@@ -3,6 +3,8 @@ package apidemo;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.ChinaStock.AM914T;
+
+import historical.Request;
 import util.VerticalPanel;
 import client.ExecutionFilter;
 import client.Types.NewsType;

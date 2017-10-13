@@ -1,5 +1,9 @@
-package apidemo;
+package historical;
 
+import apidemo.ChinaMain;
+import apidemo.ChinaStockHelper;
+import apidemo.SharpeUtility;
+import apidemo.SimpleBar;
 import client.Contract;
 import client.Types;
 import controller.ApiConnection;
@@ -45,57 +49,59 @@ import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
-public class HistHKStocks extends JPanel implements HistoricalHandler {
+public class HistUSStocks extends JPanel implements HistoricalHandler {
 
-    static final String CUTOFFTIME = getDataCutoff();
-    static final int DAYSTOREQUEST = (int) ChronoUnit.DAYS.between(
-            LocalDate.of(LocalDate.now().getYear() - 1, Month.DECEMBER, 31), LocalDate.now()) + 1;
-
-    //public static volatile long totalBeingProcessed = 0;
-    static volatile long requestCounter = 0L;
-    public static volatile long stocksProcessed = 0;
+    static final String USCHINASTOCKFILE = "USChinaStocks.txt";
+    static final String USALLFILE = "USAll.txt";
+    static final String USFAMOUSFILE = "USFamous.txt";
 
     public static volatile Semaphore sm = new Semaphore(50);
 
-    //ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
-    static ApiController apcon = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
+    static final String CUTOFFTIME = getDataCutoff();
+    static final int DAYSTOREQUEST = (int) ChronoUnit.DAYS.between(
+            LocalDate.of(LocalDate.now().getYear() - 1, Month.DECEMBER, 31),
+            LocalDate.now()) + 1;
+
+    static ApiController apcon = new ApiController(
+            new ApiController.IConnectionHandler.DefaultConnectionHandler(),
             new ApiConnection.ILogger.DefaultLogger(),
             new ApiConnection.ILogger.DefaultLogger());
 
-    //public static volatile Contract ctHK = new Contract();
-    public static volatile Map<String, NavigableMap<LocalDate, SimpleBar>> HKALL = new HashMap<>();
-    private static volatile Map<String, HKResult> HKResultMap = new HashMap<>();
+    //public Contract ctUS = new Contract();
+    //public static NavigableMap<LocalDate, SimpleBar> USSINGLE = new TreeMap<>();
+    public static Map<String, NavigableMap<LocalDate, SimpleBar>> USALL = new HashMap<>();
+    private static volatile Map<String, USResult> USResultMap = new HashMap<>();
 
-    public static List<String> hkNameList = new LinkedList<>();
-    public static File output = new File(ChinaMain.GLOBALPATH + "hkTestData.txt");
-    static volatile AtomicInteger uniqueID = new AtomicInteger(70000);
+    public static List<String> usNameList = new LinkedList<>();
+    public static File output = new File(ChinaMain.GLOBALPATH + "usTestData.txt");
 
+    static volatile AtomicInteger uniqueID = new AtomicInteger(60000);
     public static volatile Map<Integer, String> idStockMap = new HashMap<>();
 
-    static BarModel_HK m_model;
+    static BarModel_US m_model;
     static JTable tab;
     int modelRow;
     int indexRow;
-    static TableRowSorter<BarModel_HK> sorter;
-
+    static TableRowSorter<BarModel_US> sorter;
     public static JLabel totalStocksLabel = new JLabel("Total");
+    public static long stocksProcessed = 0;
 
-    public HistHKStocks() {
+    public HistUSStocks() {
         String line;
-
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + "hkMainList.txt"), "gbk"))) {
+                new FileInputStream(ChinaMain.GLOBALPATH + USALLFILE), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                HKALL.put(al1.get(0), new TreeMap<>());
-                HKResultMap.put(al1.get(0), new HKResult());
+                USALL.put(al1.get(0), new TreeMap<>());
+                USResultMap.put(al1.get(0), new USResult());
             }
         } catch (IOException ex) {
         }
-        hkNameList = HKALL.keySet().stream().collect(Collectors.toList());
-        System.out.println(" hk name list " + hkNameList);
 
-        m_model = new BarModel_HK();
+        usNameList = USALL.keySet().stream().collect(Collectors.toList());
+        System.out.println(" us name list " + usNameList);
+
+        m_model = new BarModel_US();
 
         tab = new JTable(m_model) {
             @Override
@@ -110,7 +116,7 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
                     }
                     return comp;
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    //throw new RuntimeException("");
                 }
                 return null;
             }
@@ -136,7 +142,7 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
 
         JButton getHistoricalButton = new JButton("Historical");
         getHistoricalButton.addActionListener(al -> {
-            requestAllHKStocks();
+            requestAllUSStocks();
         });
 
         JButton refreshButton = new JButton("Refresh");
@@ -158,33 +164,32 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
         add(scroll, BorderLayout.CENTER);
 
         tab.setAutoCreateRowSorter(true);
-        sorter = (TableRowSorter<BarModel_HK>) tab.getRowSorter();
-
+        sorter = (TableRowSorter<BarModel_US>) tab.getRowSorter();
     }
 
-    void requestAllHKStocks() {
+    public static void refreshAll() {
+        SwingUtilities.invokeLater(() -> {
+            totalStocksLabel.setText(Long.toString(stocksProcessed) + "/" + Long.toString(USALL.size()));
+            //System.out.println(" refreshing all ");
+            m_model.fireTableDataChanged();
+        });
+    }
+
+    void requestAllUSStocks() {
         stocksProcessed = 0;
-        MorningTask.clearFile(HistHKStocks.output);
-        HKALL.keySet().forEach(k -> request1Stock(k));
+        USALL.keySet().forEach(k -> request1Stock(k));
     }
 
-    Contract generateHKContract(String stock) {
+    Contract generateUSContract(String stock) {
         Contract ct = new Contract();
         ct.symbol(stock);
-        ct.exchange("SEHK");
-        ct.currency("HKD");
+        ct.currency("USD");
+        ct.exchange("SMART");
         ct.secType(Types.SecType.STK);
         return ct;
     }
 
-    public static void refreshAll() {
-        totalStocksLabel.setText(Long.toString(stocksProcessed) + "/" + Long.toString(HKALL.size()));
-        System.out.println(" refreshing all ");
-        m_model.fireTableDataChanged();
-    }
-
     void request1Stock(String stock) {
-
         CompletableFuture.runAsync(() -> {
             System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
             System.out.println(" available " + sm.availablePermits());
@@ -193,17 +198,16 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
             try {
                 System.out.println(" permits before " + sm.availablePermits());
                 sm.acquire();
-                //System.out.println(" unique id " + uniqueID.get() + " stock " + idStockMap.get(uniqueID.get()));
-                //System.out.println(" cut off time " + cutoffTime + " days to request " + daysToRequest);
                 System.out.println(" stock is " + stock);
                 idStockMap.put(uniqueID.incrementAndGet(), stock);
-                apcon.reqHistoricalDataUSHK(this, uniqueID.get(), generateHKContract(stock), CUTOFFTIME,
-                        DAYSTOREQUEST, Types.DurationUnit.DAY,
+                apcon.reqHistoricalDataUSHK(this, uniqueID.get(),
+                        generateUSContract(stock), CUTOFFTIME, DAYSTOREQUEST, Types.DurationUnit.DAY,
                         Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
             } catch (InterruptedException ex) {
                 Logger.getLogger(HistHKStocks.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
+
     }
 
     static String getDataCutoff() {
@@ -215,8 +219,8 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
         try {
             apcon.connect("127.0.0.1", port, 101, "");
         } catch (Exception ex) {
+            System.out.println(" connect to tws failed ");
         }
-        //apcon.client().reqIds(-1);
     }
 
     static ApiController getAPICon() {
@@ -225,55 +229,51 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
 
     public static void computeAll() {
         System.out.println(" computing starts ");
-        HKALL.keySet().forEach(k -> {
-            NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(HKALL.get(k),
+        USALL.keySet().forEach(k -> {
+            NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(USALL.get(k),
                     t -> t.isAfter(LocalDate.of(2016, Month.DECEMBER, 31)));
             double mean = SharpeUtility.getMean(ret);
             double sd = SharpeUtility.getSD(ret);
             double sr = SharpeUtility.getSharpe(ret);
-            double perc = SharpeUtility.getPercentile(HKALL.get(k));
-
-            System.out.println(ChinaStockHelper.getStrTabbed(" stock mean sd sr perc ", k, mean, sd, sr, perc));
+            double perc = SharpeUtility.getPercentile(USALL.get(k));
+            System.out.println(ChinaStockHelper.getStrTabbed(" stock mean sd sr ", k, mean, sd, sr));
         });
     }
 
     public static void compute(String stock) {
-        System.out.println(" computing starts for stock " + stock);
-        NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(HKALL.get(stock),
+        NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(USALL.get(stock),
                 t -> t.isAfter(LocalDate.of(2016, Month.DECEMBER, 31)));
         double mean = SharpeUtility.getMean(ret);
         double sd = SharpeUtility.getSD(ret);
         double sr = SharpeUtility.getSharpe(ret);
-        double perc = SharpeUtility.getPercentile(HKALL.get(stock));
-        HKResultMap.get(stock).fillResult(mean, sd, sr, perc);
+        double perc = SharpeUtility.getPercentile(USALL.get(stock));
+        USResultMap.get(stock).fillResult(mean, sd, sr, perc);
         System.out.println(ChinaStockHelper.getStrTabbed(" stock mean sd sr perc", stock, mean, sd, sr, perc));
-
     }
 
     public static void main(String[] args) {
         JFrame jf = new JFrame();
         jf.setSize(new Dimension(1000, 1000));
-
-        HistHKStocks hk = new HistHKStocks();
-        jf.add(hk);
+        HistUSStocks us = new HistUSStocks();
+        jf.add(us);
         jf.setLayout(new FlowLayout());
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jf.setVisible(true);
         CompletableFuture.runAsync(() -> {
-            hk.connectToTWS(7496);
+            us.connectToTWS(7496);
         });
     }
 
     @Override
     public void handleHist(String name, String date, double open, double high, double low, double close) {
-        HKALL.get(name).put(convertStringToDate(date), new SimpleBar(open, high, low, close));
+        USALL.get(name).put(convertStringToDate(date), new SimpleBar(open, high, low, close));
     }
 
     @Override
     public void actionUponFinish(String name) {
         stocksProcessed++;
         sm.release(1);
-        System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
+        System.out.println(" current permit after done " + HistUSStocks.sm.availablePermits());
         compute(name);
         refreshAll();
     }
@@ -283,14 +283,14 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
         return ld;
     }
 
-    private class HKResult {
+    private class USResult {
 
         double mean;
         double sd;
         double sr;
         double perc;
 
-        HKResult(double m, double s, double r, double p) {
+        USResult(double m, double s, double r, double p) {
             mean = m;
             sd = s;
             sr = r;
@@ -304,7 +304,7 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
             perc = p;
         }
 
-        HKResult() {
+        USResult() {
             mean = 0.0;
             sd = 0.0;
             sr = 0.0;
@@ -328,11 +328,11 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
         }
     }
 
-    private class BarModel_HK extends AbstractTableModel {
+    private class BarModel_US extends AbstractTableModel {
 
         @Override
         public int getRowCount() {
-            return HKALL.size();
+            return USALL.size();
         }
 
         @Override
@@ -363,21 +363,21 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
         @Override
         public Object getValueAt(int rowIn, int col) {
 
-            String name = hkNameList.get(rowIn);
+            String name = usNameList.get(rowIn);
             //System.out.println(" row in " + rowIn + " name " + name);
             switch (col) {
                 case 0:
                     return name;
                 case 1:
-                    return HKResultMap.get(name).getMean();
+                    return USResultMap.get(name).getMean();
                 case 2:
-                    return HKResultMap.get(name).getSd();
+                    return USResultMap.get(name).getSd();
                 case 3:
-                    return HKResultMap.get(name).getSr();
+                    return USResultMap.get(name).getSr();
                 case 4:
-                    return HKResultMap.get(name).getPerc();
+                    return USResultMap.get(name).getPerc();
                 case 5:
-                    return HKALL.get(name).size();
+                    return USALL.get(name).size();
                 default:
                     return null;
             }
