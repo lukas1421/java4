@@ -39,7 +39,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-class GraphIndustry extends JComponent {
+public class GraphIndustry extends JComponent {
 
     private static final int X_WIDTH = 4;
     private int height;

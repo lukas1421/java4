@@ -50,5 +50,4 @@ public class Request {
         return contract.toString() + " " + handler.toString()
                 + " custom handling needed " + getCustomFunctionNeeded();
     }
-
 }

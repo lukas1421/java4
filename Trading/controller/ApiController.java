@@ -68,6 +68,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.stream.Collectors.toList;
 import handler.HistDataConsumer;
+import utility.Utility;
 
 public class ApiController implements EWrapper {
 
@@ -1908,7 +1909,7 @@ public class ApiController implements EWrapper {
         Date d = new Date(time * 1000);
         LocalTime t = LocalDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault()).toLocalTime();
         //System.out.println(" time is " + (new Date(time * 1000)));
-        ChinaMain.updateTWSTime("TWS: " + apidemo.Utility.timeToString(t));
+        ChinaMain.updateTWSTime("TWS: " + Utility.timeToString(t));
         //ChinaMain.updateTWSTime(new Date(time * 1000).toString());
         //m_timeHandler.currentTime(time);
         recEOM();

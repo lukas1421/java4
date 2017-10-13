@@ -2,7 +2,7 @@ package historical;
 
 import apidemo.ChinaMain;
 import apidemo.ChinaStockHelper;
-import apidemo.SharpeUtility;
+import util.SharpeUtility;
 import apidemo.SimpleBar;
 import client.Contract;
 import client.Types;

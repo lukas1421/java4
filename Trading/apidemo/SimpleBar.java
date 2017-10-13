@@ -29,12 +29,12 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         this.close = c;
     }
 
-    static BinaryOperator<SimpleBar> addSB() {
+    public static BinaryOperator<SimpleBar> addSB() {
         return (a, b) -> new SimpleBar(r(a.getOpen() + b.getOpen()), r(a.getHigh() + b.getHigh()),
                 r(a.getLow() + b.getLow()), r(a.getClose() + b.getClose()));
     }
 
-    SimpleBar(SimpleBar sb) {
+    public SimpleBar(SimpleBar sb) {
         open = sb.getOpen();
         high = sb.getHigh();
         low = sb.getLow();
@@ -45,14 +45,14 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         return ZERO_BAR;
     }
 
-    SimpleBar(double v) {
+    public SimpleBar(double v) {
         open = v;
         high = v;
         low = v;
         close = v;
     }
 
-    void adjustByFactor(double f) {
+    public void adjustByFactor(double f) {
         //System.out.println ( ChinaStockHelper.getStr("BEFORE open high low close ",open, high, low, close ));
         open = open * f;
         high = high * f;
@@ -61,39 +61,39 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         //System.out.println ( ChinaStockHelper.getStr("AFTER open high low close ",open, high, low, close ));
     }
 
-    void updateOpen(double o) {
+    public void updateOpen(double o) {
         open = o;
     }
 
-    void updateHigh(double h) {
+    public void updateHigh(double h) {
         high = h;
     }
 
-    void updateLow(double l) {
+    public void updateLow(double l) {
         low = l;
     }
 
-    void updateClose(double c) {
+    public void updateClose(double c) {
         close = c;
     }
 
-    double getOpen() {
+    public double getOpen() {
         return open;
     }
 
-    double getHigh() {
+    public double getHigh() {
         return high;
     }
 
-    double getLow() {
+    public double getLow() {
         return low;
     }
 
-    double getClose() {
+    public double getClose() {
         return close;
     }
 
-    void add(double last) {
+    public void add(double last) {
         if (open == 0.0 || high == 0.0 || low == 0.0 || close == 0.0) {
             open = last;
             high = last;
@@ -110,41 +110,41 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         }
     }
 
-    void round() {
+    public void round() {
         open = Math.round(100d * open) / 100d;
         high = Math.round(100d * high) / 100d;
         low = Math.round(100d * low) / 100d;
         close = Math.round(100d * close) / 100d;
     }
 
-    static double r(double n) {
+    public static double r(double n) {
         return Math.round(n * 100d) / 100d;
     }
 
     /**
      * if any contains zero
      */
-    boolean containsZero() {
+    public boolean containsZero() {
         return (open == 0 || high == 0.0 || low == 0.0 || close == 0.0);
     }
 
-    boolean normalBar() {
+    public boolean normalBar() {
         return (open != 0 && high != 0 && low != 0.0 && close != 0.0);
     }
 
-    double getHLRange() {
+    public double getHLRange() {
         return (low != 0.0) ? (high / low - 1) : 0.0;
     }
 
-    double getBarReturn() {
+    public double getBarReturn() {
         return (open != 0.0) ? (close / open - 1) : 0.0;
     }
 
-    int getOP() {
+    public int getOP() {
         return (int) ((open - low) / (high - low) * 100d);
     }
 
-    int getCP() {
+    public int getCP() {
         return (int) ((close - low) / (high - low) * 100d);
     }
 

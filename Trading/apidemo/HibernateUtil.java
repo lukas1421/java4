@@ -4,12 +4,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 
-/**
- * Hibernate Utility class with a convenient method to get Session Factory
- * object.
- *
- * @author Administrator
- */
 class HibernateUtil {
 
     private static SessionFactory sessionFactory;

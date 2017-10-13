@@ -111,43 +111,43 @@ final class GraphPnl extends JComponent {
         this.name = s;
     }
 
-    void setMtmPnl(double p) {
+    public void setMtmPnl(double p) {
         mtmPnl = Math.round(100d * p) / 100d;
     }
 
-    void setNetPnlYtd(double p) {
+    public void setNetPnlYtd(double p) {
         netYtdPnl = Math.round(100d * p) / 100d;
     }
 
-    void setTodayPnl(double p) {
+    public void setTodayPnl(double p) {
         todayNetPnl = Math.round(100d * p) / 100d;
     }
 
-    void setOpenDelta(double d) {
+    public void setOpenDelta(double d) {
         openDelta = d;
     }
 
-    void setBoughtDelta(double d) {
+    public void setBoughtDelta(double d) {
         boughtDelta = d;
     }
 
-    void setCurrentDelta(double d) {
+    public void setCurrentDelta(double d) {
         currentDelta = d;
     }
 
-    void setSoldDelta(double d) {
+    public void setSoldDelta(double d) {
         soldDelta = d;
     }
 
-    void setBuyPnl(double p) {
+    public void setBuyPnl(double p) {
         buyPnl = Math.round(100d * p) / 100d;
     }
 
-    void setSellPnl(double p) {
+    public void setSellPnl(double p) {
         sellPnl = Math.round(100d * p) / 100d;
     }
 
-    void setNetDeltaMap(NavigableMap<LocalTime, Double> m) {
+    public void setNetDeltaMap(NavigableMap<LocalTime, Double> m) {
 
         netDeltaMap = (m != null) ? m.entrySet().stream().filter(TRADING_PRED)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, ConcurrentSkipListMap::new))

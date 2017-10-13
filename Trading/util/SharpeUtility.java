@@ -3,7 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package apidemo;
+package util;
+
+import apidemo.SimpleBar;
 
 import java.time.temporal.Temporal;
 import java.util.Map;
@@ -11,10 +13,6 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 
-/**
- *
- * @author Luke Shi
- */
 public class SharpeUtility {
 
     public SharpeUtility() {

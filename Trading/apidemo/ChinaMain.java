@@ -47,6 +47,7 @@ import util.IConnectionConfiguration;
 import util.IConnectionConfiguration.DefaultConnectionConfiguration;
 import util.NewLookAndFeel;
 import util.NewTabbedPanel;
+import utility.Utility;
 
 public final class ChinaMain implements IConnectionHandler {
 
