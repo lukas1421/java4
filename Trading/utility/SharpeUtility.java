@@ -19,7 +19,9 @@ public class SharpeUtility {
         throw new UnsupportedOperationException("utility class");
     }
 
-    public static <T extends Temporal> NavigableMap<T, Double> getReturnSeries(NavigableMap<T, SimpleBar> in, Predicate<T> fil) {
+    public static <T extends Temporal> NavigableMap<T, Double>
+    getReturnSeries(NavigableMap<T, SimpleBar> in, Predicate<T> fil) {
+
         NavigableMap<T, Double> res = new TreeMap<>();
         if (in.size() > 0) {
             T firstKey = in.keySet().stream().filter(fil).findFirst().get();

@@ -21,9 +21,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +28,8 @@ public final class MorningTask implements HistoricalHandler {
 
     static File output = new File(ChinaMain.GLOBALPATH + "output.txt");
     static File fxOutput = new File(ChinaMain.GLOBALPATH + "fx.txt");
+    static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
+            ? "G:\\export_1m\\" : "J:\\TDX\\T0002\\export_1m\\";
     static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
     static String indices = "sh000300,sh000001,sz399006,sz399001,sh000905, sh000016";
     static String urlString;
@@ -41,6 +40,8 @@ public final class MorningTask implements HistoricalHandler {
 
     public static void runThis() {
         MorningTask mt = new MorningTask();
+        writeIndexTDX();
+/*
 
         processShcomp();
         mt.getFX();
@@ -65,7 +66,9 @@ public final class MorningTask implements HistoricalHandler {
         es.schedule(() -> {
             System.exit(0);
         }, 5, TimeUnit.SECONDS);
+        */
     }
+
 
 //    static void simpleWrite(LinkedList<String> s) {
 //        try (BufferedWriter out = new BufferedWriter(new FileWriter(output))){
@@ -102,6 +105,31 @@ public final class MorningTask implements HistoricalHandler {
         } catch (IOException x) {
             x.printStackTrace();
         }
+    }
+
+    static void writeIndexTDX(){
+        String line;
+        List<String> ind = Arrays.asList(indices.split(","));
+        System.out.println(ind);
+        String currentLine;
+        String previousLine;
+
+        for(String s:ind) {
+            String name = s.substring(0, 2).toUpperCase() + "#" + s.substring(2) + ".txt";
+            String filePath = tdxPath + name + ".txt";
+
+
+            try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxPath + name)))) {
+                while ((line = reader1.readLine()) != null) {
+
+                    List<String> al1 = Arrays.asList(line.split("\t"));
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }
+
     }
 
     static void writeIndex(BufferedWriter out) {
