@@ -47,6 +47,10 @@ final class GraphPnl extends JComponent {
     String loser1;
     String loser2;
     String loser3;
+    volatile String big1;
+    volatile String big2;
+    volatile String big3;
+
 
     static double openDelta;
     static double boughtDelta;
@@ -199,6 +203,15 @@ final class GraphPnl extends JComponent {
         loser2 = (t = m.pollLast()) != null ? t : "";
         loser3 = (t = m.pollLast()) != null ? t : "";
     }
+
+    void setBigKiyodoMap(LinkedList<String> m) {
+        //pnl1mList = m;
+        String t;
+        big1 = (t = m.poll()) != null ? t : "";
+        big2 = (t = m.poll()) != null ? t : "";
+        big3 = (t = m.poll()) != null ? t : "";
+    }
+
 
     //NavigableMap<LocalTime,Double> getTreeMap() {return this.tm;}
     @Override
@@ -475,6 +488,10 @@ final class GraphPnl extends JComponent {
         g2.drawString("Mtm Sharpe: " + Double.toString(mtmDeltaSharpe), getWidth() / 7 * 6, getHeight() / 3 + 130);
         g2.drawString("netpnl Sharpe: " + Double.toString(minuteNetPnlSharpe), getWidth() / 7 * 5, getHeight() / 3 + 130);
 
+        g2.drawString("big1 " +big1, getWidth() / 7 * 5, getHeight() / 3 + 150);
+        g2.drawString("big2 " +big2, getWidth() / 7 * 5, getHeight() / 3 + 170);
+        g2.drawString("big3 " +big3, getWidth() / 7 * 5, getHeight() / 3 + 190);
+
         g2.setColor(Color.red);
         g2.setFont(g.getFont().deriveFont(20F));
         g2.drawString("Open Delta: " + Double.toString(Math.round(openDelta / 1000d)) + " K", getWidth() / 7 * 6, getHeight() / 3 + 150);
@@ -515,7 +532,7 @@ final class GraphPnl extends JComponent {
         return height - (int) val + 50;
     }
 
-    <T> Comparator<T> reverseThis(Comparator<T> comp) {
+    public <T> Comparator<T> reverseThis(Comparator<T> comp) {
         return comp.reversed();
     }
 

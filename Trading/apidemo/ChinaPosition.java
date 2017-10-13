@@ -541,6 +541,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         gpnl.setChineseName(nameMap.get(nam));
         gpnl.setMinuteNetPnlSharpe(minuteNetPnlSharpe);
         gpnl.setMtmDeltaSharpe(mtmDeltaSharpe);
+        gpnl.setBigKiyodoMap(topPnlKiyodoList());
         gpnl.refresh();
     }
 
@@ -641,7 +642,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         System.out.println(" finished ");
     }
 
-    public static void handleSGX50HistData(String date, double open, double high, double low, double close, int volume) {
+/*    public static void handleSGX50HistData(String date, double open, double high, double low, double close, int volume) {
         LocalDate currDate = LocalDate.now();
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);
@@ -662,7 +663,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         } else {
             System.out.println(getStr(date, open, high, low, close));
         }
-    }
+    }*/
 
     static void getOpenPositionsNormal() {
         int todaySoldCol = 0;
@@ -1070,6 +1071,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     }
 
+    static boolean relevantStock(String stock) {
+        return openPositionMap.containsKey(stock) ||
+                (tradesMap.containsKey(stock) && tradesMap.get(stock).size()>0);
+    }
+
     static double getPnLChange5m(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
         if (ChinaStock.NORMAL_STOCK.test(name)) {
@@ -1093,7 +1099,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 tradeChgPnlAfter = tradesMap.get(name).entrySet().stream().filter(e -> e.getKey().isAfter(lastKey.minusMinutes(6L)))
                         .collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getMtmPnl(name)));
             }
-            return Math.round((openPos + tradedPosBefore) * (p - previousP) + tradeChgPnlAfter * fx) / 1d;
+            return Math.round(((openPos + tradedPosBefore) * (p - previousP) + tradeChgPnlAfter) * fx) / 1d;
         }
         return 0.0;
     }
@@ -1152,7 +1158,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             return (int) Math.round(100d * (curr - open) / (max - min));
         }
         return 0;
-
     }
 
     static double getPotentialReturnToMid(String name) {
@@ -1194,6 +1199,37 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
         return 0;
     }
+
+
+    static double getTodayTotalPnl(String name) {
+        double fx = fxMap.getOrDefault(name, 1.0);
+        return Math.round(100d * fx * (getMtmPnl(name) + getBuyTradePnl(name) + getSellTradePnl(name))) / 100d;
+    }
+
+    //todo
+    static LinkedList<String>  topPnlKiyodoList() {
+        LinkedList<String> res = new LinkedList<>();
+
+        //map<ticker, net pnl>
+        Map<String, Double> tickerNetpnl = priceMapBar.entrySet().stream().filter(e->relevantStock(e.getKey()))
+                .peek(System.out::println)
+                .collect(Collectors.toMap(e->e.getKey(),e->getTodayTotalPnl(e.getKey())));
+
+        double netPnlAll = tickerNetpnl.entrySet().stream().mapToDouble(Map.Entry::getValue).sum();
+
+        System.out.println(" ticker net pnl " + tickerNetpnl);
+
+        res = tickerNetpnl.entrySet().stream().sorted(reverseThis(Comparator.comparingDouble(e->Math.abs(e.getValue()))))
+                .map(Map.Entry::getKey).map(s-> ChinaStockHelper.getStr(nameMap.get(s),
+                        getTodayTotalPnl(s), Math.round(1000d*getTodayTotalPnl(s)/netPnlAll)/10d))
+                .collect(Collectors.toCollection(LinkedList::new));
+
+        System.out.println(" res is " + res);
+
+
+        return res;
+    }
+
 
     private final class BarModel_POS extends AbstractTableModel {
 
@@ -1272,6 +1308,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     return "wkMin";
                 case 30:
                     return "deviation";
+                case 31:
+                    return "Today Total Pnl";
+
                 default:
                     return null;
             }
@@ -1298,6 +1337,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     return String.class;
                 case 27:
                     return Integer.class;
+
                 default:
                     return Double.class;
             }
@@ -1335,7 +1375,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 11:
                     return r(fxMap.getOrDefault(name, 1.0) * (closeMap.getOrDefault(name, 0.0) - costMap.getOrDefault(name, 0.0)) * openpos);
                 case 12:
-                    return r(fxMap.getOrDefault(name, 1.0) * (priceMap.getOrDefault(name, 0.0) - costMap.getOrDefault(name, 0.0)) * openpos);
+                    return r(fxMap. getOrDefault(name, 1.0) * (priceMap.getOrDefault(name, 0.0) - costMap.getOrDefault(name, 0.0)) * openpos);
                 case 13:
                     return getTotalTodayBought(name);
                 case 14:
@@ -1372,6 +1412,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     return Math.min(wtdMinMap.getOrDefault(name, 0.0), ChinaStock.minMap.getOrDefault(name, Double.MAX_VALUE));
                 case 30:
                     return (currPrice != 0.0) ? Math.round((((wtdMaxMap.getOrDefault(name, 0.0) + wtdMinMap.getOrDefault(name, 0.0)) / 2) / currPrice - 1) * 1000d) / 10d : 0.0;
+                case 31:
+                    return getTodayTotalPnl(name);
+
                 default:
                     return null;
             }
