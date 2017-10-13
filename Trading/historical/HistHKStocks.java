@@ -6,7 +6,7 @@ import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
 import handler.HistoricalHandler;
-import util.SharpeUtility;
+import utility.SharpeUtility;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
