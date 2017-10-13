@@ -32,7 +32,7 @@ class ChinaSave implements Serializable, ChinaSaveInterface2Blob {
     @Lob
     Blob volMapBlob;
 
-    ChinaSave() {
+    public ChinaSave() {
     }
 
     ChinaSave(String name) {

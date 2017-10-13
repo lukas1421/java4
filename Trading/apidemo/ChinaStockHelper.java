@@ -722,7 +722,8 @@ public final class ChinaStockHelper {
     }
 
     static NavigableMap<LocalTime, Double> mapSynthesizer(NavigableMap<LocalTime, Double>... mps) {
-        return Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.groupingBy(e -> e.getKey(), ConcurrentSkipListMap::new, Collectors.summingDouble(e -> e.getValue())));
+        return Stream.of(mps).flatMap(e -> e.entrySet().stream())
+                .collect(Collectors.groupingBy(e -> e.getKey(), ConcurrentSkipListMap::new, Collectors.summingDouble(e -> e.getValue())));
     }
 
     static boolean lastBarHighest(String name) {

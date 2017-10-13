@@ -13,7 +13,7 @@ import javax.persistence.Table;
 
 @Table (name="CHINASAVEOHLC")
 
-class ChinaSaveOHLCYV {
+public class ChinaSaveOHLCYV {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,7 +31,7 @@ class ChinaSaveOHLCYV {
     @Column(name = "V")
     double volume;
     
-    ChinaSaveOHLCYV(String name, double c) {
+    public ChinaSaveOHLCYV(String name, double c) {
         this.stockName = name;
         this.open = c;
         this.high= c;
@@ -41,7 +41,7 @@ class ChinaSaveOHLCYV {
         this.volume = 0.0;
     }
     
-    ChinaSaveOHLCYV(String name, double op, double hi, double lo, double c, double cy ,int v ) {
+    public ChinaSaveOHLCYV(String name, double op, double hi, double lo, double c, double cy ,int v ) {
         this.stockName = name;
         this.open = op;
         this.high= hi;
@@ -51,7 +51,7 @@ class ChinaSaveOHLCYV {
         this.volume = v;
     }
     
-    ChinaSaveOHLCYV() {}
+    public ChinaSaveOHLCYV() {}
     ChinaSaveOHLCYV(String name) { this.stockName = name; };
     
     double getOpen() {return open; }

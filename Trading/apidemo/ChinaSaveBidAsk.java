@@ -31,7 +31,7 @@ public class ChinaSaveBidAsk implements Serializable, ChinaSaveInterface2Blob {
     @Lob
     Blob askMapBlob;
 
-    ChinaSaveBidAsk() {
+    public ChinaSaveBidAsk() {
     }
 
     ChinaSaveBidAsk(String name) {
