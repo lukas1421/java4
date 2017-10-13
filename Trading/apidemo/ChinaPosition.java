@@ -688,21 +688,22 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     stockCodeCol = dataList.indexOf("证券代码") - 1;
                     todayBoughtCol = dataList.indexOf("今买数量") - 1;
                     todaySoldCol = dataList.indexOf("今卖数量") - 1;
-                    System.out.println(" today sold col " + todaySoldCol);
+                    //System.out.println(" today sold col " + todaySoldCol);
                 }
-                System.out.println(" datalist size " + dataList.size());
-                System.out.println(" stock code col " + stockCodeCol);
-                System.out.println(" stock code " + dataList.get(stockCodeCol));
-                System.out.println(" chinese name " + dataList.get(chineseNameCol));
-                System.out.println(dataList.size() > stockCodeCol);
-                System.out.println(nameMap.getOrDefault(addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol)));
+
+                //System.out.println(" datalist size " + dataList.size());
+                //System.out.println(" stock code col " + stockCodeCol);
+                //System.out.println(" stock code " + dataList.get(stockCodeCol));
+                //System.out.println(" chinese name " + dataList.get(chineseNameCol));
+                //System.out.println(dataList.size() > stockCodeCol);
+                //System.out.println(nameMap.getOrDefault(addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol)));
 
                 if (dataList.size() > 1 && (nameMap.getOrDefault(addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol))
                         || dataList.get(chineseNameCol).startsWith("XD"))) {
                     //System.out.println( " name " + addSHSZ(dataList.get(stockCodeCol)));
                     String nam = addSHSZ(dataList.get(stockCodeCol));
-                    System.out.println(" nam " + nam);
-                    System.out.println(" current pos col " + currentPosCol + " pos " + dataList.get(currentPosCol));
+                    //System.out.println(" nam " + nam);
+                    //System.out.println(" current pos col " + currentPosCol + " pos " + dataList.get(currentPosCol));
 
                     openPositionMap.put(nam, Integer.parseInt(dataList.get(currentPosCol)) + Integer.parseInt(dataList.get(todaySoldCol))
                             - Integer.parseInt(dataList.get(todayBoughtCol)));
@@ -857,7 +858,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         int buySellCol = 0;
         int beizhuCol = 0;
 
-        System.out.println(" getting current margin position ");
+        //System.out.println(" getting current margin position ");
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(ChinaMain.GLOBALPATH + "marginCurrentPosition.txt"), "gbk"))) {
@@ -1217,14 +1218,14 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         double netPnlAll = tickerNetpnl.entrySet().stream().mapToDouble(Map.Entry::getValue).sum();
 
-        System.out.println(" ticker net pnl " + tickerNetpnl);
+        //System.out.println(" ticker net pnl " + tickerNetpnl);
 
         res = tickerNetpnl.entrySet().stream().sorted(reverseThis(Comparator.comparingDouble(e->Math.abs(e.getValue()))))
                 .map(Map.Entry::getKey).map(s-> ChinaStockHelper.getStr(nameMap.get(s),
-                        getTodayTotalPnl(s), Math.round(1000d*getTodayTotalPnl(s)/netPnlAll)/10d))
+                        getTodayTotalPnl(s), Math.round(100d*getTodayTotalPnl(s)/netPnlAll)," % "))
                 .collect(Collectors.toCollection(LinkedList::new));
 
-        System.out.println(" res is " + res);
+        //System.out.println(" res is " + res);
 
 
         return res;
