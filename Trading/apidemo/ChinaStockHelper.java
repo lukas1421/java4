@@ -21,12 +21,11 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.lang.System.out;
@@ -61,14 +60,14 @@ import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toCollection;
-import java.util.stream.Stream;
+
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
-import org.hibernate.Hibernate;
-import org.hibernate.Session;
+
+import utility.Utility;
 
 public final class ChinaStockHelper {
 
@@ -114,16 +113,16 @@ public final class ChinaStockHelper {
             Comparator<? super String> compVR = Comparator.comparingDouble(ChinaSizeRatio::computeSizeRatioLast).reversed();
 
             maxLastRangeList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compLastRange)).limit(3)
-                    .collect(mapping(e -> (getStr("", e.getKey(), nameMap.get(e.getKey()), HLRANGE.applyAsDouble(e.getValue()))), toCollection(LinkedList::new)));
+                    .collect(mapping(e -> (Utility.getStr("", e.getKey(), nameMap.get(e.getKey()), HLRANGE.applyAsDouble(e.getValue()))), toCollection(LinkedList::new)));
 
             maxLastBarRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compBarRtn)).limit(3)
-                    .collect(mapping(e -> (getStr(" ", e.getKey(), nameMap.get(e.getKey()), BARRTN.applyAsDouble(e.getValue()))), toCollection(LinkedList::new)));
+                    .collect(mapping(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), BARRTN.applyAsDouble(e.getValue()))), toCollection(LinkedList::new)));
 
             maxDayRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compDayRtn)).limit(3)
-                    .collect(mapping(e -> (getStr(" ", e.getKey(), nameMap.get(e.getKey()), round(computeReturn(e.getValue()) * 1000d) / 10d, "%")), toCollection(LinkedList::new)));
+                    .collect(mapping(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), round(computeReturn(e.getValue()) * 1000d) / 10d, "%")), toCollection(LinkedList::new)));
 
             maxVRList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByKey(compVR)).limit(3)
-                    .collect(mapping(e -> (getStr(" ", e.getKey(), nameMap.get(e.getKey()), round(10d * computeSizeRatioLast(e.getKey())) / 10d,
+                    .collect(mapping(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), round(10d * computeSizeRatioLast(e.getKey())) / 10d,
                     getCurrentSize(e.getKey()))), toCollection(LinkedList::new)));
 
             String t;
@@ -532,7 +531,7 @@ public final class ChinaStockHelper {
                 }, 1L, TimeUnit.MINUTES);
             }
             jd.setVisible(true);
-            System.out.println(getStr(" dialog ", nam, " created at ", entryTime));
+            System.out.println(Utility.getStr(" dialog ", nam, " created at ", entryTime));
         }
     }
 
@@ -674,42 +673,6 @@ public final class ChinaStockHelper {
         return j;
     }
 
-    public static String getStr(Object... cs) {
-        StringBuilder b = new StringBuilder();
-        for (Object ss : cs) {
-            b.append(ss.toString()).append(" ");
-        }
-        return b.toString();
-    }
-
-    public static String getStrCheckNull(Object... cs) {
-        StringBuilder b = new StringBuilder();
-        for (Object ss : cs) {
-            if (ss != null) {
-                b.append(ss.toString()).append(" ");
-            } else {
-                b.append(" NULL ");
-            }
-        }
-        return b.toString();
-    }
-
-    public static String getStrTabbed(Object... cs) {
-        StringBuilder b = new StringBuilder();
-        for (Object ss : cs) {
-            b.append(ss.toString()).append("\t");
-        }
-        return b.toString().trim();
-    }
-
-    static String getStrComma(Object... cs) {
-        StringBuilder b = new StringBuilder();
-        for (Object ss : cs) {
-            b.append(ss.toString()).append(",");
-        }
-        return b.toString().trim();
-    }
-
     //weakness indicator
     static boolean ytdWeak(String name) {
         if (getAMCOY(name) < 0.0 && getPMCOY(name) > 0.0) {
@@ -718,30 +681,12 @@ public final class ChinaStockHelper {
         return getCOY(name) < 0.0 || getPMCOY(name) < 0.0;
     }
 
-    static NavigableMap<LocalTime, Double> mapSynthesizer(NavigableMap<LocalTime, Double>... mps) {
-        return Stream.of(mps).flatMap(e -> e.entrySet().stream())
-                .collect(Collectors.groupingBy(e -> e.getKey(), ConcurrentSkipListMap::new, Collectors.summingDouble(e -> e.getValue())));
-    }
-
     static boolean lastBarHighest(String name) {
         double last = priceMapBar.get(name).lastEntry().getValue().getClose();
         LocalTime lastKey = priceMapBar.get(name).lastKey();
         double previousMax = priceMapBar.get(name).headMap(lastKey, false).entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
         //return last>previousMax;
         return GETMAXTIME.apply(name, IS_OPEN_PRED).equals(lastKey);
-    }
-
-    static Blob blobify(NavigableMap<LocalTime, ?> mp, Session s) {
-        ByteArrayOutputStream bos;
-        try (ObjectOutputStream out = new ObjectOutputStream(bos = new ByteArrayOutputStream())) {
-            out.writeObject(mp);
-            byte[] buf = bos.toByteArray();
-            Blob b = Hibernate.getLobCreator(s).createBlob(buf);
-            return b;
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        return null;
     }
 
     static ConcurrentSkipListMap<LocalTime, ?> unblob(Blob b) {
@@ -1043,8 +988,8 @@ public final class ChinaStockHelper {
 //                    retMap.put(k, mp.get(k).getBarReturn());
 //                }
 //            });
-            double minuteMean = computeMean(retMap);
-            double minuteSD = computeSD(retMap);
+            double minuteMean = Utility.computeMean(retMap);
+            double minuteSD = Utility.computeSD(retMap);
             if (minuteSD != 0.0) {
                 //System.out.println(" mean is " + (minuteMean * 240) + " minute sd " + (minuteSD * Math.sqrt(240)));
                 return (minuteMean * 240) / (minuteSD * Math.sqrt(240));
@@ -1058,8 +1003,8 @@ public final class ChinaStockHelper {
         NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
         retMap = genReturnMap(mtmDeltaMp, (u, v) -> u / v - 1, d -> d, d -> 0.0);
 
-        double minuteMean = computeMean(retMap);
-        double minuteSD = computeSD(retMap);
+        double minuteMean = Utility.computeMean(retMap);
+        double minuteSD = Utility.computeSD(retMap);
         if (minuteSD != 0.0) {
             //System.out.println(" mean is " + (minuteMean * 240) + " minute sd " + (minuteSD * Math.sqrt(240)));
             return (minuteMean * 240) / (minuteSD * Math.sqrt(240));
@@ -1070,30 +1015,13 @@ public final class ChinaStockHelper {
     static double computeMinuteNetPnlSharpe(NavigableMap<LocalTime, Double> netPnlMp) {
         NavigableMap<LocalTime, Double> diffMap = new TreeMap<>();
         diffMap = genReturnMap(netPnlMp, (u, v) -> u - v, d -> d, d -> 0.0);
-        double minuteMean = computeMean(diffMap);
-        double minuteSD = computeSD(diffMap);
+        double minuteMean = Utility.computeMean(diffMap);
+        double minuteSD = Utility.computeSD(diffMap);
         if (minuteSD != 0.0) {
             //System.out.println(" mean is " + (minuteMean * 240) + " minute sd " + (minuteSD * Math.sqrt(240)));
             return (minuteMean * 240) / (minuteSD * Math.sqrt(240));
         }
         return 0.0;
-    }
-
-    static double computeMean(NavigableMap<LocalTime, Double> retMap) {
-        if (retMap.size() > 1) {
-            double sum = retMap.entrySet().stream().mapToDouble(e -> e.getValue()).sum();
-            return sum / retMap.size();
-        }
-        return 0;
-    }
-
-    static double computeSD(NavigableMap<LocalTime, Double> retMap) {
-        if (retMap.size() > 1) {
-            double mean = computeMean(retMap);
-            return Math.sqrt((retMap.entrySet().stream().mapToDouble(e -> e.getValue()).map(v -> Math.pow(v - mean, 2)).sum()) / (retMap.size() - 1));
-        }
-        return 0.0;
-
     }
 
 }

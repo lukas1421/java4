@@ -18,7 +18,7 @@ import static apidemo.ChinaStock.BAR_HIGH;
 import static apidemo.ChinaStock.BAR_LOW;
 import static apidemo.ChinaStock.NORMAL_MAP;
 import static apidemo.ChinaStock.TIMEMAX;
-import static apidemo.ChinaStockHelper.getStr;
+import static utility.Utility.getStr;
 import static apidemo.GraphBigIndex.maxGen;
 import static apidemo.GraphBigIndex.minGen;
 import java.awt.BasicStroke;

@@ -8,7 +8,7 @@ import static apidemo.ChinaStock.nameMap;
 import static apidemo.ChinaStock.openMap;
 import static apidemo.ChinaStock.priceMap;
 import static apidemo.ChinaStock.symbolNames;
-import static apidemo.ChinaStockHelper.getStr;
+import static utility.Utility.getStr;
 
 import TradeType.FutureTrade;
 import TradeType.MarginTrade;
@@ -22,6 +22,8 @@ import client.ExecutionFilter;
 import controller.ApiController;
 import handler.FutPositionHandler;
 import handler.HistoricalHandler;
+import utility.Utility;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -505,7 +507,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         double todayNetPnl = Optional.ofNullable(tradePNLMap.lastEntry()).map(Entry::getValue).orElse(0.0) + netYtdPnl
                 + Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0);
 
-        netPNLMap = ChinaStockHelper.mapSynthesizer(mtmPNLMap, tradePNLMap);
+        netPNLMap = Utility.mapSynthesizer(mtmPNLMap, tradePNLMap);
 
         mtmDeltaSharpe = ChinaStockHelper.computeMinuteSharpeFromMtmDeltaMp(mtmDeltaMap);
 
@@ -634,7 +636,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     xuOpenPrice = open;
                     System.out.println(" today open is " + xuOpenPrice);
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                    System.out.println(ChinaStockHelper.getStrCheckNull(dt, open, high, low, close));
+                    System.out.println(Utility.getStrCheckNull(dt, open, high, low, close));
                 }
             }
 
@@ -838,7 +840,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     } catch (Exception x) {
                         x.printStackTrace();
                     }
-                    String outputString = ChinaStockHelper.getStrTabbed(LocalDate.now().toString(), dataList.get(fillTimeCol), "Stock", " ", "CNY",
+                    String outputString = Utility.getStrTabbed(LocalDate.now().toString(), dataList.get(fillTimeCol), "Stock", " ", "CNY",
                             ticker.substring(0, 2).toUpperCase(), " ", "'" + dataList.get(stockCodeCol), dataList.get(buySellCol).equals("买入") ? "B" : "S",
                             "O", (dataList.get(buySellCol).equals("买入") ? "" : "-") + dataList.get(fillAmtCol), "1", dataList.get(fillPriceCol));
                     MorningTask.simpleWriteToFile(outputString, true, output);
@@ -1073,7 +1075,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.summingInt(Map.Entry::getValue)));
 
         return mp1.entrySet().stream().sorted(reverseThis(Comparator.comparingDouble(e -> getPnLChange5m(e.getKey())))).map(
-                e -> ChinaStockHelper.getStr(ChinaStock.nameMap.get(e.getKey()), ":", getPnLChange5m(e.getKey()))).collect(
+                e -> Utility.getStr(ChinaStock.nameMap.get(e.getKey()), ":", getPnLChange5m(e.getKey()))).collect(
                         Collectors.toCollection(LinkedList::new));
 
     }
@@ -1227,7 +1229,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         //System.out.println(" ticker net pnl " + tickerNetpnl);
 
         res = tickerNetpnl.entrySet().stream().sorted(reverseThis(Comparator.comparingDouble(e->Math.abs(e.getValue()))))
-                .map(Map.Entry::getKey).map(s-> ChinaStockHelper.getStr(nameMap.get(s),
+                .map(Map.Entry::getKey).map(s-> Utility.getStr(nameMap.get(s),
                         getTodayTotalPnl(s), Math.round(100d*getTodayTotalPnl(s)/netPnlAll)," % "))
                 .collect(Collectors.toCollection(LinkedList::new));
 

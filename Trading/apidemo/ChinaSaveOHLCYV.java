@@ -1,6 +1,6 @@
 package apidemo;
 
-import static apidemo.ChinaStockHelper.getStr;
+import static utility.Utility.getStr;
 import javax.persistence.Column;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;

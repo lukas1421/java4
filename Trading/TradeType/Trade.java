@@ -1,7 +1,7 @@
 package TradeType;
 
 import apidemo.ChinaStock;
-import apidemo.ChinaStockHelper;
+import utility.Utility;
 
 import static java.lang.Math.abs;
 
@@ -51,7 +51,7 @@ public abstract class Trade {
 
     @Override
     public String toString() {
-        return ChinaStockHelper.getStr("price ", price, "vol ", size);
+        return Utility.getStr("price ", price, "vol ", size);
     }
 }
 

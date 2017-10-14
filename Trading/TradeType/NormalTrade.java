@@ -1,6 +1,6 @@
 package TradeType;
 
-import apidemo.ChinaStockHelper;
+import utility.Utility;
 
 import static java.lang.Math.abs;
 
@@ -29,7 +29,7 @@ public class NormalTrade extends Trade {
 
     @Override
     public String toString() {
-        return ChinaStockHelper.getStr(" normal trade ", " price ", price, "vol ", size);
+        return Utility.getStr(" normal trade ", " price ", price, "vol ", size);
     }
 
 }

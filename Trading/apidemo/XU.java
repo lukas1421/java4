@@ -2,8 +2,8 @@ package apidemo;
 
 //import static apidemo.Analysis.symbolNames;
 import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaStockHelper.blobify;
-import static apidemo.ChinaStockHelper.getStr;
+import static utility.Utility.blobify;
+import static utility.Utility.getStr;
 import static apidemo.ChinaStockHelper.unblob;
 // com.ib.controller.TickType;
 import java.awt.BorderLayout;
@@ -52,6 +52,8 @@ import org.hibernate.SessionFactory;
 import static apidemo.GraphXUSI.AM900;
 import client.TickType;
 import client.Types.MktDataType;
+import utility.Utility;
+
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Map.Entry;
@@ -247,7 +249,7 @@ final class XU extends JPanel implements ITopMktDataHandler {
 
         saveHib.addActionListener(l -> {
             XU.saveHibXU();
-            ChinaMain.updateSystemNotif(ChinaStockHelper.getStr("存 XU", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+            ChinaMain.updateSystemNotif(Utility.getStr("存 XU", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
             System.out.println(getStr(" done saving ", LocalTime.now()));
         });
 

@@ -1,6 +1,6 @@
 package TradeType;
 
-import apidemo.ChinaStockHelper;
+import utility.Utility;
 
 import static java.lang.Math.abs;
 
@@ -31,7 +31,7 @@ public class MarginTrade extends Trade {
 
     @Override
     public String toString() {
-        return ChinaStockHelper.getStr(" margin trade ", " price ", price, "vol ", size);
+        return Utility.getStr(" margin trade ", " price ", price, "vol ", size);
     }
 
 }

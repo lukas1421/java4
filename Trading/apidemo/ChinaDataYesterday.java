@@ -68,6 +68,7 @@ import javax.swing.table.TableRowSorter;
 import auxiliary.SimpleBar;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import utility.Utility;
 
 //process yesterday data
 final class ChinaDataYesterday extends JPanel {
@@ -297,7 +298,7 @@ final class ChinaDataYesterday extends JPanel {
                         sizeY.put(name, ChinaStock.sizeMap.getOrDefault(name, 0L));
                     });
                 }).thenAccept(v -> {
-                    ChinaMain.updateSystemNotif(ChinaStockHelper.getStr("Fetching done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                    ChinaMain.updateSystemNotif(Utility.getStr("Fetching done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
                     SwingUtilities.invokeLater(() -> {
                         this.repaint();
                     });
@@ -311,7 +312,7 @@ final class ChinaDataYesterday extends JPanel {
             CompletableFuture.runAsync(() -> {
                 compute();
             }).thenAccept(v -> {
-                ChinaMain.updateSystemNotif(ChinaStockHelper.getStr("Computing ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                ChinaMain.updateSystemNotif(Utility.getStr("Computing ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
             });
 
         });
@@ -369,7 +370,7 @@ final class ChinaDataYesterday extends JPanel {
                     e.printStackTrace();
                 }
             }).thenAccept(v -> {
-                ChinaMain.updateSystemNotif(ChinaStockHelper.getStr("Saving Ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                ChinaMain.updateSystemNotif(Utility.getStr("Saving Ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
             });
 
         });
@@ -707,7 +708,7 @@ final class ChinaDataYesterday extends JPanel {
             compute();
         }).thenAccept(
                 v -> {
-                    ChinaMain.updateSystemNotif(ChinaStockHelper.getStr(" Loading Ytd Done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                    ChinaMain.updateSystemNotif(Utility.getStr(" Loading Ytd Done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
                 }
         );
         ;

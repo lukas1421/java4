@@ -28,7 +28,7 @@ import static apidemo.ChinaStock.BAR_LOW;
 import static apidemo.ChinaStock.IS_OPEN_PRED;
 import static apidemo.ChinaStock.TIMEMAX;
 import static apidemo.ChinaStock.TIME_BETWEEN;
-import static apidemo.ChinaStockHelper.getStr;
+import static utility.Utility.getStr;
 import java.awt.Font;
 import java.time.temporal.ChronoUnit;
 import static java.util.Comparator.comparingDouble;

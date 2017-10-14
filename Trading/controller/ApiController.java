@@ -4,7 +4,7 @@ package controller;
 
 import apidemo.ChinaMain;
 import static apidemo.ChinaMain.controller;
-import apidemo.ChinaStockHelper;
+
 import apidemo.HKData;
 import historical.Request;
 import client.CommissionReport;
@@ -563,7 +563,7 @@ public class ApiController implements EWrapper {
     @Override
     public void accountSummary(int reqId, String account, String tag, String value, String currency) {
 
-        System.out.print(ChinaStockHelper.getStrCheckNull("", reqId, Optional.ofNullable(account).orElse("accountnull"), Optional.ofNullable(tag).orElse("tagnull"),
+        System.out.print(Utility.getStrCheckNull("", reqId, Optional.ofNullable(account).orElse("accountnull"), Optional.ofNullable(tag).orElse("tagnull"),
                 Optional.ofNullable(value).orElse("valuenull"), Optional.ofNullable(currency).orElse("currencynull")));
 
         if (tag.equals("Currency")) { // ignore this, it is useless
@@ -610,7 +610,7 @@ public class ApiController implements EWrapper {
             @Override
             public void position(String account, Contract contract, double position, double avgCost) {
 
-                System.out.println(" in default position handler " + ChinaStockHelper.getStr(account, contract.toString(), position, avgCost));
+                System.out.println(" in default position handler " + Utility.getStr(account, contract.toString(), position, avgCost));
             }
 
             @Override

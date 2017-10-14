@@ -36,6 +36,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 //import org.apache.commons.math3.*;
 import org.apache.commons.math3.distribution.NormalDistribution;
+import utility.Utility;
 
 public class ChinaOption extends JPanel implements Runnable {
 
@@ -154,15 +155,15 @@ public class ChinaOption extends JPanel implements Runnable {
     static void updateData(double opPrice, double stock, double vol, double bid, double ask, Option opt) {
         SwingUtilities.invokeLater(() -> {
 
-            labelList.get(10).setText(ChinaStockHelper.getStrCheckNull(opPrice));
-            labelList.get(11).setText(ChinaStockHelper.getStrCheckNull(stock));
-            labelList.get(12).setText(ChinaStockHelper.getStrCheckNull(opt.getStrike()));
-            labelList.get(13).setText(ChinaStockHelper.getStrCheckNull(vol));
-            labelList.get(14).setText(ChinaStockHelper.getStrCheckNull(bid));
-            labelList.get(15).setText(ChinaStockHelper.getStrCheckNull(ask));
+            labelList.get(10).setText(Utility.getStrCheckNull(opPrice));
+            labelList.get(11).setText(Utility.getStrCheckNull(stock));
+            labelList.get(12).setText(Utility.getStrCheckNull(opt.getStrike()));
+            labelList.get(13).setText(Utility.getStrCheckNull(vol));
+            labelList.get(14).setText(Utility.getStrCheckNull(bid));
+            labelList.get(15).setText(Utility.getStrCheckNull(ask));
 
-            labelList.get(16).setText(ChinaStockHelper.getStrCheckNull(getDelta(stock, opt.getStrike(), vol, opt.getTimeToExpiry(), opt.getRate())));
-            labelList.get(17).setText(ChinaStockHelper.getStrCheckNull(getGamma(stock, opt.getStrike(), vol, opt.getTimeToExpiry(), opt.getRate())));
+            labelList.get(16).setText(Utility.getStrCheckNull(getDelta(stock, opt.getStrike(), vol, opt.getTimeToExpiry(), opt.getRate())));
+            labelList.get(17).setText(Utility.getStrCheckNull(getGamma(stock, opt.getStrike(), vol, opt.getTimeToExpiry(), opt.getRate())));
             timeLabel.setText(LocalTime.now().toString());
 
         });
@@ -262,7 +263,7 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
     static double getDelta(double s, double k, double v, double t, double r) {
-        System.out.println(ChinaStockHelper.getStr(" delta params ", s, k, v, t, r));
+        System.out.println(Utility.getStr(" delta params ", s, k, v, t, r));
         double d1 = (Math.log(s / k) + (r + 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
         double nd1 = (new NormalDistribution()).cumulativeProbability(d1);
         return Math.round(1000d * nd1) / 1000d;

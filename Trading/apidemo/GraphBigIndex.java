@@ -2,6 +2,7 @@ package apidemo;
 
 import auxiliary.SimpleBar;
 import graph.GraphFillable;
+import utility.Utility;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaStock.BAR_LOW;
@@ -497,9 +498,9 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
             g2.drawString("Day1: " + day1, getWidth() - widthOffset, 200);
             g2.drawString("Day2: " + day2, getWidth() - widthOffset, 215);
             g2.drawString("Day3: " + day3, getWidth() - widthOffset, 230);
-            g2.drawString(getStr("vr1:", vr1), getWidth() - widthOffset, 260);
-            g2.drawString(getStr("vr2:", vr2), getWidth() - widthOffset, 275);
-            g2.drawString(getStr("vr3: ", vr3), getWidth() - widthOffset, 290);
+            g2.drawString(Utility.getStr("vr1:", vr1), getWidth() - widthOffset, 260);
+            g2.drawString(Utility.getStr("vr2:", vr2), getWidth() - widthOffset, 275);
+            g2.drawString(Utility.getStr("vr3: ", vr3), getWidth() - widthOffset, 290);
         }
 
         g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.5F));

@@ -1383,7 +1383,7 @@ public final class ChinaStock extends JPanel {
                         stratAMMap.put(name, "AM max ");
                         stratTimeMap.put(name, LocalTime.now());
                         strategyTotalMap.get(name).put(lastEntryTime, new Strategy(lastEntryTime, last, StratType.MAX));
-                        String detailedMessage = getStr("AM MAX", name, nameMap.get(name), lastEntryTime, " system time: ", LocalTime.now());
+                        String detailedMessage = Utility.getStr("AM MAX", name, nameMap.get(name), lastEntryTime, " system time: ", LocalTime.now());
                         createDialogJD(name, detailedMessage, lastEntryTime);
                         interestedName.put(name, true);
                     }
@@ -1392,7 +1392,7 @@ public final class ChinaStock extends JPanel {
                     if (lastEntryTime.isAfter(LocalTime.of(9, 40))
                             && last < previousLow && amFirst10 > 0.0 && log(last / amMax) < -0.02 && last < minY && amhoY > 0.02 && percentileY < 50) {
 
-                        String detailedMessage = getStr("AM PANIC", name, nameMap.get(name), lastEntryTime, " system time: ", LocalTime.now());
+                        String detailedMessage = Utility.getStr("AM PANIC", name, nameMap.get(name), lastEntryTime, " system time: ", LocalTime.now());
 
                         createDialogJD(name, detailedMessage, lastEntryTime);
                     }
@@ -1510,8 +1510,8 @@ public final class ChinaStock extends JPanel {
                     if (pmReturn > amReturn * ratioBreakFloor && amReturn > 0.0 && amReturn >= 0.0 && amFirst10 >= 0.0
                             && sizeLast > sizeThresh && getVRPercentilePM(name) > vrpFloor && vrLast > vrFloor) {
 
-                        String message = getStr("amReturn Broken", name, lastEntryTime);
-                        String detailedMessage = getStr("am Return thresh Broken", name, nameMap.get(name), lastEntryTime, " system time: ", LocalTime.now());
+                        String message = Utility.getStr("amReturn Broken", name, lastEntryTime);
+                        String detailedMessage = Utility.getStr("am Return thresh Broken", name, nameMap.get(name), lastEntryTime, " system time: ", LocalTime.now());
                         stratPMMap.put(name, message);
                         stratTimeMap.put(name, LocalTime.now());
                         strategyTotalMap.get(name).put(lastEntryTime, new Strategy(lastEntryTime, last, StratType.AMRETURN));
@@ -1529,7 +1529,7 @@ public final class ChinaStock extends JPanel {
                             && getVRPercentilePM(name) > vrpFloor && vrLast > vrFloor) {
 
                         String message = "破Range";
-                        String detailedMessage = getStr("破Range", name, nameMap.get(name), lastEntryTime, "system time : ", LocalTime.now());
+                        String detailedMessage = Utility.getStr("破Range", name, nameMap.get(name), lastEntryTime, "system time : ", LocalTime.now());
                         stratPMMap.put(name, message);
                         stratTimeMap.put(name, LocalTime.now());
                         strategyTotalMap.get(name).put(lastEntryTime, new Strategy(lastEntryTime, last, StratType.AMRANGE));
@@ -1547,7 +1547,7 @@ public final class ChinaStock extends JPanel {
 
                     //pm panic
                     if (last < previousLow && amFirst10 > 0.0 && log(last / dayMax) < -0.02 && last < minY && amhoY > 0.02 && percentileY < 50) {
-                        String detailedMessage = getStr("PM PANIC", name, nameMap.get(name), lastEntryTime, " system time: ", LocalTime.now());
+                        String detailedMessage = Utility.getStr("PM PANIC", name, nameMap.get(name), lastEntryTime, " system time: ", LocalTime.now());
                         createDialogJD(name, detailedMessage, lastEntryTime);
                     }
 
@@ -1561,7 +1561,7 @@ public final class ChinaStock extends JPanel {
                     stratTimeMap.put(name, ma20FirstBreakTime);
                     strategyTotalMap.get(name).put(lastEntryTime, new Strategy(lastEntryTime, last, StratType.MA));
 
-                    String msg = getStr("MA Break", name, last, nameMap.get(name), "Sina Time", lastEntryTime.toString(), "System time", LocalTime.now().toString());
+                    String msg = Utility.getStr("MA Break", name, last, nameMap.get(name), "Sina Time", lastEntryTime.toString(), "System time", LocalTime.now().toString());
                     createDialogJD(name, msg, lastEntryTime);
                     ma20RBroken.put(name, true);
                     interestedName.put(name, true);
@@ -1576,7 +1576,7 @@ public final class ChinaStock extends JPanel {
                     stratAMMap.put(name, "breaking vol");
                     stratTimeMap.put(name, LocalTime.now());
                     strategyTotalMap.get(name).put(lastEntryTime, new Strategy(lastEntryTime, last, StratType.VOL));
-                    String msg = getStr("Vol Break", name, last, nameMap.get(name), "Sina Time", lastEntryTime, "System time" + LocalTime.now());
+                    String msg = Utility.getStr("Vol Break", name, last, nameMap.get(name), "Sina Time", lastEntryTime, "System time" + LocalTime.now());
 
                     createDialogJD(name, msg, lastEntryTime);
                     volBrokenTime.put(name, lastEntryTime);
@@ -1600,7 +1600,7 @@ public final class ChinaStock extends JPanel {
 
                 if (lastEntryTime.isAfter(AM1000T) && lastMinReturn > 0 && rangeZScore0 > 3 && volZScore > 1000 && lastOP < 20 && lastCP > 80 && percentileBar > 80) {
 
-                    String msg = getStr("price burst", name, last, nameMap.get(name), "Sina Time", lastEntryTime, "System time", LocalTime.now(), "Zscore0", rangeZScore0);
+                    String msg = Utility.getStr("price burst", name, last, nameMap.get(name), "Sina Time", lastEntryTime, "System time", LocalTime.now(), "Zscore0", rangeZScore0);
 
                     createDialogJD(name, msg, lastEntryTime);
 

@@ -1,7 +1,6 @@
 package historical;
 
 import apidemo.ChinaMain;
-import apidemo.ChinaStockHelper;
 import utility.SharpeUtility;
 import auxiliary.SimpleBar;
 import client.Contract;
@@ -9,6 +8,7 @@ import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
 import handler.HistoricalHandler;
+import utility.Utility;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -236,7 +236,7 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
             double sd = SharpeUtility.getSD(ret);
             double sr = SharpeUtility.getSharpe(ret);
             double perc = SharpeUtility.getPercentile(USALL.get(k));
-            System.out.println(ChinaStockHelper.getStrTabbed(" stock mean sd sr ", k, mean, sd, sr));
+            System.out.println(Utility.getStrTabbed(" stock mean sd sr ", k, mean, sd, sr));
         });
     }
 
@@ -248,7 +248,7 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
         double sr = SharpeUtility.getSharpe(ret);
         double perc = SharpeUtility.getPercentile(USALL.get(stock));
         USResultMap.get(stock).fillResult(mean, sd, sr, perc);
-        System.out.println(ChinaStockHelper.getStrTabbed(" stock mean sd sr perc", stock, mean, sd, sr, perc));
+        System.out.println(Utility.getStrTabbed(" stock mean sd sr perc", stock, mean, sd, sr, perc));
     }
 
     public static void main(String[] args) {

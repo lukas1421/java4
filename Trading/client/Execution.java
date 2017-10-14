@@ -2,7 +2,7 @@
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 package client;
 
-import apidemo.ChinaStockHelper;
+import utility.Utility;
 
 public class Execution {
 
@@ -218,6 +218,6 @@ public class Execution {
 //        return ChinaStockHelper.getStrCheckNull("execution details: ",m_acctNumber,m_avgPrice,m_clientId,m_cumQty,m_evMultiplier,m_evRule,
 //                m_exchange,m_execId,m_liquidation,m_modelCode,m_orderId,m_orderRef,m_permId,m_price,m_shares,m_side,m_time);
 
-        return ChinaStockHelper.getStrCheckNull("execution details: ", m_time, m_side, m_avgPrice, m_cumQty, m_price);
+        return Utility.getStrCheckNull("execution details: ", m_time, m_side, m_avgPrice, m_cumQty, m_price);
     }
 }

@@ -1,6 +1,6 @@
 package apidemo;
 
-import static apidemo.ChinaStockHelper.getStr;
+import static utility.Utility.getStr;
 
 import TradeType.IBTrade;
 import auxiliary.SimpleBar;
@@ -19,6 +19,8 @@ import controller.ApiController;
 import controller.ApiController.ITopMktDataHandler;
 import graph.GraphBarGen;
 import handler.HistoricalHandler;
+import utility.Utility;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -459,7 +461,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
                 }
 
                 //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                System.out.println(ChinaStockHelper.getStrCheckNull(dt, open, high, low, close));
+                System.out.println(Utility.getStrCheckNull(dt, open, high, low, close));
                 xuData.put(lt, new SimpleBar(open, high, low, close));
             }
         } else {
@@ -570,7 +572,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
                 }
 
                 //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                System.out.println(ChinaStockHelper.getStrCheckNull(dt, open, high, low, close));
+                System.out.println(Utility.getStrCheckNull(dt, open, high, low, close));
                 xuData.put(lt, new SimpleBar(open, high, low, close));
             }
         } else {
@@ -858,10 +860,10 @@ class XUOrderHandler implements ApiController.IOrderHandler {
 
     @Override
     public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
-        XUTrader.updateLog(ChinaStockHelper.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
+        XUTrader.updateLog(Utility.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
 
         if (status.equals(OrderStatus.Filled)) {
-            XUTrader.createDialog(ChinaStockHelper.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
+            XUTrader.createDialog(Utility.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
         }
     }
 
@@ -884,10 +886,10 @@ class XULiveOrderHandler implements ApiController.ILiveOrderHandler {
 
     @Override
     public void orderStatus(int orderId, OrderStatus status, int filled, int remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
-        XUTrader.updateLog(ChinaStockHelper.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
+        XUTrader.updateLog(Utility.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
 
         if (status.equals(OrderStatus.Filled)) {
-            XUTrader.createDialog(ChinaStockHelper.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
+            XUTrader.createDialog(Utility.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
         }
     }
 
@@ -906,10 +908,10 @@ class XULevel2Handler implements ApiController.IDeepMktDataHandler {
 
         SwingUtilities.invokeLater(() -> {
             if (side.equals(Types.DeepSide.BUY)) {
-                XUTrader.bidLabelList.get(position).setText(ChinaStockHelper.getStrCheckNull(price, "            ", size));
+                XUTrader.bidLabelList.get(position).setText(Utility.getStrCheckNull(price, "            ", size));
                 XUTrader.bidPriceList.put("bid" + Integer.toString(position + 1), price);
             } else {
-                XUTrader.askLabelList.get(position).setText(ChinaStockHelper.getStrCheckNull(price, "            ", size));
+                XUTrader.askLabelList.get(position).setText(Utility.getStrCheckNull(price, "            ", size));
                 XUTrader.offerPriceList.put("ask" + Integer.toString(position + 1), price);
             }
         });

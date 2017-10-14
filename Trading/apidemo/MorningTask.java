@@ -9,6 +9,7 @@ import controller.ApiConnection.ILogger.DefaultLogger;
 import controller.ApiController;
 import controller.ApiController.IConnectionHandler.DefaultConnectionHandler;
 import handler.HistoricalHandler;
+import utility.Utility;
 
 import java.io.*;
 //import java.net.InetSocketAddress;
@@ -129,7 +130,7 @@ public final class MorningTask implements HistoricalHandler {
                 List<String> todayList = Arrays.asList(currentLine.split("\t"));
                 List<String> ytdList = Arrays.asList(previousLine.split("\t"));
 
-                String output = ChinaStockHelper.getStrTabbed(s, pd(todayList, 4), pd(ytdList, 4),
+                String output = Utility.getStrTabbed(s, pd(todayList, 4), pd(ytdList, 4),
                         Double.toString(Math.round(10000d * (pd(todayList, 4) / pd(ytdList, 4) - 1)) / 100d) + "%");
                 System.out.println(" stock return " + s + " " + output);
 
@@ -152,7 +153,7 @@ public final class MorningTask implements HistoricalHandler {
                     Matcher matcher = DATA_PATTERN.matcher(line);
                     dataList = Arrays.asList(line.split(","));
                     if (matcher.find()) {
-                        out.write(ChinaStockHelper.getStrTabbed(matcher.group(1), pd(dataList, 3), pd(dataList, 2),
+                        out.write(Utility.getStrTabbed(matcher.group(1), pd(dataList, 3), pd(dataList, 2),
                                 Double.toString(Math.round(10000d * (pd(dataList, 3) / pd(dataList, 2) - 1)) / 100d) + "%"));
                         out.newLine();
                     }
@@ -455,7 +456,7 @@ public final class MorningTask implements HistoricalHandler {
         NavigableMap<LocalTime, SimpleBar> dataMap = new TreeMap<>();
 
         //AmOpen	931	935	940	AmClose	AmMax	AmMin	AmMaxT	AmMinT	PmOpen	Pm1310	PmClose	PmMax	PmMin	PmMaxT	PmMinT
-        final String headers = ChinaStockHelper.getStrTabbed("AmOpen", "931", "935", "940", "AmClose",
+        final String headers = Utility.getStrTabbed("AmOpen", "931", "935", "940", "AmClose",
                 "AmMax", "AmMin", "AmMaxT", "AmMinT", "PmOpen", "Pm1310", "PmClose", "PmMax", "PmMin", "PmMaxT", "PmMinT");
         String data;
 
@@ -504,7 +505,7 @@ public final class MorningTask implements HistoricalHandler {
         /*        final String headers = ChinaStockHelper.getStrTabbed("AmOpen","931","935","940","AmClose",
                 "AmMax","AmMin","AmMaxT","AmMinT","PmOpen","Pm1310","PmClose","PmMax","PmMin","PmMaxT","PmMinT");
         String data;*/
-        data = ChinaStockHelper.getStrTabbed(amopen, c931, c935, c940, amclose, ammax, ammin, convertLTtoString(ammaxt),
+        data = Utility.getStrTabbed(amopen, c931, c935, c940, amclose, ammax, ammin, convertLTtoString(ammaxt),
                 convertLTtoString(ammint), pmopen, pm1310, pmclose, pmmax, pmmin,
                 convertLTtoString(pmmaxt), convertLTtoString(pmmint));
 

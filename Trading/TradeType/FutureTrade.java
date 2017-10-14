@@ -1,6 +1,6 @@
 package TradeType;
 
-import apidemo.ChinaStockHelper;
+import utility.Utility;
 
 public class FutureTrade extends Trade {
 
@@ -22,7 +22,7 @@ public class FutureTrade extends Trade {
 
     @Override
     public String toString() {
-        return ChinaStockHelper.getStr(" future trade ", " price ", price, "vol ", size);
+        return Utility.getStr(" future trade ", " price ", price, "vol ", size);
     }
 
 }

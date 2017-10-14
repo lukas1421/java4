@@ -1,9 +1,10 @@
 package apidemo;
 
 import TradeType.Trade;
+import utility.Utility;
 
 import static apidemo.ChinaStock.TIMEMAX;
-import static apidemo.ChinaStockHelper.getStr;
+import static utility.Utility.getStr;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -322,7 +323,7 @@ final class GraphPnl extends JComponent {
                         && ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() != 0).count() > 0) {
 
                     double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).values().stream().map(e -> (Trade) e).mapToInt(Trade::getSize).filter(n -> n != 0).sum();
-                    g.drawString(ChinaStockHelper.getStr(pos), x - 20, close - (mult * 50));
+                    g.drawString(Utility.getStr(pos), x - 20, close - (mult * 50));
                     g.drawLine(x, close - (mult * 40), x, close);
                     mult = -1 * mult;
 
@@ -347,7 +348,7 @@ final class GraphPnl extends JComponent {
                         && ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).count() > 0) {
 
                     double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).values().stream().map(e -> (Trade) e).mapToInt(Trade::getSize).filter(n -> n > 0).sum();
-                    g.drawString(ChinaStockHelper.getStr(pos), x - 20, close - (mult * 50));
+                    g.drawString(Utility.getStr(pos), x - 20, close - (mult * 50));
                     g.drawLine(x, close - (mult * 40), x, close);
                     mult = -1 * mult;
 
@@ -370,7 +371,7 @@ final class GraphPnl extends JComponent {
                 if (ChinaPosition.tradesMap.containsKey(name) && ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false)
                         .entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).count() > 0) {
                     double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).values().stream().map(e -> (Trade) e).mapToInt(Trade::getSize).filter(n -> n < 0).sum();
-                    g.drawString(ChinaStockHelper.getStr(pos), x - 20, close - (mult * 50));
+                    g.drawString(Utility.getStr(pos), x - 20, close - (mult * 50));
                     g.drawLine(x, close - (mult * 40), x, close);
                     mult = -1 * mult;
                 }

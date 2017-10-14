@@ -1,5 +1,7 @@
 package apidemo;
 
+import utility.Utility;
+
 import static apidemo.ChinaStock.industryNameMap;
 import static apidemo.ChinaStock.sharpeMap;
 import java.awt.BorderLayout;
@@ -899,7 +901,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, false))) {
             ChinaData.priceMapBar.get("sh000905").entrySet().stream().forEach(e -> {
                 try {
-                    out.write(ChinaStockHelper.getStr(e.getKey(), e.getValue().toString()));
+                    out.write(Utility.getStr(e.getKey(), e.getValue().toString()));
                     out.newLine();
                 } catch (IOException ex) {
                     System.out.println(" io exception in sampling");

@@ -1,6 +1,6 @@
 package auxiliary;
 
-import static apidemo.ChinaStockHelper.getStr;
+import static utility.Utility.getStr;
 import java.io.Serializable;
 import java.util.function.BinaryOperator;
 

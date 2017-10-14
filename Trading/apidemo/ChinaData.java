@@ -3,8 +3,8 @@ package apidemo;
 import static apidemo.ChinaDataYesterday.convertTimeToInt;
 import static apidemo.ChinaMain.controller;
 import static apidemo.ChinaStock.*;
-import static apidemo.ChinaStockHelper.blobify;
-import static apidemo.ChinaStockHelper.getStr;
+import static utility.Utility.blobify;
+import static utility.Utility.getStr;
 import static apidemo.ChinaStockHelper.unblob;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -69,6 +69,7 @@ import javax.swing.table.TableCellRenderer;
 import auxiliary.SimpleBar;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import utility.Utility;
 
 public final class ChinaData extends JPanel {
 
@@ -434,7 +435,7 @@ public final class ChinaData extends JPanel {
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, false))) {
             symbolNames.forEach(s -> {
                 try {
-                    out.append(ChinaStockHelper.getStrComma(s, priceMap.getOrDefault(s, 0.0), closeMap.getOrDefault(s, 0.0)));
+                    out.append(Utility.getStrComma(s, priceMap.getOrDefault(s, 0.0), closeMap.getOrDefault(s, 0.0)));
                     out.newLine();
                 } catch (IOException ex) {
                     Logger.getLogger(ChinaData.class.getName()).log(Level.SEVERE, null, ex);
@@ -625,7 +626,7 @@ public final class ChinaData extends JPanel {
             }
         }).thenAccept(
                 v -> {
-                    ChinaMain.updateSystemNotif(ChinaStockHelper.getStr("存", saveclass.getSimpleName(),
+                    ChinaMain.updateSystemNotif(Utility.getStr("存", saveclass.getSimpleName(),
                             LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
                             SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
                     System.out.println(getStr(" done saving ", LocalTime.now()));
@@ -654,7 +655,7 @@ public final class ChinaData extends JPanel {
             System.out.println(" load finished " + " size is " + priceMapBar.size());
         }).thenAccept(
                 v -> {
-                    ChinaMain.updateSystemNotif(ChinaStockHelper.getStr(" LOAD HIB T DONE ",
+                    ChinaMain.updateSystemNotif(Utility.getStr(" LOAD HIB T DONE ",
                             LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
                             SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
                     ));
@@ -675,7 +676,7 @@ public final class ChinaData extends JPanel {
             });
         }).thenAccept(
                 v -> {
-                    ChinaMain.updateSystemNotif(ChinaStockHelper.getStr(" Loading HIB-Y done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                    ChinaMain.updateSystemNotif(Utility.getStr(" Loading HIB-Y done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
                 }
         );
 
@@ -690,7 +691,7 @@ public final class ChinaData extends JPanel {
             });
         }).thenAccept(
                 v -> {
-                    ChinaMain.updateSystemNotif(ChinaStockHelper.getStr(" Loading HIB-Y2 done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                    ChinaMain.updateSystemNotif(Utility.getStr(" Loading HIB-Y2 done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
                 }
         );
     }
@@ -737,7 +738,7 @@ public final class ChinaData extends JPanel {
             }
         }).thenAccept(
                 v -> {
-                    ChinaMain.updateSystemNotif(ChinaStockHelper.getStr(" 存 OHLC ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                    ChinaMain.updateSystemNotif(Utility.getStr(" 存 OHLC ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
                     System.out.println(getStr(" done saving ", LocalTime.now()));
                 }
         );
@@ -761,7 +762,7 @@ public final class ChinaData extends JPanel {
                 session.getTransaction().commit();
             }
         }).thenAccept(v -> {
-            ChinaMain.updateSystemNotif(ChinaStockHelper.getStr(" HIB Today -> YTD DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+            ChinaMain.updateSystemNotif(Utility.getStr(" HIB Today -> YTD DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
         }
         ).thenAccept(v -> {
             CompletableFuture.runAsync(() -> {
@@ -771,7 +772,7 @@ public final class ChinaData extends JPanel {
                 loadHibernateYesterday();
             });
         }).thenAccept(v -> {
-            ChinaMain.updateSystemNotif(ChinaStockHelper.getStr(" Loading done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+            ChinaMain.updateSystemNotif(Utility.getStr(" Loading done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
         });
     }
 
@@ -831,11 +832,11 @@ public final class ChinaData extends JPanel {
                 int pmMinT = convertTimeToInt(GETMINTIME.apply(ticker, PM_PRED));
 
                 try (BufferedWriter out = new BufferedWriter(new FileWriter(shcompSource))) {
-                    out.append(ChinaStockHelper.getStrTabbed("AmOpen", "931", "935", "940", "AmClose", "AmMax", "AmMin", "AmMaxT", "AmMinT",
+                    out.append(Utility.getStrTabbed("AmOpen", "931", "935", "940", "AmClose", "AmMax", "AmMin", "AmMaxT", "AmMinT",
                             "PmOpen", "Pm1310", "PmClose", "PmMax", "PmMin", "PmMaxT", "PmMinT"));
 
                     out.newLine();
-                    out.append(ChinaStockHelper.getStrTabbed(open, v931, v935, v940, amClose, amMax, amMin, amMaxT, amMinT,
+                    out.append(Utility.getStrTabbed(open, v931, v935, v940, amClose, amMax, amMin, amMaxT, amMinT,
                             pmOpen, pm1310, pmClose, pmMax, pmMin, pmMaxT, pmMinT));
                 } catch (IOException x) {
                     x.printStackTrace();
@@ -843,7 +844,7 @@ public final class ChinaData extends JPanel {
             }
         }).thenAccept(
                 v -> {
-                    ChinaMain.updateSystemNotif(ChinaStockHelper.getStr(" Write SHCOMP ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                    ChinaMain.updateSystemNotif(Utility.getStr(" Write SHCOMP ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
                 }
         );
 
