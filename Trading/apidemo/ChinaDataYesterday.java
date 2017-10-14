@@ -66,6 +66,7 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
 
 import auxiliary.SimpleBar;
+import graph.GraphIndustry;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import saving.ChinaSaveOHLCYV;
@@ -95,10 +96,10 @@ public final class ChinaDataYesterday extends JPanel {
     public static volatile Map<String, Double> maxMapY2 = new ConcurrentHashMap<>();
     public static volatile Map<String, Double> minMapY2 = new ConcurrentHashMap<>();
 
-    static volatile Map<String, Integer> maxTY = new ConcurrentHashMap<>();
-    static volatile Map<String, Integer> minTY = new ConcurrentHashMap<>();
-    static volatile Map<String, Integer> amMaxTY = new ConcurrentHashMap<>();
-    static volatile Map<String, Integer> amMinTY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Integer> maxTY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Integer> minTY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Integer> amMaxTY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Integer> amMinTY = new ConcurrentHashMap<>();
     static volatile Map<String, Integer> pmMaxTY = new ConcurrentHashMap<>();
     static volatile Map<String, Integer> pmMinTY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> amFirst1Y = new ConcurrentHashMap<>();
@@ -111,16 +112,16 @@ public final class ChinaDataYesterday extends JPanel {
     static volatile Map<String, Double> openPY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> retAMCOY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> retPMCOY = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> retCOY = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> retCCY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Double> retCOY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Double> retCCY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> retOPCY = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> retCHY = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> retCLY = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> retHOY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Double> retCHY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Double> retCLY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Double> retHOY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> retLOY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> amHOY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> amClosePY = new ConcurrentHashMap<>();
-    static volatile Map<String, Long> sizeY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Long> sizeY = new ConcurrentHashMap<>();
     static volatile Map<String, Long> amFirst1YOP = new ConcurrentHashMap<>();
     static volatile Map<String, Long> amFirst1YCP = new ConcurrentHashMap<>();
     static volatile Map<String, Long> amFirst10YOP = new ConcurrentHashMap<>();
@@ -716,20 +717,6 @@ public final class ChinaDataYesterday extends JPanel {
         ;
     }
 
-    static Map<String, ConcurrentSkipListMap<LocalTime, Double>> mapConverter(Map<String, ? extends NavigableMap<LocalTime, Double>> mp) {
-        ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> res = new ConcurrentHashMap<>();
-
-        mp.keySet().forEach((String name) -> {
-            res.put(name, new ConcurrentSkipListMap<>());
-            mp.get(name).keySet().forEach((LocalTime t) -> {
-                res.get(name).put(t, mp.get(name).get(t));
-            });
-            System.out.println(" for key " + name + " result " + res.get(name));
-        });
-        System.out.println(" converting done ");
-        return res;
-    }
-
     static void compute() {
         CompletableFuture.runAsync(() -> {
             symbolNamesFull.forEach(name -> {
@@ -851,11 +838,11 @@ public final class ChinaDataYesterday extends JPanel {
         });
     }
 
-    static double getAMCOY(String name) {
+    public static double getAMCOY(String name) {
         return noZeroArrayGen(name, openMapY, amCloseY) ? round(1000d * (amCloseY.get(name) / openMapY.get(name) - 1)) / 10d : 0.0;
     }
 
-    static double getPMCOY(String name) {
+    public static double getPMCOY(String name) {
         return (noZeroArrayGen(name, amCloseY, closeMapY)) ? round(1000d * (closeMapY.get(name) / amCloseY.get(name) - 1)) / 10d : 0.0;
     }
 

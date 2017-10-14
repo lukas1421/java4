@@ -52,7 +52,7 @@ public class SinaStock implements Runnable {
     Matcher matcher;
     String line;
 
-    static final double OPEN = getOpen();
+    public static final double OPEN = getOpen();
     static double rtn = 0.0;
     static double sinaVol = 0.0;
     static double currPrice = 0.0;
@@ -183,7 +183,7 @@ public class SinaStock implements Runnable {
         }
     }
 
-    static double getOpen() {
+    public static double getOpen() {
         String l;
         double temp = 0.0;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "output.txt")))) {

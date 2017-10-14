@@ -1,5 +1,8 @@
-package apidemo;
+package graph;
 
+import apidemo.ChinaDataYesterday;
+import apidemo.ChinaStock;
+import apidemo.ChinaStockHelper;
 import auxiliary.SimpleBar;
 import graph.GraphFillable;
 import utility.Utility;
@@ -567,7 +570,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
             minY2 = tmY2.entrySet().stream().min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
         }
 
-        return minGen(minYtd, minToday, minY2);
+        return Utility.minGen(minYtd, minToday, minY2);
     }
 
     private double getMax() {
@@ -579,23 +582,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
         double maxY2 = (tmY2 != null && tmY2.size() > 0) ? tmY2.entrySet().stream().filter(entry -> !entry.getValue().containsZero())
                 .max(Utility.BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
 
-        return maxGen(maxYtd, maxToday, maxY2);
-    }
-
-    static double minGen(double... l) {
-        double res = Double.MAX_VALUE;
-        for (double d : l) {
-            res = Math.min(res, d);
-        }
-        return res;
-    }
-
-    static double maxGen(double... l) {
-        double res = Double.MIN_VALUE;
-        for (double d : l) {
-            res = Math.max(res, d);
-        }
-        return res;
+        return Utility.maxGen(maxYtd, maxToday, maxY2);
     }
 
     int getPMchgY() {

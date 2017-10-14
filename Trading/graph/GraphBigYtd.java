@@ -1,7 +1,8 @@
-package apidemo;
+package graph;
 
 //import static apidemo.ChinaDataYesterday.*;
 //import static apidemo.ChinaStock.*;
+import apidemo.ChinaStock;
 import auxiliary.SimpleBar;
 import graph.GraphFillable;
 import utility.Utility;
@@ -20,8 +21,8 @@ import static utility.Utility.BAR_LOW;
 import static utility.Utility.NORMAL_MAP;
 import static utility.Utility.TIMEMAX;
 import static utility.Utility.getStr;
-import static apidemo.GraphBigIndex.maxGen;
-import static apidemo.GraphBigIndex.minGen;
+import static utility.Utility.maxGen;
+import static utility.Utility.minGen;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -43,7 +44,7 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toMap;
 import javax.swing.JComponent;
 
-class GraphBigYtd extends JComponent implements GraphFillable {
+public class GraphBigYtd extends JComponent implements GraphFillable {
 
     private static final int WIDTH_YTD = 2;
     private int height;
@@ -76,7 +77,7 @@ class GraphBigYtd extends JComponent implements GraphFillable {
     static final Predicate<? super Entry<LocalTime, SimpleBar>> CONTAINS_NO_ZERO = e -> !e.getValue().containsZero();
     static final BasicStroke BS3 = new BasicStroke(3);
 
-    GraphBigYtd() {
+    public GraphBigYtd() {
         name = "";
         chineseName = "";
         bench = "";

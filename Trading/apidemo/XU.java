@@ -48,9 +48,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import javax.swing.JButton;
+
+import graph.GraphBar;
+import graph.GraphXUSI;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import static apidemo.GraphXUSI.AM900;
+import static graph.GraphXUSI.AM900;
 import client.TickType;
 import client.Types.MktDataType;
 import saving.HibernateUtil;
@@ -61,7 +64,7 @@ import java.awt.event.MouseEvent;
 import java.util.Map.Entry;
 import javax.swing.SwingUtilities;
 
-final class XU extends JPanel implements ITopMktDataHandler {
+public final class XU extends JPanel implements ITopMktDataHandler {
 
     static volatile NavigableMap<LocalTime, SimpleBar> lastFutPrice = new ConcurrentSkipListMap<>();
     static volatile NavigableMap<LocalTime, SimpleBar> indexPriceSina = new ConcurrentSkipListMap<>();

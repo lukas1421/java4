@@ -43,13 +43,13 @@ public class GraphBidAsk extends JComponent implements GraphFillable {
     static NavigableMap<LocalTime, Double> tmAsk;
     static Predicate<? super Entry<LocalTime, Double>> containsNoZero = e -> e.getValue() != 0.0;
 
-    static volatile IND ind1 = IND.on;
-    static volatile IND ind2 = IND.on;
-    static volatile IND ind3 = IND.on;
-    static volatile IND ind4 = IND.on;
-    static volatile IND ind5 = IND.on;
+    public static volatile IND ind1 = IND.on;
+    public static volatile IND ind2 = IND.on;
+    public static volatile IND ind3 = IND.on;
+    public static volatile IND ind4 = IND.on;
+    public static volatile IND ind5 = IND.on;
 
-    GraphBidAsk() {
+    public GraphBidAsk() {
         tm = new ConcurrentSkipListMap<>();
         tmBid = new ConcurrentSkipListMap<>();
         tmAsk = new ConcurrentSkipListMap<>();

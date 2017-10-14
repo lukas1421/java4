@@ -1,6 +1,7 @@
 package apidemo;
 
 import auxiliary.GraphXU;
+import graph.GraphChinaFut;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;

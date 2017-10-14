@@ -92,8 +92,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     static Map<String, Double> costMap = new HashMap();
     public static Map<String, ConcurrentSkipListMap<LocalTime, ? super Trade>> tradesMap = new ConcurrentHashMap<>();
     static Map<String, ConcurrentSkipListMap<LocalTime, Double>> tradePnlMap = new ConcurrentHashMap<>();
-    static volatile HashMap<String, Double> wtdMaxMap = new HashMap<>();
-    static volatile HashMap<String, Double> wtdMinMap = new HashMap<>();
+    public static volatile HashMap<String, Double> wtdMaxMap = new HashMap<>();
+    public static volatile HashMap<String, Double> wtdMinMap = new HashMap<>();
     static String selectedNameStock;
     static double beginningNAV;
     static volatile NavigableMap<String, Double> ytdPNLMap;
@@ -1122,7 +1122,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //        double last = netPNLMap.lastEntry().getValue();
 //
 //    }
-    static int getPercentile(double max, double min, double now) {
+    public static int getPercentile(double max, double min, double now) {
         if (max != 0.0 && min != 0.0 && now != 0.0 && max != min) {
             double max1 = Math.max(max, now);
             double min1 = Math.min(min, now);
@@ -1132,7 +1132,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
     }
 
-    static int getPercentileWrapper(String name) {
+    public static int getPercentileWrapper(String name) {
         double curr = 0.0;
         double maxT = 0.0;
         double minT = 0.0;
@@ -1171,7 +1171,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return 0;
     }
 
-    static double getPotentialReturnToMid(String name) {
+    public static double getPotentialReturnToMid(String name) {
 
         double curr = 0.0;
         double maxT = 0.0;
@@ -1193,18 +1193,18 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return 0.0;
     }
 
-    static int getCurrentDelta(String name) {
+    public static int getCurrentDelta(String name) {
         return (int) Math.round(fxMap.getOrDefault(name, 1.0) * priceMap.getOrDefault(name, 0.0) * getNetPosition(name) / 1000d);
     }
 
-    static double getMtmPnl(String name) {
+    public static double getMtmPnl(String name) {
         if (openPositionMap.containsKey(name)) {
             return r((priceMap.getOrDefault(name, 0.0) - closeMap.getOrDefault(name, 0.0)) * openPositionMap.getOrDefault(name, 0) * fxMap.getOrDefault(name, 1.0));
         }
         return 0.0;
     }
 
-    static double getTradePnl(String name) {
+    public static double getTradePnl(String name) {
         if (tradesMap.containsKey(name) && tradesMap.get(name).size() > 0) {
             return (getBuyTradePnl(name) + getSellTradePnl(name));
         }

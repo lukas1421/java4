@@ -1,5 +1,8 @@
-package apidemo;
+package graph;
 
+import apidemo.ChinaData;
+import apidemo.ChinaDataYesterday;
+import apidemo.ChinaStock;
 import graph.GraphFillable;
 import utility.Utility;
 

@@ -1,5 +1,9 @@
-package apidemo;
+package graph;
 
+import apidemo.ChinaData;
+import apidemo.ChinaDataYesterday;
+import apidemo.ChinaStock;
+import apidemo.ChinaStockHelper;
 import auxiliary.SimpleBar;
 import graph.GraphFillable;
 import utility.Utility;
@@ -74,7 +78,7 @@ public class GraphBig extends JComponent implements GraphFillable {
         this.tm = tm.entrySet().stream().filter(Utility.CONTAINS_NO_ZERO).collect(toMap(Entry::getKey, Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
     }
 
-    GraphBig() {
+    public GraphBig() {
         name = "";
         chineseName = "";
         maxAMT = LocalTime.of(9, 30);

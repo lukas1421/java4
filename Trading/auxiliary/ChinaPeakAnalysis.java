@@ -1,5 +1,6 @@
-package apidemo;
+package auxiliary;
 
+import apidemo.ChinaData;
 import auxiliary.SimpleBar;
 
 import static apidemo.ChinaData.tradeTime;
@@ -24,9 +25,9 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
 
-class ChinaPeakAnalysis extends JPanel {
+public class ChinaPeakAnalysis extends JPanel {
 
-    static ConcurrentHashMap<Integer, ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Long>>> saveMap = new ConcurrentHashMap<>();
+    public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Long>>> saveMap = new ConcurrentHashMap<>();
 
     BarModel m_model;
 

@@ -1,5 +1,7 @@
 package apidemo;
 
+import graph.GraphSize;
+
 import static apidemo.ChinaData.sizeTotalMap;
 import static apidemo.ChinaData.sizeTotalMapYtd;
 import static apidemo.ChinaData.tradeTime;
@@ -46,7 +48,7 @@ public final class ChinaSizeRatio extends JPanel {
     String line;
     String listNames;
 
-    static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> sizeRatioMap = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> sizeRatioMap = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, Double> sizeRatioStandardizedMap = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, Double> pmF10VRChgStandardizedMap = new ConcurrentHashMap<>();
 
@@ -268,7 +270,7 @@ public final class ChinaSizeRatio extends JPanel {
         return 0.0;
     }
 
-    static NavigableMap<LocalTime, Double> computeSizeRatioName(String name) {
+    public static NavigableMap<LocalTime, Double> computeSizeRatioName(String name) {
         if (sizeTotalMap.containsKey(name)) {
             sizeTotalMap.get(name).keySet().forEach(t -> {
                 if (sizeTotalMapYtd.containsKey(name) && sizeTotalMapYtd.get(name).getOrDefault(t, 0.0) != 0.0) {
@@ -279,7 +281,7 @@ public final class ChinaSizeRatio extends JPanel {
         return sizeRatioMap.getOrDefault(name, new ConcurrentSkipListMap<>());
     }
 
-    static void computeSizeRatio() {
+    public static void computeSizeRatio() {
         if (!sizeTotalMap.isEmpty()) {
             sizeTotalMap.keySet().forEach((key) -> {
                 sizeTotalMap.get(key).keySet().forEach((t) -> {

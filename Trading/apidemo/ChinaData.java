@@ -61,6 +61,7 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableCellRenderer;
 
+import graph.GraphIndustry;
 import saving.ChinaSaveInterface2Blob;
 import auxiliary.SimpleBar;
 import auxiliary.Strategy;
@@ -88,14 +89,14 @@ public final class ChinaData extends JPanel {
     static ConcurrentHashMap<Integer, ConcurrentHashMap<String, ?>> saveMap = new ConcurrentHashMap<>();
     ConcurrentHashMap<Integer, ConcurrentHashMap<String, ?>> saveMap2 = new ConcurrentHashMap<>();
 
-    static volatile Map<String, Double> priceMinuteSharpe = new HashMap<>();
-    static volatile Map<String, Double> wtdSharpe = new HashMap<>();
+    public static volatile Map<String, Double> priceMinuteSharpe = new HashMap<>();
+    public static volatile Map<String, Double> wtdSharpe = new HashMap<>();
 
     static volatile Map<Integer, LocalDate> dateMap = new HashMap<>();
     static volatile Map<LocalDate, Double> ftseOpenMap = new HashMap<>();
 
-    static List<LocalTime> tradeTime = new LinkedList<>();
-    static List<LocalTime> tradeTimePure = new LinkedList<>();
+    public static List<LocalTime> tradeTime = new LinkedList<>();
+    public static List<LocalTime> tradeTimePure = new LinkedList<>();
     static BarModel m_model;
 
     LocalTime lastSaveTime = Utility.AM929T;
@@ -590,7 +591,7 @@ public final class ChinaData extends JPanel {
                 GraphIndustry.getIndustryPriceYtd(priceMapBarYtd);
             });
             CompletableFuture.runAsync(() -> {
-                GraphIndustry.getIndustryVolYtd(sizeTotalMapYtd);
+                Utility.getIndustryVolYtd(sizeTotalMapYtd);
             });
         }).thenAccept(
                 v -> {
@@ -605,7 +606,7 @@ public final class ChinaData extends JPanel {
                 GraphIndustry.getIndustryPriceYtd(priceMapBarY2);
             });
             CompletableFuture.runAsync(() -> {
-                GraphIndustry.getIndustryVolYtd(sizeTotalMapY2);
+                Utility.getIndustryVolYtd(sizeTotalMapY2);
             });
         }).thenAccept(
                 v -> {
@@ -622,7 +623,7 @@ public final class ChinaData extends JPanel {
                 GraphIndustry.getIndustryPriceYtd(priceMapBarY2);
             });
             CompletableFuture.runAsync(() -> {
-                GraphIndustry.getIndustryVolYtd(sizeTotalMapY2);
+                Utility.getIndustryVolYtd(sizeTotalMapY2);
             });
         });
     }
@@ -736,7 +737,7 @@ public final class ChinaData extends JPanel {
 
     }
 
-    static double getVolZScore(String name) {
+    public static double getVolZScore(String name) {
         if (Utility.normalMapGen(name, sizeTotalMap)) {
             NavigableMap<LocalTime, Double> tm = ChinaData.sizeTotalMap.get(name);
             NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();

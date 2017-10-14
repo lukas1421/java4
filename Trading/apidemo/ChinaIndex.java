@@ -1,6 +1,8 @@
 package apidemo;
 
 import auxiliary.SimpleBar;
+import graph.GraphBigIndex;
+import graph.GraphIndustry;
 import utility.Utility;
 
 import static apidemo.ChinaData.priceMapBarYtd;
@@ -34,8 +36,8 @@ import static apidemo.ChinaStock.nameMap;
 import static utility.Utility.noZeroArrayGen;
 import static utility.Utility.normalMapGen;
 import static apidemo.ChinaStock.returnMap;
-import static apidemo.GraphIndustry.getIndustryOpen;
-import static apidemo.GraphIndustry.industryMapBar;
+import static graph.GraphIndustry.getIndustryOpen;
+import static graph.GraphIndustry.industryMapBar;
 import static apidemo.SinaStock.weightMapA50;
 import java.awt.BorderLayout;
 import java.awt.Color;

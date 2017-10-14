@@ -1,5 +1,7 @@
-package apidemo;
+package graph;
 
+import apidemo.ChinaSizeRatio;
+import apidemo.ChinaStock;
 import graph.GraphFillable;
 
 import static utility.Utility.TIMEMAX;
@@ -19,7 +21,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
 
-class GraphSize extends JComponent implements GraphFillable {
+public class GraphSize extends JComponent implements GraphFillable {
 
     private static final int WIDTH_VR = 3;
     private int height;
@@ -62,7 +64,7 @@ class GraphSize extends JComponent implements GraphFillable {
         this.name = s;
     }
 
-    void setNavigableMap(NavigableMap<LocalTime, Double> tmIn) {
+    public void setNavigableMap(NavigableMap<LocalTime, Double> tmIn) {
         this.tm = (tmIn != null) ? tmIn.entrySet().stream().filter(e -> e.getValue() != 0.0)
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
     }

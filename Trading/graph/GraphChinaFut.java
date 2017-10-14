@@ -1,4 +1,4 @@
-package apidemo;
+package graph;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Collectors;
+
 import static java.util.stream.Collectors.toMap;
 import javax.swing.JComponent;
 
@@ -86,11 +88,13 @@ public class GraphChinaFut extends JComponent {
         if (fut != null && ind != null) {
             futureP = fut.entrySet().stream()
                     .filter(a -> a.getKey().getSecond() < 5)
-                    .collect(toMap(a -> a.getKey(), a -> a.getValue(), (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(toMap(a -> a.getKey(), a -> a.getValue()
+                            , (a, b) -> a, ConcurrentSkipListMap::new));
 
             indexP = ind.entrySet().stream()
                     .filter(a -> a.getKey().getSecond() < 5)
-                    .collect(toMap(a -> a.getKey(), a -> a.getValue(), (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(toMap(a -> a.getKey(), a -> a.getValue()
+                            , (a, b) -> a, ConcurrentSkipListMap::new));
             //System.out.println(" XU " + xu);
 
 //                if(xu.lastKey().isAfter(LocalTime.of(9,1))) {
@@ -112,12 +116,14 @@ public class GraphChinaFut extends JComponent {
             futureP = fut.entrySet().stream()
                     .filter(a -> a.getKey().isAfter(LocalTime.of(LocalTime.now().getHour(), 0)))
                     .filter(a -> a.getKey().getSecond() % 10 == 0)
-                    .collect(toMap(a -> a.getKey(), a -> a.getValue(), (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue,
+                            (a, b) -> a, ConcurrentSkipListMap::new));
 
             indexP = ind.entrySet().stream()
                     .filter(a -> a.getKey().isAfter(LocalTime.of(LocalTime.now().getHour(), 0)))
                     .filter(a -> a.getKey().getSecond() % 10 == 0)
-                    .collect(toMap(a -> a.getKey(), a -> a.getValue(), (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue,
+                            (a, b) -> a, ConcurrentSkipListMap::new));
 
             detailed = true;
         } else {
@@ -126,18 +132,20 @@ public class GraphChinaFut extends JComponent {
         repaint();
     }
 
-    public void setSkipMapD(ConcurrentSkipListMap<LocalTime, Double> fut, ConcurrentSkipListMap<LocalTime, Double> ind) {
+     void setSkipMapD(ConcurrentSkipListMap<LocalTime, Double> fut, ConcurrentSkipListMap<LocalTime, Double> ind) {
         if (fut != null && ind != null) {
 
             futureP = fut.entrySet().stream()
                     .filter(a -> a.getKey().isAfter(LocalTime.now().minusMinutes(30)))
                     .filter(a -> a.getKey().getSecond() % 5 == 0)
-                    .collect(toMap(a -> a.getKey(), a -> a.getValue(), (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                            (a, b) -> a, ConcurrentSkipListMap::new));
 
             indexP = ind.entrySet().stream()
                     .filter(a -> a.getKey().isAfter(LocalTime.now().minusMinutes(30)))
                     .filter(a -> a.getKey().getSecond() % 5 == 0)
-                    .collect(toMap(a -> a.getKey(), a -> a.getValue(), (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                            (a, b) -> a, ConcurrentSkipListMap::new));
 
             //openXU = xu.ceilingEntry(LocalTime.of(9,0)).getValue();
             openFuture = Optional.ofNullable(fut.ceilingEntry(LocalTime.of(9, 30))).orElse(fut.firstEntry()).getValue();

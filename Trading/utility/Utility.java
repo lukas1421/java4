@@ -1,5 +1,7 @@
 package utility;
 
+import apidemo.ChinaStock;
+import graph.GraphIndustry;
 import auxiliary.SimpleBar;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -13,15 +15,19 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.BiPredicate;
+import java.util.function.DoubleBinaryOperator;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 
 import static java.lang.Math.log;
 import static java.lang.Math.round;
+import static java.util.stream.Collectors.*;
 
 public class Utility {
 
@@ -55,6 +61,8 @@ public class Utility {
     public static final LocalTime PM1310T = LocalTime.of(13, 10, 0);
     public static final LocalTime PMCLOSET = LocalTime.of(15, 0, 0);
     public static final LocalTime TIMEMAX = LocalTime.MAX.truncatedTo(ChronoUnit.MINUTES);
+    public static final BetweenTime<LocalTime, Boolean> TIME_BETWEEN = (t1, b1, t2, b2) -> (t -> t.isAfter(b1 ? t1.minusMinutes(1) : t1) && t.isBefore(b2 ? t2.plusMinutes(1) : t2));
+    public static final GenTimePred<LocalTime, Boolean> ENTRY_BTWN_GEN = (t1, b1, t2, b2) -> (e -> e.getKey().isAfter(b1 ? t1.minusMinutes(1) : t1) && e.getKey().isBefore(b2 ? t2.plusMinutes(1) : t2));
     public static BiPredicate<? super Map<String, ? extends Map<LocalTime, ?>>, String> NORMAL_MAP = (mp, name) -> mp.containsKey(name) && !mp.get(name).isEmpty() && mp.get(name).size() > 0;
 
     private Utility() {
@@ -259,5 +267,58 @@ public class Utility {
         mp.entrySet().forEach((e) -> {
             fixNavigableMap(e.getKey(), e.getValue());
         });
+    }
+
+    public static <T extends NavigableMap<LocalTime, Double>> void getIndustryVolYtd(Map<String, T> mp) {
+        CompletableFuture.supplyAsync(()
+                -> mp.entrySet().stream().filter(GraphIndustry.NO_GC)
+                        .collect(groupingBy(e -> ChinaStock.industryNameMap.get(e.getKey()),
+                                mapping(e -> e.getValue(), Collectors.collectingAndThen(toList(), e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(GraphIndustry.TRADING_HOURS))
+                                .collect(groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, summingDouble(e1 -> e1.getValue()))))))))
+                .thenAccept(m -> m.keySet().forEach(s -> {
+            mp.put(s, (T) m.get(s));
+        }));
+    }
+
+    public static double minGen(double... l) {
+        double res = Double.MAX_VALUE;
+        for (double d : l) {
+            res = Math.min(res, d);
+        }
+        return res;
+    }
+
+    public static double maxGen(double... l) {
+        double res = Double.MIN_VALUE;
+        for (double d : l) {
+            res = Math.max(res, d);
+        }
+        return res;
+    }
+
+    public static double applyAllDouble(DoubleBinaryOperator op, double... num) {
+        List<Double> s = DoubleStream.of(num).mapToObj(Double::valueOf).collect(toList());
+        if (num.length > 0) {
+            double res = s.get(0);
+            for (double d : s) {
+                res = op.applyAsDouble(res, d);
+            }
+            return res;
+        }
+        return 0.0;
+    }
+
+    public static Map<String, ConcurrentSkipListMap<LocalTime, Double>> mapConverter(Map<String, ? extends NavigableMap<LocalTime, Double>> mp) {
+        ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> res = new ConcurrentHashMap<>();
+
+        mp.keySet().forEach((String name) -> {
+            res.put(name, new ConcurrentSkipListMap<>());
+            mp.get(name).keySet().forEach((LocalTime t) -> {
+                res.get(name).put(t, mp.get(name).get(t));
+            });
+            System.out.println(" for key " + name + " result " + res.get(name));
+        });
+        System.out.println(" converting done ");
+        return res;
     }
 }

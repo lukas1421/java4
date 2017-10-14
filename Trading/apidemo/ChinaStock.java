@@ -4,14 +4,17 @@ import static apidemo.ChinaData.*;
 import static apidemo.ChinaDataYesterday.*;
 import static apidemo.ChinaSizeRatio.*;
 import static apidemo.ChinaStockHelper.*;
-import static apidemo.GraphBigIndex.maxGen;
-import static apidemo.GraphBigIndex.minGen;
+import static utility.Utility.maxGen;
+import static utility.Utility.minGen;
 
 import auxiliary.Strategy;
 import auxiliary.Strategy.StratType;
 import auxiliary.Bench;
 import auxiliary.SimpleBar;
+import graph.GraphBar;
 import graph.GraphFillable;
+import graph.GraphIndustry;
+import graph.GraphSize;
 import utility.*;
 
 import java.awt.BorderLayout;
@@ -82,14 +85,14 @@ public final class ChinaStock extends JPanel {
     public static Map<String, Double> weightMap = new HashMap<>();
     public static Map<String, String> nameMap = new HashMap<>();
     //static Map<String, String> shortNameMap = new HashMap<>();
-    static Map<String, String> industryNameMap = new HashMap<>();
-    static Map<String, String> shortIndustryMap = new HashMap<>();
-    static Map<String, String> shortLongIndusMap = new HashMap<>();
-    static Map<String, String> longShortIndusMap = new HashMap<>();
-    static Map<String, Bench> benchFullMap = new HashMap<>();
-    static Map<String, String> benchMap = new HashMap<>();
-    static Map<String, String> benchSimpleMap = new HashMap<>();
-    static Map<String, Double> sharpeMap = new HashMap<>();
+    public static Map<String, String> industryNameMap = new HashMap<>();
+    public static Map<String, String> shortIndustryMap = new HashMap<>();
+    public static Map<String, String> shortLongIndusMap = new HashMap<>();
+    public static Map<String, String> longShortIndusMap = new HashMap<>();
+    public static Map<String, Bench> benchFullMap = new HashMap<>();
+    public static Map<String, String> benchMap = new HashMap<>();
+    public static Map<String, String> benchSimpleMap = new HashMap<>();
+    public static Map<String, Double> sharpeMap = new HashMap<>();
 
     public static List<String> symbolNames = new ArrayList<>(1000);
     public static List<String> symbolNamesFull = new ArrayList<>(1000);
@@ -144,16 +147,14 @@ public final class ChinaStock extends JPanel {
     static volatile Set<JDialog> dialogTracker = new HashSet<>();
 
     //static final Comparator<? super Entry<LocalTime,Double>> Entry.comparingByValue() = (e1,e2)->e1.getValue()>=e2.getValue()?1:-1;
-    public static final Predicate<String> NORMAL_STOCK = name -> priceMapBar.containsKey(name) && !priceMapBar.get(name).isEmpty() && priceMapBar.get(name).size() > 0;
+    public static final Predicate<String> NORMAL_STOCK = name -> priceMapBar.containsKey(name) &&
+            !priceMapBar.get(name).isEmpty() && priceMapBar.get(name).size() > 0;
+    public static final BiPredicate<String, LocalTime> FIRST_KEY_BEFORE = (name, lt) -> priceMapBar.get(name).firstKey().isBefore(lt);
+    public static final BiPredicate<String, LocalTime> LAST_KEY_AFTER = (name, lt) -> priceMapBar.get(name).lastKey().isAfter(lt);
+    public static final BiPredicate<String, LocalTime> CONTAINS_TIME = (name, lt) -> priceMapBar.get(name).containsKey(lt);
 
-    static final BiPredicate<String, LocalTime> FIRST_KEY_BEFORE = (name, lt) -> priceMapBar.get(name).firstKey().isBefore(lt);
-    static final BiPredicate<String, LocalTime> LAST_KEY_AFTER = (name, lt) -> priceMapBar.get(name).lastKey().isAfter(lt);
-    static final BiPredicate<String, LocalTime> CONTAINS_TIME = (name, lt) -> priceMapBar.get(name).containsKey(lt);
-
-    static final BiFunction1<? super Entry<LocalTime, ?>, LocalTime> ENTRY_BETWEEN = (e, lt1, lt2) -> (e.getKey().isAfter(lt1) && e.getKey().isBefore(lt2));
-    static final BiFunction2<LocalTime> ENTRY_BETWEEN2 = (lt1, lt2) -> (e -> e.getKey().isAfter(lt1) && e.getKey().isBefore(lt2));
-    static final GenTimePred<LocalTime, Boolean> ENTRY_BTWN_GEN = (t1, b1, t2, b2) -> (e -> e.getKey().isAfter(b1 ? t1.minusMinutes(1) : t1) && e.getKey().isBefore(b2 ? t2.plusMinutes(1) : t2));
-    static final BetweenTime<LocalTime, Boolean> TIME_BETWEEN = (t1, b1, t2, b2) -> (t -> t.isAfter(b1 ? t1.minusMinutes(1) : t1) && t.isBefore(b2 ? t2.plusMinutes(1) : t2));
+    public static final BiFunction1<? super Entry<LocalTime, ?>, LocalTime> ENTRY_BETWEEN = (e, lt1, lt2) -> (e.getKey().isAfter(lt1) && e.getKey().isBefore(lt2));
+    public static final BiFunction2<LocalTime> ENTRY_BETWEEN2 = (lt1, lt2) -> (e -> e.getKey().isAfter(lt1) && e.getKey().isBefore(lt2));
 
     static Map<String, Boolean> maxFlag = new ConcurrentHashMap<>();
 
@@ -1174,7 +1175,7 @@ public final class ChinaStock extends JPanel {
         });
     }
 
-    static double getCurrentMARatio(String name) {
+    public static double getCurrentMARatio(String name) {
         return Utility.noZeroArrayGen(name, ma20Map, priceMap)
                 ? round(100d * (20d / (ma20Map.get(name) / priceMap.get(name) * 19 + 1))) / 100d : 0.0;
     }
@@ -1599,7 +1600,8 @@ public final class ChinaStock extends JPanel {
     }
 
     static int getPercentile(String name) {
-        return Utility.noZeroArrayGen(name, priceMap, maxMap, minMap) ? (int) min(100, round(100d * (priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))) : 0;
+        return Utility.noZeroArrayGen(name, priceMap, maxMap, minMap) ?
+                (int) min(100, round(100d * (priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))) : 0;
     }
 
     static int getPercentileBar(String name) {
@@ -1669,8 +1671,8 @@ public final class ChinaStock extends JPanel {
 
     static long getFirst10MaxMinTimeDiff(String name) {
         if (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) {
-            LocalTime first10MaxT = GETMAXTIME.apply(name, ENTRY_BTWN_GEN.getPred(Utility.AMOPENT, true, Utility.AM940T, true));
-            LocalTime first10MinT = GETMINTIME.apply(name, ENTRY_BTWN_GEN.getPred(Utility.AMOPENT, true, Utility.AM940T, true));
+            LocalTime first10MaxT = GETMAXTIME.apply(name, Utility.ENTRY_BTWN_GEN.getPred(Utility.AMOPENT, true, Utility.AM940T, true));
+            LocalTime first10MinT = GETMINTIME.apply(name, Utility.ENTRY_BTWN_GEN.getPred(Utility.AMOPENT, true, Utility.AM940T, true));
             return ChronoUnit.MINUTES.between(first10MinT, first10MaxT);
         }
         return 0L;
@@ -1678,8 +1680,8 @@ public final class ChinaStock extends JPanel {
 
     static double getPMFirst10MaxMinTimeDiff(String name) {
         if (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(Utility.PMOPENT)) {
-            LocalTime pmfirst10MaxT = GETMAXTIME.apply(name, ENTRY_BTWN_GEN.getPred(Utility.PMOPENT, true, Utility.PM1310T, true));
-            LocalTime pmfirst10MinT = GETMINTIME.apply(name, ENTRY_BTWN_GEN.getPred(Utility.PMOPENT, true, Utility.PM1310T, true));
+            LocalTime pmfirst10MaxT = GETMAXTIME.apply(name, Utility.ENTRY_BTWN_GEN.getPred(Utility.PMOPENT, true, Utility.PM1310T, true));
+            LocalTime pmfirst10MinT = GETMINTIME.apply(name, Utility.ENTRY_BTWN_GEN.getPred(Utility.PMOPENT, true, Utility.PM1310T, true));
             return ChronoUnit.MINUTES.between(pmfirst10MinT, pmfirst10MaxT);
         }
         return 0.0;
@@ -1697,7 +1699,7 @@ public final class ChinaStock extends JPanel {
 
     static LocalTime getAMFirstBreakTimeAfter940(String name) {
         if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET)) {
-            double ammax940 = GETMAX.applyAsDouble(name, ENTRY_BTWN_GEN.getPred(Utility.AMOPENT, true, Utility.AM940T, true));
+            double ammax940 = GETMAX.applyAsDouble(name, Utility.ENTRY_BTWN_GEN.getPred(Utility.AMOPENT, true, Utility.AM940T, true));
 
             return priceMapBar.get(name).entrySet().stream().filter(e -> e.getKey().isAfter(Utility.AM940T) && e.getValue().getHigh() > ammax940).findFirst()
                     .map(Entry::getKey).orElse(Utility.TIMEMAX);

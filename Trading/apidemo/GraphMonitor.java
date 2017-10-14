@@ -2,6 +2,7 @@ package apidemo;
 
 import auxiliary.SimpleBar;
 import graph.GraphFillable;
+import utility.Utility;
 
 import static apidemo.ChinaData.priceMapBar;
 import static utility.Utility.BAR_HIGH;
@@ -17,15 +18,11 @@ import static java.lang.Math.round;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import static java.util.Optional.ofNullable;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.function.DoubleBinaryOperator;
-import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 import javax.swing.JComponent;
 
 public class GraphMonitor extends JComponent implements GraphFillable {
@@ -58,7 +55,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
     int current3DayP;
     int wtdP;
 
-    GraphMonitor() {
+    public GraphMonitor() {
         name = "";
         chineseName = "";
         this.tm = new ConcurrentSkipListMap<>();
@@ -319,8 +316,8 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
             ytdCloseP = (int) Math.round(100d * (closeY1 - minY) / (maxY - minY));
 
-            current2DayP = (int) Math.round(100d * (current - applyAllDouble(Math::min, minT, minY))
-                    / (applyAllDouble(Math::max, maxT, maxY) - applyAllDouble(Math::min, minT, minY)));
+            current2DayP = (int) Math.round(100d * (current - Utility.applyAllDouble(Math::min, minT, minY))
+                    / (Utility.applyAllDouble(Math::max, maxT, maxY) - Utility.applyAllDouble(Math::min, minT, minY)));
 
             if (ChinaData.priceMapBarY2.containsKey(name) && ChinaData.priceMapBarY2.get(name).size() > 0) {
                 double maxY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
@@ -328,30 +325,19 @@ public class GraphMonitor extends JComponent implements GraphFillable {
                 double minY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
                         .min(BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
 
-                ytdY2CloseP = (int) Math.round(100d * (closeY1 - applyAllDouble(Math::min, minY2, minY))
-                        / (applyAllDouble(Math::max, maxY2, maxY) - applyAllDouble(Math::min, minY2, minY)));
+                ytdY2CloseP = (int) Math.round(100d * (closeY1 - Utility.applyAllDouble(Math::min, minY2, minY))
+                        / (Utility.applyAllDouble(Math::max, maxY2, maxY) - Utility.applyAllDouble(Math::min, minY2, minY)));
 
-                current3DayP = (int) Math.round(100d * (current - applyAllDouble(Math::min, minT, minY, minY2))
-                        / (applyAllDouble(Math::max, maxT, maxY, maxY2) - applyAllDouble(Math::min, minT, minY, minY2)));
+                current3DayP = (int) Math.round(100d * (current - Utility.applyAllDouble(Math::min, minT, minY, minY2))
+                        / (Utility.applyAllDouble(Math::max, maxT, maxY, maxY2) - Utility.applyAllDouble(Math::min, minT, minY, minY2)));
             }
 
-            wtdP = (int) Math.round(100d * (current - applyAllDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0)))
-                    / (applyAllDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
-                    - applyAllDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0))));
+            wtdP = (int) Math.round(100d * (current - Utility.applyAllDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0)))
+                    / (Utility.applyAllDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
+                    - Utility.applyAllDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0))));
         }
     }
 
-    static double applyAllDouble(DoubleBinaryOperator op, double... num) {
-        List<Double> s = DoubleStream.of(num).mapToObj(Double::valueOf).collect(Collectors.toList());
-        if (num.length > 0) {
-            double res = s.get(0);
-            for (double d : s) {
-                res = op.applyAsDouble(res, d);
-            }
-            return res;
-        }
-        return 0.0;
-    }
 }
 
 class GraphMonitorFactory {

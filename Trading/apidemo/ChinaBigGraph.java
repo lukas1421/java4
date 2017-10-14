@@ -1,5 +1,9 @@
 package apidemo;
 
+import graph.GraphBig;
+import graph.GraphBigYtd;
+import graph.GraphIndustry;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;

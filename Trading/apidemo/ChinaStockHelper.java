@@ -62,6 +62,7 @@ import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 
+import graph.GraphIndustry;
 import utility.SharpeUtility;
 import utility.Utility;
 
@@ -97,7 +98,7 @@ public final class ChinaStockHelper {
         return Math.round(sizeMap.getOrDefault(name, 0L) / 10d) / 10d;
     }
 
-    static void chooseStockFromSectors(String sector) {
+    public static void chooseStockFromSectors(String sector) {
 
         try {
 

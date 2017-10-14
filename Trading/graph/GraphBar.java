@@ -1,5 +1,7 @@
-package apidemo;
+package graph;
 
+import apidemo.ChinaPosition;
+import apidemo.ChinaStock;
 import auxiliary.SimpleBar;
 import graph.GraphFillable;
 import utility.Utility;
@@ -9,7 +11,7 @@ import static apidemo.ChinaData.sizeTotalMap;
 import static apidemo.ChinaData.sizeTotalMapYtd;
 import static apidemo.ChinaDataYesterday.*;
 import static apidemo.ChinaStock.*;
-import static apidemo.GraphMonitor.applyAllDouble;
+import static utility.Utility.applyAllDouble;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -27,8 +29,6 @@ import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toMap;
-import static utility.Utility.getMax;
-import static utility.Utility.getMin;
 
 import javax.swing.JComponent;
 
@@ -58,7 +58,7 @@ public final class GraphBar extends JComponent implements GraphFillable {
 
     int wtdP;
 
-    GraphBar(NavigableMap<LocalTime, SimpleBar> tm) {
+    public GraphBar(NavigableMap<LocalTime, SimpleBar> tm) {
         this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue().containsZero()).collect(Collectors.toMap(Entry::getKey, Entry::getValue,
                 (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
     }

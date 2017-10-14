@@ -1,7 +1,9 @@
 package apidemo;
 
-import static apidemo.GraphIndustry.sectorMapInOrder;
-import static apidemo.GraphIndustry.sectorNamesInOrder;
+import graph.GraphIndustry;
+
+import static graph.GraphIndustry.sectorMapInOrder;
+import static graph.GraphIndustry.sectorNamesInOrder;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -21,7 +23,7 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
-final class ChinaGraphIndustry extends JPanel {
+public final class ChinaGraphIndustry extends JPanel {
 
     static GraphIndustry gi = new GraphIndustry();
     static List<JLabel> labelList = new LinkedList();
@@ -31,7 +33,7 @@ final class ChinaGraphIndustry extends JPanel {
     static final int BIG_GRAPH_HEIGHT = 600;
     static volatile LINKEDTO linkStatus = LINKEDTO.NOTHING;
 
-    ChinaGraphIndustry() {
+    public ChinaGraphIndustry() {
         JScrollPane chartScroll = new JScrollPane(gi) {
             @Override
             public Dimension getPreferredSize() {
@@ -137,7 +139,7 @@ final class ChinaGraphIndustry extends JPanel {
         });
     }
 
-    static void refresh() {
+    public static void refresh() {
         if (sectorNamesInOrder.size() > 0) {
             double max = 0.0;
             double min = 0.0;

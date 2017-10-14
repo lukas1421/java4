@@ -1,5 +1,6 @@
-package apidemo;
+package graph;
 
+import apidemo.SinaStock;
 import auxiliary.SimpleBar;
 
 import static utility.Utility.getStr;
@@ -11,6 +12,7 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
@@ -40,10 +42,10 @@ public class GraphXUSI extends JComponent {
     private double openXU = 0.0;
     private double openSI = 0.0;
     Font orig;
-    static final LocalTime AM900 = LocalTime.of(9, 0);
+    public static final LocalTime AM900 = LocalTime.of(9, 0);
     NavigableMap<LocalTime, Double> sina = new ConcurrentSkipListMap<>();
 
-    GraphXUSI() {
+    public GraphXUSI() {
         name = "";
         chineseName = "";
     }
@@ -53,19 +55,19 @@ public class GraphXUSI extends JComponent {
         return new Dimension(1000, 100);
     }
 
-    void setSkipMap(NavigableMap<LocalTime, SimpleBar> xuIn, NavigableMap<LocalTime, SimpleBar> siIn) {
+    public void setSkipMap(NavigableMap<LocalTime, SimpleBar> xuIn, NavigableMap<LocalTime, SimpleBar> siIn) {
         if (xuIn != null && siIn != null) {
             xu = xuIn.entrySet().stream()
-                    .collect(Collectors.toMap(Entry::getKey, a -> a.getValue().getClose(), (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(Collectors.toMap(Map.Entry::getKey, a -> a.getValue().getClose(), (a, b) -> a, ConcurrentSkipListMap::new));
             sina = siIn.entrySet().stream()
-                    .collect(toMap(Entry::getKey, a -> a.getValue().getClose(), (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(Collectors.toMap(Map.Entry::getKey, a -> a.getValue().getClose(), (a, b) -> a, ConcurrentSkipListMap::new));
             openXU = Optional.ofNullable(xuIn.ceilingEntry(AM900)).map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
             openSI = SinaStock.OPEN;
         }
         repaint();
     }
 
-    void setSkipMapD(NavigableMap<LocalTime, SimpleBar> xu, NavigableMap<LocalTime, SimpleBar> si) {
+    public void setSkipMapD(NavigableMap<LocalTime, SimpleBar> xu, NavigableMap<LocalTime, SimpleBar> si) {
         if (xu != null && si != null && xu.size() > 0 && si.size() > 0) {
             this.xu = xu.entrySet().stream().filter(a -> a.getKey().isAfter(LocalTime.now().minusMinutes(20)))
                     .collect(toMap(Entry::getKey, e -> e.getValue().getClose(), (a, b) -> a, ConcurrentSkipListMap::new));

@@ -1,7 +1,7 @@
 package auxiliary;
 
 import apidemo.ChinaMain;
-import apidemo.Graph;
+import graph.Graph;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

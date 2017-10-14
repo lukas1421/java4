@@ -1,9 +1,8 @@
 package auxiliary;
 
 import apidemo.ChinaMain;
-import apidemo.Graph;
+import graph.Graph;
 import apidemo.LiveData;
-import auxiliary.Trait;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

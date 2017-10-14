@@ -2,8 +2,8 @@ package auxiliary;
 
 import apidemo.ChinaIdeaPMCompute;
 import apidemo.ChinaStock;
-import apidemo.Graph;
-import apidemo.GraphBar;
+import graph.Graph;
+import graph.GraphBar;
 
 import static apidemo.ChinaStockHelper.getRange;
 import java.awt.BorderLayout;
@@ -347,8 +347,8 @@ final class IdeaProcessorPM extends JPanel {
                     JViewport jv;
                     if (p.getComponent(0) instanceof JViewport) {
                         jv = (JViewport) p.getComponent(0);
-                        if (jv.getComponent(0) instanceof apidemo.Graph) {
-                            Graph g = (apidemo.Graph) jv.getComponent(0);
+                        if (jv.getComponent(0) instanceof Graph) {
+                            Graph g = (Graph) jv.getComponent(0);
                             System.out.println(" name is " + g.getName());
                             System.out.println(" clicked " + LocalTime.now());
                             selectedNameIP1 = g.getName();

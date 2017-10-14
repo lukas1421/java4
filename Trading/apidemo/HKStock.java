@@ -1,5 +1,8 @@
 package apidemo;
 
+import graph.GraphBar;
+import graph.GraphSize;
+
 import javax.swing.JPanel;
 
 public class HKStock extends JPanel {
