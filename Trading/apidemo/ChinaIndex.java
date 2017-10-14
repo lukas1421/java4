@@ -1,5 +1,7 @@
 package apidemo;
 
+import auxiliary.SimpleBar;
+
 import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.ChinaData.sizeTotalMap;
 import static apidemo.ChinaDataYesterday.amMaxY;

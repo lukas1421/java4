@@ -65,6 +65,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableCellRenderer;
+
+import auxiliary.SimpleBar;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 

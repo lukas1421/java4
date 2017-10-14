@@ -14,6 +14,7 @@ import TradeType.FutureTrade;
 import TradeType.MarginTrade;
 import TradeType.NormalTrade;
 import TradeType.Trade;
+import auxiliary.SimpleBar;
 import client.CommissionReport;
 import client.Contract;
 import client.Execution;

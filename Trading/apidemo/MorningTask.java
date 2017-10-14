@@ -2,6 +2,7 @@ package apidemo;
 
 import static apidemo.SinaStock.pd;
 
+import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
 import controller.ApiConnection.ILogger.DefaultLogger;
@@ -11,7 +12,6 @@ import handler.HistoricalHandler;
 
 import java.io.*;
 //import java.net.InetSocketAddress;
-import java.lang.reflect.Array;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;

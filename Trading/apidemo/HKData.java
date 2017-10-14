@@ -1,5 +1,6 @@
 package apidemo;
 
+import auxiliary.SimpleBar;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
 import java.awt.BorderLayout;

@@ -1,6 +1,6 @@
 package graph;
 
-import apidemo.SimpleBar;
+import auxiliary.SimpleBar;
 import apidemo.XUTrader;
 
 import static apidemo.ChinaStock.AMOPENT;

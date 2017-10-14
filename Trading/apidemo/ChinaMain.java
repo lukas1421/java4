@@ -4,6 +4,7 @@ import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.ChinaStock.AM914T;
 
+import auxiliary.AnaCompute;
 import historical.Request;
 import util.VerticalPanel;
 import client.ExecutionFilter;

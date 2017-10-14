@@ -1,5 +1,7 @@
 package apidemo;
 
+import auxiliary.SimpleBar;
+
 import java.io.Serializable;
 import java.sql.Blob;
 import java.time.LocalTime;

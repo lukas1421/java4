@@ -1,5 +1,7 @@
 package apidemo;
 
+import auxiliary.SimpleBar;
+
 import static apidemo.ChinaStockHelper.getStr;
 import java.awt.BasicStroke;
 import java.awt.Color;

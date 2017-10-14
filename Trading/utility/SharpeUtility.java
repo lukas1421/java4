@@ -5,7 +5,7 @@
  */
 package utility;
 
-import apidemo.SimpleBar;
+import auxiliary.SimpleBar;
 
 import java.time.temporal.Temporal;
 import java.util.Map;

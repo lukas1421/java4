@@ -38,9 +38,9 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTable;
 
-final class LiveData extends JPanel implements ITopMktDataHandler1, IInternalHandler1 {
+public final class LiveData extends JPanel implements ITopMktDataHandler1, IInternalHandler1 {
 
-    static volatile ConcurrentHashMap<Integer, ConcurrentSkipListMap<LocalTime, Double>> map1 = new ConcurrentHashMap<Integer, ConcurrentSkipListMap<LocalTime, Double>>();
+    public static volatile ConcurrentHashMap<Integer, ConcurrentSkipListMap<LocalTime, Double>> map1 = new ConcurrentHashMap<Integer, ConcurrentSkipListMap<LocalTime, Double>>();
     static volatile HashMap<Integer, String> nameMap = new HashMap<Integer, String>();
     static volatile ConcurrentHashMap<Integer, Integer> sizeMap = new ConcurrentHashMap<>();
     static ConcurrentHashMap<Integer, ConcurrentHashMap<?, ?>> saveMap = new ConcurrentHashMap<>();

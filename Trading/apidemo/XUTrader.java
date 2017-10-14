@@ -3,6 +3,7 @@ package apidemo;
 import static apidemo.ChinaStockHelper.getStr;
 
 import TradeType.IBTrade;
+import auxiliary.SimpleBar;
 import client.CommissionReport;
 import client.Contract;
 import client.Execution;

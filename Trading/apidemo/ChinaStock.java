@@ -7,6 +7,8 @@ import static apidemo.ChinaStockHelper.*;
 import static apidemo.GraphBigIndex.maxGen;
 import static apidemo.GraphBigIndex.minGen;
 import apidemo.Strategy.StratType;
+import auxiliary.Bench;
+import auxiliary.SimpleBar;
 import graph.GraphFillable;
 import utility.*;
 

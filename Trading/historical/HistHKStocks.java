@@ -1,6 +1,7 @@
 package historical;
 
 import apidemo.*;
+import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
 import controller.ApiConnection;

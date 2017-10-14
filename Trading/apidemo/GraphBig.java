@@ -1,5 +1,6 @@
 package apidemo;
 
+import auxiliary.SimpleBar;
 import graph.GraphFillable;
 
 import static apidemo.ChinaData.getVolZScore;

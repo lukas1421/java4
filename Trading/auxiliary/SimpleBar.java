@@ -1,4 +1,4 @@
-package apidemo;
+package auxiliary;
 
 import static apidemo.ChinaStockHelper.getStr;
 import java.io.Serializable;
@@ -41,7 +41,7 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         close = sb.getClose();
     }
 
-    static final SimpleBar getZeroBar() {
+    public static final SimpleBar getZeroBar() {
         return ZERO_BAR;
     }
 

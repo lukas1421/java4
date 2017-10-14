@@ -9,11 +9,11 @@ import static apidemo.ChinaMain.tdxPath;
 import static apidemo.ChinaSizeRatio.computeSizeRatioLast;
 import static apidemo.ChinaStock.*;
 import static apidemo.SinaStock.weightMapA50;
+
+import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
-import client.Types.BarSize;
-import client.Types.DurationUnit;
-import handler.HistoricalHandler;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -32,7 +32,6 @@ import static java.lang.Math.round;
 import static java.lang.System.out;
 import java.sql.Blob;
 import java.sql.SQLException;
-import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -40,9 +39,7 @@ import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -789,7 +786,7 @@ public final class ChinaStockHelper {
         }
     }
 
-    static void dealWithDividends() {
+    public static void dealWithDividends() {
 
         LocalDate today = LocalDate.now().minusDays(1L);
         //LocalDate ytd = today.getDayOfWeek().equals(DayOfWeek.MONDAY)?today.minusDays(3L):today.minusDays(1L);

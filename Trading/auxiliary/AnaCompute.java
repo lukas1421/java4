@@ -1,4 +1,7 @@
-package apidemo;
+package auxiliary;
+
+import apidemo.Analysis;
+import apidemo.LiveData;
 
 import java.time.LocalTime;
 
@@ -9,10 +12,10 @@ public class AnaCompute implements Runnable {
     //LocalTime 
     private static LocalTime timepoint2 = LocalTime.now();
 
-    AnaCompute() {
+    public AnaCompute() {
     }
 
-    AnaCompute(Analysis ana, LiveData lv) {
+    public AnaCompute(Analysis ana, LiveData lv) {
         this.ana = ana;
         this.lv = lv;
 

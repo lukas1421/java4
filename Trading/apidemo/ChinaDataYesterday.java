@@ -12,7 +12,7 @@ import static apidemo.ChinaStock.nameMap;
 import static apidemo.ChinaStock.noZeroArrayGen;
 import static apidemo.ChinaStock.selectedNameStock;
 import static apidemo.ChinaStock.symbolNamesFull;
-import static apidemo.ChinaStockHelper.getStr;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -64,6 +64,8 @@ import javax.swing.RowFilter;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
+
+import auxiliary.SimpleBar;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 

@@ -1,6 +1,6 @@
-package apidemo;
+package auxiliary;
 
-final class Bench {
+public final class Bench {
 
     private final String benchName;
     private final double correl;

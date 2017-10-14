@@ -3,6 +3,8 @@ package apidemo;
 import static apidemo.ChinaData.strategyTotalMap;
 import static apidemo.ChinaStock.symbolNames;
 import apidemo.Strategy.StratType;
+import auxiliary.SimpleBar;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.util.Map;

@@ -19,6 +19,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
+
+import auxiliary.SimpleBar;
 import controller.ApiController.ITopMktDataHandler;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
