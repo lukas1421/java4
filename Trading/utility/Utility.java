@@ -21,6 +21,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.BiPredicate;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
@@ -320,5 +321,31 @@ public class Utility {
         });
         System.out.println(" converting done ");
         return res;
+    }
+
+    public static void roundMap(Map<LocalTime, SimpleBar> mp) {
+        mp.forEach((k, v) -> v.round());
+    }
+
+    public static <T> void forwardFillHelper(NavigableMap<LocalTime, T> tm, Predicate<T> testZero, Supplier<T> s) {
+        if (tm.size() > 1) {
+            LocalTime t = LocalTime.of(9, 30);
+            while (t.isBefore(LocalTime.of(15, 1))) {
+                if (t.isAfter(LocalTime.of(11, 30)) && t.isBefore(LocalTime.of(13, 0))) {
+                    if (tm.containsKey(t)) {
+                        tm.remove(t);
+                    }
+                } else {
+                    if (!tm.containsKey(t) || testZero.test(tm.get(t))) {
+                        System.out.println(" for min " + t);
+                        T sb = tm.getOrDefault(t.minusMinutes(1), s.get());
+                        tm.put(t, sb);
+                    }
+                }
+                t = t.plusMinutes(1L);
+            }
+        } else {
+            System.out.println(" tm is empty ");
+        }
     }
 }

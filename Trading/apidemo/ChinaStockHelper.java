@@ -46,7 +46,6 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import static java.util.stream.Collectors.mapping;
@@ -207,31 +206,9 @@ public final class ChinaStockHelper {
         symbolNames.forEach(name -> {
             NavigableMap<LocalTime, SimpleBar> tm = ChinaData.priceMapBar.get(name);
             NavigableMap<LocalTime, Double> tmVol = ChinaData.sizeTotalMap.get(name);
-            forwardFillHelper(tm, SimpleBar::containsZero, () -> new SimpleBar(0.0));
-            forwardFillHelper(tmVol, d -> d == 0.0, () -> 0.0);
+            Utility.forwardFillHelper(tm, SimpleBar::containsZero, () -> new SimpleBar(0.0));
+            Utility.forwardFillHelper(tmVol, d -> d == 0.0, () -> 0.0);
         });
-    }
-
-    static <T> void forwardFillHelper(NavigableMap<LocalTime, T> tm, Predicate<T> testZero, Supplier<T> s) {
-        if (tm.size() > 1) {
-            LocalTime t = LocalTime.of(9, 30);
-            while (t.isBefore(LocalTime.of(15, 1))) {
-                if (t.isAfter(LocalTime.of(11, 30)) && t.isBefore(LocalTime.of(13, 0))) {
-                    if (tm.containsKey(t)) {
-                        tm.remove(t);
-                    }
-                } else {
-                    if (!tm.containsKey(t) || testZero.test(tm.get(t))) {
-                        System.out.println(" for min " + t);
-                        T sb = tm.getOrDefault(t.minusMinutes(1), s.get());
-                        tm.put(t, sb);
-                    }
-                }
-                t = t.plusMinutes(1L);
-            }
-        } else {
-            System.out.println(" tm is empty ");
-        }
     }
 
     static void fillHolesInSize() {
@@ -269,7 +246,7 @@ public final class ChinaStockHelper {
         return 0.0;
     }
 
-    static void getFilesFromTDXGen(LocalDate ld, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp1, Map<String, ? extends NavigableMap<LocalTime, Double>> mp2) {
+    public static void getFilesFromTDXGen(LocalDate ld, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp1, Map<String, ? extends NavigableMap<LocalTime, Double>> mp2) {
 
         //String tdxPath = "J:\\TDX\\T0002\\export_1m\\";
         LocalDate t = ld;
@@ -526,7 +503,7 @@ public final class ChinaStockHelper {
         }
     }
 
-    static void fixVolMap() {
+    public static void fixVolMap() {
         ChinaData.sizeTotalMap.entrySet().forEach(e -> {
             Utility.fixVolNavigableMap(e.getKey(), e.getValue());
         });
@@ -640,7 +617,7 @@ public final class ChinaStockHelper {
         return GETMAXTIME.apply(name, Utility.IS_OPEN_PRED).equals(lastKey);
     }
 
-    static void getHistoricalFX() {
+    public static void getHistoricalFX() {
         Contract c = new Contract();
         c.symbol("USD");
         c.secType(Types.SecType.CASH);
@@ -655,12 +632,8 @@ public final class ChinaStockHelper {
     }
 
     static void roundAllData() {
-        ChinaData.priceMapBarYtd.entrySet().stream().forEach((e) -> ChinaStockHelper.roundMap(e.getValue()));
-        ChinaData.priceMapBarY2.entrySet().stream().forEach((e) -> ChinaStockHelper.roundMap(e.getValue()));
-    }
-
-    static void roundMap(Map<LocalTime, SimpleBar> mp) {
-        mp.forEach((k, v) -> v.round());
+        ChinaData.priceMapBarYtd.entrySet().stream().forEach((e) -> Utility.roundMap(e.getValue()));
+        ChinaData.priceMapBarY2.entrySet().stream().forEach((e) -> Utility.roundMap(e.getValue()));
     }
 
     public static void buildA50FromSS(double open) {
