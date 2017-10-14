@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -51,6 +52,7 @@ public class SinaStock implements Runnable {
     public static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
     Matcher matcher;
     String line;
+    public static volatile LocalDate mostRecentTradingDay = LocalDate.now();
 
     public static final double OPEN = getOpen();
     static double rtn = 0.0;
@@ -150,6 +152,10 @@ public class SinaStock implements Runnable {
                         minMap.put(ticker, Utility.pd(datalist, 5));
                         returnMap.put(ticker, 100d * (Utility.pd(datalist, 3) / Utility.pd(datalist, 2) - 1));
                         sizeMap.put(ticker, Math.round(Utility.pd(datalist, 9) / 1000000d));
+                        mostRecentTradingDay = LocalDate.parse(datalist.get(30));
+                        //ChinaData.outputRecentTradingDate();
+                        //System.out.println(" most recent trading day " + mostRecentTradingDay);
+                        //System.out.println(" last data available date " + datalist.get(30) + " " + datalist.get(31));
 
                         if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker) && DATA_COLLECTION_TIME.test(lt)) {
                             double last = Utility.pd(datalist, 3);

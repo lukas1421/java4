@@ -420,6 +420,15 @@ public final class ChinaData extends JPanel {
         }
     }
 
+    public static void outputRecentTradingDate() {
+        System.out.println(" most recent trading date " + SinaStock.mostRecentTradingDay.toString());
+        File output = new File(ChinaMain.GLOBALPATH + "mostRecentTradingDate.txt");
+
+        //MorningTask.clearFile(output);
+        MorningTask.simpleWriteToFile(SinaStock.mostRecentTradingDay.toString(),false,output);
+
+    }
+
     static void getTodayTDX(LocalDate dat) {
         CompletableFuture.runAsync(() -> {
             ChinaStockHelper.getFilesFromTDXGen(dat, ChinaData.priceMapBar, ChinaData.sizeTotalMap);

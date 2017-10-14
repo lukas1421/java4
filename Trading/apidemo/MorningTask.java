@@ -444,7 +444,7 @@ public final class MorningTask implements HistoricalHandler {
         LocalDate t = LocalDate.now();
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
+                new FileInputStream(ChinaMain.GLOBALPATH + "mostRecentTradingDate.txt"), "gbk"))) {
             String line;
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));

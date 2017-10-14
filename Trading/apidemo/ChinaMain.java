@@ -281,6 +281,7 @@ public final class ChinaMain implements IConnectionHandler {
                     XU.saveHibXU();
                     ChinaData.withHibernate();
                     ChinaData.outputPrices();
+                    ChinaData.outputRecentTradingDate();
                 }
             }, 10, 5, TimeUnit.MINUTES);
         });
