@@ -1,5 +1,7 @@
 package apidemo;
 
+import auxiliary.Backtesting;
+
 import java.time.LocalTime;
 
 public class StratCompute implements Runnable {

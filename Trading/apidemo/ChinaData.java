@@ -68,6 +68,7 @@ import javax.swing.table.TableCellRenderer;
 
 import auxiliary.ChinaSaveInterface2Blob;
 import auxiliary.SimpleBar;
+import auxiliary.Strategy;
 import auxiliary.VolBar;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -286,7 +287,7 @@ public final class ChinaData extends JPanel {
 
                     try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(source))) {
                         //ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> map1 = (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>>)trimMap(priceMapPlain);
-                        saveMap.put(1, (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>>) trimMap(priceMapPlain));
+                        saveMap.put(1, (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>>) Utility.trimMap(priceMapPlain));
                         //ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> map2 = new ConcurrentHashMap<>(sizeTotalMap);
                         saveMap.put(2, sizeTotalMap);
                         oos.writeObject(saveMap);
@@ -506,31 +507,6 @@ public final class ChinaData extends JPanel {
         //ChinaStockHelper.buildA50FromSS(openMap.get(dateMap.get(2)));
         //ChinaStockHelper.buildA50Gen(openMap.get(dateMap.get(1)), ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd, closeMap);
         //ChinaStockHelper.buildA50Gen(openMap.get(dateMap.get(0)), ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2, ChinaDataYesterday.closeMapY);
-    }
-
-    public static <T> Map<String, ? extends NavigableMap<LocalTime, T>> trimMap(Map<String, ? extends NavigableMap<LocalTime, T>> mp) {
-        Map<String, NavigableMap<LocalTime, T>> res = new ConcurrentHashMap<>();
-        mp.keySet().forEach((String key) -> {
-            res.put(key, new ConcurrentSkipListMap<>());
-            mp.get(key).keySet().forEach(t -> {
-                if ((t.isAfter(LocalTime.of(9, 14)) && t.isBefore(LocalTime.of(11, 35))) || (t.isAfter(LocalTime.of(12, 59)) && t.isBefore(LocalTime.of(15, 1)))) {
-                    if (t.isBefore(LocalTime.now().plusMinutes(5))) {
-                        res.get(key).put(t, mp.get(key).get(t));
-                    }
-                }
-            });
-        });
-        return res;
-    }
-
-    public static <T> NavigableMap<LocalTime, T> trimSkipMap(NavigableMap<LocalTime, T> mp, LocalTime startTime) {
-        NavigableMap<LocalTime, T> res = new ConcurrentSkipListMap<>();
-        mp.keySet().forEach(t -> {
-            if ((t.isAfter(startTime) && t.isBefore(LocalTime.of(11, 31))) || (t.isAfter(LocalTime.of(12, 59)) && t.isBefore(LocalTime.of(15, 1)))) {
-                res.put(t, mp.get(t));
-            }
-        });
-        return res;
     }
 
     static void loadPriceBar() {
@@ -824,14 +800,14 @@ public final class ChinaData extends JPanel {
                 double pmOpen = nm.ceilingEntry(LocalTime.of(13, 0)).getValue().getOpen();
                 double pm1310 = nm.ceilingEntry(LocalTime.of(13, 10)).getValue().getClose();
                 double pmClose = nm.floorEntry(LocalTime.of(15, 0)).getValue().getClose();
-                double amMax = ChinaStock.GETMAX.applyAsDouble(ticker, AM_PRED);
-                double amMin = ChinaStock.GETMIN.applyAsDouble(ticker, AM_PRED);
-                double pmMax = ChinaStock.GETMAX.applyAsDouble(ticker, PM_PRED);
-                double pmMin = ChinaStock.GETMIN.applyAsDouble(ticker, PM_PRED);
-                int amMaxT = convertTimeToInt(GETMAXTIME.apply(ticker, AM_PRED));
-                int amMinT = convertTimeToInt(GETMINTIME.apply(ticker, AM_PRED));
-                int pmMaxT = convertTimeToInt(GETMAXTIME.apply(ticker, PM_PRED));
-                int pmMinT = convertTimeToInt(GETMINTIME.apply(ticker, PM_PRED));
+                double amMax = ChinaStock.GETMAX.applyAsDouble(ticker, Utility.AM_PRED);
+                double amMin = ChinaStock.GETMIN.applyAsDouble(ticker, Utility.AM_PRED);
+                double pmMax = ChinaStock.GETMAX.applyAsDouble(ticker, Utility.PM_PRED);
+                double pmMin = ChinaStock.GETMIN.applyAsDouble(ticker, Utility.PM_PRED);
+                int amMaxT = convertTimeToInt(GETMAXTIME.apply(ticker, Utility.AM_PRED));
+                int amMinT = convertTimeToInt(GETMINTIME.apply(ticker, Utility.AM_PRED));
+                int pmMaxT = convertTimeToInt(GETMAXTIME.apply(ticker, Utility.PM_PRED));
+                int pmMinT = convertTimeToInt(GETMINTIME.apply(ticker, Utility.PM_PRED));
 
                 try (BufferedWriter out = new BufferedWriter(new FileWriter(shcompSource))) {
                     out.append(Utility.getStrTabbed("AmOpen", "931", "935", "940", "AmClose", "AmMax", "AmMin", "AmMaxT", "AmMinT",

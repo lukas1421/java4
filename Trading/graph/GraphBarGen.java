@@ -4,8 +4,8 @@ import auxiliary.SimpleBar;
 import apidemo.XUTrader;
 
 import static apidemo.ChinaStock.AMOPENT;
-import static apidemo.ChinaStock.BAR_HIGH;
-import static apidemo.ChinaStock.BAR_LOW;
+import static utility.Utility.BAR_HIGH;
+import static utility.Utility.BAR_LOW;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics;

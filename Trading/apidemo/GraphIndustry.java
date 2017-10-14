@@ -1,6 +1,7 @@
 package apidemo;
 
 import auxiliary.SimpleBar;
+import utility.Utility;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
@@ -23,9 +24,9 @@ import java.util.stream.Collectors;
 import javax.swing.JComponent;
 import java.util.function.Predicate;
 import static java.util.stream.Collectors.*;
-import static apidemo.ChinaStock.BAR_HIGH;
-import static apidemo.ChinaStock.BAR_LOW;
-import static apidemo.ChinaStock.IS_OPEN_PRED;
+import static utility.Utility.BAR_HIGH;
+import static utility.Utility.BAR_LOW;
+import static utility.Utility.IS_OPEN_PRED;
 import static apidemo.ChinaStock.TIMEMAX;
 import static apidemo.ChinaStock.TIME_BETWEEN;
 import static utility.Utility.getStr;
@@ -63,7 +64,7 @@ public class GraphIndustry extends JComponent {
 
     static final Predicate<? super Entry<String, ?>> NO_GC = e -> !e.getKey().equals("sh204001") && e.getKey().length() > 2;
     static final Predicate<? super Entry<LocalTime, ?>> TRADING_HOURS = e -> ((e.getKey().isAfter(LocalTime.of(9, 29)) && e.getKey().isBefore(LocalTime.of(11, 31)))
-            || ChinaStock.PM_PRED.test(e));
+            || Utility.PM_PRED.test(e));
 
     final static Comparator<? super Entry<String, ? extends NavigableMap<LocalTime, Double>>> LAST_ENTRY_COMPARATOR
             = Comparator.comparingDouble(e -> Optional.ofNullable(e.getValue().lastEntry()).map(Entry::getValue).orElse(0.0));

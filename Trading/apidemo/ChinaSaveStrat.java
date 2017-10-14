@@ -1,6 +1,7 @@
 package apidemo;
 
 import auxiliary.ChinaSaveInterface2Blob;
+import auxiliary.Strategy;
 
 import java.io.Serializable;
 import java.sql.Blob;

@@ -1,4 +1,4 @@
-package apidemo;
+package auxiliary;
 
 import static utility.Utility.getStr;
 import java.io.Serializable;
@@ -11,21 +11,21 @@ public class Strategy implements Serializable {
     private final StratType strattype;
     private final double lastPrice;
 
-    Strategy() {
+    public Strategy() {
         entranceTime = LocalTime.MIN;
         entrancePrice = 0.0;
         strattype = StratType.GEN;
         lastPrice = 0.0;
     }
 
-    Strategy(LocalTime e, double p, StratType st) {
+    public Strategy(LocalTime e, double p, StratType st) {
         entranceTime = e;
         entrancePrice = p;
         strattype = st;
         lastPrice = 0.0;
     }
 
-    Strategy(Strategy s) {
+    public Strategy(Strategy s) {
         this.entranceTime = s.entranceTime;
         this.entrancePrice = s.entrancePrice;
         this.strattype = s.strattype;
@@ -44,11 +44,11 @@ public class Strategy implements Serializable {
         return Math.log(lastPrice / entrancePrice);
     }
 
-    StratType getStrat() {
+    public StratType getStrat() {
         return strattype;
     }
 
-    enum StratType {
+    public enum StratType {
         AMRETURN, AMRANGE, MA, VOL, OVERSOLD, OVERSOLD2, BIGDROP, PRICEBURST, GEN, SIZEEXPLODE, VRMAX, MAX, TMR;
     }
 

@@ -256,9 +256,9 @@ final class GraphBar extends JComponent implements GraphFillable {
 
         if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
             current = priceMapBar.get(name).lastEntry().getValue().getClose();
-            maxT = priceMapBar.get(name).entrySet().stream().max(BAR_HIGH).map(Entry::getValue)
+            maxT = priceMapBar.get(name).entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue)
                     .map(SimpleBar::getHigh).orElse(0.0);
-            minT = priceMapBar.get(name).entrySet().stream().min(BAR_LOW).map(Entry::getValue)
+            minT = priceMapBar.get(name).entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue)
                     .map(SimpleBar::getHigh).orElse(0.0);
 
         } else {
@@ -278,11 +278,11 @@ final class GraphBar extends JComponent implements GraphFillable {
     }
 
     double getMin() {
-        return (tm.size() > 0) ? tm.entrySet().stream().min(BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0) : 0.0;
+        return (tm.size() > 0) ? tm.entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0) : 0.0;
     }
 
     double getMax() {
-        return (tm.size() > 0) ? tm.entrySet().stream().max(BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
+        return (tm.size() > 0) ? tm.entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
     }
 
     double getReturn() {
@@ -389,12 +389,12 @@ final class GraphBar extends JComponent implements GraphFillable {
 
     LocalTime getAMMinT() {
         return (tm.size() > 0 && tm.firstKey().isBefore(AMCLOSET) && tm.lastKey().isAfter(AMOPENT))
-                ? tm.entrySet().stream().filter(AM_PRED).min(BAR_LOW).map(Entry::getKey).orElse(AMOPENT) : AMOPENT;
+                ? tm.entrySet().stream().filter(Utility.AM_PRED).min(Utility.BAR_LOW).map(Entry::getKey).orElse(AMOPENT) : AMOPENT;
     }
 
     LocalTime getAMMaxT() {
         return (!tm.isEmpty() & tm.size() > 2 && tm.firstKey().isBefore(AMCLOSET) && tm.lastKey().isAfter(AMOPENT))
-                ? tm.entrySet().stream().filter(AM_PRED).max(BAR_HIGH).map(Entry::getKey).orElse(AMOPENT) : AMOPENT;
+                ? tm.entrySet().stream().filter(Utility.AM_PRED).max(Utility.BAR_HIGH).map(Entry::getKey).orElse(AMOPENT) : AMOPENT;
     }
 
     Double getSizeSizeY() {

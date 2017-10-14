@@ -1,4 +1,8 @@
-package apidemo;
+package auxiliary;
+
+import apidemo.Analysis;
+import apidemo.ChinaMain;
+import apidemo.Graph;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

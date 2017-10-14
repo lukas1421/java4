@@ -5,7 +5,7 @@ import graph.GraphFillable;
 import utility.Utility;
 
 import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaStock.BAR_LOW;
+import static utility.Utility.BAR_LOW;
 import static apidemo.ChinaData.*;
 import static apidemo.ChinaDataYesterday.*;
 import static apidemo.ChinaStock.*;
@@ -572,12 +572,12 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
 
     private double getMax() {
         double maxYtd = (tmYtd != null && tmYtd.size() > 0) ? tmYtd.entrySet().stream().filter(entry -> !entry.getValue().containsZero())
-                .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
+                .max(Utility.BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
         double maxToday = (tm != null && tm.size() > 0) ? tm.entrySet().stream().filter(entry -> !entry.getValue().containsZero())
-                .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
+                .max(Utility.BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
 
         double maxY2 = (tmY2 != null && tmY2.size() > 0) ? tmY2.entrySet().stream().filter(entry -> !entry.getValue().containsZero())
-                .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
+                .max(Utility.BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
 
         return maxGen(maxYtd, maxToday, maxY2);
     }
@@ -835,7 +835,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
         if (!tmYtd.isEmpty() & tmYtd.size() > 2) {
             if (tmYtd.firstKey().isBefore(LocalTime.of(12, 1)) && tmYtd.lastKey().isAfter(LocalTime.of(9, 30))) {
 
-                return tmYtd.entrySet().stream().filter(entry -> !entry.getValue().containsZero()).filter(AM_PRED).max(BAR_HIGH).get().getKey();
+                return tmYtd.entrySet().stream().filter(entry -> !entry.getValue().containsZero()).filter(Utility.AM_PRED).max(Utility.BAR_HIGH).get().getKey();
             }
 
         }

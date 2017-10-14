@@ -15,7 +15,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
-import static apidemo.ChinaData.trimSkipMap;
+import static utility.Utility.trimSkipMap;
 
 @Entity
 @Table(name = "CHINASAVEYEST")

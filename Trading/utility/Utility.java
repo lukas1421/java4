@@ -12,9 +12,11 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -25,6 +27,17 @@ public class Utility {
 
     public static final BiPredicate<? super Map<String, ? extends Number>, String> NO_ZERO = (mp, name) -> mp.containsKey(name) && mp.get(name).doubleValue() != 0.0;
     public static final Predicate<? super Map.Entry<LocalTime, SimpleBar>> CONTAINS_NO_ZERO = e -> !e.getValue().containsZero();
+    //static final Entry<LocalTime, SimpleBar> dummyBar =  new AbstractMap.SimpleEntry<>(LocalTime.of(23,59), SimpleBar.getInstance());
+    //static final Entry<LocalTime, Double> dummyMap =  new AbstractMap.SimpleEntry<>(LocalTime.of(23,59), 0.0);
+    public static final Predicate<? super Map.Entry<LocalTime, ?>> AM_PRED = e ->
+            e.getKey().isAfter(LocalTime.of(9, 29, 59)) && e.getKey().isBefore(LocalTime.of(11, 30, 01));
+    public static final Predicate<? super Map.Entry<LocalTime, ?>> PM_PRED = e ->
+            e.getKey().isAfter(LocalTime.of(12, 59, 59)) && e.getKey().isBefore(LocalTime.of(15, 0, 1));
+    //static final Comparator<? super Entry<LocalTime,SimpleBar>> BAR_HIGH = (e1,e2)->e1.getValue().getHigh()>=e2.getValue().getHigh()?1:-1;
+    //static final Comparator<? super Entry<LocalTime,SimpleBar>> BAR_HIGH = Comparator.comparingDouble(e->e.getValue().getHigh());
+    public static final Comparator<? super Map.Entry<LocalTime, SimpleBar>> BAR_HIGH = Map.Entry.comparingByValue(Comparator.comparingDouble(SimpleBar::getHigh));
+    public static final Comparator<? super Map.Entry<LocalTime, SimpleBar>> BAR_LOW = (e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
+    public static final Predicate<? super Map.Entry<LocalTime, ?>> IS_OPEN_PRED = e -> e.getKey().isAfter(LocalTime.of(9, 29, 59));
     public static BiPredicate<? super Map<String, ? extends Map<LocalTime, ?>>, String> NORMAL_MAP = (mp, name) -> mp.containsKey(name) && !mp.get(name).isEmpty() && mp.get(name).size() > 0;
 
     private Utility() {
@@ -161,5 +174,30 @@ public class Utility {
 
     public static double pd(List<String> l, int index) {
         return (l.size() > index) ? Double.parseDouble(l.get(index)) : 0.0;
+    }
+
+    public static <T> Map<String, ? extends NavigableMap<LocalTime, T>> trimMap(Map<String, ? extends NavigableMap<LocalTime, T>> mp) {
+        Map<String, NavigableMap<LocalTime, T>> res = new ConcurrentHashMap<>();
+        mp.keySet().forEach((String key) -> {
+            res.put(key, new ConcurrentSkipListMap<>());
+            mp.get(key).keySet().forEach(t -> {
+                if ((t.isAfter(LocalTime.of(9, 14)) && t.isBefore(LocalTime.of(11, 35))) || (t.isAfter(LocalTime.of(12, 59)) && t.isBefore(LocalTime.of(15, 1)))) {
+                    if (t.isBefore(LocalTime.now().plusMinutes(5))) {
+                        res.get(key).put(t, mp.get(key).get(t));
+                    }
+                }
+            });
+        });
+        return res;
+    }
+
+    public static <T> NavigableMap<LocalTime, T> trimSkipMap(NavigableMap<LocalTime, T> mp, LocalTime startTime) {
+        NavigableMap<LocalTime, T> res = new ConcurrentSkipListMap<>();
+        mp.keySet().forEach(t -> {
+            if ((t.isAfter(startTime) && t.isBefore(LocalTime.of(11, 31))) || (t.isAfter(LocalTime.of(12, 59)) && t.isBefore(LocalTime.of(15, 1)))) {
+                res.put(t, mp.get(t));
+            }
+        });
+        return res;
     }
 }

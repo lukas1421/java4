@@ -5,7 +5,7 @@ import auxiliary.SimpleBar;
 
 import static apidemo.ChinaData.priceMapBarY2;
 import static apidemo.ChinaData.sizeTotalMapY2;
-import static apidemo.ChinaData.trimSkipMap;
+import static utility.Utility.trimSkipMap;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.time.LocalTime;

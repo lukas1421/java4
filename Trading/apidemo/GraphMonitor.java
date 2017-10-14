@@ -4,8 +4,8 @@ import auxiliary.SimpleBar;
 import graph.GraphFillable;
 
 import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaStock.BAR_HIGH;
-import static apidemo.ChinaStock.BAR_LOW;
+import static utility.Utility.BAR_HIGH;
+import static utility.Utility.BAR_LOW;
 import static apidemo.ChinaStock.NORMAL_STOCK;
 import java.awt.BasicStroke;
 import java.awt.Color;

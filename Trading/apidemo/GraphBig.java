@@ -371,11 +371,11 @@ public class GraphBig extends JComponent implements GraphFillable {
     }
 
     private double getMin() {
-        return (tm.size() > 0) ? tm.entrySet().stream().min(BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0) : 0.0;
+        return (tm.size() > 0) ? tm.entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0) : 0.0;
     }
 
     private double getMax() {
-        return (tm.size() > 0) ? tm.entrySet().stream().max(BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
+        return (tm.size() > 0) ? tm.entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
     }
 
     private double getMinVol() {
@@ -478,12 +478,12 @@ public class GraphBig extends JComponent implements GraphFillable {
 
     private LocalTime getAMMinT() {
         return (!tm.isEmpty() & tm.size() > 0 && tm.firstKey().isBefore(AMCLOSET) && tm.lastKey().isAfter(AMOPENT))
-                ? tm.entrySet().stream().filter(AM_PRED).min(BAR_LOW).map(Entry::getKey).orElse(TIMEMAX) : TIMEMAX;
+                ? tm.entrySet().stream().filter(Utility.AM_PRED).min(Utility.BAR_LOW).map(Entry::getKey).orElse(TIMEMAX) : TIMEMAX;
     }
 
     private LocalTime getAMMaxT() {
         return (!tm.isEmpty() & tm.size() > 2 && tm.firstKey().isBefore(AMCLOSET) && tm.lastKey().isAfter(AMOPENT))
-                ? tm.entrySet().stream().filter(AM_PRED).max(BAR_HIGH).map(Entry::getKey).orElse(TIMEMAX) : TIMEMAX;
+                ? tm.entrySet().stream().filter(Utility.AM_PRED).max(Utility.BAR_HIGH).map(Entry::getKey).orElse(TIMEMAX) : TIMEMAX;
     }
 
     private Double getSizeSizeYT() {

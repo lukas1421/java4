@@ -2,7 +2,9 @@ package apidemo;
 
 import static apidemo.ChinaData.strategyTotalMap;
 import static apidemo.ChinaStock.symbolNames;
-import apidemo.Strategy.StratType;
+
+import auxiliary.Strategy;
+import auxiliary.Strategy.StratType;
 import auxiliary.SimpleBar;
 
 import java.awt.BorderLayout;
@@ -27,7 +29,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JToggleButton;
 import javax.swing.SwingUtilities;
 
-final class ChinaStrategyTable extends JPanel {
+public final class ChinaStrategyTable extends JPanel {
 
     String line;
     static BarModel m_model;

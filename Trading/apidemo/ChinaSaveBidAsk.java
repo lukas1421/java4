@@ -2,6 +2,7 @@ package apidemo;
 
 import auxiliary.ChinaSaveInterface2Blob;
 import auxiliary.VolBar;
+import utility.Utility;
 
 import java.io.Serializable;
 import java.sql.Blob;
@@ -92,12 +93,12 @@ public class ChinaSaveBidAsk implements Serializable, ChinaSaveInterface2Blob {
 
     @Override
     public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
-        ChinaData.bidMap.put(name, (ConcurrentSkipListMap<LocalTime, VolBar>) ChinaData.trimSkipMap(mp, LocalTime.of(9, 14)));
+        ChinaData.bidMap.put(name, (ConcurrentSkipListMap<LocalTime, VolBar>) Utility.trimSkipMap(mp, LocalTime.of(9, 14)));
     }
 
     @Override
     public void updateSecondMap(String name, NavigableMap<LocalTime, ?> mp) {
-        ChinaData.askMap.put(name, (ConcurrentSkipListMap<LocalTime, VolBar>) ChinaData.trimSkipMap(mp, LocalTime.of(9, 14)));
+        ChinaData.askMap.put(name, (ConcurrentSkipListMap<LocalTime, VolBar>) Utility.trimSkipMap(mp, LocalTime.of(9, 14)));
     }
 
     @Override

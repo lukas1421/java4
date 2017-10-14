@@ -21,8 +21,8 @@ public class Dividends {
 
     String ticker;
     String chineseName;
-    LocalDate adjustDate;
-    double adjFactor;
+    private LocalDate adjustDate;
+    private double adjFactor;
 
     public Dividends() {
         adjustDate = LocalDate.MAX;

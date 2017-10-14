@@ -686,7 +686,7 @@ public final class ChinaStockHelper {
         LocalTime lastKey = priceMapBar.get(name).lastKey();
         double previousMax = priceMapBar.get(name).headMap(lastKey, false).entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
         //return last>previousMax;
-        return GETMAXTIME.apply(name, IS_OPEN_PRED).equals(lastKey);
+        return GETMAXTIME.apply(name, Utility.IS_OPEN_PRED).equals(lastKey);
     }
 
     static ConcurrentSkipListMap<LocalTime, ?> unblob(Blob b) {
@@ -769,10 +769,10 @@ public final class ChinaStockHelper {
         //System.out.println( "last key a50" +priceMapBar.get("FTSEA50").lastKey());
         //System.out.println( " last entry a50 "+priceMapBar.get("FTSEA50").lastEntry().getValue());
         priceMap.put("FTSEA50", priceMapBar.get("FTSEA50").lastEntry().getValue().getClose());
-        double max = priceMapBar.get("FTSEA50").entrySet().stream().max(BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
-        double min = priceMapBar.get("FTSEA50").entrySet().stream().min(BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
-        LocalTime maxT = priceMapBar.get("FTSEA50").entrySet().stream().max(BAR_HIGH).map(Entry::getKey).orElse(LocalTime.MAX);
-        LocalTime minT = priceMapBar.get("FTSEA50").entrySet().stream().min(BAR_LOW).map(Entry::getKey).orElse(LocalTime.MAX);
+        double max = priceMapBar.get("FTSEA50").entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
+        double min = priceMapBar.get("FTSEA50").entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
+        LocalTime maxT = priceMapBar.get("FTSEA50").entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getKey).orElse(LocalTime.MAX);
+        LocalTime minT = priceMapBar.get("FTSEA50").entrySet().stream().min(Utility.BAR_LOW).map(Entry::getKey).orElse(LocalTime.MAX);
 
         System.out.println("a50 max" + max + " " + maxT);
         System.out.println("a50 min" + min + " " + minT);
@@ -849,8 +849,8 @@ public final class ChinaStockHelper {
                 closeMap.put(ticker, open);
                 openMap.put(ticker, open);
                 priceMap.put(ticker, priceMapBar.get(ticker).lastEntry().getValue().getClose());
-                double max = priceMapBar.get(ticker).entrySet().stream().max(BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
-                double min = priceMapBar.get(ticker).entrySet().stream().min(BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
+                double max = priceMapBar.get(ticker).entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
+                double min = priceMapBar.get(ticker).entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
 
                 maxMap.put(ticker, max);
                 minMap.put(ticker, min);

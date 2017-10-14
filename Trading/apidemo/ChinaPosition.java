@@ -1,8 +1,8 @@
 package apidemo;
 
 import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaStock.BAR_HIGH;
-import static apidemo.ChinaStock.BAR_LOW;
+import static utility.Utility.BAR_HIGH;
+import static utility.Utility.BAR_LOW;
 import static apidemo.ChinaStock.closeMap;
 import static apidemo.ChinaStock.nameMap;
 import static apidemo.ChinaStock.openMap;

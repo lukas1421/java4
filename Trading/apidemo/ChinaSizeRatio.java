@@ -5,7 +5,7 @@ import static apidemo.ChinaData.sizeTotalMapYtd;
 import static apidemo.ChinaData.tradeTime;
 import static apidemo.ChinaStock.PM1310T;
 import static apidemo.ChinaStock.PMOPENT;
-import static apidemo.ChinaStock.PM_PRED;
+import static utility.Utility.PM_PRED;
 import static apidemo.ChinaStock.nameMap;
 import static utility.Utility.normalMapGen;
 import static apidemo.ChinaStock.symbolNames;

@@ -2,12 +2,12 @@ package apidemo;
 
 import static apidemo.ChinaStock.AMCLOSET;
 import static apidemo.ChinaStock.AMOPENT;
-import static apidemo.ChinaStock.AM_PRED;
-import static apidemo.ChinaStock.BAR_HIGH;
-import static apidemo.ChinaStock.BAR_LOW;
-import static apidemo.ChinaStock.IS_OPEN_PRED;
+import static utility.Utility.AM_PRED;
+import static utility.Utility.BAR_HIGH;
+import static utility.Utility.BAR_LOW;
+import static utility.Utility.IS_OPEN_PRED;
 import static apidemo.ChinaStock.PMOPENT;
-import static apidemo.ChinaStock.PM_PRED;
+import static utility.Utility.PM_PRED;
 import static apidemo.ChinaStock.nameMap;
 import static utility.Utility.noZeroArrayGen;
 import static apidemo.ChinaStock.selectedNameStock;
