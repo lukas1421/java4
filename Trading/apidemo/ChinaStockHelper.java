@@ -723,62 +723,6 @@ public final class ChinaStockHelper {
 //                BarSize._1_hour, Types.WhatToShow.MIDPOINT, false);
     }
 
-    static LocalDate getPreviousWorkday(LocalDate ld) {
-        if (ld.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
-            return ld.minusDays(3L);
-        } else {
-            return ld.minusDays(1L);
-        }
-    }
-
-    public static void dealWithDividends() {
-
-        LocalDate today = LocalDate.now().minusDays(1L);
-        //LocalDate ytd = today.getDayOfWeek().equals(DayOfWeek.MONDAY)?today.minusDays(3L):today.minusDays(1L);
-        //LocalDate y2 = today.getDayOfWeek().equals(DayOfWeek.MONDAY)?today.minusDays(4L):today.minusDays(2L);
-        LocalDate ytd = getPreviousWorkday(today);
-        LocalDate y2 = getPreviousWorkday(ytd);
-
-        System.out.println(" ytd is " + ytd);
-        System.out.println(" y2 is " + y2);
-
-        Map<String, Dividends> divTable = Dividends.getDiv();
-
-        divTable.forEach((ticker, div) -> {
-            if (ChinaData.priceMapBarYtd.containsKey(ticker) && ChinaData.priceMapBarY2.containsKey(ticker)) {
-                System.out.println(" correcting for ticker " + ticker);
-                // if(div.getExDate().equals(today)) {
-                System.out.println(" correcting div YTD for " + ticker + " " + div.toString());
-                ChinaData.priceMapBarYtd.get(ticker).replaceAll((k, v) -> {
-                    SimpleBar sb = new SimpleBar(v);
-                    return sb;
-                });
-
-                //dangerous reference equality induced by fillHoles by copying the reference of the higher entry
-                ChinaData.priceMapBarYtd.get(ticker).entrySet().stream().forEach(e -> {
-                    e.getValue().adjustByFactor(div.getAdjFactor());
-                });
-                //get rid of same reference
-
-                // if(div.getExDate().equals((ytd)) || div.getExDate().equals(today)) {
-                System.out.println(" correcting div Y2 for " + ticker + " " + div.toString());
-
-                ChinaData.priceMapBarY2.get(ticker).replaceAll((k, v) -> {
-                    SimpleBar sb = new SimpleBar(v);
-                    return sb;
-                });
-
-                ChinaData.priceMapBarY2.get(ticker).entrySet().stream().forEach(e -> {
-                    //System.out.println( " Y2 time " + e.getKey());
-                    //System.out.println( " Y2  before " + e.getValue());
-                    e.getValue().adjustByFactor(div.getAdjFactor());
-                    //System.out.println( " Y2  after " + e.getValue());
-                });
-                // }
-            }
-        });
-    }
-
     static void roundAllData() {
         ChinaData.priceMapBarYtd.entrySet().stream().forEach((e) -> ChinaStockHelper.roundMap(e.getValue()));
         ChinaData.priceMapBarY2.entrySet().stream().forEach((e) -> ChinaStockHelper.roundMap(e.getValue()));

@@ -7,7 +7,7 @@ import static apidemo.ChinaStock.PM1310T;
 import static apidemo.ChinaStock.PMOPENT;
 import static apidemo.ChinaStock.PM_PRED;
 import static apidemo.ChinaStock.nameMap;
-import static apidemo.ChinaStock.normalMapGen;
+import static utility.Utility.normalMapGen;
 import static apidemo.ChinaStock.symbolNames;
 import static apidemo.ChinaStock.symbolNamesFull;
 import java.awt.BorderLayout;

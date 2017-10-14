@@ -2,6 +2,7 @@ package apidemo;
 
 import auxiliary.SimpleBar;
 import graph.GraphFillable;
+import utility.Utility;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.sizeTotalMap;
@@ -294,7 +295,7 @@ final class GraphBar extends JComponent implements GraphFillable {
     }
 
     double getRangeY() {
-        return noZeroArrayGen(name, minMapY, maxMapY) ? round(100d * (maxMapY.get(name) / minMapY.get(name) - 1)) / 100d : 0.0;
+        return Utility.noZeroArrayGen(name, minMapY, maxMapY) ? round(100d * (maxMapY.get(name) / minMapY.get(name) - 1)) / 100d : 0.0;
     }
 
     double getMaxRtn() {
@@ -324,37 +325,37 @@ final class GraphBar extends JComponent implements GraphFillable {
     }
 
     double getRetOPC() {
-        return (noZeroArrayGen(name, closeMap, openMap)) ? round(1000d * (openMap.get(name) / closeMap.get(name) - 1)) / 10d : 0.0;
+        return (Utility.noZeroArrayGen(name, closeMap, openMap)) ? round(1000d * (openMap.get(name) / closeMap.get(name) - 1)) / 10d : 0.0;
     }
 
     double getFirst1() {
-        return (normalMapGen(name, priceMapBar) && priceMapBar.get(name).containsKey(AMOPENT) && noZeroArrayGen(name, openMap))
+        return (Utility.normalMapGen(name, priceMapBar) && priceMapBar.get(name).containsKey(AMOPENT) && Utility.noZeroArrayGen(name, openMap))
                 ? round(1000d * (priceMapBar.get(name).floorEntry(AMOPENT).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
     }
 
     double getFirst10() {
-        return (normalMapGen(name, priceMapBar) && priceMapBar.get(name).containsKey(AMOPENT) && noZeroArrayGen(name, openMap))
+        return (Utility.normalMapGen(name, priceMapBar) && priceMapBar.get(name).containsKey(AMOPENT) && Utility.noZeroArrayGen(name, openMap))
                 ? round(1000d * (priceMapBar.get(name).floorEntry(AM940T).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
     }
 
     int getCurrentMaxMinYP() {
-        return (noZeroArrayGen(name, minMapY, priceMap)) ? (int) min(100, round(100d * (priceMap.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+        return (Utility.noZeroArrayGen(name, minMapY, priceMap)) ? (int) min(100, round(100d * (priceMap.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
     double getOpenYP() {
-        return (noZeroArrayGen(name, minMapY)) ? (int) min(100, round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+        return (Utility.noZeroArrayGen(name, minMapY)) ? (int) min(100, round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
     int getCloseYP() {
-        return (noZeroArrayGen(name, minMapY)) ? (int) min(100, round(100d * (closeMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+        return (Utility.noZeroArrayGen(name, minMapY)) ? (int) min(100, round(100d * (closeMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
     double getCurrentPercentile() {
-        return (noZeroArrayGen(name, priceMap, maxMap, minMap)) ? min(100.0, round(100d * ((priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name))))) : 0.0;
+        return (Utility.noZeroArrayGen(name, priceMap, maxMap, minMap)) ? min(100.0, round(100d * ((priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name))))) : 0.0;
     }
 
     double getRetCHY() {
-        return (noZeroArrayGen(name, closeMapY, maxMapY)) ? min(100.0, round(1000d * log(closeMapY.get(name) / maxMapY.get(name)))) / 10d : 0.0;
+        return (Utility.noZeroArrayGen(name, closeMapY, maxMapY)) ? min(100.0, round(1000d * log(closeMapY.get(name) / maxMapY.get(name)))) / 10d : 0.0;
     }
 
     double getHO() {
@@ -362,12 +363,12 @@ final class GraphBar extends JComponent implements GraphFillable {
     }
 
     double getHOCHRangeRatio() {
-        return (noZeroArrayGen(name, retHOY, retCHY, minMapY, maxMapY))
+        return (Utility.noZeroArrayGen(name, retHOY, retCHY, minMapY, maxMapY))
                 ? round((retHOY.get(name) - retCHY.get(name)) / ((maxMapY.get(name) / minMapY.get(name) - 1)) * 10d) / 10d : 0.0;
     }
 
     double getRetCLY() {
-        return (noZeroArrayGen(name, closeMapY, minMapY)) ? min(100.0, round(1000d * log(closeMapY.get(name) / minMapY.get(name)))) / 10d : 0.0;
+        return (Utility.noZeroArrayGen(name, closeMapY, minMapY)) ? min(100.0, round(1000d * log(closeMapY.get(name) / minMapY.get(name)))) / 10d : 0.0;
     }
 
     double getRetCC() {
@@ -397,11 +398,11 @@ final class GraphBar extends JComponent implements GraphFillable {
     }
 
     Double getSizeSizeY() {
-        return (noZeroArrayGen(name, ChinaStock.sizeMap, sizeY)) ? round(10d * sizeMap.get(name) / sizeY.get(name)) / 10d : 0.0;
+        return (Utility.noZeroArrayGen(name, ChinaStock.sizeMap, sizeY)) ? round(10d * sizeMap.get(name) / sizeY.get(name)) / 10d : 0.0;
     }
 
     Double getSizeSizeYT() {
-        if (normalMapGen(name, sizeTotalMapYtd, sizeTotalMap)) {
+        if (Utility.normalMapGen(name, sizeTotalMapYtd, sizeTotalMap)) {
             LocalTime lastEntryTime = sizeTotalMap.get(name).lastEntry().getKey();
             double yest = ofNullable(sizeTotalMapYtd.get(name).floorEntry(lastEntryTime)).map(Entry::getValue).orElse(0.0);
             return yest != 0.0 ? round(10d * sizeTotalMap.get(name).lastEntry().getValue() / yest) / 10d : 0.0;
@@ -410,7 +411,7 @@ final class GraphBar extends JComponent implements GraphFillable {
     }
 
     int getPMchgY() {
-        return (noZeroArrayGen(name, minMapY, amCloseY, closeMapY, maxMapY))
+        return (Utility.noZeroArrayGen(name, minMapY, amCloseY, closeMapY, maxMapY))
                 ? (int) min(100, round(100d * (closeMapY.get(name) - amCloseY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 }

@@ -1,5 +1,6 @@
 package apidemo;
 
+import auxiliary.ChinaSaveInterface2Blob;
 import auxiliary.SimpleBar;
 
 import java.io.Serializable;
@@ -38,7 +39,7 @@ public class ChinaSaveYest implements Serializable, ChinaSaveInterface2Blob {
     @Lob
     Blob volMapBlob;
 
-    ChinaSaveYest() {
+    public ChinaSaveYest() {
     }
 
     public ChinaSaveYest(String name) {

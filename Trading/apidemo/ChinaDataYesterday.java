@@ -9,7 +9,7 @@ import static apidemo.ChinaStock.IS_OPEN_PRED;
 import static apidemo.ChinaStock.PMOPENT;
 import static apidemo.ChinaStock.PM_PRED;
 import static apidemo.ChinaStock.nameMap;
-import static apidemo.ChinaStock.noZeroArrayGen;
+import static utility.Utility.noZeroArrayGen;
 import static apidemo.ChinaStock.selectedNameStock;
 import static apidemo.ChinaStock.symbolNamesFull;
 

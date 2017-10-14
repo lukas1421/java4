@@ -5,6 +5,7 @@ import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.ChinaStock.AM914T;
 
 import auxiliary.AnaCompute;
+import auxiliary.Dividends;
 import historical.Request;
 import util.VerticalPanel;
 import client.ExecutionFilter;
@@ -385,7 +386,7 @@ public final class ChinaMain implements IConnectionHandler {
 
         JButton dividendButton = new JButton("Dividends");
         dividendButton.addActionListener(l -> {
-            ChinaStockHelper.dealWithDividends();
+            Dividends.dealWithDividends();
         });
 
         JButton roundDataButton = new JButton("Round");

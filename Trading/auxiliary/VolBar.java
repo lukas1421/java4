@@ -1,6 +1,6 @@
-package apidemo;
+package auxiliary;
 
-import static apidemo.VolBar.LEVEL.*;
+import static auxiliary.VolBar.LEVEL.*;
 import java.io.Serializable;
 import java.util.EnumMap;
 
@@ -40,13 +40,13 @@ public class VolBar implements Serializable {
         L1, L2, L3, L4, L5, AGG;
     }
 
-    void fill(LEVEL l, double p) {
+    public void fill(LEVEL l, double p) {
         if (!map.containsKey(l) || p > map.get(l)) {
             map.put(l, p);
         }
     }
 
-    void fillAll(double p1, double p2, double p3, double p4, double p5) {
+    public void fillAll(double p1, double p2, double p3, double p4, double p5) {
         fill(L1, p1);
         fill(L2, p2);
         fill(L3, p3);
@@ -55,27 +55,27 @@ public class VolBar implements Serializable {
         fill(AGG, p1 + p2 + p3 + p4 + p5);
     }
 
-    double getL1() {
+    public double getL1() {
         return map.get(L1);
     }
 
-    double getL2() {
+    public double getL2() {
         return map.get(L2);
     }
 
-    double getL3() {
+    public double getL3() {
         return map.get(L3);
     }
 
-    double getL4() {
+    public double getL4() {
         return map.get(L4);
     }
 
-    double getL5() {
+    public double getL5() {
         return map.get(L5);
     }
 
-    double getAgg() {
+    public double getAgg() {
         return map.get(AGG);
     }
 

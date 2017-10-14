@@ -1,6 +1,8 @@
 package apidemo;
 
 import auxiliary.SimpleBar;
+import auxiliary.VolBar;
+import utility.Utility;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.sizeTotalMap;
@@ -28,7 +30,7 @@ import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 
-class SinaStock implements Runnable {
+public class SinaStock implements Runnable {
 
     static Map<String, Double> weightMapA50 = new HashMap<>();
 
@@ -46,7 +48,7 @@ class SinaStock implements Runnable {
     static String urlString;
     static String urlStringSH;
     static String urlStringSZ;
-    static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
+    public static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
     Matcher matcher;
     String line;
 
@@ -58,9 +60,9 @@ class SinaStock implements Runnable {
             -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) && !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
             && lt.toLocalTime().isAfter(LocalTime.of(9, 0, 30));
 
-    final Predicate<LocalTime> FUT_OPEN = (lt) -> lt.isAfter(LocalTime.of(9, 0, 0));
+    public final Predicate<LocalTime> FUT_OPEN = (lt) -> lt.isAfter(LocalTime.of(9, 0, 0));
 
-    static final Predicate<LocalTime> DATA_COLLECTION_TIME = (LocalTime lt) -> (lt.isAfter(LocalTime.of(9, 14)) && lt.isBefore(LocalTime.of(11, 35)))
+    public static final Predicate<LocalTime> DATA_COLLECTION_TIME = (LocalTime lt) -> (lt.isAfter(LocalTime.of(9, 14)) && lt.isBefore(LocalTime.of(11, 35)))
             || (lt.isAfter(LocalTime.of(12, 58)) && lt.isBefore(LocalTime.of(15, 05)));
 
     private SinaStock() {
@@ -68,7 +70,7 @@ class SinaStock implements Runnable {
             List<String> dataA50;
             while ((line = reader1.readLine()) != null) {
                 dataA50 = Arrays.asList(line.split("\t"));
-                weightMapA50.put(dataA50.get(0), pd(dataA50, 1));
+                weightMapA50.put(dataA50.get(0), Utility.pd(dataA50, 1));
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -140,19 +142,19 @@ class SinaStock implements Runnable {
                 while (matcher.find()) {
                     String ticker = matcher.group(1);
 
-                    if (pd(datalist, 3) > 0.0001 && pd(datalist, 1) > 0.0001) {
-                        openMap.put(ticker, pd(datalist, 1));
-                        closeMap.put(ticker, pd(datalist, 2));
-                        priceMap.put(ticker, pd(datalist, 3));
-                        maxMap.put(ticker, pd(datalist, 4));
-                        minMap.put(ticker, pd(datalist, 5));
-                        returnMap.put(ticker, 100d * (pd(datalist, 3) / pd(datalist, 2) - 1));
-                        sizeMap.put(ticker, Math.round(pd(datalist, 9) / 1000000d));
+                    if (Utility.pd(datalist, 3) > 0.0001 && Utility.pd(datalist, 1) > 0.0001) {
+                        openMap.put(ticker, Utility.pd(datalist, 1));
+                        closeMap.put(ticker, Utility.pd(datalist, 2));
+                        priceMap.put(ticker, Utility.pd(datalist, 3));
+                        maxMap.put(ticker, Utility.pd(datalist, 4));
+                        minMap.put(ticker, Utility.pd(datalist, 5));
+                        returnMap.put(ticker, 100d * (Utility.pd(datalist, 3) / Utility.pd(datalist, 2) - 1));
+                        sizeMap.put(ticker, Math.round(Utility.pd(datalist, 9) / 1000000d));
 
                         if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker) && DATA_COLLECTION_TIME.test(lt)) {
-                            double last = pd(datalist, 3);
+                            double last = Utility.pd(datalist, 3);
                             //priceMapPlain.get(ticker).put(lt,last);
-                            sizeTotalMap.get(ticker).put(lt, pd(datalist, 9) / 1000000d);
+                            sizeTotalMap.get(ticker).put(lt, Utility.pd(datalist, 9) / 1000000d);
 
                             if (priceMapBar.get(ticker).containsKey(lt)) {
                                 priceMapBar.get(ticker).get(lt).add(last);
@@ -169,9 +171,9 @@ class SinaStock implements Runnable {
                         //updateBidAskMap(ticker, lt, datalist, BidAsk.BID, bidMap);
                         //updateBidAskMap(ticker, lt, datalist, BidAsk.ASK, askMap);
                     } else {
-                        ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(pd(datalist, 2)));
-                        ChinaStock.closeMap.put(ticker, pd(datalist, 2));
-                        ChinaStock.priceMap.put(ticker, pd(datalist, 2));
+                        ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(Utility.pd(datalist, 2)));
+                        ChinaStock.closeMap.put(ticker, Utility.pd(datalist, 2));
+                        ChinaStock.priceMap.put(ticker, Utility.pd(datalist, 2));
                         ChinaStock.returnMap.put(ticker, 0.0);
                     }
                 }
@@ -203,16 +205,12 @@ class SinaStock implements Runnable {
         return LocalTime.of(now.getHour(), now.getMinute(), (now.getSecond() / 5) * 5);
     }
 
-    static double pd(List<String> l, int index) {
-        return (l.size() > index) ? Double.parseDouble(l.get(index)) : 0.0;
-    }
-
     static void updateBidAskMap(String ticker, LocalTime t, List l, BidAsk ba, Map<String, ? extends NavigableMap<LocalTime, VolBar>> mp) {
         int factor = ba.getValue() * 10;
         if (mp.get(ticker).containsKey(t)) {
-            mp.get(ticker).get(t).fillAll(pd(l, 10 + factor), pd(l, 12 + factor), pd(l, 14 + factor), pd(l, 16 + factor), pd(l, 18 + factor));
+            mp.get(ticker).get(t).fillAll(Utility.pd(l, 10 + factor), Utility.pd(l, 12 + factor), Utility.pd(l, 14 + factor), Utility.pd(l, 16 + factor), Utility.pd(l, 18 + factor));
         } else {
-            mp.get(ticker).put(t, new VolBar(pd(l, 10 + factor), pd(l, 12 + factor), pd(l, 14 + factor), pd(l, 16 + factor), pd(l, 18 + factor)));
+            mp.get(ticker).put(t, new VolBar(Utility.pd(l, 10 + factor), Utility.pd(l, 12 + factor), Utility.pd(l, 14 + factor), Utility.pd(l, 16 + factor), Utility.pd(l, 18 + factor)));
 
         }
     }

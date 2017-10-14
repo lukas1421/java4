@@ -4,6 +4,7 @@ package apidemo;
 //import static apidemo.ChinaStock.*;
 import auxiliary.SimpleBar;
 import graph.GraphFillable;
+import utility.Utility;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarY2;
@@ -16,7 +17,7 @@ import static apidemo.ChinaStock.AM925T;
 import static apidemo.ChinaStock.AM_PRED;
 import static apidemo.ChinaStock.BAR_HIGH;
 import static apidemo.ChinaStock.BAR_LOW;
-import static apidemo.ChinaStock.NORMAL_MAP;
+import static utility.Utility.NORMAL_MAP;
 import static apidemo.ChinaStock.TIMEMAX;
 import static utility.Utility.getStr;
 import static apidemo.GraphBigIndex.maxGen;
@@ -599,7 +600,7 @@ class GraphBigYtd extends JComponent implements GraphFillable {
     }
 
     private Double getSizeSizeYT() {
-        if (ChinaStock.normalMapGen(name, sizeTotalMap, sizeTotalMapYtd)) {
+        if (Utility.normalMapGen(name, sizeTotalMap, sizeTotalMapYtd)) {
             LocalTime lastEntryTime = sizeTotalMap.get(name).lastEntry().getKey();
             double lastSize = sizeTotalMap.get(name).lastEntry().getValue();
             double yest = Optional.ofNullable(sizeTotalMapYtd.get(name).floorEntry(lastEntryTime)).map(Entry::getValue).orElse(Double.MAX_VALUE);

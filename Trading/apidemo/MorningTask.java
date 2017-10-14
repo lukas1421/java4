@@ -1,6 +1,6 @@
 package apidemo;
 
-import static apidemo.SinaStock.pd;
+import static utility.Utility.pd;
 
 import auxiliary.SimpleBar;
 import client.Contract;

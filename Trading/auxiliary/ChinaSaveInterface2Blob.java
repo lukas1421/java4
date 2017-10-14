@@ -1,4 +1,4 @@
-package apidemo;
+package auxiliary;
 
 import java.sql.Blob;
 import java.time.LocalTime;

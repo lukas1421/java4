@@ -1,5 +1,8 @@
 package apidemo;
 
+import auxiliary.ChinaSaveInterface2Blob;
+import auxiliary.VolBar;
+
 import java.io.Serializable;
 import java.sql.Blob;
 import java.time.LocalTime;

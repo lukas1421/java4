@@ -1,6 +1,7 @@
 package apidemo;
 
 import graph.GraphFillable;
+import utility.Utility;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapPlain;
@@ -103,7 +104,7 @@ public class Graph extends JComponent implements GraphFillable {
             setName(name);
             setChineseName(ChinaStock.nameMap.get(name));
             setSize1(sizeMap.getOrDefault(name, 0L));
-            if (NORMAL_MAP.test(priceMapPlain, name)) {
+            if (Utility.NORMAL_MAP.test(priceMapPlain, name)) {
                 this.setNavigableMap(ChinaData.priceMapPlain.get(name));
             }
         }
@@ -122,12 +123,12 @@ public class Graph extends JComponent implements GraphFillable {
 
         height = (int) (getHeight() - 70);
         getWidth();
-        min = getMin();
-        max = getMax();
-        minRtn = getMinRtn();
-        maxRtn = getMaxRtn();
+        min = Utility.getMin(tm);
+        max = Utility.getMax(tm);
+        minRtn = getMinRtn(tm);
+        maxRtn = Utility.getMaxRtn(tm);
         last = 0;
-        rtn = getReturn();
+        rtn = getReturn(tm);
 
         int x = 5;
         for (LocalTime lt : tm.keySet()) {
@@ -160,19 +161,19 @@ public class Graph extends JComponent implements GraphFillable {
         if (!Optional.ofNullable(chineseName).orElse("").equals("")) {
             g2.drawString(chineseName, getWidth() / 7, 15);
         }
-        g2.drawString(Double.toString(getLast()), getWidth() / 7 * 2, 15);
+        g2.drawString(Double.toString(Utility.getLast(tm)), getWidth() / 7 * 2, 15);
 
         g2.drawString("P%:" + Double.toString(getCurrentPercentile()), getWidth() / 7 * 3 - 30, 15);
-        g2.drawString("涨:" + Double.toString(getReturn()) + "%", getWidth() / 7 * 4 - 40, 15);
-        g2.drawString("高 " + (getAMMaxT()), getWidth() / 7 * 5 - 40, 15);
-        g2.drawString("低 " + (getAMMinT()), getWidth() / 7 * 6 - 40, 15);
+        g2.drawString("涨:" + Double.toString(getReturn(tm)) + "%", getWidth() / 7 * 4 - 40, 15);
+        g2.drawString("高 " + (getAMMaxT(tm)), getWidth() / 7 * 5 - 40, 15);
+        g2.drawString("低 " + (getAMMinT(tm)), getWidth() / 7 * 6 - 40, 15);
 
         g2.drawString("开 " + Double.toString(getRetOPC()), 5, getHeight() - 25);
-        g2.drawString("一 " + Double.toString(getFirst1()), getWidth() / 8, getHeight() - 25);
+        g2.drawString("一 " + Double.toString(getFirst1(name)), getWidth() / 8, getHeight() - 25);
         g2.drawString("量 " + Long.toString(getSize1()), 5, getHeight() - 5);
         g2.drawString("位Y " + Integer.toString(getCurrentMaxMinYP()), getWidth() / 8, getHeight() - 5);
 
-        g2.drawString("十  " + Double.toString(getFirst10()), getWidth() / 8 + 65, getHeight() - 25);
+        g2.drawString("十  " + Double.toString(getFirst10(name)), getWidth() / 8 + 65, getHeight() - 25);
         g2.drawString("V比T " + Double.toString(getSizeSizeYT()), getWidth() / 8 + 65, getHeight() - 5);
 
         g2.setColor(Color.BLUE);
@@ -192,9 +193,6 @@ public class Graph extends JComponent implements GraphFillable {
 
     }
 
-    /**
-     * Convert bar value to y coordinate.
-     */
     public int getY(double v) {
         double span = max - min;
         double pct = (v - min) / span;
@@ -207,38 +205,23 @@ public class Graph extends JComponent implements GraphFillable {
         return new Dimension(50, 50);
     }
 
-    public double getMin() {
-        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().min(Entry.comparingByValue()).map(Entry::getValue).orElse(0.0) : 0.0;
-    }
-
-    public double getMax() {
-        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().max(Entry.comparingByValue()).map(Entry::getValue).orElse(0.0) : 0.0;
-    }
-
-    public double getReturn() {
+    public static double getReturn(NavigableMap<LocalTime, Double> tm) {
         double initialP = 0;
         double finalP = 0;
 
-        if (tm.size() > 2 && (Math.abs((finalP = tm.lastEntry().getValue()) - (initialP = tm.entrySet().stream().filter(entry -> entry.getValue() != 0.0).findFirst().get().getValue())) > 0.0001)) {
+        if (tm.size() > 2 && (Math.abs((finalP = tm.lastEntry().getValue()) -
+                (initialP = tm.entrySet().stream().filter(entry -> entry.getValue() != 0.0).findFirst().get().getValue())) > 0.0001)) {
             return (double) 100 * Math.round(log(finalP / initialP) * 1000d) / 1000d;
         }
         return 0.0;
     }
 
     public double getRangeY() {
-        return (noZeroArrayGen(name, minMapY, maxMapY)) ? Math.round(100d * Math.log(maxMapY.get(name) / minMapY.get(name))) / 100d : 0.0;
+        return (Utility.noZeroArrayGen(name, minMapY, maxMapY)) ? Math.round(100d * Math.log(maxMapY.get(name) / minMapY.get(name))) / 100d : 0.0;
     }
 
-    public double getMaxRtn() {
-        return (tm.size() > 0) ? (double) Math.round((getMax() / tm.entrySet().stream().findFirst().map(Entry::getValue).orElse(0.0) - 1) * 1000d) / 10d : 0.0;
-    }
-
-    public double getMinRtn() {
-        return tm.size() > 0 ? (double) Math.round((getMin() / tm.entrySet().stream().findFirst().map(Entry::getValue).orElse(0.0) - 1) * 1000d) / 10d : 0.0;
-    }
-
-    public double getLast() {
-        return tm.size() > 0 ? Math.round(100d * tm.lastEntry().getValue()) / 100d : 0.0;
+    public static double getMinRtn(NavigableMap<LocalTime, Double> tm) {
+        return tm.size() > 0 ? (double) Math.round((Utility.getMin(tm) / tm.entrySet().stream().findFirst().map(Entry::getValue).orElse(0.0) - 1) * 1000d) / 10d : 0.0;
     }
 
     public long getSize1() {
@@ -246,44 +229,45 @@ public class Graph extends JComponent implements GraphFillable {
     }
 
     public double getRetOPC() {
-        return (ChinaStock.noZeroArrayGen(name, ChinaStock.closeMap, ChinaStock.openMap))
+        return (Utility.noZeroArrayGen(name, ChinaStock.closeMap, ChinaStock.openMap))
                 ? Math.round(1000d * Math.log(ChinaStock.openMap.get(name) / ChinaStock.closeMap.get(name))) / 10d : 0.0;
     }
 
-    public double getFirst1() {
-        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(AMOPENT) && NO_ZERO.test(openMap, name))
-                ? Math.round(1000d * (priceMapBar.get(name).floorEntry(LocalTime.of(9, 30)).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
+    public double getFirst1(String name) {
+        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(AMOPENT) && Utility.NO_ZERO.test(openMap, name))
+                ? Math.round(1000d * (priceMapBar.get(name).floorEntry(LocalTime.of(9, 30)).getValue().getClose() /
+                openMap.get(name) - 1)) / 10d : 0.0;
     }
 
-    public double getFirst10() {
-        return (normalMapGen(name, priceMapPlain) && priceMapPlain.get(name).containsKey(LocalTime.of(9, 31)) && noZeroArrayGen(name, openMap))
+    public double getFirst10(String name) {
+        return (Utility.normalMapGen(name, priceMapPlain) && priceMapPlain.get(name).containsKey(LocalTime.of(9, 31)) && Utility.noZeroArrayGen(name, openMap))
                 ? Math.round(1000d * (priceMapPlain.get(name).floorEntry(AM940T).getValue() / openMap.get(name) - 1)) / 10d : 0.0;
     }
 
     public int getCurrentMaxMinYP() {
-        return (noZeroArrayGen(name, minMapY, priceMap)) ? (int) Math.min(100, Math.round(100d * (priceMap.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+        return (Utility.noZeroArrayGen(name, minMapY, priceMap)) ? (int) Math.min(100, Math.round(100d * (priceMap.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
     public double getOpenYP() {
-        return (NO_ZERO.test(minMapY, name)) ? (int) Math.min(100, Math.round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+        return (Utility.NO_ZERO.test(minMapY, name)) ? (int) Math.min(100, Math.round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
     public int getCloseYP() {
-        return noZeroArrayGen(name, minMapY, maxMapY, closeMapY)
+        return Utility.noZeroArrayGen(name, minMapY, maxMapY, closeMapY)
                 ? (int) Math.min(100, Math.round(100d * (closeMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
     public double getCurrentPercentile() {
-        return noZeroArrayGen(name, minMap) ? Math.min(100.0, Math.round(100d * ((priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name))))) : 0.0;
+        return Utility.noZeroArrayGen(name, minMap) ? Math.min(100.0, Math.round(100d * ((priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name))))) : 0.0;
     }
 
     //get some 
     public double getRetCHY() {
-        return (noZeroArrayGen(name, closeMapY, maxMapY)) ? Math.min(100.0, Math.round(1000d * Math.log(closeMapY.get(name) / maxMapY.get(name)))) / 10d : 0.0;
+        return (Utility.noZeroArrayGen(name, closeMapY, maxMapY)) ? Math.min(100.0, Math.round(1000d * Math.log(closeMapY.get(name) / maxMapY.get(name)))) / 10d : 0.0;
     }
 
     public double getRetCLY() {
-        return (noZeroArrayGen(name, closeMapY, minMapY)) ? Math.min(100.0, Math.round(1000d * Math.log(closeMapY.get(name) / minMapY.get(name)))) / 10d : 0.0;
+        return (Utility.noZeroArrayGen(name, closeMapY, minMapY)) ? Math.min(100.0, Math.round(1000d * Math.log(closeMapY.get(name) / minMapY.get(name)))) / 10d : 0.0;
     }
 
     public double getRetCC() {
@@ -302,7 +286,7 @@ public class Graph extends JComponent implements GraphFillable {
         return maxTY.getOrDefault(name, 0);
     }
 
-    public LocalTime getAMMinT() {
+    public LocalTime getAMMinT(NavigableMap<LocalTime, Double> tm) {
         if (tm.size() > 0) {
             if (tm.firstKey().isBefore(LocalTime.of(12, 1)) && tm.lastKey().isAfter(LocalTime.of(9, 30))) {
                 return tm.entrySet().stream().filter(entry1 -> entry1.getValue() != 0.0 && entry1.getKey().isAfter(LocalTime.of(9, 29)) && entry1.getKey().isBefore(LocalTime.of(12, 1)))
@@ -312,7 +296,7 @@ public class Graph extends JComponent implements GraphFillable {
         return LocalTime.of(9, 30);
     }
 
-    public LocalTime getAMMaxT() {
+    public LocalTime getAMMaxT(NavigableMap<LocalTime, Double> tm) {
         if (!tm.isEmpty() & tm.size() > 2 && tm.firstKey().isBefore(LocalTime.of(12, 1)) && tm.lastKey().isAfter(LocalTime.of(9, 30))) {
             return tm.entrySet().stream().filter(entry -> entry.getValue() != 0.0 && entry.getKey().isAfter(LocalTime.of(9, 29)) && entry.getKey().isBefore(LocalTime.of(12, 1)))
                     .max(Entry.comparingByValue()).get().getKey();
@@ -321,17 +305,17 @@ public class Graph extends JComponent implements GraphFillable {
     }
 
     public Double getSizeSizeY() {
-        return (noZeroArrayGen(name, ChinaStock.sizeMap, ChinaDataYesterday.sizeY))
+        return (Utility.noZeroArrayGen(name, ChinaStock.sizeMap, ChinaDataYesterday.sizeY))
                 ? Math.round(10d * ChinaStock.sizeMap.get(name) / ChinaDataYesterday.sizeY.get(name)) / 10d : 0.0;
     }
 
     public Double getSizeSizeYT() {
-        return (ChinaStock.normalMapGen(name, sizeTotalMapYtd, sizeTotalMapYtd))
+        return (Utility.normalMapGen(name, sizeTotalMapYtd, sizeTotalMapYtd))
                 ? Math.round(10d * sizeTotalMap.get(name).lastEntry().getValue() / sizeTotalMapYtd.get(name).lastEntry().getValue()) / 10d : 0.0;
     }
 
     public int getPMchgY() {
-        return (ChinaStock.noZeroArrayGen(name, minMapY, amCloseY, closeMapY, maxMapY))
+        return (Utility.noZeroArrayGen(name, minMapY, amCloseY, closeMapY, maxMapY))
                 ? (int) Math.min(100, Math.round(100d * (closeMapY.get(name) - amCloseY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 

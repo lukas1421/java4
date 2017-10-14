@@ -156,16 +156,12 @@ public final class ChinaStock extends JPanel {
     public static final Comparator<? super Entry<LocalTime, SimpleBar>> BAR_LOW = (e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
 
     //static final Comparator<? super Entry<LocalTime,Double>> Entry.comparingByValue() = (e1,e2)->e1.getValue()>=e2.getValue()?1:-1;
-    static final Predicate<String> NORMAL_STOCK = name -> priceMapBar.containsKey(name) && !priceMapBar.get(name).isEmpty() && priceMapBar.get(name).size() > 0;
-
-    static BiPredicate<? super Map<String, ? extends Map<LocalTime, ?>>, String> NORMAL_MAP = (mp, name) -> mp.containsKey(name) && !mp.get(name).isEmpty() && mp.get(name).size() > 0;
+    public static final Predicate<String> NORMAL_STOCK = name -> priceMapBar.containsKey(name) && !priceMapBar.get(name).isEmpty() && priceMapBar.get(name).size() > 0;
 
     static final BiPredicate<String, LocalTime> FIRST_KEY_BEFORE = (name, lt) -> priceMapBar.get(name).firstKey().isBefore(lt);
     static final BiPredicate<String, LocalTime> LAST_KEY_AFTER = (name, lt) -> priceMapBar.get(name).lastKey().isAfter(lt);
     static final BiPredicate<String, LocalTime> CONTAINS_TIME = (name, lt) -> priceMapBar.get(name).containsKey(lt);
 
-    static final BiPredicate<? super Map<String, ? extends Number>, String> NO_ZERO = (mp, name) -> mp.containsKey(name) && mp.get(name).doubleValue() != 0.0;
-    static final Predicate<? super Entry<LocalTime, SimpleBar>> CONTAINS_NO_ZERO = e -> !e.getValue().containsZero();
     static final BiFunction1<? super Entry<LocalTime, ?>, LocalTime> ENTRY_BETWEEN = (e, lt1, lt2) -> (e.getKey().isAfter(lt1) && e.getKey().isBefore(lt2));
     static final BiFunction2<LocalTime> ENTRY_BETWEEN2 = (lt1, lt2) -> (e -> e.getKey().isAfter(lt1) && e.getKey().isBefore(lt2));
     static final GenTimePred<LocalTime, Boolean> ENTRY_BTWN_GEN = (t1, b1, t2, b2) -> (e -> e.getKey().isAfter(b1 ? t1.minusMinutes(1) : t1) && e.getKey().isBefore(b2 ? t2.plusMinutes(1) : t2));
@@ -1208,7 +1204,7 @@ public final class ChinaStock extends JPanel {
     }
 
     static double getCurrentMARatio(String name) {
-        return noZeroArrayGen(name, ma20Map, priceMap)
+        return Utility.noZeroArrayGen(name, ma20Map, priceMap)
                 ? round(100d * (20d / (ma20Map.get(name) / priceMap.get(name) * 19 + 1))) / 100d : 0.0;
     }
 
@@ -1218,37 +1214,6 @@ public final class ChinaStock extends JPanel {
 //         IdeaProcessor.refreshPage();
 //         IdeaProcessorJolt.refreshPage();
 //         IdeaProcessorPM.refreshPage();
-    }
-
-    /**
-     * test if one-level maps contains value for a given stock
-     *
-     * @param name name of the stock
-     * @param mp hashmap of stock and value
-     * @return all of these maps contains info about this stock
-     */
-    static boolean noZeroArrayGen(String name, Map<String, ? extends Number>... mp) {
-        boolean res = true;
-        for (Map<String, ? extends Number> m : mp) {
-            res = res && NO_ZERO.test(m, name);
-        }
-        return res;
-    }
-
-    /**
-     * Tests if an arbitrary number of two-level maps satisify a
-     * {@link normalMap#NORMAL_MAP} predicate
-     *
-     * @param name
-     * @param mp
-     * @return
-     */
-    static boolean normalMapGen(String name, Map<String, ? extends Map<LocalTime, ?>>... mp) {
-        boolean res = true;
-        for (Map<String, ? extends Map<LocalTime, ?>> m : mp) {
-            res = res && ChinaStock.NORMAL_MAP.test(m, name);
-        }
-        return res;
     }
 
     /**
@@ -1269,7 +1234,7 @@ public final class ChinaStock extends JPanel {
         }
 
         if (lastEntryTime.isAfter(AMOPENT) && lastEntryTime.isBefore(PMCLOSET)) {
-            if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, AM935T) && noZeroArrayGen(name, maxMap, minMap, openMap) && NORMAL_MAP.test(sizeRatioMap, name)) {
+            if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, AM935T) && Utility.noZeroArrayGen(name, maxMap, minMap, openMap) && Utility.NORMAL_MAP.test(sizeRatioMap, name)) {
 
                 double amhoY = amHOY.getOrDefault(name, 0.0);
                 //double percentileY = ChinaDataYesterday.percentileY.getOrDefault(name, 0.0);
@@ -1312,7 +1277,7 @@ public final class ChinaStock extends JPanel {
                 percentileVRP3mChgMap.put(name, vrPercentileChg3 * pricePercentileChg3);
                 percentileVRP5mChgMap.put(name, vrPercentileChg5 * pricePercentileChg5);
 
-                double trueRange = (noZeroArrayGen(name, maxMapY, minMapY)) ? (priceMap.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)) : 1.0;
+                double trueRange = (Utility.noZeroArrayGen(name, maxMapY, minMapY)) ? (priceMap.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)) : 1.0;
 
                 int percentileY = (int) min(100, round(100d * ofNullable(ChinaDataYesterday.percentileY.get(name)).orElse(0.0)));
                 double retOPC = log(openMap.get(name) / closeMapY.getOrDefault(name, openMap.get(name)));
@@ -1358,7 +1323,7 @@ public final class ChinaStock extends JPanel {
                     }
 
                     //AM general size strategy
-                    if (NORMAL_MAP.test(sizeRatioMap, name) && last > open && amFirst10 > 0 && sizeRatioMap.get(name).containsKey(AMOPENT)) {
+                    if (Utility.NORMAL_MAP.test(sizeRatioMap, name) && last > open && amFirst10 > 0 && sizeRatioMap.get(name).containsKey(AMOPENT)) {
 
                         double currSizeR = sizeRatioMap.get(name).lastEntry().getValue();
                         double maxAfter930 = sizeRatioMap.get(name).entrySet().parallelStream().filter(IS_OPEN_PRED).max(Entry.comparingByValue()).map(Entry::getValue).orElse(0.0);
@@ -1430,7 +1395,7 @@ public final class ChinaStock extends JPanel {
                             interestedName.put(name, true);
                         }
 
-                        if (noZeroArrayGen(name, maxMapY, minMapY)) {
+                        if (Utility.noZeroArrayGen(name, maxMapY, minMapY)) {
                             if (log(last / openMap.get(name)) / log(maxMapY.get(name) / minMapY.get(name)) < -2d) {
                                 stratPMMap.put(name, "BIG DROP");
                                 stratTimeMap.put(name, LocalTime.now());
@@ -1663,7 +1628,7 @@ public final class ChinaStock extends JPanel {
     }
 
     static int getPercentile(String name) {
-        return noZeroArrayGen(name, priceMap, maxMap, minMap) ? (int) min(100, round(100d * (priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))) : 0;
+        return Utility.noZeroArrayGen(name, priceMap, maxMap, minMap) ? (int) min(100, round(100d * (priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))) : 0;
     }
 
     static int getPercentileBar(String name) {
@@ -1677,7 +1642,7 @@ public final class ChinaStock extends JPanel {
     }
 
     static double getAMFirst10(String name) {
-        return (NORMAL_STOCK.test(name) && NO_ZERO.test(openMap, name) && priceMapBar.get(name).containsKey(AMOPENT))
+        return (NORMAL_STOCK.test(name) && Utility.NO_ZERO.test(openMap, name) && priceMapBar.get(name).containsKey(AMOPENT))
                 ? round(1000d * log(priceMapBar.get(name).floorEntry(AM940T).getValue().getClose() / openMap.get(name))) / 10d : 0.0;
     }
 
@@ -1716,18 +1681,18 @@ public final class ChinaStock extends JPanel {
     }
 
     static double getVR(String name, LocalTime lt) {
-        return normalMapGen(name, sizeTotalMapYtd, sizeTotalMap)
+        return Utility.normalMapGen(name, sizeTotalMapYtd, sizeTotalMap)
                 ? round(10d * ofNullable(sizeTotalMap.get(name).floorEntry(lt)).map(Entry::getValue).orElse(0.0)
                         / (ofNullable(sizeTotalMapYtd.get(name).floorEntry(lt)).filter(e -> e.getValue() != 0.0).map(Entry::getValue).orElse(Double.MAX_VALUE))) / 10d : 0.0;
     }
 
     static double getFirst1Ret(String name) {
-        return (NORMAL_STOCK.test(name) && NO_ZERO.test(openMap, name) && CONTAINS_TIME.test(name, AMOPENT))
+        return (NORMAL_STOCK.test(name) && Utility.NO_ZERO.test(openMap, name) && CONTAINS_TIME.test(name, AMOPENT))
                 ? round(1000d * (GETCLOSE.applyAsDouble(name, AMOPENT) / openMap.get(name) - 1)) / 10d : 0.0;
     }
 
     static double getFirst10Ret(String name) {
-        return (NORMAL_STOCK.test(name) && NO_ZERO.test(openMap, name) && CONTAINS_TIME.test(name, AMOPENT))
+        return (NORMAL_STOCK.test(name) && Utility.NO_ZERO.test(openMap, name) && CONTAINS_TIME.test(name, AMOPENT))
                 ? round(1000d * (GETCLOSE.applyAsDouble(name, AM940T) / DEFAULTOPEN.applyAsDouble(name) - 1)) / 10d : 0.0;
     }
 
@@ -1750,12 +1715,12 @@ public final class ChinaStock extends JPanel {
     }
 
     static int getVRMaxT(String name) {
-        return (normalMapGen(name, sizeRatioMap))
+        return (Utility.normalMapGen(name, sizeRatioMap))
                 ? convertTimeToInt(sizeRatioMap.get(name).entrySet().parallelStream().max(Entry.comparingByValue()).map(Entry::getKey).orElse(TIMEMAX)) : 2359;
     }
 
     static int getVRMinT(String name) {
-        return (normalMapGen(name, sizeRatioMap))
+        return (Utility.normalMapGen(name, sizeRatioMap))
                 ? convertTimeToInt(sizeRatioMap.get(name).entrySet().parallelStream().min(Entry.comparingByValue()).map(Entry::getKey).orElse(TIMEMAX)) : 2359;
     }
 
@@ -1784,7 +1749,7 @@ public final class ChinaStock extends JPanel {
                 .filter(e -> (e.getKey().equals(priceMapBar.get(name).firstKey()))
                 || (e.getValue().getHigh() > ofNullable(priceMapBar.get(name).lowerEntry(e.getKey())).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)
                 && e.getValue().getHigh() >= ofNullable(priceMapBar.get(name).higherEntry(e.getKey())).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)))
-                .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getHigh(), (a, b) -> a, ConcurrentSkipListMap::new));
+                .collect(Collectors.toMap(e->e.getKey(), e -> e.getValue().getHigh(), (a, b) -> a, ConcurrentSkipListMap::new));
 
         if (tm.size() > 2) {
             LocalTime lastKey = priceMapBar.get(name).lastKey();
@@ -1850,7 +1815,7 @@ public final class ChinaStock extends JPanel {
     }
 
     static double getAMReturn(String name) {
-        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).firstKey().isBefore(AMCLOSET) && NO_ZERO.test(openMap, name))
+        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).firstKey().isBefore(AMCLOSET) && Utility.NO_ZERO.test(openMap, name))
                 ? log(priceMapBar.get(name).floorEntry(AMCLOSET).getValue().getClose() / openMap.get(name)) : 0.0;
     }
 
@@ -1869,19 +1834,19 @@ public final class ChinaStock extends JPanel {
     }
 
     static double getOPC(String name) {
-        return noZeroArrayGen(name, closeMap, openMap) ? round(1000d * (openMap.get(name) / closeMap.get(name) - 1)) / 10d : 0.0;
+        return Utility.noZeroArrayGen(name, closeMap, openMap) ? round(1000d * (openMap.get(name) / closeMap.get(name) - 1)) / 10d : 0.0;
     }
 
     static LocalTime getMA20FirstBreakTime(String name) {
         final double ma = ma20Map.getOrDefault(name, 0.0);
-        return (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, AMCLOSET) && LAST_KEY_AFTER.test(name, AMOPENT) && NO_ZERO.test(ma20Map, name))
+        return (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, AMCLOSET) && LAST_KEY_AFTER.test(name, AMOPENT) && Utility.NO_ZERO.test(ma20Map, name))
                 ? priceMapBar.get(name).entrySet().parallelStream().filter(e1 -> e1.getValue().getHigh() > ma)
                         .findFirst().map(Entry::getKey).orElse(TIMEMAX) : PMCLOSET;
     }
 
     static LocalTime getMA20FirstFallTime(String name) {
         final double ma = ma20Map.getOrDefault(name, 0d);
-        return (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, AMCLOSET) && LAST_KEY_AFTER.test(name, AMOPENT) && NO_ZERO.test(ma20Map, name))
+        return (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, AMCLOSET) && LAST_KEY_AFTER.test(name, AMOPENT) && Utility.NO_ZERO.test(ma20Map, name))
                 ? priceMapBar.get(name).entrySet().parallelStream().filter(entry1 -> entry1.getValue().getLow() <= ma).findFirst().map(Entry::getKey).orElse(TIMEMAX) : PMCLOSET;
     }
 
@@ -1925,7 +1890,7 @@ public final class ChinaStock extends JPanel {
     }
 
     static int getTrueRange(String name) {
-        if (noZeroArrayGen(name, maxMap, minMap, minMapY)) {
+        if (Utility.noZeroArrayGen(name, maxMap, minMap, minMapY)) {
             double max2d = max(maxMap.get(name), maxMapY.get(name));
             double min2d = min(minMap.get(name), minMapY.get(name));
             return (int) max(0, min(100, round(100d * ((priceMap.getOrDefault(name, 0.0) - min2d) / (max2d - min2d)))));
@@ -1938,7 +1903,7 @@ public final class ChinaStock extends JPanel {
         double maxY2 = priceMapBarY2.get(name).entrySet().stream().max(BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(Double.MIN_VALUE);
         double minY2 = priceMapBarY2.get(name).entrySet().stream().min(BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(Double.MAX_VALUE);
 
-        if (noZeroArrayGen(name, maxMap, minMap, minMapY)) {
+        if (Utility.noZeroArrayGen(name, maxMap, minMap, minMapY)) {
             double max3d = maxGen(maxMap.get(name), maxMapY.get(name), maxY2);
             double min3d = minGen(minMap.get(name), minMapY.get(name), minY2);
 
@@ -1948,7 +1913,7 @@ public final class ChinaStock extends JPanel {
     }
 
     static int getTrueRangeChg(String name) {
-        if (noZeroArrayGen(name, maxMap, minMap, minMapY)) {
+        if (Utility.noZeroArrayGen(name, maxMap, minMap, minMapY)) {
             double max2d = max(maxMap.get(name), maxMapY.get(name));
             double min2d = min(minMap.get(name), minMapY.get(name));
             return (int) max(0, min(100, round(100d * ((priceMap.getOrDefault(name, 0.0) - min2d) / (max2d - min2d)))));
@@ -2241,11 +2206,11 @@ public final class ChinaStock extends JPanel {
                             ? round(1000d * (priceMapBar.get(name).floorEntry(AM940T).getValue().getClose() / DEFAULTOPEN.applyAsDouble(name) - 1)) / 10d : 0.0;
                 //OPC
                 case 5:
-                    return noZeroArrayGen(name, closeMap, openMap) ? round(1000d * (openMap.get(name) / closeMap.get(name) - 1)) / 10d : 0.0;
+                    return Utility.noZeroArrayGen(name, closeMap, openMap) ? round(1000d * (openMap.get(name) / closeMap.get(name) - 1)) / 10d : 0.0;
 
                 //rtn  
                 case 6:
-                    return noZeroArrayGen(name, priceMap, openMap) && NORMAL_STOCK.test(name) ? round(1000d * (priceMap.get(name) / DEFAULTOPEN.applyAsDouble(name) - 1)) / 10d : 0.0;
+                    return Utility.noZeroArrayGen(name, priceMap, openMap) && NORMAL_STOCK.test(name) ? round(1000d * (priceMap.get(name) / DEFAULTOPEN.applyAsDouble(name) - 1)) / 10d : 0.0;
 
                 //AM
                 case 7:
@@ -2268,11 +2233,11 @@ public final class ChinaStock extends JPanel {
 
                 //振
                 case 11:
-                    return NO_ZERO.test(minMap, name) ? round(100 * log(maxMap.get(name) / minMap.get(name))) / 100d : 0.0;
+                    return Utility.NO_ZERO.test(minMap, name) ? round(100 * log(maxMap.get(name) / minMap.get(name))) / 100d : 0.0;
 
                 //TR%
                 case 12:
-                    if (noZeroArrayGen(name, maxMap, minMap, minMapY)) {
+                    if (Utility.noZeroArrayGen(name, maxMap, minMap, minMapY)) {
                         double max2d = max(maxMap.get(name), maxMapY.get(name));
                         double min2d = min(minMap.get(name), minMapY.get(name));
                         return (int) max(0, min(100, round(100d * ((priceMap.getOrDefault(name, 0.0) - min2d) / (max2d - min2d)))));
@@ -2289,12 +2254,12 @@ public final class ChinaStock extends JPanel {
 
                 //v
                 case 15:
-                    return normalMapGen(name, sizeTotalMap) ? round(sizeTotalMap.get(name).lastEntry().getValue() / 10d) / 10d : 0L;
+                    return Utility.normalMapGen(name, sizeTotalMap) ? round(sizeTotalMap.get(name).lastEntry().getValue() / 10d) / 10d : 0L;
 
                 //下p落
                 case 16:
                     //return()? (int)min(100,round(100d*(priceMap.get(name)-minMap.get(name))/(maxMap.get(name)-minMap.get(name)))):0;
-                    if (noZeroArrayGen(name, minMap, maxMap, priceMap) && NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, AMCLOSET)) {
+                    if (Utility.noZeroArrayGen(name, minMap, maxMap, priceMap) && NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, AMCLOSET)) {
                         return round((priceMap.get(name) - priceMapBar.get(name).floorEntry(AMCLOSET).getValue().getClose()) / (maxMap.get(name) - minMap.get(name)) * 100);
                     }
                     return 0L;
@@ -2379,7 +2344,7 @@ public final class ChinaStock extends JPanel {
 
                 //O%Y
                 case 33:
-                    return (NO_ZERO.test(minMapY, name)) ? (int) min(100, round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+                    return (Utility.NO_ZERO.test(minMapY, name)) ? (int) min(100, round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
 
                 //P%Y    
                 case 34:
@@ -2411,7 +2376,7 @@ public final class ChinaStock extends JPanel {
 
                 //上下折Y  
                 case 41:
-                    return (noZeroArrayGen(name, maxMapY, minMapY, priceMap, maxMap) && getRangeY(name) != 0.0)
+                    return (Utility.noZeroArrayGen(name, maxMapY, minMapY, priceMap, maxMap) && getRangeY(name) != 0.0)
                             ? round(100d * ((getAMCOY(name) - getPMCOY(name)) / (getRangeY(name) * 100d))) / 100d : 0.0;
 
                 //F1Y
@@ -2443,7 +2408,7 @@ public final class ChinaStock extends JPanel {
 
                 // sizeY    
                 case 49:
-                    return (NORMAL_MAP.test(sizeTotalMapYtd, name)) ? round(sizeTotalMapYtd.get(name).lastEntry().getValue()) : 0L;
+                    return (Utility.NORMAL_MAP.test(sizeTotalMapYtd, name)) ? round(sizeTotalMapYtd.get(name).lastEntry().getValue()) : 0L;
 
                 //HOCHYRatio
                 case 50:
@@ -2451,12 +2416,12 @@ public final class ChinaStock extends JPanel {
 
                 //CH/RngY
                 case 51:
-                    return (noZeroArrayGen(name, maxMapY, minMapY, priceMap, maxMap))
+                    return (Utility.noZeroArrayGen(name, maxMapY, minMapY, priceMap, maxMap))
                             ? (int) round(100d * log(priceMap.get(name) / maxMap.get(name)) / log(maxMapY.get(name) / minMapY.get(name))) : 0;
 
                 //ma20 
                 case 52:
-                    return noZeroArrayGen(name, ma20Map, priceMap) ? round(100d * 20 / (ma20Map.get(name) / priceMap.get(name) * 19 + 1)) / 100d : 0.0;
+                    return Utility.noZeroArrayGen(name, ma20Map, priceMap) ? round(100d * 20 / (ma20Map.get(name) / priceMap.get(name) * 19 + 1)) / 100d : 0.0;
                 // dayMinT    
                 case 53:
                     return (NORMAL_STOCK.test(name) && priceMapBar.get(name).lastKey().isAfter(AM929T)) ? GETMINTIMETOINT.applyAsInt(name, IS_OPEN_PRED) : 930;
@@ -2504,11 +2469,11 @@ public final class ChinaStock extends JPanel {
                 case 62:
                     double ammin = getAMMin(name);
                     double ammax = getAMMax(name);
-                    return (NO_ZERO.test(closeMapY, name) && ammin != 0.0 && ammax != 0.0) ? (int) round(100d * (closeMapY.get(name) - ammin) / (ammax - ammin)) : 0;
+                    return (Utility.NO_ZERO.test(closeMapY, name) && ammin != 0.0 && ammax != 0.0) ? (int) round(100d * (closeMapY.get(name) - ammin) / (ammax - ammin)) : 0;
 
                 //O%
                 case 63:
-                    if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, AMCLOSET) && NO_ZERO.test(minMap, name)) {
+                    if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, AMCLOSET) && Utility.NO_ZERO.test(minMap, name)) {
                         double max = GETMAX.applyAsDouble(name, AM_PRED);
                         double min = GETMIN.applyAsDouble(name, AM_PRED);
                         return (int) round((openMap.get(name) - min) / (max - min) * 100d);
@@ -2517,7 +2482,7 @@ public final class ChinaStock extends JPanel {
 
                 //openOpenJump 
                 case 64:
-                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, AMOPENT) && NO_ZERO.test(openMap, name))
+                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, AMOPENT) && Utility.NO_ZERO.test(openMap, name))
                             ? (int) round(1000d * (priceMapBar.get(name).get(AMOPENT).getOpen() / openMap.get(name) - 1)) / 10d : 0.0;
 
                 //寄    
@@ -2673,7 +2638,7 @@ public final class ChinaStock extends JPanel {
 
                 //vrPMF10    
                 case 86:
-                    return (NORMAL_MAP.test(sizeRatioMap, name) && sizeRatioMap.get(name).firstKey().isBefore(PMOPENT))
+                    return (Utility.NORMAL_MAP.test(sizeRatioMap, name) && sizeRatioMap.get(name).firstKey().isBefore(PMOPENT))
                             ? round(100d * sizeRatioMap.get(name).floorEntry(PM1310T).getValue() / sizeRatioMap.get(name).floorEntry(PMOPENT).getValue()) / 100d : 0.0;
 
                 //pm1stBreak    
@@ -2782,7 +2747,7 @@ public final class ChinaStock extends JPanel {
 
                 // P%
                 case 115:
-                    return (noZeroArrayGen(name, minMap, maxMap, priceMap)) ? (int) min(100, round(100d * (priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))) : 0;
+                    return (Utility.noZeroArrayGen(name, minMap, maxMap, priceMap)) ? (int) min(100, round(100d * (priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))) : 0;
 
                 //close
                 case 116:

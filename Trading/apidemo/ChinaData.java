@@ -66,7 +66,9 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableCellRenderer;
 
+import auxiliary.ChinaSaveInterface2Blob;
 import auxiliary.SimpleBar;
+import auxiliary.VolBar;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import utility.Utility;
@@ -75,8 +77,8 @@ public final class ChinaData extends JPanel {
 
     static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> priceMapPlain = new ConcurrentHashMap<>();
     static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBar = new ConcurrentHashMap<>();
-    static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBarYtd = new ConcurrentHashMap<>();
-    static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBarY2 = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBarYtd = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBarY2 = new ConcurrentHashMap<>();
     static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> sizeTotalMap = new ConcurrentHashMap<>();
     static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> sizeTotalMapYtd = new ConcurrentHashMap<>();
     static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> sizeTotalMapY2 = new ConcurrentHashMap<>();
@@ -716,10 +718,10 @@ public final class ChinaData extends JPanel {
                 session.getTransaction().begin();
                 try {
                     symbolNames.forEach(name -> {
-                        if (noZeroArrayGen(name, openMap, maxMap, minMap, priceMap, closeMap, sizeMap)) {
+                        if (Utility.noZeroArrayGen(name, openMap, maxMap, minMap, priceMap, closeMap, sizeMap)) {
                             ChinaSaveOHLCYV c = new ChinaSaveOHLCYV(name, openMap.get(name), maxMap.get(name), minMap.get(name), priceMap.get(name), closeMap.get(name), sizeMap.get(name).intValue());
                             session.saveOrUpdate(c);
-                        } else if (NO_ZERO.test(closeMap, name)) {
+                        } else if (Utility.NO_ZERO.test(closeMap, name)) {
                             System.out.println("only close available " + name);
                             ChinaSaveOHLCYV c = new ChinaSaveOHLCYV(name, closeMap.get(name));
                             session.saveOrUpdate(c);
@@ -855,7 +857,7 @@ public final class ChinaData extends JPanel {
     }
 
     static double getVolZScore(String name) {
-        if (normalMapGen(name, sizeTotalMap)) {
+        if (Utility.normalMapGen(name, sizeTotalMap)) {
             NavigableMap<LocalTime, Double> tm = ChinaData.sizeTotalMap.get(name);
             NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
             tm.keySet().forEach((LocalTime t) -> {

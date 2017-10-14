@@ -1,5 +1,7 @@
 package apidemo;
 
+import auxiliary.ChinaSaveInterface2Blob;
+
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.SQLException;

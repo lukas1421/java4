@@ -1,5 +1,6 @@
 package utility;
 
+import auxiliary.SimpleBar;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 
@@ -7,14 +8,24 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.sql.Blob;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Utility {
+
+    public static final BiPredicate<? super Map<String, ? extends Number>, String> NO_ZERO = (mp, name) -> mp.containsKey(name) && mp.get(name).doubleValue() != 0.0;
+    public static final Predicate<? super Map.Entry<LocalTime, SimpleBar>> CONTAINS_NO_ZERO = e -> !e.getValue().containsZero();
+    public static BiPredicate<? super Map<String, ? extends Map<LocalTime, ?>>, String> NORMAL_MAP = (mp, name) -> mp.containsKey(name) && !mp.get(name).isEmpty() && mp.get(name).size() > 0;
 
     private Utility() {
         throw new UnsupportedOperationException(" cannot instantiate utility class ");
@@ -98,5 +109,57 @@ public class Utility {
             }
         }
         return b.toString();
+    }
+
+    public static double getMin(NavigableMap<LocalTime, Double> tm) {
+        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().min(Map.Entry.comparingByValue()).map(Map.Entry::getValue).orElse(0.0) : 0.0;
+    }
+
+    public static double getMax(NavigableMap<LocalTime, Double> tm) {
+        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getValue).orElse(0.0) : 0.0;
+    }
+
+    public static double getMaxRtn(NavigableMap<LocalTime, Double> tm) {
+        return (tm.size() > 0) ? (double) Math.round((getMax(tm)
+                / tm.entrySet().stream().findFirst().map(Map.Entry::getValue).orElse(0.0) - 1) * 1000d) / 10d : 0.0;
+    }
+
+    public static double getLast(NavigableMap<LocalTime, Double> tm) {
+        return tm.size() > 0 ? Math.round(100d * tm.lastEntry().getValue()) / 100d : 0.0;
+    }
+
+    /**
+     * test if one-level maps contains value for a given stock
+     *
+     * @param name name of the stock
+     * @param mp hashmap of stock and value
+     * @return all of these maps contains info about this stock
+     */
+    public static boolean noZeroArrayGen(String name, Map<String, ? extends Number>... mp) {
+        boolean res = true;
+        for (Map<String, ? extends Number> m : mp) {
+            res = res && NO_ZERO.test(m, name);
+        }
+        return res;
+    }
+
+    public static boolean normalMapGen(String name, Map<String, ? extends Map<LocalTime, ?>>... mp) {
+        boolean res = true;
+        for (Map<String, ? extends Map<LocalTime, ?>> m : mp) {
+            res = res && NORMAL_MAP.test(m, name);
+        }
+        return res;
+    }
+
+    public static LocalDate getPreviousWorkday(LocalDate ld) {
+        if (ld.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
+            return ld.minusDays(3L);
+        } else {
+            return ld.minusDays(1L);
+        }
+    }
+
+    public static double pd(List<String> l, int index) {
+        return (l.size() > index) ? Double.parseDouble(l.get(index)) : 0.0;
     }
 }

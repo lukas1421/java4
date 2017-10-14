@@ -1023,7 +1023,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     static double getBuyTradePnl(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
-        return (tradesMap.get(name).size() > 0 && ChinaStock.noZeroArrayGen(name, ChinaStock.priceMap))
+        return (tradesMap.get(name).size() > 0 && Utility.noZeroArrayGen(name, ChinaStock.priceMap))
                 ? tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0)
                         .collect(Collectors.summingDouble(e -> (((Trade) e.getValue()).getSize())
                         * (ChinaStock.priceMap.getOrDefault(name, 0.0) - ((Trade) e.getValue()).getPrice()) - ((Trade) e.getValue()).getTradingCost(name))) * fx : 0.0;
@@ -1040,7 +1040,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //    }
     static double getSellTradePnl(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
-        return (tradesMap.get(name).size() > 0 && ChinaStock.noZeroArrayGen(name, ChinaStock.priceMap))
+        return (tradesMap.get(name).size() > 0 && Utility.noZeroArrayGen(name, ChinaStock.priceMap))
                 ? Math.round(tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0)
                         .collect(Collectors.summingDouble(e -> (((Trade) e.getValue()).getSize() * (ChinaStock.priceMap.getOrDefault(name, 0.0) - ((Trade) e.getValue()).getPrice())
                         - ((Trade) e.getValue()).getTradingCost(name)))) * 100d * fx) / 100d : 0.0;
