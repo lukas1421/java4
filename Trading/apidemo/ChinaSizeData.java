@@ -14,7 +14,7 @@ import javax.swing.JTable;
 import javax.swing.Box;
 import javax.swing.SwingUtilities;
 
-final class ChinaSizeData extends JPanel {
+public final class ChinaSizeData extends JPanel {
 
     BarModel_Size m_model;
 

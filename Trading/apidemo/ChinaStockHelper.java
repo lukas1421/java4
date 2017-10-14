@@ -1101,26 +1101,3 @@ public final class ChinaStockHelper {
 
 }
 
-@FunctionalInterface
-interface BiFunction1<T, U> {
-
-    boolean test(T t, U u1, U u2);
-}
-
-@FunctionalInterface
-interface BiFunction2<LocalTime> {
-
-    Predicate<? super Entry<LocalTime, ?>> getPred(LocalTime u1, LocalTime u2);
-}
-
-@FunctionalInterface
-interface BetweenTime<LocalTime, Boolean> {
-
-    Predicate<LocalTime> between(LocalTime u1, boolean b1, LocalTime u2, boolean b2);
-}
-
-@FunctionalInterface
-interface GenTimePred<LocalTime, Boolean> {
-
-    Predicate<? super Entry<LocalTime, ?>> getPred(LocalTime t1, boolean b1, LocalTime u2, boolean b2);
-}

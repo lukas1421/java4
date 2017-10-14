@@ -8,7 +8,7 @@ import static apidemo.GraphBigIndex.maxGen;
 import static apidemo.GraphBigIndex.minGen;
 import apidemo.Strategy.StratType;
 import graph.GraphFillable;
-import utility.Utility;
+import utility.*;
 
 import java.awt.BorderLayout;
 import java.awt.Color;

@@ -15,7 +15,7 @@ import javax.persistence.Lob;
 import javax.sql.rowset.serial.SerialBlob;
 
 @Entity
-class ChinaSaveStrat implements Serializable, ChinaSaveInterface2Blob {
+public class ChinaSaveStrat implements Serializable, ChinaSaveInterface2Blob {
 
     private static final long serialVersionUID = 456654L;
     static final ChinaSaveStrat CSS = new ChinaSaveStrat();
@@ -24,7 +24,7 @@ class ChinaSaveStrat implements Serializable, ChinaSaveInterface2Blob {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     String stock;
 
-    ChinaSaveStrat() {
+    public ChinaSaveStrat() {
     }
 
     ChinaSaveStrat(String name) {

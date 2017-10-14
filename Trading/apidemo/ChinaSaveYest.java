@@ -16,7 +16,7 @@ import static apidemo.ChinaData.trimSkipMap;
 
 @Entity
 @Table(name = "CHINASAVEYEST")
-class ChinaSaveYest implements Serializable, ChinaSaveInterface2Blob {
+public class ChinaSaveYest implements Serializable, ChinaSaveInterface2Blob {
 
     private static final long serialVersionUID = 1357900L;
     static final ChinaSaveYest CSY = new ChinaSaveYest();
@@ -39,7 +39,7 @@ class ChinaSaveYest implements Serializable, ChinaSaveInterface2Blob {
     ChinaSaveYest() {
     }
 
-    ChinaSaveYest(String name) {
+    public ChinaSaveYest(String name) {
         this.stockName = name;
     }
 

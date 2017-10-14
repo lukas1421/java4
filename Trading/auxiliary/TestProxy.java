@@ -1,4 +1,4 @@
-package apidemo;
+package auxiliary;
 
 import java.net.InetSocketAddress;
 import java.net.Proxy;

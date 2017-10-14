@@ -35,10 +35,10 @@ class GraphXU extends JComponent {
     private boolean detailed = false;
     static final BasicStroke BS2 = new BasicStroke(2);
 
-    GraphXU() {
+    public GraphXU() {
     }
 
-    void setSkipMap(NavigableMap<LocalTime, ? extends Number> tm) {
+    public void setSkipMap(NavigableMap<LocalTime, ? extends Number> tm) {
         if (tm1 != null) {
             tm1 = tm.entrySet().stream().collect(toMap(Entry::getKey, a -> a.getValue().doubleValue(), (a, b) -> a, ConcurrentSkipListMap::new));
         }

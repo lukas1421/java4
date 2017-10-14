@@ -41,7 +41,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 
-final class ChinaSizeRatio extends JPanel {
+public final class ChinaSizeRatio extends JPanel {
 
     String line;
     String listNames;

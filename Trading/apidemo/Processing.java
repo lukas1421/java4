@@ -1,5 +1,7 @@
 package apidemo;
 
+import auxiliary.Trait;
+
 import static apidemo.ChinaStock.TIMEMAX;
 import static java.lang.Math.log;
 import java.time.LocalTime;

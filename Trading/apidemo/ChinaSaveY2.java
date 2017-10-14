@@ -18,7 +18,7 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "CHINASAVEY2")
 
-class ChinaSaveY2 implements Serializable, ChinaSaveInterface2Blob {
+public class ChinaSaveY2 implements Serializable, ChinaSaveInterface2Blob {
 
     static final ChinaSaveY2 CSY2 = new ChinaSaveY2();
 

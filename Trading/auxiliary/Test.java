@@ -1,4 +1,4 @@
-package apidemo;
+package auxiliary;
 
 import java.io.IOException;
 import java.util.Set;
