@@ -12,7 +12,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
@@ -25,8 +24,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.sql.Blob;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
@@ -37,7 +34,6 @@ import java.time.temporal.ChronoUnit;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -72,20 +68,21 @@ import auxiliary.Strategy;
 import auxiliary.VolBar;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import saving.*;
 import utility.Utility;
 
 public final class ChinaData extends JPanel {
 
-    static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> priceMapPlain = new ConcurrentHashMap<>();
-    static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBar = new ConcurrentHashMap<>();
+    //public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> priceMapPlain = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBar = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBarYtd = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBarY2 = new ConcurrentHashMap<>();
-    static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> sizeTotalMap = new ConcurrentHashMap<>();
-    static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> sizeTotalMapYtd = new ConcurrentHashMap<>();
-    static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> sizeTotalMapY2 = new ConcurrentHashMap<>();
-    static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Strategy>> strategyTotalMap = new ConcurrentHashMap<>();
-    static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, VolBar>> bidMap = new ConcurrentHashMap<>();
-    static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, VolBar>> askMap = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> sizeTotalMap = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> sizeTotalMapYtd = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> sizeTotalMapY2 = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Strategy>> strategyTotalMap = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, VolBar>> bidMap = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, VolBar>> askMap = new ConcurrentHashMap<>();
     //static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> bidTotalMap = new ConcurrentHashMap<>();
     //static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> askTotalMap = new ConcurrentHashMap<>();
 
@@ -102,9 +99,9 @@ public final class ChinaData extends JPanel {
     static List<LocalTime> tradeTimePure = new LinkedList<>();
     static BarModel m_model;
 
-    LocalTime lastSaveTime = AM929T;
-    LocalTime lastLoadTime = AM929T;
-    public static LocalTime lastDataTime = AM929T;
+    LocalTime lastSaveTime = Utility.AM929T;
+    LocalTime lastLoadTime = Utility.AM929T;
+    public static LocalTime lastDataTime = Utility.AM929T;
 
     static File source = new File(ChinaMain.GLOBALPATH + "CHINASS.ser");
     static File backup = new File(ChinaMain.GLOBALPATH + "CHINABackup.ser");
@@ -119,7 +116,7 @@ public final class ChinaData extends JPanel {
     static File shcompSource = new File(ChinaMain.GLOBALPATH + "shcomp.txt");
     public static JButton btnSave2;
     static ExecutorService es = Executors.newCachedThreadPool();
-    static final Predicate<? super Entry<LocalTime, Double>> IS_OPEN = e -> e.getKey().isAfter(AM929T) && e.getValue() != 0.0;
+    static final Predicate<? super Entry<LocalTime, Double>> IS_OPEN = e -> e.getKey().isAfter(Utility.AM929T) && e.getValue() != 0.0;
 
     ChinaData() {
         LocalTime lt = LocalTime.of(9, 19);
@@ -274,33 +271,6 @@ public final class ChinaData extends JPanel {
 
         add(jp, BorderLayout.NORTH);
 
-        btnSave.addActionListener((ActionEvent al) -> {
-            if (sizeTotalMap.entrySet().stream().anyMatch(e -> e.getValue().size() > 2)) {
-                lastDataTime = ChinaData.priceMapBar.entrySet().stream().map(e -> e.getValue().lastKey()).max(Comparator.naturalOrder()).orElse(LocalTime.MIN);
-                int result = JOptionPane.showConfirmDialog(null, "lastDataTime is " + lastDataTime + " would you like to save");
-                if (result == JOptionPane.YES_OPTION) {
-                    try {
-                        Files.copy(source.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(source))) {
-                        //ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> map1 = (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>>)trimMap(priceMapPlain);
-                        saveMap.put(1, (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>>) Utility.trimMap(priceMapPlain));
-                        //ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> map2 = new ConcurrentHashMap<>(sizeTotalMap);
-                        saveMap.put(2, sizeTotalMap);
-                        oos.writeObject(saveMap);
-                        System.out.println("saving ChinaData done " + LocalTime.now());
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        JOptionPane.showMessageDialog(null, "saving failed" + e.getCause());
-                    }
-                }
-            } else {
-                JOptionPane.showMessageDialog(null, "Empty, not saving");
-            }
-        });
 
         btnSaveBarYtd.addActionListener(al -> {
             try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(priceBarYtdSource))) {
@@ -728,10 +698,10 @@ public final class ChinaData extends JPanel {
             try (Session session = sessionF.openSession()) {
                 try {
                     session.getTransaction().begin();
-                    session.createQuery("DELETE from apidemo.ChinaSaveY2").executeUpdate();
-                    session.createQuery("insert into apidemo.ChinaSaveY2(stockName,dayPriceMapBlob,volMapBlob) select stockName,dayPriceMapBlob,volMapBlob from apidemo.ChinaSaveYest").executeUpdate();
-                    session.createQuery("DELETE from apidemo.ChinaSaveYest").executeUpdate();
-                    session.createQuery("insert into apidemo.ChinaSaveYest(stockName,dayPriceMapBlob,volMapBlob) select stockName,dayPriceMapBlob,volMapBlob from apidemo.ChinaSave").executeUpdate();
+                    session.createQuery("DELETE from saving.ChinaSaveY2").executeUpdate();
+                    session.createQuery("insert into saving.ChinaSaveY2(stockName,dayPriceMapBlob,volMapBlob) select stockName,dayPriceMapBlob,volMapBlob from saving.ChinaSaveYest").executeUpdate();
+                    session.createQuery("DELETE from saving.ChinaSaveYest").executeUpdate();
+                    session.createQuery("insert into saving.ChinaSaveYest(stockName,dayPriceMapBlob,volMapBlob) select stockName,dayPriceMapBlob,volMapBlob from saving.ChinaSave").executeUpdate();
                 } catch (Exception ex) {
                     session.getTransaction().rollback();
                     ex.printStackTrace();
@@ -792,7 +762,7 @@ public final class ChinaData extends JPanel {
             String ticker = "sh000001";
             if (ChinaStock.NORMAL_STOCK.test(ticker)) {
                 ConcurrentSkipListMap<LocalTime, SimpleBar> nm = priceMapBar.get(ticker);
-                double open = nm.floorEntry(AMOPENT).getValue().getOpen();
+                double open = nm.floorEntry(Utility.AMOPENT).getValue().getOpen();
                 double v931 = nm.floorEntry(LocalTime.of(9, 31)).getValue().getClose();
                 double v935 = nm.floorEntry(LocalTime.of(9, 35)).getValue().getClose();
                 double v940 = nm.floorEntry(LocalTime.of(9, 40)).getValue().getClose();

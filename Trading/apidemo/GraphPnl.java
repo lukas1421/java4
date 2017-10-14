@@ -3,7 +3,7 @@ package apidemo;
 import TradeType.Trade;
 import utility.Utility;
 
-import static apidemo.ChinaStock.TIMEMAX;
+import static utility.Utility.TIMEMAX;
 import static utility.Utility.getStr;
 import java.awt.BasicStroke;
 import java.awt.Color;

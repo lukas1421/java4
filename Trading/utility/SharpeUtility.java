@@ -7,11 +7,14 @@ package utility;
 
 import auxiliary.SimpleBar;
 
+import java.time.LocalTime;
 import java.time.temporal.Temporal;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
+import java.util.function.DoubleBinaryOperator;
 import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
 
 public class SharpeUtility {
 
@@ -66,4 +69,78 @@ public class SharpeUtility {
         return 0;
     }
 
+    /**
+     * This method takes in a map of arbitrage type and spits out a return map
+     *
+     * @param <T>
+     * @param mp the map to operate on ( could be bar or double)
+     * @param getDiff takes in two values and compute the return
+     * @param getClose depending on data type, get the close, either identity or
+     * SimpleBar::getClose
+     * @param getFirstReturn function to get the first return
+     * @return the return map Map<String, Double>
+     */
+    public static <T> NavigableMap<LocalTime, Double> genReturnMap(NavigableMap<LocalTime, T> mp, DoubleBinaryOperator getDiff, ToDoubleFunction<T> getClose, ToDoubleFunction<T> getFirstReturn) {
+        NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
+        mp.navigableKeySet().forEach(k -> {
+            if (k.isBefore(LocalTime.of(15, 1))) {
+                if (!k.equals(mp.firstKey())) {
+                    double prevClose = getClose.applyAsDouble(mp.lowerEntry(k).getValue());
+                    retMap.put(k, getDiff.applyAsDouble(getClose.applyAsDouble(mp.get(k)), prevClose));
+                } else {
+                    retMap.put(k, getFirstReturn.applyAsDouble(mp.get(k)));
+                }
+            }
+        });
+        return retMap;
+    }
+
+    public static double computeMinuteSharpeFromMtmDeltaMp(NavigableMap<LocalTime, Double> mtmDeltaMp) {
+        //System.out.println(" compute minute sharpe from mtm mp ");
+        NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
+        retMap = genReturnMap(mtmDeltaMp, (u, v) -> u / v - 1, d -> d, d -> 0.0);
+
+        double minuteMean = Utility.computeMean(retMap);
+        double minuteSD = Utility.computeSD(retMap);
+        if (minuteSD != 0.0) {
+            //System.out.println(" mean is " + (minuteMean * 240) + " minute sd " + (minuteSD * Math.sqrt(240)));
+            return (minuteMean * 240) / (minuteSD * Math.sqrt(240));
+        }
+        return 0.0;
+    }
+
+    public static double computeMinuteNetPnlSharpe(NavigableMap<LocalTime, Double> netPnlMp) {
+        NavigableMap<LocalTime, Double> diffMap = new TreeMap<>();
+        diffMap = genReturnMap(netPnlMp, (u, v) -> u - v, d -> d, d -> 0.0);
+        double minuteMean = Utility.computeMean(diffMap);
+        double minuteSD = Utility.computeSD(diffMap);
+        if (minuteSD != 0.0) {
+            //System.out.println(" mean is " + (minuteMean * 240) + " minute sd " + (minuteSD * Math.sqrt(240)));
+            return (minuteMean * 240) / (minuteSD * Math.sqrt(240));
+        }
+        return 0.0;
+    }
+
+    public static double computeMinuteSharpe(NavigableMap<LocalTime, SimpleBar> mp) {
+        NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
+        if (mp.size() > 0) {
+            retMap = genReturnMap(mp, (u, v) -> u / v - 1, SimpleBar::getClose, SimpleBar::getBarReturn);
+//            mp.navigableKeySet().forEach(k -> {
+//                if (!k.equals(mp.firstKey())) {
+//                    double prevClose = mp.lowerEntry(k).getValue().getClose();
+//                    //double prevLow = mp.lowerEntry(k).getValue().getLow();
+//                    retMap.put(k, mp.get(k).getClose() / prevClose - 1);
+//                } else {
+//                    retMap.put(k, mp.get(k).getBarReturn());
+//                }
+//            });
+            double minuteMean = Utility.computeMean(retMap);
+            double minuteSD = Utility.computeSD(retMap);
+            if (minuteSD != 0.0) {
+                //System.out.println(" mean is " + (minuteMean * 240) + " minute sd " + (minuteSD * Math.sqrt(240)));
+                return (minuteMean * 240) / (minuteSD * Math.sqrt(240));
+            }
+        }
+        return 0.0;
+    }
 }

@@ -418,13 +418,13 @@ public class GraphBig extends JComponent implements GraphFillable {
     }
 
     private double getFirst1() {
-        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(AMOPENT) && Utility.noZeroArrayGen(name, openMap))
-                ? round(1000d * (priceMapBar.get(name).floorEntry(AMOPENT).getValue().getBarReturn())) / 10d : 0.0;
+        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(Utility.AMOPENT) && Utility.noZeroArrayGen(name, openMap))
+                ? round(1000d * (priceMapBar.get(name).floorEntry(Utility.AMOPENT).getValue().getBarReturn())) / 10d : 0.0;
     }
 
     private double getFirst10() {
-        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(AMOPENT) && Utility.noZeroArrayGen(name, openMap))
-                ? round(1000d * (priceMapBar.get(name).floorEntry(AM940T).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
+        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(Utility.AMOPENT) && Utility.noZeroArrayGen(name, openMap))
+                ? round(1000d * (priceMapBar.get(name).floorEntry(Utility.AM940T).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
     }
 
     private int getCurrentMaxMinYP() {
@@ -477,13 +477,13 @@ public class GraphBig extends JComponent implements GraphFillable {
     }
 
     private LocalTime getAMMinT() {
-        return (!tm.isEmpty() & tm.size() > 0 && tm.firstKey().isBefore(AMCLOSET) && tm.lastKey().isAfter(AMOPENT))
-                ? tm.entrySet().stream().filter(Utility.AM_PRED).min(Utility.BAR_LOW).map(Entry::getKey).orElse(TIMEMAX) : TIMEMAX;
+        return (!tm.isEmpty() & tm.size() > 0 && tm.firstKey().isBefore(Utility.AMCLOSET) && tm.lastKey().isAfter(Utility.AMOPENT))
+                ? tm.entrySet().stream().filter(Utility.AM_PRED).min(Utility.BAR_LOW).map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.TIMEMAX;
     }
 
     private LocalTime getAMMaxT() {
-        return (!tm.isEmpty() & tm.size() > 2 && tm.firstKey().isBefore(AMCLOSET) && tm.lastKey().isAfter(AMOPENT))
-                ? tm.entrySet().stream().filter(Utility.AM_PRED).max(Utility.BAR_HIGH).map(Entry::getKey).orElse(TIMEMAX) : TIMEMAX;
+        return (!tm.isEmpty() & tm.size() > 2 && tm.firstKey().isBefore(Utility.AMCLOSET) && tm.lastKey().isAfter(Utility.AMOPENT))
+                ? tm.entrySet().stream().filter(Utility.AM_PRED).max(Utility.BAR_HIGH).map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.TIMEMAX;
     }
 
     private Double getSizeSizeYT() {

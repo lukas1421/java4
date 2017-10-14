@@ -1,5 +1,7 @@
-package apidemo;
+package auxiliary;
 
+import apidemo.ChinaMain;
+import auxiliary.TopModel;
 import util.HtmlButton;
 import util.NewTabbedPanel;
 import util.TCombo;
@@ -118,7 +120,7 @@ public final class HistData extends JPanel implements IHistoricalDataHandler {
         //    rwlock.readLock().unlock();
     }
 
-    HistData() {
+    public HistData() {
         //m_historical = historical;
         init();
         // init2();

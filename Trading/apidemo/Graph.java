@@ -4,7 +4,6 @@ import graph.GraphFillable;
 import utility.Utility;
 
 import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaData.priceMapPlain;
 import static apidemo.ChinaData.sizeTotalMap;
 import static apidemo.ChinaData.sizeTotalMapYtd;
 import static apidemo.ChinaDataYesterday.*;
@@ -104,8 +103,8 @@ public class Graph extends JComponent implements GraphFillable {
             setName(name);
             setChineseName(ChinaStock.nameMap.get(name));
             setSize1(sizeMap.getOrDefault(name, 0L));
-            if (Utility.NORMAL_MAP.test(priceMapPlain, name)) {
-                this.setNavigableMap(ChinaData.priceMapPlain.get(name));
+            if (Utility.NORMAL_MAP.test(priceMapBar, name)) {
+                this.setNavigableMap(ChinaData.priceMapBar.get(name));
             }
         }
     }
@@ -234,14 +233,14 @@ public class Graph extends JComponent implements GraphFillable {
     }
 
     public double getFirst1(String name) {
-        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(AMOPENT) && Utility.NO_ZERO.test(openMap, name))
+        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(Utility.AMOPENT) && Utility.NO_ZERO.test(openMap, name))
                 ? Math.round(1000d * (priceMapBar.get(name).floorEntry(LocalTime.of(9, 30)).getValue().getClose() /
                 openMap.get(name) - 1)) / 10d : 0.0;
     }
 
     public double getFirst10(String name) {
-        return (Utility.normalMapGen(name, priceMapPlain) && priceMapPlain.get(name).containsKey(LocalTime.of(9, 31)) && Utility.noZeroArrayGen(name, openMap))
-                ? Math.round(1000d * (priceMapPlain.get(name).floorEntry(AM940T).getValue() / openMap.get(name) - 1)) / 10d : 0.0;
+        return (Utility.normalMapGen(name, priceMapBar) && priceMapBar.get(name).containsKey(LocalTime.of(9, 31)) && Utility.noZeroArrayGen(name, openMap))
+                ? Math.round(1000d * (priceMapBar.get(name).floorEntry(Utility.AM940T).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
     }
 
     public int getCurrentMaxMinYP() {

@@ -1,5 +1,6 @@
-package apidemo;
+package saving;
 
+import apidemo.ChinaData;
 import auxiliary.ChinaSaveInterface2Blob;
 import auxiliary.SimpleBar;
 
@@ -27,9 +28,6 @@ public class ChinaSaveYest implements Serializable, ChinaSaveInterface2Blob {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     String stockName;
-
-    @Column(name = "CHINESE")
-    String chineseName;
 
     @Column(name = "DATA1")
     @Lob
@@ -63,7 +61,7 @@ public class ChinaSaveYest implements Serializable, ChinaSaveInterface2Blob {
 
     @Override
     public String toString() {
-        return "apidemo.ChinaSaveYest[ id=" + stockName + " ]";
+        return "saving.ChinaSaveYest[ id=" + stockName + " ]";
     }
 
     @Override
@@ -101,7 +99,7 @@ public class ChinaSaveYest implements Serializable, ChinaSaveInterface2Blob {
         return new ChinaSaveYest(name);
     }
 
-    static ChinaSaveYest getInstance() {
+    public static ChinaSaveYest getInstance() {
         return CSY;
     }
 

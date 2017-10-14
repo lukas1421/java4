@@ -1,5 +1,7 @@
 package apidemo;
 
+import auxiliary.SimpleBar;
+
 import static apidemo.ChinaData.tradeTime;
 import static apidemo.ChinaStock.nameMap;
 import static apidemo.ChinaStock.symbolNames;
@@ -76,9 +78,11 @@ class ChinaPeakAnalysis extends JPanel {
 
     public static void analyse(String name) {
 
-        TreeMap<LocalTime, Double> tm = new TreeMap(ChinaData.priceMapPlain.get(name).entrySet().stream()
-                .filter(e -> e.getValue() > Optional.ofNullable(ChinaData.priceMapPlain.get(name).get(e.getKey().minusMinutes(1L))).orElse(Double.MAX_VALUE)
-                && e.getValue() >= Optional.ofNullable(ChinaData.priceMapPlain.get(name).get(e.getKey().plusMinutes(1L))).orElse(Double.MAX_VALUE))
+        TreeMap<LocalTime, Double> tm = new TreeMap(ChinaData.priceMapBar.get(name).entrySet().stream()
+                .filter(e -> e.getValue().getClose() > Optional.ofNullable(ChinaData.priceMapBar.get(name)
+                        .get(e.getKey().minusMinutes(1L))).map(SimpleBar::getClose).orElse(Double.MAX_VALUE)
+                && e.getValue().getClose() >= Optional.ofNullable(ChinaData.priceMapBar.get(name).get(e.getKey().plusMinutes(1L))).map(SimpleBar::getClose)
+                        .orElse(Double.MAX_VALUE))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
         Iterator<Map.Entry<LocalTime, Double>> it = tm.entrySet().iterator();

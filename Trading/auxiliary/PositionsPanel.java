@@ -1,4 +1,4 @@
-package apidemo;
+package auxiliary;
 
 import java.awt.BorderLayout;
 import java.util.ArrayList;
@@ -9,11 +9,12 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
+import apidemo.ChinaMain;
 import client.Contract;
 import controller.ApiController.IPositionHandler;
 import controller.Formats;
 
-import apidemo.AccountInfoPanel.Table;
+import auxiliary.AccountInfoPanel.Table;
 import util.HtmlButton;
 import util.NewTabbedPanel.NewTabPanel;
 import util.VerticalPanel;

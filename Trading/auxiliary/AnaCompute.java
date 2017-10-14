@@ -1,6 +1,5 @@
 package auxiliary;
 
-import apidemo.Analysis;
 import apidemo.LiveData;
 
 import java.time.LocalTime;

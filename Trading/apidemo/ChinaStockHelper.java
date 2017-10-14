@@ -52,7 +52,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.TimeUnit;
-import java.util.function.DoubleBinaryOperator;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -67,6 +66,7 @@ import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
 
+import utility.SharpeUtility;
 import utility.Utility;
 
 public final class ChinaStockHelper {
@@ -591,7 +591,7 @@ public final class ChinaStockHelper {
 
     LocalTime getMaxPriceRangeTime(String name) {
 
-        LocalTime maxTime = AMOPENT;
+        LocalTime maxTime = Utility.AMOPENT;
 
         if (NORMAL_STOCK.test(name)) {
             double max = 0.0;
@@ -861,7 +861,7 @@ public final class ChinaStockHelper {
 
     static void computeMinuteSharpeAll() {
         ChinaData.priceMapBar.entrySet().stream().forEach(e -> {
-            double minSharp = computeMinuteSharpe(e.getValue().tailMap(LocalTime.of(9, 30), true));
+            double minSharp = SharpeUtility.computeMinuteSharpe(e.getValue().tailMap(LocalTime.of(9, 30), true));
             //System.out.println(e.getKey() + " minsharp " + minSharp);
 //            if (e.getKey().equals("sh601398")) {
 //                e.getValue().tailMap(LocalTime.of(9, 30), true).entrySet().forEach(System.out::println);
@@ -891,81 +891,6 @@ public final class ChinaStockHelper {
             });
         }
         return retMap;
-    }
-
-    /**
-     * This method takes in a map of arbitrage type and spits out a return map
-     *
-     * @param <T>
-     * @param mp the map to operate on ( could be bar or double)
-     * @param getDiff takes in two values and compute the return
-     * @param getClose depending on data type, get the close, either identity or
-     * SimpleBar::getClose
-     * @param getFirstReturn function to get the first return
-     * @return the return map Map<String, Double>
-     */
-    static <T> NavigableMap<LocalTime, Double> genReturnMap(NavigableMap<LocalTime, T> mp, DoubleBinaryOperator getDiff, ToDoubleFunction<T> getClose, ToDoubleFunction<T> getFirstReturn) {
-        NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
-        mp.navigableKeySet().forEach(k -> {
-            if (k.isBefore(LocalTime.of(15, 1))) {
-                if (!k.equals(mp.firstKey())) {
-                    double prevClose = getClose.applyAsDouble(mp.lowerEntry(k).getValue());
-                    retMap.put(k, getDiff.applyAsDouble(getClose.applyAsDouble(mp.get(k)), prevClose));
-                } else {
-                    retMap.put(k, getFirstReturn.applyAsDouble(mp.get(k)));
-                }
-            }
-        });
-        return retMap;
-    }
-
-    static double computeMinuteSharpe(NavigableMap<LocalTime, SimpleBar> mp) {
-        NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
-        if (mp.size() > 0) {
-            retMap = genReturnMap(mp, (u, v) -> u / v - 1, SimpleBar::getClose, SimpleBar::getBarReturn);
-//            mp.navigableKeySet().forEach(k -> {
-//                if (!k.equals(mp.firstKey())) {
-//                    double prevClose = mp.lowerEntry(k).getValue().getClose();
-//                    //double prevLow = mp.lowerEntry(k).getValue().getLow();
-//                    retMap.put(k, mp.get(k).getClose() / prevClose - 1);
-//                } else {
-//                    retMap.put(k, mp.get(k).getBarReturn());
-//                }
-//            });
-            double minuteMean = Utility.computeMean(retMap);
-            double minuteSD = Utility.computeSD(retMap);
-            if (minuteSD != 0.0) {
-                //System.out.println(" mean is " + (minuteMean * 240) + " minute sd " + (minuteSD * Math.sqrt(240)));
-                return (minuteMean * 240) / (minuteSD * Math.sqrt(240));
-            }
-        }
-        return 0.0;
-    }
-
-    static double computeMinuteSharpeFromMtmDeltaMp(NavigableMap<LocalTime, Double> mtmDeltaMp) {
-        //System.out.println(" compute minute sharpe from mtm mp ");
-        NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
-        retMap = genReturnMap(mtmDeltaMp, (u, v) -> u / v - 1, d -> d, d -> 0.0);
-
-        double minuteMean = Utility.computeMean(retMap);
-        double minuteSD = Utility.computeSD(retMap);
-        if (minuteSD != 0.0) {
-            //System.out.println(" mean is " + (minuteMean * 240) + " minute sd " + (minuteSD * Math.sqrt(240)));
-            return (minuteMean * 240) / (minuteSD * Math.sqrt(240));
-        }
-        return 0.0;
-    }
-
-    static double computeMinuteNetPnlSharpe(NavigableMap<LocalTime, Double> netPnlMp) {
-        NavigableMap<LocalTime, Double> diffMap = new TreeMap<>();
-        diffMap = genReturnMap(netPnlMp, (u, v) -> u - v, d -> d, d -> 0.0);
-        double minuteMean = Utility.computeMean(diffMap);
-        double minuteSD = Utility.computeSD(diffMap);
-        if (minuteSD != 0.0) {
-            //System.out.println(" mean is " + (minuteMean * 240) + " minute sd " + (minuteSD * Math.sqrt(240)));
-            return (minuteMean * 240) / (minuteSD * Math.sqrt(240));
-        }
-        return 0.0;
     }
 
 }

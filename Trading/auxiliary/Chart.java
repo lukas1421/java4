@@ -1,4 +1,4 @@
-package apidemo;
+package auxiliary;
 
 import java.awt.Color;
 import java.awt.Dimension;

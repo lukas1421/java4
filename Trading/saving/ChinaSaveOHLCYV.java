@@ -1,4 +1,4 @@
-package apidemo;
+package saving;
 
 import static utility.Utility.getStr;
 import javax.persistence.Column;
@@ -52,21 +52,21 @@ public class ChinaSaveOHLCYV {
     }
     
     public ChinaSaveOHLCYV() {}
-    ChinaSaveOHLCYV(String name) { this.stockName = name; };
+    public ChinaSaveOHLCYV(String name) { this.stockName = name; };
     
-    double getOpen() {return open; }
-    double getHigh() {return high; }        
-    double getLow()  { return low;}    
-    double getClose() {return close; }
-    double getCloseY() {return closeY; }
-    double getVolume() {return volume; }
-    void setOpen(double op) {this.open = op;}
-    void getHigh(double hi) {this.high = hi; }        
-    void getLow(double lo) {  this.low = lo; }    
-    void getClose(double cl) { this.close = cl; }
-    void getCloseY(double cly) {this.closeY = cly; }
-    void getVolume(int v) { this.volume = v; }
-    
+    public double getOpen() {return open; }
+    public double getHigh() {return high; }
+    public double getLow()  { return low;}
+    public double getClose() {return close; }
+    public double getCloseY() {return closeY; }
+    public double getVolume() {return volume; }
+    public void setOpen(double op) {this.open = op;}
+    public void getHigh(double hi) {this.high = hi; }
+    public void getLow(double lo) {  this.low = lo; }
+    public void getClose(double cl) { this.close = cl; }
+    public void getCloseY(double cly) {this.closeY = cly; }
+    public void getVolume(int v) { this.volume = v; }
+
     @Override public int hashCode() {int hash = 0; return hash += (stockName != null ? stockName.hashCode() : 0);}
 
     @Override
@@ -76,7 +76,7 @@ public class ChinaSaveOHLCYV {
         return !((this.stockName == null && other.stockName != null) || (this.stockName != null && !this.stockName.equals(other.stockName)));
     }
     
-    String s(double d) {return Double.toString(d);}
+    public String s(double d) {return Double.toString(d);}
     
-    @Override public String toString() { return getStr(" ","apidemo.ChinaSaveOHLCYV[ id=",stockName," O H L C V",s(open),s(high),s(low),s(close),s(closeY),s(volume)," ]"); }
+    @Override public String toString() { return getStr(" ","saving.ChinaSaveOHLCYV[ id=",stockName," O H L C V",s(open),s(high),s(low),s(close),s(closeY),s(volume)," ]"); }
 }

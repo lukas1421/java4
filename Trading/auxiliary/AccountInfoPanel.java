@@ -1,4 +1,4 @@
-package apidemo;
+package auxiliary;
 
 import static controller.Formats.fmt0;
 
@@ -21,6 +21,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 
+import apidemo.ChinaMain;
 import client.Types.SecType;
 import controller.ApiController.IAccountHandler;
 import controller.MarketValueTag;

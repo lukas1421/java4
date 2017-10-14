@@ -38,6 +38,23 @@ public class Utility {
     public static final Comparator<? super Map.Entry<LocalTime, SimpleBar>> BAR_HIGH = Map.Entry.comparingByValue(Comparator.comparingDouble(SimpleBar::getHigh));
     public static final Comparator<? super Map.Entry<LocalTime, SimpleBar>> BAR_LOW = (e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
     public static final Predicate<? super Map.Entry<LocalTime, ?>> IS_OPEN_PRED = e -> e.getKey().isAfter(LocalTime.of(9, 29, 59));
+    public static final LocalTime AM914T = LocalTime.of(9, 14, 0);
+    public static final LocalTime AM941T = LocalTime.of(9, 41, 0);
+    public static final LocalTime AM924T = LocalTime.of(9, 24, 0);
+    public static final LocalTime AM925T = LocalTime.of(9, 25, 0);
+    public static final LocalTime AM929T = LocalTime.of(9, 29, 0);
+    public static final LocalTime AMOPENT = LocalTime.of(9, 30, 0);
+    public static final LocalTime AM935T = LocalTime.of(9, 35, 0);
+    public static final LocalTime AM940T = LocalTime.of(9, 40, 0);
+    public static final LocalTime AM950T = LocalTime.of(9, 50, 0);
+    public static final LocalTime AM1000T = LocalTime.of(10, 0);
+    public static final LocalTime AMCLOSET = LocalTime.of(11, 30, 0);
+    public static final LocalTime AM1131T = LocalTime.of(11, 31, 0);
+    public static final LocalTime PMOPENT = LocalTime.of(13, 0, 0);
+    public static final LocalTime PM1309T = LocalTime.of(13, 9, 0);
+    public static final LocalTime PM1310T = LocalTime.of(13, 10, 0);
+    public static final LocalTime PMCLOSET = LocalTime.of(15, 0, 0);
+    public static final LocalTime TIMEMAX = LocalTime.MAX.truncatedTo(ChronoUnit.MINUTES);
     public static BiPredicate<? super Map<String, ? extends Map<LocalTime, ?>>, String> NORMAL_MAP = (mp, name) -> mp.containsKey(name) && !mp.get(name).isEmpty() && mp.get(name).size() > 0;
 
     private Utility() {

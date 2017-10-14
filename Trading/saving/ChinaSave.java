@@ -1,4 +1,4 @@
-package apidemo;
+package saving;
 
 import auxiliary.ChinaSaveInterface2Blob;
 import auxiliary.SimpleBar;
@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 @javax.persistence.Entity
 @Table(name = "CHINASAVE")
-class ChinaSave implements Serializable, ChinaSaveInterface2Blob {
+public class ChinaSave implements Serializable, ChinaSaveInterface2Blob {
 
     private static final long serialVersionUID = 888888L;
     static final ChinaSave CS = new ChinaSave();
@@ -39,11 +39,11 @@ class ChinaSave implements Serializable, ChinaSaveInterface2Blob {
     public ChinaSave() {
     }
 
-    ChinaSave(String name) {
+    public ChinaSave(String name) {
         this.stockName = name;
     }
 
-    static ChinaSave getInstance() {
+    public static ChinaSave getInstance() {
         return CS;
     }
 
@@ -100,7 +100,7 @@ class ChinaSave implements Serializable, ChinaSaveInterface2Blob {
 
     @Override
     public String toString() {
-        return "apidemo.ChinaSave[ id=" + stockName + " ]";
+        return "saving.ChinaSave[ id=" + stockName + " ]";
     }
 
     @Override

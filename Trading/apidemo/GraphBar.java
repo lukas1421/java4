@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toMap;
 import javax.swing.JComponent;
 
-final class GraphBar extends JComponent implements GraphFillable {
+public final class GraphBar extends JComponent implements GraphFillable {
 
     static final int WIDTH_BAR = 3;
     int height;
@@ -60,11 +60,11 @@ final class GraphBar extends JComponent implements GraphFillable {
                 (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
     }
 
-    GraphBar() {
+    public GraphBar() {
         name = "";
         chineseName = "";
         maxAMT = LocalTime.of(9, 30);
-        minAMT = AMOPENT;
+        minAMT = Utility.AMOPENT;
         this.tm = new ConcurrentSkipListMap<>();
     }
 
@@ -329,13 +329,13 @@ final class GraphBar extends JComponent implements GraphFillable {
     }
 
     double getFirst1() {
-        return (Utility.normalMapGen(name, priceMapBar) && priceMapBar.get(name).containsKey(AMOPENT) && Utility.noZeroArrayGen(name, openMap))
-                ? round(1000d * (priceMapBar.get(name).floorEntry(AMOPENT).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
+        return (Utility.normalMapGen(name, priceMapBar) && priceMapBar.get(name).containsKey(Utility.AMOPENT) && Utility.noZeroArrayGen(name, openMap))
+                ? round(1000d * (priceMapBar.get(name).floorEntry(Utility.AMOPENT).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
     }
 
     double getFirst10() {
-        return (Utility.normalMapGen(name, priceMapBar) && priceMapBar.get(name).containsKey(AMOPENT) && Utility.noZeroArrayGen(name, openMap))
-                ? round(1000d * (priceMapBar.get(name).floorEntry(AM940T).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
+        return (Utility.normalMapGen(name, priceMapBar) && priceMapBar.get(name).containsKey(Utility.AMOPENT) && Utility.noZeroArrayGen(name, openMap))
+                ? round(1000d * (priceMapBar.get(name).floorEntry(Utility.AM940T).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
     }
 
     int getCurrentMaxMinYP() {
@@ -388,13 +388,13 @@ final class GraphBar extends JComponent implements GraphFillable {
     }
 
     LocalTime getAMMinT() {
-        return (tm.size() > 0 && tm.firstKey().isBefore(AMCLOSET) && tm.lastKey().isAfter(AMOPENT))
-                ? tm.entrySet().stream().filter(Utility.AM_PRED).min(Utility.BAR_LOW).map(Entry::getKey).orElse(AMOPENT) : AMOPENT;
+        return (tm.size() > 0 && tm.firstKey().isBefore(Utility.AMCLOSET) && tm.lastKey().isAfter(Utility.AMOPENT))
+                ? tm.entrySet().stream().filter(Utility.AM_PRED).min(Utility.BAR_LOW).map(Entry::getKey).orElse(Utility.AMOPENT) : Utility.AMOPENT;
     }
 
     LocalTime getAMMaxT() {
-        return (!tm.isEmpty() & tm.size() > 2 && tm.firstKey().isBefore(AMCLOSET) && tm.lastKey().isAfter(AMOPENT))
-                ? tm.entrySet().stream().filter(Utility.AM_PRED).max(Utility.BAR_HIGH).map(Entry::getKey).orElse(AMOPENT) : AMOPENT;
+        return (!tm.isEmpty() & tm.size() > 2 && tm.firstKey().isBefore(Utility.AMCLOSET) && tm.lastKey().isAfter(Utility.AMOPENT))
+                ? tm.entrySet().stream().filter(Utility.AM_PRED).max(Utility.BAR_HIGH).map(Entry::getKey).orElse(Utility.AMOPENT) : Utility.AMOPENT;
     }
 
     Double getSizeSizeY() {

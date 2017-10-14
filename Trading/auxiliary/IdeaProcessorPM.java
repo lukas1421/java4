@@ -1,4 +1,9 @@
-package apidemo;
+package auxiliary;
+
+import apidemo.ChinaIdeaPMCompute;
+import apidemo.ChinaStock;
+import apidemo.Graph;
+import apidemo.GraphBar;
 
 import static apidemo.ChinaStockHelper.getRange;
 import java.awt.BorderLayout;
@@ -26,7 +31,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 
-final class IdeaProcessorJolt extends JPanel {
+final class IdeaProcessorPM extends JPanel {
 
     //ConcurrentHashMap<> hm 
     public static ConcurrentHashMap<String, TreeMap<LocalTime, String>> ideas = new ConcurrentHashMap<>();
@@ -38,24 +43,24 @@ final class IdeaProcessorJolt extends JPanel {
     //return of ideas
     public static ConcurrentHashMap<String, TreeMap<LocalTime, Double>> ideaReturn = new ConcurrentHashMap<>();
 
-    private static final Graph GRAPH_1 = new Graph();
-    private static final Graph GRAPH_2 = new Graph();
-    private static final Graph GRAPH_3 = new Graph();
-    private static final Graph GRAPH_4 = new Graph();
-    private static final Graph GRAPH_5 = new Graph();
-    private static final Graph GRAPH_6 = new Graph();
-    private static final Graph GRAPH_7 = new Graph();
-    private static final Graph GRAPH_8 = new Graph();
-    private static final Graph GRAPH_9 = new Graph();
-    private static final Graph GRAPH_10 = new Graph();
-    private static final Graph GRAPH_11 = new Graph();
-    private static final Graph GRAPH_12 = new Graph();
-    private static final Graph GRAPH_13 = new Graph();
-    private static final Graph GRAPH_14 = new Graph();
-    private static final Graph GRAPH_15 = new Graph();
-    private static final Graph GRAPH_16 = new Graph();
-    private static final Graph GRAPH_17 = new Graph();
-    private static final Graph GRAPH_18 = new Graph();
+    private static final GraphBar GRAPH1 = new GraphBar();
+    private static final GraphBar GRAPH2 = new GraphBar();
+    private static final GraphBar GRAPH3 = new GraphBar();
+    private static final GraphBar GRAPH4 = new GraphBar();
+    private static final GraphBar GRAPH5 = new GraphBar();
+    private static final GraphBar GRAPH6 = new GraphBar();
+    private static final GraphBar GRAPH7 = new GraphBar();
+    private static final GraphBar GRAPH8 = new GraphBar();
+    private static final GraphBar GRAPH9 = new GraphBar();
+    private static final GraphBar GRAPH10 = new GraphBar();
+    private static final GraphBar GRAPH11 = new GraphBar();
+    private static final GraphBar GRAPH12 = new GraphBar();
+    private static final GraphBar GRAPH13 = new GraphBar();
+    private static final GraphBar GRAPH14 = new GraphBar();
+    private static final GraphBar GRAPH15 = new GraphBar();
+    private static final GraphBar GRAPH16 = new GraphBar();
+    private static final GraphBar GRAPH17 = new GraphBar();
+    private static final GraphBar GRAPH18 = new GraphBar();
 
     private static String stock1;
     private static String stock2;
@@ -84,7 +89,7 @@ final class IdeaProcessorJolt extends JPanel {
     ScheduledExecutorService ftes;
 
     //
-    IdeaProcessorJolt() {
+    IdeaProcessorPM() {
 
         JPanel graphLeft = new JPanel();
         JPanel graphMiddle = new JPanel();
@@ -94,7 +99,7 @@ final class IdeaProcessorJolt extends JPanel {
         graphMiddle.setLayout(new GridLayout(6, 1));
         graphRight.setLayout(new GridLayout(6, 1));
 
-        JScrollPane chartScroll = new JScrollPane(GRAPH_1) {
+        JScrollPane chartScroll = new JScrollPane(GRAPH1) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -102,7 +107,7 @@ final class IdeaProcessorJolt extends JPanel {
                 return d;
             }
         };
-        JScrollPane chartScroll2 = new JScrollPane(GRAPH_2) {
+        JScrollPane chartScroll2 = new JScrollPane(GRAPH2) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -110,7 +115,7 @@ final class IdeaProcessorJolt extends JPanel {
                 return d;
             }
         };
-        JScrollPane chartScroll3 = new JScrollPane(GRAPH_3) {
+        JScrollPane chartScroll3 = new JScrollPane(GRAPH3) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -118,7 +123,7 @@ final class IdeaProcessorJolt extends JPanel {
                 return d;
             }
         };
-        JScrollPane chartScroll4 = new JScrollPane(GRAPH_4) {
+        JScrollPane chartScroll4 = new JScrollPane(GRAPH4) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -126,7 +131,7 @@ final class IdeaProcessorJolt extends JPanel {
                 return d;
             }
         };
-        JScrollPane chartScroll5 = new JScrollPane(GRAPH_5) {
+        JScrollPane chartScroll5 = new JScrollPane(GRAPH5) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -134,56 +139,7 @@ final class IdeaProcessorJolt extends JPanel {
                 return d;
             }
         };
-        JScrollPane chartScroll6 = new JScrollPane(GRAPH_6) {
-            @Override
-            public Dimension getPreferredSize() {
-                Dimension d = super.getPreferredSize();
-                d.height = 250;
-                return d;
-            }
-        };
-
-        JScrollPane chartScroll7 = new JScrollPane(GRAPH_7) {
-            @Override
-            public Dimension getPreferredSize() {
-                Dimension d = super.getPreferredSize();
-                d.height = 250;
-                return d;
-            }
-        };
-        JScrollPane chartScroll8 = new JScrollPane(GRAPH_8) {
-            @Override
-            public Dimension getPreferredSize() {
-                Dimension d = super.getPreferredSize();
-                d.height = 250;
-                return d;
-            }
-        };
-        JScrollPane chartScroll9 = new JScrollPane(GRAPH_9) {
-            @Override
-            public Dimension getPreferredSize() {
-                Dimension d = super.getPreferredSize();
-                d.height = 250;
-                return d;
-            }
-        };
-        JScrollPane chartScroll10 = new JScrollPane(GRAPH_10) {
-            @Override
-            public Dimension getPreferredSize() {
-                Dimension d = super.getPreferredSize();
-                d.height = 250;
-                return d;
-            }
-        };
-        JScrollPane chartScroll11 = new JScrollPane(GRAPH_11) {
-            @Override
-            public Dimension getPreferredSize() {
-                Dimension d = super.getPreferredSize();
-                d.height = 250;
-                return d;
-            }
-        };
-        JScrollPane chartScroll12 = new JScrollPane(GRAPH_12) {
+        JScrollPane chartScroll6 = new JScrollPane(GRAPH6) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -192,7 +148,7 @@ final class IdeaProcessorJolt extends JPanel {
             }
         };
 
-        JScrollPane chartScroll13 = new JScrollPane(GRAPH_13) {
+        JScrollPane chartScroll7 = new JScrollPane(GRAPH7) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -200,7 +156,7 @@ final class IdeaProcessorJolt extends JPanel {
                 return d;
             }
         };
-        JScrollPane chartScroll14 = new JScrollPane(GRAPH_14) {
+        JScrollPane chartScroll8 = new JScrollPane(GRAPH8) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -208,7 +164,7 @@ final class IdeaProcessorJolt extends JPanel {
                 return d;
             }
         };
-        JScrollPane chartScroll15 = new JScrollPane(GRAPH_15) {
+        JScrollPane chartScroll9 = new JScrollPane(GRAPH9) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -216,7 +172,7 @@ final class IdeaProcessorJolt extends JPanel {
                 return d;
             }
         };
-        JScrollPane chartScroll16 = new JScrollPane(GRAPH_16) {
+        JScrollPane chartScroll10 = new JScrollPane(GRAPH10) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -224,7 +180,7 @@ final class IdeaProcessorJolt extends JPanel {
                 return d;
             }
         };
-        JScrollPane chartScroll17 = new JScrollPane(GRAPH_17) {
+        JScrollPane chartScroll11 = new JScrollPane(GRAPH11) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -232,7 +188,56 @@ final class IdeaProcessorJolt extends JPanel {
                 return d;
             }
         };
-        JScrollPane chartScroll18 = new JScrollPane(GRAPH_18) {
+        JScrollPane chartScroll12 = new JScrollPane(GRAPH12) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 250;
+                return d;
+            }
+        };
+
+        JScrollPane chartScroll13 = new JScrollPane(GRAPH13) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 250;
+                return d;
+            }
+        };
+        JScrollPane chartScroll14 = new JScrollPane(GRAPH14) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 250;
+                return d;
+            }
+        };
+        JScrollPane chartScroll15 = new JScrollPane(GRAPH15) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 250;
+                return d;
+            }
+        };
+        JScrollPane chartScroll16 = new JScrollPane(GRAPH16) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 250;
+                return d;
+            }
+        };
+        JScrollPane chartScroll17 = new JScrollPane(GRAPH17) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 250;
+                return d;
+            }
+        };
+        JScrollPane chartScroll18 = new JScrollPane(GRAPH18) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -311,44 +316,45 @@ final class IdeaProcessorJolt extends JPanel {
         JButton computeButton = new JButton("Compute");
         JButton stopComputeButton = new JButton("Stop");
         JButton refreshButton = new JButton("Refresh");
-        //JButton refreshButton = new JButton("Refresh");
 
         stopComputeButton.addActionListener(al -> {
             ftes.shutdown();
         });
+        // button that does computation
+        computeButton.addActionListener(al -> {
 
-        computeButton.addActionListener((al) -> {
-            ChinaIdeaTimeCompute citc = new ChinaIdeaTimeCompute();
+            ChinaIdeaPMCompute cipc = new ChinaIdeaPMCompute();
             CompletableFuture.runAsync(() -> {
                 ftes = Executors.newScheduledThreadPool(10);
-                ftes.scheduleAtFixedRate(citc, 0, 10, TimeUnit.SECONDS);
+                ftes.scheduleAtFixedRate(cipc, 0, 10, TimeUnit.SECONDS);
                 ftes.scheduleAtFixedRate(() -> {
-                    System.out.println("Refreshing China Idea" + LocalTime.now());
+                    System.out.println("compute PM" + LocalTime.now());
                     refreshPage();
                 }, 5, 20, TimeUnit.SECONDS);
             });
+
         });
 
         refreshButton.addActionListener(al -> {
             refreshPage();
         });
 
-        paneList.forEach((JScrollPane p) -> {
+        paneList.forEach(p -> {
             JScrollPane sp = (JScrollPane) p;
             sp.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    //JViewport jv;
+                    JViewport jv;
                     if (p.getComponent(0) instanceof JViewport) {
-                        JViewport jv = (JViewport) p.getComponent(0);
+                        jv = (JViewport) p.getComponent(0);
                         if (jv.getComponent(0) instanceof apidemo.Graph) {
                             Graph g = (apidemo.Graph) jv.getComponent(0);
                             System.out.println(" name is " + g.getName());
                             System.out.println(" clicked " + LocalTime.now());
                             selectedNameIP1 = g.getName();
                             //ChinaSizeRatio.setGraph4(selectedNameIP1);       
-                            //ChinaSizeRatio.refreshPage();                     
-                            ChinaStock.setGraphGen(selectedNameIP1, GRAPH_6);
+                            //ChinaSizeRatio.refreshPage();                       
+                            ChinaStock.setGraphGen(selectedNameIP1, GRAPH6);
                             ChinaStock.pureRefreshTable();
                         }
                     }
@@ -356,45 +362,16 @@ final class IdeaProcessorJolt extends JPanel {
             });
         });
 
-//        chartScroll.addMouseListener(new MouseAdapter() {
-//            @Override public void mouseClicked(MouseEvent e) {
-//                selectedNameIP1 = graph1.getName();
-//                ChinaSizeRatio.setGraph3(selectedNameIP1);
-//                System.out.println(" clicked " + LocalTime.now());
-//            }
-//        });
-//        
-//                
-//        chartScroll7.addMouseListener(new MouseAdapter() {
-//            @Override public void mouseClicked(MouseEvent e) {
-//                selectedNameIP1 = graph1.getName();
-//                ChinaSizeRatio.setGraph4(selectedNameIP2);
-//                System.out.println(" clicked " + LocalTime.now());
-//            }
-//        });
-//           
-//       
-//        chartScroll13.addMouseListener(new MouseAdapter() {
-//            @Override public void mouseClicked(MouseEvent e) {
-//                selectedNameIP1 = graph1.getName();
-//                ChinaSizeRatio.setGraph5(selectedNameIP3);
-//                System.out.println(" clicked " + LocalTime.now());
-//            }
-//        });
         northPanel.add(computeButton);
         northPanel.add(stopComputeButton);
         northPanel.add(refreshButton);
-        //northPanel.add(refreshButton2); 
 
         jp.setLayout(new BorderLayout());
         jp.add(northPanel, BorderLayout.NORTH);
         jp.add(graphPanel, BorderLayout.CENTER);
 
         setLayout(new BorderLayout());
-
         add(jp, BorderLayout.CENTER);
-        //add(northPanel, BorderLayout.NORTH);
-        //add(graphPanel, BorderLayout.CENTER); 
 
     }
 
@@ -420,42 +397,40 @@ final class IdeaProcessorJolt extends JPanel {
     public static void chooseGraphs() {
         // for percentileVRPMap (2 term product
         System.out.println(" choosing graphs ");
-        if (!ChinaStock.percentileVRP1mChgMap.isEmpty() && ChinaStock.percentileVRP1mChgMap.size() > 2) {
-            List<String> stocklist1 = ChinaStock.percentileVRP1mChgMap.entrySet().stream().filter(e -> Optional.ofNullable(e.getValue()).orElse(0) != 0
-                    && Optional.ofNullable(getRange(e.getKey())).orElse(0.0) > 0.01)
-                    .sorted((e1, e2) -> e1.getValue() <= e2.getValue() ? 1 : -1).map(Map.Entry::getKey).collect(Collectors.toList());
+
+        if (!ChinaStock.pmVRPRatioMap.isEmpty() && ChinaStock.pmVRPRatioMap.size() > 2) {
+            List<String> stocklist1 = ChinaStock.pmVRPRatioMap.entrySet().stream().filter(e -> Optional.ofNullable(getRange(e.getKey())).orElse(0.0) > 0.01)
+                    .sorted((e1, e2) -> e1.getValue() < e2.getValue() ? 1 : -1).map(Map.Entry::getKey).collect(Collectors.toList());
 
             // System.out.println(" stocklist1 is " + stocklist1);
             // System.out.println(" stocklist1 full is " +  ChinaStock.percentileVRPMap.entrySet().stream().sorted((e1,e2)-> e1.getValue()<e2.getValue()?1:-1).collect(Collectors.);
-            if (stocklist1.size() > 5) {
+            if (stocklist1.size() >= 6) {
                 stock1 = stocklist1.get(0);
                 stock2 = stocklist1.get(1);
                 stock3 = stocklist1.get(2);
                 stock4 = stocklist1.get(3);
                 stock5 = stocklist1.get(4);
                 stock6 = stocklist1.get(5);
-
-                GRAPH_1.fillInGraph(stock1);
-                GRAPH_2.fillInGraph(stock2);
-                GRAPH_3.fillInGraph(stock3);
-                GRAPH_4.fillInGraph(stock4);
-                GRAPH_5.fillInGraph(stock5);
-                GRAPH_6.fillInGraph(stock6);
+                GRAPH1.fillInGraph(stock1);
+                GRAPH2.fillInGraph(stock2);
+                GRAPH3.fillInGraph(stock3);
+                GRAPH4.fillInGraph(stock4);
+                GRAPH5.fillInGraph(stock5);
+                GRAPH6.fillInGraph(stock6);
             }
+
         }
         //this.repaint();
 
-        if (!ChinaStock.percentileVRP3mChgMap.isEmpty() && ChinaStock.percentileVRP3mChgMap.size() > 2) {
-            //System.out.println(" issue map is "  + ChinaStock.percentileVRP3mChgMap);
-            List<String> stocklist2 = ChinaStock.percentileVRP3mChgMap.entrySet().stream().filter(e -> Optional.ofNullable(e.getValue()).orElse(0) != 0
-                    && Optional.ofNullable(getRange(e.getKey())).orElse(0.0) > 0.01)
-                    .sorted((e1, e2) -> e1.getValue() <= e2.getValue() ? 1 : -1)
+        if (!ChinaStock.pmVRPPercentileChgMap.isEmpty() && ChinaStock.pmVRPPercentileChgMap.size() > 2) {
+            List<String> stocklist2 = ChinaStock.pmVRPPercentileChgMap.entrySet().stream().filter(e -> Optional.ofNullable(getRange(e.getKey())).orElse(0.0) > 0.01)
+                    .sorted((e1, e2) -> e1.getValue() < e2.getValue() ? 1 : -1)
                     .map(Map.Entry::getKey).collect(Collectors.toList());
 
             // System.out.println(" stocklist2 is " + stocklist2);
             // System.out.println(" stocklist2 full is " + ChinaStock.percentileVRP3mChgMap.entrySet().stream().filter(e->Optional.ofNullable(ChinaDataYesterday.getRangeY(e.getKey())).orElse(0.0)>0.01)
             //         .sorted((e1,e2)-> e1.getValue()<e2.getValue()?1:-1).toString());
-            if (stocklist2.size() > 5) {
+            if (stocklist2.size() >= 6) {
                 stock7 = stocklist2.get(0);
                 stock8 = stocklist2.get(1);
                 stock9 = stocklist2.get(2);
@@ -463,25 +438,24 @@ final class IdeaProcessorJolt extends JPanel {
                 stock11 = stocklist2.get(4);
                 stock12 = stocklist2.get(5);
 
-                GRAPH_7.fillInGraph(stock7);
-                GRAPH_8.fillInGraph(stock8);
-                GRAPH_9.fillInGraph(stock9);
-                GRAPH_10.fillInGraph(stock10);
-                GRAPH_11.fillInGraph(stock11);
-                GRAPH_12.fillInGraph(stock12);
+                GRAPH7.fillInGraph(stock7);
+                GRAPH8.fillInGraph(stock8);
+                GRAPH9.fillInGraph(stock9);
+                GRAPH10.fillInGraph(stock10);
+                GRAPH11.fillInGraph(stock11);
+                GRAPH12.fillInGraph(stock12);
             }
         }
 
-        if (!ChinaStock.percentileVRP5mChgMap.isEmpty() && ChinaStock.percentileVRP5mChgMap.size() > 2) {
+        if (!ChinaStock.pmReturnMap.isEmpty() && ChinaStock.pmReturnMap.size() > 2) {
             //double rangeY = Optional.ofNullable(ui)
-            List<String> stocklist3 = ChinaStock.percentileVRP5mChgMap.entrySet().stream().filter(e -> Optional.ofNullable(e.getValue()).orElse(0) != 0
-                    && Optional.ofNullable(getRange(e.getKey())).orElse(0.0) > 0.01)
-                    .sorted((e1, e2) -> e1.getValue() <= e2.getValue() ? 1 : -1).map(Map.Entry::getKey).collect(Collectors.toList());
+            List<String> stocklist3 = ChinaStock.pmReturnMap.entrySet().stream().filter(e -> Optional.ofNullable(getRange(e.getKey())).orElse(0.0) > 0.01)
+                    .sorted((e1, e2) -> e1.getValue() < e2.getValue() ? 1 : -1).map(Map.Entry::getKey).collect(Collectors.toList());
 
             // System.out.println(" stocklist3 is " + stocklist3);
             // System.out.println(" stocklist3 full is " + ChinaStock.percentileVRP5mChgMap.entrySet().stream().filter(e->Optional.ofNullable(ChinaDataYesterday.getRangeY(e.getKey())).orElse(0.0)>0.02)
             //         .sorted((e1,e2)-> e1.getValue()<e2.getValue()?1:-1).toString());
-            if (stocklist3.size() > 5) {
+            if (stocklist3.size() >= 6) {
                 stock13 = stocklist3.get(0);
                 stock14 = stocklist3.get(1);
                 stock15 = stocklist3.get(2);
@@ -489,13 +463,14 @@ final class IdeaProcessorJolt extends JPanel {
                 stock17 = stocklist3.get(4);
                 stock18 = stocklist3.get(5);
 
-                GRAPH_13.fillInGraph(stock13);
-                GRAPH_14.fillInGraph(stock14);
-                GRAPH_15.fillInGraph(stock15);
-                GRAPH_16.fillInGraph(stock16);
-                GRAPH_17.fillInGraph(stock17);
-                GRAPH_18.fillInGraph(stock18);
+                GRAPH13.fillInGraph(stock13);
+                GRAPH14.fillInGraph(stock14);
+                GRAPH15.fillInGraph(stock15);
+                GRAPH16.fillInGraph(stock16);
+                GRAPH17.fillInGraph(stock17);
+                GRAPH18.fillInGraph(stock18);
             }
         }
     }
+
 }

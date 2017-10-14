@@ -1,5 +1,6 @@
-package apidemo;
+package saving;
 
+import apidemo.ChinaData;
 import auxiliary.ChinaSaveInterface2Blob;
 import auxiliary.Strategy;
 
@@ -76,7 +77,7 @@ public class ChinaSaveStrat implements Serializable, ChinaSaveInterface2Blob {
         return new ChinaSaveStrat(name);
     }
 
-    static ChinaSaveInterface2Blob getInstance() {
+    public static ChinaSaveInterface2Blob getInstance() {
         return CSS;
     }
 
@@ -97,7 +98,7 @@ public class ChinaSaveStrat implements Serializable, ChinaSaveInterface2Blob {
 
     @Override
     public String toString() {
-        return "apidemo.ChinaSaveStrat[ id=" + stock + " ]";
+        return "saving.ChinaSaveStrat[ id=" + stock + " ]";
     }
 
     @Override

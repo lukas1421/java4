@@ -1,4 +1,6 @@
-package apidemo;
+package auxiliary;
+
+import apidemo.*;
 
 import static apidemo.ChinaStockHelper.getRange;
 import java.awt.BorderLayout;
@@ -26,7 +28,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JViewport;
 
-final class IdeaProcessorPM extends JPanel {
+public final class IdeaProcessor extends JPanel {
 
     //ConcurrentHashMap<> hm 
     public static ConcurrentHashMap<String, TreeMap<LocalTime, String>> ideas = new ConcurrentHashMap<>();
@@ -38,24 +40,24 @@ final class IdeaProcessorPM extends JPanel {
     //return of ideas
     public static ConcurrentHashMap<String, TreeMap<LocalTime, Double>> ideaReturn = new ConcurrentHashMap<>();
 
-    private static final GraphBar GRAPH1 = new GraphBar();
-    private static final GraphBar GRAPH2 = new GraphBar();
-    private static final GraphBar GRAPH3 = new GraphBar();
-    private static final GraphBar GRAPH4 = new GraphBar();
-    private static final GraphBar GRAPH5 = new GraphBar();
-    private static final GraphBar GRAPH6 = new GraphBar();
-    private static final GraphBar GRAPH7 = new GraphBar();
-    private static final GraphBar GRAPH8 = new GraphBar();
-    private static final GraphBar GRAPH9 = new GraphBar();
-    private static final GraphBar GRAPH10 = new GraphBar();
-    private static final GraphBar GRAPH11 = new GraphBar();
-    private static final GraphBar GRAPH12 = new GraphBar();
-    private static final GraphBar GRAPH13 = new GraphBar();
-    private static final GraphBar GRAPH14 = new GraphBar();
-    private static final GraphBar GRAPH15 = new GraphBar();
-    private static final GraphBar GRAPH16 = new GraphBar();
-    private static final GraphBar GRAPH17 = new GraphBar();
-    private static final GraphBar GRAPH18 = new GraphBar();
+    private static final Graph GRAPH1 = new Graph();
+    private static final Graph GRAPH2 = new Graph();
+    private static final Graph GRAPH3 = new Graph();
+    private static final Graph GRAPH4 = new Graph();
+    private static final Graph GRAPH5 = new Graph();
+    private static final Graph GRAPH6 = new Graph();
+    private static final Graph GRAPH7 = new Graph();
+    private static final Graph GRAPH8 = new Graph();
+    private static final Graph GRAPH9 = new Graph();
+    private static final Graph GRAPH10 = new Graph();
+    private static final Graph GRAPH11 = new Graph();
+    private static final Graph GRAPH12 = new Graph();
+    private static final Graph GRAPH13 = new Graph();
+    private static final Graph GRAPH14 = new Graph();
+    private static final Graph GRAPH15 = new Graph();
+    private static final Graph GRAPH16 = new Graph();
+    private static final Graph GRAPH17 = new Graph();
+    private static final Graph GRAPH18 = new Graph();
 
     private static String stock1;
     private static String stock2;
@@ -83,8 +85,7 @@ final class IdeaProcessorPM extends JPanel {
     public static JPanel jp = new JPanel();
     ScheduledExecutorService ftes;
 
-    //
-    IdeaProcessorPM() {
+    IdeaProcessor() {
 
         JPanel graphLeft = new JPanel();
         JPanel graphMiddle = new JPanel();
@@ -102,6 +103,7 @@ final class IdeaProcessorPM extends JPanel {
                 return d;
             }
         };
+
         JScrollPane chartScroll2 = new JScrollPane(GRAPH2) {
             @Override
             public Dimension getPreferredSize() {
@@ -110,6 +112,7 @@ final class IdeaProcessorPM extends JPanel {
                 return d;
             }
         };
+
         JScrollPane chartScroll3 = new JScrollPane(GRAPH3) {
             @Override
             public Dimension getPreferredSize() {
@@ -118,6 +121,7 @@ final class IdeaProcessorPM extends JPanel {
                 return d;
             }
         };
+
         JScrollPane chartScroll4 = new JScrollPane(GRAPH4) {
             @Override
             public Dimension getPreferredSize() {
@@ -126,6 +130,7 @@ final class IdeaProcessorPM extends JPanel {
                 return d;
             }
         };
+
         JScrollPane chartScroll5 = new JScrollPane(GRAPH5) {
             @Override
             public Dimension getPreferredSize() {
@@ -134,6 +139,7 @@ final class IdeaProcessorPM extends JPanel {
                 return d;
             }
         };
+
         JScrollPane chartScroll6 = new JScrollPane(GRAPH6) {
             @Override
             public Dimension getPreferredSize() {
@@ -315,15 +321,16 @@ final class IdeaProcessorPM extends JPanel {
         stopComputeButton.addActionListener(al -> {
             ftes.shutdown();
         });
-        // button that does computation
-        computeButton.addActionListener(al -> {
 
-            ChinaIdeaPMCompute cipc = new ChinaIdeaPMCompute();
+        computeButton.addActionListener(al -> {
+            ChinaIdeaCompute cic = new ChinaIdeaCompute();
             CompletableFuture.runAsync(() -> {
                 ftes = Executors.newScheduledThreadPool(10);
-                ftes.scheduleAtFixedRate(cipc, 0, 10, TimeUnit.SECONDS);
+
+                ftes.scheduleAtFixedRate(cic, 0, 10, TimeUnit.SECONDS);
+
                 ftes.scheduleAtFixedRate(() -> {
-                    System.out.println("compute PM" + LocalTime.now());
+                    System.out.println("Refreshing China Idea" + LocalTime.now());
                     refreshPage();
                 }, 5, 20, TimeUnit.SECONDS);
             });
@@ -334,7 +341,7 @@ final class IdeaProcessorPM extends JPanel {
             refreshPage();
         });
 
-        paneList.forEach(p -> {
+        paneList.forEach((JScrollPane p) -> {
             JScrollPane sp = (JScrollPane) p;
             sp.addMouseListener(new MouseAdapter() {
                 @Override
@@ -347,8 +354,6 @@ final class IdeaProcessorPM extends JPanel {
                             System.out.println(" name is " + g.getName());
                             System.out.println(" clicked " + LocalTime.now());
                             selectedNameIP1 = g.getName();
-                            //ChinaSizeRatio.setGraph4(selectedNameIP1);       
-                            //ChinaSizeRatio.refreshPage();                       
                             ChinaStock.setGraphGen(selectedNameIP1, GRAPH6);
                             ChinaStock.pureRefreshTable();
                         }
@@ -364,48 +369,47 @@ final class IdeaProcessorPM extends JPanel {
         jp.setLayout(new BorderLayout());
         jp.add(northPanel, BorderLayout.NORTH);
         jp.add(graphPanel, BorderLayout.CENTER);
-
-        setLayout(new BorderLayout());
-        add(jp, BorderLayout.CENTER);
+        this.setLayout(new BorderLayout());
+        this.add(jp, BorderLayout.CENTER);
 
     }
 
-    public static void refreshPage() {
+    static void refreshPage() {
         jp.repaint();
     }
 
-//    public static void register(String name, LocalTime time, String message, IdeaProcessor.STRATTYPE st) {
-//        if(ideas.containsKey(name)) {
-//            ideas.get(name).put(time, message);
-//            numberIdeas.get(name).incrementAndGet();
-//        }
-//    }
-//    
-//    public static void evaluate() {
-//        ideas.entrySet().forEach((e) -> { 
-//            String name = e.getKey();
-//            double currPrice = ChinaStock.priceMap.get(name);
-//            e.getValue().keySet().forEach(k -> ideaReturn.get(name).put(k,Math.log(currPrice/ChinaData.priceMap.get(name).get(k))));
-//            ideaCorrectRate.compute(name, (k,v) ->  (double)numberIdeas.get(name).get()/ideaReturn.get(name).values().stream().filter(d->d>0.0).count());
-//        });
-//    }
-    public static void chooseGraphs() {
-        // for percentileVRPMap (2 term product
-        System.out.println(" choosing graphs ");
+    static void register(String name, LocalTime time, String message, IdeaProcessor.STRATTYPE st) {
+        if (ideas.containsKey(name)) {
+            ideas.get(name).put(time, message);
+            numberIdeas.get(name).incrementAndGet();
+        }
+    }
 
-        if (!ChinaStock.pmVRPRatioMap.isEmpty() && ChinaStock.pmVRPRatioMap.size() > 2) {
-            List<String> stocklist1 = ChinaStock.pmVRPRatioMap.entrySet().stream().filter(e -> Optional.ofNullable(getRange(e.getKey())).orElse(0.0) > 0.01)
+    public static void evaluate() {
+        ideas.entrySet().forEach((e) -> {
+            String name = e.getKey();
+            double currPrice = ChinaStock.priceMap.get(name);
+            e.getValue().keySet().forEach(k -> ideaReturn.get(name).put(k, Math.log(currPrice /
+                    ChinaData.priceMapBar.get(name).get(k).getClose())));
+            ideaCorrectRate.compute(name, (k, v) -> (double) numberIdeas.get(name).get() /
+                    ideaReturn.get(name).values().stream().filter(d -> d > 0.0).count());
+        });
+    }
+
+    public static void chooseGraphs() {
+        System.out.println(" choosing graphs ");
+        if (!ChinaStock.percentileVRPMap.isEmpty() && ChinaStock.percentileVRPMap.size() > 2) {
+            List<String> stocklist1 = ChinaStock.percentileVRPMap.entrySet().stream().filter(e -> Optional.ofNullable(e.getValue()).orElse(0) != 0
+                    && Optional.ofNullable(getRange(e.getKey())).orElse(0.0) > 0.01)
                     .sorted((e1, e2) -> e1.getValue() < e2.getValue() ? 1 : -1).map(Map.Entry::getKey).collect(Collectors.toList());
 
-            // System.out.println(" stocklist1 is " + stocklist1);
-            // System.out.println(" stocklist1 full is " +  ChinaStock.percentileVRPMap.entrySet().stream().sorted((e1,e2)-> e1.getValue()<e2.getValue()?1:-1).collect(Collectors.);
             if (stocklist1.size() >= 6) {
-                stock1 = stocklist1.get(0);
-                stock2 = stocklist1.get(1);
-                stock3 = stocklist1.get(2);
-                stock4 = stocklist1.get(3);
-                stock5 = stocklist1.get(4);
-                stock6 = stocklist1.get(5);
+                stock1 = Optional.ofNullable(stocklist1.get(0)).orElse("");
+                stock2 = Optional.ofNullable(stocklist1.get(1)).orElse("");
+                stock3 = Optional.ofNullable(stocklist1.get(2)).orElse("");
+                stock4 = Optional.ofNullable(stocklist1.get(3)).orElse("");
+                stock5 = Optional.ofNullable(stocklist1.get(4)).orElse("");
+                stock6 = Optional.ofNullable(stocklist1.get(5)).orElse("");
                 GRAPH1.fillInGraph(stock1);
                 GRAPH2.fillInGraph(stock2);
                 GRAPH3.fillInGraph(stock3);
@@ -413,18 +417,15 @@ final class IdeaProcessorPM extends JPanel {
                 GRAPH5.fillInGraph(stock5);
                 GRAPH6.fillInGraph(stock6);
             }
-
         }
         //this.repaint();
 
-        if (!ChinaStock.pmVRPPercentileChgMap.isEmpty() && ChinaStock.pmVRPPercentileChgMap.size() > 2) {
-            List<String> stocklist2 = ChinaStock.pmVRPPercentileChgMap.entrySet().stream().filter(e -> Optional.ofNullable(getRange(e.getKey())).orElse(0.0) > 0.01)
+        if (!ChinaStock.percentileVRPAvgVRMap.isEmpty() && ChinaStock.percentileVRPAvgVRMap.size() > 2) {
+            List<String> stocklist2 = ChinaStock.percentileVRPAvgVRMap.entrySet().stream().filter(e -> Optional.ofNullable(e.getValue()).orElse(0) != 0
+                    && Optional.ofNullable(ChinaStockHelper.getRange(e.getKey())).orElse(0.0) > 0.01)
                     .sorted((e1, e2) -> e1.getValue() < e2.getValue() ? 1 : -1)
                     .map(Map.Entry::getKey).collect(Collectors.toList());
 
-            // System.out.println(" stocklist2 is " + stocklist2);
-            // System.out.println(" stocklist2 full is " + ChinaStock.percentileVRP3mChgMap.entrySet().stream().filter(e->Optional.ofNullable(ChinaDataYesterday.getRangeY(e.getKey())).orElse(0.0)>0.01)
-            //         .sorted((e1,e2)-> e1.getValue()<e2.getValue()?1:-1).toString());
             if (stocklist2.size() >= 6) {
                 stock7 = stocklist2.get(0);
                 stock8 = stocklist2.get(1);
@@ -442,14 +443,11 @@ final class IdeaProcessorPM extends JPanel {
             }
         }
 
-        if (!ChinaStock.pmReturnMap.isEmpty() && ChinaStock.pmReturnMap.size() > 2) {
-            //double rangeY = Optional.ofNullable(ui)
-            List<String> stocklist3 = ChinaStock.pmReturnMap.entrySet().stream().filter(e -> Optional.ofNullable(getRange(e.getKey())).orElse(0.0) > 0.01)
+        if (!ChinaStock.percentileVRPAvgPRMap.isEmpty() && ChinaStock.percentileVRPAvgPRMap.size() > 2) {
+            List<String> stocklist3 = ChinaStock.percentileVRPAvgPRMap.entrySet().stream().filter(e -> Optional.ofNullable(e.getValue()).orElse(0) != 0
+                    && Optional.ofNullable(getRange(e.getKey())).orElse(0.0) > 0.01)
                     .sorted((e1, e2) -> e1.getValue() < e2.getValue() ? 1 : -1).map(Map.Entry::getKey).collect(Collectors.toList());
 
-            // System.out.println(" stocklist3 is " + stocklist3);
-            // System.out.println(" stocklist3 full is " + ChinaStock.percentileVRP5mChgMap.entrySet().stream().filter(e->Optional.ofNullable(ChinaDataYesterday.getRangeY(e.getKey())).orElse(0.0)>0.02)
-            //         .sorted((e1,e2)-> e1.getValue()<e2.getValue()?1:-1).toString());
             if (stocklist3.size() >= 6) {
                 stock13 = stocklist3.get(0);
                 stock14 = stocklist3.get(1);
@@ -457,7 +455,6 @@ final class IdeaProcessorPM extends JPanel {
                 stock16 = stocklist3.get(3);
                 stock17 = stocklist3.get(4);
                 stock18 = stocklist3.get(5);
-
                 GRAPH13.fillInGraph(stock13);
                 GRAPH14.fillInGraph(stock14);
                 GRAPH15.fillInGraph(stock15);
@@ -468,4 +465,25 @@ final class IdeaProcessorPM extends JPanel {
         }
     }
 
+    enum STRATTYPE {
+        AMOpenSize,
+        AMPriceLevel,
+        AMSizeBreak,
+        AmGen,
+        PmOpen,
+        PMSizeBreak,
+        PMNextDay,
+        PmClose
+    }
+
+    class Idea {
+
+        private final LocalTime ideaTime;
+        private final IdeaProcessor.STRATTYPE tradeType;
+
+        Idea(LocalTime lt, IdeaProcessor.STRATTYPE tt) {
+            ideaTime = lt;
+            tradeType = tt;
+        }
+    }
 }

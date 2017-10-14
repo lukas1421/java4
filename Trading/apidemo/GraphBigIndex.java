@@ -721,13 +721,13 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
     }
 
     private double getFirst1() {
-        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(AMOPENT) && Utility.noZeroArrayGen(name, openMap))
-                ? round(1000d * (priceMapBar.get(name).floorEntry(AMOPENT).getValue().getBarReturn())) / 10d : 0.0;
+        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(Utility.AMOPENT) && Utility.noZeroArrayGen(name, openMap))
+                ? round(1000d * (priceMapBar.get(name).floorEntry(Utility.AMOPENT).getValue().getBarReturn())) / 10d : 0.0;
     }
 
     private double getFirst10() {
-        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(AMOPENT) && Utility.noZeroArrayGen(name, openMap))
-                ? round(1000d * (priceMapBar.get(name).floorEntry(AM940T).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
+        return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(Utility.AMOPENT) && Utility.noZeroArrayGen(name, openMap))
+                ? round(1000d * (priceMapBar.get(name).floorEntry(Utility.AM940T).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
     }
 
 //        private int getCurrentMaxMinYP() {

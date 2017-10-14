@@ -1,4 +1,4 @@
-package apidemo;
+package auxiliary;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -11,6 +11,7 @@ import javax.swing.JTable;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.AbstractTableModel;
 
+import apidemo.ChinaMain;
 import util.HtmlButton;
 
 import client.CommissionReport;

@@ -20,16 +20,16 @@ import static apidemo.ChinaDataYesterday.retHOY;
 import static apidemo.ChinaDataYesterday.retLOY;
 import static apidemo.ChinaDataYesterday.retPMCOY;
 import static apidemo.ChinaSizeRatio.getVRPercentile;
-import static apidemo.ChinaStock.AM940T;
-import static apidemo.ChinaStock.AMCLOSET;
-import static apidemo.ChinaStock.AMOPENT;
+import static utility.Utility.AM940T;
+import static utility.Utility.AMCLOSET;
+import static utility.Utility.AMOPENT;
 import static utility.Utility.AM_PRED;
 import static utility.Utility.BAR_HIGH;
 import static utility.Utility.BAR_LOW;
 import static utility.Utility.IS_OPEN_PRED;
-import static apidemo.ChinaStock.PMOPENT;
+import static utility.Utility.PMOPENT;
 import static utility.Utility.PM_PRED;
-import static apidemo.ChinaStock.TIMEMAX;
+import static utility.Utility.TIMEMAX;
 import static apidemo.ChinaStock.nameMap;
 import static utility.Utility.noZeroArrayGen;
 import static utility.Utility.normalMapGen;
@@ -343,7 +343,7 @@ final class ChinaIndex extends JPanel {
     }
 
     static double getRtn(NavigableMap<LocalTime, SimpleBar> mp, LocalTime t1, LocalTime t2) {
-        if (t1.isAfter(ChinaStock.AM929T) && t2.isAfter(ChinaStock.AM929T)) {
+        if (t1.isAfter(Utility.AM929T) && t2.isAfter(Utility.AM929T)) {
             if (mp.containsKey(t2) && mp.containsKey(t1)) {
                 return mp.floorEntry(t2).getValue().getClose() / mp.floorEntry(t1).getValue().getOpen() - 1;
             } else {

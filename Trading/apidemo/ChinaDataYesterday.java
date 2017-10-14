@@ -1,12 +1,12 @@
 package apidemo;
 
-import static apidemo.ChinaStock.AMCLOSET;
-import static apidemo.ChinaStock.AMOPENT;
+import static utility.Utility.AMCLOSET;
+import static utility.Utility.AMOPENT;
 import static utility.Utility.AM_PRED;
 import static utility.Utility.BAR_HIGH;
 import static utility.Utility.BAR_LOW;
 import static utility.Utility.IS_OPEN_PRED;
-import static apidemo.ChinaStock.PMOPENT;
+import static utility.Utility.PMOPENT;
 import static utility.Utility.PM_PRED;
 import static apidemo.ChinaStock.nameMap;
 import static utility.Utility.noZeroArrayGen;
@@ -68,10 +68,11 @@ import javax.swing.table.TableRowSorter;
 import auxiliary.SimpleBar;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import saving.ChinaSaveOHLCYV;
 import utility.Utility;
 
 //process yesterday data
-final class ChinaDataYesterday extends JPanel {
+public final class ChinaDataYesterday extends JPanel {
 
     String line;
     String listNames;
@@ -83,15 +84,15 @@ final class ChinaDataYesterday extends JPanel {
     static File source = new File(ChinaMain.GLOBALPATH + "CHINASSYesterday.ser");
     static File backup = new File(ChinaMain.GLOBALPATH + "CHINABackupYesterday.ser");
     static ExecutorService es = Executors.newCachedThreadPool();
-    static volatile Map<String, Double> openMapY = new ConcurrentHashMap();
-    static volatile Map<String, Double> closeMapY = new ConcurrentHashMap();
-    static volatile Map<String, Double> closeMapY2 = new ConcurrentHashMap();
-    static volatile Map<String, Double> amCloseY = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> maxMapY = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> minMapY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Double> openMapY = new ConcurrentHashMap();
+    public static volatile Map<String, Double> closeMapY = new ConcurrentHashMap();
+    public static volatile Map<String, Double> closeMapY2 = new ConcurrentHashMap();
+    public static volatile Map<String, Double> amCloseY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Double> maxMapY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Double> minMapY = new ConcurrentHashMap<>();
 
-    static volatile Map<String, Double> maxMapY2 = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> minMapY2 = new ConcurrentHashMap<>();
+    public static volatile Map<String, Double> maxMapY2 = new ConcurrentHashMap<>();
+    public static volatile Map<String, Double> minMapY2 = new ConcurrentHashMap<>();
 
     static volatile Map<String, Integer> maxTY = new ConcurrentHashMap<>();
     static volatile Map<String, Integer> minTY = new ConcurrentHashMap<>();

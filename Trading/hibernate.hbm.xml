@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN" "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping default-access="field">
-  <class name="apidemo.ChinaSave" table="CHINASAVE">
+  <class name="saving.ChinaSave" table="CHINASAVE">
     <id column="STOCK" name="stockName" type="string">
     </id>
     <!--
@@ -18,25 +18,25 @@
     <property column="DATA" name="dayPriceMapBlob" type="blob"/>
     <property column="VOL" name="volMapBlob" type="blob"/>
   </class>
-  <class name="apidemo.ChinaSaveYest" table="CHINASAVEYEST">
+  <class name="saving.ChinaSaveYest" table="CHINASAVEYEST">
     <id column="STOCK" name="stockName" type="string">
     </id>
     <property column="DATA1" name="dayPriceMapBlob" type="blob"/>
     <property column="VOL" name="volMapBlob" type="blob"/>
   </class>
-    <class name="apidemo.ChinaSaveY2" table="CHINASAVEY2">
+    <class name="saving.ChinaSaveY2" table="CHINASAVEY2">
     <id column="STOCK" name="stockName" type="string">
     </id>
     <property column="DATA1" name="dayPriceMapBlob" type="blob"/>
     <property column="VOL" name="volMapBlob" type="blob"/>
   </class>
-  <class name="apidemo.ChinaSaveBidAsk" table="CHINASAVEBIDASK">
+  <class name="saving.ChinaSaveBidAsk" table="CHINASAVEBIDASK">
     <id column="STOCK" name="stockName" type="string">
     </id>
     <property column="BID" name="bidMapBlob" type="blob"/>
     <property column="ASK" name="askMapBlob" type="blob"/>
   </class>
-  <class name="apidemo.ChinaSaveOHLCYV" table="CHINASAVEOHLC">
+  <class name="saving.ChinaSaveOHLCYV" table="CHINASAVEOHLC">
     <id column="STOCK" name="stockName" type="string">
     </id>
     <property column="O" name="open" type="double"/>
@@ -46,7 +46,7 @@
     <property column="CY" name="closeY" type="double"/>
     <property column="V" name="volume" type="double"/>
   </class>
-  <class name="apidemo.ChinaSaveStrat" table="CHINASAVESTRAT">
+  <class name="saving.ChinaSaveStrat" table="CHINASAVESTRAT">
     <id column="STOCK" name="stock" type="string">
     </id>
     <property column="STRAT" name="stratBlob" type="blob"/>

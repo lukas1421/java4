@@ -1,4 +1,4 @@
-package apidemo;
+package saving;
 
 import auxiliary.ChinaSaveInterface2Blob;
 import auxiliary.SimpleBar;
@@ -63,7 +63,7 @@ public class ChinaSaveY2 implements Serializable, ChinaSaveInterface2Blob {
 
     @Override
     public String toString() {
-        return "apidemo.ChinaSaveY2[ stock=" + stockName + " ]";
+        return "saving.ChinaSaveY2[ stock=" + stockName + " ]";
     }
 
     @Override
@@ -101,7 +101,7 @@ public class ChinaSaveY2 implements Serializable, ChinaSaveInterface2Blob {
         return "priceMapBarY2";
     }
 
-    static ChinaSaveY2 getInstance() {
+    public static ChinaSaveY2 getInstance() {
         return CSY2;
     }
 

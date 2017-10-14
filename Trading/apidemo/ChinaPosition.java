@@ -22,6 +22,7 @@ import client.ExecutionFilter;
 import controller.ApiController;
 import handler.FutPositionHandler;
 import handler.HistoricalHandler;
+import utility.SharpeUtility;
 import utility.Utility;
 
 import java.awt.BorderLayout;
@@ -509,9 +510,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         netPNLMap = Utility.mapSynthesizer(mtmPNLMap, tradePNLMap);
 
-        mtmDeltaSharpe = ChinaStockHelper.computeMinuteSharpeFromMtmDeltaMp(mtmDeltaMap);
+        mtmDeltaSharpe = SharpeUtility.computeMinuteSharpeFromMtmDeltaMp(mtmDeltaMap);
 
-        minuteNetPnlSharpe = ChinaStockHelper.computeMinuteNetPnlSharpe(netPNLMap);
+        minuteNetPnlSharpe = SharpeUtility.computeMinuteNetPnlSharpe(netPNLMap);
 
         //e->!e.equals("sh204001")
         benchExposureMap = ChinaStock.benchSimpleMap.entrySet().stream().filter(e -> !e.getKey().equals("sh204001")).filter(p)
@@ -1221,7 +1222,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         //map<ticker, net pnl>
         Map<String, Double> tickerNetpnl = priceMapBar.entrySet().stream().filter(e->relevantStock(e.getKey()))
-                .peek(System.out::println)
                 .collect(Collectors.toMap(e->e.getKey(),e->getTodayTotalPnl(e.getKey())));
 
         double netPnlAll = tickerNetpnl.entrySet().stream().mapToDouble(Map.Entry::getValue).sum();
@@ -1232,8 +1232,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 .map(Map.Entry::getKey).map(s-> Utility.getStr(nameMap.get(s),
                         getTodayTotalPnl(s), Math.round(100d*getTodayTotalPnl(s)/netPnlAll)," % "))
                 .collect(Collectors.toCollection(LinkedList::new));
-
-        //System.out.println(" res is " + res);
 
 
         return res;

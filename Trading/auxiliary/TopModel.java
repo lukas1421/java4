@@ -1,5 +1,6 @@
-package apidemo;
+package auxiliary;
 
+import apidemo.ChinaMain;
 import client.Contract;
 import client.TickType;
 import client.Types.MktDataType;
@@ -17,7 +18,7 @@ import javax.swing.table.TableCellRenderer;
 import controller.ApiController.TopMktDataAdapter;
 import controller.Formats;
 
-class TopModel extends AbstractTableModel {
+public class TopModel extends AbstractTableModel {
 
     private final ArrayList<TopRow> m_rows = new ArrayList<>();
 

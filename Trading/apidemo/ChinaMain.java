@@ -2,9 +2,10 @@ package apidemo;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
-import static apidemo.ChinaStock.AM914T;
+import static utility.Utility.AM914T;
 
 import auxiliary.AnaCompute;
+import auxiliary.Analysis;
 import auxiliary.Dividends;
 import historical.Request;
 import util.VerticalPanel;
@@ -59,7 +60,7 @@ public final class ChinaMain implements IConnectionHandler {
     private final IConnectionConfiguration m_connectionConfiguration;
 
     public static volatile Map<Integer, Request> globalRequestMap = new HashMap<>();
-    static ChinaMain INSTANCE;
+    public static ChinaMain INSTANCE;
     private final JTextArea m_inLog = new JTextArea();
     private final JTextArea m_outLog = new JTextArea();
     private final static ILogger M_INLOGGER = new DefaultLogger(); //new Logger( m_inLog);
@@ -98,7 +99,7 @@ public final class ChinaMain implements IConnectionHandler {
     final static int PORT_IBAPI = 4001;
     final static int PORT_NORMAL = 7496;
     //private final Data data = new Data();
-    private final HistData histdata = new HistData();
+    //private final HistData histdata = new HistData();
     //private LiveData livedata = new LiveData();
     //private Analysis analysis = new Analysis();
     //private Backtesting backtesting = new Backtesting();
@@ -215,7 +216,7 @@ public final class ChinaMain implements IConnectionHandler {
         //m_tabbedPanel.addTab( "Advisor", m_advisorPanel);
         // m_tabbedPanel.addTab( "Strategy", m_stratPanel); in progress
 
-        m_tabbedPanel.addTab("Hist", histdata);
+        //m_tabbedPanel.addTab("Hist", histdata);
 
         m_tabbedPanel.addTab(" HK Data", hkdata);
         // m_tabbedPanel.addTab("Backtesting", backtesting);

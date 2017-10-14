@@ -1,6 +1,6 @@
 package apidemo;
 
-//import static apidemo.Analysis.symbolNames;
+//import static auxiliary.Analysis.symbolNames;
 import static apidemo.ChinaData.priceMapBar;
 import static utility.Utility.blobify;
 import static utility.Utility.getStr;

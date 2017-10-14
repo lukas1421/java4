@@ -3,7 +3,7 @@ package graph;
 import auxiliary.SimpleBar;
 import apidemo.XUTrader;
 
-import static apidemo.ChinaStock.AMOPENT;
+import static utility.Utility.AMOPENT;
 import static utility.Utility.BAR_HIGH;
 import static utility.Utility.BAR_LOW;
 import java.awt.BasicStroke;

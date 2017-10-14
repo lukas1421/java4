@@ -1,5 +1,6 @@
-package apidemo;
+package saving;
 
+import apidemo.ChinaData;
 import auxiliary.ChinaSaveInterface2Blob;
 import auxiliary.VolBar;
 import utility.Utility;
@@ -38,11 +39,11 @@ public class ChinaSaveBidAsk implements Serializable, ChinaSaveInterface2Blob {
     public ChinaSaveBidAsk() {
     }
 
-    ChinaSaveBidAsk(String name) {
+    public ChinaSaveBidAsk(String name) {
         stockName = name;
     }
 
-    static ChinaSaveBidAsk getInstance() {
+    public static ChinaSaveBidAsk getInstance() {
         return CSBA;
     }
 
@@ -118,7 +119,7 @@ public class ChinaSaveBidAsk implements Serializable, ChinaSaveInterface2Blob {
 
     @Override
     public String toString() {
-        return "apidemo.ChinaSaveBidAsk[ id=" + stockName + " ]";
+        return "saving.ChinaSaveBidAsk[ id=" + stockName + " ]";
     }
 
     @Override
