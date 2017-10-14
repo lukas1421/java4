@@ -1,5 +1,7 @@
 package apidemo;
 
+import graph.GraphFillable;
+
 import static apidemo.ChinaStock.TIMEMAX;
 import java.awt.BasicStroke;
 import java.awt.Color;

@@ -2,6 +2,8 @@ package apidemo;
 
 //import static apidemo.ChinaDataYesterday.*;
 //import static apidemo.ChinaStock.*;
+import graph.GraphFillable;
+
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarY2;
 import static apidemo.ChinaData.priceMapBarYtd;

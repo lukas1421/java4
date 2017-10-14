@@ -1,5 +1,7 @@
 package apidemo;
 
+import TradeType.Trade;
+
 import static apidemo.ChinaStock.TIMEMAX;
 import static apidemo.ChinaStockHelper.getStr;
 import java.awt.BasicStroke;

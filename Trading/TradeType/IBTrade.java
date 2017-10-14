@@ -1,4 +1,4 @@
-package apidemo;
+package TradeType;
 
 public class IBTrade {
 
@@ -18,7 +18,7 @@ public class IBTrade {
         return size;
     }
 
-    void merge(IBTrade t) {
+    public void merge(IBTrade t) {
         int sizeNew = size + t.getSize();
         price = (getCost() + t.getCost()) / sizeNew;
         size = sizeNew;

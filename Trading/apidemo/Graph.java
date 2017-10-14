@@ -1,5 +1,7 @@
 package apidemo;
 
+import graph.GraphFillable;
+
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapPlain;
 import static apidemo.ChinaData.sizeTotalMap;

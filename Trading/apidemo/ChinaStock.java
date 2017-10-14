@@ -7,6 +7,7 @@ import static apidemo.ChinaStockHelper.*;
 import static apidemo.GraphBigIndex.maxGen;
 import static apidemo.GraphBigIndex.minGen;
 import apidemo.Strategy.StratType;
+import graph.GraphFillable;
 import utility.Utility;
 
 import java.awt.BorderLayout;

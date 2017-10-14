@@ -9,6 +9,11 @@ import static apidemo.ChinaStock.openMap;
 import static apidemo.ChinaStock.priceMap;
 import static apidemo.ChinaStock.symbolNames;
 import static apidemo.ChinaStockHelper.getStr;
+
+import TradeType.FutureTrade;
+import TradeType.MarginTrade;
+import TradeType.NormalTrade;
+import TradeType.Trade;
 import client.CommissionReport;
 import client.Contract;
 import client.Execution;
