@@ -27,6 +27,9 @@ import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toMap;
+import static utility.Utility.getMax;
+import static utility.Utility.getMin;
+
 import javax.swing.JComponent;
 
 public final class GraphBar extends JComponent implements GraphFillable {
@@ -72,7 +75,7 @@ public final class GraphBar extends JComponent implements GraphFillable {
         this.name = s;
     }
 
-    void setNavigableMap(NavigableMap<LocalTime, SimpleBar> tm) {
+    public void setNavigableMap(NavigableMap<LocalTime, SimpleBar> tm) {
         this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue().containsZero())
                 .collect(toMap(Entry::getKey, Entry::getValue, (u, v) -> u,
                         ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
@@ -92,19 +95,19 @@ public final class GraphBar extends JComponent implements GraphFillable {
         return this.name;
     }
 
-    void setChineseName(String s) {
+    public void setChineseName(String s) {
         this.chineseName = s;
     }
 
-    void setSize1(long s) {
+    public void setSize1(long s) {
         this.size = (int) s;
     }
 
-    void setBench(String s) {
+    public void setBench(String s) {
         this.bench = s;
     }
 
-    void setSharpe(double s) {
+    public void setSharpe(double s) {
         this.sharpe = s;
     }
 
@@ -143,7 +146,7 @@ public final class GraphBar extends JComponent implements GraphFillable {
         minRtn = getMinRtn();
         maxRtn = getMaxRtn();
         last = 0;
-        rtn = getReturn();
+        rtn = getRtn();
 
         int x = 5;
         for (LocalTime lt : tm.keySet()) {
@@ -199,7 +202,7 @@ public final class GraphBar extends JComponent implements GraphFillable {
         g2.drawString(Double.toString(getLast()), getWidth() * 3 / 8, 15);
 
         g2.drawString("P%:" + Double.toString(getCurrentPercentile()), getWidth() * 4 / 8, 15);
-        g2.drawString("涨:" + Double.toString(getReturn()) + "%", getWidth() * 5 / 8, 15);
+        g2.drawString("涨:" + Double.toString(getRtn()) + "%", getWidth() * 5 / 8, 15);
         g2.drawString("高 " + (getAMMaxT()), getWidth() * 6 / 8, 15);
         //g2.drawString("低 " + (getAMMinT()), getWidth() * 7 * 8, 15);
         g2.drawString("夏 " + sharpe, getWidth() * 7 / 8, 15);
@@ -244,11 +247,11 @@ public final class GraphBar extends JComponent implements GraphFillable {
         return height - (int) val + 20;
     }
 
-    static int colorGen(int wtd) {
+    public static int colorGen(int wtd) {
         return Math.max(0, Math.min(255, 230 * (100 - wtd) / 100));
     }
 
-    void computeWtd() {
+    public void computeWtd() {
 
         double current;
         double maxT;
@@ -277,6 +280,7 @@ public final class GraphBar extends JComponent implements GraphFillable {
         return new Dimension(50, 50);
     }
 
+
     double getMin() {
         return (tm.size() > 0) ? tm.entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0) : 0.0;
     }
@@ -285,7 +289,7 @@ public final class GraphBar extends JComponent implements GraphFillable {
         return (tm.size() > 0) ? tm.entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
     }
 
-    double getReturn() {
+    double getRtn() {
         if (tm.size() > 0) {
             double initialP = tm.entrySet().stream().findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
             double finalP = tm.lastEntry().getValue().getClose();

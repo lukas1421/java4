@@ -1,6 +1,5 @@
 package saving;
 
-import auxiliary.ChinaSaveInterface2Blob;
 import auxiliary.SimpleBar;
 import utility.Utility;
 

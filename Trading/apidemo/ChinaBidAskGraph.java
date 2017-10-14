@@ -1,6 +1,7 @@
 package apidemo;
 
-import apidemo.GraphBidAsk.IND;
+import graph.GraphBidAsk;
+import graph.IND;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import javax.swing.JButton;

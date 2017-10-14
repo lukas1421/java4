@@ -363,7 +363,7 @@ public final class ChinaMain implements IConnectionHandler {
 
         fixMapButton.addActionListener(l -> {
             ChinaStockHelper.fixVolMap();
-            ChinaStockHelper.fixPriceMap(ChinaData.priceMapBar);
+            Utility.fixPriceMap(ChinaData.priceMapBar);
         });
 
 //        JButton getSGXA50HistButton = new JButton("SGXA50 ");
@@ -739,7 +739,7 @@ public final class ChinaMain implements IConnectionHandler {
         }
     }
 
-    static void updateSystemNotif(String text) {
+    public static void updateSystemNotif(String text) {
 
         systemNotif.setText(text);
         systemNotif.setBackground(shiftColor(systemNotif.getBackground()));

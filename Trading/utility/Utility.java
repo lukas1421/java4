@@ -12,16 +12,16 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.lang.Math.log;
+import static java.lang.Math.round;
 
 public class Utility {
 
@@ -216,5 +216,48 @@ public class Utility {
             }
         });
         return res;
+    }
+
+    public static double getRtn(NavigableMap<LocalTime, Double> tm1) {
+        return tm1.size() > 0 ? round(log(tm1.lastEntry().getValue() / tm1.firstEntry().getValue()) * 1000d) / 10d : 0.0;
+    }
+
+    public static void fixNavigableMap(String name, NavigableMap<LocalTime, SimpleBar> nm) {
+        nm.entrySet().forEach(e -> {
+            if (e.getValue().getHLRange() > 0.03) {
+                System.out.println(" name wrong is " + name);
+                double close = nm.lowerEntry(e.getKey()).getValue().getClose();
+                nm.get(e.getKey()).updateClose(close);
+                nm.get(e.getKey()).updateHigh(close);
+                nm.get(e.getKey()).updateLow(close);
+                nm.get(e.getKey()).updateOpen(close);
+
+            }
+        });
+
+    }
+
+    public static void fixVolNavigableMap(String s, NavigableMap<LocalTime, Double> nm) {
+        nm.descendingKeySet().stream().forEachOrdered(k -> {
+            double thisValue = nm.get(k);
+
+            if (s.equals("sz300315")) {
+                System.out.println(" sz300315 ");
+                System.out.println(" size size " + nm.size());
+                System.out.println(" last entry " + nm.lastEntry());
+                nm.replaceAll((k1, v1) -> 0.0);
+            }
+
+            if (Optional.ofNullable(nm.lowerEntry(k)).map(Map.Entry::getValue).orElse(thisValue) > thisValue) {
+                System.out.println(" fixing vol for " + s + " time " + k + " this value " + thisValue);
+                nm.put(nm.lowerKey(k), thisValue);
+            }
+        });
+    }
+
+    public static void fixPriceMap(Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp) {
+        mp.entrySet().forEach((e) -> {
+            fixNavigableMap(e.getKey(), e.getValue());
+        });
     }
 }

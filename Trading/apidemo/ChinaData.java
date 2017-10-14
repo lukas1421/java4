@@ -5,7 +5,7 @@ import static apidemo.ChinaMain.controller;
 import static apidemo.ChinaStock.*;
 import static utility.Utility.blobify;
 import static utility.Utility.getStr;
-import static apidemo.ChinaStockHelper.unblob;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.sql.Blob;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -62,7 +61,7 @@ import javax.swing.JTable;
 import javax.swing.SwingUtilities;
 import javax.swing.table.TableCellRenderer;
 
-import auxiliary.ChinaSaveInterface2Blob;
+import saving.ChinaSaveInterface2Blob;
 import auxiliary.SimpleBar;
 import auxiliary.Strategy;
 import auxiliary.VolBar;
@@ -306,12 +305,12 @@ public final class ChinaData extends JPanel {
             saveChinaOHLC();
         });
         loadHibGenPriceButton.addActionListener(al -> {
-            loadHibGenPrice();
+            Hibtask.loadHibGenPrice();
         });
         hibMorning.addActionListener(al -> {
             int ans = JOptionPane.showConfirmDialog(null, "are you sure", "", JOptionPane.YES_NO_OPTION);
             if (ans == JOptionPane.YES_OPTION) {
-                hibernateMorningTask();
+                Hibtask.hibernateMorningTask();
             } else {
                 System.out.println(" nothing done ");
             }
@@ -353,7 +352,7 @@ public final class ChinaData extends JPanel {
             writeShcomp2();
         });
         closeHib.addActionListener(al -> {
-            closeHibSessionFactory();
+            Hibtask.closeHibSessionFactory();
         });
 
         getFXButton.addActionListener(al -> {
@@ -440,7 +439,7 @@ public final class ChinaData extends JPanel {
         });
     }
 
-    void retrieveDataAll() {
+    public static void retrieveDataAll() {
 //        //should be strictly 3 lines for Y2 Ytd today (pmb)
 //        LocalDate today;
 //        LocalDate ytd;
@@ -479,7 +478,7 @@ public final class ChinaData extends JPanel {
         //ChinaStockHelper.buildA50Gen(openMap.get(dateMap.get(0)), ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2, ChinaDataYesterday.closeMapY);
     }
 
-    static void loadPriceBar() {
+    public static void loadPriceBar() {
         CompletableFuture.runAsync(() -> {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(priceBarSource))) {
                 priceMapBar = (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>>) ois.readObject();
@@ -505,7 +504,7 @@ public final class ChinaData extends JPanel {
         return mpTo;
     }
 
-    static void withHibernate() {
+    public static void withHibernate() {
 //        Properties p = System.getProperties();
 //        p.put("derby.locks.waitTimeout", "20");
 //        System.out.println( " get properties " + p.getProperty("derby.locks.waitTimeout"));
@@ -515,33 +514,33 @@ public final class ChinaData extends JPanel {
     }
 
     //static void hibSave
-    void hibSaveGenYtd() {
+    public void hibSaveGenYtd() {
         saveHibGen(priceMapBarYtd, sizeTotalMapYtd, ChinaSaveYest.getInstance());
     }
 
-    void hibSaveGenY2() {
+    public void hibSaveGenY2() {
         saveHibGen(priceMapBarY2, sizeTotalMapY2, ChinaSaveY2.getInstance());
     }
 
-    void hibSaveGenBidAsk() {
+    public void hibSaveGenBidAsk() {
         saveHibGen(bidMap, askMap, ChinaSaveBidAsk.getInstance());
     }
 
-    void hibSaveStrat() {
+    public void hibSaveStrat() {
         saveHibGen(strategyTotalMap, new ConcurrentHashMap<>(), ChinaSaveStrat.getInstance());
     }
 
-    void hibLoadStrat() {
+    public void hibLoadStrat() {
         CompletableFuture.runAsync(() -> {
-            loadHibGen(ChinaSaveStrat.getInstance());
+            Hibtask.loadHibGen(ChinaSaveStrat.getInstance());
         });
     }
 
-    void loadHibGenBidAsk() {
-        loadHibGen(ChinaSaveBidAsk.getInstance());
+    public void loadHibGenBidAsk() {
+        Hibtask.loadHibGen(ChinaSaveBidAsk.getInstance());
     }
 
-    static void saveHibGen(Map<String, ? extends NavigableMap<LocalTime, ?>> mp, Map<String, ? extends NavigableMap<LocalTime, ?>> mp2, ChinaSaveInterface2Blob saveclass) {
+    public static void saveHibGen(Map<String, ? extends NavigableMap<LocalTime, ?>> mp, Map<String, ? extends NavigableMap<LocalTime, ?>> mp2, ChinaSaveInterface2Blob saveclass) {
         LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
 
@@ -582,39 +581,10 @@ public final class ChinaData extends JPanel {
         );
     }
 
-    public void loadHibGen(ChinaSaveInterface2Blob saveclass) {
-        LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
-        SessionFactory sessionF = HibernateUtil.getSessionFactory();
-        try (Session session = sessionF.openSession()) {
-            symbolNames.forEach((key) -> {
-                ChinaSaveInterface2Blob cs = session.load(saveclass.getClass(), key);
-                Blob blob1 = cs.getFirstBlob();
-                Blob blob2 = cs.getSecondBlob();
-                saveclass.updateFirstMap(key, unblob(blob1));
-                saveclass.updateSecondMap(key, unblob(blob2));
-            });
-        }
-    }
-
-    void loadHibGenPrice() {
-        LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
-        CompletableFuture.runAsync(() -> {
-            loadHibGen(ChinaSave.getInstance());
-            System.out.println(" load finished " + " size is " + priceMapBar.size());
-        }).thenAccept(
-                v -> {
-                    ChinaMain.updateSystemNotif(Utility.getStr(" LOAD HIB T DONE ",
-                            LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
-                            SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
-                    ));
-                }
-        );
-    }
-
-    void loadHibernateYesterday() {
+    public static void loadHibernateYesterday() {
 
         CompletableFuture.runAsync(() -> {
-            loadHibGen(ChinaSaveYest.getInstance());
+            Hibtask.loadHibGen(ChinaSaveYest.getInstance());
         }).thenRun(() -> {
             CompletableFuture.runAsync(() -> {
                 GraphIndustry.getIndustryPriceYtd(priceMapBarYtd);
@@ -629,7 +599,7 @@ public final class ChinaData extends JPanel {
         );
 
         CompletableFuture.runAsync(() -> {
-            loadHibGen(ChinaSaveY2.getInstance());
+            Hibtask.loadHibGen(ChinaSaveY2.getInstance());
         }).thenRun(() -> {
             CompletableFuture.runAsync(() -> {
                 GraphIndustry.getIndustryPriceYtd(priceMapBarY2);
@@ -644,9 +614,9 @@ public final class ChinaData extends JPanel {
         );
     }
 
-    void loadHibernateY2() {
+    public void loadHibernateY2() {
         CompletableFuture.runAsync(() -> {
-            loadHibGen(ChinaSaveY2.getInstance());
+            Hibtask.loadHibGen(ChinaSaveY2.getInstance());
         }).thenRun(() -> {
             CompletableFuture.runAsync(() -> {
                 GraphIndustry.getIndustryPriceYtd(priceMapBarY2);
@@ -657,7 +627,7 @@ public final class ChinaData extends JPanel {
         });
     }
 
-    void saveChinaOHLC() {
+    public static void saveChinaOHLC() {
         CompletableFuture.runAsync(() -> {
             SessionFactory sessionF = HibernateUtil.getSessionFactory();
             try (Session session = sessionF.openSession()) {
@@ -690,38 +660,6 @@ public final class ChinaData extends JPanel {
                     System.out.println(getStr(" done saving ", LocalTime.now()));
                 }
         );
-    }
-
-    void hibernateMorningTask() {
-        CompletableFuture.runAsync(() -> {
-            SessionFactory sessionF = HibernateUtil.getSessionFactory();
-            try (Session session = sessionF.openSession()) {
-                try {
-                    session.getTransaction().begin();
-                    session.createQuery("DELETE from saving.ChinaSaveY2").executeUpdate();
-                    session.createQuery("insert into saving.ChinaSaveY2(stockName,dayPriceMapBlob,volMapBlob) select stockName,dayPriceMapBlob,volMapBlob from saving.ChinaSaveYest").executeUpdate();
-                    session.createQuery("DELETE from saving.ChinaSaveYest").executeUpdate();
-                    session.createQuery("insert into saving.ChinaSaveYest(stockName,dayPriceMapBlob,volMapBlob) select stockName,dayPriceMapBlob,volMapBlob from saving.ChinaSave").executeUpdate();
-                } catch (Exception ex) {
-                    session.getTransaction().rollback();
-                    ex.printStackTrace();
-                    session.close();
-                }
-                session.getTransaction().commit();
-            }
-        }).thenAccept(v -> {
-            ChinaMain.updateSystemNotif(Utility.getStr(" HIB Today -> YTD DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
-        }
-        ).thenAccept(v -> {
-            CompletableFuture.runAsync(() -> {
-                loadHibGenPrice();
-            });
-            CompletableFuture.runAsync(() -> {
-                loadHibernateYesterday();
-            });
-        }).thenAccept(v -> {
-            ChinaMain.updateSystemNotif(Utility.getStr(" Loading done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
-        });
     }
 
     public static void writeShcomp() {
@@ -796,10 +734,6 @@ public final class ChinaData extends JPanel {
                 }
         );
 
-    }
-
-    public void closeHibSessionFactory() {
-        HibernateUtil.close();
     }
 
     static double getVolZScore(String name) {

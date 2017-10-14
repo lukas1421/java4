@@ -69,6 +69,7 @@ import auxiliary.SimpleBar;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import saving.ChinaSaveOHLCYV;
+import saving.HibernateUtil;
 import utility.Utility;
 
 //process yesterday data

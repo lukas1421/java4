@@ -1,7 +1,6 @@
 package saving;
 
 import apidemo.ChinaData;
-import auxiliary.ChinaSaveInterface2Blob;
 import auxiliary.SimpleBar;
 
 import java.io.Serializable;

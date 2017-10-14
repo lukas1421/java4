@@ -91,8 +91,8 @@ public final class ChinaStock extends JPanel {
     static Map<String, String> benchSimpleMap = new HashMap<>();
     static Map<String, Double> sharpeMap = new HashMap<>();
 
-    static List<String> symbolNames = new ArrayList<>(1000);
-    static List<String> symbolNamesFull = new ArrayList<>(1000);
+    public static List<String> symbolNames = new ArrayList<>(1000);
+    public static List<String> symbolNamesFull = new ArrayList<>(1000);
 
     List<Double> weights = new ArrayList<>(600);
     String line;

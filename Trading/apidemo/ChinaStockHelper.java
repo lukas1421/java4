@@ -20,17 +20,14 @@ import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
 
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.lang.System.out;
-import java.sql.Blob;
-import java.sql.SQLException;
+
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -47,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -81,18 +77,18 @@ public final class ChinaStockHelper {
     static LinkedList<String> maxDayRtnList = new LinkedList<>();
     static LinkedList<String> maxVRList = new LinkedList<>();
 
-    static String range1 = "";
-    static String range2 = "";
-    static String range3 = "";
-    static String bar1 = "";
-    static String bar2 = "";
-    static String bar3 = "";
-    static String day1 = "";
-    static String day2 = "";
-    static String day3 = "";
-    static String vr1 = "";
-    static String vr2 = "";
-    static String vr3 = "";
+    public static String range1 = "";
+    public static String range2 = "";
+    public static String range3 = "";
+    public static String bar1 = "";
+    public static String bar2 = "";
+    public static String bar3 = "";
+    public static String day1 = "";
+    public static String day2 = "";
+    public static String day3 = "";
+    public static String vr1 = "";
+    public static String vr2 = "";
+    public static String vr3 = "";
 
     static ToDoubleFunction<? super NavigableMap<LocalTime, SimpleBar>> HLRANGE = tm -> round(1000d * tm.lastEntry().getValue().getHLRange()) / 10d;
     static ToDoubleFunction<? super NavigableMap<LocalTime, SimpleBar>> BARRTN = tm -> round(1000d * tm.lastEntry().getValue().getBarReturn()) / 10d;
@@ -264,7 +260,7 @@ public final class ChinaStockHelper {
         });
     }
 
-    static double getBarSharp(String name, Predicate<? super Entry<LocalTime, SimpleBar>> p) {
+    public static double getBarSharp(String name, Predicate<? super Entry<LocalTime, SimpleBar>> p) {
         NavigableMap<LocalTime, SimpleBar> tm = ChinaData.priceMapBar.get(name);
         if (tm != null && tm.size() > 2) {
             long len = tm.entrySet().stream().filter(p).count();
@@ -347,7 +343,7 @@ public final class ChinaStockHelper {
         });
     }
 
-    static void getFilesFromTDX() {
+    public static void getFilesFromTDX() {
         final String tdxPath = "J:\\TDX\\T0002\\export_1m\\";
 
         LocalDate today = LocalDate.now();
@@ -474,7 +470,7 @@ public final class ChinaStockHelper {
         });
     }
 
-    static void createDialogJD(String nam, String msg, LocalTime entryTime) {
+    public static void createDialogJD(String nam, String msg, LocalTime entryTime) {
 
         if (!dialogLastTime.containsKey(nam) || ChronoUnit.SECONDS.between(dialogLastTime.get(nam), entryTime) > 30) {
             JDialog jd = new JDialog();
@@ -537,59 +533,19 @@ public final class ChinaStockHelper {
 
     static void fixVolMap() {
         ChinaData.sizeTotalMap.entrySet().forEach(e -> {
-            fixVolNavigableMap(e.getKey(), e.getValue());
+            Utility.fixVolNavigableMap(e.getKey(), e.getValue());
         });
 
         ChinaData.sizeTotalMapYtd.entrySet().forEach(e -> {
-            fixVolNavigableMap(e.getKey(), e.getValue());
+            Utility.fixVolNavigableMap(e.getKey(), e.getValue());
         });
 
         ChinaData.sizeTotalMapY2.entrySet().forEach(e -> {
-            fixVolNavigableMap(e.getKey(), e.getValue());
+            Utility.fixVolNavigableMap(e.getKey(), e.getValue());
         });
     }
 
-    static void fixVolNavigableMap(String s, NavigableMap<LocalTime, Double> nm) {
-
-        nm.descendingKeySet().stream().forEachOrdered(k -> {
-            double thisValue = nm.get(k);
-
-            if (s.equals("sz300315")) {
-                System.out.println(" sz300315 ");
-                System.out.println(" size size " + nm.size());
-                System.out.println(" last entry " + nm.lastEntry());
-                nm.replaceAll((k1, v1) -> 0.0);
-            }
-
-            if (Optional.ofNullable(nm.lowerEntry(k)).map(Entry::getValue).orElse(thisValue) > thisValue) {
-                System.out.println(" fixing vol for " + s + " time " + k + " this value " + thisValue);
-                nm.put(nm.lowerKey(k), thisValue);
-            }
-        });
-    }
-
-    static void fixPriceMap(Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp) {
-        mp.entrySet().forEach((e) -> {
-            fixNavigableMap(e.getKey(), e.getValue());
-        });
-    }
-
-    static void fixNavigableMap(String name, NavigableMap<LocalTime, SimpleBar> nm) {
-        nm.entrySet().forEach(e -> {
-            if (e.getValue().getHLRange() > 0.03) {
-                System.out.println(" name wrong is " + name);
-                double close = nm.lowerEntry(e.getKey()).getValue().getClose();
-                nm.get(e.getKey()).updateClose(close);
-                nm.get(e.getKey()).updateHigh(close);
-                nm.get(e.getKey()).updateLow(close);
-                nm.get(e.getKey()).updateOpen(close);
-
-            }
-        });
-
-    }
-
-    LocalTime getMaxPriceRangeTime(String name) {
+    public LocalTime getMaxPriceRangeTime(String name) {
 
         LocalTime maxTime = Utility.AMOPENT;
 
@@ -616,7 +572,7 @@ public final class ChinaStockHelper {
         return maxTime;
     }
 
-    static void killAllDialogs() {
+    public static void killAllDialogs() {
         dialogTracker.forEach(d -> {
             d.setVisible(false);
             d.dispose();
@@ -624,7 +580,7 @@ public final class ChinaStockHelper {
         });
     }
 
-    static double getMinuteRangeZScoreGen(String name, long offset) {
+    public static double getMinuteRangeZScoreGen(String name, long offset) {
         if (NORMAL_STOCK.test(name) && priceMapBar.get(name).size() > offset) {
             LocalTime lastEntryTime = priceMapBar.get(name).lastKey();
             LocalTime resultEntryTime = priceMapBar.get(name).floorKey(lastEntryTime.minusMinutes(offset));
@@ -638,7 +594,7 @@ public final class ChinaStockHelper {
         return 0.0;
     }
 
-    static double getZScoreGen(String name, Map<String, TreeMap<LocalTime, Double>> mp) {
+    public static double getZScoreGen(String name, Map<String, TreeMap<LocalTime, Double>> mp) {
 
 //        if(!mp.isEmpty() && mp.containsKey(name) && mp.get(name).size()>5) {
 //            double lastSize = mp.get(name).lastEntry().getValue();
@@ -689,26 +645,6 @@ public final class ChinaStockHelper {
         return GETMAXTIME.apply(name, Utility.IS_OPEN_PRED).equals(lastKey);
     }
 
-    static ConcurrentSkipListMap<LocalTime, ?> unblob(Blob b) {
-        try {
-            int len = (int) b.length();
-            if (len > 1) {
-                byte[] buf = b.getBytes(1, len);
-                try (ObjectInputStream iin = new ObjectInputStream(new ByteArrayInputStream(buf))) {
-                    //saveclass.updateFirstMap(key, (ConcurrentSkipListMap<LocalTime,?>)iin.readObject());
-                    //c.accept((ConcurrentSkipListMap<LocalTime,?>)iin.readObject());
-                    return ((ConcurrentSkipListMap<LocalTime, ?>) iin.readObject());
-                } catch (IOException | ClassNotFoundException io) {
-                    System.out.println(" issue is with " + "XU");
-                    io.printStackTrace();
-                }
-            }
-        } catch (SQLException sq) {
-            sq.printStackTrace();
-        }
-        return new ConcurrentSkipListMap<>();
-    }
-
     static void getHistoricalFX() {
         Contract c = new Contract();
         c.symbol("USD");
@@ -732,7 +668,7 @@ public final class ChinaStockHelper {
         mp.forEach((k, v) -> v.round());
     }
 
-    static void buildA50FromSS(double open) {
+    public static void buildA50FromSS(double open) {
 
         priceMapBar.get("FTSEA50").entrySet().removeIf(e -> e.getKey().isBefore(LocalTime.of(9, 29)));
 
@@ -782,7 +718,7 @@ public final class ChinaStockHelper {
         sizeMap.put("FTSEA50", Math.round(ChinaData.sizeTotalMap.get("FTSEA50").lastEntry().getValue()));
     }
 
-    static void buildA50FromSSYtdY2() {
+    public static void buildA50FromSSYtdY2() {
 
         double openY2 = ChinaData.ftseOpenMap.get(ChinaData.dateMap.get(0));
         double openYtd = ChinaData.ftseOpenMap.get(ChinaData.dateMap.get(1));
@@ -791,7 +727,7 @@ public final class ChinaStockHelper {
         buildA50Gen(openY2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2, new HashMap<>());
     }
 
-    static void buildA50Gen(double open, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp, Map<String, ? extends NavigableMap<LocalTime, Double>> volmp, Map<String, Double> closeMp) {
+    public static void buildA50Gen(double open, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp, Map<String, ? extends NavigableMap<LocalTime, Double>> volmp, Map<String, Double> closeMp) {
 
         if (mp.containsKey("FTSEA50")) {
             mp.get("FTSEA50").entrySet().removeIf(e -> e.getKey().isBefore(LocalTime.of(9, 30)));
@@ -840,7 +776,7 @@ public final class ChinaStockHelper {
         });
     }
 
-    static void buildGenForYtd(String... tickers) {
+    public static void buildGenForYtd(String... tickers) {
         for (String ticker : tickers) {
             if (ChinaStock.NORMAL_STOCK.test(ticker)) {
                 System.out.println("building " + ticker);
@@ -859,7 +795,7 @@ public final class ChinaStockHelper {
         }
     }
 
-    static void computeMinuteSharpeAll() {
+    public static void computeMinuteSharpeAll() {
         ChinaData.priceMapBar.entrySet().stream().forEach(e -> {
             double minSharp = SharpeUtility.computeMinuteSharpe(e.getValue().tailMap(LocalTime.of(9, 30), true));
             //System.out.println(e.getKey() + " minsharp " + minSharp);

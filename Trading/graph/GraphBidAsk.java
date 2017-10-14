@@ -1,6 +1,9 @@
-package apidemo;
+package graph;
 
+import apidemo.ChinaData;
+import apidemo.ChinaStock;
 import graph.GraphFillable;
+import graph.IND;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
@@ -17,7 +20,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.swing.JComponent;
 
-class GraphBidAsk extends JComponent implements GraphFillable {
+public class GraphBidAsk extends JComponent implements GraphFillable {
 
     static final int WIDTH_BA = 6;
     String name;
@@ -157,23 +160,6 @@ class GraphBidAsk extends JComponent implements GraphFillable {
 
     double getFirst() {
         return (tm.size() > 2) ? tm.entrySet().stream().filter(e -> e.getValue() != 0.0).findFirst().map(Entry::getValue).orElse(0.0) : 0.0;
-    }
-
-    enum IND {
-        on(1), off(0);
-        private int value;
-
-        IND(int v) {
-            this.value = v;
-        }
-
-        public int getV() {
-            return value;
-        }
-
-        public void setV(int v) {
-            value = v;
-        }
     }
 
 }

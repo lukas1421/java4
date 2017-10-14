@@ -1,6 +1,5 @@
 package saving;
 
-import auxiliary.ChinaSaveInterface2Blob;
 import auxiliary.SimpleBar;
 
 import static apidemo.ChinaData.priceMapBarY2;

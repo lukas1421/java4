@@ -1,5 +1,7 @@
 package apidemo;
 
+import auxiliary.GraphXU;
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;

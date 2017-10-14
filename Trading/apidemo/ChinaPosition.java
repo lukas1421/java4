@@ -20,6 +20,7 @@ import client.Contract;
 import client.Execution;
 import client.ExecutionFilter;
 import controller.ApiController;
+import graph.GraphPnl;
 import handler.FutPositionHandler;
 import handler.HistoricalHandler;
 import utility.SharpeUtility;
@@ -143,7 +144,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         super.scrollRectToVisible(aRect); //To change body of generated methods, choose Tools | Templates.
     }
 
-    static volatile boolean buySellTogether = true;
+    public static volatile boolean buySellTogether = true;
 
     ChinaPosition() {
 

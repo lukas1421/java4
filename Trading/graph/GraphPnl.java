@@ -1,6 +1,7 @@
-package apidemo;
+package graph;
 
 import TradeType.Trade;
+import apidemo.ChinaPosition;
 import utility.Utility;
 
 import static utility.Utility.TIMEMAX;
@@ -30,7 +31,7 @@ import java.util.stream.Stream;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 
-final class GraphPnl extends JComponent {
+public final class GraphPnl extends JComponent {
 
     final static int WIDTH_PNL = 5;
 
@@ -161,15 +162,15 @@ final class GraphPnl extends JComponent {
         //netDeltaMap.entrySet().stream().filter(e->e.getKey().isAfter(LocalTime.of(14,15))).forEach(System.out::println);
     }
 
-    void setBenchMap(NavigableMap<String, Double> m) {
+    public void setBenchMap(NavigableMap<String, Double> m) {
         this.benchMap = m;
     }
 
-    void setMtmBenchMap(Map<String, Double> m) {
+    public void setMtmBenchMap(Map<String, Double> m) {
         this.benchMtmMap = m;
     }
 
-    void setNavigableMap(NavigableMap<LocalTime, Double> mtmmap, NavigableMap<LocalTime, Double> trademap, NavigableMap<LocalTime, Double> netmap) {
+    public void setNavigableMap(NavigableMap<LocalTime, Double> mtmmap, NavigableMap<LocalTime, Double> trademap, NavigableMap<LocalTime, Double> netmap) {
 
         mtmMap = (mtmmap != null) ? mtmmap.entrySet().stream().filter(TRADING_PRED)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, ConcurrentSkipListMap::new))
@@ -190,12 +191,12 @@ final class GraphPnl extends JComponent {
                 : new ConcurrentSkipListMap<>();
     }
 
-    void setBuySellPnlMap(NavigableMap<LocalTime, Double> buym, NavigableMap<LocalTime, Double> sellm) {
+    public void setBuySellPnlMap(NavigableMap<LocalTime, Double> buym, NavigableMap<LocalTime, Double> sellm) {
         buyMap = (buym != null && buym.size() > 0 && buym.lastEntry().getValue() != 0.0) ? buym : new ConcurrentSkipListMap<>();
         sellMap = (sellm != null && sellm.size() > 0 && sellm.lastEntry().getValue() != 0.0) ? sellm : new ConcurrentSkipListMap<>();
     }
 
-    void setPnl1mChgMap(LinkedList<String> m) {
+    public void setPnl1mChgMap(LinkedList<String> m) {
         pnl1mList = m;
         String t;
         winner1 = (t = m.poll()) != null ? t : "";
@@ -207,7 +208,7 @@ final class GraphPnl extends JComponent {
         loser3 = (t = m.pollLast()) != null ? t : "";
     }
 
-    void setBigKiyodoMap(LinkedList<String> m) {
+    public void setBigKiyodoMap(LinkedList<String> m) {
         //pnl1mList = m;
         String t;
         big1 = (t = m.poll()) != null ? t : "";
@@ -222,23 +223,23 @@ final class GraphPnl extends JComponent {
         this.name = s;
     }
 
-    void setChineseName(String s) {
+    public void setChineseName(String s) {
         chineseName = (s == null) ? "" : s;
     }
 
-    void setMinuteNetPnlSharpe(double d) {
+    public void setMinuteNetPnlSharpe(double d) {
         minuteNetPnlSharpe = Math.round(100d * d) / 100d;
     }
 
-    void setMtmDeltaSharpe(double d) {
+    public void setMtmDeltaSharpe(double d) {
         mtmDeltaSharpe = Math.round(100d * d) / 100d;
     }
 
-    void setMaxAMT(LocalTime t) {
+    public void setMaxAMT(LocalTime t) {
         this.maxAMT = (t != null) ? t : TIMEMAX;
     }
 
-    void setMinAMT(LocalTime t) {
+    public void setMinAMT(LocalTime t) {
         this.minAMT = (t != null) ? t : TIMEMAX;
     }
 

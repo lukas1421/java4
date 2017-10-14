@@ -1,11 +1,12 @@
-package apidemo;
+package auxiliary;
 
+import utility.Utility;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import static java.lang.Math.log;
+
 import static java.lang.Math.round;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
@@ -14,9 +15,13 @@ import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import static java.util.stream.Collectors.*;
+import static utility.Utility.getMax;
+import static utility.Utility.getMin;
+import static utility.Utility.getRtn;
+
 import javax.swing.JComponent;
 
-class GraphXU extends JComponent {
+public class GraphXU extends JComponent {
 
     private static final int WIDTH_XU = 4;
     private int height;
@@ -39,12 +44,13 @@ class GraphXU extends JComponent {
     }
 
     public void setSkipMap(NavigableMap<LocalTime, ? extends Number> tm) {
-        if (tm1 != null) {
-            tm1 = tm.entrySet().stream().collect(toMap(Entry::getKey, a -> a.getValue().doubleValue(), (a, b) -> a, ConcurrentSkipListMap::new));
+        if (tm != null) {
+            tm1 = tm.entrySet().stream().collect(toMap(Entry::getKey, a -> a.getValue().doubleValue(),
+                    (a, b) -> a, ConcurrentSkipListMap::new));
         }
     }
 
-    void setSkipMapD(NavigableMap<LocalTime, ? extends Number> tm) {
+    public void setSkipMapD(NavigableMap<LocalTime, ? extends Number> tm) {
         if (tm != null) {
             tm1 = tm.entrySet().stream()
                     .filter(a -> a.getKey().isAfter(LocalTime.now().minusMinutes(20)))
@@ -60,10 +66,10 @@ class GraphXU extends JComponent {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g2.setStroke(BS2);
-        min = getMin();
-        max = getMax();
+        min = getMin(tm1);
+        max = getMax(tm1);
         last = 0;
-        rtn = getRtn();
+        rtn = getRtn(tm1);
 
         int x = 50;
 
@@ -127,16 +133,12 @@ class GraphXU extends JComponent {
         return new Dimension(1000, 50);
     }
 
-    private double getMin() {
-        return (tm1.size() > 0) ? tm1.entrySet().stream().min(Entry.comparingByValue()).map(Entry::getValue).orElse(0.0) : 0.0;
-    }
+//    private double getMin() {
+//        return (tm1.size() > 0) ? tm1.entrySet().stream().min(Entry.comparingByValue()).map(Entry::getValue).orElse(0.0) : 0.0;
+//    }
 
-    private double getMax() {
-        return (tm1.size() > 0) ? tm1.entrySet().stream().max(Entry.comparingByValue()).map(Entry::getValue).orElse(0.0) : 0.0;
-    }
-
-    private double getRtn() {
-        return tm1.size() > 0 ? round(log(tm1.lastEntry().getValue() / tm1.firstEntry().getValue()) * 1000d) / 10d : 0.0;
-    }
+//    private double getMax() {
+//        return (tm1.size() > 0) ? tm1.entrySet().stream().max(Entry.comparingByValue()).map(Entry::getValue).orElse(0.0) : 0.0;
+//    }
 
 }
