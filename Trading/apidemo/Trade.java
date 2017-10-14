@@ -7,7 +7,7 @@ public abstract class Trade {
     protected double price;
     protected int size;
 
-    Trade(double p, int s) {
+    public Trade(double p, int s) {
         price = p;
         size = s;
     }
@@ -16,7 +16,7 @@ public abstract class Trade {
         return size;
     }
 
-    void merge(Trade t) {
+    public void merge(Trade t) {
         int sizeNew = size + t.getSize();
         price = (getCost() + t.getCost()) / sizeNew;
         size = sizeNew;

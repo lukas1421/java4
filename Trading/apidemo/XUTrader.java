@@ -14,6 +14,7 @@ import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
 import controller.ApiController.ITopMktDataHandler;
+import graph.GraphBarGen;
 import handler.HistoricalHandler;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -23,7 +24,6 @@ import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -77,18 +77,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
     static Map<String, Double> offerPriceList = new HashMap<>();
     ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
 
-    static Map<LocalTime, IBTrade> tradesMap = new ConcurrentSkipListMap<>();
+    public static Map<LocalTime, IBTrade> tradesMap = new ConcurrentSkipListMap<>();
 
     static volatile double netTotalCommissions = 0.0;
 
     GraphBarGen xuGraph = new GraphBarGen();
 
-    static NavigableMap<LocalTime, SimpleBar> xuData = new ConcurrentSkipListMap<>();
+    public static NavigableMap<LocalTime, SimpleBar> xuData = new ConcurrentSkipListMap<>();
 
-    static volatile int netPosition;
-    static volatile int netBoughtPosition;
-    static volatile int netSoldPosition;
-    static volatile boolean showTrades = false;
+    public static volatile int netPosition;
+    public static volatile int netBoughtPosition;
+    public static volatile int netSoldPosition;
+    public static volatile boolean showTrades = false;
     static volatile boolean connectionStatus = false;
     static volatile JLabel connectionLabel = new JLabel();
     static volatile AtomicInteger connectionID = new AtomicInteger(100);
@@ -910,40 +910,5 @@ class XULevel2Handler implements ApiController.IDeepMktDataHandler {
                 XUTrader.offerPriceList.put("ask" + Integer.toString(position + 1), price);
             }
         });
-    }
-}
-
-class IBTrade {
-
-    double price;
-    int size;
-
-    public IBTrade(double p, int s) {
-        price = p;
-        size = s;
-    }
-
-    double getPrice() {
-        return price;
-    }
-
-    int getSize() {
-        return size;
-    }
-
-    void merge(IBTrade t) {
-        int sizeNew = size + t.getSize();
-        price = (getCost() + t.getCost()) / sizeNew;
-        size = sizeNew;
-        System.out.println(" merged results " + "size price " + size + " " + price);
-    }
-
-    public double getCost() {
-        return size * price;
-    }
-
-    @Override
-    public String toString() {
-        return " price " + price + " volumn " + size;
     }
 }

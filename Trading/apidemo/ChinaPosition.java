@@ -1,7 +1,6 @@
 package apidemo;
 
 import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaPosition.xuBotPos;
 import static apidemo.ChinaStock.BAR_HIGH;
 import static apidemo.ChinaStock.BAR_LOW;
 import static apidemo.ChinaStock.closeMap;
@@ -15,6 +14,7 @@ import client.Contract;
 import client.Execution;
 import client.ExecutionFilter;
 import controller.ApiController;
+import handler.FutPositionHandler;
 import handler.HistoricalHandler;
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -118,7 +118,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     //xu pos
     static volatile int xuOpenPostion;
-    static volatile int xuCurrentPosition;
+    public static volatile int xuCurrentPosition;
     static volatile int xuBotPos;
     static volatile int xuSoldPos;
 
@@ -577,7 +577,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return res;
     }
 
-    void getOpenTradePositionForFuture() {
+    public void getOpenTradePositionForFuture() {
         System.out.println(" get open trade position for future ");
         if (ChinaPosition.tradesMap.containsKey("SGXA50")) {
             ChinaPosition.tradesMap.put("SGXA50", new ConcurrentSkipListMap<>());
@@ -665,7 +665,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
     }*/
 
-    static void getOpenPositionsNormal() {
+    public static void getOpenPositionsNormal() {
         int todaySoldCol = 0;
         int todayBoughtCol = 0;
         int chineseNameCol = 0;
@@ -716,7 +716,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
     }
 
-    static void getOpenPositionsFromMargin() {
+    public static void getOpenPositionsFromMargin() {
         int todaySoldCol = 0;
         int todayBoughtCol = 0;
         int chineseNameCol = 0;
@@ -756,7 +756,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
     }
 
-    static void getCurrentPositionNormal() {
+    public static void getCurrentPositionNormal() {
         int chineseNameCol = 0;
         int openPosCol = 0;
         int orderTimeCol = 0;
@@ -846,7 +846,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     //get margin position
-    static void getCurrentPositionMargin() {
+    public static void getCurrentPositionMargin() {
 
         int fillTimeCol = 0;
         int statusCol = 0;
@@ -1485,19 +1485,3 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
     }
 }
 
-class FutPositionHandler implements ApiController.IPositionHandler {
-
-    @Override
-    public void position(String account, Contract contract, double position, double avgCost) {
-        if (contract.symbol().equals("XINA50")) {
-            System.out.println(" XU position is " + position);
-            ChinaPosition.xuCurrentPosition = (int) position;
-        }
-    }
-
-    @Override
-    public void positionEnd() {
-        System.out.println(" position request ended");
-    }
-
-}

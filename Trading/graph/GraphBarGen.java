@@ -1,4 +1,7 @@
-package apidemo;
+package graph;
+
+import apidemo.SimpleBar;
+import apidemo.XUTrader;
 
 import static apidemo.ChinaStock.AMOPENT;
 import static apidemo.ChinaStock.BAR_HIGH;
@@ -201,7 +204,6 @@ public class GraphBarGen extends JComponent {
                 System.out.println(e.getKey());
             });
         }
-
     }
 
     public int getXForLT(LocalTime t) {
@@ -267,7 +269,7 @@ public class GraphBarGen extends JComponent {
         return 0.0;
     }
 
-    double getMinRtn() {
+    public double getMinRtn() {
         if (tm.size() > 0) {
             double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(e -> e.getOpen()).orElse(0.0);
             double finalP = getMin();

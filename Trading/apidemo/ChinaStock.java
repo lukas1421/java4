@@ -104,7 +104,7 @@ public final class ChinaStock extends JPanel {
     static volatile Map<String, Double> returnMap = new ConcurrentHashMap<>();
     static volatile Map<String, Double> openMap = new ConcurrentHashMap<>();
     static volatile Map<String, Double> closeMap = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> priceMap = new ConcurrentHashMap<>();
+    public static volatile Map<String, Double> priceMap = new ConcurrentHashMap<>();
     static volatile Map<String, Double> maxMap = new ConcurrentHashMap<>();
     static volatile Map<String, Double> minMap = new ConcurrentHashMap<>();
     static volatile Map<String, Long> sizeMap = new ConcurrentHashMap<>();
@@ -149,8 +149,8 @@ public final class ChinaStock extends JPanel {
 
     //static final Comparator<? super Entry<LocalTime,SimpleBar>> BAR_HIGH = (e1,e2)->e1.getValue().getHigh()>=e2.getValue().getHigh()?1:-1;
     //static final Comparator<? super Entry<LocalTime,SimpleBar>> BAR_HIGH = Comparator.comparingDouble(e->e.getValue().getHigh());
-    static final Comparator<? super Entry<LocalTime, SimpleBar>> BAR_HIGH = Entry.comparingByValue(Comparator.comparingDouble(SimpleBar::getHigh));
-    static final Comparator<? super Entry<LocalTime, SimpleBar>> BAR_LOW = (e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
+    public static final Comparator<? super Entry<LocalTime, SimpleBar>> BAR_HIGH = Entry.comparingByValue(Comparator.comparingDouble(SimpleBar::getHigh));
+    public static final Comparator<? super Entry<LocalTime, SimpleBar>> BAR_LOW = (e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
 
     //static final Comparator<? super Entry<LocalTime,Double>> Entry.comparingByValue() = (e1,e2)->e1.getValue()>=e2.getValue()?1:-1;
     static final Predicate<String> NORMAL_STOCK = name -> priceMapBar.containsKey(name) && !priceMapBar.get(name).isEmpty() && priceMapBar.get(name).size() > 0;
@@ -255,7 +255,7 @@ public final class ChinaStock extends JPanel {
     static final LocalTime AM924T = LocalTime.of(9, 24, 0);
     static final LocalTime AM925T = LocalTime.of(9, 25, 0);
     static final LocalTime AM929T = LocalTime.of(9, 29, 0);
-    static final LocalTime AMOPENT = LocalTime.of(9, 30, 0);
+    public static final LocalTime AMOPENT = LocalTime.of(9, 30, 0);
     static final LocalTime AM935T = LocalTime.of(9, 35, 0);
     static final LocalTime AM940T = LocalTime.of(9, 40, 0);
     static final LocalTime AM941T = LocalTime.of(9, 41, 0);

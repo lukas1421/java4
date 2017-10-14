@@ -1,6 +1,7 @@
 package apidemo;
 
 import static apidemo.SinaStock.pd;
+
 import client.Contract;
 import client.Types;
 import controller.ApiConnection.ILogger.DefaultLogger;
@@ -72,7 +73,7 @@ public final class MorningTask implements HistoricalHandler {
     }
 
 
-//    static void simpleWrite(LinkedList<String> s) {
+//        static void simpleWrite(LinkedList<String> s) {
 //        try (BufferedWriter out = new BufferedWriter(new FileWriter(output))){
 //            String toWrite;
 //            while((toWrite=s.poll())!=null) {
@@ -109,18 +110,18 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
-    static void writeIndexTDX(BufferedWriter out){
+    static void writeIndexTDX(BufferedWriter out) {
         String line;
         List<String> ind = Arrays.asList(indices.split(","));
         System.out.println(ind);
         String currentLine = "";
         String previousLine = "";
-        for(String s:ind) {
+        for (String s : ind) {
             String name = s.substring(0, 2).toUpperCase() + "#" + s.substring(2) + ".txt";
             String filePath = tdxPath + name + ".txt";
             currentLine = "";
             previousLine = "";
-            try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxPath + name),"GBK"))) {
+            try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxPath + name), "GBK"))) {
                 while ((line = reader1.readLine()) != null && !line.startsWith("数据来源")) {
                     previousLine = currentLine;
                     currentLine = line;
@@ -128,8 +129,8 @@ public final class MorningTask implements HistoricalHandler {
                 List<String> todayList = Arrays.asList(currentLine.split("\t"));
                 List<String> ytdList = Arrays.asList(previousLine.split("\t"));
 
-                String output = ChinaStockHelper.getStrTabbed(s, pd(todayList,4),pd(ytdList,4),
-                        Double.toString(Math.round(10000d*(pd(todayList,4)/pd(ytdList,4)-1))/100d)+"%");
+                String output = ChinaStockHelper.getStrTabbed(s, pd(todayList, 4), pd(ytdList, 4),
+                        Double.toString(Math.round(10000d * (pd(todayList, 4) / pd(ytdList, 4) - 1)) / 100d) + "%");
                 System.out.println(" stock return " + s + " " + output);
 
                 out.write(output);
