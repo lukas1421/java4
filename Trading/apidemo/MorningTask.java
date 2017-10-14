@@ -10,6 +10,7 @@ import handler.HistoricalHandler;
 
 import java.io.*;
 //import java.net.InetSocketAddress;
+import java.lang.reflect.Array;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
@@ -21,6 +22,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,9 +33,9 @@ public final class MorningTask implements HistoricalHandler {
     static File output = new File(ChinaMain.GLOBALPATH + "output.txt");
     static File fxOutput = new File(ChinaMain.GLOBALPATH + "fx.txt");
     static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
-            ? "G:\\export_1m\\" : "J:\\TDX\\T0002\\export_1m\\";
+            ? "G:\\export\\" : "J:\\TDX\\T0002\\export\\";
     static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
-    static String indices = "sh000300,sh000001,sz399006,sz399001,sh000905, sh000016";
+    static String indices = "sh000300,sh000001,sz399006,sz399001,sh000905,sh000016";
     static String urlString;
     //static String line;
     static List<String> dataList = new ArrayList<>();
@@ -40,13 +44,12 @@ public final class MorningTask implements HistoricalHandler {
 
     public static void runThis() {
         MorningTask mt = new MorningTask();
-        writeIndexTDX();
-/*
 
         processShcomp();
         mt.getFX();
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
-            writeIndex(out);
+            //writeIndex(out);
+            writeIndexTDX(out);
             writeETF(out);
             writeA50(out);
             writeA50FT(out);
@@ -66,7 +69,6 @@ public final class MorningTask implements HistoricalHandler {
         es.schedule(() -> {
             System.exit(0);
         }, 5, TimeUnit.SECONDS);
-        */
     }
 
 
@@ -107,29 +109,35 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
-    static void writeIndexTDX(){
+    static void writeIndexTDX(BufferedWriter out){
         String line;
         List<String> ind = Arrays.asList(indices.split(","));
         System.out.println(ind);
-        String currentLine;
-        String previousLine;
-
+        String currentLine = "";
+        String previousLine = "";
         for(String s:ind) {
             String name = s.substring(0, 2).toUpperCase() + "#" + s.substring(2) + ".txt";
             String filePath = tdxPath + name + ".txt";
-
-
-            try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxPath + name)))) {
-                while ((line = reader1.readLine()) != null) {
-
-                    List<String> al1 = Arrays.asList(line.split("\t"));
+            currentLine = "";
+            previousLine = "";
+            try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxPath + name),"GBK"))) {
+                while ((line = reader1.readLine()) != null && !line.startsWith("数据来源")) {
+                    previousLine = currentLine;
+                    currentLine = line;
                 }
+                List<String> todayList = Arrays.asList(currentLine.split("\t"));
+                List<String> ytdList = Arrays.asList(previousLine.split("\t"));
+
+                String output = ChinaStockHelper.getStrTabbed(s, pd(todayList,4),pd(ytdList,4),
+                        Double.toString(Math.round(10000d*(pd(todayList,4)/pd(ytdList,4)-1))/100d)+"%");
+                System.out.println(" stock return " + s + " " + output);
+
+                out.write(output);
+                out.newLine();
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
         }
-
     }
 
     static void writeIndex(BufferedWriter out) {
