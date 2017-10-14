@@ -1,29 +1,27 @@
-package apidemo;
+package graph;
 
+import apidemo.ChinaData;
+import apidemo.ChinaPosition;
+import apidemo.ChinaStock;
 import auxiliary.SimpleBar;
-import graph.GraphFillable;
 import utility.Utility;
 
+import javax.swing.*;
+import java.awt.*;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+
 import static apidemo.ChinaData.priceMapBar;
-import static utility.Utility.BAR_HIGH;
-import static utility.Utility.BAR_LOW;
 import static apidemo.ChinaStock.NORMAL_STOCK;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import static java.lang.Math.abs;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
-import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
 import static java.util.Optional.ofNullable;
-import java.util.concurrent.ConcurrentSkipListMap;
-import javax.swing.JComponent;
+import static utility.Utility.BAR_HIGH;
+import static utility.Utility.BAR_LOW;
 
 public class GraphMonitor extends JComponent implements GraphFillable {
 
@@ -131,7 +129,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         g2.drawString("2 " + Integer.toString(ytdY2CloseP), getWidth() - 45, 55);
         g2.drawString("二 " + Integer.toString(current2DayP), getWidth() - 45, 75);
         g2.drawString("三 " + Integer.toString(current3DayP), getWidth() - 45, 95);
-        //g2.drawString(Integer.toString(wtdP),getWidth()-40,115); 
+        //g2.drawString(Integer.toString(wtdP),getWidth()-40,115);
 
         g2.setColor(Color.black);
 
@@ -193,11 +191,11 @@ public class GraphMonitor extends JComponent implements GraphFillable {
     }
 
     double getMin() {
-        return (tm.size() > 0) ? tm.entrySet().stream().min(BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0) : 0.0;
+        return (tm.size() > 0) ? tm.entrySet().stream().min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0) : 0.0;
     }
 
     double getMax() {
-        return (tm.size() > 0) ? tm.entrySet().stream().max(BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
+        return (tm.size() > 0) ? tm.entrySet().stream().max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
     }
 
     double getLast() {
@@ -226,7 +224,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
     double getReturn() {
         if (tm.size() > 0) {
-            double initialP = tm.entrySet().stream().findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+            double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
             double finalP = tm.lastEntry().getValue().getClose();
             return (double) round((finalP / initialP - 1) * 1000d) / 10d;
         }
@@ -274,7 +272,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
     double getMaxRtn() {
         if (tm.size() > 0) {
-            double initialP = tm.entrySet().stream().findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+            double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
             double finalP = getMax();
             return abs(finalP - initialP) > 0.0001 ? (double) round((finalP / initialP - 1) * 1000d) / 10d : 0;
         }
@@ -283,7 +281,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
     double getMinRtn() {
         if (tm.size() > 0) {
-            double initialP = tm.entrySet().stream().findFirst().map(Entry::getValue).map(e -> e.getOpen()).orElse(0.0);
+            double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(e -> e.getOpen()).orElse(0.0);
             double finalP = getMin();
             return (Math.abs(finalP - initialP) > 0.0001) ? (double) round(log(getMin() / initialP) * 1000d) / 10d : 0;
         }
@@ -297,9 +295,9 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
         if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
             current = priceMapBar.get(name).lastEntry().getValue().getClose();
-            maxT = priceMapBar.get(name).entrySet().stream().max(BAR_HIGH).map(Entry::getValue)
+            maxT = priceMapBar.get(name).entrySet().stream().max(BAR_HIGH).map(Map.Entry::getValue)
                     .map(SimpleBar::getHigh).orElse(0.0);
-            minT = priceMapBar.get(name).entrySet().stream().min(BAR_LOW).map(Entry::getValue)
+            minT = priceMapBar.get(name).entrySet().stream().min(BAR_LOW).map(Map.Entry::getValue)
                     .map(SimpleBar::getHigh).orElse(0.0);
         } else {
             current = 0.0;
@@ -310,9 +308,9 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         if (ChinaData.priceMapBarYtd.containsKey(name) && ChinaData.priceMapBarYtd.get(name).size() > 0) {
             double closeY1 = ChinaData.priceMapBarYtd.get(name).lastEntry().getValue().getClose();
             double maxY = ChinaData.priceMapBarYtd.get(name).entrySet().stream()
-                    .max(BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
+                    .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
             double minY = ChinaData.priceMapBarYtd.get(name).entrySet().stream()
-                    .min(BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
+                    .min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
 
             ytdCloseP = (int) Math.round(100d * (closeY1 - minY) / (maxY - minY));
 
@@ -321,9 +319,9 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
             if (ChinaData.priceMapBarY2.containsKey(name) && ChinaData.priceMapBarY2.get(name).size() > 0) {
                 double maxY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
-                        .max(BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
+                        .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
                 double minY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
-                        .min(BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
+                        .min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
 
                 ytdY2CloseP = (int) Math.round(100d * (closeY1 - Utility.applyAllDouble(Math::min, minY2, minY))
                         / (Utility.applyAllDouble(Math::max, maxY2, maxY) - Utility.applyAllDouble(Math::min, minY2, minY)));
@@ -336,30 +334,6 @@ public class GraphMonitor extends JComponent implements GraphFillable {
                     / (Utility.applyAllDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
                     - Utility.applyAllDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0))));
         }
-    }
-
-}
-
-class GraphMonitorFactory {
-
-    static Map<Integer, GraphMonitor> mp = new HashMap<>();
-
-    private GraphMonitorFactory() {
-        throw new UnsupportedOperationException();
-    }
-
-    static GraphMonitor generate(int i) {
-        GraphMonitor gm = new GraphMonitor();
-        mp.put(i, gm);
-        return gm;
-    }
-
-    static GraphMonitor getGraphMonitor(int i) {
-        return mp.getOrDefault(i, new GraphMonitor());
-    }
-
-    static void clearAllGraphs() {
-        mp.entrySet().forEach(e -> e.getValue().clearGraph());
     }
 
 }

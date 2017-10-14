@@ -13,7 +13,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import static apidemo.ChinaStock.industryNameMap;
 
-final class ChinaBigGraph extends JPanel {
+public final class ChinaBigGraph extends JPanel {
 
     public static GraphBig gb = new GraphBig();
     public static GraphBigYtd gYtd = new GraphBigYtd();

@@ -1,5 +1,7 @@
 package apidemo;
 
+import graph.GraphMonitor;
+import graph.GraphMonitorFactory;
 import utility.Utility;
 
 import static apidemo.ChinaStock.industryNameMap;
@@ -655,8 +657,8 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                     JViewport jv;
                     if (p.getComponent(0) instanceof JViewport) {
                         jv = (JViewport) p.getComponent(0);
-                        if (jv.getComponent(0) instanceof apidemo.GraphMonitor) {
-                            GraphMonitor g = (apidemo.GraphMonitor) jv.getComponent(0);
+                        if (jv.getComponent(0) instanceof GraphMonitor) {
+                            GraphMonitor g = (GraphMonitor) jv.getComponent(0);
                             //System.out.println(" name is " + g.getName());
                             //System.out.println(" clicked " + LocalTime.now());
                             //ChinaStock.pureRefreshTable();
