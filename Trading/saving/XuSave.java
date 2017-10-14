@@ -1,5 +1,6 @@
-package apidemo;
+package saving;
 
+import apidemo.XU;
 import auxiliary.SimpleBar;
 
 import java.io.Serializable;
@@ -16,7 +17,7 @@ import javax.persistence.Table;
 
 @Entity
 @Table(name = "XU")
-class XuSave implements Serializable {
+public class XuSave implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,63 +41,63 @@ class XuSave implements Serializable {
 
     static XuSave xsSingleton = new XuSave();
 
-    XuSave() {
+    public XuSave() {
     }
 
-    XuSave(String nam) {
+    public XuSave(String nam) {
         name = nam;
     }
 
-    Blob getFutBlob() {
+    public Blob getFutBlob() {
         return lastFutPriceBlob;
     }
 
-    Blob getIndexBlob() {
+    public Blob getIndexBlob() {
         return indexPriceBlob;
     }
 
-    Blob getFutVolBlob() {
+    public Blob getFutVolBlob() {
         return futVolBlob;
     }
 
-    Blob getIndexVolBlob() {
+    public Blob getIndexVolBlob() {
         return indexVolBlob;
     }
 
-    void setFutBlob(Blob b) {
+    public void setFutBlob(Blob b) {
         lastFutPriceBlob = b;
     }
 
-    void setIndexBlob(Blob b) {
+    public void setIndexBlob(Blob b) {
         indexPriceBlob = b;
     }
 
-    void setFutVolBlob(Blob b) {
+    public void setFutVolBlob(Blob b) {
         futVolBlob = b;
     }
 
-    void setIndexVolBlob(Blob b) {
+    public void setIndexVolBlob(Blob b) {
         indexVolBlob = b;
     }
     //static void setBlobGen(Consumer<Blob> f, Blob b){f.accept(b);} 
 
-    void updateFut(NavigableMap<LocalTime, ?> m) {
+    public void updateFut(NavigableMap<LocalTime, ?> m) {
         XU.lastFutPrice = (NavigableMap<LocalTime, SimpleBar>) m;
     }
 
-    void updateIndex(NavigableMap<LocalTime, ?> m) {
+    public void updateIndex(NavigableMap<LocalTime, ?> m) {
         XU.indexPriceSina = (NavigableMap<LocalTime, SimpleBar>) m;
     }
 
-    void updateFutVol(NavigableMap<LocalTime, ?> m) {
+    public void updateFutVol(NavigableMap<LocalTime, ?> m) {
         XU.futVol = (NavigableMap<LocalTime, Integer>) m;
     }
 
-    void updateIndexVol(NavigableMap<LocalTime, ?> m) {
+    public void updateIndexVol(NavigableMap<LocalTime, ?> m) {
         XU.indexVol = (NavigableMap<LocalTime, Double>) m;
     }
 
-    static XuSave getInstance() {
+    public static XuSave getInstance() {
         return xsSingleton;
     }
 

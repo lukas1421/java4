@@ -51,7 +51,7 @@
     </id>
     <property column="STRAT" name="stratBlob" type="blob"/>
   </class>
-  <class name="apidemo.XuSave" table="XU">
+  <class name="saving.XuSave" table="XU">
     <id column="STOCK" name="name" type="string"/>
     <property column="FUT" name="lastFutPriceBlob" type="blob"/>
     <property column="INDEX" name="indexPriceBlob" type="blob"/>

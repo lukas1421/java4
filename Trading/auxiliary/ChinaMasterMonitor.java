@@ -1,10 +1,11 @@
-package apidemo;
+package auxiliary;
 
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.Collections;
 import javax.swing.JPanel;
 
+import apidemo.ChinaStock;
 import javafx.application.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;

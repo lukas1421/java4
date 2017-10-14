@@ -1,4 +1,4 @@
-package apidemo;
+package auxiliary;
 
 import graph.GraphBidAsk;
 import graph.IND;
@@ -9,7 +9,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JToggleButton;
 
-final class ChinaBidAskGraph extends JPanel {
+public class ChinaBidAskGraph extends JPanel {
 
     static GraphBidAsk graph = new GraphBidAsk();
     static JToggleButton level1 = new JToggleButton("level1", true);

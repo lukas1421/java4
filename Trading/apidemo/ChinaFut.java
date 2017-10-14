@@ -63,7 +63,7 @@ public class ChinaFut extends JPanel implements Runnable {
     static File source = new File(ChinaMain.GLOBALPATH + "chinafut.ser");
     static File backup = new File(ChinaMain.GLOBALPATH + "chinafutbackup.ser");
 
-    ChinaFut() {
+    public ChinaFut() {
 
         //lookUp = "hq.sinajs.cn//list=";
         lookUp = "http://hq.sinajs.cn/list=CFF_RE_IF1602,CFF_RE_IC1602,CFF_RE_IH1602,sh000300,sh000016,sh000905";

@@ -1,8 +1,12 @@
-package apidemo;
+package auxiliary;
 
 import static apidemo.ChinaData.strategyTotalMap;
 import static apidemo.ChinaStock.symbolNames;
 
+import apidemo.ChinaBigGraph;
+import apidemo.ChinaData;
+import apidemo.ChinaMain;
+import apidemo.ChinaStock;
 import auxiliary.Strategy;
 import auxiliary.Strategy.StratType;
 import auxiliary.SimpleBar;

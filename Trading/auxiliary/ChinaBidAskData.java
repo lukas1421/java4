@@ -1,4 +1,4 @@
-package apidemo;
+package auxiliary;
 
 import static apidemo.ChinaData.tradeTime;
 import static apidemo.ChinaStock.nameMap;
@@ -17,7 +17,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
 
-final class ChinaBidAskData extends JPanel {
+public class ChinaBidAskData extends JPanel {
 
     public static volatile ConcurrentHashMap<String, TreeMap<LocalTime, Long>> bidAskDiffMap = new ConcurrentHashMap<>();
     public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, TreeMap<LocalTime, Long>>> saveMap = new ConcurrentHashMap<>();

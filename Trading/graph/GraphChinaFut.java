@@ -132,7 +132,7 @@ public class GraphChinaFut extends JComponent {
         repaint();
     }
 
-     void setSkipMapD(ConcurrentSkipListMap<LocalTime, Double> fut, ConcurrentSkipListMap<LocalTime, Double> ind) {
+     public void setSkipMapD(ConcurrentSkipListMap<LocalTime, Double> fut, ConcurrentSkipListMap<LocalTime, Double> ind) {
         if (fut != null && ind != null) {
 
             futureP = fut.entrySet().stream()

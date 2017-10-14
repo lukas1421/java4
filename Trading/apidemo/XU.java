@@ -57,6 +57,7 @@ import static graph.GraphXUSI.AM900;
 import client.TickType;
 import client.Types.MktDataType;
 import saving.HibernateUtil;
+import saving.XuSave;
 import utility.Utility;
 
 import java.awt.event.MouseAdapter;
@@ -66,10 +67,10 @@ import javax.swing.SwingUtilities;
 
 public final class XU extends JPanel implements ITopMktDataHandler {
 
-    static volatile NavigableMap<LocalTime, SimpleBar> lastFutPrice = new ConcurrentSkipListMap<>();
-    static volatile NavigableMap<LocalTime, SimpleBar> indexPriceSina = new ConcurrentSkipListMap<>();
-    static volatile NavigableMap<LocalTime, Integer> futVol = new ConcurrentSkipListMap<>();
-    static volatile NavigableMap<LocalTime, Double> indexVol = new ConcurrentSkipListMap<>();
+    public static volatile NavigableMap<LocalTime, SimpleBar> lastFutPrice = new ConcurrentSkipListMap<>();
+    public static volatile NavigableMap<LocalTime, SimpleBar> indexPriceSina = new ConcurrentSkipListMap<>();
+    public static volatile NavigableMap<LocalTime, Integer> futVol = new ConcurrentSkipListMap<>();
+    public static volatile NavigableMap<LocalTime, Double> indexVol = new ConcurrentSkipListMap<>();
 
 //   static NavigableMap<LocalTime, Double> bidPrice = new ConcurrentSkipListMap<>();
 //   static NavigableMap<LocalTime, Double> askPrice = new ConcurrentSkipListMap<>();

@@ -16,17 +16,17 @@ public class GraphMonitorFactory {
         throw new UnsupportedOperationException();
     }
 
-    static GraphMonitor generate(int i) {
+    public static GraphMonitor generate(int i) {
         GraphMonitor gm = new GraphMonitor();
         mp.put(i, gm);
         return gm;
     }
 
-    static GraphMonitor getGraphMonitor(int i) {
+    public static GraphMonitor getGraphMonitor(int i) {
         return mp.getOrDefault(i, new GraphMonitor());
     }
 
-    static void clearAllGraphs() {
+    public static void clearAllGraphs() {
         mp.entrySet().forEach(e -> e.getValue().clearGraph());
     }
 

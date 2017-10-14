@@ -78,7 +78,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
 //    GraphBigYtd(TreeMap<LocalTime, SimpleBar>tm) {
 //        this.tmYtd = tm;
 //    }
-    GraphBigIndex() {
+    public GraphBigIndex() {
         name = "";
         chineseName = "";
         maxAMT = LocalTime.of(9, 30);

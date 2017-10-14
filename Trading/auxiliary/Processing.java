@@ -1,5 +1,6 @@
-package apidemo;
+package auxiliary;
 
+import apidemo.LiveData;
 import auxiliary.Trait;
 
 import static utility.Utility.TIMEMAX;

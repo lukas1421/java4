@@ -7,6 +7,7 @@ import static utility.Utility.AM914T;
 import auxiliary.AnaCompute;
 import auxiliary.Analysis;
 import auxiliary.Dividends;
+import auxiliary.StratCompute;
 import graph.GraphIndustry;
 import historical.Request;
 import util.VerticalPanel;

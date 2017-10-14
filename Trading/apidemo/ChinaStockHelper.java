@@ -9,11 +9,9 @@ import static apidemo.ChinaMain.tdxPath;
 import static apidemo.ChinaSizeRatio.computeSizeRatioLast;
 import static apidemo.ChinaStock.*;
 import static apidemo.SinaStock.weightMapA50;
-
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -23,11 +21,9 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.lang.System.out;
-
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -55,13 +51,11 @@ import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toCollection;
-
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
-
 import graph.GraphIndustry;
 import utility.SharpeUtility;
 import utility.Utility;
