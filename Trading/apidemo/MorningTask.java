@@ -47,7 +47,7 @@ public final class MorningTask implements HistoricalHandler {
     public static void runThis() {
         MorningTask mt = new MorningTask();
 
-        processShcomp();
+        //processShcomp();
         mt.getFX();
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
             //writeIndex(out);
@@ -441,11 +441,21 @@ public final class MorningTask implements HistoricalHandler {
 
         final String tdxPath = ChinaMain.tdxPath;
         File output = new File(ChinaMain.GLOBALPATH + "shcomp.txt");
-        LocalDate today = LocalDate.now();
-        long daysToSubtract = (today.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 3L : 1L;
-        LocalDate t = today.minusDays(daysToSubtract);
-        System.out.println(" localdate is " + t);
-        //add test
+        LocalDate t = LocalDate.now();
+
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(ChinaMain.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
+            String line;
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                t= LocalDate.parse(al1.get(0));
+                System.out.println(" current t is " + t);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+
 
         final String dateString = t.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         System.out.println(" date is " + dateString);
