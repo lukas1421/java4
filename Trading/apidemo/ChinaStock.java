@@ -352,13 +352,13 @@ public final class ChinaStock extends JPanel {
 
         tab = new JTable(m_model) {
             @Override
-            public Component prepareRenderer(TableCellRenderer renderer, int Index_row, int Index_col) {
+            public Component prepareRenderer(TableCellRenderer renderer, int index_row, int index_col) {
                 try {
-                    Component comp = super.prepareRenderer(renderer, Index_row, Index_col);
+                    Component comp = super.prepareRenderer(renderer, index_row, index_col);
 
-                    if (isCellSelected(Index_row, Index_col)) {
-                        modelRow = this.convertRowIndexToModel(Index_row);
-                        indexRow = Index_row;
+                    if (isCellSelected(index_row, index_col)) {
+                        modelRow = this.convertRowIndexToModel(index_row);
+                        indexRow = index_row;
 
                         comp.setBackground(Color.GREEN);
 
@@ -401,7 +401,7 @@ public final class ChinaStock extends JPanel {
                             ex.printStackTrace();
                         }
                     } else {
-                        comp.setBackground((Index_row % 2 == 0) ? Color.lightGray : Color.white);
+                        comp.setBackground((index_row % 2 == 0) ? Color.lightGray : Color.white);
                     }
                     return comp;
                 } catch (Exception e) {

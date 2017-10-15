@@ -837,7 +837,9 @@ public class ApiController implements EWrapper {
         //int reqId=m_reqId++;
 
         //int reqId = m_reqId.getAndIncrement();
-        int reqId = m_reqId.get() + 1000;
+        //int reqId = m_reqId.get() + 1000;
+
+        int reqId = m_reqId.getAndIncrement();
         int counter = 1;
         boolean isSnapShot = true;
 

@@ -3,24 +3,53 @@ package apidemo;
 import graph.GraphBar;
 import graph.GraphSize;
 
-import javax.swing.JPanel;
+import javax.swing.*;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
+import java.awt.*;
 
 public class HKStock extends JPanel {
 
-    BarModel_HKStock m_model;
+
 
     static GraphBar graph1 = new GraphBar();
     static GraphBar graph2 = new GraphBar();
     static GraphBar graph3 = new GraphBar();
     static GraphBar graph4 = new GraphBar();
     static GraphBar graph5 = new GraphBar();
-    static GraphSize graph6 = new GraphSize();
+    static GraphBar graph6 = new GraphBar();
+
+    BarModel_HKStock m_model;
+    int modelRow;
+    int indexRow;
+    static JTable tab;
+
+    static TableRowSorter<BarModel_HKStock> sorter;
 
     public HKStock() {
 
         m_model = new BarModel_HKStock();
 
         JPanel controlPanel = new JPanel();
+
+        tab = new JTable(){
+            @Override
+            public Component prepareRenderer(TableCellRenderer tableCellRenderer, int row, int col) {
+                Component comp = super.prepareRenderer(tableCellRenderer, row, col);
+
+                if(isCellSelected(row,col)){
+                    modelRow = this.convertRowIndexToModel(row);
+                    indexRow = row;
+
+                    comp.setBackground(Color.green);
+                } else {
+                    comp.setBackground((row%2==0)?Color.lightGray:Color.white);
+                }
+
+                return comp;
+            }
+        };
+        setLayout(new BorderLayout());
 
         //test
 
