@@ -250,7 +250,8 @@ public final class ChinaStock extends JPanel {
     static final ToDoubleBiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>> GETMIN = (name, p) -> priceMapBar.
             get(name).entrySet().stream().filter(p).min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
 
-    static final ToDoubleBiFunction<String, LocalTime> GETCLOSE = (name, lt) -> Optional.ofNullable(priceMapBar.get(name)).map(e -> e.get(lt)).map(SimpleBar::getClose).orElse(0.0);
+    static final ToDoubleBiFunction<String, LocalTime> GETCLOSE = (name, lt) ->
+            Optional.ofNullable(priceMapBar.get(name)).map(e -> e.get(lt)).map(SimpleBar::getClose).orElse(0.0);
 
     static BiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>, LocalTime> GETMAXTIME = (name, p) -> priceMapBar.
             get(name).entrySet().stream().filter(p).max(Utility.BAR_HIGH).map(Entry::getKey).orElse(Utility.TIMEMAX);
@@ -264,16 +265,19 @@ public final class ChinaStock extends JPanel {
     static ToIntBiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>> GETMINTIMETOINT = (name, p) -> convertTimeToInt(priceMapBar.
             get(name).entrySet().stream().filter(p).min(Utility.BAR_LOW).map(Entry::getKey).orElse(Utility.TIMEMAX));
 
-    ChinaStock() {
+    public ChinaStock() {
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(ChinaMain.GLOBALPATH + "ChinaAllWeight.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 weightMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
             }
+
             listNames = weightMap.entrySet().stream().map(Map.Entry::getKey).collect(joining(","));
-            listNameSH = weightMap.entrySet().stream().filter(s -> s.getKey().startsWith("sh")).map(Map.Entry::getKey).collect(joining(","));
-            listNameSZ = weightMap.entrySet().stream().filter(s -> !s.getKey().startsWith("sh")).map(Map.Entry::getKey).collect(joining(","));
+            listNameSH = weightMap.entrySet().stream().filter(s -> s.getKey().startsWith("sh"))
+                    .map(Map.Entry::getKey).collect(joining(","));
+            listNameSZ = weightMap.entrySet().stream().filter(s -> !s.getKey().startsWith("sh"))
+                    .map(Map.Entry::getKey).collect(joining(","));
 
             //System.out.println( " sh size " + listNameSH.si)
             //System.out.println( " listnames in Chinastock " + listNames);
@@ -291,9 +295,9 @@ public final class ChinaStock extends JPanel {
                 nameMap.put(al1.get(0), al1.get(1));
                 industryNameMap.put(al1.get(0), al1.get(2));
                 //shortNameMap.put(al1.get(0), al1.get(3));
-                shortIndustryMap.put(al1.get(0), al1.get(4));
-                shortLongIndusMap.put(al1.get(4), al1.get(2));
-                longShortIndusMap.put(al1.get(2), al1.get(4));
+                shortIndustryMap.put(al1.get(0), al1.get(3));
+                shortLongIndusMap.put(al1.get(3), al1.get(2));
+                longShortIndusMap.put(al1.get(2), al1.get(3));
             }
             symbolNamesFull = nameMap.keySet().stream().collect(Collectors.toList());
 
