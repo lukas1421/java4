@@ -1,18 +1,18 @@
 package utility;
 
+import apidemo.ChinaData;
 import apidemo.ChinaStock;
 import graph.GraphIndustry;
 import auxiliary.SimpleBar;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.sql.Blob;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -26,6 +26,9 @@ import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 
+import static apidemo.ChinaMain.tdxPath;
+import static apidemo.ChinaStock.priceMap;
+import static apidemo.ChinaStock.symbolNames;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.util.stream.Collectors.*;
@@ -347,5 +350,76 @@ public class Utility {
         } else {
             System.out.println(" tm is empty ");
         }
+    }
+
+    public static void getFilesFromTDXGen(LocalDate ld, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp1
+            , Map<String, ? extends NavigableMap<LocalTime, Double>> mp2) {
+
+        //String tdxPath = "J:\\TDX\\T0002\\export_1m\\";
+        LocalDate t = ld;
+
+        //boolean found = false;
+        System.out.println(" localdate is " + t);
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        final String dateString = t.format(formatter);
+        System.out.println(" date is " + dateString);
+
+        symbolNames.forEach(e -> {
+            System.out.println(" date stock " + dateString + " " + e);
+            boolean found = false;
+            String name = (e.substring(0, 2).toUpperCase() + "#" + e.substring(2) + ".txt");
+            String line;
+            double totalSize = 0.0;
+
+            if (!e.equals("sh204001") && (e.substring(0, 2).toUpperCase().equals("SH") || e.substring(0, 2).toUpperCase().equals("SZ"))) {
+                try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxPath + name)))) {
+                    while ((line = reader1.readLine()) != null) {
+                        List<String> al1 = Arrays.asList(line.split("\t"));
+                        if (al1.get(0).equals(dateString)) {
+                            found = true;
+                            String time = al1.get(1);
+                            LocalTime lt = LocalTime.of(Integer.parseInt(time.substring(0, 2)), Integer.parseInt(time.substring(2)));
+                            mp1.get(e).put(lt.minusMinutes(1L), new SimpleBar(Double.parseDouble(al1.get(2)), Double.parseDouble(al1.get(3)),
+                                    Double.parseDouble(al1.get(4)), Double.parseDouble(al1.get(5))));
+                            if (Double.parseDouble(al1.get(7)) == 0.0) {
+                                totalSize += (Double.parseDouble(al1.get(6)) / 100);
+                                mp2.get(e).put(lt.minusMinutes(1L), totalSize);
+                            } else {
+                                totalSize += (Double.parseDouble(al1.get(7)) / 1000000);
+                                mp2.get(e).put(lt.minusMinutes(1L), totalSize);
+                            }
+                        }
+                    }
+                    if (found) {
+                        mp1.get(e).put(LocalTime.of(11, 29), mp1.get(e).get(LocalTime.of(11, 28)));
+                        mp1.get(e).put(LocalTime.of(11, 30), mp1.get(e).get(LocalTime.of(11, 28)));
+
+                        if (mp1.get(e).containsKey(LocalTime.of(14, 59))) {
+                            mp1.get(e).put(LocalTime.of(15, 0), mp1.get(e).get(LocalTime.of(14, 59)));
+                        }
+
+                        mp2.get(e).put(LocalTime.of(11, 29), mp2.get(e).get(LocalTime.of(11, 28)));
+                        mp2.get(e).put(LocalTime.of(11, 30), mp2.get(e).get(LocalTime.of(11, 28)));
+
+                        if (mp2.get(e).containsKey(LocalTime.of(14, 59))) {
+                            mp2.get(e).put(LocalTime.of(15, 0), mp2.get(e).get(LocalTime.of(14, 59)));
+                        }
+                    } else {
+                        System.out.println(" for " + e + " filling done");
+                        SimpleBar sb = new SimpleBar(priceMap.getOrDefault(e,0.0));
+                        ChinaData.tradeTimePure.forEach(ti -> {
+                            mp1.get(e).put(ti, sb);
+                        });
+                        //System.out.println( "last key "+e+ " "+ mp1.get(e).lastEntry());
+                        //System.out.println( "noon last key "+e+ " " + mp1.get(e).ceilingEntry(LocalTime.of(11,30)).toString());
+                    }
+
+                } catch (IOException | NumberFormatException ex) {
+                    System.out.println(" does not contain" + e);
+                    ex.printStackTrace();
+                }
+            }
+        });
     }
 }

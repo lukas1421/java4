@@ -153,7 +153,7 @@ public final class ChinaMain implements IConnectionHandler {
     private volatile StratCompute stratcompute = new StratCompute();
     private final ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
 
-    static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
+    public static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export_1m\\" : "J:\\TDX\\T0002\\export_1m\\";
 
     public ArrayList<String> accountList() {

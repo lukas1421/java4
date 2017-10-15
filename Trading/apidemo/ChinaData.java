@@ -118,7 +118,7 @@ public final class ChinaData extends JPanel {
     static ExecutorService es = Executors.newCachedThreadPool();
     static final Predicate<? super Entry<LocalTime, Double>> IS_OPEN = e -> e.getKey().isAfter(Utility.AM929T) && e.getValue() != 0.0;
 
-    ChinaData() {
+    public ChinaData() {
         LocalTime lt = LocalTime.of(9, 19);
         while (lt.isBefore(LocalTime.of(15, 1))) {
             if (lt.getHour() == 11 && lt.getMinute() == 31) {
@@ -431,21 +431,21 @@ public final class ChinaData extends JPanel {
 
     static void getTodayTDX(LocalDate dat) {
         CompletableFuture.runAsync(() -> {
-            ChinaStockHelper.getFilesFromTDXGen(dat, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
+            Utility.getFilesFromTDXGen(dat, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
         });
     }
 
     static void getFromTDX(LocalDate today, LocalDate ytd, LocalDate y2) {
 
         CompletableFuture.runAsync(() -> {
-            ChinaStockHelper.getFilesFromTDXGen(today, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
+            Utility.getFilesFromTDXGen(today, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
         });
         CompletableFuture.runAsync(() -> {
-            ChinaStockHelper.getFilesFromTDXGen(ytd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
+            Utility.getFilesFromTDXGen(ytd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
         });
 
         CompletableFuture.runAsync(() -> {
-            ChinaStockHelper.getFilesFromTDXGen(y2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
+            Utility.getFilesFromTDXGen(y2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
         });
     }
 
@@ -780,14 +780,14 @@ public final class ChinaData extends JPanel {
             Date dt = new Date(Long.parseLong(date) * 1000);
             Calendar cal = Calendar.getInstance();
             cal.setTime(dt);
-            System.out.println(dt);
+            //System.out.println(dt);
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
-            System.out.println(" ld " + ld);
+            //System.out.println(" ld " + ld);
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
             if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31))) || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                System.out.println(getStr(dt, open, high, low, close));
+                //System.out.println(getStr(dt, open, high, low, close));
                 double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get("SGXA50").lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
                 ChinaData.priceMapBar.get("SGXA50").put(lt, new SimpleBar(open, high, low, close));
                 ChinaData.sizeTotalMap.get("SGXA50").put(lt, volume * 1d + previousVol);
@@ -795,7 +795,7 @@ public final class ChinaData extends JPanel {
 
             if (ld.equals(ytd) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31))) || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                System.out.println(getStr(dt, open, high, low, close));
+                //System.out.println(getStr(dt, open, high, low, close));
                 ChinaData.priceMapBarYtd.get("SGXA50").put(lt, new SimpleBar(open, high, low, close));
                 double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get("SGXA50").lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
                 ChinaData.sizeTotalMapYtd.get("SGXA50").put(lt, volume * 1d + previousVol);
@@ -803,13 +803,13 @@ public final class ChinaData extends JPanel {
 
             if (ld.equals(y2) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31))) || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
                 //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                System.out.println(getStr(dt, open, high, low, close));
+                //System.out.println(getStr(dt, open, high, low, close));
                 ChinaData.priceMapBarY2.get("SGXA50").put(lt, new SimpleBar(open, high, low, close));
                 double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapY2.get("SGXA50").lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
                 ChinaData.sizeTotalMapY2.get("SGXA50").put(lt, volume * 1d + previousVol);
             }
         } else {
-            System.out.println(getStr(date, open, high, low, close));
+            //System.out.println(getStr(date, open, high, low, close));
         }
     }
 
