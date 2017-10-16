@@ -422,4 +422,11 @@ public class Utility {
             }
         });
     }
+
+    public static String addSHSZ(String s) {
+        if (s.equals("204001") || s.equals("000905") || s.equals("510050")) {
+            return "sh" + s;
+        }
+        return ((s.startsWith("6")) ? "sh" : "sz") + s;
+    }
 }

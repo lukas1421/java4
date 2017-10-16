@@ -1115,6 +1115,7 @@ public class ApiController implements EWrapper {
         //System.out.println(" req id " + reqId + " price " + price);
         if (ChinaMain.globalRequestMap.containsKey(reqId)) {
             //System.out.println(" in tick price " + TickType.getField(tickType));
+            System.out.println(" in tick price " + TickType.get(tickType));
             Request r = ChinaMain.globalRequestMap.get(reqId);
             LiveHandler lh = (LiveHandler) ChinaMain.globalRequestMap.get(reqId).getHandler();
             lh.handlePrice(r.getContract().symbol(), price, LocalTime.now().truncatedTo(ChronoUnit.MINUTES));

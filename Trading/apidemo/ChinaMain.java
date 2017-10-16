@@ -142,7 +142,7 @@ public final class ChinaMain implements IConnectionHandler {
     //private final HibernateUtil hib = new HibernateUtil();
 
     public static HKData hkdata = new HKData();
-
+    public static HKStock hkstock = new HKStock();
     SinaStock sinastock1 = SinaStock.getInstance();
 
     private ExecutorService pool;
@@ -221,6 +221,8 @@ public final class ChinaMain implements IConnectionHandler {
         //m_tabbedPanel.addTab("Hist", histdata);
 
         m_tabbedPanel.addTab(" HK Data", hkdata);
+        m_tabbedPanel.addTab(" HK Stock", hkstock);
+
         // m_tabbedPanel.addTab("Backtesting", backtesting);
         //m_tabbedPanel.
         //m_tabbedPanel.getComponent(15).

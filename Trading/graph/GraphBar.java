@@ -2,6 +2,8 @@ package graph;
 
 import apidemo.ChinaPosition;
 import apidemo.ChinaStock;
+import apidemo.HKData;
+import apidemo.HKStock;
 import auxiliary.SimpleBar;
 import graph.GraphFillable;
 import utility.Utility;
@@ -27,6 +29,7 @@ import java.util.Map.Entry;
 import static java.util.Optional.ofNullable;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toMap;
 
@@ -129,9 +132,26 @@ public final class GraphBar extends JComponent implements GraphFillable {
         }
     }
 
+    public void fillInGraphHK(String name) {
+        System.out.println(" filling HK " + name);
+        this.name = name;
+        setName(name);
+        setChineseName(HKStock.hkNameMap.getOrDefault(name,""));
+
+        if (HKData.hkPriceBar.containsKey(name) && HKData.hkPriceBar.get(name).size()>0) {
+            this.setNavigableMap(HKData.hkPriceBar.get(name));
+        } else {
+            this.setNavigableMap(new ConcurrentSkipListMap<>());
+        }
+    }
+
     @Override
     public void refresh() {
         fillInGraph(name);
+    }
+
+    public void refresh(Consumer<String> cons) {
+        cons.accept(name);
     }
 
     @Override

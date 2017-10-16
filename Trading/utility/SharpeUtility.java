@@ -80,7 +80,10 @@ public class SharpeUtility {
      * @param getFirstReturn function to get the first return
      * @return the return map Map<String, Double>
      */
-    public static <T> NavigableMap<LocalTime, Double> genReturnMap(NavigableMap<LocalTime, T> mp, DoubleBinaryOperator getDiff, ToDoubleFunction<T> getClose, ToDoubleFunction<T> getFirstReturn) {
+    public static <T> NavigableMap<LocalTime, Double> genReturnMap(
+            NavigableMap<LocalTime, T> mp, DoubleBinaryOperator getDiff, ToDoubleFunction<T> getClose,
+            ToDoubleFunction<T> getFirstReturn) {
+
         NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
         mp.navigableKeySet().forEach(k -> {
             if (k.isBefore(LocalTime.of(15, 1))) {

@@ -708,10 +708,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 //System.out.println(dataList.size() > stockCodeCol);
                 //System.out.println(nameMap.getOrDefault(addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol)));
 
-                if (dataList.size() > 1 && (nameMap.getOrDefault(addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol))
+                if (dataList.size() > 1 && (nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol))
                         || dataList.get(chineseNameCol).startsWith("XD"))) {
                     //System.out.println( " name " + addSHSZ(dataList.get(stockCodeCol)));
-                    String nam = addSHSZ(dataList.get(stockCodeCol));
+                    String nam = Utility.addSHSZ(dataList.get(stockCodeCol));
                     //System.out.println(" nam " + nam);
                     //System.out.println(" current pos col " + currentPosCol + " pos " + dataList.get(currentPosCol));
 
@@ -750,10 +750,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     System.out.println(" today sold col " + todaySoldCol);
                 }
 
-                if (dataList.size() > stockCodeCol && (nameMap.getOrDefault(addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol))
+                if (dataList.size() > stockCodeCol && (nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol))
                         || dataList.get(chineseNameCol).startsWith("XD"))) {
                     //System.out.println( " name " + addSHSZ(dataList.get(stockCodeCol)));
-                    String nam = addSHSZ(dataList.get(stockCodeCol));
+                    String nam = Utility.addSHSZ(dataList.get(stockCodeCol));
                     System.out.println(" nam " + nam);
                     openPositionMap.put(nam, Integer.parseInt(dataList.get(openPosCol)) + Integer.parseInt(dataList.get(todaySoldCol))
                             - Integer.parseInt(dataList.get(todayBoughtCol)));
@@ -806,7 +806,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 if (dataList.size() > 10 && !dataList.get(stockCodeCol).startsWith("2") && (dataList.get(statusCol).equals("已成交") || dataList.get(statusCol).equals("部分成交"))
                         && (dataList.get(buySellCol).equals("买入") || dataList.get(buySellCol).equals("卖出"))) {
 
-                    String ticker = addSHSZ(dataList.get(stockCodeCol));
+                    String ticker = Utility.addSHSZ(dataList.get(stockCodeCol));
                     LocalTime lt = LocalTime.parse(dataList.get(fillTimeCol)).truncatedTo(ChronoUnit.SECONDS);
 
                     if (lt.isAfter(LocalTime.of(11, 30, 0)) && lt.isBefore(LocalTime.of(13, 0, 0))) {
@@ -892,7 +892,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 if (dataList.size() > 10 && !dataList.get(stockCodeCol).startsWith("2") && (dataList.get(statusCol).equals("已成") || dataList.get(statusCol).equals("部成"))
                         && (dataList.get(buySellCol).equals("证券买入") || dataList.get(buySellCol).equals("证券卖出"))) {
 
-                    String ticker = addSHSZ(dataList.get(stockCodeCol));
+                    String ticker = Utility.addSHSZ(dataList.get(stockCodeCol));
                     LocalTime lt = LocalTime.parse(dataList.get(fillTimeCol)).truncatedTo(ChronoUnit.SECONDS);
 
                     if (lt.isAfter(LocalTime.of(11, 30, 0)) && lt.isBefore(LocalTime.of(13, 0, 0))) {
@@ -975,14 +975,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return new HashMap<>();
     }
 
-    static String addSHSZ(String s) {
-        if (s.equals("204001") || s.equals("000905") || s.equals("510050")) {
-            return "sh" + s;
-        }
-        return ((s.startsWith("6")) ? "sh" : "sz") + s;
-    }
-
-//    public static void main(String[] args) {
+    //    public static void main(String[] args) {
 //        getWtdMaxMin();
 //    }
     int getTotalTodayBought(String name) {

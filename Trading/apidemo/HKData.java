@@ -140,6 +140,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
 
     @Override
     public void handlePrice(String name, double price, LocalTime t) {
+        HKStock.hkCurrPrice.put(name,price);
         if (hkPriceBar.containsKey(name)) {
             if (hkPriceBar.get(name).containsKey(t)) {
                 hkPriceBar.get(name).get(t).add(price);
@@ -151,6 +152,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
 
     @Override
     public void handleVol(String name, double vol, LocalTime t) {
+        HKStock.hkVol.put(name,vol);
         if (hkVolMap.containsKey(name)) {
             hkVolMap.get(name).put(t, vol);
         }
