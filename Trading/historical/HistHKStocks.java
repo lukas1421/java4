@@ -61,7 +61,7 @@ public class HistHKStocks extends JPanel {
 
     static volatile AtomicInteger uniqueID = new AtomicInteger(70000);
 
-    public static volatile Map<Integer, String> idStockMap = new HashMap<>();
+    //public static volatile Map<Integer, String> idStockMap = new HashMap<>();
 
     static BarModel_HK m_model;
     static JTable tab;
@@ -82,6 +82,7 @@ public class HistHKStocks extends JPanel {
                 hkYtdAll.put(al1.get(0), new TreeMap<>());
                 hkWtdAll.put(al1.get(0),new TreeMap<>());
                 HKResultMapYtd.put(al1.get(0), new HKResult());
+                HKResultMapWtd.put(al1.get(0), new HKResult());
             }
         } catch (IOException ex) {
         }
@@ -173,9 +174,9 @@ public class HistHKStocks extends JPanel {
     }
 
     void requestAllHKStocksWtd() {
-        stocksProcessedYtd = 0;
+        stocksProcessedWtd = 0;
         MorningTask.clearFile(HistHKStocks.outputWtd);
-        hkYtdAll.keySet().forEach(k -> request1StockWtd(k));
+        hkWtdAll.keySet().forEach(k -> request1StockWtd(k));
     }
 
 
@@ -195,7 +196,7 @@ public class HistHKStocks extends JPanel {
     }
 
     public static void refreshWtd() {
-        totalStocksLabelWtd.setText(Long.toString(stocksProcessedYtd) + "/" + Long.toString(hkWtdAll.size()));
+        totalStocksLabelWtd.setText(Long.toString(stocksProcessedWtd) + "/" + Long.toString(hkWtdAll.size()));
         System.out.println(" refreshing WTD ");
         m_model.fireTableDataChanged();
     }
@@ -212,7 +213,7 @@ public class HistHKStocks extends JPanel {
                 //System.out.println(" unique id " + uniqueID.get() + " stock " + idStockMap.get(uniqueID.get()));
                 //System.out.println(" cut off time " + cutoffTime + " days to request " + daysToRequest);
                 System.out.println(" stock is " + stock);
-                idStockMap.put(uniqueID.incrementAndGet(), stock);
+                //idStockMap.put(uniqueID.incrementAndGet(), stock);
                 apcon.reqHistoricalDataUSHK(new YtdDataHandler(), uniqueID.get(), generateHKContract(stock), CUTOFFTIME,
                         DAYSTOREQUEST, Types.DurationUnit.DAY,
                         Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
@@ -234,7 +235,7 @@ public class HistHKStocks extends JPanel {
                 //System.out.println(" unique id " + uniqueID.get() + " stock " + idStockMap.get(uniqueID.get()));
                 //System.out.println(" cut off time " + cutoffTime + " days to request " + daysToRequest);
                 System.out.println(" stock is " + stock);
-                idStockMap.put(uniqueID.incrementAndGet(), stock);
+                //idStockMap.put(uniqueID.incrementAndGet(), stock);
                 apcon.reqHistoricalDataUSHK(new WtdDataHandler()
                         , uniqueID.get(), generateHKContract(stock), CUTOFFTIME,
                         7, Types.DurationUnit.DAY,
@@ -277,7 +278,7 @@ public class HistHKStocks extends JPanel {
     }
 
     public static void computeYtd(String stock) {
-        System.out.println(" computing starts for stock " + stock);
+        System.out.println(" computing Ytd starts for stock " + stock);
         NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(hkYtdAll.get(stock),
                 t -> t.isAfter(LocalDate.of(2016, Month.DECEMBER, 31)));
         double mean = SharpeUtility.getMean(ret);
@@ -289,9 +290,9 @@ public class HistHKStocks extends JPanel {
     }
 
     public static void computeWtd(String stock) {
-        System.out.println(" computing starts for stock " + stock);
-        NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(hkYtdAll.get(stock),
-                t -> t.isAfter(getMondayOfWeek(LocalDate.now()).minusDays(1L)));
+        System.out.println(" computing Wtd starts for stock " + stock);
+        NavigableMap<LocalDateTime, Double> ret = SharpeUtility.getReturnSeries(hkWtdAll.get(stock),
+                t -> t.isAfter(getMondayOfWeek(LocalDateTime.now())));
         double mean = SharpeUtility.getMean(ret);
         double sd = SharpeUtility.getSD(ret);
         double sr = SharpeUtility.getSharpe(ret);
@@ -329,7 +330,7 @@ public class HistHKStocks extends JPanel {
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
             LocalDateTime ldt = LocalDateTime.of(ld,lt);
 
-            LocalDate monOfWeek = getMondayOfWeek(LocalDate.now());
+            LocalDate monOfWeek = getMondayOfWeek(LocalDateTime.now()).toLocalDate();
 
             if (ld.isEqual(monOfWeek) || ld.isAfter(monOfWeek)) {
                 //System.out.println(" CORRECT name ld lt open " + name + " " + ld + " " + lt + " " + open);
@@ -344,17 +345,17 @@ public class HistHKStocks extends JPanel {
 
         @Override
         public void actionUponFinish(String name) {
-            stocksProcessedYtd++;
+            stocksProcessedWtd++;
             sm.release(1);
             System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
             computeWtd(name);
-            refreshYtd();
+            refreshWtd();
 
         }
     }
 
-    static LocalDate getMondayOfWeek(LocalDate ld) {
-        LocalDate res = LocalDate.now();
+    static LocalDateTime getMondayOfWeek(LocalDateTime ld) {
+        LocalDateTime res = ld;
         while(!res.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
             res = res.minusDays(1);
         }
@@ -438,7 +439,7 @@ public class HistHKStocks extends JPanel {
 
         @Override
         public int getColumnCount() {
-            return 6;
+            return 15;
         }
 
         @Override
