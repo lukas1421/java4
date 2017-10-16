@@ -82,11 +82,11 @@ public class SharpeUtility {
      */
     public static <T> NavigableMap<LocalTime, Double> genReturnMap(
             NavigableMap<LocalTime, T> mp, DoubleBinaryOperator getDiff, ToDoubleFunction<T> getClose,
-            ToDoubleFunction<T> getFirstReturn) {
+            ToDoubleFunction<T> getFirstReturn, LocalTime cutoff) {
 
         NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
         mp.navigableKeySet().forEach(k -> {
-            if (k.isBefore(LocalTime.of(15, 1))) {
+            if (k.isBefore(cutoff)) {
                 if (!k.equals(mp.firstKey())) {
                     double prevClose = getClose.applyAsDouble(mp.lowerEntry(k).getValue());
                     retMap.put(k, getDiff.applyAsDouble(getClose.applyAsDouble(mp.get(k)), prevClose));
@@ -101,7 +101,7 @@ public class SharpeUtility {
     public static double computeMinuteSharpeFromMtmDeltaMp(NavigableMap<LocalTime, Double> mtmDeltaMp) {
         //System.out.println(" compute minute sharpe from mtm mp ");
         NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
-        retMap = genReturnMap(mtmDeltaMp, (u, v) -> u / v - 1, d -> d, d -> 0.0);
+        retMap = genReturnMap(mtmDeltaMp, (u, v) -> u / v - 1, d -> d, d -> 0.0, LocalTime.of(15,1));
 
         double minuteMean = Utility.computeMean(retMap);
         double minuteSD = Utility.computeSD(retMap);
@@ -114,7 +114,7 @@ public class SharpeUtility {
 
     public static double computeMinuteNetPnlSharpe(NavigableMap<LocalTime, Double> netPnlMp) {
         NavigableMap<LocalTime, Double> diffMap = new TreeMap<>();
-        diffMap = genReturnMap(netPnlMp, (u, v) -> u - v, d -> d, d -> 0.0);
+        diffMap = genReturnMap(netPnlMp, (u, v) -> u - v, d -> d, d -> 0.0, LocalTime.of(15,1));
         double minuteMean = Utility.computeMean(diffMap);
         double minuteSD = Utility.computeSD(diffMap);
         if (minuteSD != 0.0) {
@@ -127,19 +127,32 @@ public class SharpeUtility {
     public static double computeMinuteSharpe(NavigableMap<LocalTime, SimpleBar> mp) {
         NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
         if (mp.size() > 0) {
-            retMap = genReturnMap(mp, (u, v) -> u / v - 1, SimpleBar::getClose, SimpleBar::getBarReturn);
-//            mp.navigableKeySet().forEach(k -> {
-//                if (!k.equals(mp.firstKey())) {
-//                    double prevClose = mp.lowerEntry(k).getValue().getClose();
-//                    //double prevLow = mp.lowerEntry(k).getValue().getLow();
-//                    retMap.put(k, mp.get(k).getClose() / prevClose - 1);
-//                } else {
-//                    retMap.put(k, mp.get(k).getBarReturn());
-//                }
-//            });
+            retMap = genReturnMap(mp, (u, v) -> u / v - 1, SimpleBar::getClose, SimpleBar::getBarReturn,
+                    LocalTime.of(16,1));
             double minuteMean = Utility.computeMean(retMap);
             double minuteSD = Utility.computeSD(retMap);
             if (minuteSD != 0.0) {
+                //System.out.println(" mean is " + (minuteMean * 240) + " minute sd " + (minuteSD * Math.sqrt(240)));
+                return (minuteMean * 240) / (minuteSD * Math.sqrt(240));
+            }
+        }
+        return 0.0;
+    }
+
+    public static double computeMinuteSharpeHK(NavigableMap<LocalTime, SimpleBar> mp, String name) {
+        NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
+        if (mp.size() > 0) {
+            retMap = genReturnMap(mp, (u, v) -> u / v - 1, SimpleBar::getClose, SimpleBar::getBarReturn,
+                    LocalTime.of(16,1));
+            double minuteMean = Utility.computeMean(retMap);
+            double minuteSD = Utility.computeSD(retMap);
+            if (minuteSD != 0.0) {
+                if(name.equals("700")) {
+                    System.out.println(" name length retmap mean sd "+ name + " "
+                            + mp.size() + " " + minuteMean + " " + minuteSD );
+                    System.out.println(" retmap first 5" + retMap.headMap(LocalTime.of(9,35)));
+                    System.out.println(" retmap last 5" + retMap.tailMap(LocalTime.of(15,55)));
+                }
                 //System.out.println(" mean is " + (minuteMean * 240) + " minute sd " + (minuteSD * Math.sqrt(240)));
                 return (minuteMean * 240) / (minuteSD * Math.sqrt(240));
             }

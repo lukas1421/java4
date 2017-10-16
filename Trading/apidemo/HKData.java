@@ -4,37 +4,21 @@ import auxiliary.SimpleBar;
 import client.TickType;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
+import utility.Utility;
+
+import javax.swing.*;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.Semaphore;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableRowSorter;
+import java.util.concurrent.*;
 
 public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
 
@@ -58,8 +42,11 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
     int modelRow;
     int indexRow;
     static TableRowSorter<BarModel_HKData> sorter;
+    File testOutput = new File(ChinaMain.GLOBALPATH + "hkTestData.txt");
 
     public HKData() {
+
+        MorningTask.clearFile(testOutput);
 
         for (LocalTime t = LocalTime.of(9, 19); t.isBefore(LocalTime.of(16, 1)); t = t.plusMinutes(1)) {
             if (t.isAfter(LocalTime.of(11, 59)) && t.isBefore(LocalTime.of(13, 0))) {
@@ -156,7 +143,6 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
             }
         } else if(tt == TickType.CLOSE) {
             hkPreviousCloseMap.put(name,price);
-
         }
     }
 
@@ -179,6 +165,12 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
         if (ld.equals(LocalDate.now())) {
             //System.out.println(" CORRECT name ld lt open " + name + " " + ld + " " + lt + " " + open);
             hkPriceBar.get(name).put(lt, new SimpleBar(open, high, low, close));
+            if(name.equals("700")) {
+                System.out.println(" outputting tencent");
+                MorningTask.simpleWriteToFile(Utility.getStrTabbed(lt, open, high, low, close), true,
+                        testOutput);
+            }
+
         }
     }
 

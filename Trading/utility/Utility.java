@@ -2,8 +2,8 @@ package utility;
 
 import apidemo.ChinaData;
 import apidemo.ChinaStock;
-import graph.GraphIndustry;
 import auxiliary.SimpleBar;
+import graph.GraphIndustry;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 
@@ -93,7 +93,8 @@ public class Utility {
     public static double computeSD(NavigableMap<LocalTime, Double> retMap) {
         if (retMap.size() > 1) {
             double mean = computeMean(retMap);
-            return Math.sqrt((retMap.entrySet().stream().mapToDouble(e -> e.getValue()).map(v -> Math.pow(v - mean, 2)).sum()) / (retMap.size() - 1));
+            return Math.sqrt((retMap.entrySet().stream().mapToDouble(e -> e.getValue()).map(v -> Math.pow(v - mean, 2)).sum())
+                    / (retMap.size() - 1));
         }
         return 0.0;
 

@@ -1,8 +1,6 @@
 package apidemo;
 
-import auxiliary.SimpleBar;
 import graph.GraphBar;
-import graph.GraphSize;
 import utility.SharpeUtility;
 import utility.Utility;
 
@@ -52,10 +50,7 @@ public class HKStock extends JPanel {
     static String hkstock6 = "1398";
 
 
-
-
     public HKStock() {
-
         try(BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(hkstockFile),"GBK"))){
             while((line=reader1.readLine())!=null) {
                 //System.out.println(" hk line is " + line);
@@ -124,6 +119,7 @@ public class HKStock extends JPanel {
 
             });
         });
+
         controlPanel.add(refreshButton);
 
 
@@ -134,10 +130,14 @@ public class HKStock extends JPanel {
                 if(isCellSelected(row,col)){
                     modelRow = this.convertRowIndexToModel(row);
                     indexRow = row;
+                    graph1.fillInGraphHK(symbolNamesHK.get(modelRow));
+                    refreshAll();
                     comp.setBackground(Color.green);
                 } else {
                     comp.setBackground((row%2==0)?Color.lightGray:Color.white);
                 }
+
+
                 return comp;
             }
         };
@@ -156,7 +156,7 @@ public class HKStock extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.width = 600;
+                d.width = 700;
                 return d;
             }
         };
@@ -282,6 +282,14 @@ public class HKStock extends JPanel {
 
     }
 
+    static void refreshAll () {
+        //System.out.print(" refreshing all ");
+        SwingUtilities.invokeLater(()->{
+            graphPanel.repaint();
+            tab.repaint();
+        });
+    }
+
     static double getHPremiumOverA(String name) {
         double currentHKPrice = hkCurrPrice.getOrDefault(name, 0.0);
         double currentAPrice = getASharePrice(name)*1.2;
@@ -303,7 +311,8 @@ public class HKStock extends JPanel {
 
     static double computeTodayHKSharpe(String name) {
         if(HKData.hkPriceBar.containsKey(name)) {
-            return SharpeUtility.computeMinuteSharpe(HKData.hkPriceBar.get(name));
+            return SharpeUtility.computeMinuteSharpeHK(HKData.hkPriceBar.get(name)
+                    .subMap(LocalTime.of(9,30),true, LocalTime.of(16,0),true), name);
         }
         return 0.0;
     }

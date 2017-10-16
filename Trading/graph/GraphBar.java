@@ -5,35 +5,26 @@ import apidemo.ChinaStock;
 import apidemo.HKData;
 import apidemo.HKStock;
 import auxiliary.SimpleBar;
-import graph.GraphFillable;
 import utility.Utility;
 
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaData.sizeTotalMap;
-import static apidemo.ChinaData.sizeTotalMapYtd;
-import static apidemo.ChinaDataYesterday.*;
-import static apidemo.ChinaStock.*;
-import static utility.Utility.applyAllDouble;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import static java.lang.Double.min;
-import static java.lang.Math.abs;
-import static java.lang.Math.log;
-import static java.lang.Math.round;
+import javax.swing.*;
+import java.awt.*;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map.Entry;
-import static java.util.Optional.ofNullable;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import static java.util.stream.Collectors.toMap;
 
-import javax.swing.JComponent;
+import static apidemo.ChinaData.*;
+import static apidemo.ChinaDataYesterday.*;
+import static apidemo.ChinaStock.*;
+import static java.lang.Double.min;
+import static java.lang.Math.*;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toMap;
+import static utility.Utility.applyAllDouble;
 
 public final class GraphBar extends JComponent implements GraphFillable {
 
@@ -133,7 +124,7 @@ public final class GraphBar extends JComponent implements GraphFillable {
     }
 
     public void fillInGraphHK(String name) {
-        System.out.println(" filling HK " + name);
+        //System.out.println(" filling HK " + name);
         this.name = name;
         setName(name);
         setChineseName(HKStock.hkNameMap.getOrDefault(name,""));

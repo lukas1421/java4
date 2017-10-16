@@ -3,43 +3,16 @@
 package controller;
 
 import apidemo.ChinaMain;
-import static apidemo.ChinaMain.controller;
-
 import apidemo.HKData;
-import historical.Request;
-import client.CommissionReport;
-import client.Contract;
-import client.ContractDetails;
-import client.DeltaNeutralContract;
-import client.EClientErrors;
-import client.EJavaSignal;
-import client.EReader;
-import client.EReaderSignal;
-import client.EWrapper;
-import client.Execution;
-import client.ExecutionFilter;
-import client.Order;
-import client.OrderState;
-import client.OrderStatus;
-import client.ScannerSubscription;
-import client.SoftDollarTier;
-import client.TagValue;
-import client.TickType;
-import client.Types;
-import client.Types.BarSize;
-import client.Types.DeepSide;
-import client.Types.DeepType;
-import client.Types.DurationUnit;
-import client.Types.ExerciseType;
-import client.Types.FADataType;
-import client.Types.FundamentalType;
-import client.Types.MktDataType;
-import client.Types.NewsType;
-import client.Types.SecType;
-import client.Types.WhatToShow;
+import client.*;
+import client.Types.*;
 import controller.ApiConnection.ILogger;
+import handler.HistDataConsumer;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
+import historical.Request;
+import utility.Utility;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -49,26 +22,16 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.StringTokenizer;
-import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static apidemo.ChinaMain.controller;
 import static java.util.stream.Collectors.toList;
-import handler.HistDataConsumer;
-import utility.Utility;
 
 public class ApiController implements EWrapper {
 
@@ -892,6 +855,8 @@ public class ApiController implements EWrapper {
     }
 
     public void reqHKTodayData() {
+        //HKData.historyDataSem.drainPermits();
+        HKData.historyDataSem = new Semaphore(50);
         HKData.hkPriceBar.keySet().forEach(k -> req1HKStockToday(k));
     }
 
@@ -1118,8 +1083,7 @@ public class ApiController implements EWrapper {
 
             Request r = ChinaMain.globalRequestMap.get(reqId);
             LiveHandler lh = (LiveHandler) ChinaMain.globalRequestMap.get(reqId).getHandler();
-            System.out.println(" in tick price "+ r.getContract().symbol()
-                    + TickType.get(tickType) + price);
+            //System.out.println(" in tick price "+ r.getContract().symbol()+ TickType.get(tickType) + price);
             try {
                 //if(TickType.get(tickType) == TickType.LAST) {
                     lh.handlePrice(TickType.get(tickType),
