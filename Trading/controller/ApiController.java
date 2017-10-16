@@ -1115,10 +1115,21 @@ public class ApiController implements EWrapper {
         //System.out.println(" req id " + reqId + " price " + price);
         if (ChinaMain.globalRequestMap.containsKey(reqId)) {
             //System.out.println(" in tick price " + TickType.getField(tickType));
-            System.out.println(" in tick price " + TickType.get(tickType));
+
             Request r = ChinaMain.globalRequestMap.get(reqId);
             LiveHandler lh = (LiveHandler) ChinaMain.globalRequestMap.get(reqId).getHandler();
-            lh.handlePrice(r.getContract().symbol(), price, LocalTime.now().truncatedTo(ChronoUnit.MINUTES));
+            System.out.println(" in tick price "+ r.getContract().symbol()
+                    + TickType.get(tickType) + price);
+            try {
+                //if(TickType.get(tickType) == TickType.LAST) {
+                    lh.handlePrice(TickType.get(tickType),
+                            r.getContract().symbol(), price, LocalTime.now().truncatedTo(ChronoUnit.MINUTES));
+
+            } catch(Exception ex) {
+                System.out.println(" handling price has issues " );
+                ex.printStackTrace();
+            }
+
         }
 
         if (m_topMktDataMap.containsKey(reqId)) {

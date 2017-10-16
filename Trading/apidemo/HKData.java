@@ -1,6 +1,7 @@
 package apidemo;
 
 import auxiliary.SimpleBar;
+import client.TickType;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
 import java.awt.BorderLayout;
@@ -39,6 +40,9 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
 
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> hkPriceBar
             = new ConcurrentHashMap<>();
+
+    public static volatile ConcurrentHashMap<String, Double> hkPreviousCloseMap = new ConcurrentHashMap<>();
+
 
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> hkVolMap
             = new ConcurrentHashMap<>();
@@ -139,14 +143,20 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
     }
 
     @Override
-    public void handlePrice(String name, double price, LocalTime t) {
-        HKStock.hkCurrPrice.put(name,price);
-        if (hkPriceBar.containsKey(name)) {
-            if (hkPriceBar.get(name).containsKey(t)) {
-                hkPriceBar.get(name).get(t).add(price);
-            } else {
-                hkPriceBar.get(name).put(t, new SimpleBar(price));
+    public void handlePrice(TickType tt, String name, double price, LocalTime t) {
+        if(tt == TickType.LAST) {
+            HKStock.hkCurrPrice.put(name, price);
+
+            if (hkPriceBar.containsKey(name)) {
+                if (hkPriceBar.get(name).containsKey(t)) {
+                    hkPriceBar.get(name).get(t).add(price);
+                } else {
+                    hkPriceBar.get(name).put(t, new SimpleBar(price));
+                }
             }
+        } else if(tt == TickType.CLOSE) {
+            hkPreviousCloseMap.put(name,price);
+
         }
     }
 

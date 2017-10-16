@@ -156,7 +156,7 @@ public class HKStock extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.width = 900;
+                d.width = 600;
                 return d;
             }
         };
@@ -253,7 +253,7 @@ public class HKStock extends JPanel {
                 case 6:
                     return getASharePrice(name);
                 case 7:
-                    return Math.round(1000d*(hkCurrPrice.getOrDefault(name, 0.0)/(getASharePrice(name)*1.2)-1))/10d;
+                    return getHPremiumOverA(name);
                 case 8:
                     return 0.0;
                 case 9:
@@ -282,6 +282,16 @@ public class HKStock extends JPanel {
 
     }
 
+    static double getHPremiumOverA(String name) {
+        double currentHKPrice = hkCurrPrice.getOrDefault(name, 0.0);
+        double currentAPrice = getASharePrice(name)*1.2;
+
+        if(currentHKPrice != 0.0 && currentAPrice!= 0.0) {
+            return Math.round(1000d * (currentHKPrice / currentAPrice-1)) / 10d;
+        }
+        return 0.0;
+    }
+
     static double getASharePrice(String hkTicker) {
         String aShare = haMap.getOrDefault(hkTicker,"");
         if(!aShare.equals("")) {
@@ -301,9 +311,11 @@ public class HKStock extends JPanel {
     static double computeTodayReturn(String name) {
 
         if(HKData.hkPriceBar.containsKey(name) && HKData.hkPriceBar.get(name).size()>0) {
-            double open = HKData.hkPriceBar.get(name).firstEntry().getValue().getOpen();
-            double last = HKData.hkPriceBar.get(name).lastEntry().getValue().getClose();
-            return Math.round(1000d*(last/open-1))/10d;
+            //double open = HKData.hkPriceBar.get(name).firstEntry().getValue().getOpen();
+            double prevClose = HKData.hkPreviousCloseMap.getOrDefault(name,0.0);
+            //double last = HKData.hkPriceBar.get(name).lastEntry().getValue().getClose();
+            double priceNow = hkCurrPrice.getOrDefault(name,0.0);
+            return Math.round(1000d*(priceNow/prevClose-1))/10d;
         }
         return 0.0;
     }
