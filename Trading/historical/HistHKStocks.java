@@ -1,6 +1,7 @@
 package historical;
 
-import apidemo.*;
+import apidemo.ChinaMain;
+import apidemo.MorningTask;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
@@ -10,46 +11,25 @@ import handler.HistoricalHandler;
 import utility.SharpeUtility;
 import utility.Utility;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
+import java.awt.*;
+import java.io.*;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableRowSorter;
 
-public class HistHKStocks extends JPanel implements HistoricalHandler {
+public class HistHKStocks extends JPanel {
 
     static final String CUTOFFTIME = getDataCutoff();
     static final int DAYSTOREQUEST = (int) ChronoUnit.DAYS.between(
@@ -57,9 +37,12 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
 
     //public static volatile long totalBeingProcessed = 0;
     static volatile long requestCounter = 0L;
-    public static volatile long stocksProcessed = 0;
+    public static volatile long stocksProcessedYtd = 0;
+    public static volatile long stocksProcessedWtd = 0;
 
     public static volatile Semaphore sm = new Semaphore(50);
+
+    public final static File testOutput = new File(ChinaMain.GLOBALPATH+"hkTestData.txt");
 
     //ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
     static ApiController apcon = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
@@ -67,11 +50,15 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
             new ApiConnection.ILogger.DefaultLogger());
 
     //public static volatile Contract ctHK = new Contract();
-    public static volatile Map<String, NavigableMap<LocalDate, SimpleBar>> HKALL = new HashMap<>();
-    private static volatile Map<String, HKResult> HKResultMap = new HashMap<>();
+    public static volatile Map<String, NavigableMap<LocalDate, SimpleBar>> hkYtdAll = new HashMap<>();
+    public static volatile Map<String, NavigableMap<LocalDateTime, SimpleBar>> hkWtdAll = new HashMap<>();
+    private static volatile Map<String, HKResult> HKResultMapYtd = new HashMap<>();
+    private static volatile Map<String, HKResult> HKResultMapWtd = new HashMap<>();
 
     public static List<String> hkNameList = new LinkedList<>();
-    public static File output = new File(ChinaMain.GLOBALPATH + "hkTestData.txt");
+    public static File outputYtd = new File(ChinaMain.GLOBALPATH + "hkSharpeYtd.txt");
+    public static File outputWtd = new File(ChinaMain.GLOBALPATH + "hkSharpeWtd.txt");
+
     static volatile AtomicInteger uniqueID = new AtomicInteger(70000);
 
     public static volatile Map<Integer, String> idStockMap = new HashMap<>();
@@ -82,7 +69,8 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
     int indexRow;
     static TableRowSorter<BarModel_HK> sorter;
 
-    public static JLabel totalStocksLabel = new JLabel("Total");
+    public static JLabel totalStocksLabelYtd = new JLabel("Total Ytd");
+    public static JLabel totalStocksLabelWtd = new JLabel("Total Wtd");
 
     public HistHKStocks() {
         String line;
@@ -91,26 +79,27 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
                 new FileInputStream(ChinaMain.GLOBALPATH + "hkMainList.txt"), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                HKALL.put(al1.get(0), new TreeMap<>());
-                HKResultMap.put(al1.get(0), new HKResult());
+                hkYtdAll.put(al1.get(0), new TreeMap<>());
+                hkWtdAll.put(al1.get(0),new TreeMap<>());
+                HKResultMapYtd.put(al1.get(0), new HKResult());
             }
         } catch (IOException ex) {
         }
-        hkNameList = HKALL.keySet().stream().collect(Collectors.toList());
+        hkNameList = hkYtdAll.keySet().stream().collect(Collectors.toList());
         System.out.println(" hk name list " + hkNameList);
 
         m_model = new BarModel_HK();
 
         tab = new JTable(m_model) {
             @Override
-            public Component prepareRenderer(TableCellRenderer renderer, int Index_row, int Index_col) {
+            public Component prepareRenderer(TableCellRenderer renderer, int indexRow, int indexCol) {
                 try {
-                    Component comp = super.prepareRenderer(renderer, Index_row, Index_col);
-                    if (isCellSelected(Index_row, Index_col)) {
-                        modelRow = this.convertRowIndexToModel(Index_row);
+                    Component comp = super.prepareRenderer(renderer, indexRow, indexCol);
+                    if (isCellSelected(indexRow, indexCol)) {
+                        modelRow = this.convertRowIndexToModel(indexRow);
                         comp.setBackground(Color.GREEN);
                     } else {
-                        comp.setBackground((Index_row % 2 == 0) ? Color.lightGray : Color.white);
+                        comp.setBackground((indexRow % 2 == 0) ? Color.lightGray : Color.white);
                     }
                     return comp;
                 } catch (Exception e) {
@@ -138,9 +127,15 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
             }
         };
 
-        JButton getHistoricalButton = new JButton("Historical");
-        getHistoricalButton.addActionListener(al -> {
-            requestAllHKStocks();
+        JButton getYtdButton = new JButton("Ytd");
+        JButton getWtdButton = new JButton("Wtd");
+
+        getYtdButton.addActionListener(al -> {
+            requestAllHKStocksYtd();
+        });
+
+        getWtdButton.addActionListener(al->{
+            requestAllHKStocksWtd();
         });
 
         JButton refreshButton = new JButton("Refresh");
@@ -153,9 +148,14 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
         });
 
         controlPanel.add(refreshButton);
-        controlPanel.add(getHistoricalButton);
-        totalStocksLabel.setFont(totalStocksLabel.getFont().deriveFont(30L));
-        controlPanel.add(totalStocksLabel);
+        controlPanel.add(getYtdButton);
+        controlPanel.add(getWtdButton);
+
+        totalStocksLabelYtd.setFont(totalStocksLabelYtd.getFont().deriveFont(30L));
+        controlPanel.add(totalStocksLabelYtd);
+
+        totalStocksLabelWtd.setFont(totalStocksLabelWtd.getFont().deriveFont(30L));
+        controlPanel.add(totalStocksLabelWtd);
 
         setLayout(new BorderLayout());
         add(controlPanel, BorderLayout.NORTH);
@@ -166,11 +166,18 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
 
     }
 
-    void requestAllHKStocks() {
-        stocksProcessed = 0;
-        MorningTask.clearFile(HistHKStocks.output);
-        HKALL.keySet().forEach(k -> request1Stock(k));
+    void requestAllHKStocksYtd() {
+        stocksProcessedYtd = 0;
+        MorningTask.clearFile(HistHKStocks.outputYtd);
+        hkYtdAll.keySet().forEach(k -> request1StockYtd(k));
     }
+
+    void requestAllHKStocksWtd() {
+        stocksProcessedYtd = 0;
+        MorningTask.clearFile(HistHKStocks.outputWtd);
+        hkYtdAll.keySet().forEach(k -> request1StockWtd(k));
+    }
+
 
     Contract generateHKContract(String stock) {
         Contract ct = new Contract();
@@ -181,14 +188,19 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
         return ct;
     }
 
-    public static void refreshAll() {
-        totalStocksLabel.setText(Long.toString(stocksProcessed) + "/" + Long.toString(HKALL.size()));
-        System.out.println(" refreshing all ");
+    public static void refreshYtd() {
+        totalStocksLabelYtd.setText(Long.toString(stocksProcessedYtd) + "/" + Long.toString(hkYtdAll.size()));
+        System.out.println(" refreshing YTD ");
         m_model.fireTableDataChanged();
     }
 
-    void request1Stock(String stock) {
+    public static void refreshWtd() {
+        totalStocksLabelWtd.setText(Long.toString(stocksProcessedYtd) + "/" + Long.toString(hkWtdAll.size()));
+        System.out.println(" refreshing WTD ");
+        m_model.fireTableDataChanged();
+    }
 
+    void request1StockYtd(String stock) {
         CompletableFuture.runAsync(() -> {
             System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
             System.out.println(" available " + sm.availablePermits());
@@ -201,9 +213,32 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
                 //System.out.println(" cut off time " + cutoffTime + " days to request " + daysToRequest);
                 System.out.println(" stock is " + stock);
                 idStockMap.put(uniqueID.incrementAndGet(), stock);
-                apcon.reqHistoricalDataUSHK(this, uniqueID.get(), generateHKContract(stock), CUTOFFTIME,
+                apcon.reqHistoricalDataUSHK(new YtdDataHandler(), uniqueID.get(), generateHKContract(stock), CUTOFFTIME,
                         DAYSTOREQUEST, Types.DurationUnit.DAY,
                         Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(HistHKStocks.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+    }
+
+    void request1StockWtd(String stock) {
+        CompletableFuture.runAsync(() -> {
+            System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
+            System.out.println(" available " + sm.availablePermits());
+            System.out.println(" queue length is " + sm.getQueueLength());
+
+            try {
+                System.out.println(" permits before " + sm.availablePermits());
+                sm.acquire();
+                //System.out.println(" unique id " + uniqueID.get() + " stock " + idStockMap.get(uniqueID.get()));
+                //System.out.println(" cut off time " + cutoffTime + " days to request " + daysToRequest);
+                System.out.println(" stock is " + stock);
+                idStockMap.put(uniqueID.incrementAndGet(), stock);
+                apcon.reqHistoricalDataUSHK(new WtdDataHandler()
+                        , uniqueID.get(), generateHKContract(stock), CUTOFFTIME,
+                        7, Types.DurationUnit.DAY,
+                        Types.BarSize._1_min, Types.WhatToShow.TRADES, true);
             } catch (InterruptedException ex) {
                 Logger.getLogger(HistHKStocks.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -229,30 +264,104 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
 
     public static void computeAll() {
         System.out.println(" computing starts ");
-        HKALL.keySet().forEach(k -> {
-            NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(HKALL.get(k),
+        hkYtdAll.keySet().forEach(k -> {
+            NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(hkYtdAll.get(k),
                     t -> t.isAfter(LocalDate.of(2016, Month.DECEMBER, 31)));
             double mean = SharpeUtility.getMean(ret);
             double sd = SharpeUtility.getSD(ret);
             double sr = SharpeUtility.getSharpe(ret);
-            double perc = SharpeUtility.getPercentile(HKALL.get(k));
+            double perc = SharpeUtility.getPercentile(hkYtdAll.get(k));
 
             System.out.println(Utility.getStrTabbed(" stock mean sd sr perc ", k, mean, sd, sr, perc));
         });
     }
 
-    public static void compute(String stock) {
+    public static void computeYtd(String stock) {
         System.out.println(" computing starts for stock " + stock);
-        NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(HKALL.get(stock),
+        NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(hkYtdAll.get(stock),
                 t -> t.isAfter(LocalDate.of(2016, Month.DECEMBER, 31)));
         double mean = SharpeUtility.getMean(ret);
         double sd = SharpeUtility.getSD(ret);
         double sr = SharpeUtility.getSharpe(ret);
-        double perc = SharpeUtility.getPercentile(HKALL.get(stock));
-        HKResultMap.get(stock).fillResult(mean, sd, sr, perc);
+        double perc = SharpeUtility.getPercentile(hkYtdAll.get(stock));
+        HKResultMapYtd.get(stock).fillResult(mean, sd, sr, perc);
         System.out.println(Utility.getStrTabbed(" stock mean sd sr perc", stock, mean, sd, sr, perc));
-
     }
+
+    public static void computeWtd(String stock) {
+        System.out.println(" computing starts for stock " + stock);
+        NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(hkYtdAll.get(stock),
+                t -> t.isAfter(getMondayOfWeek(LocalDate.now()).minusDays(1L)));
+        double mean = SharpeUtility.getMean(ret);
+        double sd = SharpeUtility.getSD(ret);
+        double sr = SharpeUtility.getSharpe(ret);
+        double perc = SharpeUtility.getPercentile(hkYtdAll.get(stock));
+        HKResultMapWtd.get(stock).fillResult(mean, sd, sr, perc);
+        System.out.println(Utility.getStrTabbed(" wtd stock mean sd sr perc", stock, mean, sd, sr, perc));
+    }
+
+    static class YtdDataHandler implements HistoricalHandler{
+        @Override
+        public void handleHist(String name, String date, double open, double high, double low, double close) {
+            hkYtdAll.get(name).put(convertStringToDate(date), new SimpleBar(open, high, low, close));
+        }
+
+        @Override
+        public void actionUponFinish(String name) {
+            stocksProcessedYtd++;
+            sm.release(1);
+            System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
+            computeYtd(name);
+            refreshYtd();
+        }
+    }
+
+
+    //from hkdata get data today
+    static class WtdDataHandler implements HistoricalHandler {
+
+        @Override
+        public void handleHist(String name, String date, double open, double high, double low, double close) {
+            Date dt = new Date(Long.parseLong(date) * 1000);
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(dt);
+            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+            LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+            LocalDateTime ldt = LocalDateTime.of(ld,lt);
+
+            LocalDate monOfWeek = getMondayOfWeek(LocalDate.now());
+
+            if (ld.isEqual(monOfWeek) || ld.isAfter(monOfWeek)) {
+                //System.out.println(" CORRECT name ld lt open " + name + " " + ld + " " + lt + " " + open);
+                hkWtdAll.get(name).put(ldt, new SimpleBar(open, high, low, close));
+                if(name.equals("700")) {
+                    System.out.println(" outputting tencent");
+                    MorningTask.simpleWriteToFile(Utility.getStrTabbed(lt, open, high, low, close), true,
+                            testOutput);
+                }
+            }
+        }
+
+        @Override
+        public void actionUponFinish(String name) {
+            stocksProcessedYtd++;
+            sm.release(1);
+            System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
+            computeWtd(name);
+            refreshYtd();
+
+        }
+    }
+
+    static LocalDate getMondayOfWeek(LocalDate ld) {
+        LocalDate res = LocalDate.now();
+        while(!res.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
+            res = res.minusDays(1);
+        }
+        return res;
+    }
+
+
 
     public static void main(String[] args) {
         JFrame jf = new JFrame();
@@ -268,21 +377,9 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
         });
     }
 
-    @Override
-    public void handleHist(String name, String date, double open, double high, double low, double close) {
-        HKALL.get(name).put(convertStringToDate(date), new SimpleBar(open, high, low, close));
-    }
 
-    @Override
-    public void actionUponFinish(String name) {
-        stocksProcessed++;
-        sm.release(1);
-        System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
-        compute(name);
-        refreshAll();
-    }
 
-    public LocalDate convertStringToDate(String date) {
+    public static LocalDate convertStringToDate(String date) {
         LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
         return ld;
     }
@@ -336,7 +433,7 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
 
         @Override
         public int getRowCount() {
-            return HKALL.size();
+            return hkYtdAll.size();
         }
 
         @Override
@@ -359,6 +456,12 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
                     return "Perc";
                 case 5:
                     return "Days";
+                case 6:
+                    return "wtd Sharpe";
+                case 7:
+                    return "Wtd perc";
+                case 8:
+                    return "Wtd days";
                 default:
                     return "";
             }
@@ -373,15 +476,23 @@ public class HistHKStocks extends JPanel implements HistoricalHandler {
                 case 0:
                     return name;
                 case 1:
-                    return HKResultMap.get(name).getMean();
+                    return HKResultMapYtd.get(name).getMean();
                 case 2:
-                    return HKResultMap.get(name).getSd();
+                    return HKResultMapYtd.get(name).getSd();
                 case 3:
-                    return HKResultMap.get(name).getSr();
+                    return HKResultMapYtd.get(name).getSr();
                 case 4:
-                    return HKResultMap.get(name).getPerc();
+                    return HKResultMapYtd.get(name).getPerc();
                 case 5:
-                    return HKALL.get(name).size();
+                    return hkYtdAll.get(name).size();
+                case 6:
+                    return HKResultMapWtd.get(name).getSr();
+                case 7:
+                    return HKResultMapWtd.get(name).getPerc();
+                case 8:
+                    return hkWtdAll.get(name).size();
+
+
                 default:
                     return null;
             }

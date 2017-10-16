@@ -1709,8 +1709,8 @@ public class ApiController implements EWrapper {
 //                HistUSStocks.stocksProcessed++;
 //                HistUSStocks.sm.release(1);
 //                System.out.println(" current permit after done " + HistUSStocks.sm.availablePermits());
-//                HistUSStocks.compute(HistUSStocks.idStockMap.get(reqId));
-//                HistUSStocks.refreshAll();
+//                HistUSStocks.computeYtd(HistUSStocks.idStockMap.get(reqId));
+//                HistUSStocks.refreshYtd();
 //            }
 //            return;
 //        }
@@ -1719,7 +1719,7 @@ public class ApiController implements EWrapper {
 //            if (!date.startsWith("finished")) {
 //                //System.out.println(" req id " + reqId + " stock " + HistHKStocks.idStockMap.get(reqId));
 //
-//                HistHKStocks.HKALL.get(HistHKStocks.idStockMap.get(reqId))
+//                HistHKStocks.hkYtdAll.get(HistHKStocks.idStockMap.get(reqId))
 //                        .put(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")),
 //                                new SimpleBar(open, high, low, close));
 //                if (HistHKStocks.idStockMap.get(reqId).equals("700")) {
@@ -1731,8 +1731,8 @@ public class ApiController implements EWrapper {
 //                HistHKStocks.stocksProcessed++;
 //                HistHKStocks.sm.release(1);
 //                System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
-//                HistHKStocks.compute(HistHKStocks.idStockMap.get(reqId));
-//                HistHKStocks.refreshAll();
+//                HistHKStocks.computeYtd(HistHKStocks.idStockMap.get(reqId));
+//                HistHKStocks.refreshYtd();
 //            }
 //            return;
 //        }

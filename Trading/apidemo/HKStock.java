@@ -69,7 +69,6 @@ public class HKStock extends JPanel {
                 List<String> l = Arrays.asList(line.split("\t"));
                 haMap.put(l.get(0),l.get(1));
             }
-
         } catch(IOException e) {
             e.printStackTrace();
         }
@@ -87,14 +86,12 @@ public class HKStock extends JPanel {
         graph5.fillInGraphHK(hkstock5);
         graph6.fillInGraphHK(hkstock6);
 
-
         JScrollPane gp1 = genNewScrollPane(graph1);
         JScrollPane gp2 = genNewScrollPane(graph2);
         JScrollPane gp3 = genNewScrollPane(graph3);
         JScrollPane gp4 = genNewScrollPane(graph4);
         JScrollPane gp5 = genNewScrollPane(graph5);
         JScrollPane gp6 = genNewScrollPane(graph6);
-
 
         graphPanel.add(gp1);
         graphPanel.add(gp2);
@@ -116,12 +113,10 @@ public class HKStock extends JPanel {
                 graph4.refresh(s-> graph4.fillInGraphHK(s));
                 graph5.refresh(s-> graph5.fillInGraphHK(s));
                 graph6.refresh(s-> graph6.fillInGraphHK(s));
-
             });
         });
 
         controlPanel.add(refreshButton);
-
 
         tab = new JTable(m_model){
             @Override

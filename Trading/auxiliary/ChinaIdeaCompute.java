@@ -1,7 +1,5 @@
 package auxiliary;
 
-import auxiliary.IdeaProcessor;
-
 import java.time.LocalTime;
 
 public class ChinaIdeaCompute implements Runnable {
@@ -15,7 +13,7 @@ public class ChinaIdeaCompute implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("interrupted");
-            System.out.println("Idea compute issue");
+            System.out.println("Idea computeYtd issue");
         }
     }
 }

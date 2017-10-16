@@ -74,7 +74,7 @@ public class SharpeUtility {
      *
      * @param <T>
      * @param mp the map to operate on ( could be bar or double)
-     * @param getDiff takes in two values and compute the return
+     * @param getDiff takes in two values and computeYtd the return
      * @param getClose depending on data type, get the close, either identity or
      * SimpleBar::getClose
      * @param getFirstReturn function to get the first return
@@ -99,7 +99,7 @@ public class SharpeUtility {
     }
 
     public static double computeMinuteSharpeFromMtmDeltaMp(NavigableMap<LocalTime, Double> mtmDeltaMp) {
-        //System.out.println(" compute minute sharpe from mtm mp ");
+        //System.out.println(" computeYtd minute sharpe from mtm mp ");
         NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
         retMap = genReturnMap(mtmDeltaMp, (u, v) -> u / v - 1, d -> d, d -> 0.0, LocalTime.of(15,1));
 
@@ -147,12 +147,12 @@ public class SharpeUtility {
             double minuteMean = Utility.computeMean(retMap);
             double minuteSD = Utility.computeSD(retMap);
             if (minuteSD != 0.0) {
-                if(name.equals("700")) {
-                    System.out.println(" name length retmap mean sd "+ name + " "
-                            + mp.size() + " " + minuteMean + " " + minuteSD );
-                    System.out.println(" retmap first 5" + retMap.headMap(LocalTime.of(9,35)));
-                    System.out.println(" retmap last 5" + retMap.tailMap(LocalTime.of(15,55)));
-                }
+//                if(name.equals("700")) {
+//                    System.out.println(" name length retmap mean sd "+ name + " "
+//                            + mp.size() + " " + minuteMean + " " + minuteSD );
+//                    System.out.println(" retmap first 5" + retMap.headMap(LocalTime.of(9,35)));
+//                    System.out.println(" retmap last 5" + retMap.tailMap(LocalTime.of(15,55)));
+//                }
                 //System.out.println(" mean is " + (minuteMean * 240) + " minute sd " + (minuteSD * Math.sqrt(240)));
                 return (minuteMean * 240) / (minuteSD * Math.sqrt(240));
             }

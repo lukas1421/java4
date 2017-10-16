@@ -4,31 +4,18 @@ import apidemo.ChinaStock;
 import graph.Graph;
 import graph.GraphBar;
 
-import static apidemo.ChinaStockHelper.getRange;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.time.LocalTime;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JViewport;
+
+import static apidemo.ChinaStockHelper.getRange;
 
 final class IdeaProcessorPM extends JPanel {
 
@@ -327,7 +314,7 @@ final class IdeaProcessorPM extends JPanel {
                 ftes = Executors.newScheduledThreadPool(10);
                 ftes.scheduleAtFixedRate(cipc, 0, 10, TimeUnit.SECONDS);
                 ftes.scheduleAtFixedRate(() -> {
-                    System.out.println("compute PM" + LocalTime.now());
+                    System.out.println("computeYtd PM" + LocalTime.now());
                     refreshPage();
                 }, 5, 20, TimeUnit.SECONDS);
             });
@@ -390,7 +377,7 @@ final class IdeaProcessorPM extends JPanel {
 //            String name = e.getKey();
 //            double currPrice = ChinaStock.priceMap.get(name);
 //            e.getValue().keySet().forEach(k -> ideaReturn.get(name).put(k,Math.log(currPrice/ChinaData.priceMap.get(name).get(k))));
-//            ideaCorrectRate.compute(name, (k,v) ->  (double)numberIdeas.get(name).get()/ideaReturn.get(name).values().stream().filter(d->d>0.0).count());
+//            ideaCorrectRate.computeYtd(name, (k,v) ->  (double)numberIdeas.get(name).get()/ideaReturn.get(name).values().stream().filter(d->d>0.0).count());
 //        });
 //    }
     public static void chooseGraphs() {
