@@ -27,7 +27,6 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
 
     public static volatile ConcurrentHashMap<String, Double> hkPreviousCloseMap = new ConcurrentHashMap<>();
 
-
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> hkVolMap
             = new ConcurrentHashMap<>();
 

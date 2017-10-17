@@ -1,16 +1,9 @@
 package apidemo;
 
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaData.priceMapBarYtd;
-import static utility.Utility.AM914T;
-
 import auxiliary.AnaCompute;
 import auxiliary.Analysis;
 import auxiliary.Dividends;
 import auxiliary.StratCompute;
-import graph.GraphIndustry;
-import historical.Request;
-import util.VerticalPanel;
 import client.ExecutionFilter;
 import client.Types.NewsType;
 import controller.ApiConnection.ILogger;
@@ -18,41 +11,30 @@ import controller.ApiConnection.ILogger.DefaultLogger;
 import controller.ApiController;
 import controller.ApiController.IConnectionHandler;
 import controller.Formats;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Rectangle;
+import graph.GraphIndustry;
+import historical.Request;
+import util.*;
+import util.IConnectionConfiguration.DefaultConnectionConfiguration;
+import utility.Utility;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.time.LocalTime;
-//import java.time.temporal.ChronoUnit;
-//import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.border.EmptyBorder;
-import util.HtmlButton;
-import util.IConnectionConfiguration;
-import util.IConnectionConfiguration.DefaultConnectionConfiguration;
-import util.NewLookAndFeel;
-import util.NewTabbedPanel;
-import utility.Utility;
+import java.util.concurrent.*;
+
+import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaData.priceMapBarYtd;
+import static utility.Utility.AM914T;
+
+//import java.time.temporal.ChronoUnit;
+//import java.time.temporal.TemporalUnit;
 
 public final class ChinaMain implements IConnectionHandler {
 
@@ -98,6 +80,7 @@ public final class ChinaMain implements IConnectionHandler {
     public static final String GLOBALPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";
     public static final String GLOBALA50EXPIRY = "20171030";
     public static final int GLOBALWIDTH = 1900;
+    public static volatile double CNHHKD = 1.18;
     final static int PORT_IBAPI = 4001;
     final static int PORT_NORMAL = 7496;
     //private final Data data = new Data();
@@ -282,6 +265,7 @@ public final class ChinaMain implements IConnectionHandler {
                 if (LocalTime.now().isAfter(AM914T) && LocalTime.now().isBefore(LocalTime.of(15, 15))) {
                     XU.saveHibXU();
                     ChinaData.withHibernate();
+                    ChinaData.saveChinaOHLC();
                     ChinaData.outputPrices();
                     ChinaData.outputRecentTradingDate();
                 }

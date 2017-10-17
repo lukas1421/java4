@@ -287,7 +287,7 @@ public class HKStock extends JPanel {
 
     static double getHPremiumOverA(String name) {
         double currentHKPrice = hkCurrPrice.getOrDefault(name, 0.0);
-        double currentAPrice = getASharePrice(name)*1.2;
+        double currentAPrice = getASharePrice(name)*ChinaMain.CNHHKD;
 
         if(currentHKPrice != 0.0 && currentAPrice!= 0.0) {
             return Math.round(1000d * (currentHKPrice / currentAPrice-1)) / 10d;
