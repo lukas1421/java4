@@ -1,53 +1,34 @@
 package historical;
 
 import apidemo.ChinaMain;
-import utility.SharpeUtility;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
 import handler.HistoricalHandler;
+import utility.SharpeUtility;
 import utility.Utility;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
+import java.awt.*;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableRowSorter;
 
 public class HistUSStocks extends JPanel implements HistoricalHandler {
 
@@ -231,10 +212,10 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
         System.out.println(" computing starts ");
         USALL.keySet().forEach(k -> {
             NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(USALL.get(k),
-                    t -> t.isAfter(LocalDate.of(2016, Month.DECEMBER, 31)));
+                    LocalDate.of(2016, Month.DECEMBER, 31));
             double mean = SharpeUtility.getMean(ret);
             double sd = SharpeUtility.getSD(ret);
-            double sr = SharpeUtility.getSharpe(ret);
+            double sr = SharpeUtility.getSharpe(ret, 252);
             double perc = SharpeUtility.getPercentile(USALL.get(k));
             System.out.println(Utility.getStrTabbed(" stock mean sd sr ", k, mean, sd, sr));
         });
@@ -242,10 +223,10 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
 
     public static void compute(String stock) {
         NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(USALL.get(stock),
-                t -> t.isAfter(LocalDate.of(2016, Month.DECEMBER, 31)));
+                LocalDate.of(2016, Month.DECEMBER, 31));
         double mean = SharpeUtility.getMean(ret);
         double sd = SharpeUtility.getSD(ret);
-        double sr = SharpeUtility.getSharpe(ret);
+        double sr = SharpeUtility.getSharpe(ret,252);
         double perc = SharpeUtility.getPercentile(USALL.get(stock));
         USResultMap.get(stock).fillResult(mean, sd, sr, perc);
         System.out.println(Utility.getStrTabbed(" stock mean sd sr perc", stock, mean, sd, sr, perc));

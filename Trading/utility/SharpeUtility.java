@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 import java.util.function.DoubleBinaryOperator;
-import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 
 public class SharpeUtility {
@@ -23,16 +22,18 @@ public class SharpeUtility {
     }
 
     public static <T extends Temporal> NavigableMap<T, Double>
-    getReturnSeries(NavigableMap<T, SimpleBar> in, Predicate<T> fil) {
+    getReturnSeries(NavigableMap<T, SimpleBar> in, T startPoint) {
 
+        NavigableMap<T,SimpleBar> inSub = in.tailMap(startPoint,true);
         NavigableMap<T, Double> res = new TreeMap<>();
+
         if (in.size() > 0) {
-            T firstKey = in.keySet().stream().filter(fil).findFirst().get();
-            in.keySet().stream().filter(fil).forEach(t -> {
+            T firstKey = inSub.keySet().stream().findFirst().get();
+            inSub.keySet().stream().forEach(t -> {
                 if (t.equals(firstKey)) {
-                    res.put(t, in.get(t).getBarReturn());
+                    res.put(t, inSub.get(t).getBarReturn());
                 } else {
-                    res.put(t, in.get(t).getClose() / in.lowerEntry(t).getValue().getClose() - 1);
+                    res.put(t, inSub.get(t).getClose() / inSub.lowerEntry(t).getValue().getClose() - 1);
                 }
             });
             //res.entrySet().forEach(System.out::println);
@@ -53,10 +54,10 @@ public class SharpeUtility {
         return count == 0 ? 0 : Math.sqrt(mp.entrySet().stream().mapToDouble(Map.Entry::getValue).map(v -> Math.pow(v - mean, 2)).sum() / (count - 1));
     }
 
-    public static double getSharpe(NavigableMap<? extends Temporal, Double> mp) {
+    public static double getSharpe(NavigableMap<? extends Temporal, Double> mp, double annuFactor) {
         double mean = getMean(mp);
         double sd = getSD(mp);
-        return mp.size() == 0 ? 0 : mean / sd * Math.sqrt(252);
+        return mp.size() == 0 ? 0 : mean / sd * Math.sqrt(annuFactor);
     }
 
     public static int getPercentile(NavigableMap<? extends Temporal, SimpleBar> mp) {

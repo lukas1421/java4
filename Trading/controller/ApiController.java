@@ -1613,9 +1613,9 @@ public class ApiController implements EWrapper {
 
         ChinaMain.globalRequestMap.put(reqId, new Request(contract, hh));
 
-        System.out.println(" getting historical data simple US HK");
+        //System.out.println(" getting historical data simple US HK");
         //System.out.println(" contract " + contract);
-        System.out.println(" req id is" + reqId);
+        //System.out.println(" req id is" + reqId);
         String durationStr = duration + " " + durationUnit.toString().charAt(0);
         m_client.reqHistoricalData(reqId, contract, endDateTime, durationStr,
                 barSize.toString(), whatToShow.toString(), rthOnly ? 1 : 0, 2, Collections.<TagValue>emptyList());
