@@ -647,7 +647,7 @@ public final class ChinaStockHelper {
                 //return mp.get(e.getKey()).ceilingEntry(t).getValue().getClose()/closeMp.getOrDefault(e.getKey(),0.0)-1)*e.getValue()/100;
             }));
 
-            System.out.println(" RETURN " + t.toString() + " " + rtn);
+            //System.out.println(" RETURN " + t.toString() + " " + rtn);
             if (t.isBefore(LocalTime.of(9, 30))) {
                 mp.get("FTSEA50").put(t, new SimpleBar(open));
             } else if (t.equals(LocalTime.of(9, 30))) {

@@ -734,7 +734,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         int costCol = 0;
         int stockCodeCol = 10;
 
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "openPositionMargin.txt"), "gbk"))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader
+                (new FileInputStream(ChinaMain.GLOBALPATH + "openPositionMargin.txt"), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
                 dataList = Arrays.asList(line.split("\\s+"));
                 System.out.println(Arrays.asList(line.split("\\s+")));
@@ -750,8 +751,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     System.out.println(" today sold col " + todaySoldCol);
                 }
 
-                if (dataList.size() > stockCodeCol && (nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol))
+                if (dataList.size() > stockCodeCol && (
+                        nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol))
                         || dataList.get(chineseNameCol).startsWith("XD"))) {
+
                     //System.out.println( " name " + addSHSZ(dataList.get(stockCodeCol)));
                     String nam = Utility.addSHSZ(dataList.get(stockCodeCol));
                     System.out.println(" nam " + nam);

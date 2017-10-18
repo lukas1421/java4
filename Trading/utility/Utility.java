@@ -367,7 +367,7 @@ public class Utility {
         System.out.println(" date is " + dateString);
 
         symbolNames.forEach(e -> {
-            System.out.println(" date stock " + dateString + " " + e);
+            //System.out.println(" date stock " + dateString + " " + e);
             boolean found = false;
             String name = (e.substring(0, 2).toUpperCase() + "#" + e.substring(2) + ".txt");
             String line;
