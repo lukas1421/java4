@@ -610,8 +610,8 @@ public final class ChinaStockHelper {
         LocalTime maxT = priceMapBar.get("FTSEA50").entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getKey).orElse(LocalTime.MAX);
         LocalTime minT = priceMapBar.get("FTSEA50").entrySet().stream().min(Utility.BAR_LOW).map(Entry::getKey).orElse(LocalTime.MAX);
 
-        System.out.println("a50 max" + max + " " + maxT);
-        System.out.println("a50 min" + min + " " + minT);
+        //System.out.println("a50 max" + max + " " + maxT);
+        //System.out.println("a50 min" + min + " " + minT);
 
         maxMap.put("FTSEA50", max);
         minMap.put("FTSEA50", min);
