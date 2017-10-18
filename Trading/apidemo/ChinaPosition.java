@@ -1210,7 +1210,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     static double getTodayTotalPnl(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
-        return Math.round(100d * fx * (getMtmPnl(name) + getBuyTradePnl(name) + getSellTradePnl(name))) / 100d;
+        return Math.round(100d *(getMtmPnl(name) + getBuyTradePnl(name) + getSellTradePnl(name))) / 100d;
     }
 
     //todo
