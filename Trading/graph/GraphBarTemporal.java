@@ -5,6 +5,7 @@ import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDate;
 import java.time.temporal.Temporal;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 public class GraphBarTemporal<T extends Temporal> extends JComponent implements GraphFillable{
 
 
-    static final int WIDTH_BAR = 3;
+    static final int WIDTH_BAR = 4;
     int height;
     double min;
     double max;
@@ -41,7 +42,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     int wtdP;
 
     public GraphBarTemporal(NavigableMap<T, SimpleBar> tm1) {
-        this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+        this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                 (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
     }
 
@@ -61,7 +63,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
                         ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
-        System.out.println(" mainMap in set navigable map is " + mainMap);
+        //System.out.println(" mainMap in set navigable map is " + mainMap);
     }
 
     public NavigableMap<T, SimpleBar> getNavigableMap() {
@@ -101,8 +103,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         //setChineseName(HKStock.hkNameMap.getOrDefault(name,""));
 
         if (mp.containsKey(name) && mp.get(name).size() > 0) {
-            System.out.println(" in graph bar temporal setting " + name);
-            System.out.println(mp.get(name));
+            //System.out.println(" in graph bar temporal setting " + name);
+            //System.out.println(mp.get(name));
             this.setNavigableMap(mp.get(name));
         } else {
             this.setNavigableMap(new ConcurrentSkipListMap<>());
@@ -127,7 +129,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     @Override
     protected void paintComponent(Graphics g) {
 
-        System.out.println(" drawing graph mainMap is " + mainMap);
+        //System.out.println(" drawing graph mainMap is " + mainMap);
 
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
@@ -161,14 +163,14 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
             g.drawLine(x + 1, highY, x + 1, lowY);
 
             g.setColor(Color.black);
-//            if (lt.equals(mainMap.firstKey())) {
-//                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
-//            } else {
-//                if (lt.getMinute() == 0 || (lt.getHour() != 9 && lt.getHour() != 11
-//                        && lt.getMinute() == 30)) {
-//                    g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
-//                }
-//            }
+
+            if (lt.equals(mainMap.firstKey())) {
+                g.drawString(lt.toString(), x, getHeight() - 40);
+            } else if (lt.equals(mainMap.lastKey())) {
+                g.drawString(lt.toString(), x, getHeight() - 40);
+            }
+
+
             x += WIDTH_BAR;
         }
 
@@ -176,10 +178,10 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.5F));
         g2.setStroke(BS3);
 
-        g2.drawString(Double.toString(minRtn) + "%", getWidth() - 40, getHeight() - 33);
-        g2.drawString(Double.toString(maxRtn) + "%", getWidth() - 40, 15);
+        g2.drawString(Double.toString(max), getWidth() - 40, getHeight() - 33);
+        g2.drawString(Double.toString(min), getWidth() - 40, 15);
         //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2);
-        g2.drawString("周" + Integer.toString(wtdP), getWidth() - 40, getHeight() / 2);
+        //g2.drawString("周" + Integer.toString(wtdP), getWidth() - 40, getHeight() / 2);
 
         if (!Optional.ofNullable(name).orElse("").equals("")) {
             g2.drawString(name, 5, 15);

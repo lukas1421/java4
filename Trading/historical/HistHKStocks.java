@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -34,17 +35,16 @@ import java.util.stream.Collectors;
 public class HistHKStocks extends JPanel {
 
     static final String CUTOFFTIME = getDataCutoff();
-    static final int DAYSTOREQUESTYTD = (int) ChronoUnit.DAYS.between(
-            LocalDate.of(LocalDate.now().getYear() - 1, Month.DECEMBER, 31), LocalDate.now()) + 1;
+    static final int DAYSTOREQUESTYTD = (int) Math.round(ChronoUnit.DAYS.between(
+            LocalDate.of(LocalDate.now().getYear() - 1, Month.DECEMBER, 31), LocalDate.now())*252/365);
 
     static final int DAYSTOREQUESTWTD = (int) ChronoUnit.DAYS.between(
             getMondayOfWeek(LocalDateTime.now()), LocalDate.now()) + 1;
 
 
     //public static volatile long totalBeingProcessed = 0;
-    static volatile long requestCounter = 0L;
-    public static volatile long stocksProcessedYtd = 0;
-    public static volatile long stocksProcessedWtd = 0;
+    public static volatile AtomicLong stocksProcessedYtd = new AtomicLong(0);
+    public static volatile AtomicLong stocksProcessedWtd = new AtomicLong(0);
 
     public static volatile Semaphore sm = new Semaphore(50);
 
@@ -146,8 +146,8 @@ public class HistHKStocks extends JPanel {
                         //System.out.println(" selected stock in monitor is " + selectedStock);
                         comp.setBackground(Color.GREEN);
                         graphYtd.fillInGraphHKGen(selectedStock, hkYtdAll);
+                        graphWtd.fillInGraphHKGen(selectedStock, hkWtdAll);
                         graphPanel.repaint();
-                        //graphWtd.fillInGraphHKGen(selectedStock, hkWtdAll);
                     } else {
                         comp.setBackground((indexRow % 2 == 0) ? Color.lightGray : Color.white);
                     }
@@ -184,10 +184,12 @@ public class HistHKStocks extends JPanel {
         JButton outputWtdButton = new JButton("OutputW");
 
         getYtdButton.addActionListener(al -> {
+            sm = new Semaphore(50);
             requestAllHKStocksYtd();
         });
 
         getWtdButton.addActionListener(al->{
+            sm = new Semaphore(50);
             requestAllHKStocksWtd();
         });
 
@@ -251,14 +253,14 @@ public class HistHKStocks extends JPanel {
     }
 
     void requestAllHKStocksYtd() {
-        stocksProcessedYtd = 0;
+        stocksProcessedYtd = new AtomicLong(0);
         MorningTask.clearFile(HistHKStocks.outputYtd);
         hkYtdAll.keySet().forEach(k -> request1StockYtd(k));
         //request1StockYtd("700");
     }
 
     void requestAllHKStocksWtd() {
-        stocksProcessedWtd = 0;
+        stocksProcessedWtd = new AtomicLong(0);
         MorningTask.clearFile(HistHKStocks.outputWtd);
         hkWtdAll.keySet().forEach(k -> request1StockWtd(k));
         //request1StockWtd("700");
@@ -275,30 +277,31 @@ public class HistHKStocks extends JPanel {
     }
 
     public static void refreshYtd() {
-        totalStocksLabelYtd.setText(Long.toString(stocksProcessedYtd) + "/" + Long.toString(hkYtdAll.size()));
-        System.out.println(" refreshing YTD ");
+        totalStocksLabelYtd.setText(Long.toString(stocksProcessedYtd.get()) + "/" + Long.toString(hkYtdAll.size()));
+        //System.out.println(" refreshing YTD ");
         //m_model.fireTableDataChanged();
     }
 
     public static void refreshWtd() {
-        totalStocksLabelWtd.setText(Long.toString(stocksProcessedWtd) + "/" + Long.toString(hkWtdAll.size()));
-        System.out.println(" refreshing WTD ");
+        totalStocksLabelWtd.setText(Long.toString(stocksProcessedWtd.get()) + "/" + Long.toString(hkWtdAll.size()));
+        //System.out.println(" refreshing WTD ");
         //m_model.fireTableDataChanged();
     }
 
     void request1StockYtd(String stock) {
         CompletableFuture.runAsync(() -> {
-            System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
-            System.out.println(" available " + sm.availablePermits());
-            System.out.println(" queue length is " + sm.getQueueLength());
+            //System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
+            //System.out.println(" available " + sm.availablePermits());
+            //System.out.println(" queue length is " + sm.getQueueLength());
 
             try {
-                System.out.println(" permits before " + sm.availablePermits());
+                //System.out.println(" permits before " + sm.availablePermits());
                 sm.acquire();
                 //System.out.println(" unique id " + uniqueID.get() + " stock " + idStockMap.get(uniqueID.get()));
                 //System.out.println(" cut off time " + cutoffTime + " days to request " + daysToRequest);
                 System.out.println(" stock is " + stock);
                 //idStockMap.put(uniqueID.incrementAndGet(), stock);
+                System.out.println(" days requested  " + DAYSTOREQUESTYTD);
                 apcon.reqHistoricalDataUSHK(new YtdDataHandler(), uniqueID.incrementAndGet(), generateHKContract(stock), CUTOFFTIME,
                         DAYSTOREQUESTYTD, Types.DurationUnit.DAY,
                         Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
@@ -311,11 +314,11 @@ public class HistHKStocks extends JPanel {
     void request1StockWtd(String stock) {
         CompletableFuture.runAsync(() -> {
             //System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
-            System.out.println(" available " + sm.availablePermits());
-            System.out.println(" queue length is " + sm.getQueueLength());
+            //System.out.println(" available " + sm.availablePermits());
+            //System.out.println(" queue length is " + sm.getQueueLength());
 
             try {
-                System.out.println(" permits before " + sm.availablePermits());
+                //System.out.println(" permits before " + sm.availablePermits());
                 sm.acquire();
                 //System.out.println(" unique id " + uniqueID.get() + " stock " + idStockMap.get(uniqueID.get()));
                 //System.out.println(" cut off time " + cutoffTime + " days to request " + daysToRequest);
@@ -324,7 +327,7 @@ public class HistHKStocks extends JPanel {
                 apcon.reqHistoricalDataUSHK(new WtdDataHandler()
                         , uniqueID.incrementAndGet(), generateHKContract(stock), CUTOFFTIME,
                         DAYSTOREQUESTWTD, Types.DurationUnit.DAY,
-                        Types.BarSize._1_min, Types.WhatToShow.TRADES, true);
+                        Types.BarSize._5_mins, Types.WhatToShow.TRADES, true);
             } catch (InterruptedException ex) {
                 Logger.getLogger(HistHKStocks.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -390,7 +393,7 @@ public class HistHKStocks extends JPanel {
                 LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1),LocalTime.MIN));
         double mean = SharpeUtility.getMean(ret);
         double sd = SharpeUtility.getSD(ret);
-        double sr = SharpeUtility.getSharpe(ret,240);
+        double sr = SharpeUtility.getSharpe(ret,48);
         double perc = SharpeUtility.getPercentile(hkWtdAll.get(stock));
         HKResultMapWtd.get(stock).fillResult(mean, sd, sr, perc);
         System.out.println(Utility.getStrTabbed(" wtd stock mean sd sr perc size firstEntry last Entry",
@@ -414,7 +417,7 @@ public class HistHKStocks extends JPanel {
 
         @Override
         public void actionUponFinish(String name) {
-            stocksProcessedYtd++;
+            stocksProcessedYtd.incrementAndGet();
             sm.release(1);
             System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
             computeYtd(name);
@@ -450,9 +453,9 @@ public class HistHKStocks extends JPanel {
 
         @Override
         public void actionUponFinish(String name) {
-            stocksProcessedWtd++;
+            stocksProcessedWtd.incrementAndGet();
             sm.release(1);
-            System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
+            //System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
             computeWtd(name);
             refreshWtd();
 
