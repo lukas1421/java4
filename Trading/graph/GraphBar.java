@@ -11,6 +11,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -135,6 +137,19 @@ public final class GraphBar extends JComponent implements GraphFillable {
             this.setNavigableMap(new ConcurrentSkipListMap<>());
         }
     }
+
+//    public void fillInGraphHKGen(String name, Map<String, NavigableMap<? extends  Temporal, SimpleBar>> mp) {
+//        //System.out.println(" filling HK " + name);
+//        this.name = name;
+//        setName(name);
+//        //setChineseName(HKStock.hkNameMap.getOrDefault(name,""));
+//
+//        if (mp.containsKey(name) && mp.get(name).size()>0) {
+//            this.setNavigableMap(mp.get(name));
+//        } else {
+//            this.setNavigableMap(new ConcurrentSkipListMap<>());
+//        }
+//    }
 
     @Override
     public void refresh() {

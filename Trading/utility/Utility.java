@@ -18,10 +18,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.function.BiPredicate;
-import java.util.function.DoubleBinaryOperator;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.function.*;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
@@ -154,11 +151,24 @@ public class Utility {
         return b.toString();
     }
 
-    public static double getMin(NavigableMap<LocalTime, Double> tm) {
+
+
+    public static <T> double  getMin(NavigableMap<T, Double> tm) {
         return (tm != null && tm.size() > 2) ? tm.entrySet().stream().min(Map.Entry.comparingByValue()).map(Map.Entry::getValue).orElse(0.0) : 0.0;
     }
 
-    public static double getMax(NavigableMap<LocalTime, Double> tm) {
+    public static <T,S> double  getMinGen(NavigableMap<T, S> tm, ToDoubleFunction<S> func) {
+        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().min((e1,e2)->func.applyAsDouble(e1.getValue())>=func.applyAsDouble(e2.getValue())?1:-1
+        ).map(Map.Entry::getValue).map(sb->func.applyAsDouble(sb)).orElse(0.0) : 0.0;
+    }
+
+    public static <T,S> double  getMaxGen(NavigableMap<T, S> tm, ToDoubleFunction<S> func) {
+        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().max((e1,e2)->func.applyAsDouble(e1.getValue())>=func.applyAsDouble(e2.getValue())?1:-1
+        ).map(Map.Entry::getValue).map(sb-> func.applyAsDouble(sb)).orElse(0.0):0.0;
+                //.flatMap(e->Optional.of(func.applyAsDouble(e))).orElse(0.0) : 0.0;
+    }
+
+    public static  <T> double getMax(NavigableMap<T, Double> tm) {
         return (tm != null && tm.size() > 2) ? tm.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getValue).orElse(0.0) : 0.0;
     }
 
@@ -167,7 +177,7 @@ public class Utility {
                 / tm.entrySet().stream().findFirst().map(Map.Entry::getValue).orElse(0.0) - 1) * 1000d) / 10d : 0.0;
     }
 
-    public static double getLast(NavigableMap<LocalTime, Double> tm) {
+    public static <T> double getLast(NavigableMap<T, Double> tm) {
         return tm.size() > 0 ? Math.round(100d * tm.lastEntry().getValue()) / 100d : 0.0;
     }
 
@@ -231,8 +241,13 @@ public class Utility {
         return res;
     }
 
-    public static double getRtn(NavigableMap<LocalTime, Double> tm1) {
+    public static <T> double getRtn(NavigableMap<T, Double> tm1) {
         return tm1.size() > 0 ? round(log(tm1.lastEntry().getValue() / tm1.firstEntry().getValue()) * 1000d) / 10d : 0.0;
+    }
+
+    public static <T,S> double getRtn(NavigableMap<T, S> tm1, ToDoubleFunction<S> func) {
+        return tm1.size() > 0 ? round((func.applyAsDouble(tm1.lastEntry().getValue()) /
+                func.applyAsDouble(tm1.firstEntry().getValue())-1) * 1000d) / 10d : 0.0;
     }
 
     public static void fixNavigableMap(String name, NavigableMap<LocalTime, SimpleBar> nm) {
@@ -278,7 +293,8 @@ public class Utility {
         CompletableFuture.supplyAsync(()
                 -> mp.entrySet().stream().filter(GraphIndustry.NO_GC)
                         .collect(groupingBy(e -> ChinaStock.industryNameMap.get(e.getKey()),
-                                mapping(e -> e.getValue(), Collectors.collectingAndThen(toList(), e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(GraphIndustry.TRADING_HOURS))
+                                mapping(e -> e.getValue(), Collectors.collectingAndThen(toList(),
+                                        e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(GraphIndustry.TRADING_HOURS))
                                 .collect(groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, summingDouble(e1 -> e1.getValue()))))))))
                 .thenAccept(m -> m.keySet().forEach(s -> {
             mp.put(s, (T) m.get(s));

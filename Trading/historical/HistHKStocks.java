@@ -7,6 +7,8 @@ import client.Contract;
 import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
+import graph.GraphBar;
+import graph.GraphBarTemporal;
 import handler.HistoricalHandler;
 import utility.SharpeUtility;
 import utility.Utility;
@@ -67,12 +69,17 @@ public class HistHKStocks extends JPanel {
 
     static volatile AtomicInteger uniqueID = new AtomicInteger(70000);
 
+    static volatile String selectedStock = "";
+
     //public static volatile Map<Integer, String> idStockMap = new HashMap<>();
 
     static BarModel_HK m_model;
     static JTable tab;
     int modelRow;
     int indexRow;
+    static JPanel graphPanel;
+    GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
+    GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
     static TableRowSorter<BarModel_HK> sorter;
 
     public static JLabel totalStocksLabelYtd = new JLabel("Total Ytd");
@@ -98,6 +105,35 @@ public class HistHKStocks extends JPanel {
         System.out.println(" hk name list " + hkNameList);
 
         m_model = new BarModel_HK();
+        graphPanel = new JPanel();
+
+        JScrollPane jp1 = new JScrollPane(){
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 250;
+                d.width = 1900;
+                return d;
+            }
+        };
+
+        JScrollPane jp2 = new JScrollPane(){
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 250;
+                d.width = 1900;
+                return d;
+            }
+        };
+        jp1.add(graphYtd);
+        jp2.add(graphWtd);
+        graphPanel.setLayout(new GridLayout(2,1));
+        graphPanel.add(jp1);
+        graphPanel.add(jp2);
+
+
+
 
         tab = new JTable(m_model) {
             @Override
@@ -106,7 +142,11 @@ public class HistHKStocks extends JPanel {
                     Component comp = super.prepareRenderer(renderer, indexRow, indexCol);
                     if (isCellSelected(indexRow, indexCol)) {
                         modelRow = this.convertRowIndexToModel(indexRow);
+                        selectedStock = hkNameList.get(modelRow);
+                        //System.out.println(" selected stock in monitor is " + selectedStock);
                         comp.setBackground(Color.GREEN);
+                        graphYtd.fillInGraphHKGen(selectedStock, hkYtdAll);
+                        graphWtd.fillInGraphHKGen(selectedStock, hkWtdAll);
                     } else {
                         comp.setBackground((indexRow % 2 == 0) ? Color.lightGray : Color.white);
                     }
@@ -122,7 +162,7 @@ public class HistHKStocks extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = 1000;
+                //d.height = 1000;
                 d.width =1000;
                 return d;
             }
@@ -139,6 +179,8 @@ public class HistHKStocks extends JPanel {
 
         JButton getYtdButton = new JButton("Ytd");
         JButton getWtdButton = new JButton("Wtd");
+        JButton outputYtdButton = new JButton("OutputY");
+        JButton outputWtdButton = new JButton("OutputW");
 
         getYtdButton.addActionListener(al -> {
             requestAllHKStocksYtd();
@@ -146,6 +188,34 @@ public class HistHKStocks extends JPanel {
 
         getWtdButton.addActionListener(al->{
             requestAllHKStocksWtd();
+        });
+
+        outputYtdButton.addActionListener(al->{
+            if(hkYtdAll.containsKey(selectedStock)) {
+                MorningTask.clearFile(testOutput);
+                hkYtdAll.get(selectedStock).entrySet().forEach(e->
+                        MorningTask.simpleWriteToFile(
+                                Utility.getStrTabbed(e.getKey(),e.getValue().getOpen(),e.getValue().getHigh()
+                                        ,e.getValue().getLow()
+                                        ,e.getValue().getClose()), true,testOutput));
+            } else {
+                System.out.println(" cannot find stock for outtputting ytd " + selectedStock);
+            }
+
+
+        });
+
+        outputWtdButton.addActionListener(al-> {
+            if(hkWtdAll.containsKey(selectedStock)) {
+                MorningTask.clearFile(testOutput);
+                hkWtdAll.get(selectedStock).entrySet().forEach(e ->
+                        MorningTask.simpleWriteToFile(
+                                Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
+                                        , e.getValue().getLow()
+                                        , e.getValue().getClose()), true, testOutput));
+            } else {
+                System.out.println(" cannot find stock for outputting wtd " + selectedStock);
+            }
         });
 
         JButton refreshButton = new JButton("Refresh");
@@ -160,6 +230,8 @@ public class HistHKStocks extends JPanel {
         controlPanel.add(refreshButton);
         controlPanel.add(getYtdButton);
         controlPanel.add(getWtdButton);
+        controlPanel.add(outputYtdButton);
+        controlPanel.add(outputWtdButton);
 
         totalStocksLabelYtd.setFont(totalStocksLabelYtd.getFont().deriveFont(30L));
         controlPanel.add(totalStocksLabelYtd);
@@ -170,6 +242,7 @@ public class HistHKStocks extends JPanel {
         setLayout(new BorderLayout());
         add(controlPanel, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
+        add(graphPanel,BorderLayout.SOUTH);
 
         tab.setAutoCreateRowSorter(true);
         sorter = (TableRowSorter<BarModel_HK>) tab.getRowSorter();
@@ -203,13 +276,13 @@ public class HistHKStocks extends JPanel {
     public static void refreshYtd() {
         totalStocksLabelYtd.setText(Long.toString(stocksProcessedYtd) + "/" + Long.toString(hkYtdAll.size()));
         System.out.println(" refreshing YTD ");
-        m_model.fireTableDataChanged();
+        //m_model.fireTableDataChanged();
     }
 
     public static void refreshWtd() {
         totalStocksLabelWtd.setText(Long.toString(stocksProcessedWtd) + "/" + Long.toString(hkWtdAll.size()));
         System.out.println(" refreshing WTD ");
-        m_model.fireTableDataChanged();
+        //m_model.fireTableDataChanged();
     }
 
     void request1StockYtd(String stock) {
@@ -479,21 +552,25 @@ public class HistHKStocks extends JPanel {
                 case 0:
                     return "name";
                 case 1:
-                    return "mean";
+                    return "meanY";
                 case 2:
-                    return "sd";
+                    return "sdY";
                 case 3:
-                    return "Sharpe";
+                    return "SharpeY";
                 case 4:
-                    return "Perc";
+                    return "PercY";
                 case 5:
-                    return "Days";
+                    return "DaysY";
                 case 6:
-                    return "wtd Sharpe";
+                    return "meanW";
                 case 7:
-                    return "Wtd perc";
+                    return "sdW";
                 case 8:
-                    return "Wtd days";
+                    return "sharpeW";
+                case 9:
+                    return "percW";
+                case 10:
+                    return "DaysW";
                 default:
                     return "";
             }
@@ -517,11 +594,16 @@ public class HistHKStocks extends JPanel {
                     return HKResultMapYtd.get(name).getPerc();
                 case 5:
                     return hkYtdAll.get(name).size();
+
                 case 6:
-                    return HKResultMapWtd.get(name).getSr();
+                    return HKResultMapWtd.get(name).getMean();
                 case 7:
-                    return HKResultMapWtd.get(name).getPerc();
+                    return HKResultMapWtd.get(name).getSd();
                 case 8:
+                    return HKResultMapWtd.get(name).getSr();
+                case 9:
+                    return HKResultMapWtd.get(name).getPerc();
+                case 10:
                     return hkWtdAll.get(name).size();
 
 
