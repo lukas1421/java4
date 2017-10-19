@@ -47,7 +47,7 @@ public class GraphChinaFut extends JComponent {
 
     GraphChinaFut(TreeMap<LocalTime, Double> tm) {
         //m_rows = rows;
-        // this.tm= tm;
+        // this.mainMap= mainMap;
     }
 
     @Override
@@ -62,7 +62,7 @@ public class GraphChinaFut extends JComponent {
         //maxAMT = LocalTime.of(9, 30);
         // minAMT = LocalTime.of(9,30);
         //m_rows = rows;
-        // this.tm = new TreeMap<LocalTime, Double>();
+        // this.mainMap = new TreeMap<LocalTime, Double>();
     }
 
     public GraphChinaFut(String s) {
@@ -267,7 +267,7 @@ public class GraphChinaFut extends JComponent {
         // draw price line
         //g.setColor( Color.black);
         //int y = getY( m_current);
-        //g.drawLine( 0, y, tm.size() * width, y);
+        //g.drawLine( 0, y, mainMap.size() * width, y);
     }
 
     /**

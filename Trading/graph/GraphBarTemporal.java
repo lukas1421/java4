@@ -28,7 +28,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     int openY;
     int last = 0;
     double rtn = 0;
-    NavigableMap<T, SimpleBar> tm;
+    NavigableMap<T, SimpleBar> mainMap;
     String name;
     String chineseName;
     String bench;
@@ -40,8 +40,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
     int wtdP;
 
-    public GraphBarTemporal(NavigableMap<T, SimpleBar> tm) {
-        this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue().containsZero()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+    public GraphBarTemporal(NavigableMap<T, SimpleBar> tm1) {
+        this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                 (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
     }
 
@@ -50,21 +50,22 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         chineseName = "";
         //maxAMT = LocalTime.of(9, 30);
         //minAMT = Utility.AMOPENT;
-        this.tm = new ConcurrentSkipListMap<>();
+        this.mainMap = new ConcurrentSkipListMap<>();
     }
 
     GraphBarTemporal(String s) {
         this.name = s;
     }
 
-    public void setNavigableMap(NavigableMap<T, SimpleBar> tm) {
-        this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue().containsZero())
+    public void setNavigableMap(NavigableMap<T, SimpleBar> tm1) {
+        this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
                         ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
+        System.out.println(" mainMap in set navigable map is " + mainMap);
     }
 
     public NavigableMap<T, SimpleBar> getNavigableMap() {
-        return this.tm;
+        return this.mainMap;
     }
 
     @Override
@@ -95,7 +96,6 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
 
     public void fillInGraphHKGen(String name, Map<String, NavigableMap<T, SimpleBar>> mp) {
-        //System.out.println(" filling HK " + name);
         this.name = name;
         setName(name);
         //setChineseName(HKStock.hkNameMap.getOrDefault(name,""));
@@ -117,7 +117,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
     @Override
     public void refresh() {
-        //fillInGraphHKGen(name, tm);
+        //fillInGraphHKGen(name, mainMap);
     }
 
     public void refresh(Consumer<String> cons){
@@ -127,26 +127,26 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     @Override
     protected void paintComponent(Graphics g) {
 
-        System.out.println(" drawing graph tm is " + tm);
+        System.out.println(" drawing graph mainMap is " + mainMap);
 
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
 
         height = (int) (getHeight() - 70);
-        min = Utility.getMinGen(tm, SimpleBar::getLow);
-        max = Utility.getMaxGen(tm, SimpleBar::getHigh);
+        min = Utility.getMinGen(mainMap, SimpleBar::getLow);
+        max = Utility.getMaxGen(mainMap, SimpleBar::getHigh);
         //minRtn = getMinRtn();
         //maxRtn = getMaxRtn();
         last = 0;
         //rtn = getRtn();
 
         int x = 5;
-        for (T lt : tm.keySet()) {
-            openY = getY(tm.floorEntry(lt).getValue().getOpen());
-            highY = getY(tm.floorEntry(lt).getValue().getHigh());
-            lowY = getY(tm.floorEntry(lt).getValue().getLow());
-            closeY = getY(tm.floorEntry(lt).getValue().getClose());
+        for (T lt : mainMap.keySet()) {
+            openY = getY(mainMap.floorEntry(lt).getValue().getOpen());
+            highY = getY(mainMap.floorEntry(lt).getValue().getHigh());
+            lowY = getY(mainMap.floorEntry(lt).getValue().getLow());
+            closeY = getY(mainMap.floorEntry(lt).getValue().getClose());
 
             if (closeY < openY) {  //close>open
                 g.setColor(new Color(0, 140, 0));
@@ -161,7 +161,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
             g.drawLine(x + 1, highY, x + 1, lowY);
 
             g.setColor(Color.black);
-//            if (lt.equals(tm.firstKey())) {
+//            if (lt.equals(mainMap.firstKey())) {
 //                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
 //            } else {
 //                if (lt.getMinute() == 0 || (lt.getHour() != 9 && lt.getHour() != 11

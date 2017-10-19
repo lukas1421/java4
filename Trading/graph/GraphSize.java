@@ -273,8 +273,8 @@ public class GraphSize extends JComponent implements GraphFillable {
     private double getVRPMFirst10() {
 
         return 0;
-//        return (tm.size() > 0 && tm.lastKey().isAfter(LocalTime.of(13,10)) && tm.firstKey().isBefore(PMOPENT))?
-//                Math.round(1000d*Math.log(tm.get(LocalTime.of(13,10))/tm.ceilingEntry(PMOPENT).getValue()))/10d:0.0;
+//        return (mainMap.size() > 0 && mainMap.lastKey().isAfter(LocalTime.of(13,10)) && mainMap.firstKey().isBefore(PMOPENT))?
+//                Math.round(1000d*Math.log(mainMap.get(LocalTime.of(13,10))/mainMap.ceilingEntry(PMOPENT).getValue()))/10d:0.0;
     }
 
     private LocalTime getAMMinT() {

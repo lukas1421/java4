@@ -75,8 +75,8 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
     static final Comparator<? super Map.Entry<LocalTime, Double>> GREATER = (e1, e2) -> e1.getValue() >= e2.getValue() ? 1 : -1;
     static final Predicate<? super Map.Entry<LocalTime, SimpleBar>> CONTAINS_NO_ZERO = e -> !e.getValue().containsZero();
 
-//    GraphBigYtd(TreeMap<LocalTime, SimpleBar>tm) {
-//        this.tmYtd = tm;
+//    GraphBigYtd(TreeMap<LocalTime, SimpleBar>mainMap) {
+//        this.tmYtd = mainMap;
 //    }
     public GraphBigIndex() {
         name = "";
@@ -740,13 +740,13 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
 //            }
 //        }
 //        private double getCurrentPercentile() {
-//            if(tmYtd.size() > 2 && tm.size() > 2) {
+//            if(tmYtd.size() > 2 && mainMap.size() > 2) {
 //                double max = Math.max(tmYtd.entrySet().stream().mapToDouble(e->e.getValue().getHigh()).max().orElse(Double.MIN_VALUE)
-//                        ,tm.entrySet().stream().mapToDouble(e->e.getValue().getHigh()).max().orElse(Double.MIN_VALUE)) ;
+//                        ,mainMap.entrySet().stream().mapToDouble(e->e.getValue().getHigh()).max().orElse(Double.MIN_VALUE)) ;
 //                double min = Math.min(tmYtd.entrySet().stream().mapToDouble(e->e.getValue().getLow()).min().orElse(Double.MAX_VALUE),
-//                        tm.entrySet().stream().mapToDouble(e->e.getValue().getLow()).min().orElse(Double.MAX_VALUE));
+//                        mainMap.entrySet().stream().mapToDouble(e->e.getValue().getLow()).min().orElse(Double.MAX_VALUE));
 //                
-//                double last = tm.lastEntry().getValue().getClose();
+//                double last = mainMap.lastEntry().getValue().getClose();
 //                
 //                return Math.min(100.0,Math.round(100d*((last-min)/(max-min))));
 //            } else {    

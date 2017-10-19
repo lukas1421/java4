@@ -1726,7 +1726,7 @@ public final class ChinaStock extends JPanel {
                 .filter(e -> (e.getKey().equals(priceMapBar.get(name).firstKey()))
                 || (e.getValue().getHigh() > ofNullable(priceMapBar.get(name).lowerEntry(e.getKey())).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)
                 && e.getValue().getHigh() >= ofNullable(priceMapBar.get(name).higherEntry(e.getKey())).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)))
-                .collect(Collectors.toMap(e->e.getKey(), e -> e.getValue().getHigh(), (a, b) -> a, ConcurrentSkipListMap::new));
+                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getHigh(), (a, b) -> a, ConcurrentSkipListMap::new));
 
         if (tm.size() > 2) {
             LocalTime lastKey = priceMapBar.get(name).lastKey();

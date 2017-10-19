@@ -94,8 +94,8 @@ public final class GraphPnl extends JComponent {
             -> (e.getKey().isAfter(LocalTime.of(9, 15)) && e.getKey().isBefore(LocalTime.of(11, 31)))
             || (e.getKey().isAfter(LocalTime.of(12, 59)) && e.getKey().isBefore(LocalTime.of(15, 1)));
 
-//    public GraphPnl(NavigableMap<LocalTime, Double> tm) {    
-//        this.tm = tm.entrySet().stream().filter(e->e.getValue()!=0).collect(Collectors.toMap(Map.Entry::getKey,Map.Entry::getValue, (u,v)->u, ConcurrentSkipListMap::new));
+//    public GraphPnl(NavigableMap<LocalTime, Double> mainMap) {
+//        this.mainMap = mainMap.entrySet().stream().filter(e->e.getValue()!=0).collect(Collectors.toMap(Map.Entry::getKey,Map.Entry::getValue, (u,v)->u, ConcurrentSkipListMap::new));
 //    } 
     public GraphPnl() {
         name = "";
@@ -217,7 +217,7 @@ public final class GraphPnl extends JComponent {
     }
 
 
-    //NavigableMap<LocalTime,Double> getTreeMap() {return this.tm;}
+    //NavigableMap<LocalTime,Double> getTreeMap() {return this.mainMap;}
     @Override
     public void setName(String s) {
         this.name = s;

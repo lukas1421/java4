@@ -107,7 +107,7 @@ public class HistHKStocks extends JPanel {
         m_model = new BarModel_HK();
         graphPanel = new JPanel();
 
-        JScrollPane jp1 = new JScrollPane(){
+        JScrollPane jp1 = new JScrollPane(graphYtd){
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -117,7 +117,7 @@ public class HistHKStocks extends JPanel {
             }
         };
 
-        JScrollPane jp2 = new JScrollPane(){
+        JScrollPane jp2 = new JScrollPane(graphWtd){
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -126,8 +126,8 @@ public class HistHKStocks extends JPanel {
                 return d;
             }
         };
-        jp1.add(graphYtd);
-        jp2.add(graphWtd);
+        //jp1.add();
+        //jp2.add(graphWtd);
         graphPanel.setLayout(new GridLayout(2,1));
         graphPanel.add(jp1);
         graphPanel.add(jp2);
@@ -146,7 +146,8 @@ public class HistHKStocks extends JPanel {
                         //System.out.println(" selected stock in monitor is " + selectedStock);
                         comp.setBackground(Color.GREEN);
                         graphYtd.fillInGraphHKGen(selectedStock, hkYtdAll);
-                        graphWtd.fillInGraphHKGen(selectedStock, hkWtdAll);
+                        graphPanel.repaint();
+                        //graphWtd.fillInGraphHKGen(selectedStock, hkWtdAll);
                     } else {
                         comp.setBackground((indexRow % 2 == 0) ? Color.lightGray : Color.white);
                     }
