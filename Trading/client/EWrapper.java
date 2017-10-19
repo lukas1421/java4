@@ -52,6 +52,7 @@ public interface EWrapper {
     void receiveFA(int faDataType, String xml);
     void historicalData(int reqId, String date, double open, double high, double low,        
             double close, int volume, int count, double WAP, boolean hasGaps);
+    void historicalDataEnd(int reqId);
     void scannerParameters(String xml);
     void scannerData(int reqId, int rank, ContractDetails contractDetails, String distance,
             String benchmark, String projection, String legsStr);

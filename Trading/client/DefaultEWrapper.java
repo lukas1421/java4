@@ -174,6 +174,11 @@ class DefaultEWrapper implements EWrapper {
     }
 
     @Override
+    public void historicalDataEnd(int reqId) {
+
+    }
+
+    @Override
     public void scannerParameters(String xml) {
         // TODO Auto-generated method stub
 

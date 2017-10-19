@@ -406,6 +406,7 @@ public class HistUSStocks extends JPanel  {
 
         @Override
         public void actionUponFinish(String name) {
+            //System.out.println(" YTD action upon finish for " + name);
             stocksProcessedYtd.incrementAndGet();
             sm.release(1);
             computeYtd(name);
@@ -433,6 +434,7 @@ public class HistUSStocks extends JPanel  {
 
         @Override
         public void actionUponFinish(String name) {
+            //System.out.println(" WTD action upon finish for " + name);
             stocksProcessedWtd.incrementAndGet();
             sm.release(1);
             //System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());

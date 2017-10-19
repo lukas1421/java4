@@ -1669,8 +1669,18 @@ public class ApiController implements EWrapper {
             } else {
                 HistoricalHandler hh = (HistoricalHandler) r.getHandler();
                 if (!date.startsWith("finished")) {
-                    hh.handleHist(symb, date, open, high, low, close);
+                    try {
+                        hh.handleHist(symb, date, open, high, low, close);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                } else if(date.toUpperCase().startsWith("ERROR")) {
+                    hh.actionUponFinish(symb);
+                    throw new IllegalStateException(" error found ");
+
+
                 } else {
+                    //try this in historicalDataEnd
                     hh.actionUponFinish(symb);
                 }
             }
@@ -1806,7 +1816,22 @@ public class ApiController implements EWrapper {
         recEOM();
     }
 
-//----------------------------------------- Real-time bars --------------------------------------
+    @Override
+    public void historicalDataEnd(int reqId) {
+        System.out.println(" historical data ending for " + reqId);
+        if (ChinaMain.globalRequestMap.containsKey(reqId)) {
+            Request r = ChinaMain.globalRequestMap.get(reqId);
+            String symb = r.getContract().symbol();
+            if (r.getCustomFunctionNeeded()) {
+                System.out.println(" custom handling needed ");
+            } else {
+                HistoricalHandler hh = (HistoricalHandler) r.getHandler();
+                hh.actionUponFinish(symb);
+            }
+        }
+    }
+
+    //----------------------------------------- Real-time bars --------------------------------------
     public interface IRealTimeBarHandler {
 
         void realtimeBar(Bar bar); // time is in seconds since epoch
