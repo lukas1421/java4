@@ -418,7 +418,7 @@ final class IdeaProcessorJolt extends JPanel {
 //            String name = e.getKey();
 //            double currPrice = ChinaStock.priceMap.get(name);
 //            e.getValue().keySet().forEach(k -> ideaReturn.get(name).put(k,Math.log(currPrice/ChinaData.priceMap.get(name).get(k))));
-//            ideaCorrectRate.compute(name, (k,v) ->  (double)numberIdeas.get(name).get()/ideaReturn.get(name).values().stream().filter(d->d>0.0).count());
+//            ideaCorrectRate.computeYtd(name, (k,v) ->  (double)numberIdeas.get(name).get()/ideaReturn.get(name).values().stream().filter(d->d>0.0).count());
 //        });
 //    }
     public static void chooseGraphs() {

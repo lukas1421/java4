@@ -192,7 +192,7 @@ public class SinaStock implements Runnable {
     public static double getOpen() {
         String l;
         double temp = 0.0;
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "output.txt")))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "testOutput.txt")))) {
             while ((l = reader1.readLine()) != null) {
                 List<String> s = Arrays.asList(l.split("\t"));
                 if (s.get(0).equals("FTSE A50")) {

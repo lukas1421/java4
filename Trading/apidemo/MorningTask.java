@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 
 public final class MorningTask implements HistoricalHandler {
 
-    static File output = new File(ChinaMain.GLOBALPATH + "output.txt");
+    static File output = new File(ChinaMain.GLOBALPATH + "testOutput.txt");
     static File fxOutput = new File(ChinaMain.GLOBALPATH + "fx.txt");
     static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export\\" : "J:\\TDX\\T0002\\export\\";
@@ -75,7 +75,7 @@ public final class MorningTask implements HistoricalHandler {
 
 
 //        static void simpleWrite(LinkedList<String> s) {
-//        try (BufferedWriter out = new BufferedWriter(new FileWriter(output))){
+//        try (BufferedWriter out = new BufferedWriter(new FileWriter(testOutput))){
 //            String toWrite;
 //            while((toWrite=s.poll())!=null) {
 //                out.append(toWrite);

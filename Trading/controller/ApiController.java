@@ -1702,11 +1702,11 @@ public class ApiController implements EWrapper {
 //        if (reqId >= 60000 && reqId < 70000) {
 //            if (!date.startsWith("finished")) {
 //                //System.out.println(" req id " + reqId + " stock "+ USStocks.idStockMap.get(reqId));
-//                HistUSStocks.USALL.get(HistUSStocks.idStockMap.get(reqId))
+//                HistUSStocks.USALLYtd.get(HistUSStocks.idStockMap.get(reqId))
 //                        .put(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")),
 //                                new SimpleBar(open, high, low, close));
 //            } else {
-//                HistUSStocks.stocksProcessed++;
+//                HistUSStocks.stocksProcessedYtd++;
 //                HistUSStocks.sm.release(1);
 //                System.out.println(" current permit after done " + HistUSStocks.sm.availablePermits());
 //                HistUSStocks.computeYtd(HistUSStocks.idStockMap.get(reqId));
@@ -1723,12 +1723,12 @@ public class ApiController implements EWrapper {
 //                        .put(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")),
 //                                new SimpleBar(open, high, low, close));
 //                if (HistHKStocks.idStockMap.get(reqId).equals("700")) {
-//                    //MorningTask.clearFile(HistHKStocks.output);
+//                    //MorningTask.clearFile(HistHKStocks.testOutput);
 //                    MorningTask.simpleWriteToFile(ChinaStockHelper.getStrTabbed(date, open, high, low, close, volume),
-//                            true, HistHKStocks.output);
+//                            true, HistHKStocks.testOutput);
 //                }
 //            } else {
-//                HistHKStocks.stocksProcessed++;
+//                HistHKStocks.stocksProcessedYtd++;
 //                HistHKStocks.sm.release(1);
 //                System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
 //                HistHKStocks.computeYtd(HistHKStocks.idStockMap.get(reqId));

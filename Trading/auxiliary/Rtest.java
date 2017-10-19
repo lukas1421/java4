@@ -67,7 +67,7 @@ package auxiliary;
 //                
 //                System.out.println( " r2 is " + r2);
 //                
-//                REXPString r = (REXPString)c.parseAndEval("capture.output(try(eval("+mainExpression2+"),silent=TRUE))"); 
+//                REXPString r = (REXPString)c.parseAndEval("capture.testOutput(try(eval("+mainExpression2+"),silent=TRUE))");
 //                
 //                String[] out = r.asStrings();
 //                

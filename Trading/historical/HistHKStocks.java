@@ -46,7 +46,7 @@ public class HistHKStocks extends JPanel {
     public static volatile AtomicLong stocksProcessedYtd = new AtomicLong(0);
     public static volatile AtomicLong stocksProcessedWtd = new AtomicLong(0);
 
-    public static volatile Semaphore sm = new Semaphore(50);
+    private static volatile Semaphore sm = new Semaphore(50);
 
     public static final LocalDate MONDAY_OF_WEEK = getMondayOfWeek(LocalDateTime.now());
 
@@ -204,8 +204,6 @@ public class HistHKStocks extends JPanel {
             } else {
                 System.out.println(" cannot find stock for outtputting ytd " + selectedStock);
             }
-
-
         });
 
         outputWtdButton.addActionListener(al-> {
@@ -419,7 +417,7 @@ public class HistHKStocks extends JPanel {
         public void actionUponFinish(String name) {
             stocksProcessedYtd.incrementAndGet();
             sm.release(1);
-            System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
+            //System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
             computeYtd(name);
             refreshYtd();
         }
@@ -462,7 +460,7 @@ public class HistHKStocks extends JPanel {
         }
     }
 
-    static LocalDate getMondayOfWeek(LocalDateTime ld) {
+    public static LocalDate getMondayOfWeek(LocalDateTime ld) {
         LocalDate res = ld.toLocalDate();
         while(!res.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
             res = res.minusDays(1);

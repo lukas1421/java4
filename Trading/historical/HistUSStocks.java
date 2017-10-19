@@ -1,12 +1,13 @@
 package historical;
 
 import apidemo.ChinaMain;
+import apidemo.MorningTask;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
-import handler.HistoricalHandler;
+import graph.GraphBarTemporal;
 import utility.SharpeUtility;
 import utility.Utility;
 
@@ -18,6 +19,7 @@ import java.awt.*;
 import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -26,22 +28,29 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class HistUSStocks extends JPanel implements HistoricalHandler {
+import static historical.HistHKStocks.getMondayOfWeek;
+
+public class HistUSStocks extends JPanel  {
 
     static final String USCHINASTOCKFILE = "USChinaStocks.txt";
     static final String USALLFILE = "USAll.txt";
     static final String USFAMOUSFILE = "USFamous.txt";
 
-    public static volatile Semaphore sm = new Semaphore(50);
+    private static volatile Semaphore sm = new Semaphore(50);
+    public static final LocalDate MONDAY_OF_WEEK = getMondayOfWeek(LocalDateTime.now());
 
     static final String CUTOFFTIME = getDataCutoff();
-    static final int DAYSTOREQUEST = (int) ChronoUnit.DAYS.between(
+    static final int DAYSTOREQUESTYtd = (int) Math.round(ChronoUnit.DAYS.between(
             LocalDate.of(LocalDate.now().getYear() - 1, Month.DECEMBER, 31),
-            LocalDate.now()) + 1;
+            LocalDate.now())*252/365) ;
+
+    static final int DAYSTOREQUESTWtd = (int) ChronoUnit.DAYS.between(
+            getMondayOfWeek(LocalDateTime.now()), LocalDate.now()) + 2;
 
     static ApiController apcon = new ApiController(
             new ApiController.IConnectionHandler.DefaultConnectionHandler(),
@@ -50,22 +59,36 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
 
     //public Contract ctUS = new Contract();
     //public static NavigableMap<LocalDate, SimpleBar> USSINGLE = new TreeMap<>();
-    public static Map<String, NavigableMap<LocalDate, SimpleBar>> USALL = new HashMap<>();
-    private static volatile Map<String, USResult> USResultMap = new HashMap<>();
+    public static volatile Map<String, NavigableMap<LocalDate, SimpleBar>> USALLYtd = new HashMap<>();
+    public static volatile Map<String, NavigableMap<LocalDateTime, SimpleBar>> USALLWtd = new HashMap<>();
+    private static volatile Map<String, USResult> USResultMapYtd = new HashMap<>();
+    private static volatile Map<String, USResult> USResultMapWtd = new HashMap<>();
+
 
     public static List<String> usNameList = new LinkedList<>();
-    public static File output = new File(ChinaMain.GLOBALPATH + "usTestData.txt");
+    public static File testOutput = new File(ChinaMain.GLOBALPATH + "usTestData.txt");
 
     static volatile AtomicInteger uniqueID = new AtomicInteger(60000);
-    public static volatile Map<Integer, String> idStockMap = new HashMap<>();
+    static volatile String selectedStock = "";
+    //public static volatile Map<Integer, String> idStockMap = new HashMap<>();
 
     static BarModel_US m_model;
+    static JPanel graphPanel;
     static JTable tab;
     int modelRow;
     int indexRow;
     static TableRowSorter<BarModel_US> sorter;
-    public static JLabel totalStocksLabel = new JLabel("Total");
-    public static long stocksProcessed = 0;
+    public static volatile JLabel totalStocksLabelYtd = new JLabel("Total Y");
+    public static volatile JLabel totalStocksLabelWtd = new JLabel("Total W");
+    public static volatile AtomicLong stocksProcessedYtd = new AtomicLong(0);
+    public static volatile AtomicLong stocksProcessedWtd = new AtomicLong(0);
+
+    GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
+    GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
+
+    public static File outputYtd = new File(ChinaMain.GLOBALPATH + "usSharpeYtd.txt");
+    public static File outputWtd = new File(ChinaMain.GLOBALPATH + "usSharpeWtd.txt");
+
 
     public HistUSStocks() {
         String line;
@@ -73,16 +96,19 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
                 new FileInputStream(ChinaMain.GLOBALPATH + USALLFILE), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                USALL.put(al1.get(0), new TreeMap<>());
-                USResultMap.put(al1.get(0), new USResult());
+                USALLYtd.put(al1.get(0), new TreeMap<>());
+                USResultMapYtd.put(al1.get(0), new USResult());
+                USALLWtd.put(al1.get(0), new TreeMap<>());
+                USResultMapWtd.put(al1.get(0), new USResult());
             }
         } catch (IOException ex) {
         }
 
-        usNameList = USALL.keySet().stream().collect(Collectors.toList());
+        usNameList = USALLYtd.keySet().stream().collect(Collectors.toList());
         System.out.println(" us name list " + usNameList);
 
         m_model = new BarModel_US();
+        graphPanel = new JPanel();
 
         tab = new JTable(m_model) {
             @Override
@@ -91,6 +117,9 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
                     Component comp = super.prepareRenderer(renderer, Index_row, Index_col);
                     if (isCellSelected(Index_row, Index_col)) {
                         modelRow = this.convertRowIndexToModel(Index_row);
+                        selectedStock = usNameList.get(modelRow);
+                        graphYtd.fillInGraphHKGen(selectedStock, USALLYtd);
+                        graphWtd.fillInGraphHKGen(selectedStock, USALLWtd);
                         comp.setBackground(Color.GREEN);
                     } else {
                         comp.setBackground((Index_row % 2 == 0) ? Color.lightGray : Color.white);
@@ -107,10 +136,33 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = 600;
+                //d.height = 600;
+                d.width = 1000;
                 return d;
             }
         };
+
+        JScrollPane jp1 = new JScrollPane(graphYtd) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d =  super.getPreferredSize();
+                d.height = 250;
+                d.width = 1900;
+                return d;
+            }
+        };
+
+        JScrollPane jp2 = new JScrollPane(graphWtd){
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 250;
+                d.width = 1900;
+                return d;
+            }
+        };
+
+
 
         JPanel controlPanel = new JPanel() {
             @Override
@@ -121,11 +173,6 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
             }
         };
 
-        JButton getHistoricalButton = new JButton("Historical");
-        getHistoricalButton.addActionListener(al -> {
-            requestAllUSStocks();
-        });
-
         JButton refreshButton = new JButton("Refresh");
         refreshButton.addActionListener(al -> {
             System.out.println(" refreshing ");
@@ -135,30 +182,101 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
             });
         });
 
+        JButton getHistoricalYtdButton = new JButton("Ytd");
+        getHistoricalYtdButton.addActionListener(al -> {
+            sm = new Semaphore(50);
+            requestAllUSStocksYtd();
+        });
+
+        JButton getHistoricalWtdButton = new JButton("Wtd");
+        getHistoricalWtdButton.addActionListener(al -> {
+            sm = new Semaphore(50);
+            requestAllUSStocksWtd();
+        });
+
+        JButton outputYtdButton = new JButton("Output Y");
+        outputYtdButton.addActionListener(al->{
+            if(USALLYtd.containsKey(selectedStock)) {
+                MorningTask.clearFile(testOutput);
+                USALLYtd.get(selectedStock).entrySet().forEach(e->
+                        MorningTask.simpleWriteToFile(
+                                Utility.getStrTabbed(e.getKey(),e.getValue().getOpen(),e.getValue().getHigh()
+                                        ,e.getValue().getLow()
+                                        ,e.getValue().getClose()), true,testOutput));
+            } else {
+                System.out.println(" cannot find stock for outtputting ytd " + selectedStock);
+            }
+        });
+
+        JButton outputWtdButton = new JButton("Output Y");
+        outputWtdButton.addActionListener(al-> {
+            if(USALLWtd.containsKey(selectedStock)) {
+                MorningTask.clearFile(testOutput);
+                USALLWtd.get(selectedStock).entrySet().forEach(e ->
+                        MorningTask.simpleWriteToFile(
+                                Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
+                                        , e.getValue().getLow()
+                                        , e.getValue().getClose()), true, testOutput));
+            } else {
+                System.out.println(" cannot find stock for outputting wtd " + selectedStock);
+            }
+        });
+
+
+
         controlPanel.add(refreshButton);
-        controlPanel.add(getHistoricalButton);
-        totalStocksLabel.setFont(totalStocksLabel.getFont().deriveFont(30L));
-        controlPanel.add(totalStocksLabel);
+        controlPanel.add(getHistoricalYtdButton);
+        controlPanel.add(getHistoricalWtdButton);
+        controlPanel.add(outputYtdButton);
+        controlPanel.add(outputWtdButton);
+
+        totalStocksLabelYtd.setFont(totalStocksLabelYtd.getFont().deriveFont(30L));
+        controlPanel.add(totalStocksLabelYtd);
+
+        totalStocksLabelWtd.setFont(totalStocksLabelWtd.getFont().deriveFont(30L));
+        controlPanel.add(totalStocksLabelWtd);
+
+
+        graphPanel.setLayout(new GridLayout(2,1));
+        graphPanel.add(jp1);
+        graphPanel.add(jp2);
+
 
         setLayout(new BorderLayout());
         add(controlPanel, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
+        add(graphPanel,BorderLayout.SOUTH);
 
         tab.setAutoCreateRowSorter(true);
         sorter = (TableRowSorter<BarModel_US>) tab.getRowSorter();
     }
 
-    public static void refreshAll() {
+    public static void refreshYtd() {
         SwingUtilities.invokeLater(() -> {
-            totalStocksLabel.setText(Long.toString(stocksProcessed) + "/" + Long.toString(USALL.size()));
+            totalStocksLabelYtd.setText(Long.toString(stocksProcessedYtd.get()) + "/" + Long.toString(USALLYtd.size()));
             //System.out.println(" refreshing all ");
-            m_model.fireTableDataChanged();
+            //m_model.fireTableDataChanged();
         });
     }
 
-    void requestAllUSStocks() {
-        stocksProcessed = 0;
-        USALL.keySet().forEach(k -> request1Stock(k));
+    public static void refreshWtd() {
+        SwingUtilities.invokeLater(() -> {
+            totalStocksLabelWtd.setText(Long.toString(stocksProcessedWtd.get()) + "/" + Long.toString(USALLWtd.size()));
+            //System.out.println(" refreshing all ");
+            //m_model.fireTableDataChanged();
+        });
+    }
+
+    void requestAllUSStocksYtd() {
+        stocksProcessedYtd = new AtomicLong(0);
+        MorningTask.clearFile(HistUSStocks.outputYtd);
+        USALLYtd.keySet().forEach(k -> request1StockYtd(k));
+    }
+
+    void requestAllUSStocksWtd() {
+        stocksProcessedWtd = new AtomicLong(0);
+        MorningTask.clearFile(HistUSStocks.outputWtd);
+        USALLWtd.keySet().forEach(k -> request1StockWtd(k));
     }
 
     Contract generateUSContract(String stock) {
@@ -170,25 +288,44 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
         return ct;
     }
 
-    void request1Stock(String stock) {
+    void request1StockYtd(String stock) {
         CompletableFuture.runAsync(() -> {
-            System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
-            System.out.println(" available " + sm.availablePermits());
-            System.out.println(" queue length is " + sm.getQueueLength());
+            //System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
+            //System.out.println(" available " + sm.availablePermits());
+            //System.out.println(" queue length is " + sm.getQueueLength());
 
             try {
-                System.out.println(" permits before " + sm.availablePermits());
+                //System.out.println(" permits before " + sm.availablePermits());
                 sm.acquire();
-                System.out.println(" stock is " + stock);
-                idStockMap.put(uniqueID.incrementAndGet(), stock);
-                apcon.reqHistoricalDataUSHK(this, uniqueID.get(),
-                        generateUSContract(stock), CUTOFFTIME, DAYSTOREQUEST, Types.DurationUnit.DAY,
+                //System.out.println(" stock is " + stock);
+                //idStockMap.put(uniqueID.incrementAndGet(), stock);
+                apcon.reqHistoricalDataUSHK(new YtdHandler(), uniqueID.incrementAndGet(),
+                        generateUSContract(stock), CUTOFFTIME, DAYSTOREQUESTYtd, Types.DurationUnit.DAY,
                         Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
             } catch (InterruptedException ex) {
                 Logger.getLogger(HistHKStocks.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
+    }
 
+    void request1StockWtd(String stock) {
+        CompletableFuture.runAsync(() -> {
+            //System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
+            //System.out.println(" available " + sm.availablePermits());
+            //System.out.println(" queue length is " + sm.getQueueLength());
+
+            try {
+                //System.out.println(" permits before " + sm.availablePermits());
+                sm.acquire();
+                //System.out.println(" stock is " + stock);
+                //idStockMap.put(uniqueID.incrementAndGet(), stock);
+                apcon.reqHistoricalDataUSHK(new WtdHandler(), uniqueID.incrementAndGet(),
+                        generateUSContract(stock), CUTOFFTIME, DAYSTOREQUESTWtd, Types.DurationUnit.DAY,
+                        Types.BarSize._5_mins, Types.WhatToShow.TRADES, true);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(HistHKStocks.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
     }
 
     static String getDataCutoff() {
@@ -210,31 +347,45 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
 
     public static void computeAll() {
         System.out.println(" computing starts ");
-        USALL.keySet().forEach(k -> {
-            NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(USALL.get(k),
+        USALLYtd.keySet().forEach(k -> {
+            NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(USALLYtd.get(k),
                     LocalDate.of(2016, Month.DECEMBER, 31));
             double mean = SharpeUtility.getMean(ret);
             double sd = SharpeUtility.getSD(ret);
             double sr = SharpeUtility.getSharpe(ret, 252);
-            double perc = SharpeUtility.getPercentile(USALL.get(k));
+            double perc = SharpeUtility.getPercentile(USALLYtd.get(k));
             System.out.println(Utility.getStrTabbed(" stock mean sd sr ", k, mean, sd, sr));
         });
     }
 
-    public static void compute(String stock) {
-        NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(USALL.get(stock),
+    public static void computeYtd(String stock) {
+        NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(USALLYtd.get(stock),
                 LocalDate.of(2016, Month.DECEMBER, 31));
         double mean = SharpeUtility.getMean(ret);
         double sd = SharpeUtility.getSD(ret);
         double sr = SharpeUtility.getSharpe(ret,252);
-        double perc = SharpeUtility.getPercentile(USALL.get(stock));
-        USResultMap.get(stock).fillResult(mean, sd, sr, perc);
+        double perc = SharpeUtility.getPercentile(USALLYtd.get(stock));
+        USResultMapYtd.get(stock).fillResult(mean, sd, sr, perc);
         System.out.println(Utility.getStrTabbed(" stock mean sd sr perc", stock, mean, sd, sr, perc));
     }
 
+    public static void computeWtd(String stock) {
+        System.out.println(" computing Wtd starts for stock " + stock);
+        NavigableMap<LocalDateTime, Double> ret = SharpeUtility.getReturnSeries(USALLWtd.get(stock),
+                LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1), LocalTime.MIN));
+        double mean = SharpeUtility.getMean(ret);
+        double sd = SharpeUtility.getSD(ret);
+        double sr = SharpeUtility.getSharpe(ret,48);
+        double perc = SharpeUtility.getPercentile(USALLWtd.get(stock));
+        USResultMapWtd.get(stock).fillResult(mean, sd, sr, perc);
+        System.out.println(Utility.getStrTabbed(" wtd stock mean sd sr perc size firstEntry last Entry",
+                stock, mean, sd, sr, perc,ret.size(), ret.firstEntry(), ret.lastEntry()));
+    }
+
+
     public static void main(String[] args) {
         JFrame jf = new JFrame();
-        jf.setSize(new Dimension(1000, 1000));
+        jf.setSize(new Dimension(1900, 1000));
         HistUSStocks us = new HistUSStocks();
         jf.add(us);
         jf.setLayout(new FlowLayout());
@@ -245,19 +396,53 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
         });
     }
 
-    @Override
-    public void handleHist(String name, String date, double open, double high, double low, double close) {
-        USALL.get(name).put(convertStringToDate(date), new SimpleBar(open, high, low, close));
+
+
+    class YtdHandler implements handler.HistoricalHandler {
+        @Override
+        public void handleHist(String name, String date, double open, double high, double low, double close) {
+            USALLYtd.get(name).put(convertStringToDate(date), new SimpleBar(open, high, low, close));
+        }
+
+        @Override
+        public void actionUponFinish(String name) {
+            stocksProcessedYtd.incrementAndGet();
+            sm.release(1);
+            computeYtd(name);
+            refreshYtd();
+        }
     }
 
-    @Override
-    public void actionUponFinish(String name) {
-        stocksProcessed++;
-        sm.release(1);
-        System.out.println(" current permit after done " + HistUSStocks.sm.availablePermits());
-        compute(name);
-        refreshAll();
+    class WtdHandler implements handler.HistoricalHandler {
+        @Override
+        public void handleHist(String name, String date, double open, double high, double low, double close) {
+            Date dt = new Date(Long.parseLong(date) * 1000);
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(dt);
+            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+            LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+            LocalDateTime ldt = LocalDateTime.of(ld,lt);
+
+            LocalDate monOfWeek = getMondayOfWeek(LocalDateTime.now());
+
+            if (ld.isEqual(monOfWeek) || ld.isAfter(monOfWeek)) {
+                //System.out.println(" CORRECT name ld lt open " + name + " " + ld + " " + lt + " " + open);
+                USALLWtd.get(name).put(ldt, new SimpleBar(open, high, low, close));
+            }
+        }
+
+        @Override
+        public void actionUponFinish(String name) {
+            stocksProcessedWtd.incrementAndGet();
+            sm.release(1);
+            //System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
+            computeWtd(name);
+            refreshWtd();
+
+        }
     }
+
+
 
     public LocalDate convertStringToDate(String date) {
         LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -313,12 +498,12 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
 
         @Override
         public int getRowCount() {
-            return USALL.size();
+            return USALLYtd.size();
         }
 
         @Override
         public int getColumnCount() {
-            return 6;
+            return 11;
         }
 
         @Override
@@ -327,15 +512,25 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
                 case 0:
                     return "name";
                 case 1:
-                    return "mean";
+                    return "meanY";
                 case 2:
-                    return "sd";
+                    return "sdY";
                 case 3:
-                    return "Sharpe";
+                    return "SharpeY";
                 case 4:
-                    return "Perc";
+                    return "PercY";
                 case 5:
-                    return "Days";
+                    return "DaysY";
+                case 6:
+                    return "meanW";
+                case 7:
+                    return "sdW";
+                case 8:
+                    return "sharpeW";
+                case 9:
+                    return "percW";
+                case 10:
+                    return "DaysW";
                 default:
                     return "";
             }
@@ -350,15 +545,28 @@ public class HistUSStocks extends JPanel implements HistoricalHandler {
                 case 0:
                     return name;
                 case 1:
-                    return USResultMap.get(name).getMean();
+                    return USResultMapYtd.get(name).getMean();
                 case 2:
-                    return USResultMap.get(name).getSd();
+                    return USResultMapYtd.get(name).getSd();
                 case 3:
-                    return USResultMap.get(name).getSr();
+                    return USResultMapYtd.get(name).getSr();
                 case 4:
-                    return USResultMap.get(name).getPerc();
+                    return USResultMapYtd.get(name).getPerc();
                 case 5:
-                    return USALL.get(name).size();
+                    return USALLYtd.get(name).size();
+                case 6:
+                    return USResultMapWtd.get(name).getMean();
+
+                case 7:
+                    return USResultMapWtd.get(name).getSd();
+
+                case 8:
+                    return USResultMapWtd.get(name).getSr();
+                case 9:
+                    return USResultMapWtd.get(name).getPerc();
+                case 10:
+                    return USALLWtd.get(name).size();
+
                 default:
                     return null;
             }
