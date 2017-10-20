@@ -420,7 +420,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
         return t.isAfter(LocalTime.of(8, 59));
     }
 
-//    @Override
+    //    @Override
 //    public void handleHist(String name, LocalDate ld, double open, double high, double low, double close) {
 //        LocalDate currDate = LocalDate.now();
 //        if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
@@ -440,34 +440,34 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
 //    @Override
 //    public void actionUponFinish(String name) {
 //    }
-    public static void handleSGX50HistData(String date, double open, double high, double low, double close, int volume) {
-
-        LocalDate currDate = LocalDate.now();
-
-        if (!date.startsWith("finished")) {
-            System.out.println(" date is " + date);
-            Date dt = new Date(Long.parseLong(date) * 1000);
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(dt);
-            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
-            LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
-
-            if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
-                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
-
-                if (lt.equals(LocalTime.of(9, 0))) {
-                    todayOpen = open;
-                    System.out.println(" today open is " + todayOpen);
-                }
-
-                //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                System.out.println(Utility.getStrCheckNull(dt, open, high, low, close));
-                xuData.put(lt, new SimpleBar(open, high, low, close));
-            }
-        } else {
-            System.out.println(getStr(date, open, high, low, close));
-        }
-    }
+//    public static void handleSGX50HistData(String date, double open, double high, double low, double close, int volume) {
+//
+//        LocalDate currDate = LocalDate.now();
+//
+//        if (!date.startsWith("finished")) {
+//            System.out.println(" date is " + date);
+//            Date dt = new Date(Long.parseLong(date) * 1000);
+//            Calendar cal = Calendar.getInstance();
+//            cal.setTime(dt);
+//            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+//            LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+//
+//            if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
+//                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
+//
+//                if (lt.equals(LocalTime.of(9, 0))) {
+//                    todayOpen = open;
+//                    System.out.println(" today open is " + todayOpen);
+//                }
+//
+//                //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+//                System.out.println(Utility.getStrCheckNull(dt, open, high, low, close));
+//                xuData.put(lt, new SimpleBar(open, high, low, close));
+//            }
+//        } else {
+//            System.out.println(getStr(date, open, high, low, close));
+//        }
+//    }
 
     void connectToTWS(int port) {
         System.out.println(" trying to connect");
@@ -636,7 +636,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
     void requestExecHistory() {
         System.out.println(" requesting exec history ");
         XUTrader.tradesMap = new ConcurrentSkipListMap<>();
-        apcon.reqExecutions(new ExecutionFilter(), new TradeDefaultHandler());
+        apcon.reqExecutions(new ExecutionFilter(), new XUTradeDefaultHandler());
     }
 
     void requestXUData() {
@@ -670,17 +670,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
 
         //average buy cost
         //System.out.println(" processing -------------------------------------------------");
-        int unitsBought = XUTrader.tradesMap.entrySet().stream().filter(e -> e.getValue().getSize() > 0).collect(Collectors.summingInt(e -> e.getValue().getSize()));
-        int unitsSold = XUTrader.tradesMap.entrySet().stream().filter(e -> e.getValue().getSize() < 0).collect(Collectors.summingInt(e -> e.getValue().getSize()));
+        int unitsBought = XUTrader.tradesMap.entrySet().stream().filter(e -> e.getValue().getSize() > 0)
+                .collect(Collectors.summingInt(e -> e.getValue().getSize()));
+        int unitsSold = XUTrader.tradesMap.entrySet().stream().filter(e -> e.getValue().getSize() < 0)
+                .collect(Collectors.summingInt(e -> e.getValue().getSize()));
 
         netBoughtPosition = unitsBought;
         netSoldPosition = unitsSold;
 
-        double avgBuy = Math.round(100d * (XUTrader.tradesMap.entrySet().stream().filter(e -> e.getValue().getSize() > 0).collect(Collectors.summingDouble(e -> e.getValue().getCost()))
-                / unitsBought)) / 100d;
+        double avgBuy = Math.round(100d * (XUTrader.tradesMap.entrySet().stream().filter(e -> e.getValue().getSize() > 0).
+                collect(Collectors.summingDouble(e -> e.getValue().getCost()))/ unitsBought)) / 100d;
 
-        double avgSell = Math.round(100d * (XUTrader.tradesMap.entrySet().stream().filter(e -> e.getValue().getSize() < 0).collect(Collectors.summingDouble(e -> e.getValue().getCost()))
-                / unitsSold)) / 100d;
+        double avgSell = Math.round(100d * (XUTrader.tradesMap.entrySet().stream().filter(e -> e.getValue().getSize() < 0).
+                collect(Collectors.summingDouble(e -> e.getValue().getCost()))/ unitsSold)) / 100d;
 
         double buyTradePnl = Math.round(100d * (XUTrader.currentPrice - avgBuy) * unitsBought) / 100d;
         double sellTradePnl = Math.round(100d * (XUTrader.currentPrice - avgSell) * unitsSold) / 100d;
@@ -775,7 +777,7 @@ class XUConnectionHandler implements ApiController.IConnectionHandler {
     }
 }
 
-class TradeDefaultHandler implements ApiController.ITradeReportHandler {
+class XUTradeDefaultHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
