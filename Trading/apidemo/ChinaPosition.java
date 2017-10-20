@@ -415,12 +415,24 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return res;
     }
 
-    static NavigableMap<LocalTime, Double> tradePnlCompute(String name, NavigableMap<LocalTime, SimpleBar> prMap, NavigableMap<LocalTime, ? super Trade> trMap, DoublePredicate d) {
+    static NavigableMap<LocalTime, Double> tradePnlCompute(String name, NavigableMap<LocalTime, SimpleBar> prMap,
+                                                           NavigableMap<LocalTime, ? super Trade> trMap, DoublePredicate d) {
         int pos = 0;
         double cb = 0.0;
         double mv;
         double fx = fxMap.getOrDefault(name, 1.0);
         NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
+
+        if(trMap.firstKey().isBefore(prMap.firstKey())) {
+            for(Map.Entry e: trMap.headMap(prMap.firstKey(),false).entrySet()) {
+                pos += ((Trade) e.getValue()).getSize();
+                cb += ((Trade)e.getValue()).getCostWithCommission(name);
+            }
+//            System.out.println(" name is " + name);
+//            System.out.println(" pos before open " + pos);
+//            System.out.println(" cb before open " + cb);
+        }
+
         for (LocalTime t : prMap.navigableKeySet()) {
             if (trMap.subMap(t, true, t.plusMinutes(1), false).size() > 0) {
                 pos += getAdditionalInfo(t, trMap, d, x -> x.getSize());
@@ -505,6 +517,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()),
                         e.getValue(), e1 -> true), collectingAndThen(toList(), l -> l.stream().flatMap(m -> m.entrySet().stream())
                 .collect(Collectors.groupingBy(e1 -> e1.getKey(), ConcurrentSkipListMap::new, Collectors.summingDouble(e1 -> e1.getValue()))))));
+
+        System.out.println(" trade pnl map " + tradePNLMap);
 
         double todayNetPnl = Optional.ofNullable(tradePNLMap.lastEntry()).map(Entry::getValue).orElse(0.0) + netYtdPnl
                 + Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0);
