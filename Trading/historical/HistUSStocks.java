@@ -93,7 +93,7 @@ public class HistUSStocks extends JPanel  {
     public HistUSStocks() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + USALLFILE), "gbk"))) {
+                new FileInputStream(ChinaMain.GLOBALPATH + USCHINASTOCKFILE), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 USALLYtd.put(al1.get(0), new TreeMap<>());
