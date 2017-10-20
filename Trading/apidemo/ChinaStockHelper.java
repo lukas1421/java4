@@ -400,13 +400,13 @@ public final class ChinaStockHelper {
                 @Override
                 public void mouseEntered(MouseEvent e) {
                     if (!industryNameMap.get(nam).equals("板块")) {
-                        setGraphGen(nam, graph4);
-                        setGraphGen(ChinaStock.industryNameMap.get(nam), graph5);
+                        //setGraphGen(nam, graph4);
+                        //setGraphGen(ChinaStock.industryNameMap.get(nam), graph5);
                         GraphIndustry.selectedNameIndus = ChinaStock.shortIndustryMap.getOrDefault(nam, "");
                         ChinaStock.setIndustryFilter(ChinaStock.industryNameMap.get(nam));
                         ChinaIndex.setSector(ChinaStock.industryNameMap.get(nam));
                     } else {
-                        setGraphGen(nam, graph5);
+                        //setGraphGen(nam, graph5);
                         GraphIndustry.selectedNameIndus = ChinaStock.longShortIndusMap.getOrDefault(nam, "");
                         ChinaStock.setIndustryFilter(nam);
                         ChinaIndex.setSector(nam);

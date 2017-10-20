@@ -502,7 +502,7 @@ public final class GraphPnl extends JComponent {
         g2.drawString("Bought Delta: " + Double.toString(Math.round(boughtDelta / 1000d)) + " K", getWidth() / 7 * 6, getHeight() / 3 + 170);
         g2.drawString("Sold Delta: " + Double.toString(Math.round(soldDelta / 1000d)) + " K", getWidth() / 7 * 6, getHeight() / 3 + 190);
         g2.drawString("rtn on +Delta: " + Double.toString(Math.round(buyPnl / boughtDelta * 1000d) / 10d) + " %", getWidth() / 7 * 6, getHeight() / 3 + 210);
-        g2.drawString("rtn on -Delta: " + Double.toString(Math.round(-1 * sellPnl / soldDelta * 1000d) / 10d) + " %", getWidth() / 7 * 6, getHeight() / 3 + 230);
+        g2.drawString("rtn on -Delta: " + (soldDelta!=0.0?(Double.toString(Math.round(-1 * sellPnl / soldDelta * 1000d) / 10d) + " %"):""), getWidth() / 7 * 6, getHeight() / 3 + 230);
 
         int heightStart = getHeight() / 3 + 250;
         g2.drawString("w1 " + winner1, getWidth() / 7 * 6, heightStart);

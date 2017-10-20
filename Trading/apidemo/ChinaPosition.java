@@ -518,7 +518,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                         e.getValue(), e1 -> true), collectingAndThen(toList(), l -> l.stream().flatMap(m -> m.entrySet().stream())
                 .collect(Collectors.groupingBy(e1 -> e1.getKey(), ConcurrentSkipListMap::new, Collectors.summingDouble(e1 -> e1.getValue()))))));
 
-        System.out.println(" trade pnl map " + tradePNLMap);
+        //System.out.println(" trade pnl map " + tradePNLMap);
 
         double todayNetPnl = Optional.ofNullable(tradePNLMap.lastEntry()).map(Entry::getValue).orElse(0.0) + netYtdPnl
                 + Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0);

@@ -178,7 +178,7 @@ public final class ChinaGraphIndustry extends JPanel {
             switch (linkStatus) {
                 case STRONG:
                     ChinaBigGraph.setGraph(GraphIndustry.topStockInRiser);
-                    ChinaStock.setGraphGen(ChinaStock.shortLongIndusMap.get(GraphIndustry.quickestRiser), ChinaStock.graph5);
+                    //ChinaStock.setGraphGen(ChinaStock.shortLongIndusMap.get(GraphIndustry.quickestRiser), ChinaStock.graph5);
                     break;
                 case SELECTION:
                     break;

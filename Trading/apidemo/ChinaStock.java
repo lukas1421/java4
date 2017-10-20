@@ -165,13 +165,14 @@ public final class ChinaStock extends JPanel {
     static GraphBar graph3 = new GraphBar();
     static GraphBar graph4 = new GraphBar();
     static GraphBar graph5 = new GraphBar();
-    static GraphSize graph6 = new GraphSize();
+    static GraphBar graph6 = new GraphBar();
 
     String stock1;
     String stock2 = "sh000001";
     String stock3 = "sh000016";
     String stock4 = "sh000300";
     String stock5 = "sz399006";
+    String stock6 = "sh000905";
 
     private static TableRowSorter<BarModel_STOCK> sorter;
 
@@ -369,7 +370,7 @@ public final class ChinaStock extends JPanel {
 
                                 //System.out.println( " selected stock/bench is " + selectedNameStock + " " + selectedBench);
                                 graph1.fillInGraph(selectedNameStock);
-                                graph6.fillInGraph(selectedNameStock);
+                                //graph6.fillInGraph(selectedNameStock);
 
 //                                priceMapBarYtd.get(selectedNameStock).entrySet().stream()
 //                                        .filter(e->e.getKey().isAfter(LocalTime.of(14,45))).forEach(System.out::println);
@@ -476,6 +477,8 @@ public final class ChinaStock extends JPanel {
         JTextField tf5 = new JTextField(stock4);
         JLabel jl7 = new JLabel("Graph5");
         JTextField tf6 = new JTextField(stock5);
+        JLabel jl8 = new JLabel("Graph6");
+        JTextField tf7 = new JTextField(stock6);
 
         jpTop.add(jl4);
         jpBottom.add(tf3);
@@ -598,6 +601,7 @@ public final class ChinaStock extends JPanel {
                     graph3.fillInGraph(tf4.getText());
                     graph4.fillInGraph(tf5.getText());
                     graph5.fillInGraph(tf6.getText());
+                    graph6.fillInGraph(tf7.getText());
                 } catch (Exception e) {
                     e.printStackTrace();
                     tf3.setText(stock2);
