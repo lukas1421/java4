@@ -3,9 +3,12 @@ package apidemo;
 import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
+import graph.GraphBarTemporal;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 
 public class USOvernightTrader extends JPanel {
@@ -15,8 +18,56 @@ public class USOvernightTrader extends JPanel {
     static ApiController apcon = new ApiController(new USConnectionHandler(),
             new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
 
+    static GraphBarTemporal<LocalDateTime> graph1 = new GraphBarTemporal<>();
 
 
+    public USOvernightTrader() {
+
+
+        JPanel controlPanel = new JPanel();
+        JButton connect4001 = new JButton(" Connect 4001 ");
+
+
+        JScrollPane jp1 = new JScrollPane(graph1) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 300;
+                return d;
+            }
+        };
+
+        connect4001.addActionListener(al->{
+            System.out.println(" connecting 4001 ");
+            connectToTWS(4001);
+        });
+
+        controlPanel.setLayout(new FlowLayout());
+        controlPanel.add(connect4001);
+
+        this.setLayout(new BorderLayout());
+        this.add(controlPanel, BorderLayout.NORTH);
+        this.add(jp1, BorderLayout.CENTER);
+
+
+    }
+
+
+    void connectToTWS(int port) {
+        System.out.println(" trying to connect");
+        try {
+            apcon.connect("127.0.0.1", port, 101, "");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        apcon.client().reqIds(-1);
+        //orderIdNo = new AtomicInteger();
+    }
+
+
+    static ApiController getAPICon() {
+        return apcon;
+    }
 
 
     public static void main(String[] args) {
@@ -27,6 +78,7 @@ public class USOvernightTrader extends JPanel {
         jf.add(uso);
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jf.setVisible(true);
+        uso.connectToTWS(4001);
 
 
 
