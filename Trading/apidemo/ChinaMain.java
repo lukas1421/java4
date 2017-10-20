@@ -267,6 +267,7 @@ public final class ChinaMain implements IConnectionHandler {
                     ChinaData.withHibernate();
                     ChinaData.saveChinaOHLC();
                     ChinaData.outputPrices();
+                    MorningTask.getBOCFX();
                     ChinaData.outputRecentTradingDate();
                 }
             }, 10, 5, TimeUnit.MINUTES);

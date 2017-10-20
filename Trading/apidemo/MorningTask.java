@@ -32,7 +32,8 @@ import java.util.regex.Pattern;
 
 public final class MorningTask implements HistoricalHandler {
 
-    static File output = new File(ChinaMain.GLOBALPATH + "testOutput.txt");
+    static File output = new File(ChinaMain.GLOBALPATH + "morningOutput.txt");
+    static File bocOutput = new File(ChinaMain.GLOBALPATH + "BOCUSD.txt");
     static File fxOutput = new File(ChinaMain.GLOBALPATH + "fx.txt");
     static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export\\" : "J:\\TDX\\T0002\\export\\";
@@ -59,7 +60,7 @@ public final class MorningTask implements HistoricalHandler {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-        getBOCFX();
+        getBOCFX2();
         processShcomp();
 
         System.out.println("done and starting exiting sequence in 5");
@@ -74,7 +75,7 @@ public final class MorningTask implements HistoricalHandler {
     }
 
 
-//        static void simpleWrite(LinkedList<String> s) {
+    //        static void simpleWrite(LinkedList<String> s) {
 //        try (BufferedWriter out = new BufferedWriter(new FileWriter(testOutput))){
 //            String toWrite;
 //            while((toWrite=s.poll())!=null) {
@@ -365,7 +366,9 @@ public final class MorningTask implements HistoricalHandler {
                 System.out.println("l " + l);
 
                 if (l.size() > 0) {
-                    simpleWrite("BOCFX" + "\t" + Double.parseDouble(l.get(4)) / 100d + "\t" + l.get(5) + "\t" + l.get(6), true);
+                    clearFile(bocOutput);
+                    simpleWriteToFile("BOCFX" + "\t" + Double.parseDouble(l.get(4)) / 100d + "\t" + l.get(5) + "\t" + l.get(6), true,bocOutput);
+                    //simpleWrite("BOCFX" + "\t" + Double.parseDouble(l.get(4)) / 100d + "\t" + l.get(5) + "\t" + l.get(6), true);
                 }
 
             } catch (Exception ex) {
@@ -375,6 +378,19 @@ public final class MorningTask implements HistoricalHandler {
             ex.printStackTrace();
         }
     }
+
+    public static void getBOCFX2() {
+        String line;
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(bocOutput), "GBK"))) {
+            while ((line = reader1.readLine()) != null) {
+                System.out.println(" writing BOCFX " + line);
+                simpleWrite(line,true);
+            }
+        } catch (IOException io) {
+            io.printStackTrace();
+        }
+    }
+
 
     public static void handleHistoricalData(String date, double c) {
         System.out.println(" handling historical data ");
@@ -448,13 +464,12 @@ public final class MorningTask implements HistoricalHandler {
             String line;
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                t= LocalDate.parse(al1.get(0));
+                t = LocalDate.parse(al1.get(0));
                 System.out.println(" current t is " + t);
             }
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-
 
 
         final String dateString = t.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
