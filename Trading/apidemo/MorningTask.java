@@ -383,7 +383,7 @@ public final class MorningTask implements HistoricalHandler {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(bocOutput), "GBK"))) {
             while ((line = reader1.readLine()) != null) {
-                System.out.println(" writing BOCFX " + line);
+                System.out.println(" outputting BOCFX " + line);
                 simpleWrite(line,true);
             }
         } catch (IOException io) {

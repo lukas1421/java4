@@ -21,11 +21,13 @@ public class USOvernightTrader extends JPanel {
     static GraphBarTemporal<LocalDateTime> graph1 = new GraphBarTemporal<>();
 
 
+
     public USOvernightTrader() {
 
 
         JPanel controlPanel = new JPanel();
         JButton connect4001 = new JButton(" Connect 4001 ");
+        JButton connect7046 = new JButton(" Connect 7046 ");
 
 
         JScrollPane jp1 = new JScrollPane(graph1) {
@@ -42,13 +44,21 @@ public class USOvernightTrader extends JPanel {
             connectToTWS(4001);
         });
 
+
+        connect7046.addActionListener(al->{
+            System.out.println(" connecting 7046");
+            connectToTWS(7046);
+        });
+
         controlPanel.setLayout(new FlowLayout());
         controlPanel.add(connect4001);
+
+        JPanel tradePanel = new JPanel();
 
         this.setLayout(new BorderLayout());
         this.add(controlPanel, BorderLayout.NORTH);
         this.add(jp1, BorderLayout.CENTER);
-
+        this.add(tradePanel, BorderLayout.SOUTH);
 
     }
 
@@ -68,6 +78,8 @@ public class USOvernightTrader extends JPanel {
     static ApiController getAPICon() {
         return apcon;
     }
+
+
 
 
     public static void main(String[] args) {
@@ -99,7 +111,7 @@ class USConnectionHandler implements ApiController.IConnectionHandler {
 
     @Override
     public void disconnected() {
-        System.out.println("disconnected in XUConnectionHandler");
+        System.out.println("disconnected in US ConnectionHandler");
         USOvernightTrader.connectionStatus = false;
         USOvernightTrader.connectionLabel.setText(Boolean.toString(USOvernightTrader.connectionStatus));
     }
@@ -111,7 +123,7 @@ class USConnectionHandler implements ApiController.IConnectionHandler {
 
     @Override
     public void error(Exception e) {
-        System.out.println(" error in XUConnectionHandler");
+        System.out.println(" error in US ConnectionHandler");
         e.printStackTrace();
     }
 

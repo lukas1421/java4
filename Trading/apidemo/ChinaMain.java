@@ -586,9 +586,9 @@ public final class ChinaMain implements IConnectionHandler {
             }
         });
 
-        CompletableFuture.runAsync(() -> {
-            M_CONTROLLER.generateData();
-        });
+//        CompletableFuture.runAsync(() -> {
+//            M_CONTROLLER.generateData();
+//        });
 
         CompletableFuture.runAsync(() -> {
             try {
