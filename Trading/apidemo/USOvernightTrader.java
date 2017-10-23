@@ -92,9 +92,6 @@ public class USOvernightTrader extends JPanel {
         jf.setVisible(true);
         uso.connectToTWS(4001);
 
-
-
-
     }
 
 }

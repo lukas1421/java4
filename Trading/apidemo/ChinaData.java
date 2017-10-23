@@ -374,13 +374,13 @@ public final class ChinaData extends JPanel {
 
         getSGXA50HistButton.addActionListener(l -> {
             CompletableFuture.runAsync(() -> {
-                controller().getSGXA50Historical(20000, ChinaData::handleSGX50HistData, 7);
+                controller().getSGXA50HistoricalCustom(20000, ChinaData::handleSGX50HistData, 7);
             });
         });
 
         getSGXA50TodayButton.addActionListener(l -> {
             CompletableFuture.runAsync(() -> {
-                controller().getSGXA50Historical(50000, ChinaData::handleSGXDataToday, 1);
+                controller().getSGXA50HistoricalCustom(50000, ChinaData::handleSGXDataToday, 1);
             });
         });
 
@@ -475,7 +475,7 @@ public final class ChinaData extends JPanel {
         System.out.println(" get ftse open map " + ftseOpenMap.toString());
 
         CompletableFuture.runAsync(() -> {
-            controller().getSGXA50Historical(20000, ChinaData::handleSGX50HistData, 7);
+            controller().getSGXA50HistoricalCustom(20000, ChinaData::handleSGX50HistData, 7);
         });
 
         // get from tdx

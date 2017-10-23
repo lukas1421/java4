@@ -925,7 +925,7 @@ public class ApiController implements EWrapper {
         System.out.println("requesting XU data ends");
     }
 
-    public void getSGXA50Historical(int reqId, HistDataConsumer<String, Double, Integer> dc, int duration) {
+    public void getSGXA50HistoricalCustom(int reqId, HistDataConsumer<String, Double, Integer> dc, int duration) {
         Contract c = new Contract();
         c.symbol("XINA50");
         c.exchange("SGX");
@@ -979,10 +979,11 @@ public class ApiController implements EWrapper {
         ChinaMain.globalRequestMap.put(reqID, new Request(c, hh));
 
         CompletableFuture.runAsync(() -> {
-            m_client.reqHistoricalData(reqID, c, "", durationStr, barSize.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList());
+            m_client.reqHistoricalData(reqID, c, "", durationStr, barSize.toString(), whatToShow.toString(),
+                    0, 2, Collections.<TagValue>emptyList());
         });
 
-        System.out.println("getSGXA50Historical END thread " + Thread.currentThread().getName());
+        System.out.println("getSGXA50HistoricalCustom END thread " + Thread.currentThread().getName());
     }
 
     public void reHistDataArray(IHistoricalDataHandler handler) {

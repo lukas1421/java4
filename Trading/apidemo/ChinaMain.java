@@ -363,7 +363,7 @@ public final class ChinaMain implements IConnectionHandler {
 //            long start = System.currentTimeMillis();
 //            CompletableFuture.runAsync(() -> {
 //                System.out.println("in completablefuture thread" + Thread.currentThread().getName());
-//                controller().getSGXA50Historical();
+//                controller().getSGXA50HistoricalCustom();
 //            });
 //            System.out.println(" time total " + (System.currentTimeMillis() - start));
 //        });
