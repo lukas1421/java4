@@ -10,10 +10,8 @@ import static apidemo.ChinaStock.sizeMap;
 import static apidemo.ChinaStock.*;
 import static apidemo.XU.indexPriceSina;
 import static apidemo.XU.indexVol;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.time.LocalDate;
@@ -32,6 +30,8 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 
 public class SinaStock implements Runnable {
+
+    //static File = new File()
 
     static Map<String, Double> weightMapA50 = new HashMap<>();
 
@@ -192,7 +192,7 @@ public class SinaStock implements Runnable {
     public static double getOpen() {
         String l;
         double temp = 0.0;
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "testOutput.txt")))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(MorningTask.output)))) {
             while ((l = reader1.readLine()) != null) {
                 List<String> s = Arrays.asList(l.split("\t"));
                 if (s.get(0).equals("FTSE A50")) {

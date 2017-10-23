@@ -32,7 +32,7 @@ import java.util.regex.Pattern;
 
 public final class MorningTask implements HistoricalHandler {
 
-    static File output = new File(ChinaMain.GLOBALPATH + "morningOutput.txt");
+    public static File output = new File(ChinaMain.GLOBALPATH + "morningOutput.txt");
     static File bocOutput = new File(ChinaMain.GLOBALPATH + "BOCUSD.txt");
     static File fxOutput = new File(ChinaMain.GLOBALPATH + "fx.txt");
     static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
