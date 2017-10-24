@@ -389,8 +389,8 @@ public class HistHKStocks extends JPanel {
         NavigableMap<LocalDateTime, Double> ret = SharpeUtility.getReturnSeries(hkWtdAll.get(stock),
                 LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1),LocalTime.MIN));
         double mean = SharpeUtility.getMean(ret);
-        double sd = SharpeUtility.getSD(ret)*Math.sqrt(48);
-        double sr = SharpeUtility.getSharpe(ret,48);
+        double sd = SharpeUtility.getSD(ret)*Math.sqrt(68);
+        double sr = SharpeUtility.getSharpe(ret,68);
         double perc = SharpeUtility.getPercentile(hkWtdAll.get(stock));
         HKResultMapWtd.get(stock).fillResult(mean, sd, sr, perc);
         System.out.println(Utility.getStrTabbed(" wtd stock mean sd sr perc size firstEntry last Entry",
