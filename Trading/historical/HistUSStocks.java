@@ -66,7 +66,7 @@ public class HistUSStocks extends JPanel  {
 
 
     public static List<String> usNameList = new LinkedList<>();
-    public static File testOutput = new File(ChinaMain.GLOBALPATH + "usTestData.txt");
+    public static File usTestOutput = new File(ChinaMain.GLOBALPATH + "usTestData.txt");
 
     static volatile AtomicInteger uniqueID = new AtomicInteger(60000);
     static volatile String selectedStock = "";
@@ -197,26 +197,26 @@ public class HistUSStocks extends JPanel  {
         JButton outputYtdButton = new JButton("Output Y");
         outputYtdButton.addActionListener(al->{
             if(USALLYtd.containsKey(selectedStock)) {
-                MorningTask.clearFile(testOutput);
+                MorningTask.clearFile(usTestOutput);
                 USALLYtd.get(selectedStock).entrySet().forEach(e->
                         MorningTask.simpleWriteToFile(
                                 Utility.getStrTabbed(e.getKey(),e.getValue().getOpen(),e.getValue().getHigh()
                                         ,e.getValue().getLow()
-                                        ,e.getValue().getClose()), true,testOutput));
+                                        ,e.getValue().getClose()), true, usTestOutput));
             } else {
                 System.out.println(" cannot find stock for outtputting ytd " + selectedStock);
             }
         });
 
-        JButton outputWtdButton = new JButton("Output Y");
+        JButton outputWtdButton = new JButton("Output W");
         outputWtdButton.addActionListener(al-> {
             if(USALLWtd.containsKey(selectedStock)) {
-                MorningTask.clearFile(testOutput);
+                MorningTask.clearFile(usTestOutput);
                 USALLWtd.get(selectedStock).entrySet().forEach(e ->
                         MorningTask.simpleWriteToFile(
                                 Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
                                         , e.getValue().getLow()
-                                        , e.getValue().getClose()), true, testOutput));
+                                        , e.getValue().getClose()), true, usTestOutput));
             } else {
                 System.out.println(" cannot find stock for outputting wtd " + selectedStock);
             }
@@ -374,8 +374,8 @@ public class HistUSStocks extends JPanel  {
         NavigableMap<LocalDateTime, Double> ret = SharpeUtility.getReturnSeries(USALLWtd.get(stock),
                 LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1), LocalTime.MIN));
         double mean = SharpeUtility.getMean(ret);
-        double sd = SharpeUtility.getSD(ret);
-        double sr = SharpeUtility.getSharpe(ret,48);
+        double sd = SharpeUtility.getSD(ret)*Math.sqrt(78); //get day vol
+        double sr = SharpeUtility.getSharpe(ret,78); //get day SR
         double perc = SharpeUtility.getPercentile(USALLWtd.get(stock));
         USResultMapWtd.get(stock).fillResult(mean, sd, sr, perc);
         System.out.println(Utility.getStrTabbed(" wtd stock mean sd sr perc size firstEntry last Entry",
@@ -522,7 +522,7 @@ public class HistUSStocks extends JPanel  {
                 case 4:
                     return "PercY";
                 case 5:
-                    return "DaysY";
+                    return "nY";
                 case 6:
                     return "meanW";
                 case 7:
@@ -532,7 +532,7 @@ public class HistUSStocks extends JPanel  {
                 case 9:
                     return "percW";
                 case 10:
-                    return "DaysW";
+                    return "nW";
                 default:
                     return "";
             }
@@ -558,10 +558,8 @@ public class HistUSStocks extends JPanel  {
                     return USALLYtd.get(name).size();
                 case 6:
                     return USResultMapWtd.get(name).getMean();
-
                 case 7:
                     return USResultMapWtd.get(name).getSd();
-
                 case 8:
                     return USResultMapWtd.get(name).getSr();
                 case 9:

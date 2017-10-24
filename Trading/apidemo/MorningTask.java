@@ -76,7 +76,7 @@ public final class MorningTask implements HistoricalHandler {
 
 
     //        static void simpleWrite(LinkedList<String> s) {
-//        try (BufferedWriter out = new BufferedWriter(new FileWriter(testOutput))){
+//        try (BufferedWriter out = new BufferedWriter(new FileWriter(usTestOutput))){
 //            String toWrite;
 //            while((toWrite=s.poll())!=null) {
 //                out.append(toWrite);

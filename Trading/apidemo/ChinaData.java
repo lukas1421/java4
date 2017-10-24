@@ -424,7 +424,7 @@ public final class ChinaData extends JPanel {
         System.out.println(" most recent trading date " + SinaStock.mostRecentTradingDay.toString());
         File output = new File(ChinaMain.GLOBALPATH + "mostRecentTradingDate.txt");
 
-        //MorningTask.clearFile(testOutput);
+        //MorningTask.clearFile(usTestOutput);
         MorningTask.simpleWriteToFile(SinaStock.mostRecentTradingDay.toString(),false,output);
 
     }

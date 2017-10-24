@@ -1734,9 +1734,9 @@ public class ApiController implements EWrapper {
 //                        .put(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")),
 //                                new SimpleBar(open, high, low, close));
 //                if (HistHKStocks.idStockMap.get(reqId).equals("700")) {
-//                    //MorningTask.clearFile(HistHKStocks.testOutput);
+//                    //MorningTask.clearFile(HistHKStocks.usTestOutput);
 //                    MorningTask.simpleWriteToFile(ChinaStockHelper.getStrTabbed(date, open, high, low, close, volume),
-//                            true, HistHKStocks.testOutput);
+//                            true, HistHKStocks.usTestOutput);
 //                }
 //            } else {
 //                HistHKStocks.stocksProcessedYtd++;

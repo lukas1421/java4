@@ -177,8 +177,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.5F));
         g2.setStroke(BS3);
 
-        g2.drawString(Double.toString(max), getWidth() - 40, getHeight() - 33);
-        g2.drawString(Double.toString(min), getWidth() - 40, 15);
+        g2.drawString(Double.toString(max), getWidth() - 40, 15);
+        g2.drawString(Double.toString(min), getWidth() - 40, getHeight() - 33);
         //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2);
         //g2.drawString("周" + Integer.toString(wtdP), getWidth() - 40, getHeight() / 2);
 

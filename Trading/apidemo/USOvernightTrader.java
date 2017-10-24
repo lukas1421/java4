@@ -20,10 +20,9 @@ public class USOvernightTrader extends JPanel {
 
     static GraphBarTemporal<LocalDateTime> graph1 = new GraphBarTemporal<>();
 
-
+    static double GLOBAL_DELTA_CAP = 2000.0;
 
     public USOvernightTrader() {
-
 
         JPanel controlPanel = new JPanel();
         JButton connect4001 = new JButton(" Connect 4001 ");
@@ -52,6 +51,7 @@ public class USOvernightTrader extends JPanel {
 
         controlPanel.setLayout(new FlowLayout());
         controlPanel.add(connect4001);
+        controlPanel.add(connect7046);
 
         JPanel tradePanel = new JPanel();
 
@@ -79,11 +79,7 @@ public class USOvernightTrader extends JPanel {
         return apcon;
     }
 
-
-
-
     public static void main(String[] args) {
-
         JFrame jf = new JFrame();
         jf.setSize(new Dimension(1000,1000));
         USOvernightTrader uso = new USOvernightTrader();
@@ -163,7 +159,7 @@ class USPositionHandler implements ApiController.IPositionHandler {
 
     @Override
     public void positionEnd() {
-
+        System.out.println(" position ended ");
     }
 }
 
@@ -177,7 +173,6 @@ class USTradeDefaultHandler implements ApiController.ITradeReportHandler {
     @Override
     public void tradeReportEnd() {
         System.out.println(" trade report ended ");
-
     }
 
     @Override

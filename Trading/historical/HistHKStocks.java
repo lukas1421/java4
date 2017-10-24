@@ -7,7 +7,6 @@ import client.Contract;
 import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
-import graph.GraphBar;
 import graph.GraphBarTemporal;
 import handler.HistoricalHandler;
 import utility.SharpeUtility;
@@ -50,7 +49,7 @@ public class HistHKStocks extends JPanel {
 
     public static final LocalDate MONDAY_OF_WEEK = getMondayOfWeek(LocalDateTime.now());
 
-    public final static File testOutput = new File(ChinaMain.GLOBALPATH+"hkTestData.txt");
+    public final static File hkTestOutput = new File(ChinaMain.GLOBALPATH+"hkTestData.txt");
 
     //ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
     static ApiController apcon = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
@@ -180,8 +179,8 @@ public class HistHKStocks extends JPanel {
 
         JButton getYtdButton = new JButton("Ytd");
         JButton getWtdButton = new JButton("Wtd");
-        JButton outputYtdButton = new JButton("OutputY");
-        JButton outputWtdButton = new JButton("OutputW");
+        JButton outputYtdButton = new JButton("Output Y");
+        JButton outputWtdButton = new JButton("Output W");
 
         getYtdButton.addActionListener(al -> {
             sm = new Semaphore(50);
@@ -195,12 +194,12 @@ public class HistHKStocks extends JPanel {
 
         outputYtdButton.addActionListener(al->{
             if(hkYtdAll.containsKey(selectedStock)) {
-                MorningTask.clearFile(testOutput);
+                MorningTask.clearFile(hkTestOutput);
                 hkYtdAll.get(selectedStock).entrySet().forEach(e->
                         MorningTask.simpleWriteToFile(
                                 Utility.getStrTabbed(e.getKey(),e.getValue().getOpen(),e.getValue().getHigh()
                                         ,e.getValue().getLow()
-                                        ,e.getValue().getClose()), true,testOutput));
+                                        ,e.getValue().getClose()), true, hkTestOutput));
             } else {
                 System.out.println(" cannot find stock for outtputting ytd " + selectedStock);
             }
@@ -208,12 +207,12 @@ public class HistHKStocks extends JPanel {
 
         outputWtdButton.addActionListener(al-> {
             if(hkWtdAll.containsKey(selectedStock)) {
-                MorningTask.clearFile(testOutput);
+                MorningTask.clearFile(hkTestOutput);
                 hkWtdAll.get(selectedStock).entrySet().forEach(e ->
                         MorningTask.simpleWriteToFile(
                                 Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
                                         , e.getValue().getLow()
-                                        , e.getValue().getClose()), true, testOutput));
+                                        , e.getValue().getClose()), true, hkTestOutput));
             } else {
                 System.out.println(" cannot find stock for outputting wtd " + selectedStock);
             }
@@ -381,7 +380,7 @@ public class HistHKStocks extends JPanel {
                     MorningTask.simpleWriteToFile(
                             Utility.getStrTabbed(e.getKey(),e.getValue().getOpen(),e.getValue().getHigh()
                                     ,e.getValue().getLow()
-                            ,e.getValue().getClose()), true,testOutput));
+                            ,e.getValue().getClose()), true, hkTestOutput));
         }
     }
 
@@ -390,7 +389,7 @@ public class HistHKStocks extends JPanel {
         NavigableMap<LocalDateTime, Double> ret = SharpeUtility.getReturnSeries(hkWtdAll.get(stock),
                 LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1),LocalTime.MIN));
         double mean = SharpeUtility.getMean(ret);
-        double sd = SharpeUtility.getSD(ret);
+        double sd = SharpeUtility.getSD(ret)*Math.sqrt(48);
         double sr = SharpeUtility.getSharpe(ret,48);
         double perc = SharpeUtility.getPercentile(hkWtdAll.get(stock));
         HKResultMapWtd.get(stock).fillResult(mean, sd, sr, perc);
@@ -403,7 +402,7 @@ public class HistHKStocks extends JPanel {
                     MorningTask.simpleWriteToFile(
                             Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
                                     , e.getValue().getLow()
-                                    , e.getValue().getClose()), true, testOutput));
+                                    , e.getValue().getClose()), true, hkTestOutput));
         }
     }
 
@@ -444,7 +443,7 @@ public class HistHKStocks extends JPanel {
                 if(name.equals("700")) {
 //                    System.out.println(" outputting tencent");
 //                    MorningTask.simpleWriteToFile(Utility.getStrTabbed(lt, open, high, low, close), true,
-//                            testOutput);
+//                            usTestOutput);
                 }
             }
         }

@@ -799,7 +799,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         File output = new File(ChinaMain.GLOBALPATH + "currentPositionProcessed.txt");
         MorningTask.clearFile(output);
-        //MorningTask.simpleWriteToFile("", false, testOutput); //clear content
+        //MorningTask.simpleWriteToFile("", false, hkTestOutput); //clear content
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(ChinaMain.GLOBALPATH + "currentPosition.txt"), "gbk"))) {
@@ -864,7 +864,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             "O", (dataList.get(buySellCol).equals("买入") ? "" : "-") + dataList.get(fillAmtCol), "1", dataList.get(fillPriceCol));
                     MorningTask.simpleWriteToFile(outputString, true, output);
 
-                    //testOutput here to currentPositionProcessed
+                    //hkTestOutput here to currentPositionProcessed
                 }
             }
         } catch (IOException ex1) {
