@@ -467,16 +467,16 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 
         indexButton.addActionListener(l -> {
             displayType = WhatToDisplay.INDEX;
-            interestButton.doClick();
+            //interestButton.doClick();
         });
         stockButton.addActionListener(l -> {
             displayType = WhatToDisplay.STOCK;
-            interestButton.doClick();
+            //interestButton.doClick();
         });
         sectorButton.addActionListener(l -> {
             displayType = WhatToDisplay.SECTOR;
             sinceTodayButton.doClick();
-            interestButton.doClick();
+            //interestButton.doClick();
         });
 //        //granularity (should not need these for today and ytd, implied granu is min and daydata respectively.
 //        JRadioButton dayDataButton = new JRadioButton("Day");
@@ -751,8 +751,8 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 
             LinkedList<String> l = sharpMapMaster.get(yqm).entrySet().stream().sorted(reverseComparator(Comparator.comparingDouble(e -> ChinaData.priceMinuteSharpe.get(e.getKey()))))
                     .map(Map.Entry::getKey).collect(Collectors.toCollection(LinkedList::new));
-            System.out.println(" yqm is " + yqm);
-            System.out.println(" sharpe list is " + l);
+            //System.out.println(" yqm is " + yqm);
+            //System.out.println(" sharpe list is " + l);
 
             //System.out.println(" sharpe linked list " + l);
             processGraphMonitors(l);
