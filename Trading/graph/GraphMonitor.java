@@ -1,5 +1,6 @@
 package graph;
 
+import TradeType.Trade;
 import apidemo.ChinaData;
 import apidemo.ChinaPosition;
 import apidemo.ChinaStock;
@@ -29,6 +30,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
     String name;
     String chineseName;
     NavigableMap<LocalTime, SimpleBar> tm;
+    NavigableMap<LocalTime, ? super Trade> trades = new ConcurrentSkipListMap<>();
     double maxToday;
     double minToday;
     double minRtn;
@@ -104,6 +106,32 @@ public class GraphMonitor extends JComponent implements GraphFillable {
                 g.drawLine(x, openY, x + 2, openY);
             }
             g.drawLine(x + 1, highY, x + 1, lowY);
+
+            //if()
+            //ChinaPosition.tradesMap.get()
+            if(trades.subMap(lt,true,lt.plusMinutes(1L),false).size()>0) {
+                //System.out.println(" name time trade " + name + " " + lt);
+                for(Map.Entry e: trades.subMap(lt,true,lt.plusMinutes(1L),false).entrySet()) {
+                    Trade t = (Trade) e.getValue();
+                    if (t.getSize() > 0) {
+                        //System.out.println(" drawing " + name + " " + lt);
+                        g.setColor(Color.blue);
+                        int xCord = x;
+                        int yCord = lowY;
+                        Polygon p = new Polygon(new int[]{xCord - 10, xCord, xCord + 10}, new int[]{yCord + 10, yCord, yCord + 10}, 3);
+                        g.drawPolygon(p);
+                        g.fillPolygon(p);
+
+                    } else {
+                        g.setColor(Color.black);
+                        int xCord = x;
+                        int yCord = highY;
+                        Polygon p1 = new Polygon(new int[]{xCord - 10, xCord, xCord + 10}, new int[]{yCord - 10, yCord, yCord - 10}, 3);
+                        g.drawPolygon(p1);
+                        g.fillPolygon(p1);
+                    }
+                };
+            };
 
             g.setColor(Color.black);
             if (lt.equals(tm.firstKey())) {
@@ -253,6 +281,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         setMinSharpe(ChinaData.priceMinuteSharpe.getOrDefault(name, 0.0));
         setWtdSharpe(ChinaData.wtdSharpe.getOrDefault(name, 0.0));
         setSize1(ChinaStock.sizeMap.getOrDefault(name, 0L));
+        trades = ChinaPosition.tradesMap.get(name);
         if (NORMAL_STOCK.test(name)) {
             this.setNavigableMap(priceMapBar.get(name));
             getYtdY2CloseP(name);

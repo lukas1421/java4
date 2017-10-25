@@ -621,11 +621,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     static void refreshFuture() {
 
-        xuBotPos = ChinaPosition.tradesMap.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.summingInt(e
-                -> ((Trade) e.getValue()).getSize()));
+        xuBotPos = ChinaPosition.tradesMap.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0)
+                .collect(Collectors.summingInt(e -> ((Trade) e.getValue()).getSize()));
 
-        xuSoldPos = ChinaPosition.tradesMap.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).collect(Collectors.summingInt(e
-                -> ((Trade) e.getValue()).getSize()));
+        xuSoldPos = ChinaPosition.tradesMap.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0)
+                .collect(Collectors.summingInt(e -> ((Trade) e.getValue()).getSize()));
 
         xuOpenPostion = xuCurrentPosition - xuBotPos - xuSoldPos;
 

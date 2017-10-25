@@ -348,40 +348,40 @@ public class HistHKStocks extends JPanel {
         return apcon;
     }
 
-    public static void computeAll() {
-        System.out.println(" computing starts ");
-        hkYtdAll.keySet().forEach(k -> {
-            NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(hkYtdAll.get(k),
-                    LocalDate.of(2016, Month.DECEMBER, 31));
-            double mean = SharpeUtility.getMean(ret);
-            double sd = SharpeUtility.getSD(ret);
-            double sr = SharpeUtility.getSharpe(ret,252);
-            double perc = SharpeUtility.getPercentile(hkYtdAll.get(k));
-
-            System.out.println(Utility.getStrTabbed(" stock mean sd sr perc ", k, mean, sd, sr, perc));
-        });
-    }
+//    public static void computeAll() {
+//        System.out.println(" computing starts ");
+//        hkYtdAll.keySet().forEach(k -> {
+//            NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(hkYtdAll.get(k),
+//                    LocalDate.of(2016, Month.DECEMBER, 31));
+//            double mean = SharpeUtility.getMean(ret);
+//            double sd = SharpeUtility.getSD(ret);
+//            double sr = SharpeUtility.getSharpe(ret,252);
+//            double perc = SharpeUtility.getPercentile(hkYtdAll.get(k));
+//
+//            System.out.println(Utility.getStrTabbed(" stock mean sd sr perc ", k, mean, sd, sr, perc));
+//        });
+//    }
 
     public static void computeYtd(String stock) {
         System.out.println(" computing Ytd starts for stock " + stock);
         NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(hkYtdAll.get(stock),
                 LocalDate.of(2016, Month.DECEMBER, 31));
         double mean = SharpeUtility.getMean(ret);
-        double sd = SharpeUtility.getSD(ret);
+        double sdDay = SharpeUtility.getSD(ret);
         double sr = SharpeUtility.getSharpe(ret,252);
         double perc = SharpeUtility.getPercentile(hkYtdAll.get(stock));
-        HKResultMapYtd.get(stock).fillResult(mean, sd, sr, perc);
+        HKResultMapYtd.get(stock).fillResult(mean, sdDay, sr, perc);
         System.out.println(Utility.getStrTabbed(" stock mean sd sr perc size firstEntry"
-                , stock, mean, sd, sr, perc, ret.size(), ret.firstEntry(), ret.lastEntry()));
+                , stock, mean, sdDay, sr, perc, ret.size(), ret.firstEntry(), ret.lastEntry()));
 
-        if(stock.equals("700")) {
-            System.out.println(" outputting 700 ");
-            hkYtdAll.get(stock).entrySet().forEach(e->
-                    MorningTask.simpleWriteToFile(
-                            Utility.getStrTabbed(e.getKey(),e.getValue().getOpen(),e.getValue().getHigh()
-                                    ,e.getValue().getLow()
-                            ,e.getValue().getClose()), true, hkTestOutput));
-        }
+//        if(stock.equals("700")) {
+//            System.out.println(" outputting 700 ");
+//            hkYtdAll.get(stock).entrySet().forEach(e->
+//                    MorningTask.simpleWriteToFile(
+//                            Utility.getStrTabbed(e.getKey(),e.getValue().getOpen(),e.getValue().getHigh()
+//                                    ,e.getValue().getLow()
+//                            ,e.getValue().getClose()), true, hkTestOutput));
+//        }
     }
 
     public static void computeWtd(String stock) {
@@ -389,21 +389,21 @@ public class HistHKStocks extends JPanel {
         NavigableMap<LocalDateTime, Double> ret = SharpeUtility.getReturnSeries(hkWtdAll.get(stock),
                 LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1),LocalTime.MIN));
         double mean = SharpeUtility.getMean(ret);
-        double sd = SharpeUtility.getSD(ret)*Math.sqrt(68);
+        double sdDay = SharpeUtility.getSD(ret)*Math.sqrt(68);
         double sr = SharpeUtility.getSharpe(ret,68);
         double perc = SharpeUtility.getPercentile(hkWtdAll.get(stock));
-        HKResultMapWtd.get(stock).fillResult(mean, sd, sr, perc);
+        HKResultMapWtd.get(stock).fillResult(mean, sdDay, sr, perc);
         System.out.println(Utility.getStrTabbed(" wtd stock mean sd sr perc size firstEntry last Entry",
-                stock, mean, sd, sr, perc,ret.size(), ret.firstEntry(), ret.lastEntry()));
+                stock, mean, sdDay, sr, perc,ret.size(), ret.firstEntry(), ret.lastEntry()));
 
-        if(stock.equals("700")) {
-            System.out.println(" outputting 700 ");
-            hkWtdAll.get(stock).entrySet().forEach(e ->
-                    MorningTask.simpleWriteToFile(
-                            Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
-                                    , e.getValue().getLow()
-                                    , e.getValue().getClose()), true, hkTestOutput));
-        }
+//        if(stock.equals("700")) {
+//            System.out.println(" outputting 700 ");
+//            hkWtdAll.get(stock).entrySet().forEach(e ->
+//                    MorningTask.simpleWriteToFile(
+//                            Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
+//                                    , e.getValue().getLow()
+//                                    , e.getValue().getClose()), true, hkTestOutput));
+//        }
     }
 
     static class YtdDataHandler implements HistoricalHandler{

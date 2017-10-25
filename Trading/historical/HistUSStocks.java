@@ -40,6 +40,7 @@ public class HistUSStocks extends JPanel  {
     static final String USCHINASTOCKFILE = "USChinaStocks.txt";
     static final String USALLFILE = "USAll.txt";
     static final String USFAMOUSFILE = "USFamous.txt";
+    static final String USCurrent= USALLFILE;
 
     private static volatile Semaphore sm = new Semaphore(50);
     public static final LocalDate MONDAY_OF_WEEK = getMondayOfWeek(LocalDateTime.now());
@@ -93,7 +94,7 @@ public class HistUSStocks extends JPanel  {
     public HistUSStocks() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + USCHINASTOCKFILE), "gbk"))) {
+                new FileInputStream(ChinaMain.GLOBALPATH + USCurrent), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 USALLYtd.put(al1.get(0), new TreeMap<>());
