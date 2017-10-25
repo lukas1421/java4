@@ -110,6 +110,24 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         }
     }
 
+    public void updateBar(double o, double h, double l, double c) {
+
+        //System.out.println("updating bar o h l c" + o + " " + h + " " + l + " " + c);
+
+        if(h > high) {
+            high = h;
+        }
+
+        if(l < low) {
+            low = l;
+        }
+
+        close = c;
+
+
+    }
+
+
     public void round() {
         open = Math.round(100d * open) / 100d;
         high = Math.round(100d * high) / 100d;

@@ -11,6 +11,7 @@ import java.io.*;
 import java.sql.Blob;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -95,6 +96,14 @@ public class Utility {
         }
         return 0.0;
 
+    }
+
+    public static LocalDate getMondayOfWeek(LocalDateTime ld) {
+        LocalDate res = ld.toLocalDate();
+        while (!res.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
+            res = res.minusDays(1);
+        }
+        return res;
     }
 
     public static Blob blobify(NavigableMap<LocalTime, ?> mp, Session s) {
