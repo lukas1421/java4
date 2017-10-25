@@ -35,7 +35,7 @@ public class HistHKStocks extends JPanel {
 
     static final String CUTOFFTIME = getDataCutoff();
     static final int DAYSTOREQUESTYTD = (int) Math.round(ChronoUnit.DAYS.between(
-            LocalDate.of(LocalDate.now().getYear() - 1, Month.DECEMBER, 31), LocalDate.now())*252/365);
+            LocalDate.of(LocalDate.now().getYear() - 1, Month.DECEMBER, 31), LocalDate.now()) * 252 / 365);
 
     static final int DAYSTOREQUESTWTD = (int) ChronoUnit.DAYS.between(
             getMondayOfWeek(LocalDateTime.now()), LocalDate.now()) + 1;
@@ -49,7 +49,7 @@ public class HistHKStocks extends JPanel {
 
     public static final LocalDate MONDAY_OF_WEEK = getMondayOfWeek(LocalDateTime.now());
 
-    public final static File hkTestOutput = new File(ChinaMain.GLOBALPATH+"hkTestData.txt");
+    public final static File hkTestOutput = new File(ChinaMain.GLOBALPATH + "hkTestData.txt");
 
     //ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
     static ApiController apcon = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
@@ -94,7 +94,7 @@ public class HistHKStocks extends JPanel {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 hkYtdAll.put(al1.get(0), new TreeMap<>());
-                hkWtdAll.put(al1.get(0),new TreeMap<>());
+                hkWtdAll.put(al1.get(0), new TreeMap<>());
                 HKResultMapYtd.put(al1.get(0), new HKResult());
                 HKResultMapWtd.put(al1.get(0), new HKResult());
             }
@@ -106,7 +106,7 @@ public class HistHKStocks extends JPanel {
         m_model = new BarModel_HK();
         graphPanel = new JPanel();
 
-        JScrollPane jp1 = new JScrollPane(graphYtd){
+        JScrollPane jp1 = new JScrollPane(graphYtd) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -116,7 +116,7 @@ public class HistHKStocks extends JPanel {
             }
         };
 
-        JScrollPane jp2 = new JScrollPane(graphWtd){
+        JScrollPane jp2 = new JScrollPane(graphWtd) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -127,11 +127,9 @@ public class HistHKStocks extends JPanel {
         };
         //jp1.add();
         //jp2.add(graphWtd);
-        graphPanel.setLayout(new GridLayout(2,1));
+        graphPanel.setLayout(new GridLayout(2, 1));
         graphPanel.add(jp1);
         graphPanel.add(jp2);
-
-
 
 
         tab = new JTable(m_model) {
@@ -163,7 +161,7 @@ public class HistHKStocks extends JPanel {
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
                 //d.height = 1000;
-                d.width =1000;
+                d.width = 1000;
                 return d;
             }
         };
@@ -187,26 +185,26 @@ public class HistHKStocks extends JPanel {
             requestAllHKStocksYtd();
         });
 
-        getWtdButton.addActionListener(al->{
+        getWtdButton.addActionListener(al -> {
             sm = new Semaphore(50);
             requestAllHKStocksWtd();
         });
 
-        outputYtdButton.addActionListener(al->{
-            if(hkYtdAll.containsKey(selectedStock)) {
+        outputYtdButton.addActionListener(al -> {
+            if (hkYtdAll.containsKey(selectedStock)) {
                 MorningTask.clearFile(hkTestOutput);
-                hkYtdAll.get(selectedStock).entrySet().forEach(e->
+                hkYtdAll.get(selectedStock).entrySet().forEach(e ->
                         MorningTask.simpleWriteToFile(
-                                Utility.getStrTabbed(e.getKey(),e.getValue().getOpen(),e.getValue().getHigh()
-                                        ,e.getValue().getLow()
-                                        ,e.getValue().getClose()), true, hkTestOutput));
+                                Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
+                                        , e.getValue().getLow()
+                                        , e.getValue().getClose()), true, hkTestOutput));
             } else {
                 System.out.println(" cannot find stock for outtputting ytd " + selectedStock);
             }
         });
 
-        outputWtdButton.addActionListener(al-> {
-            if(hkWtdAll.containsKey(selectedStock)) {
+        outputWtdButton.addActionListener(al -> {
+            if (hkWtdAll.containsKey(selectedStock)) {
                 MorningTask.clearFile(hkTestOutput);
                 hkWtdAll.get(selectedStock).entrySet().forEach(e ->
                         MorningTask.simpleWriteToFile(
@@ -242,7 +240,7 @@ public class HistHKStocks extends JPanel {
         setLayout(new BorderLayout());
         add(controlPanel, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
-        add(graphPanel,BorderLayout.SOUTH);
+        add(graphPanel, BorderLayout.SOUTH);
 
         tab.setAutoCreateRowSorter(true);
         sorter = (TableRowSorter<BarModel_HK>) tab.getRowSorter();
@@ -368,7 +366,7 @@ public class HistHKStocks extends JPanel {
                 LocalDate.of(2016, Month.DECEMBER, 31));
         double mean = SharpeUtility.getMean(ret);
         double sdDay = SharpeUtility.getSD(ret);
-        double sr = SharpeUtility.getSharpe(ret,252);
+        double sr = SharpeUtility.getSharpe(ret, 252);
         double perc = SharpeUtility.getPercentile(hkYtdAll.get(stock));
         HKResultMapYtd.get(stock).fillResult(mean, sdDay, sr, perc);
         System.out.println(Utility.getStrTabbed(" stock mean sd sr perc size firstEntry"
@@ -387,14 +385,14 @@ public class HistHKStocks extends JPanel {
     public static void computeWtd(String stock) {
         System.out.println(" computing Wtd starts for stock " + stock);
         NavigableMap<LocalDateTime, Double> ret = SharpeUtility.getReturnSeries(hkWtdAll.get(stock),
-                LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1),LocalTime.MIN));
+                LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1), LocalTime.MIN));
         double mean = SharpeUtility.getMean(ret);
-        double sdDay = SharpeUtility.getSD(ret)*Math.sqrt(68);
-        double sr = SharpeUtility.getSharpe(ret,68);
+        double sdDay = SharpeUtility.getSD(ret) * Math.sqrt(68);
+        double sr = SharpeUtility.getSharpe(ret, 68);
         double perc = SharpeUtility.getPercentile(hkWtdAll.get(stock));
         HKResultMapWtd.get(stock).fillResult(mean, sdDay, sr, perc);
         System.out.println(Utility.getStrTabbed(" wtd stock mean sd sr perc size firstEntry last Entry",
-                stock, mean, sdDay, sr, perc,ret.size(), ret.firstEntry(), ret.lastEntry()));
+                stock, mean, sdDay, sr, perc, ret.size(), ret.firstEntry(), ret.lastEntry()));
 
 //        if(stock.equals("700")) {
 //            System.out.println(" outputting 700 ");
@@ -406,7 +404,7 @@ public class HistHKStocks extends JPanel {
 //        }
     }
 
-    static class YtdDataHandler implements HistoricalHandler{
+    static class YtdDataHandler implements HistoricalHandler {
         @Override
         public void handleHist(String name, String date, double open, double high, double low, double close) {
             hkYtdAll.get(name).put(convertStringToDate(date), new SimpleBar(open, high, low, close));
@@ -433,14 +431,14 @@ public class HistHKStocks extends JPanel {
             cal.setTime(dt);
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
-            LocalDateTime ldt = LocalDateTime.of(ld,lt);
+            LocalDateTime ldt = LocalDateTime.of(ld, lt);
 
             LocalDate monOfWeek = getMondayOfWeek(LocalDateTime.now());
 
             if (ld.isEqual(monOfWeek) || ld.isAfter(monOfWeek)) {
                 //System.out.println(" CORRECT name ld lt open " + name + " " + ld + " " + lt + " " + open);
                 hkWtdAll.get(name).put(ldt, new SimpleBar(open, high, low, close));
-                if(name.equals("700")) {
+                if (name.equals("700")) {
 //                    System.out.println(" outputting tencent");
 //                    MorningTask.simpleWriteToFile(Utility.getStrTabbed(lt, open, high, low, close), true,
 //                            usTestOutput);
@@ -461,12 +459,11 @@ public class HistHKStocks extends JPanel {
 
     public static LocalDate getMondayOfWeek(LocalDateTime ld) {
         LocalDate res = ld.toLocalDate();
-        while(!res.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
+        while (!res.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
             res = res.minusDays(1);
         }
         return res;
     }
-
 
 
     public static void main(String[] args) {
@@ -482,7 +479,6 @@ public class HistHKStocks extends JPanel {
             hk.connectToTWS(7496);
         });
     }
-
 
 
     public static LocalDate convertStringToDate(String date) {

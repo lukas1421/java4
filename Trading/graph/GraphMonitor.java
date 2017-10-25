@@ -107,21 +107,16 @@ public class GraphMonitor extends JComponent implements GraphFillable {
             }
             g.drawLine(x + 1, highY, x + 1, lowY);
 
-            //if()
-            //ChinaPosition.tradesMap.get()
             if(trades.subMap(lt,true,lt.plusMinutes(1L),false).size()>0) {
-                //System.out.println(" name time trade " + name + " " + lt);
                 for(Map.Entry e: trades.subMap(lt,true,lt.plusMinutes(1L),false).entrySet()) {
                     Trade t = (Trade) e.getValue();
                     if (t.getSize() > 0) {
-                        //System.out.println(" drawing " + name + " " + lt);
                         g.setColor(Color.blue);
                         int xCord = x;
                         int yCord = lowY;
                         Polygon p = new Polygon(new int[]{xCord - 10, xCord, xCord + 10}, new int[]{yCord + 10, yCord, yCord + 10}, 3);
                         g.drawPolygon(p);
                         g.fillPolygon(p);
-
                     } else {
                         g.setColor(Color.black);
                         int xCord = x;
