@@ -67,7 +67,7 @@ public class HistChinaStocks extends JPanel {
             while ((line = reader.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
 
-                if(al1.get(0) != "sh204001" && (al1.get(0).startsWith("sh") || al1.get(0).startsWith("sz"))) {
+                if(!al1.get(0).equals("sh204001") && (al1.get(0).startsWith("sh") || al1.get(0).startsWith("sz"))) {
                     chinaYtd.put(al1.get(0), new TreeMap<>());
                     chinaWtd.put(al1.get(0), new TreeMap<>());
                     stockList.add(al1.get(0));
@@ -334,12 +334,7 @@ public class HistChinaStocks extends JPanel {
     }
 
     static LocalTime roundTo5(LocalTime t) {
-        if(t.getMinute()%5==0) {
-            return t;
-        } else {
-            //return LocalTime.of(t.getHour(),t.getMinute()+(5-t.getMinute()%5));
-            return t.plusMinutes(5-t.getMinute()%5);
-        }
+        return (t.getMinute()%5==0)? t:t.plusMinutes(5-t.getMinute()%5);
     }
 
 
