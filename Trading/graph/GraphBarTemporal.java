@@ -33,6 +33,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     NavigableMap<T, Integer> histTradesMap;
     int netCurrentPosition;
     double currentTradePnl;
+    double currentMtmPnl;
     String name;
     String chineseName;
     String bench;
@@ -66,6 +67,11 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
     public void setTradePnl(double p) {
         currentTradePnl = Math.round(p*100d)/100d;
+    }
+
+    public void setWtdMtmPnl(double p) {
+        currentMtmPnl = Math.round(p*100d)/100d;
+
     }
 
     GraphBarTemporal(String s) {
@@ -244,8 +250,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         }
 
         g2.drawString(" pos: " + Integer.toString(netCurrentPosition), getWidth()*7/8, getHeight()/6);
-        g2.drawString(" pnl " + Double.toString(currentTradePnl), getWidth()*7/8, getHeight()*2/6);
-
+        g2.drawString(" Trade pnl " + Double.toString(currentTradePnl), getWidth()*7/8, getHeight()*2/6);
+        g2.drawString(" mtm pnl " + Double.toString(currentMtmPnl), getWidth()*7/8, getHeight()*3/6);
 
 
         if (!Optional.ofNullable(bench).orElse("").equals("")) {
