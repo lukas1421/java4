@@ -39,9 +39,8 @@ public class HistChinaStocks extends JPanel {
 
     public static Map<String, String> nameMap = new HashMap<>();
 
-
-    GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
-    GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
+    static GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
+    static GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
     File chinaInput = new File(ChinaMain.GLOBALPATH + "ChinaAll.txt");
 
     static List<String> stockList = new LinkedList<>();
@@ -86,6 +85,7 @@ public class HistChinaStocks extends JPanel {
                     wtdResult.put(al1.get(0), new ChinaResult());
                     chinaTradeMap.put(al1.get(0), new TreeMap<>());
                     netSharesTradedByDay.put(al1.get(0), new TreeMap<>());
+                    netSharesTradedWtd.put(al1.get(0), new TreeMap<>());
                 }
             }
 
@@ -111,6 +111,9 @@ public class HistChinaStocks extends JPanel {
                         comp.setBackground(Color.GREEN);
                         graphYtd.fillInGraphChinaGen(selectedStock, chinaYtd);
                         graphWtd.fillInGraphChinaGen(selectedStock, chinaWtd);
+                        graphYtd.setTradesMap(netSharesTradedByDay.get(selectedStock));
+                        graphWtd.setTradesMap(netSharesTradedWtd.get(selectedStock));
+
                         //graphWtd.fillInGraphHKGen(selectedStock, hkWtdAll);
                         graphPanel.repaint();
                     } else {
@@ -195,7 +198,13 @@ public class HistChinaStocks extends JPanel {
         });
 
         loadTradesButton.addActionListener(al -> {
-            loadTradeList();
+
+            CompletableFuture.runAsync(() -> {
+                loadTradeList();
+            }).thenRunAsync(() -> {
+                computeNetSharesTradedByDay();
+                computeNetSharesTradedWtd();
+            });
         });
 
 
@@ -203,6 +212,7 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(refreshButton);
         controlPanel.add(ytdButton);
         controlPanel.add(wtdButton);
+        controlPanel.add(loadTradesButton);
 
         this.setLayout(new BorderLayout());
         this.add(controlPanel, BorderLayout.NORTH);
@@ -234,7 +244,7 @@ public class HistChinaStocks extends JPanel {
                 try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxDayPath + tickerFull)))) {
                     while ((line = reader1.readLine()) != null) {
                         List<String> al1 = Arrays.asList(line.split("\t"));
-                        if (al1.get(0).startsWith("2017")) {
+                        if (al1.get(0).startsWith("2017") || al1.get(0).startsWith("2016/1")) {
                             LocalDate d = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
                             if (chinaYtd.containsKey(s)) {
                                 chinaYtd.get(s).put(d, new SimpleBar(Double.parseDouble(al1.get(1)), Double.parseDouble(al1.get(2))
@@ -351,25 +361,37 @@ public class HistChinaStocks extends JPanel {
 
 
     static void loadTradeList() {
+        System.out.println(" loading trade list ");
+
         File f = new File(ChinaMain.GLOBALPATH + "tradeHistoryRecap.txt");
         String line;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), "GBK"))) {
 
             while ((line = reader.readLine()) != null) {
+                //System.out.println(" line is " + line);
                 List<String> l = Arrays.asList(line.split("\t"));
-                LocalDate d = LocalDate.parse(l.get(0), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-                LocalTime t = LocalTime.parse(l.get(1), DateTimeFormatter.ofPattern("HH:mm:ss"));
+                LocalDate d = LocalDate.parse(l.get(0), DateTimeFormatter.ofPattern("yyyy/M/d"));
+                //System.out.println(" d " + d);
+                LocalTime t = LocalTime.parse(l.get(1), DateTimeFormatter.ofPattern("H:mm:ss"));
+                //System.out.println(" t " + t);
                 String ticker = l.get(3).toLowerCase() + l.get(5);
-                int q = Integer.parseInt(l.get(8));
-                double p = Double.parseDouble(l.get(10));
+                //System.out.println(" ticker  " +  ticker);
+                //System.out.println(" d t ticker " + d + t + ticker);
 
+                int q = Integer.parseInt(l.get(8));
+                //System.out.println(" q  " +  q);
+                double p = Double.parseDouble(l.get(10));
+                //System.out.println(" p  " +  p);
                 //chinaTradeList.add(new ChinaTrade(ticker, LocalDateTime.of(d,t), p,q));
+                //System.out.println(" d t ticker q p " + d + " " + t + " "  + ticker + " " + q + " " + p);
 
                 if (chinaTradeMap.containsKey(ticker)) {
-                    if (l.get(3).equals("Stock")) {
+                    if (l.get(2).equals("Stock")) {
                         chinaTradeMap.get(ticker).put(LocalDateTime.of(d, t), new NormalTrade(p, q));
-                    } else if (l.get(3).equals("Margin")) {
+                        System.out.println(" china trade map get ticker " + chinaTradeMap.get(ticker));
+                    } else if (l.get(2).equals("Margin")) {
                         chinaTradeMap.get(ticker).put(LocalDateTime.of(d, t), new MarginTrade(p, q));
+                        System.out.println(" margin get ticker " + chinaTradeMap.get(ticker));
                     }
                 }
             }
@@ -385,18 +407,20 @@ public class HistChinaStocks extends JPanel {
     static void computeNetSharesTradedByDay() {
         for (String s : chinaTradeMap.keySet()) {
             NavigableMap<LocalDate, Integer> res = chinaTradeMap.get(s).entrySet().stream()
-                    .collect(Collectors.groupingBy(e1 -> e1.getKey().toLocalDate(),TreeMap::new,Collectors.summingInt(e1->((Trade)e1.getValue()).getSize())));
+                    .collect(Collectors.groupingBy(e1 -> e1.getKey().toLocalDate(), TreeMap::new, Collectors.summingInt(e1 -> ((Trade) e1.getValue()).getSize())));
             netSharesTradedByDay.put(s, res);
         }
+        //graphYtd.setTradesMap(netSharesTradedByDay);
     }
 
     static void computeNetSharesTradedWtd() {
         for (String s : chinaTradeMap.keySet()) {
             NavigableMap<LocalDateTime, Integer> res =
-                    chinaTradeMap.get(s).entrySet().stream().filter(e->e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
-                    .collect(Collectors.groupingBy(e1 -> roundTo5Ldt(e1.getKey()),TreeMap::new,Collectors.summingInt(e1->((Trade)e1.getValue()).getSize())));
+                    chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
+                            .collect(Collectors.groupingBy(e1 -> roundTo5Ldt(e1.getKey()), TreeMap::new, Collectors.summingInt(e1 -> ((Trade) e1.getValue()).getSize())));
             netSharesTradedWtd.put(s, res);
         }
+        //graphWtd.setTradesMap();
     }
 
 
@@ -499,6 +523,8 @@ public class HistChinaStocks extends JPanel {
                     return "W perc";
                 case 11:
                     return "W n";
+                case 12:
+                    return " Trades n";
 
 
                 default:
@@ -535,6 +561,8 @@ public class HistChinaStocks extends JPanel {
                     return wtdResult.get(name).getPerc();
                 case 11:
                     return chinaWtd.get(name).size();
+                case 12:
+                    return chinaTradeMap.get(name).size();
 
 
                 default:

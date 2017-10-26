@@ -30,6 +30,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     int last = 0;
     double rtn = 0;
     NavigableMap<T, SimpleBar> mainMap;
+    NavigableMap<T, Integer> histTradesMap;
     String name;
     String chineseName;
     String bench;
@@ -53,6 +54,11 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         //maxAMT = LocalTime.of(9, 30);
         //minAMT = Utility.AMOPENT;
         this.mainMap = new ConcurrentSkipListMap<>();
+    }
+
+    public void setTradesMap(NavigableMap<T, Integer> tm) {
+        //System.out.println(" trade history is " + tm);
+        histTradesMap = tm;
     }
 
     GraphBarTemporal(String s) {
@@ -178,6 +184,28 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
             }
             g.drawLine(x + 1, highY, x + 1, lowY);
 
+            if(histTradesMap.containsKey(lt)) {
+                int q = histTradesMap.get(lt);
+                if (q > 0) {
+                    g.setColor(Color.blue);
+                    int xCord = x;
+                    int yCord = lowY;
+                    Polygon p = new Polygon(new int[]{xCord - 10, xCord, xCord + 10}, new int[]{yCord + 10, yCord, yCord + 10}, 3);
+                    g.drawPolygon(p);
+                    g.fillPolygon(p);
+                    g.drawString(Long.toString(Math.round(q/1000.0)), xCord, yCord+25);
+                } else {
+                    g.setColor(Color.black);
+                    int xCord = x;
+                    int yCord = highY;
+                    Polygon p1 = new Polygon(new int[]{xCord - 10, xCord, xCord + 10}, new int[]{yCord - 10, yCord, yCord - 10}, 3);
+                    g.drawPolygon(p1);
+                    g.fillPolygon(p1);
+                    g.drawString(Long.toString(Math.round(q/1000.0)), xCord, yCord-25);
+                }
+            }
+
+
             g.setColor(Color.black);
 
             if (lt.equals(mainMap.firstKey())) {
@@ -185,7 +213,6 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
             } else if (lt.equals(mainMap.lastKey())) {
                 g.drawString(lt.toString(), x, getHeight() - 40);
             }
-
 
             x += WIDTH_BAR;
         }
