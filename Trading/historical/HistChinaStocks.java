@@ -42,6 +42,7 @@ public class HistChinaStocks extends JPanel {
     static GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
     static GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
     File chinaInput = new File(ChinaMain.GLOBALPATH + "ChinaAll.txt");
+    File priceInput = new File(ChinaMain.GLOBALPATH + "pricesTodayYtd.csv");
 
     static List<String> stockList = new LinkedList<>();
     static Map<String, NavigableMap<LocalDate, SimpleBar>> chinaYtd = new HashMap<>();
@@ -56,6 +57,10 @@ public class HistChinaStocks extends JPanel {
 
     public static Map<String, NavigableMap<LocalDate, Integer>> netSharesTradedByDay = new HashMap<>();
     public static Map<String, NavigableMap<LocalDateTime, Integer>> netSharesTradedWtd = new HashMap<>();
+    static Map<String, Double> priceMap = new HashMap<>();
+    static Map<String, Double> totalTradingCostMap = new HashMap<>();
+    static Map<String, Double> costBasisMap = new HashMap<>();
+    static Map<String, Double> netTradePnlMap = new HashMap<>();
 
     static String tdxDayPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export\\" : "J:\\TDX\\T0002\\export\\";
@@ -72,6 +77,20 @@ public class HistChinaStocks extends JPanel {
 
     public HistChinaStocks() {
         String line;
+
+        try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(priceInput)))) {
+            while((line=reader.readLine())!= null) {
+                List<String> l = Arrays.asList(line.split(","));
+                if(l.size() >= 2) {
+                    priceMap.put(l.get(0), Double.parseDouble(l.get(1)));
+                } else {
+                    System.out.println(" line is wrong " + line);
+                }
+            }
+        } catch(IOException e) {
+            e.printStackTrace();
+        }
+
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(chinaInput), "GBK"))) {
             while ((line = reader.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
@@ -86,6 +105,9 @@ public class HistChinaStocks extends JPanel {
                     chinaTradeMap.put(al1.get(0), new TreeMap<>());
                     netSharesTradedByDay.put(al1.get(0), new TreeMap<>());
                     netSharesTradedWtd.put(al1.get(0), new TreeMap<>());
+                    totalTradingCostMap.put(al1.get(0), 0.0);
+                    costBasisMap.put(al1.get(0),0.0);
+
                 }
             }
 
@@ -179,6 +201,7 @@ public class HistChinaStocks extends JPanel {
         JButton ytdButton = new JButton("ytd");
         JButton wtdButton = new JButton("wtd");
         JButton loadTradesButton = new JButton("Load trades");
+        JButton updatePriceButton = new JButton(" update price ");
 
         refreshButton.addActionListener(al -> {
             refreshAll();
@@ -202,9 +225,34 @@ public class HistChinaStocks extends JPanel {
             CompletableFuture.runAsync(() -> {
                 loadTradeList();
             }).thenRunAsync(() -> {
-                computeNetSharesTradedByDay();
-                computeNetSharesTradedWtd();
+                CompletableFuture.runAsync(() -> {
+                    computeNetSharesTradedByDay();
+                });
+
+                CompletableFuture.runAsync(() -> {
+                    computeNetSharesTradedWtd();
+                });
+
+                CompletableFuture.runAsync(() -> {
+                    computeTradingCost();
+                });
             });
+        });
+
+        updatePriceButton.addActionListener(al->{
+            String line1;
+            try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(priceInput)))) {
+                while((line1=reader.readLine())!= null) {
+                    List<String> l = Arrays.asList(line1.split(","));
+                    if(l.size() >= 2) {
+                        priceMap.put(l.get(0), Double.parseDouble(l.get(1)));
+                    } else {
+                        System.out.println(" line is wrong " + line1);
+                    }
+                }
+            } catch(IOException e) {
+                e.printStackTrace();
+            }
         });
 
 
@@ -213,6 +261,7 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(ytdButton);
         controlPanel.add(wtdButton);
         controlPanel.add(loadTradesButton);
+        controlPanel.add(updatePriceButton);
 
         this.setLayout(new BorderLayout());
         this.add(controlPanel, BorderLayout.NORTH);
@@ -275,14 +324,11 @@ public class HistChinaStocks extends JPanel {
                 System.out.println(" name is less than 1 " + tickerFull);
             }
         }
-
     }
 
     /////////////////// wtd
 
     static void computeWtd() {
-
-
         for (String s : stockList) {
             System.out.println(" processing wtd for " + s);
             String tickerFull = s.substring(0, 2).toUpperCase() + "#" + s.substring(2) + ".txt";
@@ -337,7 +383,6 @@ public class HistChinaStocks extends JPanel {
 
     }
 
-
     static LocalTime stringToLocalTime(String s) {
         if (s.length() != 4) {
             System.out.println(" length is not equal to 4");
@@ -363,6 +408,10 @@ public class HistChinaStocks extends JPanel {
     static void loadTradeList() {
         System.out.println(" loading trade list ");
 
+        chinaTradeMap.keySet().forEach(k -> {
+            chinaTradeMap.put(k, new TreeMap<>());
+        });
+
         File f = new File(ChinaMain.GLOBALPATH + "tradeHistoryRecap.txt");
         String line;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), "GBK"))) {
@@ -385,13 +434,23 @@ public class HistChinaStocks extends JPanel {
                 //chinaTradeList.add(new ChinaTrade(ticker, LocalDateTime.of(d,t), p,q));
                 //System.out.println(" d t ticker q p " + d + " " + t + " "  + ticker + " " + q + " " + p);
 
+                LocalDateTime ldt = LocalDateTime.of(d, t);
+
                 if (chinaTradeMap.containsKey(ticker)) {
-                    if (l.get(2).equals("Stock")) {
-                        chinaTradeMap.get(ticker).put(LocalDateTime.of(d, t), new NormalTrade(p, q));
-                        System.out.println(" china trade map get ticker " + chinaTradeMap.get(ticker));
-                    } else if (l.get(2).equals("Margin")) {
-                        chinaTradeMap.get(ticker).put(LocalDateTime.of(d, t), new MarginTrade(p, q));
-                        System.out.println(" margin get ticker " + chinaTradeMap.get(ticker));
+                    if (chinaTradeMap.get(ticker).containsKey(ldt)) {
+                        ((Trade) chinaTradeMap.get(ticker).get(ldt)).merge(l.get(2).equals("Stock") ? (new NormalTrade(p, q)) :
+                                (l.get(2).equals("Margin")?new MarginTrade(p, q):new NormalTrade(0,0)));
+
+                    } else {
+                        if (l.get(2).equals("Stock")) {
+                            chinaTradeMap.get(ticker).put(ldt, new NormalTrade(p, q));
+                            System.out.println(" china trade map get ticker " + chinaTradeMap.get(ticker));
+                        } else if (l.get(2).equals("Margin")) {
+                            chinaTradeMap.get(ticker).put(ldt, new MarginTrade(p, q));
+                            System.out.println(" margin get ticker " + chinaTradeMap.get(ticker));
+                        } else if (l.get(2).equals("Dividend")){
+                            chinaTradeMap.get(ticker).put(ldt, new NormalTrade(0.0, q));
+                        }
                     }
                 }
             }
@@ -421,6 +480,15 @@ public class HistChinaStocks extends JPanel {
             netSharesTradedWtd.put(s, res);
         }
         //graphWtd.setTradesMap();
+    }
+
+    static void computeTradingCost() {
+        for (String s : chinaTradeMap.keySet()) {
+            double tradingCost = chinaTradeMap.get(s).entrySet().stream().collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getTradingCost(s)));
+            double costBasis = chinaTradeMap.get(s).entrySet().stream().collect(Collectors.summingDouble(e-> ((Trade)e.getValue()).getCostWithCommission(s)));
+            totalTradingCostMap.put(s, tradingCost);
+            costBasisMap.put(s, costBasis);
+        }
     }
 
 
@@ -492,7 +560,7 @@ public class HistChinaStocks extends JPanel {
 
         @Override
         public int getColumnCount() {
-            return 20;
+            return 25;
         }
 
         @Override
@@ -525,8 +593,20 @@ public class HistChinaStocks extends JPanel {
                     return "W n";
                 case 12:
                     return " Trades n";
-
-
+                case 13:
+                    return " current pos ";
+                case 14:
+                    return "Trading cost";
+                case 15:
+                    return "price ";
+                case 16:
+                    return "Pos Value";
+                case 17:
+                    return "cost basis";
+                case 18:
+                    return "pnl";
+                case 19:
+                    return "Pnl/cost";
                 default:
                     return "";
 
@@ -536,6 +616,10 @@ public class HistChinaStocks extends JPanel {
         @Override
         public Object getValueAt(int row, int col) {
             String name = stockList.get(row);
+            int currPos = 0;
+            if(netSharesTradedByDay.containsKey(name) && netSharesTradedByDay.get(name).size() > 0) {
+                currPos = netSharesTradedByDay.get(name).entrySet().stream().mapToInt(Map.Entry::getValue).sum();
+            }
             switch (col) {
                 case 0:
                     return name;
@@ -563,7 +647,26 @@ public class HistChinaStocks extends JPanel {
                     return chinaWtd.get(name).size();
                 case 12:
                     return chinaTradeMap.get(name).size();
-
+                case 13:
+                    return currPos;
+                case 14:
+                    return totalTradingCostMap.getOrDefault(name, 0.0);
+                case 15:
+                    return priceMap.getOrDefault(name, 0.0);
+                case 16:
+                    return priceMap.getOrDefault(name, 0.0)*currPos;
+                case 17:
+                    return costBasisMap.getOrDefault(name, 0.0);
+                case 18:
+                    return priceMap.getOrDefault(name, 0.0)*currPos
+                            +costBasisMap.getOrDefault(name, 0.0);
+                case 19:
+                    if(totalTradingCostMap.getOrDefault(name,1.0)!=0.0) {
+                        return Math.round((priceMap.getOrDefault(name, 0.0) * currPos
+                                + costBasisMap.getOrDefault(name, 0.0)) / (totalTradingCostMap.getOrDefault(name, 1.0)));
+                    } else {
+                        return 0.0;
+                    }
 
                 default:
                     return null;
@@ -582,6 +685,10 @@ public class HistChinaStocks extends JPanel {
                     return Integer.class;
                 case 11:
                     return Integer.class;
+                case 13:
+                    return Integer.class;
+                case 19:
+                    return Long.class;
                 default:
                     return Double.class;
             }
