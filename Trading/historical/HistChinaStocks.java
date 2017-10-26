@@ -35,6 +35,7 @@ public class HistChinaStocks extends JPanel {
     static BarModel_China model;
     static JTable tab;
 
+    public static final LocalDate LAST_YEAR_END = LocalDate.of(2016,12,31);
     public static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now());
 
     public static Map<String, String> nameMap = new HashMap<>();
@@ -61,6 +62,7 @@ public class HistChinaStocks extends JPanel {
     static Map<String, Double> totalTradingCostMap = new HashMap<>();
     static Map<String, Double> costBasisMap = new HashMap<>();
     static Map<String, Double> netTradePnlMap = new HashMap<>();
+    static Map<String, Double> wtdTradePnlMap = new HashMap<>();
 
     static String tdxDayPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export\\" : "J:\\TDX\\T0002\\export\\";
@@ -78,16 +80,16 @@ public class HistChinaStocks extends JPanel {
     public HistChinaStocks() {
         String line;
 
-        try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(priceInput)))) {
-            while((line=reader.readLine())!= null) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(priceInput)))) {
+            while ((line = reader.readLine()) != null) {
                 List<String> l = Arrays.asList(line.split(","));
-                if(l.size() >= 2) {
+                if (l.size() >= 2) {
                     priceMap.put(l.get(0), Double.parseDouble(l.get(1)));
                 } else {
                     System.out.println(" line is wrong " + line);
                 }
             }
-        } catch(IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -106,7 +108,8 @@ public class HistChinaStocks extends JPanel {
                     netSharesTradedByDay.put(al1.get(0), new TreeMap<>());
                     netSharesTradedWtd.put(al1.get(0), new TreeMap<>());
                     totalTradingCostMap.put(al1.get(0), 0.0);
-                    costBasisMap.put(al1.get(0),0.0);
+                    costBasisMap.put(al1.get(0), 0.0);
+                    wtdTradePnlMap.put(al1.get(0),0.0);
 
                 }
             }
@@ -135,6 +138,8 @@ public class HistChinaStocks extends JPanel {
                         graphWtd.fillInGraphChinaGen(selectedStock, chinaWtd);
                         graphYtd.setTradesMap(netSharesTradedByDay.get(selectedStock));
                         graphWtd.setTradesMap(netSharesTradedWtd.get(selectedStock));
+                        graphYtd.setTradePnl(computeCurrentTradePnl(selectedStock, LAST_YEAR_END));
+                        graphWtd.setTradePnl(computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)));
 
                         //graphWtd.fillInGraphHKGen(selectedStock, hkWtdAll);
                         graphPanel.repaint();
@@ -221,7 +226,6 @@ public class HistChinaStocks extends JPanel {
         });
 
         loadTradesButton.addActionListener(al -> {
-
             CompletableFuture.runAsync(() -> {
                 loadTradeList();
             }).thenRunAsync(() -> {
@@ -236,21 +240,25 @@ public class HistChinaStocks extends JPanel {
                 CompletableFuture.runAsync(() -> {
                     computeTradingCost();
                 });
+
+                CompletableFuture.runAsync(()->{
+                    computeWtdCurrentTradePnlAll();
+                });
             });
         });
 
-        updatePriceButton.addActionListener(al->{
+        updatePriceButton.addActionListener(al -> {
             String line1;
-            try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(priceInput)))) {
-                while((line1=reader.readLine())!= null) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(priceInput)))) {
+                while ((line1 = reader.readLine()) != null) {
                     List<String> l = Arrays.asList(line1.split(","));
-                    if(l.size() >= 2) {
+                    if (l.size() >= 2) {
                         priceMap.put(l.get(0), Double.parseDouble(l.get(1)));
                     } else {
                         System.out.println(" line is wrong " + line1);
                     }
                 }
-            } catch(IOException e) {
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         });
@@ -417,29 +425,19 @@ public class HistChinaStocks extends JPanel {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), "GBK"))) {
 
             while ((line = reader.readLine()) != null) {
-                //System.out.println(" line is " + line);
                 List<String> l = Arrays.asList(line.split("\t"));
                 LocalDate d = LocalDate.parse(l.get(0), DateTimeFormatter.ofPattern("yyyy/M/d"));
-                //System.out.println(" d " + d);
                 LocalTime t = LocalTime.parse(l.get(1), DateTimeFormatter.ofPattern("H:mm:ss"));
-                //System.out.println(" t " + t);
                 String ticker = l.get(3).toLowerCase() + l.get(5);
-                //System.out.println(" ticker  " +  ticker);
-                //System.out.println(" d t ticker " + d + t + ticker);
-
                 int q = Integer.parseInt(l.get(8));
-                //System.out.println(" q  " +  q);
                 double p = Double.parseDouble(l.get(10));
-                //System.out.println(" p  " +  p);
-                //chinaTradeList.add(new ChinaTrade(ticker, LocalDateTime.of(d,t), p,q));
-                //System.out.println(" d t ticker q p " + d + " " + t + " "  + ticker + " " + q + " " + p);
 
                 LocalDateTime ldt = LocalDateTime.of(d, t);
 
                 if (chinaTradeMap.containsKey(ticker)) {
                     if (chinaTradeMap.get(ticker).containsKey(ldt)) {
                         ((Trade) chinaTradeMap.get(ticker).get(ldt)).merge(l.get(2).equals("Stock") ? (new NormalTrade(p, q)) :
-                                (l.get(2).equals("Margin")?new MarginTrade(p, q):new NormalTrade(0,0)));
+                                (l.get(2).equals("Margin") ? new MarginTrade(p, q) : new NormalTrade(0, 0)));
 
                     } else {
                         if (l.get(2).equals("Stock")) {
@@ -448,7 +446,7 @@ public class HistChinaStocks extends JPanel {
                         } else if (l.get(2).equals("Margin")) {
                             chinaTradeMap.get(ticker).put(ldt, new MarginTrade(p, q));
                             System.out.println(" margin get ticker " + chinaTradeMap.get(ticker));
-                        } else if (l.get(2).equals("Dividend")){
+                        } else if (l.get(2).equals("Dividend")) {
                             chinaTradeMap.get(ticker).put(ldt, new NormalTrade(0.0, q));
                         }
                     }
@@ -485,9 +483,29 @@ public class HistChinaStocks extends JPanel {
     static void computeTradingCost() {
         for (String s : chinaTradeMap.keySet()) {
             double tradingCost = chinaTradeMap.get(s).entrySet().stream().collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getTradingCost(s)));
-            double costBasis = chinaTradeMap.get(s).entrySet().stream().collect(Collectors.summingDouble(e-> ((Trade)e.getValue()).getCostWithCommission(s)));
+            double costBasis = chinaTradeMap.get(s).entrySet().stream().collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getCostWithCommission(s)));
             totalTradingCostMap.put(s, tradingCost);
             costBasisMap.put(s, costBasis);
+        }
+    }
+
+    static double computeCurrentTradePnl(String s, LocalDate cutoff) {
+        double costBasis = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(cutoff))
+                .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommission(s)).sum();
+        int netPosition = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(cutoff))
+                .mapToInt(e -> ((Trade) e.getValue()).getSize()).sum();
+
+        return netPosition * priceMap.getOrDefault(s, 0.0) + costBasis;
+    }
+
+    static void computeWtdCurrentTradePnlAll() {
+        for(String s:chinaTradeMap.keySet()) {
+            double costBasis = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
+                    .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommission(s)).sum();
+            int netPosition = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
+                    .mapToInt(e -> ((Trade) e.getValue()).getSize()).sum();
+
+            wtdTradePnlMap.put(s, netPosition * priceMap.getOrDefault(s, 0.0) + costBasis);
         }
     }
 
@@ -607,6 +625,8 @@ public class HistChinaStocks extends JPanel {
                     return "pnl";
                 case 19:
                     return "Pnl/cost";
+                case 20:
+                    return "w Trade pnl";
                 default:
                     return "";
 
@@ -617,7 +637,7 @@ public class HistChinaStocks extends JPanel {
         public Object getValueAt(int row, int col) {
             String name = stockList.get(row);
             int currPos = 0;
-            if(netSharesTradedByDay.containsKey(name) && netSharesTradedByDay.get(name).size() > 0) {
+            if (netSharesTradedByDay.containsKey(name) && netSharesTradedByDay.get(name).size() > 0) {
                 currPos = netSharesTradedByDay.get(name).entrySet().stream().mapToInt(Map.Entry::getValue).sum();
             }
             switch (col) {
@@ -654,19 +674,21 @@ public class HistChinaStocks extends JPanel {
                 case 15:
                     return priceMap.getOrDefault(name, 0.0);
                 case 16:
-                    return priceMap.getOrDefault(name, 0.0)*currPos;
+                    return priceMap.getOrDefault(name, 0.0) * currPos;
                 case 17:
                     return costBasisMap.getOrDefault(name, 0.0);
                 case 18:
-                    return priceMap.getOrDefault(name, 0.0)*currPos
-                            +costBasisMap.getOrDefault(name, 0.0);
+                    return priceMap.getOrDefault(name, 0.0) * currPos
+                            + costBasisMap.getOrDefault(name, 0.0);
                 case 19:
-                    if(totalTradingCostMap.getOrDefault(name,1.0)!=0.0) {
+                    if (totalTradingCostMap.getOrDefault(name, 1.0) != 0.0) {
                         return Math.round((priceMap.getOrDefault(name, 0.0) * currPos
                                 + costBasisMap.getOrDefault(name, 0.0)) / (totalTradingCostMap.getOrDefault(name, 1.0)));
                     } else {
                         return 0.0;
                     }
+                case 20:
+                    return wtdTradePnlMap.getOrDefault(name,0.0);
 
                 default:
                     return null;
