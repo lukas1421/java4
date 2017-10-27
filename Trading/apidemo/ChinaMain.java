@@ -125,8 +125,8 @@ public final class ChinaMain implements IConnectionHandler {
     //private final HibernateUtil hib = new HibernateUtil();
 
     public static HKData hkdata = new HKData();
-    public static HKStock hkstock = new HKStock();
-    SinaStock sinastock1 = SinaStock.getInstance();
+    private static HKStock hkstock = new HKStock();
+    private SinaStock sinastock1 = SinaStock.getInstance();
 
     private ExecutorService pool;
 

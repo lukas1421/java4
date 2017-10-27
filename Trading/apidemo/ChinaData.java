@@ -550,7 +550,8 @@ public final class ChinaData extends JPanel {
         Hibtask.loadHibGen(ChinaSaveBidAsk.getInstance());
     }
 
-    public static void saveHibGen(Map<String, ? extends NavigableMap<LocalTime, ?>> mp, Map<String, ? extends NavigableMap<LocalTime, ?>> mp2, ChinaSaveInterface2Blob saveclass) {
+    public static void saveHibGen(Map<String, ? extends NavigableMap<LocalTime, ?>> mp, Map<String, ? extends NavigableMap<LocalTime, ?>> mp2,
+                                  ChinaSaveInterface2Blob saveclass) {
         LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
 

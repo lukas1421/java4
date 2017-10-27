@@ -38,12 +38,14 @@ public class HistChinaStocks extends JPanel {
     public static final LocalDate LAST_YEAR_END = LocalDate.of(2016, 12, 31);
     public static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now());
 
+    public static final String GLOBALPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";;
+
     public static Map<String, String> nameMap = new HashMap<>();
 
     static GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
     static GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
-    File chinaInput = new File(ChinaMain.GLOBALPATH + "ChinaAll.txt");
-    File priceInput = new File(ChinaMain.GLOBALPATH + "pricesTodayYtd.csv");
+    File chinaInput = new File(GLOBALPATH + "ChinaAll.txt");
+    File priceInput = new File(GLOBALPATH + "pricesTodayYtd.csv");
 
     static List<String> stockList = new LinkedList<>();
     static Map<String, NavigableMap<LocalDate, SimpleBar>> chinaYtd = new HashMap<>();
@@ -146,6 +148,13 @@ public class HistChinaStocks extends JPanel {
                         graphWtd.setTradePnl(computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)));
                         graphWtd.setWtdMtmPnl(wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
 
+                        chinaTradeMap.get(selectedStock).entrySet().stream().forEach(e -> {
+                            System.out.println(e);
+                            System.out.println( ((Trade)e.getValue()).getMergeList());
+                            System.out.println( ((Trade)e.getValue()).getMergeStatus());
+                            System.out.println(getTradingCostCustom(selectedStock, e.getKey().toLocalDate(), (Trade)e.getValue()));
+                        });
+
                         //graphWtd.fillInGraphHKGen(selectedStock, hkWtdAll);
                         graphPanel.repaint();
                     } else {
@@ -219,14 +228,18 @@ public class HistChinaStocks extends JPanel {
 
         ytdButton.addActionListener(al -> {
 
-            CompletableFuture.runAsync(() -> {
-                computeYtd();
-            });
+            computeYtd();
+            System.out.println(" refreshing from ytd ");
+            refreshAll();
+
         });
 
         wtdButton.addActionListener(al -> {
             CompletableFuture.runAsync(() -> {
                 computeWtd();
+            }).thenRun(() -> {
+                System.out.println(" refreshing from wtd ");
+                refreshAll();
             });
         });
 
@@ -254,6 +267,8 @@ public class HistChinaStocks extends JPanel {
                     computeWtdMtmPnlAll();
                 });
 
+            }).thenRun(() -> {
+                refreshAll();
             });
         });
 
@@ -301,59 +316,73 @@ public class HistChinaStocks extends JPanel {
 
 
     static void computeYtd() {
-        for (String s : stockList) {
-            System.out.println(" processing ytd for " + s);
-            String tickerFull = s.substring(0, 2).toUpperCase() + "#" + s.substring(2) + ".txt";
+        CompletableFuture.runAsync(()-> {
+            for (String s : stockList) {
+                //System.out.println(" processing ytd for " + s);
+                String tickerFull = s.substring(0, 2).toUpperCase() + "#" + s.substring(2) + ".txt";
 
-            double totalSize = 0.0;
+                double totalSize = 0.0;
 
-            CompletableFuture.runAsync(() -> {
-                String line;
-                if (s.substring(0, 2).toUpperCase().equals("SH") || s.substring(0, 2).toUpperCase().equals("SZ")) {
-                    try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxDayPath + tickerFull)))) {
-                        while ((line = reader1.readLine()) != null) {
-                            List<String> al1 = Arrays.asList(line.split("\t"));
-                            if (al1.get(0).startsWith("2017") || al1.get(0).startsWith("2016/1")) {
-                                LocalDate d = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-                                if (chinaYtd.containsKey(s)) {
-                                    chinaYtd.get(s).put(d, new SimpleBar(Double.parseDouble(al1.get(1)), Double.parseDouble(al1.get(2))
-                                            , Double.parseDouble(al1.get(3)), Double.parseDouble(al1.get(4))));
-                                } else {
-                                    throw new IllegalStateException(" cannot find stock " + s);
+                CompletableFuture.runAsync(() -> {
+                    String line;
+                    if (s.substring(0, 2).toUpperCase().equals("SH") || s.substring(0, 2).toUpperCase().equals("SZ")) {
+                        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxDayPath + tickerFull)))) {
+                            while ((line = reader1.readLine()) != null) {
+                                List<String> al1 = Arrays.asList(line.split("\t"));
+                                if (al1.get(0).startsWith("2017") || al1.get(0).startsWith("2016/1")) {
+                                    LocalDate d = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+                                    if (chinaYtd.containsKey(s)) {
+                                        chinaYtd.get(s).put(d, new SimpleBar(Double.parseDouble(al1.get(1)), Double.parseDouble(al1.get(2))
+                                                , Double.parseDouble(al1.get(3)), Double.parseDouble(al1.get(4))));
+                                    } else {
+                                        throw new IllegalStateException(" cannot find stock " + s);
+                                    }
                                 }
                             }
+                        } catch (IOException e) {
+                            e.printStackTrace();
                         }
-                    } catch (IOException e) {
-                        e.printStackTrace();
                     }
-                }
-            }).thenRunAsync(() -> {
-                lastWeekCloseMap.put(s, chinaYtd.get(s).lowerEntry(MONDAY_OF_WEEK).getValue().getClose());
-            });
+                }).thenRunAsync(() -> {
+                    CompletableFuture.runAsync(() -> {
+                        if (chinaYtd.get(s).size() > 0 && chinaYtd.get(s).firstKey().isBefore(MONDAY_OF_WEEK)) {
+                            lastWeekCloseMap.put(s, chinaYtd.get(s).lowerEntry(MONDAY_OF_WEEK).getValue().getClose());
+                        } else {
+                            lastWeekCloseMap.put(s, 0.0);
+                        }
+                    });
 
-            //do computation
-            System.out.println(" data is " + s + " " + chinaYtd.get(tickerFull));
-            if (chinaYtd.containsKey(s) && chinaYtd.get(s).size() > 1) {
-                NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(chinaYtd.get(s),
-                        LocalDate.of(2016, Month.DECEMBER, 31));
-                double mean = SharpeUtility.getMean(ret);
-                double sdDay = SharpeUtility.getSD(ret);
-                double sr = SharpeUtility.getSharpe(ret, 252);
-                double perc = SharpeUtility.getPercentile(chinaYtd.get(s));
-                ytdResult.get(s).fillResult(mean, sdDay, sr, perc);
-                System.out.println(Utility.getStrTabbed(" stock mean sd sr perc size firstEntry"
-                        , s, mean, sdDay, sr, perc, ret.size(), ret.firstEntry(), ret.lastEntry()));
-            } else {
-                System.out.println(" name is less than 1 " + tickerFull);
+                    CompletableFuture.runAsync(() -> {
+                        //do computation
+                        //System.out.println(" data is " + s + " " + chinaYtd.get(s));
+                        if (chinaYtd.containsKey(s) && chinaYtd.get(s).size() > 1) {
+                            NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(chinaYtd.get(s),
+                                    LocalDate.of(2016, Month.DECEMBER, 31));
+                            double mean = SharpeUtility.getMean(ret);
+                            double sdDay = SharpeUtility.getSD(ret);
+                            double sr = SharpeUtility.getSharpe(ret, 252);
+                            double perc = SharpeUtility.getPercentile(chinaYtd.get(s));
+                            ytdResult.get(s).fillResult(mean, sdDay, sr, perc);
+                            //System.out.println(Utility.getStrTabbed(" stock mean sd sr perc size firstEntry"
+                            //        , s, mean, sdDay, sr, perc, ret.size(), ret.firstEntry(), ret.lastEntry()));
+                        } else {
+                            System.out.println(" name is less than 1 " + tickerFull);
+                        }
+                    });
+                });
             }
-        }
+
+        }).thenRun(()->{
+            System.out.println(" ytd processing end ");
+            refreshAll();
+        });
     }
 
     /////////////////// wtd
 
     static void computeWtd() {
         for (String s : stockList) {
-            System.out.println(" processing wtd for " + s);
+            //System.out.println(" processing wtd for " + s);
             String tickerFull = s.substring(0, 2).toUpperCase() + "#" + s.substring(2) + ".txt";
             String line;
 
@@ -388,7 +417,7 @@ public class HistChinaStocks extends JPanel {
             }
 
             //do computation
-            System.out.println(" data is " + s + " " + chinaWtd.get(tickerFull));
+            //System.out.println(" data is " + s + " " + chinaWtd.get(tickerFull));
             if (chinaWtd.containsKey(s) && chinaWtd.get(s).size() > 1) {
                 NavigableMap<LocalDateTime, Double> ret = SharpeUtility.getReturnSeries(chinaWtd.get(s),
                         LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1), LocalTime.MIN));
@@ -397,12 +426,13 @@ public class HistChinaStocks extends JPanel {
                 double sr = SharpeUtility.getSharpe(ret, 240);
                 double perc = SharpeUtility.getPercentile(chinaWtd.get(s));
                 wtdResult.get(s).fillResult(mean, sdDay, sr, perc);
-                System.out.println(Utility.getStrTabbed(" stock mean sd sr perc size firstEntry"
-                        , s, mean, sdDay, sr, perc, ret.size(), ret.firstEntry(), ret.lastEntry()));
+                //System.out.println(Utility.getStrTabbed(" stock mean sd sr perc size firstEntry"
+                //        , s, mean, sdDay, sr, perc, ret.size(), ret.firstEntry(), ret.lastEntry()));
             } else {
                 System.out.println(" name is less than 1 " + tickerFull);
             }
         }
+        System.out.println(" wtd processing end ");
 
     }
 
@@ -451,7 +481,7 @@ public class HistChinaStocks extends JPanel {
 
                 if (chinaTradeMap.containsKey(ticker)) {
                     if (chinaTradeMap.get(ticker).containsKey(ldt)) {
-                        ((Trade) chinaTradeMap.get(ticker).get(ldt)).merge(l.get(2).equals("Stock") ? (new NormalTrade(p, q)) :
+                        ((Trade) chinaTradeMap.get(ticker).get(ldt)).merge2(l.get(2).equals("Stock") ? (new NormalTrade(p, q)) :
                                 (l.get(2).equals("Margin") ? new MarginTrade(p, q) : new NormalTrade(0, 0)));
 
                     } else {
@@ -467,7 +497,6 @@ public class HistChinaStocks extends JPanel {
                     }
                 }
             }
-
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -497,12 +526,33 @@ public class HistChinaStocks extends JPanel {
 
     static void computeTradingCost() {
         for (String s : chinaTradeMap.keySet()) {
-            double tradingCost = chinaTradeMap.get(s).entrySet().stream().collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getTradingCost(s)));
-            double costBasis = chinaTradeMap.get(s).entrySet().stream().collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getCostWithCommission(s)));
+            double tradingCost = chinaTradeMap.get(s).entrySet().stream()
+                    .mapToDouble(e->getTradingCostCustom(s,e.getKey().toLocalDate(), (Trade)e.getValue())).sum();
+                    //.collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getTradingCost(s)));
+            double costBasis = chinaTradeMap.get(s).entrySet().stream()
+                    .mapToDouble(e->getCostWithCommissionsCustom(s,e.getKey().toLocalDate(),(Trade)e.getValue())).sum();
+                    //.collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getCostWithCommission(s)));
             totalTradingCostMap.put(s, tradingCost);
             costBasisMap.put(s, costBasis);
         }
     }
+
+    static double getTradingCostCustom(String name, LocalDate ld, Trade t) {
+        if(ld.isBefore(LocalDate.of(2016,Month.NOVEMBER,3))) {
+            return t.getTradingCostCustomBrokerage(name, 3.1);
+        } else {
+            return t.getTradingCostCustomBrokerage(name, 2.0);
+        }
+    }
+
+    static double getCostWithCommissionsCustom(String name, LocalDate ld, Trade t) {
+        if(ld.isBefore(LocalDate.of(2016,Month.NOVEMBER,3))) {
+            return t.getCostWithCommissionCustomBrokerage(name, 3.1);
+        } else {
+            return t.getCostWithCommissionCustomBrokerage(name, 2.0);
+        }
+    }
+
 
     static double computeCurrentTradePnl(String s, LocalDate cutoff) {
         double costBasis = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(cutoff))
@@ -620,7 +670,6 @@ public class HistChinaStocks extends JPanel {
                     return "Y perc";
                 case 6:
                     return "Y n";
-
                 case 7:
                     return "W mean";
                 case 8:
@@ -634,25 +683,25 @@ public class HistChinaStocks extends JPanel {
                 case 12:
                     return " Trades n";
                 case 13:
-                    return " current pos ";
+                    return "pos";
                 case 14:
-                    return "Trading cost";
+                    return "Trans Cost";
                 case 15:
-                    return "price ";
+                    return "p";
                 case 16:
-                    return "Pos Value";
+                    return "Delta";
                 case 17:
                     return "cost basis";
                 case 18:
-                    return "pnl";
+                    return "Net Pnl";
                 case 19:
                     return "Pnl/cost";
                 case 20:
-                    return "w Trade pnl";
+                    return "w Tr pnl";
                 case 21:
-                    return " last week C";
+                    return "last week P";
                 case 22:
-                    return "wtd Mtm";
+                    return "w Mtm";
                 default:
                     return "";
 
@@ -715,7 +764,6 @@ public class HistChinaStocks extends JPanel {
                     }
                 case 20:
                     return wtdTradePnlMap.getOrDefault(name, 0.0);
-
                 case 21:
                     return lastWeekCloseMap.getOrDefault(name, 0.0);
                 case 22:
@@ -736,6 +784,8 @@ public class HistChinaStocks extends JPanel {
                 case 6:
                     return Integer.class;
                 case 11:
+                    return Integer.class;
+                case 12:
                     return Integer.class;
                 case 13:
                     return Integer.class;

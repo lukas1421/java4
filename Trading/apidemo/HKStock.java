@@ -51,6 +51,8 @@ public class HKStock extends JPanel {
 
 
     public HKStock() {
+
+        System.out.println(" initializing hk stock ");
         try(BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(hkstockFile),"GBK"))){
             while((line=reader1.readLine())!=null) {
                 //System.out.println(" hk line is " + line);
