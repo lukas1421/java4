@@ -473,9 +473,9 @@ public class HistChinaStocks extends JPanel {
                 List<String> l = Arrays.asList(line.split("\t"));
                 LocalDate d = LocalDate.parse(l.get(0), DateTimeFormatter.ofPattern("yyyy/M/d"));
                 LocalTime t = LocalTime.parse(l.get(1), DateTimeFormatter.ofPattern("H:mm:ss"));
-                String ticker = l.get(3).toLowerCase() + l.get(5);
-                int q = Integer.parseInt(l.get(8));
-                double p = Double.parseDouble(l.get(10));
+                String ticker = l.get(5).toLowerCase() + l.get(7);
+                int q = Integer.parseInt(l.get(10));
+                double p = Double.parseDouble(l.get(12));
 
                 LocalDateTime ldt = LocalDateTime.of(d, t);
 
@@ -760,7 +760,7 @@ public class HistChinaStocks extends JPanel {
                         return Math.round((priceMap.getOrDefault(name, 0.0) * currPos
                                 + costBasisMap.getOrDefault(name, 0.0)) / (totalTradingCostMap.getOrDefault(name, 1.0)));
                     } else {
-                        return 0.0;
+                        return 0L;
                     }
                 case 20:
                     return wtdTradePnlMap.getOrDefault(name, 0.0);

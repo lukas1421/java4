@@ -199,8 +199,13 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
             }
             g.drawLine(x + 1, highY, x + 1, lowY);
 
+
             if(histTradesMap.containsKey(lt)) {
                 int q = histTradesMap.get(lt);
+                if(lt.getClass()==LocalDateTime.class) {
+                    g.setColor(Color.blue);
+                    g.drawString(((LocalDateTime)lt).toLocalTime().toString(), x, getHeight()-20);
+                }
                 if (q > 0) {
                     g.setColor(Color.blue);
                     int xCord = x;
@@ -209,6 +214,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                     g.drawPolygon(p);
                     g.fillPolygon(p);
                     g.drawString(Long.toString(Math.round(q/1000.0)), xCord, yCord+25);
+                    //g.drawString();
                 } else {
                     g.setColor(Color.black);
                     int xCord = x;
