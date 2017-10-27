@@ -148,12 +148,12 @@ public class HistChinaStocks extends JPanel {
                         graphWtd.setTradePnl(computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)));
                         graphWtd.setWtdMtmPnl(wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
 
-                        chinaTradeMap.get(selectedStock).entrySet().stream().forEach(e -> {
-                            System.out.println(e);
-                            System.out.println( ((Trade)e.getValue()).getMergeList());
-                            System.out.println( ((Trade)e.getValue()).getMergeStatus());
-                            System.out.println(getTradingCostCustom(selectedStock, e.getKey().toLocalDate(), (Trade)e.getValue()));
-                        });
+//                        chinaTradeMap.get(selectedStock).entrySet().stream().forEach(e -> {
+//                            System.out.println(e);
+//                            System.out.println( ((Trade)e.getValue()).getMergeList());
+//                            System.out.println( ((Trade)e.getValue()).getMergeStatus());
+//                            System.out.println(getTradingCostCustom(selectedStock, e.getKey().toLocalDate(), (Trade)e.getValue()));
+//                        });
 
                         //graphWtd.fillInGraphHKGen(selectedStock, hkWtdAll);
                         graphPanel.repaint();
