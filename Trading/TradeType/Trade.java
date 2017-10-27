@@ -38,6 +38,10 @@ public abstract class Trade {
         return size;
     }
 
+    public int getSizeAll() {
+        return mergeList.stream().mapToInt(t->((Trade)t).getSize()).sum();
+    }
+
     public boolean getMergeStatus() {
         return mergeStatus;
     }
