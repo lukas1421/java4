@@ -188,7 +188,8 @@ public class GraphIndustry extends JComponent {
     double getMin() {
         //System.out.println ( " industry in is " + min);
         return (industryPriceMap.size() > 0)
-                ? industryPriceMap.entrySet().stream().filter(e -> e.getValue().size() > 0).flatMap(e -> e.getValue().entrySet().stream()).min(Entry.comparingByValue()).map(Entry::getValue).orElse(0.0) : 0.0;
+                ? industryPriceMap.entrySet().stream().filter(e -> e.getValue().size() > 0)
+                .flatMap(e -> e.getValue().entrySet().stream()).min(Entry.comparingByValue()).map(Entry::getValue).orElse(0.0) : 0.0;
     }
 
     private int getY(double v) {

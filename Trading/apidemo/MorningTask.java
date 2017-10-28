@@ -48,6 +48,7 @@ public final class MorningTask implements HistoricalHandler {
     public static void runThis() {
         MorningTask mt = new MorningTask();
 
+        MorningTask.clearFile(output);
         //processShcomp();
         mt.getFX();
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
@@ -582,6 +583,7 @@ public final class MorningTask implements HistoricalHandler {
 
     @Override
     public void actionUponFinish(String name) {
+        System.out.println(" data is finished ");
 
     }
 

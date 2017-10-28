@@ -64,7 +64,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     public void setTradesMap(NavigableMap<T, Integer> tm) {
         //System.out.println(" trade history is " + tm);
         histTradesMap = tm;
-        netCurrentPosition = tm.entrySet().stream().collect(Collectors.summingInt(Map.Entry::getValue));
+        netCurrentPosition = tm.entrySet().stream().mapToInt(Map.Entry::getValue).sum();
     }
 
     public void setTradePnl(double p) {

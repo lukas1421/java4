@@ -357,7 +357,8 @@ public final class GraphPnl extends JComponent {
             }
 
             if (buyMap.size() > 0) {
-                g.drawString("BUY: " + Math.round(100d * Optional.ofNullable(buyMap.lastEntry()).map(Entry::getValue).orElse(0.0)) / 100d, x + WIDTH_PNL, last + 10);
+                g.drawString("BUY: " + Math.round(100d * Optional.ofNullable(buyMap.lastEntry())
+                        .map(Entry::getValue).orElse(0.0)) / 100d, x + WIDTH_PNL, last + 10);
             }
 
             x = 5;
@@ -371,7 +372,8 @@ public final class GraphPnl extends JComponent {
                 x += WIDTH_PNL;
                 if (ChinaPosition.tradesMap.containsKey(name) && ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false)
                         .entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).count() > 0) {
-                    double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).values().stream().map(e -> (Trade) e).mapToInt(Trade::getSize).filter(n -> n < 0).sum();
+                    double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false)
+                            .values().stream().map(e -> (Trade) e).mapToInt(Trade::getSize).filter(n -> n < 0).sum();
                     g.drawString(Utility.getStr(pos), x - 20, close - (mult * 50));
                     g.drawLine(x, close - (mult * 40), x, close);
                     mult = -1 * mult;

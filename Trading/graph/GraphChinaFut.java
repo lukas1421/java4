@@ -73,10 +73,10 @@ public class GraphChinaFut extends JComponent {
         if (fut != null && ind != null) {
             futureP = fut.entrySet().stream()
                     .filter(a -> a.getKey().getSecond() < 5)
-                    .collect(toMap(a -> a.getKey(), a -> a.getValue(), (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
             indexP = ind.entrySet().stream()
                     .filter(a -> a.getKey().getSecond() < 5)
-                    .collect(toMap(a -> a.getKey(), a -> a.getValue(), (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
         } else {
             throw new NullPointerException("Issue with input");
         }
@@ -88,12 +88,12 @@ public class GraphChinaFut extends JComponent {
         if (fut != null && ind != null) {
             futureP = fut.entrySet().stream()
                     .filter(a -> a.getKey().getSecond() < 5)
-                    .collect(toMap(a -> a.getKey(), a -> a.getValue()
+                    .collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue()
                             , (a, b) -> a, ConcurrentSkipListMap::new));
 
             indexP = ind.entrySet().stream()
                     .filter(a -> a.getKey().getSecond() < 5)
-                    .collect(toMap(a -> a.getKey(), a -> a.getValue()
+                    .collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue()
                             , (a, b) -> a, ConcurrentSkipListMap::new));
             //System.out.println(" XU " + xu);
 
