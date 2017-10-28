@@ -23,10 +23,15 @@ import java.time.LocalTime;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BinaryOperator;
+import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class HistChinaStocks extends JPanel {
 
@@ -148,7 +153,7 @@ public class HistChinaStocks extends JPanel {
                         graphYtd.setTradePnl(computeCurrentTradePnl(selectedStock, LAST_YEAR_END));
                         graphWtd.setTradePnl(computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)));
                         graphWtd.setWtdMtmPnl(wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
-
+                        computeWtdPnl(e->e.getKey().equals(selectedStock));
 //                        chinaTradeMap.get(selectedStock).entrySet().stream().forEach(e -> {
 //                            System.out.println(e);
 //                            System.out.println( ((Trade)e.getValue()).getMergeList());
@@ -271,6 +276,10 @@ public class HistChinaStocks extends JPanel {
                 computeWtdMtmPnlAll();
             });
 
+            CompletableFuture.runAsync(()->{
+                computeWtdPnl(e->true);
+            });
+
         });
 
         updatePriceButton.addActionListener(al -> {
@@ -314,6 +323,46 @@ public class HistChinaStocks extends JPanel {
             graphPanel.repaint();
         });
 
+    }
+
+    static void computeWtdPnl(Predicate<? super Map.Entry> p) {
+        System.out.println(" computing wtd pnl ");
+        LocalDate cutoff = MONDAY_OF_WEEK;
+
+        //Predicate<? super Map.Entry> p = e -> e.getKey().equals("");
+        //Predicate<? super Map.Entry> p = e->true;
+        Map<String, Integer> weekOpenPositionMap = new HashMap<>();
+        Map<LocalDateTime, Double> weekMtmMap = new HashMap<>();
+
+        for (String s : chinaTradeMap.keySet()) {
+            int openPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(cutoff))
+                    .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
+            weekOpenPositionMap.put(s, openPos);
+        }
+        //chinaTradeMap.entrySet().stream().filter(p).
+        //chinaWtd
+        weekMtmMap  = weekOpenPositionMap.entrySet().stream().filter(p).map(e->
+                computeMtm(e.getValue(),chinaWtd.get(e.getKey()),lastWeekCloseMap.getOrDefault(e.getKey(),0.0))).
+                reduce(mapAcc()).orElse(new TreeMap<>());
+
+        weekMtmMap.entrySet().forEach(System.out::println);
+
+    }
+
+    static NavigableMap<LocalDateTime, Double> computeMtm(int openPos, NavigableMap<LocalDateTime, SimpleBar> prices, double lastWeekClose) {
+        NavigableMap<LocalDateTime, Double> res = new TreeMap<>();
+        for (Map.Entry e : prices.entrySet()) {
+            LocalDateTime t = (LocalDateTime) e.getKey();
+            SimpleBar sb = (SimpleBar) e.getValue();
+            res.put(t, openPos * (sb.getClose() - lastWeekClose));
+        }
+        return res;
+    }
+
+    static <T extends Temporal> BinaryOperator<NavigableMap<T, Double>> mapAcc() {
+        return (a,b)->  Stream.of(a,b).flatMap(e->e.entrySet().stream())
+                    .collect(Collectors.groupingBy(e1->e1.getKey(), TreeMap::new,Collectors.summingDouble(
+                            e1->e1.getValue())));
     }
 
 

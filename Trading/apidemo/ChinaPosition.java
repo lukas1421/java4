@@ -538,7 +538,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         pureMtmMap = ChinaPosition.openPositionMap.entrySet().stream().filter(p).filter(e -> e.getValue() > 0)
                 .collect(Collectors.groupingBy(e -> ChinaStock.benchSimpleMap.getOrDefault(e.getKey(), ""), HashMap::new,
                         Collectors.summingDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
-                        * (ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0) - ChinaStock.closeMap.getOrDefault(e.getKey(), 0.0)) * (e.getValue()))));
+                        * (ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0) -
+                                ChinaStock.closeMap.getOrDefault(e.getKey(), 0.0)) * (e.getValue()))));
 
         //System.out.println( " mtm pnl map "+mtmPNLMap);
         //gpnl.setNavigableMap(mtmPNLMap);
