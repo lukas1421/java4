@@ -42,6 +42,10 @@ public abstract class Trade {
         return mergeList.stream().mapToInt(t->((Trade)t).getSize()).sum();
     }
 
+    public double getCostAll(String name) {
+        return mergeList.stream().mapToDouble(t->((Trade)t).getCostWithCommission(name)).sum();
+    }
+
     public boolean getMergeStatus() {
         return mergeStatus;
     }
