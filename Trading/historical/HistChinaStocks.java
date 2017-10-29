@@ -6,6 +6,7 @@ import TradeType.Trade;
 import apidemo.ChinaMain;
 import auxiliary.SimpleBar;
 import graph.GraphBarTemporal;
+import graph.GraphChinaPnl;
 import utility.SharpeUtility;
 import utility.Utility;
 
@@ -50,6 +51,8 @@ public class HistChinaStocks extends JPanel {
 
     static GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
     static GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
+    static GraphChinaPnl<LocalDateTime> graphWtdPnl = new GraphChinaPnl<>();
+
     File chinaInput = new File(GLOBALPATH + "ChinaAll.txt");
     File priceInput = new File(GLOBALPATH + "pricesTodayYtd.csv");
 
@@ -73,6 +76,9 @@ public class HistChinaStocks extends JPanel {
     static Map<String, Double> netTradePnlMap = new HashMap<>();
     static Map<String, Double> wtdTradePnlMap = new HashMap<>();
     static Map<String, Double> wtdMtmPnlMap = new HashMap<>();
+
+    //pnl graph
+    static NavigableMap<LocalDateTime, Double> weekMtmMap = new TreeMap<>();
 
     static String tdxDayPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export\\" : "J:\\TDX\\T0002\\export\\";
@@ -153,7 +159,8 @@ public class HistChinaStocks extends JPanel {
                         graphYtd.setTradePnl(computeCurrentTradePnl(selectedStock, LAST_YEAR_END));
                         graphWtd.setTradePnl(computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)));
                         graphWtd.setWtdMtmPnl(wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
-                        computeWtdPnl(e->e.getKey().equals(selectedStock));
+                        graphWtdPnl.fillInGraph(selectedStock);
+                        graphWtdPnl.setMtm(computeWtdPnl(e->e.getKey().equals(selectedStock)));
 //                        chinaTradeMap.get(selectedStock).entrySet().stream().forEach(e -> {
 //                            System.out.println(e);
 //                            System.out.println( ((Trade)e.getValue()).getMergeList());
@@ -192,17 +199,18 @@ public class HistChinaStocks extends JPanel {
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
                 d.width = 1900;
+                d.height = 300;
                 return d;
             }
         };
 
-        graphPanel.setLayout(new GridLayout(2, 1));
+        graphPanel.setLayout(new GridLayout(3, 1));
 
         JScrollPane jp1 = new JScrollPane(graphYtd) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = 250;
+                d.height = 200;
                 d.width = 1900;
                 return d;
             }
@@ -212,7 +220,17 @@ public class HistChinaStocks extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = 250;
+                d.height = 200;
+                d.width = 1900;
+                return d;
+            }
+        };
+
+        JScrollPane jp3 = new JScrollPane(graphWtdPnl) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 200;
                 d.width = 1900;
                 return d;
             }
@@ -220,6 +238,7 @@ public class HistChinaStocks extends JPanel {
 
         graphPanel.add(jp1);
         graphPanel.add(jp2);
+        graphPanel.add(jp3);
 
         JPanel controlPanel = new JPanel();
         JButton refreshButton = new JButton("Refresh");
@@ -319,34 +338,37 @@ public class HistChinaStocks extends JPanel {
 
     static void refreshAll() {
         SwingUtilities.invokeLater(() -> {
+            graphWtdPnl.setMtm(computeWtdPnl(e->true));
             model.fireTableDataChanged();
             graphPanel.repaint();
         });
 
     }
 
-    static void computeWtdPnl(Predicate<? super Map.Entry> p) {
+    static NavigableMap<LocalDateTime, Double> computeWtdPnl(Predicate<? super Map.Entry> p) {
         System.out.println(" computing wtd pnl ");
         LocalDate cutoff = MONDAY_OF_WEEK;
 
-        //Predicate<? super Map.Entry> p = e -> e.getKey().equals("");
-        //Predicate<? super Map.Entry> p = e->true;
         Map<String, Integer> weekOpenPositionMap = new HashMap<>();
-        Map<LocalDateTime, Double> weekMtmMap = new HashMap<>();
+
 
         for (String s : chinaTradeMap.keySet()) {
             int openPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(cutoff))
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
             weekOpenPositionMap.put(s, openPos);
         }
-        //chinaTradeMap.entrySet().stream().filter(p).
-        //chinaWtd
-        weekMtmMap  = weekOpenPositionMap.entrySet().stream().filter(p).map(e->
-                computeMtm(e.getValue(),chinaWtd.get(e.getKey()),lastWeekCloseMap.getOrDefault(e.getKey(),0.0))).
-                reduce(mapAcc()).orElse(new TreeMap<>());
 
-        weekMtmMap.entrySet().forEach(System.out::println);
+        if(weekOpenPositionMap.entrySet().stream().filter(p).mapToInt(Map.Entry::getValue).sum()!=0) {
+            System.out.println(" computing mtm map ");
+            weekMtmMap = weekOpenPositionMap.entrySet().stream().filter(p).map(e ->
+                    computeMtm(e.getValue(), chinaWtd.get(e.getKey()), lastWeekCloseMap.getOrDefault(e.getKey(), 0.0))).
+                    reduce(mapAcc()).orElse(new TreeMap<>());
 
+            System.out.println(" week mtm map is " + weekMtmMap);
+            return weekMtmMap;
+        } else {
+            return new TreeMap<>();
+        }
     }
 
     static NavigableMap<LocalDateTime, Double> computeMtm(int openPos, NavigableMap<LocalDateTime, SimpleBar> prices, double lastWeekClose) {
