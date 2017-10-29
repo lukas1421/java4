@@ -144,7 +144,10 @@ public class HistHKStocks extends JPanel {
                         comp.setBackground(Color.GREEN);
                         graphYtd.fillInGraphHKGen(selectedStock, hkYtdAll);
                         graphWtd.fillInGraphHKGen(selectedStock, hkWtdAll);
-                        graphPanel.repaint();
+                        SwingUtilities.invokeLater(()->{
+                            graphPanel.repaint();
+                        });
+
                     } else {
                         comp.setBackground((indexRow % 2 == 0) ? Color.lightGray : Color.white);
                     }

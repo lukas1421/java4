@@ -25,10 +25,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JViewport;
+import javax.swing.*;
 
 final class IdeaProcessorJolt extends JPanel {
 
@@ -403,7 +400,9 @@ final class IdeaProcessorJolt extends JPanel {
     }
 
     public static void refreshPage() {
-        jp.repaint();
+        SwingUtilities.invokeLater(() -> {
+            jp.repaint();
+        });
     }
 
 //    public static void register(String name, LocalTime time, String message, IdeaProcessor.STRATTYPE st) {

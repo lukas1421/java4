@@ -15,7 +15,8 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
-import javax.swing.JComponent;
+
+import javax.swing.*;
 
 public class GraphChinaFut extends JComponent {
 
@@ -80,7 +81,10 @@ public class GraphChinaFut extends JComponent {
         } else {
             throw new NullPointerException("Issue with input");
         }
-        repaint();
+        SwingUtilities.invokeLater(()->{
+            repaint();
+        });
+
         // System.out.println("repainting");
     }
 
@@ -108,7 +112,9 @@ public class GraphChinaFut extends JComponent {
         } else {
             throw new NullPointerException("Issue with input");
         }
-        repaint();
+        SwingUtilities.invokeLater(()->{
+            repaint();
+        });
     }
 
     public void setTreeMapD(TreeMap<LocalTime, Double> fut, TreeMap<LocalTime, Double> ind) {
@@ -129,7 +135,9 @@ public class GraphChinaFut extends JComponent {
         } else {
             throw new NullPointerException("Issue with input");
         }
-        repaint();
+        SwingUtilities.invokeLater(()->{
+            repaint();
+        });
     }
 
      public void setSkipMapD(ConcurrentSkipListMap<LocalTime, Double> fut, ConcurrentSkipListMap<LocalTime, Double> ind) {
@@ -156,7 +164,9 @@ public class GraphChinaFut extends JComponent {
         } else {
             throw new NullPointerException("Issue with input");
         }
-        repaint();
+         SwingUtilities.invokeLater(()->{
+             repaint();
+         });
         // System.out.println("repainting");
     }
 

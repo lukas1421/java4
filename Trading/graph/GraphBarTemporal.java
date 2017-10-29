@@ -130,7 +130,10 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         } else {
             this.setNavigableMap(new ConcurrentSkipListMap<>());
         }
-        this.repaint();
+        SwingUtilities.invokeLater(()->{
+            this.repaint();
+        });
+
     }
 
     public void fillInGraphChinaGen(String name, Map<String, NavigableMap<T, SimpleBar>> mp) {
@@ -145,7 +148,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         } else {
             this.setNavigableMap(new ConcurrentSkipListMap<>());
         }
-        this.repaint();
+        SwingUtilities.invokeLater(()->{this.repaint();});
+
     }
 
     @Override
