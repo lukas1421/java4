@@ -4,6 +4,7 @@ import historical.HistChinaStocks;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
 import java.util.*;
@@ -21,6 +22,11 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
     volatile NavigableMap<T, Double> mtmMap = new ConcurrentSkipListMap<>();
     volatile NavigableMap<T, Double> tradeMap = new ConcurrentSkipListMap<>();
     volatile NavigableMap<T, Double> netMap = new ConcurrentSkipListMap<>();
+
+    NavigableMap<LocalDate, Double> mtmByDay = new ConcurrentSkipListMap<>();
+    NavigableMap<LocalDate, Double> mtmByAm = new ConcurrentSkipListMap<>();
+    NavigableMap<LocalDate, Double> mtmByPm = new ConcurrentSkipListMap<>();
+
     NavigableMap<T, Double> deltaMap;
 
     double max;
@@ -48,6 +54,12 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
 
     public void setNet(NavigableMap<T, Double> input) {
         netMap = input;
+    }
+
+    public void setWeekdayMtm(NavigableMap<LocalDate, Double> d, NavigableMap<LocalDate, Double> am, NavigableMap<LocalDate, Double> pm) {
+        mtmByDay = d;
+        mtmByAm = am;
+        mtmByPm = pm;
     }
 
 
@@ -174,7 +186,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
 
                 try {
                     if (lt.equals(netMap.lastKey())) {
-                        g.drawString("Net: " + Math.round(netMap.lastEntry().getValue()), x + 200, close);
+                        g.drawString("Net: " + Math.round(netMap.lastEntry().getValue()), x + 50, close);
                     }
                 } catch (Exception ex) {
                     System.out.println(" lt equals net map last key issue " + lt + " name " + name);
@@ -183,27 +195,31 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
             }
         }
 
+        int temp = 20;
+        for(Map.Entry e:mtmByDay.entrySet()) {
+            temp = temp +20;
+            g2.drawString(e.getKey().toString() + ": " + Math.round((Double)e.getValue()), getWidth()*6/8, temp);
+        }
+
+        temp = 20;
+        for(Map.Entry e:mtmByAm.entrySet()) {
+            temp = temp +20;
+            g2.drawString(""+Math.round((Double)e.getValue()), getWidth()*15/16, temp);
+        }
+
+        temp = 20;
+        for(Map.Entry e:mtmByPm.entrySet()) {
+            temp = temp +20;
+            g2.drawString(""+Math.round((Double)e.getValue()), getWidth()*7/8, temp);
+        }
+
         g.setColor(Color.black);
-        g2.setFont(g.getFont().
-
-                deriveFont(20F));
+        g2.setFont(g.getFont().deriveFont(20F));
         g2.drawString(name, 0, 20);
-        g2.drawString(chineseName,
-
-                getWidth() / 10, 20);
-        g2.drawString("" + (mtmMap.size() > 0 ? Math.round(mtmMap.lastEntry().
-
-                        getValue()) : 0.0),
-
-                getWidth() * 2 / 10, 20);
-        g2.drawString(Long.toString(Math.round(max)),
-
-                getWidth() - 60, 20);
-        g2.drawString(Long.toString(Math.round(min)),
-
-                getWidth() - 60,
-
-                getHeight() - 20);
+        g2.drawString(chineseName, getWidth() / 10, 20);
+        g2.drawString("" + (mtmMap.size() > 0 ? Math.round(mtmMap.lastEntry().getValue()) : 0.0), getWidth() * 2 / 10, 20);
+        g2.drawString(Long.toString(Math.round(max)), getWidth() - 60, 20);
+        g2.drawString(Long.toString(Math.round(min)), getWidth() - 60,getHeight() - 20);
     }
 
     private int getY(double v) {
