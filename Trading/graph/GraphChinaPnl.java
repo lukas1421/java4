@@ -6,10 +6,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.function.DoubleBinaryOperator;
+import java.util.stream.Stream;
 
 public class GraphChinaPnl<T extends Temporal> extends JComponent implements GraphFillable {
 
@@ -43,6 +42,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         } else {
             mtmMap = new TreeMap<>();
         }
+        //System.out.println(" print mtmmap in graph china pnl " + mtmMap);
     }
 
     public void setTrade(NavigableMap<T, Double> input) {
@@ -51,6 +51,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         } else {
             tradeMap = new TreeMap<>();
         }
+        //System.out.println(" print trade map in graph china pnl " + tradeMap);
     }
 
     public void setNet(NavigableMap<T,Double> input) {
@@ -59,6 +60,8 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         } else {
             netMap = new TreeMap<>();
         }
+
+        //System.out.println(" print net map in graph china pnl " + netMap);
     }
 
 
@@ -78,89 +81,92 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         height = (int) (getHeight() * 0.7);
 
         g2.setColor(Color.RED);
-        for (T lt : mtmMap.keySet()) {
-            close = getY(mtmMap.floorEntry(lt).getValue());
-            last = (last == 0) ? close : last;
-            g.drawLine(x, last, x + WIDTH_PNL, close);
-            last = close;
+        if(mtmMap.size()>0) {
+            for (T lt : mtmMap.keySet()) {
+                close = getY(mtmMap.floorEntry(lt).getValue());
+                last = (last == 0) ? close : last;
+                g.drawLine(x, last, x + WIDTH_PNL, close);
+                last = close;
 
 
-            if (lt.equals(mtmMap.firstKey())) {
-                g.drawString(lt.toString(), x, getHeight() - 10);
-            } else if (lt.equals(mtmMap.lastKey())) {
-                g.drawString(lt.toString(), x, getHeight() - 10);
-            } else {
-                if (lt.getClass() == LocalDateTime.class) {
-                    LocalDateTime t = (LocalDateTime) lt;
-                    LocalDateTime lowerT = (LocalDateTime) mtmMap.lowerKey(lt);
-                    if (t.toLocalDate().getDayOfMonth() != lowerT.toLocalDate().getDayOfMonth()) {
-                        g.drawString(Integer.toString(t.toLocalDate().getDayOfMonth()), x, getHeight() - 10);
+                if (lt.equals(mtmMap.firstKey())) {
+                    g.drawString(lt.toString(), x, getHeight() - 10);
+                } else if (lt.equals(mtmMap.lastKey())) {
+                    g.drawString(lt.toString(), x, getHeight() - 10);
+                } else {
+                    if (lt.getClass() == LocalDateTime.class) {
+                        LocalDateTime t = (LocalDateTime) lt;
+                        LocalDateTime lowerT = (LocalDateTime) mtmMap.lowerKey(lt);
+                        if (t.toLocalDate().getDayOfMonth() != lowerT.toLocalDate().getDayOfMonth()) {
+                            g.drawString(Integer.toString(t.toLocalDate().getDayOfMonth()), x, getHeight() - 10);
+                        }
                     }
                 }
+
+                if (lt.equals(mtmMap.lastKey())) {
+                    g.drawString("Mtm: " + Math.round(mtmMap.lastEntry().getValue()), x + 10, close);
+                }
+
+                x += WIDTH_PNL;
             }
-
-            if (mtmMap.get(lt) == max) {
-                g.drawString("hi: " + ((LocalDateTime) lt).toLocalTime().toString(), x, Math.max(15, last - 10));
-            } else if (mtmMap.get(lt) == min) {
-                g.drawString(" lo:" + ((LocalDateTime) lt).toLocalTime().toString(), x, Math.min(last + 10, getHeight() - 5));
-
-            }
-
-            if(lt.equals(mtmMap.lastKey())) {
-                g.drawString("Mtm: "+Math.round(mtmMap.lastEntry().getValue()),x+10,close);
-            }
-
-            x += WIDTH_PNL;
         }
 
         x = 5;
         last = 0;
         g.setColor(Color.BLUE);
-        for (T lt : tradeMap.keySet()) {
-            close = getY(tradeMap.floorEntry(lt).getValue());
-            last = (last == 0) ? close : last;
-            g.drawLine(x, last, x + WIDTH_PNL, close);
-            last = close;
-            x += WIDTH_PNL;
 
-            if(lt.equals(tradeMap.lastKey())) {
-                g.drawString("Trade: "+Math.round(tradeMap.lastEntry().getValue()), x+10,close);
-            }
+        if(tradeMap.size()>0) {
+            for (T lt : tradeMap.keySet()) {
+                close = getY(tradeMap.floorEntry(lt).getValue());
+                last = (last == 0) ? close : last;
+                g.drawLine(x, last, x + WIDTH_PNL, close);
+                last = close;
+                x += WIDTH_PNL;
 
-            if (mtmMap.size() == 0) {
-                if (lt.equals(tradeMap.firstKey())) {
-                    g.drawString(lt.toString(), x, getHeight() - 10);
-                } else if (lt.equals(tradeMap.lastKey())) {
-                    g.drawString(lt.toString(), x, getHeight() - 10);
-                } else {
-                    if (lt.getClass() == LocalDateTime.class) {
-                        LocalDateTime t = (LocalDateTime) lt;
-                        LocalDateTime lowerT = (LocalDateTime) tradeMap.lowerKey(lt);
-                        if (t.toLocalDate().getDayOfMonth() != lowerT.toLocalDate().getDayOfMonth()) {
-                            g.drawString(Integer.toString(t.toLocalDate().getDayOfMonth()), x, getHeight() - 10);
+                if (lt.equals(tradeMap.lastKey())) {
+                    g.drawString("Trade: " + Math.round(tradeMap.lastEntry().getValue()), x + 10, close);
+                }
+
+                if (mtmMap.size() == 0) {
+                    if (lt.equals(tradeMap.firstKey())) {
+                        g.drawString(lt.toString(), x, getHeight() - 10);
+                    } else if (lt.equals(tradeMap.lastKey())) {
+                        g.drawString(lt.toString(), x, getHeight() - 10);
+                    } else {
+                        if (lt.getClass() == LocalDateTime.class) {
+                            LocalDateTime t = (LocalDateTime) lt;
+                            LocalDateTime lowerT = (LocalDateTime) tradeMap.lowerKey(lt);
+                            if (t.toLocalDate().getDayOfMonth() != lowerT.toLocalDate().getDayOfMonth()) {
+                                g.drawString(Integer.toString(t.toLocalDate().getDayOfMonth()), x, getHeight() - 10);
+                            }
                         }
                     }
                 }
             }
         }
 
-
         x = 5;
         last = 0;
-        g.setColor(Color.red);
-        for (T lt : netMap.keySet()) {
-            close = getY(tradeMap.floorEntry(lt).getValue());
-            last = (last == 0) ? close : last;
-            g.drawLine(x, last, x + WIDTH_PNL, close);
-            last = close;
-            x += WIDTH_PNL;
+        g.setColor(new Color(50, 150, 0));
+        if(netMap.size()>0) {
+            for (T lt : netMap.keySet()) {
+                close = getY(netMap.floorEntry(lt).getValue());
+                last = (last == 0) ? close : last;
+                g.drawLine(x, last, x + WIDTH_PNL, close);
+                last = close;
+                x += WIDTH_PNL;
 
-            if(lt.equals(netMap.lastKey())) {
-                g.drawString("Net: "+Math.round(netMap.lastEntry().getValue()), x+200,close);
+                if (netMap.get(lt) == reduceMap((a,b)->Math.max(a,b),netMap)) {
+                    g.drawString("H:" + ((LocalDateTime) lt).toLocalTime().toString(), x, Math.max(15, last - 10));
+                } else if (netMap.get(lt) == reduceMap((a,b)->Math.min(a,b),netMap)) {
+                    g.drawString("L:" + ((LocalDateTime) lt).toLocalTime().toString(), x, Math.min(last + 10, getHeight() - 10));
+                }
+
+                if (lt.equals(netMap.lastKey())) {
+                    g.drawString("Net: " + Math.round(netMap.lastEntry().getValue()), x + 200, close);
+                }
             }
-
         }
-
 
         g.setColor(Color.black);
         g2.setFont(g.getFont().deriveFont(20F));
@@ -169,8 +175,6 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         g2.drawString("" + (mtmMap.size() > 0 ? Math.round(mtmMap.lastEntry().getValue()) : 0.0), getWidth() * 2 / 10, 20);
         g2.drawString(Long.toString(Math.round(max)), getWidth() - 60, 20);
         g2.drawString(Long.toString(Math.round(min)), getWidth() - 60, getHeight() - 20);
-
-
     }
 
     private int getY(double v) {
@@ -181,20 +185,21 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
     }
 
     private double getMin() {
-        return Math.min(mtmMap.entrySet().stream().min(Comparator.comparingDouble(Map.Entry::getValue)).map(Map.Entry::getValue).orElse(0.0)
-                , tradeMap.entrySet().stream().min(Comparator.comparingDouble(Map.Entry::getValue)).map(Map.Entry::getValue).orElse(0.0));
+        return reduceMap((a,b)->Math.min(a,b), mtmMap,tradeMap,netMap);
     }
 
     private double getMax() {
-
-        return Math.max(mtmMap.entrySet().stream().max(Comparator.comparingDouble(Map.Entry::getValue)).map(Map.Entry::getValue).orElse(0.0),
-                tradeMap.entrySet().stream().max(Comparator.comparingDouble(Map.Entry::getValue)).map(Map.Entry::getValue).orElse(0.0));
+        return reduceMap((a,b)->Math.max(a,b),mtmMap,tradeMap,netMap);
     }
+
+    static public  <T> double reduceMap(DoubleBinaryOperator o, NavigableMap<T, Double>... mps){
+        return Arrays.asList(mps).stream().flatMap(e->e.entrySet().stream()).mapToDouble(e->e.getValue()).reduce(o).orElse(0.0);
+    }
+
 
 
     @Override
     public void fillInGraph(String nam) {
-        //System.out.println(" nam in fill in graph " + nam);
         if (nam.equals("")) {
             name = "PTF";
             chineseName = "PTF";

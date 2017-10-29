@@ -152,30 +152,24 @@ public class HistChinaStocks extends JPanel {
                     if (isCellSelected(indexRow, indexCol)) {
                         modelRow = this.convertRowIndexToModel(indexRow);
                         selectedStock = stockList.get(modelRow);
-                        //System.out.println(" selected stock in monitor is " + selectedStock);
                         comp.setBackground(Color.GREEN);
-                        graphYtd.fillInGraphChinaGen(selectedStock, chinaYtd);
-                        graphWtd.fillInGraphChinaGen(selectedStock, chinaWtd);
-                        graphYtd.setTradesMap(netSharesTradedByDay.get(selectedStock));
-                        graphWtd.setTradesMap(netSharesTradedWtd.get(selectedStock));
-                        graphYtd.setTradePnl(computeCurrentTradePnl(selectedStock, LAST_YEAR_END));
-                        graphWtd.setTradePnl(computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)));
-                        graphWtd.setWtdMtmPnl(wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
-                        graphWtdPnl.fillInGraph(selectedStock);
-                        graphWtdPnl.setMtm(computeWtdMtmPnl(e -> e.getKey().equals(selectedStock)));
-                        graphWtdPnl.setTrade(computeWtdTradePnl(e -> e.getKey().equals(selectedStock)));
-                        //graphWtdPnl.setNet(mapOp.apply(weekMtmMap,weekTradePnlMap));
-                        graphWtdPnl.setNet(computeNet(e->e.getKey().equals(selectedStock)));
-                        //System.out.println(" printing trade pnl map " + weekTradePnlMap);
-//                        chinaTradeMap.get(selectedStock).entrySet().stream().forEach(e -> {
-//                            System.out.println(e);
-//                            System.out.println( ((Trade)e.getValue()).getMergeList());
-//                            System.out.println( ((Trade)e.getValue()).getMergeStatus());
-//                            System.out.println(getTradingCostCustom(selectedStock, e.getKey().toLocalDate(), (Trade)e.getValue()));
-//                        });
+                        CompletableFuture.runAsync(() -> {
+                            graphYtd.fillInGraphChinaGen(selectedStock, chinaYtd);
+                            graphWtd.fillInGraphChinaGen(selectedStock, chinaWtd);
+                            graphYtd.setTradesMap(netSharesTradedByDay.get(selectedStock));
+                            graphWtd.setTradesMap(netSharesTradedWtd.get(selectedStock));
+                            graphYtd.setTradePnl(computeCurrentTradePnl(selectedStock, LAST_YEAR_END));
+                            graphWtd.setTradePnl(computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)));
+                            graphWtd.setWtdMtmPnl(wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
+                            graphWtdPnl.fillInGraph(selectedStock);
+                            graphWtdPnl.setMtm(computeWtdMtmPnl(e -> e.getKey().equals(selectedStock)));
+                            graphWtdPnl.setTrade(computeWtdTradePnl(e -> e.getKey().equals(selectedStock)));
+                            //graphWtdPnl.setNet(mapOp.apply(weekMtmMap,weekTradePnlMap));
+                            graphWtdPnl.setNet(computeNet(e -> e.getKey().equals(selectedStock)));
+                        }).thenRun(() -> {
+                            graphPanel.repaint();
+                        });
 
-                        //graphWtd.fillInGraphHKGen(selectedStock, hkWtdAll);
-                        graphPanel.repaint();
                     } else {
                         comp.setBackground((indexRow % 2 == 0) ? Color.lightGray : Color.white);
                     }
@@ -352,7 +346,7 @@ public class HistChinaStocks extends JPanel {
             graphWtdPnl.fillInGraph("");
             graphWtdPnl.setMtm(computeWtdMtmPnl(e -> true));
             graphWtdPnl.setTrade(computeWtdTradePnl(e -> true));
-            graphWtdPnl.setNet(computeNet(e->true));
+            graphWtdPnl.setNet(computeNet(e -> true));
             model.fireTableDataChanged();
             graphPanel.repaint();
         });
@@ -410,11 +404,14 @@ public class HistChinaStocks extends JPanel {
             mv = currPos * prices.get(lt).getClose();
             res.put(lt, costBasis + mv);
         }
+        if (currPos == 0) {
+            return new TreeMap<>();
+        }
         return res;
     }
 
     static NavigableMap<LocalDateTime, Double> computeNet(Predicate<? super Map.Entry> p) {
-        return mapOp.apply(computeWtdMtmPnl(p),computeWtdTradePnl(p));
+        return mapOp.apply(computeWtdMtmPnl(p), computeWtdTradePnl(p));
     }
 
 
@@ -879,7 +876,7 @@ public class HistChinaStocks extends JPanel {
                 case 22:
                     return wtdMtmPnlMap.getOrDefault(name, 0.0);
                 case 23:
-                    return wtdTradePnlMap.getOrDefault(name, 0.0)+wtdMtmPnlMap.getOrDefault(name,0.0);
+                    return wtdTradePnlMap.getOrDefault(name, 0.0) + wtdMtmPnlMap.getOrDefault(name, 0.0);
                 default:
                     return null;
 
