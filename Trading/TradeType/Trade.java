@@ -67,7 +67,6 @@ public abstract class Trade {
         int sizeNew = size + t.getSize();
         price = (getCost() + t.getCost()) / sizeNew;
         size = sizeNew;
-        //System.out.println(" merged results " + "size price " + size + " " + price);
     }
 
     public double getPrice() {

@@ -162,29 +162,24 @@ public class Utility {
 
 
     public static <T> double getMin(NavigableMap<T, Double> tm) {
-        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().min(Map.Entry.comparingByValue()).map(Map.Entry::getValue).orElse(0.0) : 0.0;
+        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().min(Map.Entry.comparingByValue()).
+                map(Map.Entry::getValue).orElse(0.0) : 0.0;
     }
 
     public static <T, S> double getMinGen(NavigableMap<T, S> tm, ToDoubleFunction<S> f) {
-        //(e1, e2) -> func.applyAsDouble(e1.getValue()) >= func.applyAsDouble(e2.getValue()) ? 1 : -1
-        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().min(Comparator.comparingDouble(e->f.applyAsDouble(e.getValue())))
-                .map(Map.Entry::getValue).map(sb -> f.applyAsDouble(sb)).orElse(0.0) : 0.0;
+        return (tm != null && tm.size() > 2) ? tm.values().stream().mapToDouble(f).reduce(Math::min).orElse(0.0):0.0;
     }
 
     public static <T, S> double getMaxGen(NavigableMap<T, S> tm, ToDoubleFunction<S> f) {
-        //(e1, e2) -> func.applyAsDouble(e1.getValue()) >= func.applyAsDouble(e2.getValue()) ? 1 : -1
-        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().max(Comparator.comparingDouble(e->f.applyAsDouble(e.getValue())))
-                .map(Map.Entry::getValue).map(sb -> f.applyAsDouble(sb)).orElse(0.0) : 0.0;
-        //.flatMap(e->Optional.of(func.applyAsDouble(e))).orElse(0.0) : 0.0;
+        return (tm != null && tm.size() > 2) ? tm.values().stream().mapToDouble(f).reduce(Math::max).orElse(0.0):0.0;
     }
 
     public static <T> double getMax(NavigableMap<T, Double> tm) {
-        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getValue).orElse(0.0) : 0.0;
+        return (tm != null && tm.size() > 2) ? tm.values().stream().reduce(Math::max).orElse(0.0):0.0;
     }
 
     public static double getMaxRtn(NavigableMap<LocalTime, Double> tm) {
-        return (tm.size() > 0) ? (double) Math.round((getMax(tm)
-                / tm.entrySet().stream().findFirst().map(Map.Entry::getValue).orElse(0.0) - 1) * 1000d) / 10d : 0.0;
+        return (tm.size() > 0) ? (double) Math.round((getMax(tm)/tm.firstEntry().getValue() - 1) * 1000d) / 10d : 0.0;
     }
 
     public static <T> double getLast(NavigableMap<T, Double> tm) {
@@ -312,24 +307,15 @@ public class Utility {
     }
 
     public static double minGen(double... l) {
-        double res = Double.MAX_VALUE;
-        for (double d : l) {
-            res = Math.min(res, d);
-        }
-        return res;
+        return Arrays.stream(l).reduce(Math::min).orElse(0.0);
     }
 
     public static double maxGen(double... l) {
-        double res = Double.MIN_VALUE;
-        for (double d : l) {
-            res = Math.max(res, d);
-        }
-        return res;
+        return Arrays.stream(l).reduce(Math::max).orElse(0.0);
     }
 
     public static double reduceDouble(DoubleBinaryOperator op, double... num) {
-        List<Double> s = DoubleStream.of(num).mapToObj(Double::valueOf).collect(toList());
-        return s.stream().mapToDouble(e -> e.doubleValue()).reduce(op).orElse(0.0);
+        return Arrays.stream(num).reduce(op).orElse(0.0);
     }
 
     public static Map<String, ConcurrentSkipListMap<LocalTime, Double>> mapConverter(Map<String, ? extends NavigableMap<LocalTime, Double>> mp) {
@@ -448,5 +434,9 @@ public class Utility {
             return "sh" + s;
         }
         return ((s.startsWith("6")) ? "sh" : "sz") + s;
+    }
+
+    public static <T> double reduceMap(DoubleBinaryOperator o, NavigableMap<T, Double>... mps) {
+        return Arrays.stream(mps).flatMap(e->e.entrySet().stream()).mapToDouble(Map.Entry::getValue).reduce(o).orElse(0.0);
     }
 }

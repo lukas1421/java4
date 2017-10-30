@@ -656,15 +656,11 @@ public class HistChinaStocks extends JPanel {
                     if (chinaTradeMap.get(ticker).containsKey(ldt)) {
                         ((Trade) chinaTradeMap.get(ticker).get(ldt)).merge2(l.get(2).equals("Stock") ? (new NormalTrade(p, q)) :
                                 (l.get(2).equals("Margin") ? new MarginTrade(p, q) : new NormalTrade(0, 0)));
-
                     } else {
                         if (l.get(2).equals("Stock")) {
                             chinaTradeMap.get(ticker).put(ldt, new NormalTrade(p, q));
-                            //System.out.println(" inputting trade " + ldt + " " + chinaTradeMap.get(ticker));
-                            //System.out.println(" china trade map get ticker " + chinaTradeMap.get(ticker));
                         } else if (l.get(2).equals("Margin")) {
                             chinaTradeMap.get(ticker).put(ldt, new MarginTrade(p, q));
-                            //System.out.println(" margin get ticker " + chinaTradeMap.get(ticker));
                         } else if (l.get(2).equals("Dividend")) {
                             chinaTradeMap.get(ticker).put(ldt, new NormalTrade(0.0, q));
                         }

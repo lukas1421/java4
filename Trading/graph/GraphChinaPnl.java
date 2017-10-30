@@ -1,6 +1,7 @@
 package graph;
 
 import historical.HistChinaStocks;
+import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,7 +12,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.ToDoubleFunction;
-import java.util.stream.Stream;
 
 public class GraphChinaPnl<T extends Temporal> extends JComponent implements GraphFillable {
 
@@ -170,12 +170,12 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
 
 
                 try {
-                    if (netMap.get(lt) == reduceMap(Math::max, netMap) &&
+                    if (netMap.get(lt) == Utility.reduceMap(Math::max, netMap) &&
                             lt.equals(getEarliestT2(netMap, Math::max))) {
 
                         g.drawString("H:" + ((LocalDateTime) lt).toLocalTime().toString(), x, Math.max(15, last - 10));
                     } else if (netMap.get(lt) ==
-                            reduceMap(Math::min, netMap)
+                            Utility.reduceMap(Math::min, netMap)
                             && lt.equals(getEarliestT2(netMap, Math::min))) {
 
                         g.drawString("L:" + ((LocalDateTime) lt).toLocalTime().toString(), x, Math.min(last + 10, getHeight() - 10));
@@ -234,16 +234,11 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
     }
 
     private double getMin() {
-        return reduceMap(Math::min, mtmMap, tradeMap, netMap);
+        return Utility.reduceMap(Math::min, mtmMap, tradeMap, netMap);
     }
 
     private double getMax() {
-        return reduceMap(Math::max, mtmMap, tradeMap, netMap);
-    }
-
-    private static <T> double reduceMap(DoubleBinaryOperator o, NavigableMap<T, Double>... mps) {
-        return Arrays.asList(mps).stream().flatMap(e -> e.entrySet().stream())
-                .mapToDouble(Map.Entry::getValue).reduce(o).orElse(0.0);
+        return Utility.reduceMap(Math::max, mtmMap, tradeMap, netMap);
     }
 
     static public <T> T getEarliestT(NavigableMap<T, Double> mp, ToDoubleFunction<NavigableMap<T, Double>> f) {
@@ -253,7 +248,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
 
     private static <T> T getEarliestT2(NavigableMap<T, Double> mp, DoubleBinaryOperator b) {
         if (mp.size() > 0) {
-            double target = reduceMap(b, mp);
+            double target = Utility.reduceMap(b, mp);
             return mp.entrySet().stream().filter(e -> e.getValue() == target).findFirst().map(Map.Entry::getKey).orElse(mp.firstKey());
         } else {
             throw new IllegalStateException(" map size wrong in get earliest t2");
