@@ -38,30 +38,30 @@ import java.util.stream.Stream;
 
 public class HistChinaStocks extends JPanel {
 
-    static JPanel graphPanel;
-    static BarModel_China model;
-    static JTable tab;
+    private static JPanel graphPanel;
+    private static BarModel_China model;
+    private static JTable tab;
 
-    public static final LocalDate LAST_YEAR_END = LocalDate.of(2016, 12, 31);
-    public static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now());
+    private static final LocalDate LAST_YEAR_END = LocalDate.of(2016, 12, 31);
+    private static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now().minusDays(1));
 
     public static final String GLOBALPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";
 
     public static Map<String, String> nameMap = new HashMap<>();
 
-    static volatile GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
-    static volatile GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
-    static volatile GraphChinaPnl<LocalDateTime> graphWtdPnl = new GraphChinaPnl<>();
+    private static volatile GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
+    private static volatile GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
+    private static volatile GraphChinaPnl<LocalDateTime> graphWtdPnl = new GraphChinaPnl<>();
 
-    File chinaInput = new File(GLOBALPATH + "ChinaAll.txt");
-    File priceInput = new File(GLOBALPATH + "pricesTodayYtd.csv");
+    private File chinaInput = new File(GLOBALPATH + "ChinaAll.txt");
+    private File priceInput = new File(GLOBALPATH + "pricesTodayYtd.csv");
 
-    static List<String> stockList = new LinkedList<>();
-    static volatile Map<String, NavigableMap<LocalDate, SimpleBar>> chinaYtd = new HashMap<>();
-    static volatile Map<String, NavigableMap<LocalDateTime, SimpleBar>> chinaWtd = new HashMap<>();
+    private static List<String> stockList = new LinkedList<>();
+    private static volatile Map<String, NavigableMap<LocalDate, SimpleBar>> chinaYtd = new HashMap<>();
+    private static volatile Map<String, NavigableMap<LocalDateTime, SimpleBar>> chinaWtd = new HashMap<>();
 
-    static Map<String, ChinaResult> ytdResult = new HashMap<>();
-    static Map<String, ChinaResult> wtdResult = new HashMap<>();
+    private static Map<String, ChinaResult> ytdResult = new HashMap<>();
+    private static Map<String, ChinaResult> wtdResult = new HashMap<>();
 
     static List<ChinaTrade> chinaTradeList = new LinkedList<>();
 
@@ -84,24 +84,24 @@ public class HistChinaStocks extends JPanel {
     static volatile NavigableMap<LocalDateTime, Double> weekTradePnlMap = new ConcurrentSkipListMap<>();
     static volatile NavigableMap<LocalDateTime, Double> weekNetMap = new ConcurrentSkipListMap<>();
 
-    static NavigableMap<LocalDate, Double> netPnlByWeekday = new ConcurrentSkipListMap<>();
-    static NavigableMap<LocalDate, Double> netPnlByWeekdayAM = new ConcurrentSkipListMap<>();
-    static NavigableMap<LocalDate, Double> netPnlByWeekdayPM = new ConcurrentSkipListMap<>();
+    private static NavigableMap<LocalDate, Double> netPnlByWeekday = new ConcurrentSkipListMap<>();
+    private static NavigableMap<LocalDate, Double> netPnlByWeekdayAM = new ConcurrentSkipListMap<>();
+    private static NavigableMap<LocalDate, Double> netPnlByWeekdayPM = new ConcurrentSkipListMap<>();
 
-    static String tdxDayPath = (System.getProperty("user.name").equals("Luke Shi"))
+    private static String tdxDayPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export\\" : "J:\\TDX\\T0002\\export\\";
 
-    static String tdxMinutePath = (System.getProperty("user.name").equals("Luke Shi"))
+    private static String tdxMinutePath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export_1m\\" : "J:\\TDX\\T0002\\export_1m\\";
 
-    static final DateTimeFormatter DATE_PATTERN = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+    private static final DateTimeFormatter DATE_PATTERN = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
-    int modelRow;
+    private int modelRow;
     int indexRow;
-    static volatile String selectedStock = "";
-    TableRowSorter<BarModel_China> sorter;
+    private static volatile String selectedStock = "";
+    private TableRowSorter<BarModel_China> sorter;
 
-    public HistChinaStocks() {
+    private HistChinaStocks() {
         String line;
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(priceInput)))) {
@@ -284,9 +284,7 @@ public class HistChinaStocks extends JPanel {
         });
 
         ytdButton.addActionListener(al -> {
-            CompletableFuture.runAsync(() -> {
-                computeYtd();
-            }).thenRun(() -> {
+            CompletableFuture.runAsync(HistChinaStocks::computeYtd).thenRun(() -> {
                 System.out.println(" ytd ended ");
                 SwingUtilities.invokeLater(() -> {
                     model.fireTableDataChanged();
@@ -297,9 +295,7 @@ public class HistChinaStocks extends JPanel {
         });
 
         wtdButton.addActionListener(al -> {
-            CompletableFuture.runAsync(() -> {
-                computeWtd();
-            }).thenRun(() -> {
+            CompletableFuture.runAsync(HistChinaStocks::computeWtd).thenRun(() -> {
                 System.out.println(" wtd ended ");
                 //refreshAll();
                 SwingUtilities.invokeLater(() -> {
@@ -310,9 +306,7 @@ public class HistChinaStocks extends JPanel {
         });
 
         loadTradesButton.addActionListener(al -> {
-            CompletableFuture.runAsync(() -> {
-                loadTradeList();
-            }).thenRun(() -> {
+            CompletableFuture.runAsync(HistChinaStocks::loadTradeList).thenRun(() -> {
                 System.out.println(" loading trade list finished ");
                 computeButton.doClick();
                 //refreshAll();
@@ -321,33 +315,21 @@ public class HistChinaStocks extends JPanel {
 
         computeButton.addActionListener(l -> {
             CompletableFuture.runAsync(() -> {
-                CompletableFuture.runAsync(() -> {
-                    computeNetSharesTradedByDay();
-                });
+                CompletableFuture.runAsync(HistChinaStocks::computeNetSharesTradedByDay);
 
-                CompletableFuture.runAsync(() -> {
-                    computeNetSharesTradedWtd();
-                });
+                CompletableFuture.runAsync(HistChinaStocks::computeNetSharesTradedWtd);
 
-                CompletableFuture.runAsync(() -> {
-                    computeTradingCost();
-                });
+                CompletableFuture.runAsync(HistChinaStocks::computeTradingCost);
 
-                CompletableFuture.runAsync(() -> {
-                    computeWtdCurrentTradePnlAll();
-                });
+                CompletableFuture.runAsync(HistChinaStocks::computeWtdCurrentTradePnlAll);
 
-                CompletableFuture.runAsync(() -> {
-                    computeWtdMtmPnlAll();
-                });
+                CompletableFuture.runAsync(HistChinaStocks::computeWtdMtmPnlAll);
 
                 CompletableFuture.runAsync(() -> {
                     computeWtdMtmPnl(e -> true);
                 });
             }).thenRun(() -> {
-                SwingUtilities.invokeLater(() -> {
-                    this.repaint();
-                });
+                SwingUtilities.invokeLater(this::repaint);
             });
         });
 
@@ -386,7 +368,7 @@ public class HistChinaStocks extends JPanel {
     }
 
 
-    static void refreshAll() {
+    private static void refreshAll() {
         CompletableFuture.runAsync(() -> {
             graphWtdPnl.fillInGraph("");
             graphWtdPnl.setMtm(computeWtdMtmPnl(e -> true));
@@ -403,11 +385,10 @@ public class HistChinaStocks extends JPanel {
 
     }
 
-    static NavigableMap<LocalDateTime, Double> computeWtdMtmPnl(Predicate<? super Map.Entry> p) {
-        LocalDate cutoff = MONDAY_OF_WEEK;
+    private static NavigableMap<LocalDateTime, Double> computeWtdMtmPnl(Predicate<? super Map.Entry> p) {
         Map<String, Integer> weekOpenPositionMap = new HashMap<>();
         for (String s : chinaTradeMap.keySet()) {
-            int openPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(cutoff))
+            int openPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONDAY_OF_WEEK))
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
             weekOpenPositionMap.put(s, openPos);
         }
@@ -421,7 +402,7 @@ public class HistChinaStocks extends JPanel {
         return new ConcurrentSkipListMap<>();
     }
 
-    static NavigableMap<LocalDateTime, Double> computeMtm(int openPos, NavigableMap<LocalDateTime, SimpleBar> prices, double lastWeekClose) {
+    private static NavigableMap<LocalDateTime, Double> computeMtm(int openPos, NavigableMap<LocalDateTime, SimpleBar> prices, double lastWeekClose) {
         NavigableMap<LocalDateTime, Double> res = new ConcurrentSkipListMap<>();
         for (Map.Entry e : prices.entrySet()) {
             LocalDateTime t = (LocalDateTime) e.getKey();
@@ -432,15 +413,15 @@ public class HistChinaStocks extends JPanel {
     }
 
 
-    static NavigableMap<LocalDateTime, Double> computeWtdTradePnl(Predicate<? super Map.Entry> p) {
+    private static NavigableMap<LocalDateTime, Double> computeWtdTradePnl(Predicate<? super Map.Entry> p) {
         weekTradePnlMap = chinaTradeMap.entrySet().stream().filter(p).map(e ->
                 computeTrade(e.getKey(), chinaWtd.get(e.getKey()), e.getValue()))
                 .reduce(mapOp).orElse(new ConcurrentSkipListMap<>());
         return weekTradePnlMap;
     }
 
-    static NavigableMap<LocalDateTime, Double> computeTrade(String ticker, NavigableMap<LocalDateTime, SimpleBar> prices,
-                                                            NavigableMap<LocalDateTime, ? super Trade> trades) {
+    private static NavigableMap<LocalDateTime, Double> computeTrade(String ticker, NavigableMap<LocalDateTime, SimpleBar> prices,
+                                                                    NavigableMap<LocalDateTime, ? super Trade> trades) {
         NavigableMap<LocalDateTime, Double> res = new ConcurrentSkipListMap<>();
         int currPos = 0;
         double costBasis = 0.0;
@@ -461,41 +442,41 @@ public class HistChinaStocks extends JPanel {
         return res;
     }
 
-    static NavigableMap<LocalDateTime, Double> computeNet(Predicate<? super Map.Entry> p) {
+    private static NavigableMap<LocalDateTime, Double> computeNet(Predicate<? super Map.Entry> p) {
         NavigableMap<LocalDateTime, Double> res= mapOp.apply(computeWtdMtmPnl(p), computeWtdTradePnl(p));
         computeNetPnlByWeekday(res);
         return res;
     }
 
-    static void computeNetPnlByWeekday(NavigableMap<LocalDateTime, Double> mp) {
+    private static void computeNetPnlByWeekday(NavigableMap<LocalDateTime, Double> mp) {
 
 
-       netPnlByWeekday =mp.keySet().stream().map(e -> e.toLocalDate()).distinct().collect(Collectors.toMap(d -> d,
+       netPnlByWeekday =mp.keySet().stream().map(LocalDateTime::toLocalDate).distinct().collect(Collectors.toMap(d -> d,
                d -> computeNetPnlForGivenDate(mp, d), (a, b) -> a, ConcurrentSkipListMap::new));
 
-       netPnlByWeekdayAM = mp.keySet().stream().map(e -> e.toLocalDate()).distinct().collect(Collectors.toMap(d -> d,
+       netPnlByWeekdayAM = mp.keySet().stream().map(LocalDateTime::toLocalDate).distinct().collect(Collectors.toMap(d -> d,
                d -> computeAMNetPnlForGivenDate(mp, d), (a, b) -> a, ConcurrentSkipListMap::new));
 
-        netPnlByWeekdayPM = mp.keySet().stream().map(e -> e.toLocalDate()).distinct().collect(Collectors.toMap(d -> d,
+        netPnlByWeekdayPM = mp.keySet().stream().map(LocalDateTime::toLocalDate).distinct().collect(Collectors.toMap(d -> d,
                 d -> computePMNetPnlForGivenDate(mp, d), (a, b) -> a, ConcurrentSkipListMap::new));
 
-        System.out.println(" net by week day " + netPnlByWeekday + " " + netPnlByWeekday.values().stream().mapToDouble(e->e.doubleValue()).sum());
-        System.out.println(" am " + netPnlByWeekdayAM + " " + netPnlByWeekdayAM.values().stream().mapToDouble(e->e.doubleValue()).sum());
-        System.out.println(" pm " + netPnlByWeekdayPM + " " +  netPnlByWeekdayPM.values().stream().mapToDouble(e->e.doubleValue()).sum());
-        System.out.println(" am pm " + Stream.of(netPnlByWeekdayAM, netPnlByWeekdayPM).flatMap(e->e.entrySet().stream())
-                .collect(Collectors.groupingBy(e->e.getKey(), ConcurrentSkipListMap::new,Collectors.summingDouble(e->e.getValue()))));
-        System.out.println(" week day all " + netPnlByWeekday.entrySet().stream().collect(Collectors.summingDouble(e->e.getValue())));
+//        System.out.println(" net by week day " + netPnlByWeekday + " " + netPnlByWeekday.values().stream().mapToDouble(e-> e).sum());
+//        System.out.println(" am " + netPnlByWeekdayAM + " " + netPnlByWeekdayAM.values().stream().mapToDouble(e-> e).sum());
+//        System.out.println(" pm " + netPnlByWeekdayPM + " " +  netPnlByWeekdayPM.values().stream().mapToDouble(e-> e).sum());
+//        System.out.println(" am pm " + Stream.of(netPnlByWeekdayAM, netPnlByWeekdayPM).flatMap(e->e.entrySet().stream())
+//                .collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new,Collectors.summingDouble(Map.Entry::getValue))));
+//        System.out.println(" week day all " + (Double) netPnlByWeekday.entrySet().stream().mapToDouble(Map.Entry::getValue).sum());
 
     }
 
-    static double computeNetPnlForGivenDate(NavigableMap<LocalDateTime, Double> mp, LocalDate d) {
+    private static double computeNetPnlForGivenDate(NavigableMap<LocalDateTime, Double> mp, LocalDate d) {
         double lastV = mp.floorEntry(LocalDateTime.of(d, LocalTime.of(15, 0))).getValue();
         LocalDateTime ytdClose = LocalDateTime.of(d.minusDays(1), LocalTime.of(15,0));
         double prevV = mp.firstKey().isBefore(ytdClose)? mp.floorEntry(ytdClose).getValue():0.0;
         return lastV - prevV;
     }
 
-    static double computeAMNetPnlForGivenDate(NavigableMap<LocalDateTime, Double> mp, LocalDate d) {
+    private static double computeAMNetPnlForGivenDate(NavigableMap<LocalDateTime, Double> mp, LocalDate d) {
         double lastV = mp.floorEntry(LocalDateTime.of(d, LocalTime.of(12, 0))).getValue();
         LocalDateTime ytdClose = LocalDateTime.of(d.minusDays(1), LocalTime.of(15,0));
         double prevV = mp.firstKey().isBefore(ytdClose)? mp.floorEntry(ytdClose).getValue():0.0;
@@ -507,16 +488,7 @@ public class HistChinaStocks extends JPanel {
         double lastV = mp.floorEntry(LocalDateTime.of(d, LocalTime.of(15, 0))).getValue();
         double noonV = mp.floorEntry(LocalDateTime.of(d, LocalTime.of(11, 35))).getValue();
         return lastV-noonV;
-
     }
-
-
-
-//    static <T extends Temporal> BinaryOperator<NavigableMap<T, Double>> mapAcc() {
-//        return (a, b) -> Stream.of(a, b).flatMap(e -> e.entrySet().stream())
-//                .collect(Collectors.groupingBy(e1 -> e1.getKey(), ConcurrentSkipListMap::new, Collectors.summingDouble(
-//                        e1 -> e1.getValue())));
-//    }
 
 
     static void computeYtd() {
@@ -707,7 +679,7 @@ public class HistChinaStocks extends JPanel {
 
     }
 
-    static void computeNetSharesTradedByDay() {
+    private static void computeNetSharesTradedByDay() {
         for (String s : chinaTradeMap.keySet()) {
             NavigableMap<LocalDate, Integer> res = chinaTradeMap.get(s).entrySet().stream()
                     .collect(Collectors.groupingBy(e1 -> e1.getKey().toLocalDate(), ConcurrentSkipListMap::new,
@@ -717,7 +689,7 @@ public class HistChinaStocks extends JPanel {
         //graphYtd.setTradesMap(netSharesTradedByDay);
     }
 
-    static void computeNetSharesTradedWtd() {
+    private static void computeNetSharesTradedWtd() {
         for (String s : chinaTradeMap.keySet()) {
             NavigableMap<LocalDateTime, Integer> res =
                     chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
@@ -728,7 +700,7 @@ public class HistChinaStocks extends JPanel {
         //graphWtd.setTradesMap();
     }
 
-    static void computeTradingCost() {
+    private static void computeTradingCost() {
         for (String s : chinaTradeMap.keySet()) {
             double tradingCost = chinaTradeMap.get(s).entrySet().stream()
                     .mapToDouble(e -> getTradingCostCustom(s, e.getKey().toLocalDate(), (Trade) e.getValue())).sum();
@@ -741,7 +713,7 @@ public class HistChinaStocks extends JPanel {
         }
     }
 
-    static double getTradingCostCustom(String name, LocalDate ld, Trade t) {
+    private static double getTradingCostCustom(String name, LocalDate ld, Trade t) {
         if (ld.isBefore(LocalDate.of(2016, Month.NOVEMBER, 3))) {
             return t.getTradingCostCustomBrokerage(name, 3.1);
         } else {
@@ -749,7 +721,7 @@ public class HistChinaStocks extends JPanel {
         }
     }
 
-    static double getCostWithCommissionsCustom(String name, LocalDate ld, Trade t) {
+    private static double getCostWithCommissionsCustom(String name, LocalDate ld, Trade t) {
         if (ld.isBefore(LocalDate.of(2016, Month.NOVEMBER, 3))) {
             return t.getCostWithCommissionCustomBrokerage(name, 3.1);
         } else {
@@ -758,7 +730,7 @@ public class HistChinaStocks extends JPanel {
     }
 
 
-    static double computeCurrentTradePnl(String s, LocalDate cutoff) {
+    private static double computeCurrentTradePnl(String s, LocalDate cutoff) {
         double costBasis = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(cutoff))
                 .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommission(s)).sum();
         int netPosition = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(cutoff))
@@ -767,7 +739,7 @@ public class HistChinaStocks extends JPanel {
         return netPosition * priceMap.getOrDefault(s, 0.0) + costBasis;
     }
 
-    static void computeWtdCurrentTradePnlAll() {
+    private static void computeWtdCurrentTradePnlAll() {
         for (String s : chinaTradeMap.keySet()) {
             double costBasis = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
                     .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommission(s)).sum();
@@ -1008,10 +980,10 @@ public class HistChinaStocks extends JPanel {
 }
 
 class ChinaTrade {
-    String ticker;
-    LocalDateTime tradeTime;
-    double price;
-    int quantity;
+    private String ticker;
+    private LocalDateTime tradeTime;
+    private double price;
+    private int quantity;
 
     public ChinaTrade() {
         ticker = "";

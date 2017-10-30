@@ -147,9 +147,9 @@ public final class ChinaMain implements IConnectionHandler {
         return M_CONTROLLER;
     }
 
-    public JFrame frame() {
-        return m_frame;
-    }
+//    public JFrame frame() {
+//        return m_frame;
+//    }
 
     //public static JComponent indexWatcher;
     public static void main(String[] args) throws IOException, InterruptedException {

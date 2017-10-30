@@ -186,7 +186,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
 
                 try {
                     if (lt.equals(netMap.lastKey())) {
-                        g.drawString("Net: " + Math.round(netMap.lastEntry().getValue()), x + 50, close);
+                        g.drawString("Net: " + Math.round(netMap.lastEntry().getValue()), x - 150, 15);
                     }
                 } catch (Exception ex) {
                     System.out.println(" lt equals net map last key issue " + lt + " name " + name);
@@ -200,18 +200,22 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
             temp = temp +20;
             g2.drawString(e.getKey().toString() + ": " + Math.round((Double)e.getValue()), getWidth()*6/8, temp);
         }
+        g2.drawString("Total:         "
+                +Math.round(mtmByDay.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth()*6/8, temp+20);
 
         temp = 20;
         for(Map.Entry e:mtmByAm.entrySet()) {
             temp = temp +20;
             g2.drawString(""+Math.round((Double)e.getValue()), getWidth()*15/16, temp);
         }
+        g2.drawString(""+Math.round(mtmByAm.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth()*15/16, temp+20);
 
         temp = 20;
         for(Map.Entry e:mtmByPm.entrySet()) {
             temp = temp +20;
             g2.drawString(""+Math.round((Double)e.getValue()), getWidth()*7/8, temp);
         }
+        g2.drawString(""+ Math.round(mtmByPm.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth()*7/8, temp+20);
 
         g.setColor(Color.black);
         g2.setFont(g.getFont().deriveFont(20F));
@@ -237,7 +241,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         return reduceMap(Math::max, mtmMap, tradeMap, netMap);
     }
 
-    static public <T> double reduceMap(DoubleBinaryOperator o, NavigableMap<T, Double>... mps) {
+    private static <T> double reduceMap(DoubleBinaryOperator o, NavigableMap<T, Double>... mps) {
         return Arrays.asList(mps).stream().flatMap(e -> e.entrySet().stream())
                 .mapToDouble(Map.Entry::getValue).reduce(o).orElse(0.0);
     }
@@ -247,7 +251,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         return mp.entrySet().stream().filter(e -> e.getValue() == target).findFirst().map(Map.Entry::getKey).orElse(mp.firstKey());
     }
 
-    static public <T> T getEarliestT2(NavigableMap<T, Double> mp, DoubleBinaryOperator b) {
+    private static <T> T getEarliestT2(NavigableMap<T, Double> mp, DoubleBinaryOperator b) {
         if (mp.size() > 0) {
             double target = reduceMap(b, mp);
             return mp.entrySet().stream().filter(e -> e.getValue() == target).findFirst().map(Map.Entry::getKey).orElse(mp.firstKey());
