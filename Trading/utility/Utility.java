@@ -20,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.*;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
@@ -80,7 +81,7 @@ public class Utility {
         return t.truncatedTo(ChronoUnit.SECONDS).toString() + (t.getSecond() == 0 ? ":00" : "");
     }
 
-    public static double computeMean(NavigableMap<LocalTime, Double> retMap) {
+    static double computeMean(NavigableMap<LocalTime, Double> retMap) {
         if (retMap.size() > 1) {
             double sum = retMap.entrySet().stream().mapToDouble(e -> e.getValue()).sum();
             return sum / retMap.size();
@@ -88,7 +89,7 @@ public class Utility {
         return 0;
     }
 
-    public static double computeSD(NavigableMap<LocalTime, Double> retMap) {
+    static double computeSD(NavigableMap<LocalTime, Double> retMap) {
         if (retMap.size() > 1) {
             double mean = computeMean(retMap);
             return Math.sqrt((retMap.entrySet().stream().mapToDouble(e -> e.getValue()).map(v -> Math.pow(v - mean, 2)).sum())
@@ -119,10 +120,33 @@ public class Utility {
         return null;
     }
 
+    @SafeVarargs
     public static NavigableMap<LocalTime, Double> mapSynthesizer(NavigableMap<LocalTime, Double>... mps) {
         return Stream.of(mps).flatMap(e -> e.entrySet().stream())
-                .collect(Collectors.groupingBy(e -> e.getKey(), ConcurrentSkipListMap::new, Collectors.summingDouble(e -> e.getValue())));
+                .collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, Collectors.summingDouble(Map.Entry::getValue)));
     }
+
+    public static <T> BinaryOperator<NavigableMap<T,Double>> mapBinOp(BinaryOperator<Double> o) {
+        return (a,b) -> mapCominberGen(o,a,b);
+    }
+
+    public static <T> BinaryOperator<NavigableMap<T,Double>> mapBinOp() {
+        return (a,b) -> mapCominberGen((x,y)->x+y,a,b);
+    }
+
+    @SafeVarargs
+    public static <T> NavigableMap<T, Double> mapCominberGen(BinaryOperator<Double> o, NavigableMap<T,Double>... mps ) {
+        return Stream.of(mps).flatMap(e->e.entrySet().stream()).collect(Collectors.groupingBy(Map.Entry::getKey,ConcurrentSkipListMap::new,
+                    Collectors.reducing(0.0, Map.Entry::getValue,o)));
+    }
+
+    @SafeVarargs
+    public static <T> NavigableMap<T, Double> mapCominberGen(NavigableMap<T,Double>... mps ) {
+        return Stream.of(mps).flatMap(e->e.entrySet().stream()).collect(Collectors.groupingBy(Map.Entry::getKey,ConcurrentSkipListMap::new,
+                Collectors.reducing(0.0, Map.Entry::getValue,(a, b)->a+b)));
+    }
+
+
 
     public static String getStrTabbed(Object... cs) {
         StringBuilder b = new StringBuilder();
@@ -439,4 +463,5 @@ public class Utility {
     public static <T> double reduceMap(DoubleBinaryOperator o, NavigableMap<T, Double>... mps) {
         return Arrays.stream(mps).flatMap(e->e.entrySet().stream()).mapToDouble(Map.Entry::getValue).reduce(o).orElse(0.0);
     }
+
 }

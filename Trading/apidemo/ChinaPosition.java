@@ -44,33 +44,23 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.DoublePredicate;
-import java.util.function.Predicate;
-import java.util.function.ToDoubleFunction;
+import java.util.function.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.summingInt;
 import static java.util.stream.Collectors.toList;
+
 import java.util.stream.Stream;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
@@ -405,7 +395,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         });
     }
 
-    static double getAdditionalInfo(LocalTime t, NavigableMap<LocalTime, ? super Trade> trMap, DoublePredicate d, ToDoubleFunction<Trade> f) {
+    private static double getAdditionalInfo(LocalTime t, NavigableMap<LocalTime, ? super Trade> trMap, DoublePredicate d, ToDoubleFunction<Trade> f) {
         double res = 0.0;
         for (LocalTime t1 : trMap.subMap(t, true, t.plusMinutes(1), false).keySet()) {
             if (d.test(((Trade) trMap.get(t1)).getSize())) {
@@ -415,18 +405,18 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return res;
     }
 
-    static NavigableMap<LocalTime, Double> tradePnlCompute(String name, NavigableMap<LocalTime, SimpleBar> prMap,
-                                                           NavigableMap<LocalTime, ? super Trade> trMap, DoublePredicate d) {
+    private static NavigableMap<LocalTime, Double> tradePnlCompute(String name, NavigableMap<LocalTime, SimpleBar> prMap,
+                                                                   NavigableMap<LocalTime, ? super Trade> trMap, DoublePredicate d) {
         int pos = 0;
         double cb = 0.0;
         double mv;
         double fx = fxMap.getOrDefault(name, 1.0);
         NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
 
-        if(trMap.firstKey().isBefore(prMap.firstKey())) {
-            for(Map.Entry e: trMap.headMap(prMap.firstKey(),false).entrySet()) {
+        if (trMap.firstKey().isBefore(prMap.firstKey())) {
+            for (Map.Entry e : trMap.headMap(prMap.firstKey(), false).entrySet()) {
                 pos += ((Trade) e.getValue()).getSize();
-                cb += ((Trade)e.getValue()).getCostWithCommission(name);
+                cb += ((Trade) e.getValue()).getCostWithCommission(name);
             }
 //            System.out.println(" name is " + name);
 //            System.out.println(" pos before open " + pos);
@@ -435,7 +425,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         for (LocalTime t : prMap.navigableKeySet()) {
             if (trMap.subMap(t, true, t.plusMinutes(1), false).size() > 0) {
-                pos += getAdditionalInfo(t, trMap, d, x -> x.getSize());
+                pos += getAdditionalInfo(t, trMap, d, Trade::getSize);
                 cb += getAdditionalInfo(t, trMap, d, x -> x.getCostWithCommission(name));
             }
             mv = pos * prMap.get(t).getClose();
@@ -464,89 +454,58 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         double netDelta = openPositionMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
                 * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum()
+
                 + tradesMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
                 * priceMap.getOrDefault(e.getKey(), 0.0)
-                * e.getValue().entrySet().stream().collect(Collectors.summingInt(e1 -> ((Trade) e1.getValue()).getSize()))).sum();
+                * e.getValue().entrySet().stream().mapToInt(e1 -> ((Trade) e1.getValue()).getSize()).sum()).sum();
 
-        //System.out.println(" printing trades map ");
-        //tradesMap.entrySet().stream().forEach(System.out::println);
         netDeltaMap = Stream.of(openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p).map(Entry::getKey).collect(Collectors.toSet()),
                 tradesMap.entrySet().stream().filter(e -> e.getValue().size() > 0).filter(p).map(Entry::getKey).collect(Collectors.toSet()))
-                .flatMap(e -> e.stream()).distinct().map(e -> getDelta(e, 1)).collect(Collectors.collectingAndThen(toList(),
-                l -> l.stream().flatMap(e1 -> e1.entrySet().stream()).collect(Collectors.groupingBy(e2 -> e2.getKey(),
-                        ConcurrentSkipListMap::new, Collectors.summingDouble(e2 -> e2.getValue())))));
+                .flatMap(Collection::stream).distinct().map(e -> getDelta(e, 1)).collect(Collectors.collectingAndThen(toList(),
+                        l -> l.stream().flatMap(e1 -> e1.entrySet().stream()).collect(Collectors.groupingBy(Entry::getKey,
+                                ConcurrentSkipListMap::new, Collectors.summingDouble(Entry::getValue)))));
 
         mtmDeltaMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p).map(Entry::getKey).collect(Collectors.toSet()).stream().
                 distinct().map(e -> getDelta(e, 0)).collect(Collectors.collectingAndThen(toList(),
-                l -> l.stream().flatMap(e1 -> e1.entrySet().stream()).collect(Collectors.groupingBy(e2 -> e2.getKey(),
-                        ConcurrentSkipListMap::new, Collectors.summingDouble(e2 -> e2.getValue())))));
+                l -> l.stream().flatMap(e1 -> e1.entrySet().stream()).collect(Collectors.groupingBy(Entry::getKey,
+                        ConcurrentSkipListMap::new, Collectors.summingDouble(Entry::getValue)))));
 
-        //System.out.println(" printing delta ");
-        //netDeltaMap.entrySet().stream().filter(e -> e.getKey().isAfter(LocalTime.of(14, 55))).forEach(System.out::println);
-        //System.out.println(" net delta map " + netDeltaMap);
-        //netDeltaMap.entrySet().stream().filter(e->e.getKey().isAfter(LocalTime.of(14, 15))).forEach(System.out::println);
-//        System.out.println(" first entry " + netDeltaMap.firstEntry());
-//        System.out.println(" last entry " + netDeltaMap.lastEntry());
-//        System.out.println( " max entry " + netDeltaMap.entrySet().stream().max(Map.Entry.comparingByValue()).get());
-//        System.out.println( " min entry " + netDeltaMap.entrySet().stream().min(Map.Entry.comparingByValue()).get());
-        mtmPNLMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() > 0).filter(p).collect(Collectors.mapping(e -> {
-            return getMtmPNL(ChinaData.priceMapBar.get(e.getKey()), closeMap.getOrDefault(e.getKey(), 0.0), e.getValue(), fxMap.getOrDefault(e.getKey(), 1.0));
-        }, collectingAndThen(toList(), l -> l.stream().flatMap(m -> m.entrySet().stream()).collect(Collectors.groupingBy(e1 -> e1.getKey(), ConcurrentSkipListMap::new,
-                Collectors.summingDouble(e1 -> e1.getValue()))))));
+        mtmPNLMap = openPositionMap.entrySet().stream().filter(e->e.getValue()>0).filter(p)
+                .map(e-> getMtmPNL(ChinaData.priceMapBar.get(e.getKey()),closeMap.getOrDefault(e.getKey(),0.0),e.getValue(),
+                fxMap.getOrDefault(e.getKey(),1.0))).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
 
-        //System.out.println(" debugging delta map ");
-        //netDeltaMap.entrySet().stream().filter(e->e.getKey().isAfter(LocalTime.of(11,25)) && e.getKey().isBefore(LocalTime.of(13,05))).forEach(System.out::println);
-        //System.out.println(" debugging pnl map ");
-        //mtmPNLMap.entrySet().stream().filter(e->e.getKey().isAfter(LocalTime.of(11,25)) && e.getKey().isBefore(LocalTime.of(13,05))).forEach(System.out::println);
-        //System.out.println(" mtm last entry : " + mtmPNLMap.lastEntry());
-        //mtmPNLMap.entrySet().stream().filter(e->e.getKey().isAfter(LocalTime.of(11,25))).forEach(System.out::println);
-        //mtmPNLMap.entrySet().stream().filter(e->e.getKey().isAfter(LocalTime.of(14,55))).forEach(System.out::println);
-        boughtPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0).collect(Collectors.mapping(e
-                -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 > 0),
-                collectingAndThen(toList(), l -> l.stream().flatMap(m -> m.entrySet().stream())
-                .collect(Collectors.groupingBy(e1 -> e1.getKey(), ConcurrentSkipListMap::new,
-                        Collectors.summingDouble(e1 -> e1.getValue()))))));
 
-        soldPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0).collect(Collectors.mapping(e
-                -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()),
-                        e.getValue(), e1 -> e1 < 0), collectingAndThen(toList(), l -> l.stream().flatMap(m -> m.entrySet().stream())
-                .collect(Collectors.groupingBy(e1 -> e1.getKey(), ConcurrentSkipListMap::new,
-                        Collectors.summingDouble(e1 -> e1.getValue()))))));
+        boughtPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
+                .map(e-> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 > 0))
+                .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
 
-        tradePNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0).collect(Collectors.mapping(e
-                -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()),
-                        e.getValue(), e1 -> true), collectingAndThen(toList(), l -> l.stream().flatMap(m -> m.entrySet().stream())
-                .collect(Collectors.groupingBy(e1 -> e1.getKey(), ConcurrentSkipListMap::new, Collectors.summingDouble(e1 -> e1.getValue()))))));
+        soldPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
+                .map(e->tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()),e.getValue(), e1 -> e1 < 0))
+                .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
 
-        //System.out.println(" trade pnl map " + tradePNLMap);
+        tradePNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
+                .map(e-> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()),e.getValue(), e1 -> true))
+                .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
 
         double todayNetPnl = Optional.ofNullable(tradePNLMap.lastEntry()).map(Entry::getValue).orElse(0.0) + netYtdPnl
                 + Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0);
 
-        netPNLMap = Utility.mapSynthesizer(mtmPNLMap, tradePNLMap);
-
+        netPNLMap = Utility.mapCominberGen((a,b)->a+b, mtmPNLMap, tradePNLMap);
         mtmDeltaSharpe = SharpeUtility.computeMinuteSharpeFromMtmDeltaMp(mtmDeltaMap);
 
         minuteNetPnlSharpe = SharpeUtility.computeMinuteNetPnlSharpe(netPNLMap);
 
-        //e->!e.equals("sh204001")
         benchExposureMap = ChinaStock.benchSimpleMap.entrySet().stream().filter(e -> !e.getKey().equals("sh204001")).filter(p)
                 .collect(Collectors.groupingBy(s -> ChinaStock.benchSimpleMap.get(s.getKey()), ConcurrentSkipListMap::new,
                         Collectors.summingDouble(s -> fxMap.getOrDefault(s.getKey(), 1.0)
-                        * getNetPosition(s.getKey()) * priceMap.getOrDefault(s.getKey(), 0.0))));
+                                * getNetPosition(s.getKey()) * priceMap.getOrDefault(s.getKey(), 0.0))));
 
         pureMtmMap = ChinaPosition.openPositionMap.entrySet().stream().filter(p).filter(e -> e.getValue() > 0)
                 .collect(Collectors.groupingBy(e -> ChinaStock.benchSimpleMap.getOrDefault(e.getKey(), ""), HashMap::new,
                         Collectors.summingDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
-                        * (ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0) -
+                                * (ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0) -
                                 ChinaStock.closeMap.getOrDefault(e.getKey(), 0.0)) * (e.getValue()))));
 
-        //System.out.println( " mtm pnl map "+mtmPNLMap);
-        //gpnl.setNavigableMap(mtmPNLMap);
-        //System.out.println( " bought pnl map " + boughtPNLMap);
-        //System.out.println( " sold pnl map " + soldPNLMap);
-        //System.out.println(" printing net pnl map ");
-        //netPNLMap.entrySet().stream().forEach(System.out::println);
         gpnl.setPnl1mChgMap(getPnl5mChg());
         gpnl.setNetDeltaMap(netDeltaMap);
         gpnl.setBuySellPnlMap(boughtPNLMap, soldPNLMap);
@@ -570,7 +529,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         gpnl.refresh();
     }
 
-    static NavigableMap<LocalTime, Double> getDelta(String name, int tradesMultiplier) {
+
+    private static NavigableMap<LocalTime, Double> getDelta(String name, int tradesMultiplier) {
         NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
         double fx = fxMap.getOrDefault(name, 1.0);
         int pos = openPositionMap.getOrDefault(name, 0);
@@ -592,7 +552,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return res;
     }
 
-    static NavigableMap<LocalTime, Double> getMtmPNL(NavigableMap<LocalTime, SimpleBar> m, double close, int openPos, double fx) {
+    private static NavigableMap<LocalTime, Double> getMtmPNL(NavigableMap<LocalTime, SimpleBar> m, double close, int openPos, double fx) {
         //.filter(e->((e.isAfter(LocalTime.of(9,30)) && e.isBefore(LocalTime.of(11,30))) || (e.isAfter(LocalTime.of(12,59)) && e.isBefore(LocalTime.of(15,1)))))
         //double fx = fxMap.getOrDefault(m, close)
         NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
@@ -602,7 +562,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return res;
     }
 
-    public void getOpenTradePositionForFuture() {
+    private void getOpenTradePositionForFuture() {
         System.out.println(" get open trade position for future ");
         if (ChinaPosition.tradesMap.containsKey("SGXA50")) {
             ChinaPosition.tradesMap.put("SGXA50", new ConcurrentSkipListMap<>());
@@ -620,13 +580,13 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //        openPositionMap.put("SGXA50", xuOpenPostion);
     }
 
-    static void refreshFuture() {
+    private static void refreshFuture() {
 
         xuBotPos = ChinaPosition.tradesMap.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0)
-                .collect(Collectors.summingInt(e -> ((Trade) e.getValue()).getSize()));
+                .mapToInt(e -> ((Trade) e.getValue()).getSize()).sum();
 
         xuSoldPos = ChinaPosition.tradesMap.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0)
-                .collect(Collectors.summingInt(e -> ((Trade) e.getValue()).getSize()));
+                .mapToInt(e -> ((Trade) e.getValue()).getSize()).sum();
 
         xuOpenPostion = xuCurrentPosition - xuBotPos - xuSoldPos;
 
@@ -768,7 +728,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
                 if (dataList.size() > stockCodeCol && (
                         nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol))
-                        || dataList.get(chineseNameCol).startsWith("XD"))) {
+                                || dataList.get(chineseNameCol).startsWith("XD"))) {
 
                     //System.out.println( " name " + addSHSZ(dataList.get(stockCodeCol)));
                     String nam = Utility.addSHSZ(dataList.get(stockCodeCol));
@@ -983,7 +943,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
             Map<String, Integer> trades = tradesMap.entrySet().stream().filter(e -> e.getValue().size() > 0)
                     .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().entrySet().stream().collect(Collectors
-                    .summingInt(e1 -> ((Trade) e1.getValue()).getSize()))));
+                            .summingInt(e1 -> ((Trade) e1.getValue()).getSize()))));
             Map<String, Integer> res = Stream.of(openPositionMap, trades).flatMap(e -> e.entrySet().stream())
                     .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.summingInt(e -> e.getValue())));
 
@@ -1009,27 +969,27 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         double fx = fxMap.getOrDefault(name, 1.0);
         return (tradesMap.get(name).size() > 0) ? tradesMap.get(name).entrySet().stream()
                 .filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.summingDouble(
-                e -> ((Trade) e.getValue()).getSize() * ((Trade) e.getValue()).getPrice())) * fx : 0;
+                        e -> ((Trade) e.getValue()).getSize() * ((Trade) e.getValue()).getPrice())) * fx : 0;
     }
 
     double getTotalDeltaSold(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
         return (tradesMap.get(name).size() > 0) ? tradesMap.get(name).entrySet().stream()
                 .filter(e -> ((Trade) e.getValue()).getSize() < 0).collect(Collectors.summingDouble(
-                e -> ((Trade) e.getValue()).getSize() * ((Trade) e.getValue()).getPrice())) * fx : 0;
+                        e -> ((Trade) e.getValue()).getSize() * ((Trade) e.getValue()).getPrice())) * fx : 0;
     }
 
     double getAvgBCost(String name) {
         return (tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).count() > 0)
                 ? tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.collectingAndThen(toList(),
-                        l -> l.stream().collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getPrice()
+                l -> l.stream().collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getPrice()
                         * ((Trade) e.getValue()).getSize())) / l.stream().collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getSize())))) : 0.0;
     }
 
     double getAvgSCost(String name) {
         return (tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).count() > 0)
                 ? tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).collect(Collectors.collectingAndThen(toList(),
-                        l -> l.stream().collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getPrice() * ((Trade) e.getValue()).getSize()))
+                l -> l.stream().collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getPrice() * ((Trade) e.getValue()).getSize()))
                         / l.stream().collect(Collectors.summingDouble(e -> ((Trade) e.getValue()).getSize())))) : 0.0;
     }
 
@@ -1037,11 +997,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         double fx = fxMap.getOrDefault(name, 1.0);
         return (tradesMap.get(name).size() > 0 && Utility.noZeroArrayGen(name, ChinaStock.priceMap))
                 ? tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0)
-                        .collect(Collectors.summingDouble(e -> (((Trade) e.getValue()).getSize())
+                .collect(Collectors.summingDouble(e -> (((Trade) e.getValue()).getSize())
                         * (ChinaStock.priceMap.getOrDefault(name, 0.0) - ((Trade) e.getValue()).getPrice()) - ((Trade) e.getValue()).getTradingCost(name))) * fx : 0.0;
     }
 
-//    static double getTradingCost(String name, Trade td) {
+    //    static double getTradingCost(String name, Trade td) {
 //        return td.getTradingCost(name);
 ////        double brokerage = Math.max(5,Math.round(td.getPrice()*abs(td.getSize())*2/100)/100d);
 ////        double guohu = (name.equals("sh510050"))?0:((name.startsWith("sz"))?0.0:Math.round(td.getPrice()*abs(td.getSize())*0.2/100d)/100d);
@@ -1054,7 +1014,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         double fx = fxMap.getOrDefault(name, 1.0);
         return (tradesMap.get(name).size() > 0 && Utility.noZeroArrayGen(name, ChinaStock.priceMap))
                 ? Math.round(tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0)
-                        .collect(Collectors.summingDouble(e -> (((Trade) e.getValue()).getSize() * (ChinaStock.priceMap.getOrDefault(name, 0.0) - ((Trade) e.getValue()).getPrice())
+                .collect(Collectors.summingDouble(e -> (((Trade) e.getValue()).getSize() * (ChinaStock.priceMap.getOrDefault(name, 0.0) - ((Trade) e.getValue()).getPrice())
                         - ((Trade) e.getValue()).getTradingCost(name)))) * 100d * fx) / 100d : 0.0;
     }
 
@@ -1083,18 +1043,18 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     static LinkedList<String> getPnl5mChg() {
         Map<String, Integer> mp1 = Stream.of(openPositionMap, tradesMap.entrySet().stream().collect(
                 Collectors.toMap(Map.Entry::getKey, e -> e.getValue().entrySet().stream().collect(
-                Collectors.summingInt(e1 -> ((Trade) e1.getValue()).getSize()))))).flatMap(e -> e.entrySet().stream())
+                        Collectors.summingInt(e1 -> ((Trade) e1.getValue()).getSize()))))).flatMap(e -> e.entrySet().stream())
                 .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.summingInt(Map.Entry::getValue)));
 
         return mp1.entrySet().stream().sorted(reverseThis(Comparator.comparingDouble(e -> getPnLChange5m(e.getKey())))).map(
                 e -> Utility.getStr(ChinaStock.nameMap.get(e.getKey()), ":", getPnLChange5m(e.getKey()))).collect(
-                        Collectors.toCollection(LinkedList::new));
+                Collectors.toCollection(LinkedList::new));
 
     }
 
     static boolean relevantStock(String stock) {
         return openPositionMap.containsKey(stock) ||
-                (tradesMap.containsKey(stock) && tradesMap.get(stock).size()>0);
+                (tradesMap.containsKey(stock) && tradesMap.get(stock).size() > 0);
     }
 
     static double getPnLChange5m(String name) {
@@ -1125,7 +1085,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return 0.0;
     }
 
-//    int getNetPnlPercentile(String name) {
+    //    int getNetPnlPercentile(String name) {
 //        //if(netPnl)
 //        double min = netPNLMap.entrySet().stream().min(Map.Entry.comparingByValue()).map(Entry::getValue).orElse(0.0);
 //        double max = netPNLMap.entrySet().stream().max(Map.Entry.comparingByValue()).map(Entry::getValue).orElse(0.0);
@@ -1224,24 +1184,24 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     static double getTodayTotalPnl(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
-        return Math.round(100d *(getMtmPnl(name) + getBuyTradePnl(name) + getSellTradePnl(name))) / 100d;
+        return Math.round(100d * (getMtmPnl(name) + getBuyTradePnl(name) + getSellTradePnl(name))) / 100d;
     }
 
     //todo
-    static LinkedList<String>  topPnlKiyodoList() {
+    static LinkedList<String> topPnlKiyodoList() {
         LinkedList<String> res = new LinkedList<>();
 
         //map<ticker, net pnl>
-        Map<String, Double> tickerNetpnl = priceMapBar.entrySet().stream().filter(e->relevantStock(e.getKey()))
-                .collect(Collectors.toMap(e->e.getKey(),e->getTodayTotalPnl(e.getKey())));
+        Map<String, Double> tickerNetpnl = priceMapBar.entrySet().stream().filter(e -> relevantStock(e.getKey()))
+                .collect(Collectors.toMap(e -> e.getKey(), e -> getTodayTotalPnl(e.getKey())));
 
         double netPnlAll = tickerNetpnl.entrySet().stream().mapToDouble(Map.Entry::getValue).sum();
 
         //System.out.println(" ticker net pnl " + tickerNetpnl);
 
-        res = tickerNetpnl.entrySet().stream().sorted(reverseThis(Comparator.comparingDouble(e->Math.abs(e.getValue()))))
-                .map(Map.Entry::getKey).map(s-> Utility.getStr(nameMap.get(s),
-                        getTodayTotalPnl(s), Math.round(100d*getTodayTotalPnl(s)/netPnlAll)," % "))
+        res = tickerNetpnl.entrySet().stream().sorted(reverseThis(Comparator.comparingDouble(e -> Math.abs(e.getValue()))))
+                .map(Map.Entry::getKey).map(s -> Utility.getStr(nameMap.get(s),
+                        getTodayTotalPnl(s), Math.round(100d * getTodayTotalPnl(s) / netPnlAll), " % "))
                 .collect(Collectors.toCollection(LinkedList::new));
 
 
@@ -1393,7 +1353,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 11:
                     return r(fxMap.getOrDefault(name, 1.0) * (closeMap.getOrDefault(name, 0.0) - costMap.getOrDefault(name, 0.0)) * openpos);
                 case 12:
-                    return r(fxMap. getOrDefault(name, 1.0) * (priceMap.getOrDefault(name, 0.0) - costMap.getOrDefault(name, 0.0)) * openpos);
+                    return r(fxMap.getOrDefault(name, 1.0) * (priceMap.getOrDefault(name, 0.0) - costMap.getOrDefault(name, 0.0)) * openpos);
                 case 13:
                     return getTotalTodayBought(name);
                 case 14:

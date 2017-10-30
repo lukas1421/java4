@@ -254,7 +254,8 @@ public class GraphIndustry extends JComponent {
 
     public static String getTopStockForRiser(String riser) {
         return priceMapBar.entrySet().stream().filter(NO_GC).filter(e -> ChinaStock.shortIndustryMap.get(e.getKey()).equals(riser))
-                .max(Comparator.comparingDouble(e -> Optional.ofNullable(e.getValue().lastEntry()).map(Entry::getValue).map(SimpleBar::getBarReturn).orElse(0.0)))
+                .max(Comparator.comparingDouble(e -> Optional.ofNullable(e.getValue().lastEntry())
+                        .map(Entry::getValue).map(SimpleBar::getBarReturn).orElse(0.0)))
                 .map(Entry::getKey).orElse("");
     }
 
@@ -351,7 +352,8 @@ public class GraphIndustry extends JComponent {
         CompletableFuture.supplyAsync(()
                 -> sizeTotalMap.entrySet().stream().filter(NO_GC)
                         .collect(groupingByConcurrent(e -> ChinaStock.industryNameMap.get(e.getKey()),
-                                mapping(Entry::getValue, Collectors.collectingAndThen(toList(), e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(TRADING_HOURS))
+                                mapping(Entry::getValue, Collectors.collectingAndThen(toList(),
+                                        e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(TRADING_HOURS))
                                 .collect(groupingBy(Entry::getKey, ConcurrentSkipListMap::new, summingDouble(e1 -> e1.getValue()))))))))
                 .thenAccept(
                         mp -> mp.keySet().forEach(s -> {
