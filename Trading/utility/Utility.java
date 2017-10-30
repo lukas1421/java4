@@ -161,23 +161,24 @@ public class Utility {
     }
 
 
-
-    public static <T> double  getMin(NavigableMap<T, Double> tm) {
+    public static <T> double getMin(NavigableMap<T, Double> tm) {
         return (tm != null && tm.size() > 2) ? tm.entrySet().stream().min(Map.Entry.comparingByValue()).map(Map.Entry::getValue).orElse(0.0) : 0.0;
     }
 
-    public static <T,S> double  getMinGen(NavigableMap<T, S> tm, ToDoubleFunction<S> func) {
-        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().min((e1,e2)->func.applyAsDouble(e1.getValue())>=func.applyAsDouble(e2.getValue())?1:-1
-        ).map(Map.Entry::getValue).map(sb->func.applyAsDouble(sb)).orElse(0.0) : 0.0;
+    public static <T, S> double getMinGen(NavigableMap<T, S> tm, ToDoubleFunction<S> f) {
+        //(e1, e2) -> func.applyAsDouble(e1.getValue()) >= func.applyAsDouble(e2.getValue()) ? 1 : -1
+        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().min(Comparator.comparingDouble(e->f.applyAsDouble(e.getValue())))
+                .map(Map.Entry::getValue).map(sb -> f.applyAsDouble(sb)).orElse(0.0) : 0.0;
     }
 
-    public static <T,S> double  getMaxGen(NavigableMap<T, S> tm, ToDoubleFunction<S> func) {
-        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().max((e1,e2)->func.applyAsDouble(e1.getValue())>=func.applyAsDouble(e2.getValue())?1:-1
-        ).map(Map.Entry::getValue).map(sb-> func.applyAsDouble(sb)).orElse(0.0):0.0;
-                //.flatMap(e->Optional.of(func.applyAsDouble(e))).orElse(0.0) : 0.0;
+    public static <T, S> double getMaxGen(NavigableMap<T, S> tm, ToDoubleFunction<S> f) {
+        //(e1, e2) -> func.applyAsDouble(e1.getValue()) >= func.applyAsDouble(e2.getValue()) ? 1 : -1
+        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().max(Comparator.comparingDouble(e->f.applyAsDouble(e.getValue())))
+                .map(Map.Entry::getValue).map(sb -> f.applyAsDouble(sb)).orElse(0.0) : 0.0;
+        //.flatMap(e->Optional.of(func.applyAsDouble(e))).orElse(0.0) : 0.0;
     }
 
-    public static  <T> double getMax(NavigableMap<T, Double> tm) {
+    public static <T> double getMax(NavigableMap<T, Double> tm) {
         return (tm != null && tm.size() > 2) ? tm.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getValue).orElse(0.0) : 0.0;
     }
 
@@ -194,7 +195,7 @@ public class Utility {
      * test if one-level maps contains value for a given stock
      *
      * @param name name of the stock
-     * @param mp hashmap of stock and value
+     * @param mp   hashmap of stock and value
      * @return all of these maps contains info about this stock
      */
     public static boolean noZeroArrayGen(String name, Map<String, ? extends Number>... mp) {
@@ -254,9 +255,9 @@ public class Utility {
         return tm1.size() > 0 ? round(log(tm1.lastEntry().getValue() / tm1.firstEntry().getValue()) * 1000d) / 10d : 0.0;
     }
 
-    public static <T,S> double getRtn(NavigableMap<T, S> tm1, ToDoubleFunction<S> func) {
+    public static <T, S> double getRtn(NavigableMap<T, S> tm1, ToDoubleFunction<S> func) {
         return tm1.size() > 0 ? round((func.applyAsDouble(tm1.lastEntry().getValue()) /
-                func.applyAsDouble(tm1.firstEntry().getValue())-1) * 1000d) / 10d : 0.0;
+                func.applyAsDouble(tm1.firstEntry().getValue()) - 1) * 1000d) / 10d : 0.0;
     }
 
     public static void fixNavigableMap(String name, NavigableMap<LocalTime, SimpleBar> nm) {
@@ -301,13 +302,13 @@ public class Utility {
     public static <T extends NavigableMap<LocalTime, Double>> void getIndustryVolYtd(Map<String, T> mp) {
         CompletableFuture.supplyAsync(()
                 -> mp.entrySet().stream().filter(GraphIndustry.NO_GC)
-                        .collect(groupingBy(e -> ChinaStock.industryNameMap.get(e.getKey()),
-                                mapping(e -> e.getValue(), Collectors.collectingAndThen(toList(),
-                                        e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(GraphIndustry.TRADING_HOURS))
-                                .collect(groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, summingDouble(e1 -> e1.getValue()))))))))
+                .collect(groupingBy(e -> ChinaStock.industryNameMap.get(e.getKey()),
+                        mapping(e -> e.getValue(), Collectors.collectingAndThen(toList(),
+                                e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(GraphIndustry.TRADING_HOURS))
+                                        .collect(groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, summingDouble(e1 -> e1.getValue()))))))))
                 .thenAccept(m -> m.keySet().forEach(s -> {
-            mp.put(s, (T) m.get(s));
-        }));
+                    mp.put(s, (T) m.get(s));
+                }));
     }
 
     public static double minGen(double... l) {
@@ -326,16 +327,9 @@ public class Utility {
         return res;
     }
 
-    public static double applyAllDouble(DoubleBinaryOperator op, double... num) {
+    public static double reduceDouble(DoubleBinaryOperator op, double... num) {
         List<Double> s = DoubleStream.of(num).mapToObj(Double::valueOf).collect(toList());
-        if (num.length > 0) {
-            double res = s.get(0);
-            for (double d : s) {
-                res = op.applyAsDouble(res, d);
-            }
-            return res;
-        }
-        return 0.0;
+        return s.stream().mapToDouble(e -> e.doubleValue()).reduce(op).orElse(0.0);
     }
 
     public static Map<String, ConcurrentSkipListMap<LocalTime, Double>> mapConverter(Map<String, ? extends NavigableMap<LocalTime, Double>> mp) {
@@ -433,7 +427,7 @@ public class Utility {
                         }
                     } else {
                         System.out.println(" for " + e + " filling done");
-                        SimpleBar sb = new SimpleBar(priceMap.getOrDefault(e,0.0));
+                        SimpleBar sb = new SimpleBar(priceMap.getOrDefault(e, 0.0));
                         ChinaData.tradeTimePure.forEach(ti -> {
                             mp1.get(e).put(ti, sb);
                         });

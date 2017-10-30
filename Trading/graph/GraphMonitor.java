@@ -338,8 +338,8 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
             ytdCloseP = (int) Math.round(100d * (closeY1 - minY) / (maxY - minY));
 
-            current2DayP = (int) Math.round(100d * (current - Utility.applyAllDouble(Math::min, minT, minY))
-                    / (Utility.applyAllDouble(Math::max, maxT, maxY) - Utility.applyAllDouble(Math::min, minT, minY)));
+            current2DayP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, minY))
+                    / (Utility.reduceDouble(Math::max, maxT, maxY) - Utility.reduceDouble(Math::min, minT, minY)));
 
             if (ChinaData.priceMapBarY2.containsKey(name) && ChinaData.priceMapBarY2.get(name).size() > 0) {
                 double maxY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
@@ -347,16 +347,18 @@ public class GraphMonitor extends JComponent implements GraphFillable {
                 double minY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
                         .min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
 
-                ytdY2CloseP = (int) Math.round(100d * (closeY1 - Utility.applyAllDouble(Math::min, minY2, minY))
-                        / (Utility.applyAllDouble(Math::max, maxY2, maxY) - Utility.applyAllDouble(Math::min, minY2, minY)));
+                ytdY2CloseP = (int) Math.round(100d * (closeY1 - Utility.reduceDouble(Math::min, minY2, minY))
+                        / (Utility.reduceDouble(Math::max, maxY2, maxY) - Utility.reduceDouble(Math::min, minY2, minY)));
 
-                current3DayP = (int) Math.round(100d * (current - Utility.applyAllDouble(Math::min, minT, minY, minY2))
-                        / (Utility.applyAllDouble(Math::max, maxT, maxY, maxY2) - Utility.applyAllDouble(Math::min, minT, minY, minY2)));
+                current3DayP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, minY, minY2))
+                        / (Utility.reduceDouble(Math::max, maxT, maxY, maxY2) - Utility.reduceDouble(Math::min, minT, minY, minY2)));
             }
 
-            wtdP = (int) Math.round(100d * (current - Utility.applyAllDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0)))
-                    / (Utility.applyAllDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
-                    - Utility.applyAllDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0))));
+            wtdP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name,
+                    Double.MAX_VALUE))) / (Utility.reduceDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
+                    - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, Double.MAX_VALUE))));
+//            System.out.println(" name " + name + " current max min wtd wtdMax wtdMin "+ getStr(current,maxT,minT,wtdP,
+//                    ChinaPosition.wtdMinMap.getOrDefault(name,Double.MAX_VALUE), ChinaPosition.wtdMinMap.getOrDefault(name, Double.MAX_VALUE)));
         }
     }
 

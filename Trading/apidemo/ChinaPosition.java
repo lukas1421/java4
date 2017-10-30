@@ -164,7 +164,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             tradesMap.put(name, new ConcurrentSkipListMap<>());
             tradePnlMap.put(name, new ConcurrentSkipListMap<>());
             wtdMaxMap.put(name, 0.0);
-            wtdMinMap.put(name, 0.0);
+            wtdMinMap.put(name, Double.MAX_VALUE);
         });
 
         m_model = new BarModel_POS();

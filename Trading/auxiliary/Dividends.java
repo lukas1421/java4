@@ -62,8 +62,8 @@ public class Dividends {
                     e.getValue().adjustByFactor(div.getAdjFactor());
                 });
                 //get rid of same reference
-
                 // if(div.getExDate().equals((ytd)) || div.getExDate().equals(today)) {
+
                 System.out.println(" correcting div Y2 for " + ticker + " " + div.toString());
 
                 ChinaData.priceMapBarY2.get(ticker).replaceAll((k, v) -> {
@@ -77,7 +77,6 @@ public class Dividends {
                     e.getValue().adjustByFactor(div.getAdjFactor());
                     //System.out.println( " Y2  after " + e.getValue());
                 });
-                // }
             }
         });
     }

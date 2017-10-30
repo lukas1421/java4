@@ -11,8 +11,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -26,7 +24,7 @@ import static java.lang.Double.min;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-import static utility.Utility.applyAllDouble;
+import static utility.Utility.reduceDouble;
 
 public final class GraphBar extends JComponent implements GraphFillable {
 
@@ -296,9 +294,9 @@ public final class GraphBar extends JComponent implements GraphFillable {
             minT = Double.MAX_VALUE;
         }
 
-        wtdP = (int) Math.round(100d * (current - applyAllDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0)))
-                / (applyAllDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
-                - applyAllDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0))));
+        wtdP = (int) Math.round(100d * (current - reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0)))
+                / (reduceDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
+                - reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0))));
     }
 
     @Override
