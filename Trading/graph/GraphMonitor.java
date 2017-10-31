@@ -276,7 +276,9 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         setMinSharpe(ChinaData.priceMinuteSharpe.getOrDefault(name, 0.0));
         setWtdSharpe(ChinaData.wtdSharpe.getOrDefault(name, 0.0));
         setSize1(ChinaStock.sizeMap.getOrDefault(name, 0L));
-        trades = ChinaPosition.tradesMap.get(name);
+        trades = ChinaPosition.tradesMap.containsKey(name)?
+                ChinaPosition.tradesMap.get(name):new ConcurrentSkipListMap<>();
+
         if (NORMAL_STOCK.test(name)) {
             this.setNavigableMap(priceMapBar.get(name));
             getYtdY2CloseP(name);

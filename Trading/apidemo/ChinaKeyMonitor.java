@@ -421,56 +421,6 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         correlLabel.setFont(correlLabel.getFont().deriveFont(15F));
         corrPeriodLabel.setFont(corrPeriodLabel.getFont().deriveFont(15F));
 
-        JRadioButton posButton = new JRadioButton("Pos");
-        JRadioButton sharpeButton = new JRadioButton("sharp");
-        JRadioButton interestButton = new JRadioButton("Interest");
-        JRadioButton correlButton = new JRadioButton("Correl");
-
-        posButton.setSelected(true);
-        posButton.addActionListener(al -> {
-            displayPos = posButton.isSelected();
-            displaySharp = !posButton.isSelected();
-            displayInterest = !posButton.isSelected();
-            displayCorrel = !posButton.isSelected();
-            positionComparingFunc = e -> e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0);
-            refresh();
-            System.out.println(" display pos is " + displayPos);
-        });
-
-        sharpeButton.addActionListener(al -> {
-            displayPos = !sharpeButton.isSelected();
-            displaySharp = sharpeButton.isSelected();
-            displayInterest = !sharpeButton.isSelected();
-            displayCorrel = !sharpeButton.isSelected();
-            sharpeComparingFunc = s->ChinaStock.sharpeMap.getOrDefault(s,0.0);
-            refresh();
-            //System.out.println(" display sharpe is " + displaySharp);
-        });
-
-        interestButton.addActionListener(l -> {
-            //System.out.println("B4 display interest is " + displayInterest);
-            displayPos = !interestButton.isSelected();
-            displaySharp = !interestButton.isSelected();
-            displayInterest = interestButton.isSelected();
-            displayCorrel = !interestButton.isSelected();
-            //System.out.println("AFT display interest is " + displayInterest);
-        });
-
-        correlButton.addActionListener(l -> {
-            //System.out.println(" correl button clicked ");
-            displayPos = !correlButton.isSelected();
-            displaySharp = !correlButton.isSelected();
-            displayInterest = !correlButton.isSelected();
-            displayCorrel = correlButton.isSelected();
-
-        });
-
-        ButtonGroup bg = new ButtonGroup();
-        bg.add(posButton);
-        bg.add(sharpeButton);
-        bg.add(interestButton);
-        bg.add(correlButton);
-
         //what to display?
         JRadioButton indexButton = new JRadioButton("index");
         JRadioButton stockButton = new JRadioButton("stock");
@@ -480,6 +430,13 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         JRadioButton sinceTodayButton = new JRadioButton("Today");
         JRadioButton sinceWtdButton = new JRadioButton("wtd");
         JRadioButton sinceYtdButton = new JRadioButton("ytd");
+
+
+        JRadioButton posButton = new JRadioButton("Pos");
+        JRadioButton sharpeButton = new JRadioButton("sharp");
+        JRadioButton interestButton = new JRadioButton("Interest");
+        JRadioButton correlButton = new JRadioButton("Correl");
+
 
         indexButton.addActionListener(l -> {
             displayType = WhatToDisplay.INDEX;
@@ -572,6 +529,58 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         sinceBG.add(sinceTodayButton);
         sinceBG.add(sinceWtdButton);
         sinceBG.add(sinceYtdButton);
+
+
+        posButton.setSelected(true);
+        posButton.addActionListener(al -> {
+            displayPos = posButton.isSelected();
+            displaySharp = !posButton.isSelected();
+            displayInterest = !posButton.isSelected();
+            displayCorrel = !posButton.isSelected();
+            positionComparingFunc = e -> e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0);
+            refresh();
+            System.out.println(" display pos is " + displayPos);
+
+            stockButton.doClick();
+
+        });
+
+        sharpeButton.addActionListener(al -> {
+            displayPos = !sharpeButton.isSelected();
+            displaySharp = sharpeButton.isSelected();
+            displayInterest = !sharpeButton.isSelected();
+            displayCorrel = !sharpeButton.isSelected();
+            sharpeComparingFunc = s->ChinaStock.sharpeMap.getOrDefault(s,0.0);
+            refresh();
+            //System.out.println(" display sharpe is " + displaySharp);
+        });
+
+        interestButton.addActionListener(l -> {
+            //System.out.println("B4 display interest is " + displayInterest);
+            displayPos = !interestButton.isSelected();
+            displaySharp = !interestButton.isSelected();
+            displayInterest = interestButton.isSelected();
+            displayCorrel = !interestButton.isSelected();
+            //System.out.println("AFT display interest is " + displayInterest);
+        });
+
+        correlButton.addActionListener(l -> {
+            //System.out.println(" correl button clicked ");
+            displayPos = !correlButton.isSelected();
+            displaySharp = !correlButton.isSelected();
+            displayInterest = !correlButton.isSelected();
+            displayCorrel = correlButton.isSelected();
+
+        });
+
+        ButtonGroup bg = new ButtonGroup();
+        bg.add(posButton);
+        bg.add(sharpeButton);
+        bg.add(interestButton);
+        bg.add(correlButton);
+
+
+
 
         JRadioButton sh000001Button = new JRadioButton("主");
         JRadioButton sh000300Button = new JRadioButton("沪深");
@@ -700,7 +709,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                 processGraphMonitors(l);
             } else if (displayInterest) {
                 System.out.println("processGraphMonitors(generateGraphList())");
-                LinkedList<String> l = generateGraphList();
+                //LinkedList<String> l = generateGraphList();
                 processGraphMonitors(generateGraphList());
             } else if (displayCorrel) {
                 //System.out.println(" print correl stocks ");
@@ -907,7 +916,17 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                 System.out.println(" printing sector list ");
                 //todayList.stream().peek(System.out::println).map(s -> ChinaStock.industryNameMap.getOrDefault(s, "")).forEach(System.out::println);
                 //todayList.stream().filter(buildPred("板块")).forEach(System.out::println);
-                return todayList.stream().filter(buildPred("板块")).collect(Collectors.toCollection(LinkedList::new));
+                //todayList.stream().limit(20).forEach(System.out::println);
+                 LinkedList<String> l = ChinaData.priceMinuteSharpe.entrySet().stream().filter(e->buildPred("板块").test(e.getKey()))
+                         .sorted(reverseComparator(Comparator.comparingDouble(Map.Entry::getValue)))
+                         .peek(System.out::println)
+                        .map(Entry::getKey).collect(Collectors.toCollection(LinkedList::new));
+                 System.out.println(" sector list is " + l);
+                 return l;
+//
+//  return todayList.stream().filter(buildPred("板块")).peek(System.out::println)
+//                        .collect(Collectors.toCollection(LinkedList::new));
+
             } else if (sharpPeriod == SharpePeriod.WTD) {
                 System.out.println(" sector WTD not available ");
             } else if (sharpPeriod == SharpePeriod.YTD) {
