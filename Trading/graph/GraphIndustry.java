@@ -65,8 +65,8 @@ public class GraphIndustry extends JComponent {
     public static volatile String selectedNameIndus = "";
 
     public static final Predicate<? super Entry<String, ?>> NO_GC = e -> !e.getKey().equals("sh204001") && e.getKey().length() > 2;
-    public static final Predicate<? super Entry<LocalTime, ?>> TRADING_HOURS = e -> ((e.getKey().isAfter(LocalTime.of(9, 29)) && e.getKey().isBefore(LocalTime.of(11, 31)))
-            || Utility.PM_PRED.test(e));
+    public static final Predicate<? super Entry<LocalTime, ?>> TRADING_HOURS =
+            e -> ((e.getKey().isAfter(LocalTime.of(9, 29)) && e.getKey().isBefore(LocalTime.of(11, 31))) || Utility.PM_PRED.test(e));
 
     final static Comparator<? super Entry<String, ? extends NavigableMap<LocalTime, Double>>> LAST_ENTRY_COMPARATOR
             = Comparator.comparingDouble(e -> Optional.ofNullable(e.getValue().lastEntry()).map(Entry::getValue).orElse(0.0));

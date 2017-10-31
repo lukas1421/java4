@@ -140,10 +140,21 @@ public class Utility {
         return (a,b) -> mapCominberGen((x,y)->x+y,a,b);
     }
 
+    public static <T> BinaryOperator<NavigableMap<T,Double>> mapBinOp(Predicate<? super Map.Entry<T, ?>> p) {
+        return (a,b) -> mapCominberGen((x,y)->x+y,p,a,b);
+    }
+
     @SafeVarargs
     public static <T> NavigableMap<T, Double> mapCominberGen(BinaryOperator<Double> o, NavigableMap<T,Double>... mps ) {
         return Stream.of(mps).flatMap(e->e.entrySet().stream()).collect(Collectors.groupingBy(Map.Entry::getKey,ConcurrentSkipListMap::new,
                     Collectors.reducing(0.0, Map.Entry::getValue,o)));
+    }
+
+    @SafeVarargs
+    public static <T> NavigableMap<T, Double> mapCominberGen(BinaryOperator<Double> o, Predicate<? super Map.Entry<T,?>> p, NavigableMap<T,Double>... mps ) {
+        return Stream.of(mps).flatMap(e->e.entrySet().stream().filter(p))
+                .collect(Collectors.groupingBy(Map.Entry::getKey,ConcurrentSkipListMap::new,
+                Collectors.reducing(0.0, Map.Entry::getValue,o)));
     }
 
     @SafeVarargs
@@ -328,11 +339,13 @@ public class Utility {
         CompletableFuture.supplyAsync(()
                 -> mp.entrySet().stream().filter(GraphIndustry.NO_GC)
                 .collect(groupingBy(e -> ChinaStock.industryNameMap.get(e.getKey()),
-                        mapping(e -> e.getValue(), Collectors.collectingAndThen(toList(),
-                                e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(GraphIndustry.TRADING_HOURS))
-                                        .collect(groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, summingDouble(e1 -> e1.getValue()))))))))
+                        mapping(Map.Entry::getValue, Collectors.reducing(Utility.mapBinOp(GraphIndustry.TRADING_HOURS)))))
+//                                , Collectors.collectingAndThen(toList(),
+//                                e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(GraphIndustry.TRADING_HOURS))
+//                                        .collect(groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, summingDouble(Map.Entry::getValue)))))))
+        )
                 .thenAccept(m -> m.keySet().forEach(s -> {
-                    mp.put(s, (T) m.get(s));
+                    mp.put(s, (T)(m.get(s).orElse(new ConcurrentSkipListMap<>())));
                 }));
     }
 
@@ -348,7 +361,7 @@ public class Utility {
         return Arrays.stream(num).reduce(op).orElse(0.0);
     }
 
-    public static Map<String, ConcurrentSkipListMap<LocalTime, Double>> mapConverter(Map<String, ? extends NavigableMap<LocalTime, Double>> mp) {
+    public static Map<String, ? extends NavigableMap<LocalTime, Double>> mapConverter(Map<String, ? extends NavigableMap<LocalTime, Double>> mp) {
         ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> res = new ConcurrentHashMap<>();
 
         mp.keySet().forEach((String name) -> {
@@ -470,4 +483,25 @@ public class Utility {
         return Arrays.stream(mps).flatMap(e->e.entrySet().stream()).mapToDouble(Map.Entry::getValue).reduce(o).orElse(0.0);
     }
 
+    public static <T,S> double reduceMap(DoubleBinaryOperator o, ToDoubleFunction<S> f, NavigableMap<T, S>... mps) {
+        return Arrays.stream(mps).flatMap(e->e.entrySet().stream()).map(Map.Entry::getValue).mapToDouble(f).reduce(o).orElse(0.0);
+    }
+
+    public static <T extends Temporal,S> NavigableMap<LocalDateTime, S> mergeMap(NavigableMap<T, S>... mps) {
+        NavigableMap<LocalDateTime, S> res = new ConcurrentSkipListMap<>();
+
+        for(NavigableMap<T,S> mp:mps) {
+            if(mp.size()>0) {
+                for(Map.Entry<T,S> e : mp.entrySet()) {
+                    if(e.getKey().getClass()==LocalTime.class) {
+                        res.put(LocalDateTime.of(LocalDate.now(),(LocalTime)e.getKey()),e.getValue());
+                    } else if(e.getKey().getClass()==LocalDateTime.class) {
+                        res.put((LocalDateTime)e.getKey(), e.getValue());
+                    }
+                }
+            }
+        }
+
+        return res;
+    }
 }

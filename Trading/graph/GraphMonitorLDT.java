@@ -5,22 +5,19 @@ import apidemo.ChinaData;
 import apidemo.ChinaPosition;
 import apidemo.ChinaStock;
 import auxiliary.SimpleBar;
+import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalUnit;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Function;
 
 import static apidemo.ChinaData.price5mWtd;
-import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaStock.NORMAL_STOCK;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.BAR_HIGH;
@@ -288,7 +285,7 @@ public class GraphMonitorLDT extends JComponent implements GraphFillable  {
 
         //trades needs to be this weeks's trades
         trades = ChinaPosition.tradesMap.containsKey(name)?
-                mergeMap(ChinaPosition.tradesMap.get(name)):new ConcurrentSkipListMap<>();
+                Utility.mergeMap(ChinaPosition.tradesMap.get(name)):new ConcurrentSkipListMap<>();
 
         if (NORMAL_STOCK.test(name)) {
             //if(Loca)
@@ -324,24 +321,6 @@ public class GraphMonitorLDT extends JComponent implements GraphFillable  {
             return (Math.abs(finalP - initialP) > 0.0001) ? (double) Math.round(Math.log(getMin() / initialP) * 1000d) / 10d : 0;
         }
         return 0.0;
-    }
-
-    static <T extends Temporal,S> NavigableMap<LocalDateTime, S> mergeMap(NavigableMap<T,S>... mps) {
-        NavigableMap<LocalDateTime, S> res = new ConcurrentSkipListMap<>();
-
-        for(NavigableMap<T,S> mp:mps) {
-            if(mp.size()>0) {
-                for(Map.Entry<T,S> e : mp.entrySet()) {
-                    if(e.getKey().getClass()==LocalTime.class) {
-                        res.put(LocalDateTime.of(LocalDate.now(),(LocalTime)e.getKey()),e.getValue());
-                    } else if(e.getKey().getClass()==LocalDateTime.class) {
-                        res.put((LocalDateTime)e.getKey(), e.getValue());
-                    }
-                }
-            }
-        }
-
-        return res;
     }
 
 
