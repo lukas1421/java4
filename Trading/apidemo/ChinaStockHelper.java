@@ -413,7 +413,7 @@ public final class ChinaStockHelper {
                     }
                     ChinaGraphIndustry.pureRefresh();
                     setGraphGen(nam, graph6);
-                    ChinaBigGraph.setGraph(nam);
+                    //ChinaBigGraph.setGraph(nam);
 
                     System.out.println(" nam is " + nam);
                     System.out.println(" selected Name industry " + GraphIndustry.selectedNameIndus);
@@ -421,7 +421,7 @@ public final class ChinaStockHelper {
                 }
             });
 
-            ChinaBigGraph.setGraph(nam);
+            //ChinaBigGraph.setGraph(nam);
 
             if (!ftes.isShutdown()) {
                 ftes.schedule(() -> {

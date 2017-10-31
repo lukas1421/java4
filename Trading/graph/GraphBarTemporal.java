@@ -290,7 +290,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 //        g2.drawString("涨:" + Double.toString(getRtn()) + "%", getWidth() * 5 / 8, 15);
 //        g2.drawString("高 " + (getAMMaxT()), getWidth() * 6 / 8, 15);
 //        //g2.drawString("低 " + (getAMMinT()), getWidth() * 7 * 8, 15);
-//        g2.drawString("夏 " + sharpe, getWidth() * 7 / 8, 15);
+//        g2.drawString("夏 " + ytdSharpe, getWidth() * 7 / 8, 15);
 //
 //        //below
 //        g2.drawString("开 " + Double.toString(getRetOPC()), 5, getHeight() - 25);

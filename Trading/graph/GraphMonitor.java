@@ -45,7 +45,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
     double rtn = 0;
     int size;
     String bench;
-    double sharpe;
+    double ytdSharpe;
     double minSharpe;
     double wtdSharpe;
     static final BasicStroke BS3 = new BasicStroke(3);
@@ -192,7 +192,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         g2.drawString("分夏 " + Double.toString(Math.round(100d * minSharpe) / 100d), getWidth() * 5 / 6, 115);
         g2.drawString("弹 " + Double.toString(ChinaPosition.getPotentialReturnToMid(name)), getWidth() * 5 / 6, 135);
 
-        g2.drawString("年夏" + Double.toString(sharpe), getWidth() * 5 / 6 + 10, getHeight() - 5);
+        g2.drawString("年夏" + Double.toString(ytdSharpe), getWidth() * 5 / 6 + 10, getHeight() - 5);
 
         g2.drawString("周夏" + Double.toString(wtdSharpe), getWidth() * 4 / 6, getHeight() - 20);
 
@@ -233,8 +233,8 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         this.bench = s;
     }
 
-    void setSharpe(double s) {
-        this.sharpe = s;
+    void setYtdSharpe(double s) {
+        this.ytdSharpe = s;
     }
 
     void setMinSharpe(double s) {
@@ -259,7 +259,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         setName("");
         setChineseName("");
         setBench("");
-        setSharpe(0.0);
+        setYtdSharpe(0.0);
         setMinSharpe(0.0);
         setWtdSharpe(0.0);
         setSize1(0L);
@@ -272,7 +272,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         setName(name);
         setChineseName(ChinaStock.nameMap.get(name));
         setBench(ChinaStock.benchMap.getOrDefault(name, ""));
-        setSharpe(ChinaStock.sharpeMap.getOrDefault(name, 0.0));
+        setYtdSharpe(ChinaStock.sharpeMap.getOrDefault(name, 0.0));
         setMinSharpe(ChinaData.priceMinuteSharpe.getOrDefault(name, 0.0));
         setWtdSharpe(ChinaData.wtdSharpe.getOrDefault(name, 0.0));
         setSize1(ChinaStock.sizeMap.getOrDefault(name, 0L));
@@ -305,7 +305,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
     double getMinRtn() {
         if (tm.size() > 0) {
-            double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(e -> e.getOpen()).orElse(0.0);
+            double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
             double finalP = getMin();
             return (Math.abs(finalP - initialP) > 0.0001) ? (double) round(log(getMin() / initialP) * 1000d) / 10d : 0;
         }
