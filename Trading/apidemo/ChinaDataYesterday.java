@@ -29,9 +29,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+
 import static java.lang.Double.min;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
+
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalTime;
@@ -279,10 +281,8 @@ public final class ChinaDataYesterday extends JPanel {
 
         //Fetch from China data
         btnGetData.addActionListener(al -> {
-
             int result = JOptionPane.showConfirmDialog(null, "would you like to get Data?");
             if (result == JOptionPane.YES_OPTION) {
-
                 CompletableFuture.runAsync(() -> {
                     GraphIndustry.getIndustryPrice();
                     GraphIndustry.compute();
@@ -300,14 +300,19 @@ public final class ChinaDataYesterday extends JPanel {
                         minMapY.put(name, ChinaStock.minMap.getOrDefault(name, 0.0));
                         sizeY.put(name, ChinaStock.sizeMap.getOrDefault(name, 0L));
                     });
-                }).thenAccept(v -> {
+                }).thenRun(() -> {
                     ChinaMain.updateSystemNotif(Utility.getStr("Fetching done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                    SwingUtilities.invokeLater(() -> {
+                        this.repaint();
+                    });
+                }).thenRun(() -> {
+                    compute();
+                    ChinaMain.updateSystemNotif(Utility.getStr("Computing ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
                     SwingUtilities.invokeLater(() -> {
                         this.repaint();
                     });
                 });
             }
-
             //ChinaMain.updateSystemNotif(ChinaStockHelper.getStr(" LOAD HIB T DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
         });
 
@@ -1151,7 +1156,7 @@ public final class ChinaDataYesterday extends JPanel {
                 case 34:
                     return (noZeroArrayGen(name, amMaxY, openMapY, closeMapY, pmMaxY, maxMapY))
                             ? round(100d * (Math.log(amMaxY.get(name) / openMapY.get(name)) - Math.log(closeMapY.get(name) / pmMaxY.get(name)))
-                                    / (Math.log(maxMapY.get(name) / minMapY.get(name)))) / 100d : 0.0;
+                            / (Math.log(maxMapY.get(name) / minMapY.get(name)))) / 100d : 0.0;
 
                 //ma20
                 case 35:

@@ -83,7 +83,7 @@ public class Utility {
 
     static double computeMean(NavigableMap<LocalTime, Double> retMap) {
         if (retMap.size() > 1) {
-            double sum = retMap.entrySet().stream().mapToDouble(e -> e.getValue()).sum();
+            double sum = retMap.entrySet().stream().mapToDouble(Map.Entry::getValue).sum();
             return sum / retMap.size();
         }
         return 0;
@@ -92,7 +92,7 @@ public class Utility {
     static double computeSD(NavigableMap<LocalTime, Double> retMap) {
         if (retMap.size() > 1) {
             double mean = computeMean(retMap);
-            return Math.sqrt((retMap.entrySet().stream().mapToDouble(e -> e.getValue()).map(v -> Math.pow(v - mean, 2)).sum())
+            return Math.sqrt((retMap.entrySet().stream().mapToDouble(Map.Entry::getValue).map(v -> Math.pow(v - mean, 2)).sum())
                     / (retMap.size() - 1));
         }
         return 0.0;
@@ -112,8 +112,7 @@ public class Utility {
         try (ObjectOutputStream out = new ObjectOutputStream(bos = new ByteArrayOutputStream())) {
             out.writeObject(mp);
             byte[] buf = bos.toByteArray();
-            Blob b = Hibernate.getLobCreator(s).createBlob(buf);
-            return b;
+            return Hibernate.getLobCreator(s).createBlob(buf);
         } catch (IOException ex) {
             ex.printStackTrace();
         }

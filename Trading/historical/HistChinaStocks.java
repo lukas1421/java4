@@ -43,7 +43,7 @@ public class HistChinaStocks extends JPanel {
     private static JTable tab;
 
     private static final LocalDate LAST_YEAR_END = LocalDate.of(2016, 12, 31);
-    private static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now().minusDays(1));
+    private static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now());
 
     public static final String GLOBALPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";
 
@@ -77,8 +77,10 @@ public class HistChinaStocks extends JPanel {
     static Map<String, Double> wtdTradePnlMap = new HashMap<>();
     static Map<String, Double> wtdMtmPnlMap = new HashMap<>();
     static BinaryOperator<NavigableMap<LocalDateTime, Double>> mapOp = (a, b) -> Stream.of(a, b).flatMap(e -> e.entrySet().stream())
-            .collect(Collectors.groupingBy(e1 -> e1.getKey(), ConcurrentSkipListMap::new, Collectors.summingDouble(
-                    e1 -> e1.getValue())));
+            .collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, Collectors.summingDouble(
+                    Map.Entry::getValue)));
+
+    //static BinaryOperator<NavigableMap<LocalDateTime, Double>> mapOp2 = (a,b) -> Stream.of(a,b).
 
     static volatile NavigableMap<LocalDateTime, Double> weekMtmMap = new ConcurrentSkipListMap<>();
     static volatile NavigableMap<LocalDateTime, Double> weekTradePnlMap = new ConcurrentSkipListMap<>();
@@ -378,6 +380,7 @@ public class HistChinaStocks extends JPanel {
         }).thenRun(() -> {
             SwingUtilities.invokeLater(() -> {
                 model.fireTableDataChanged();
+                graphWtdPnl.repaint();
                 //repaint();
             });
         });

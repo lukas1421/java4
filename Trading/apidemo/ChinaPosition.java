@@ -488,22 +488,22 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             fxMap.getOrDefault(e.getKey(), 1.0))).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
 
 
-            if (tradesMap.entrySet().stream().filter(p).mapToInt(e -> e.getValue().size()).sum() > 0) {
-                boughtPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
-                        .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 > 0))
-                        .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
+            //if (tradesMap.entrySet().stream().filter(p).mapToInt(e -> e.getValue().size()).sum() > 0) {
+            boughtPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
+                    .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 > 0))
+                    .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
 
-                soldPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
-                        .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 < 0))
-                        .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
+            soldPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
+                    .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 < 0))
+                    .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
 
-                tradePNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
-                        .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> true))
-                        .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
+            tradePNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
+                    .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> true))
+                    .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
 
-                todayNetPnl = Optional.ofNullable(tradePNLMap.lastEntry()).map(Entry::getValue).orElse(0.0) + netYtdPnl
-                        + Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0);
-            }
+            todayNetPnl = Optional.ofNullable(tradePNLMap.lastEntry()).map(Entry::getValue).orElse(0.0) + netYtdPnl
+                    + Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0);
+            //}
 
 
             netPNLMap = Utility.mapCominberGen((a, b) -> a + b, mtmPNLMap, tradePNLMap);
@@ -1020,7 +1020,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     double getAvgBCost(String name) {
         return (tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).count() > 0)
                 ? tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.collectingAndThen(toList(),
-                l -> (Double) l.stream().mapToDouble(e -> ((Trade) e.getValue()).getPrice()* ((Trade) e.getValue()).getSize()).sum()
+                l -> (Double) l.stream().mapToDouble(e -> ((Trade) e.getValue()).getPrice() * ((Trade) e.getValue()).getSize()).sum()
                         / (Double) l.stream().mapToDouble(e -> ((Trade) e.getValue()).getSize()).sum())) : 0.0;
     }
 
