@@ -5,34 +5,36 @@ import apidemo.ChinaData;
 import apidemo.ChinaPosition;
 import apidemo.ChinaStock;
 import auxiliary.SimpleBar;
-import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
-import java.time.temporal.TemporalAmount;
+import java.time.temporal.TemporalUnit;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Function;
 
+import static apidemo.ChinaData.price5mWtd;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaStock.NORMAL_STOCK;
-import static java.lang.Math.abs;
-import static java.lang.Math.log;
-import static java.lang.Math.round;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.BAR_HIGH;
 import static utility.Utility.BAR_LOW;
 
-public class GraphMonitor extends JComponent implements GraphFillable {
-
+public class GraphMonitorLDT extends JComponent implements GraphFillable  {
     static final int WIDTH_MON = 2;
     String name;
     String chineseName;
-    NavigableMap<LocalTime, SimpleBar> tm;
-    NavigableMap<LocalTime, ? super Trade> trades = new ConcurrentSkipListMap<>();
+    NavigableMap<LocalDateTime, SimpleBar> tm;
+    NavigableMap<LocalDateTime, ? super Trade> trades = new ConcurrentSkipListMap<>();
+
+    Function<LocalDateTime, LocalTime> toLocalTimeFunc;
+
     double maxToday;
     double minToday;
     double minRtn;
@@ -57,10 +59,13 @@ public class GraphMonitor extends JComponent implements GraphFillable {
     int current3DayP;
     int wtdP;
 
-    public GraphMonitor() {
+    public GraphMonitorLDT() {
         name = "";
         chineseName = "";
         this.tm = new ConcurrentSkipListMap<>();
+
+//        toLocalTimeFunc = (tm.firstEntry().getKey().getClass() == LocalDateTime.class)?
+//                t->((LocalDateTime)t).toLocalTime():e->(LocalTime)e;
     }
 
     @Override
@@ -91,11 +96,11 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         last = 0;
 
         int x = 5;
-        for (LocalTime lt : tm.keySet()) {
-            openY = getY(tm.floorEntry(lt).getValue().getOpen());
-            highY = getY(tm.floorEntry(lt).getValue().getHigh());
-            lowY = getY(tm.floorEntry(lt).getValue().getLow());
-            closeY = getY(tm.floorEntry(lt).getValue().getClose());
+        for (LocalDateTime ldt : tm.keySet()) {
+            openY = getY(tm.floorEntry(ldt).getValue().getOpen());
+            highY = getY(tm.floorEntry(ldt).getValue().getHigh());
+            lowY = getY(tm.floorEntry(ldt).getValue().getLow());
+            closeY = getY(tm.floorEntry(ldt).getValue().getClose());
 
             if (closeY < openY) {
                 g.setColor(new Color(0, 140, 0));
@@ -109,8 +114,8 @@ public class GraphMonitor extends JComponent implements GraphFillable {
             }
             g.drawLine(x + 1, highY, x + 1, lowY);
 
-            if(trades.subMap(lt,true,lt.plusMinutes(1L),false).size()>0) {
-                for(Map.Entry e: trades.subMap(lt,true,lt.plusMinutes(1L),false).entrySet()) {
+            if(trades.subMap(ldt,true,  ldt.plusMinutes(1L),false).size()>0) {
+                for(Map.Entry e: trades.subMap(ldt,true,ldt.plusMinutes(1L),false).entrySet()) {
                     Trade t = (Trade) e.getValue();
                     if (t.getSize() > 0) {
                         g.setColor(Color.blue);
@@ -131,7 +136,9 @@ public class GraphMonitor extends JComponent implements GraphFillable {
             };
 
             g.setColor(Color.black);
-            if (lt.equals(tm.firstKey())) {
+
+            LocalTime lt = toLocalTimeFunc.apply(ldt);
+            if (ldt.equals(tm.firstKey())) {
                 g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 5);
             } else {
                 if (lt.getMinute() == 0 || (lt.getHour() != 9 && lt.getHour() != 11
@@ -224,7 +231,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
     }
 
     double getLast() {
-        return (tm.size() > 0) ? round(1000d * tm.lastEntry().getValue().getClose()) / 1000d : 0.0;
+        return (tm.size() > 0) ? Math.round(1000d * tm.lastEntry().getValue().getClose()) / 1000d : 0.0;
     }
 
     void setSize1(long s) {
@@ -251,7 +258,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         if (tm.size() > 0) {
             double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
             double finalP = tm.lastEntry().getValue().getClose();
-            return (double) round((finalP / initialP - 1) * 1000d) / 10d;
+            return (double) Math.round((finalP / initialP - 1) * 1000d) / 10d;
         }
         return 0.0;
     }
@@ -278,12 +285,15 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         setMinSharpe(ChinaData.priceMinuteSharpe.getOrDefault(name, 0.0));
         setWtdSharpe(ChinaData.wtdSharpe.getOrDefault(name, 0.0));
         setSize1(ChinaStock.sizeMap.getOrDefault(name, 0L));
+
+        //trades needs to be this weeks's trades
         trades = ChinaPosition.tradesMap.containsKey(name)?
-                ChinaPosition.tradesMap.get(name):new ConcurrentSkipListMap<>();
+                mergeMap(ChinaPosition.tradesMap.get(name)):new ConcurrentSkipListMap<>();
 
         if (NORMAL_STOCK.test(name)) {
-            this.setNavigableMap(priceMapBar.get(name));
-            getYtdY2CloseP(name);
+            //if(Loca)
+            this.setNavigableMap(price5mWtd.get(name));
+            //getYtdY2CloseP(name);
         } else {
             this.setNavigableMap(new ConcurrentSkipListMap<>());
         }
@@ -294,7 +304,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         fillInGraph(name);
     }
 
-    void setNavigableMap(NavigableMap<LocalTime, SimpleBar> tmIn) {
+    void setNavigableMap(NavigableMap<LocalDateTime, SimpleBar> tmIn) {
         this.tm = tmIn;
     }
 
@@ -302,7 +312,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         if (tm.size() > 0) {
             double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
             double finalP = getMax();
-            return abs(finalP - initialP) > 0.0001 ? (double) round((finalP / initialP - 1) * 1000d) / 10d : 0;
+            return Math.abs(finalP - initialP) > 0.0001 ? (double) Math.round((finalP / initialP - 1) * 1000d) / 10d : 0;
         }
         return 0.0;
     }
@@ -311,59 +321,28 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         if (tm.size() > 0) {
             double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
             double finalP = getMin();
-            return (Math.abs(finalP - initialP) > 0.0001) ? (double) round(log(getMin() / initialP) * 1000d) / 10d : 0;
+            return (Math.abs(finalP - initialP) > 0.0001) ? (double) Math.round(Math.log(getMin() / initialP) * 1000d) / 10d : 0;
         }
         return 0.0;
     }
 
-    void getYtdY2CloseP(String name) {
-        double current;
-        double maxT;
-        double minT;
+    static <T extends Temporal,S> NavigableMap<LocalDateTime, S> mergeMap(NavigableMap<T,S>... mps) {
+        NavigableMap<LocalDateTime, S> res = new ConcurrentSkipListMap<>();
 
-        if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
-            current = priceMapBar.get(name).lastEntry().getValue().getClose();
-            maxT = priceMapBar.get(name).entrySet().stream().max(BAR_HIGH).map(Map.Entry::getValue)
-                    .map(SimpleBar::getHigh).orElse(0.0);
-            minT = priceMapBar.get(name).entrySet().stream().min(BAR_LOW).map(Map.Entry::getValue)
-                    .map(SimpleBar::getHigh).orElse(0.0);
-        } else {
-            current = 0.0;
-            maxT = Double.MIN_VALUE;
-            minT = Double.MAX_VALUE;
-        }
-
-        if (ChinaData.priceMapBarYtd.containsKey(name) && ChinaData.priceMapBarYtd.get(name).size() > 0) {
-            double closeY1 = ChinaData.priceMapBarYtd.get(name).lastEntry().getValue().getClose();
-            double maxY = ChinaData.priceMapBarYtd.get(name).entrySet().stream()
-                    .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
-            double minY = ChinaData.priceMapBarYtd.get(name).entrySet().stream()
-                    .min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
-
-            ytdCloseP = (int) Math.round(100d * (closeY1 - minY) / (maxY - minY));
-
-            current2DayP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, minY))
-                    / (Utility.reduceDouble(Math::max, maxT, maxY) - Utility.reduceDouble(Math::min, minT, minY)));
-
-            if (ChinaData.priceMapBarY2.containsKey(name) && ChinaData.priceMapBarY2.get(name).size() > 0) {
-                double maxY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
-                        .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
-                double minY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
-                        .min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
-
-                ytdY2CloseP = (int) Math.round(100d * (closeY1 - Utility.reduceDouble(Math::min, minY2, minY))
-                        / (Utility.reduceDouble(Math::max, maxY2, maxY) - Utility.reduceDouble(Math::min, minY2, minY)));
-
-                current3DayP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, minY, minY2))
-                        / (Utility.reduceDouble(Math::max, maxT, maxY, maxY2) - Utility.reduceDouble(Math::min, minT, minY, minY2)));
+        for(NavigableMap<T,S> mp:mps) {
+            if(mp.size()>0) {
+                for(Map.Entry<T,S> e : mp.entrySet()) {
+                    if(e.getKey().getClass()==LocalTime.class) {
+                        res.put(LocalDateTime.of(LocalDate.now(),(LocalTime)e.getKey()),e.getValue());
+                    } else if(e.getKey().getClass()==LocalDateTime.class) {
+                        res.put((LocalDateTime)e.getKey(), e.getValue());
+                    }
+                }
             }
-
-            wtdP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name,
-                    Double.MAX_VALUE))) / (Utility.reduceDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
-                    - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, Double.MAX_VALUE))));
-//            System.out.println(" name " + name + " current max min wtd wtdMax wtdMin "+ getStr(current,maxT,minT,wtdP,
-//                    ChinaPosition.wtdMinMap.getOrDefault(name,Double.MAX_VALUE), ChinaPosition.wtdMinMap.getOrDefault(name, Double.MAX_VALUE)));
         }
+
+        return res;
     }
+
 
 }

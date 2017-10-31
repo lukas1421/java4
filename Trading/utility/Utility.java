@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -44,8 +45,14 @@ public class Utility {
             e.getKey().isAfter(LocalTime.of(12, 59, 59)) && e.getKey().isBefore(LocalTime.of(15, 0, 1));
     //static final Comparator<? super Entry<LocalTime,SimpleBar>> BAR_HIGH = (e1,e2)->e1.getValue().getHigh()>=e2.getValue().getHigh()?1:-1;
     //static final Comparator<? super Entry<LocalTime,SimpleBar>> BAR_HIGH = Comparator.comparingDouble(e->e.getValue().getHigh());
-    public static final Comparator<? super Map.Entry<LocalTime, SimpleBar>> BAR_HIGH = Map.Entry.comparingByValue(Comparator.comparingDouble(SimpleBar::getHigh));
-    public static final Comparator<? super Map.Entry<LocalTime, SimpleBar>> BAR_LOW = (e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
+
+    public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_HIGH =
+            (e1,e2)->e1.getValue().getHigh()>=e2.getValue().getHigh()?1:-1;
+            //Map.Entry.comparingByValue(Comparator.comparingDouble(SimpleBar::getHigh));
+
+    public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_LOW =
+            (e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
+
     public static final Predicate<? super Map.Entry<LocalTime, ?>> IS_OPEN_PRED = e -> e.getKey().isAfter(LocalTime.of(9, 29, 59));
     public static final LocalTime AM914T = LocalTime.of(9, 14, 0);
     public static final LocalTime AM941T = LocalTime.of(9, 41, 0);
