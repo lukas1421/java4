@@ -3,7 +3,9 @@ package historical;
 import TradeType.MarginTrade;
 import TradeType.NormalTrade;
 import TradeType.Trade;
+import apidemo.ChinaData;
 import apidemo.ChinaMain;
+import apidemo.ChinaPosition;
 import auxiliary.SimpleBar;
 import graph.GraphBarTemporal;
 import graph.GraphChinaPnl;
@@ -31,6 +33,12 @@ import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaPosition.tradesMap;
+import static utility.Utility.mergeMap;
+import static utility.Utility.mergeTradeMap;
+import static utility.Utility.priceMap1mTo5M;
 
 public class HistChinaStocks extends JPanel {
 
@@ -275,9 +283,13 @@ public class HistChinaStocks extends JPanel {
         JButton loadTradesButton = new JButton("Load trades");
         JButton computeButton = new JButton("Compute");
         JButton updatePriceButton = new JButton(" update price ");
+        JButton getTodayDataButton = new JButton(" Today Data");
+        JButton getTodayTradesButton = new JButton("Today trades");
+        JButton liveUpdateButton = new JButton("Compute");
+        JButton stopButton = new JButton ("stop");
+
 
         refreshButton.addActionListener(al -> {
-
             refreshAll();
         });
 
@@ -347,6 +359,25 @@ public class HistChinaStocks extends JPanel {
             }
         });
 
+        getTodayDataButton.addActionListener(al->{
+            for(String s:chinaWtd.keySet()) {
+                if(priceMapBar.containsKey(s) && priceMapBar.get(s).size()>0) {
+                    NavigableMap<LocalDateTime, SimpleBar> res = mergeMap(chinaWtd.get(s), Utility.priceMapToLDT(priceMap1mTo5M(priceMapBar.get(s))));
+                    chinaWtd.put(s, res);
+                }
+            }
+        });
+
+        getTodayTradesButton.addActionListener(al->{
+            for(String s:chinaTradeMap.keySet()) {
+                if(tradesMap.containsKey(s) && tradesMap.get(s).size()>0) {
+                    NavigableMap<LocalDateTime, ? super Trade> res = mergeTradeMap(chinaTradeMap.get(s),
+                            Utility.priceMapToLDT(tradesMap.get(s)));
+                    chinaTradeMap.put(s,res);
+                }
+            }
+
+        });
 
         controlPanel.setLayout(new FlowLayout());
         controlPanel.add(refreshButton);
@@ -355,6 +386,8 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(loadTradesButton);
         controlPanel.add(computeButton);
         controlPanel.add(updatePriceButton);
+        controlPanel.add(getTodayDataButton);
+        controlPanel.add(getTodayTradesButton);
 
         this.setLayout(new BorderLayout());
         this.add(controlPanel, BorderLayout.NORTH);

@@ -503,14 +503,10 @@ public class Utility {
         return res;
     }
 
-    public static NavigableMap<LocalDateTime, ? super Trade> mergeTradeMap(NavigableMap<? extends Temporal, ? super Trade>... mps) {
+    public static NavigableMap<LocalDateTime, ? super Trade> mergeTradeMap(NavigableMap<LocalDateTime, ? super Trade>... mps) {
         NavigableMap<LocalDateTime, ? super Trade> res = new ConcurrentSkipListMap<>();
-        Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.toMap(e -> {
-                    if(e.getKey().getClass()==LocalTime.class) {
-                        return LocalDateTime.of(LocalDate.now(),(LocalTime)e.getKey());
-                    }
-                    return (LocalDateTime)e.getKey();
-                }, e -> e.getValue(), (a, b) -> a,ConcurrentSkipListMap::new));
+        res = Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.toMap(e -> (LocalDateTime)e.getKey(),
+                e -> e.getValue(), (a, b) -> a,ConcurrentSkipListMap::new));
         return res;
     }
 
