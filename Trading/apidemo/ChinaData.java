@@ -3,6 +3,7 @@ package apidemo;
 import static apidemo.ChinaDataYesterday.convertTimeToInt;
 import static apidemo.ChinaMain.controller;
 import static apidemo.ChinaStock.*;
+import static historical.HistChinaStocks.chinaWtd;
 import static utility.Utility.blobify;
 import static utility.Utility.getStr;
 
@@ -67,6 +68,7 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.TableCellRenderer;
 
 import graph.GraphIndustry;
+import historical.HistChinaStocks;
 import saving.ChinaSaveInterface2Blob;
 import auxiliary.SimpleBar;
 import auxiliary.Strategy;
@@ -787,12 +789,24 @@ public final class ChinaData extends JPanel {
             Date dt = new Date(Long.parseLong(date) * 1000);
             Calendar cal = Calendar.getInstance();
             cal.setTime(dt);
-            //System.out.println(dt);
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
-            //System.out.println(" ld " + ld);
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
-            if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31))) || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
+
+            if(ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
+                LocalDateTime ldt = LocalDateTime.of(ld,lt);
+                LocalDateTime ltTo5 = Utility.roundTo5Ldt(ldt);
+                if(!chinaWtd.get("SGXA50").containsKey(ltTo5)) {
+                    chinaWtd.get("SGXA50").put(ltTo5, new SimpleBar(open, high, low, close));
+                } else {
+                    chinaWtd.get("SGXA50").get(LocalDateTime.of(ld,lt)).updateBar(open,high,low,close);
+                }
+            }
+
+
+            if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
+                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
+
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 //System.out.println(getStr(dt, open, high, low, close));
                 double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get("SGXA50").lowerEntry(lt)).map(Entry::getValue).orElse(0.0);

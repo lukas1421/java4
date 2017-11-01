@@ -479,14 +479,17 @@ public class Utility {
         return ((s.startsWith("6")) ? "sh" : "sz") + s;
     }
 
+    @SafeVarargs
     public static <T> double reduceMap(DoubleBinaryOperator o, NavigableMap<T, Double>... mps) {
         return Arrays.stream(mps).flatMap(e -> e.entrySet().stream()).mapToDouble(Map.Entry::getValue).reduce(o).orElse(0.0);
     }
 
+    @SafeVarargs
     public static <T, S> double reduceMap(DoubleBinaryOperator o, ToDoubleFunction<S> f, NavigableMap<T, S>... mps) {
         return Arrays.stream(mps).flatMap(e -> e.entrySet().stream()).map(Map.Entry::getValue).mapToDouble(f).reduce(o).orElse(0.0);
     }
 
+    @SafeVarargs
     public static <S> NavigableMap<LocalDateTime, S> mergeMap(NavigableMap<? extends Temporal, S>... mps) {
         NavigableMap<LocalDateTime, S> res = new ConcurrentSkipListMap<>();
         for (NavigableMap<? extends Temporal, S> mp : mps) {
@@ -505,7 +508,7 @@ public class Utility {
 
     @SafeVarargs
     public static NavigableMap<LocalDateTime, ? super Trade> mergeTradeMap(NavigableMap<LocalDateTime, ? super Trade>... mps) {
-        NavigableMap<LocalDateTime, ? super Trade> res = new ConcurrentSkipListMap<>();
+        NavigableMap<LocalDateTime, ? super Trade> res;
         res = Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.toMap(e -> (LocalDateTime)(e.getKey()),
                 Map.Entry::getValue, (a, b) -> a,ConcurrentSkipListMap::new));
         return res;
