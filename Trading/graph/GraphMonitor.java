@@ -1,38 +1,40 @@
 package graph;
 
 import TradeType.Trade;
-import apidemo.ChinaData;
-import apidemo.ChinaPosition;
-import apidemo.ChinaStock;
+import apidemo.*;
 import auxiliary.SimpleBar;
+import historical.HistChinaStocks;
 import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalAmount;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaKeyMonitor.dispGran;
 import static apidemo.ChinaStock.NORMAL_STOCK;
 import static java.lang.Math.abs;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.util.Optional.ofNullable;
-import static utility.Utility.BAR_HIGH;
-import static utility.Utility.BAR_LOW;
+import static utility.Utility.*;
 
 public class GraphMonitor extends JComponent implements GraphFillable {
 
     static final int WIDTH_MON = 2;
     String name;
     String chineseName;
-    NavigableMap<LocalTime, SimpleBar> tm;
-    NavigableMap<LocalTime, ? super Trade> trades = new ConcurrentSkipListMap<>();
+    NavigableMap<LocalDateTime, SimpleBar> tm;
+    NavigableMap<LocalDateTime, ? super Trade> trades = new ConcurrentSkipListMap<>();
+
+    NavigableMap<LocalDateTime, SimpleBar> tmLDT;
+    NavigableMap<LocalDateTime, ? super Trade> tradesLdt = new ConcurrentSkipListMap<>();
+
     double maxToday;
     double minToday;
     double minRtn;
@@ -61,6 +63,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         name = "";
         chineseName = "";
         this.tm = new ConcurrentSkipListMap<>();
+        this.tmLDT = new ConcurrentSkipListMap<>();
     }
 
     @Override
@@ -91,7 +94,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         last = 0;
 
         int x = 5;
-        for (LocalTime lt : tm.keySet()) {
+        for (LocalDateTime lt : tm.keySet()) {
             openY = getY(tm.floorEntry(lt).getValue().getOpen());
             highY = getY(tm.floorEntry(lt).getValue().getHigh());
             lowY = getY(tm.floorEntry(lt).getValue().getLow());
@@ -109,8 +112,9 @@ public class GraphMonitor extends JComponent implements GraphFillable {
             }
             g.drawLine(x + 1, highY, x + 1, lowY);
 
-            if(trades.subMap(lt,true,lt.plusMinutes(1L),false).size()>0) {
-                for(Map.Entry e: trades.subMap(lt,true,lt.plusMinutes(1L),false).entrySet()) {
+            if (trades.subMap(lt, true, lt.plusMinutes(dispGran.getMinuteDiff()), false).size() > 0) {
+                for (Map.Entry e : trades.subMap(lt, true, lt.plusMinutes(dispGran.getMinuteDiff()),
+                        false).entrySet()) {
                     Trade t = (Trade) e.getValue();
                     if (t.getSize() > 0) {
                         g.setColor(Color.blue);
@@ -127,16 +131,29 @@ public class GraphMonitor extends JComponent implements GraphFillable {
                         g.drawPolygon(p1);
                         g.fillPolygon(p1);
                     }
-                };
-            };
+                }
+                ;
+            }
+            ;
 
             g.setColor(Color.black);
-            if (lt.equals(tm.firstKey())) {
-                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 5);
+
+            if (dispGran == DisplayGranularity._1MDATA) {
+                if (lt.equals(tm.firstKey())) {
+                    g.drawString(lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 5);
+                } else {
+                    if (lt.getMinute() == 0 || (lt.getHour() != 9 && lt.getHour() != 11
+                            && lt.getMinute() == 30)) {
+                        g.drawString(lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 5);
+                    }
+                }
             } else {
-                if (lt.getMinute() == 0 || (lt.getHour() != 9 && lt.getHour() != 11
-                        && lt.getMinute() == 30)) {
-                    g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 5);
+                if (lt.equals(tm.firstKey())) {
+                    g.drawString(lt.toLocalDate().toString(), x, getHeight() - 5);
+                } else {
+                    if (lt.getDayOfMonth() != tm.lowerKey(lt).getDayOfMonth()) {
+                        g.drawString(lt.toLocalDate().toString(), x, getHeight() - 5);
+                    }
                 }
             }
             x += WIDTH_MON;
@@ -173,6 +190,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         if (!ofNullable(bench).orElse("").equals("")) {
             g2.drawString("(" + bench + ")", getWidth() * 2 / 6, 15);
         }
+
         g2.drawString(Double.toString(getLast()), getWidth() * 3 / 6, 15);
 
         g2.drawString(Double.toString(getReturn()) + "%", getWidth() * 4 / 6, 15);
@@ -278,8 +296,22 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         setMinSharpe(ChinaData.priceMinuteSharpe.getOrDefault(name, 0.0));
         setWtdSharpe(ChinaData.wtdSharpe.getOrDefault(name, 0.0));
         setSize1(ChinaStock.sizeMap.getOrDefault(name, 0L));
-        trades = ChinaPosition.tradesMap.containsKey(name)?
-                ChinaPosition.tradesMap.get(name):new ConcurrentSkipListMap<>();
+
+
+//        if(HistChinaStocks.chinaTradeMap.containsKey(name)) {
+//            trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(name),
+//                    ChinaPosition.tradesMap.containsKey(name)?
+//                    ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>());
+//        } else {
+
+
+        trades = priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
+                ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>());
+
+
+        if (HistChinaStocks.chinaTradeMap.containsKey(name)) {
+            tradesLdt = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(name), trades);
+        }
 
         if (NORMAL_STOCK.test(name)) {
             this.setNavigableMap(priceMapBar.get(name));
@@ -295,7 +327,21 @@ public class GraphMonitor extends JComponent implements GraphFillable {
     }
 
     void setNavigableMap(NavigableMap<LocalTime, SimpleBar> tmIn) {
-        this.tm = tmIn;
+
+        //this.tm =
+        //this.tmLDT = priceMapToLDT(priceMap1mTo5M(tmIn));
+
+        if (dispGran == DisplayGranularity._1MDATA) {
+            this.tm = priceMapToLDT(tmIn);
+        } else if (dispGran == DisplayGranularity._5MDATA) {
+
+            if (HistChinaStocks.chinaWtd.containsKey(name) && HistChinaStocks.chinaWtd.get(name).size() > 0) {
+                this.tm = mergeMap(HistChinaStocks.chinaWtd.get(name), Utility.priceMap1mTo5M(tmIn));
+            } else {
+                this.tm = priceMapToLDT(priceMap1mTo5M(tmIn));
+            }
+
+        }
     }
 
     double getMaxRtn() {

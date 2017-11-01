@@ -1,5 +1,6 @@
 package utility;
 
+import TradeType.Trade;
 import apidemo.ChinaData;
 import apidemo.ChinaStock;
 import auxiliary.SimpleBar;
@@ -502,6 +503,18 @@ public class Utility {
         return res;
     }
 
+    public static NavigableMap<LocalDateTime, ? super Trade> mergeTradeMap(NavigableMap<? extends Temporal, ? super Trade>... mps) {
+        NavigableMap<LocalDateTime, ? super Trade> res = new ConcurrentSkipListMap<>();
+        Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.toMap(e -> {
+                    if(e.getKey().getClass()==LocalTime.class) {
+                        return LocalDateTime.of(LocalDate.now(),(LocalTime)e.getKey());
+                    }
+                    return (LocalDateTime)e.getKey();
+                }, e -> e.getValue(), (a, b) -> a,ConcurrentSkipListMap::new));
+        return res;
+    }
+
+
     public static NavigableMap<LocalTime, SimpleBar> priceMap1mTo5M(NavigableMap<LocalTime, SimpleBar> mp) {
         NavigableMap<LocalTime, SimpleBar> res = new ConcurrentSkipListMap<>();
         for (Map.Entry e : mp.entrySet()) {
@@ -516,10 +529,10 @@ public class Utility {
         return res;
     }
 
-    public static NavigableMap<LocalDateTime, SimpleBar>  priceMapToLDT(NavigableMap<LocalTime, SimpleBar> mp) {
-        NavigableMap<LocalDateTime, SimpleBar> res = new ConcurrentSkipListMap<>();
-        for(Map.Entry e:mp.entrySet()) {
-             res.put(LocalDateTime.of(LocalDate.now(),(LocalTime)e.getKey()),(SimpleBar) e.getValue());
+    public static <T> NavigableMap<LocalDateTime, T> priceMapToLDT(NavigableMap<LocalTime,T> mp) {
+        NavigableMap<LocalDateTime, T> res = new ConcurrentSkipListMap<>();
+        for (Map.Entry e : mp.entrySet()) {
+            res.put(LocalDateTime.of(LocalDate.now(), (LocalTime) e.getKey()), (T)e.getValue());
         }
         return res;
     }

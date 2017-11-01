@@ -1,12 +1,11 @@
 package apidemo;
 
-import com.sun.xml.internal.bind.v2.TODO;
+import graph.DisplayGranularity;
 import graph.GraphMonitor;
 import graph.GraphMonitorFactory;
 import utility.Utility;
 
 import static apidemo.ChinaStock.industryNameMap;
-import static apidemo.ChinaStock.process;
 import static apidemo.ChinaStock.sharpeMap;
 
 import java.awt.BorderLayout;
@@ -83,6 +82,8 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
     static volatile SharpePeriod sharpPeriod = SharpePeriod.TODAY;
     static volatile String indexBench = "";
     static volatile YQM yqm = YQM.YTD;
+
+    public static volatile DisplayGranularity dispGran = DisplayGranularity._1MDATA;
 
     static volatile ToDoubleFunction<Entry<String,Integer>> positionComparingFunc=
             e -> e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0) ;
@@ -413,6 +414,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         JLabel interestLabel = new JLabel("TYPE");
         JLabel correlLabel = new JLabel("COR");
         JLabel corrPeriodLabel = new JLabel("CorrP");
+        JLabel granuLabel = new JLabel("Granu");
 
         //jb1.setFont(jb1.getFont().deriveFont(INDUSTRY_LABEL_SIZE));
         displayWhatLabel.setFont(displayWhatLabel.getFont().deriveFont(15F));
@@ -420,7 +422,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         interestLabel.setFont(interestLabel.getFont().deriveFont(15F));
         correlLabel.setFont(correlLabel.getFont().deriveFont(15F));
         corrPeriodLabel.setFont(corrPeriodLabel.getFont().deriveFont(15F));
-
+        granuLabel.setFont(granuLabel.getFont().deriveFont(15F));
         //what to display?
         JRadioButton indexButton = new JRadioButton("index");
         JRadioButton stockButton = new JRadioButton("stock");
@@ -640,6 +642,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         yqmBG.add(qButton);
         yqmBG.add(mButton);
 
+
         yButton.addActionListener(l -> {
             yqm = YQM.YTD;
             sharpeButton.doClick();
@@ -653,6 +656,21 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         mButton.addActionListener(l -> {
             yqm = YQM.MTD;
             sharpeButton.doClick();
+        });
+
+        JRadioButton _1minButton = new JRadioButton("1m");
+        JRadioButton _5minButton = new JRadioButton("5m");
+        ButtonGroup granuBG= new ButtonGroup();
+        granuBG.add(_1minButton);
+        granuBG.add(_5minButton);
+        _1minButton.setSelected(true);
+
+        _1minButton.addActionListener(al->{
+            dispGran = DisplayGranularity._1MDATA;
+        });
+
+        _5minButton.addActionListener(al->{
+            dispGran = DisplayGranularity._5MDATA;
         });
 
         //JRadioButton hushenButton = new JRadioButton();
@@ -797,6 +815,10 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         northPanel.add(yButton);
         northPanel.add(qButton);
         northPanel.add(mButton);
+
+        northPanel.add(granuLabel);
+        northPanel.add(_1minButton);
+        northPanel.add(_5minButton);
 
         jp.setLayout(new BorderLayout());
         jp.add(northPanel, BorderLayout.NORTH);
@@ -1050,14 +1072,10 @@ enum WhatToDisplay {
 
 }
 
-enum DiplayGranu {
-    DAYDATA, MINUTEDATA;
-}
-
 enum SharpePeriod {
     TODAY, WTD, YTD;
 }
 
 enum YQM {
-    YTD(), QTD(),MTD();
+    YTD, QTD,MTD;
 }
