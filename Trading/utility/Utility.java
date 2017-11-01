@@ -503,10 +503,11 @@ public class Utility {
         return res;
     }
 
+    @SafeVarargs
     public static NavigableMap<LocalDateTime, ? super Trade> mergeTradeMap(NavigableMap<LocalDateTime, ? super Trade>... mps) {
         NavigableMap<LocalDateTime, ? super Trade> res = new ConcurrentSkipListMap<>();
-        res = Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.toMap(e -> (LocalDateTime)e.getKey(),
-                e -> e.getValue(), (a, b) -> a,ConcurrentSkipListMap::new));
+        res = Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.toMap(e -> (LocalDateTime)(e.getKey()),
+                Map.Entry::getValue, (a, b) -> a,ConcurrentSkipListMap::new));
         return res;
     }
 
@@ -528,7 +529,7 @@ public class Utility {
     public static <T> NavigableMap<LocalDateTime, T> priceMapToLDT(NavigableMap<LocalTime,T> mp) {
         NavigableMap<LocalDateTime, T> res = new ConcurrentSkipListMap<>();
         for (Map.Entry e : mp.entrySet()) {
-            res.put(LocalDateTime.of(LocalDate.now(), (LocalTime) e.getKey()), (T)e.getValue());
+            res.put(LocalDateTime.of(LocalDate.now(), (LocalTime) e.getKey()), (T)(e.getValue()));
         }
         return res;
     }

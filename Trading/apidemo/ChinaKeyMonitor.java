@@ -5,6 +5,7 @@ import graph.GraphMonitor;
 import graph.GraphMonitorFactory;
 import utility.Utility;
 
+import static apidemo.ChinaPosition.fxMap;
 import static apidemo.ChinaStock.industryNameMap;
 import static apidemo.ChinaStock.sharpeMap;
 
@@ -86,7 +87,8 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
     public static volatile DisplayGranularity dispGran = DisplayGranularity._1MDATA;
 
     static volatile ToDoubleFunction<Entry<String,Integer>> positionComparingFunc=
-            e -> e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0) ;
+            e -> fxMap.getOrDefault(e.getKey(),1.0)
+                    *e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0) ;
 
     static volatile ToDoubleFunction<String> sharpeComparingFunc =
             s->ChinaStock.sharpeMap.getOrDefault(s,0.0);
@@ -539,7 +541,8 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
             displaySharp = !posButton.isSelected();
             displayInterest = !posButton.isSelected();
             displayCorrel = !posButton.isSelected();
-            positionComparingFunc = e -> e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0);
+            positionComparingFunc = e -> fxMap.getOrDefault(e.getKey(),0.0)
+                    *e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0);
             refresh();
             System.out.println(" display pos is " + displayPos);
 
