@@ -793,13 +793,18 @@ public final class ChinaData extends JPanel {
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
 
-            if(ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
-                LocalDateTime ldt = LocalDateTime.of(ld,lt);
-                LocalDateTime ltTo5 = Utility.roundTo5Ldt(ldt);
-                if(!chinaWtd.get("SGXA50").containsKey(ltTo5)) {
-                    chinaWtd.get("SGXA50").put(ltTo5, new SimpleBar(open, high, low, close));
-                } else {
-                    chinaWtd.get("SGXA50").get(LocalDateTime.of(ld,lt)).updateBar(open,high,low,close);
+            if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
+
+                if ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
+                    ||(lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1)))) {
+
+                    LocalDateTime ldt = LocalDateTime.of(ld, lt);
+                    LocalDateTime ltTo5 = Utility.roundTo5Ldt(ldt);
+                    if (!chinaWtd.get("SGXA50").containsKey(ltTo5)) {
+                        chinaWtd.get("SGXA50").put(ltTo5, new SimpleBar(open, high, low, close));
+                    } else {
+                        chinaWtd.get("SGXA50").get(ltTo5).updateBar(open, high, low, close);
+                    }
                 }
             }
 

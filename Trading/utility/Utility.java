@@ -529,10 +529,10 @@ public class Utility {
         return res;
     }
 
-    public static <T> NavigableMap<LocalDateTime, T> priceMapToLDT(NavigableMap<LocalTime,T> mp) {
+    public static <T> NavigableMap<LocalDateTime, T> priceMapToLDT(NavigableMap<LocalTime,T> mp, LocalDate ld) {
         NavigableMap<LocalDateTime, T> res = new ConcurrentSkipListMap<>();
         for (Map.Entry e : mp.entrySet()) {
-            res.put(LocalDateTime.of(LocalDate.now(), (LocalTime) e.getKey()), (T)(e.getValue()));
+            res.put(LocalDateTime.of(ld, (LocalTime) e.getKey()), (T)(e.getValue()));
         }
         return res;
     }

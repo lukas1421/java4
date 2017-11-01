@@ -1059,7 +1059,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     static int getNetPosition(String name) {
         if (openPositionMap.containsKey(name) || tradesMap.containsKey(name)) {
             return openPositionMap.getOrDefault(name, 0) + (Integer) tradesMap.get(name).entrySet().stream()
-                    .mapToInt(e -> ((Trade) e.getValue()).getSize()).sum();
+                    .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
         } else {
             return 0;
         }
