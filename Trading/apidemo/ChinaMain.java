@@ -12,6 +12,7 @@ import controller.ApiController;
 import controller.ApiController.IConnectionHandler;
 import controller.Formats;
 import graph.GraphIndustry;
+import historical.HistChinaStocks;
 import historical.Request;
 import util.*;
 import util.IConnectionConfiguration.DefaultConnectionConfiguration;
@@ -126,6 +127,9 @@ public final class ChinaMain implements IConnectionHandler {
 
     public static HKData hkdata = new HKData();
     private static HKStock hkstock = new HKStock();
+    private static HistChinaStocks histChina = new HistChinaStocks();
+
+
     private SinaStock sinastock1 = SinaStock.getInstance();
 
     private ExecutorService pool;
@@ -205,6 +209,7 @@ public final class ChinaMain implements IConnectionHandler {
 
         m_tabbedPanel.addTab(" HK Data", hkdata);
         m_tabbedPanel.addTab(" HK Stock", hkstock);
+        m_tabbedPanel.addTab("Hist China", histChina);
 
         // m_tabbedPanel.addTab("Backtesting", backtesting);
         //m_tabbedPanel.

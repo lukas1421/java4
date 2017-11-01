@@ -5,6 +5,7 @@ import apidemo.ChinaData;
 import apidemo.ChinaPosition;
 import apidemo.ChinaStock;
 import auxiliary.SimpleBar;
+import historical.HistChinaStocks;
 import utility.Utility;
 
 import javax.swing.*;
@@ -18,10 +19,12 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Function;
 
 import static apidemo.ChinaData.price5mWtd;
+import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaStock.NORMAL_STOCK;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.BAR_HIGH;
 import static utility.Utility.BAR_LOW;
+import static utility.Utility.mergeMap;
 
 public class GraphMonitorLDT extends JComponent implements GraphFillable  {
     static final int WIDTH_MON = 2;
@@ -177,6 +180,7 @@ public class GraphMonitorLDT extends JComponent implements GraphFillable  {
         if (!ofNullable(bench).orElse("").equals("")) {
             g2.drawString("(" + bench + ")", getWidth() * 2 / 6, 15);
         }
+
         g2.drawString(Double.toString(getLast()), getWidth() * 3 / 6, 15);
 
         g2.drawString(Double.toString(getReturn()) + "%", getWidth() * 4 / 6, 15);
@@ -288,7 +292,8 @@ public class GraphMonitorLDT extends JComponent implements GraphFillable  {
                 Utility.mergeMap(ChinaPosition.tradesMap.get(name)):new ConcurrentSkipListMap<>();
 
         if (NORMAL_STOCK.test(name)) {
-            //if(Loca)
+            price5mWtd.put(name,(ConcurrentSkipListMap<LocalDateTime, SimpleBar>)mergeMap(HistChinaStocks.chinaWtd.get(name),
+                    Utility.priceMap1mTo5M(priceMapBar.get(name))));
             this.setNavigableMap(price5mWtd.get(name));
             //getYtdY2CloseP(name);
         } else {

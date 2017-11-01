@@ -29,7 +29,7 @@ public class SharpeUtility {
 
         if (in.size() > 0) {
             T firstKey = inSub.keySet().stream().findFirst().get();
-            inSub.keySet().stream().forEach(t -> {
+            inSub.keySet().forEach(t -> {
                 if (t.equals(firstKey)) {
                     res.put(t, inSub.get(t).getBarReturn());
                 } else {

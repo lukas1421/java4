@@ -6,6 +6,7 @@ import auxiliary.SimpleBar;
 import graph.GraphIndustry;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.io.*;
 import java.sql.Blob;
@@ -47,8 +48,8 @@ public class Utility {
     //static final Comparator<? super Entry<LocalTime,SimpleBar>> BAR_HIGH = Comparator.comparingDouble(e->e.getValue().getHigh());
 
     public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_HIGH =
-            (e1,e2)->e1.getValue().getHigh()>=e2.getValue().getHigh()?1:-1;
-            //Map.Entry.comparingByValue(Comparator.comparingDouble(SimpleBar::getHigh));
+            (e1, e2) -> e1.getValue().getHigh() >= e2.getValue().getHigh() ? 1 : -1;
+    //Map.Entry.comparingByValue(Comparator.comparingDouble(SimpleBar::getHigh));
 
     public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_LOW =
             (e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
@@ -132,38 +133,36 @@ public class Utility {
                 .collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, Collectors.summingDouble(Map.Entry::getValue)));
     }
 
-    public static <T> BinaryOperator<NavigableMap<T,Double>> mapBinOp(BinaryOperator<Double> o) {
-        return (a,b) -> mapCominberGen(o,a,b);
+    public static <T> BinaryOperator<NavigableMap<T, Double>> mapBinOp(BinaryOperator<Double> o) {
+        return (a, b) -> mapCominberGen(o, a, b);
     }
 
-    public static <T> BinaryOperator<NavigableMap<T,Double>> mapBinOp() {
-        return (a,b) -> mapCominberGen((x,y)->x+y,a,b);
+    public static <T> BinaryOperator<NavigableMap<T, Double>> mapBinOp() {
+        return (a, b) -> mapCominberGen((x, y) -> x + y, a, b);
     }
 
-    public static <T> BinaryOperator<NavigableMap<T,Double>> mapBinOp(Predicate<? super Map.Entry<T, ?>> p) {
-        return (a,b) -> mapCominberGen((x,y)->x+y,p,a,b);
-    }
-
-    @SafeVarargs
-    public static <T> NavigableMap<T, Double> mapCominberGen(BinaryOperator<Double> o, NavigableMap<T,Double>... mps ) {
-        return Stream.of(mps).flatMap(e->e.entrySet().stream()).collect(Collectors.groupingBy(Map.Entry::getKey,ConcurrentSkipListMap::new,
-                    Collectors.reducing(0.0, Map.Entry::getValue,o)));
+    public static <T> BinaryOperator<NavigableMap<T, Double>> mapBinOp(Predicate<? super Map.Entry<T, ?>> p) {
+        return (a, b) -> mapCominberGen((x, y) -> x + y, p, a, b);
     }
 
     @SafeVarargs
-    public static <T> NavigableMap<T, Double> mapCominberGen(BinaryOperator<Double> o, Predicate<? super Map.Entry<T,?>> p, NavigableMap<T,Double>... mps ) {
-        return Stream.of(mps).flatMap(e->e.entrySet().stream().filter(p))
-                .collect(Collectors.groupingBy(Map.Entry::getKey,ConcurrentSkipListMap::new,
-                Collectors.reducing(0.0, Map.Entry::getValue,o)));
+    public static <T> NavigableMap<T, Double> mapCominberGen(BinaryOperator<Double> o, NavigableMap<T, Double>... mps) {
+        return Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new,
+                Collectors.reducing(0.0, Map.Entry::getValue, o)));
     }
 
     @SafeVarargs
-    public static <T> NavigableMap<T, Double> mapCominberGen(NavigableMap<T,Double>... mps ) {
-        return Stream.of(mps).flatMap(e->e.entrySet().stream()).collect(Collectors.groupingBy(Map.Entry::getKey,ConcurrentSkipListMap::new,
-                Collectors.reducing(0.0, Map.Entry::getValue,(a, b)->a+b)));
+    public static <T> NavigableMap<T, Double> mapCominberGen(BinaryOperator<Double> o, Predicate<? super Map.Entry<T, ?>> p, NavigableMap<T, Double>... mps) {
+        return Stream.of(mps).flatMap(e -> e.entrySet().stream().filter(p))
+                .collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new,
+                        Collectors.reducing(0.0, Map.Entry::getValue, o)));
     }
 
-
+    @SafeVarargs
+    public static <T> NavigableMap<T, Double> mapCominberGen(NavigableMap<T, Double>... mps) {
+        return Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new,
+                Collectors.reducing(0.0, Map.Entry::getValue, (a, b) -> a + b)));
+    }
 
     public static String getStrTabbed(Object... cs) {
         StringBuilder b = new StringBuilder();
@@ -208,19 +207,19 @@ public class Utility {
     }
 
     public static <T, S> double getMinGen(NavigableMap<T, S> tm, ToDoubleFunction<S> f) {
-        return (tm != null && tm.size() > 2) ? tm.values().stream().mapToDouble(f).reduce(Math::min).orElse(0.0):0.0;
+        return (tm != null && tm.size() > 2) ? tm.values().stream().mapToDouble(f).reduce(Math::min).orElse(0.0) : 0.0;
     }
 
     public static <T, S> double getMaxGen(NavigableMap<T, S> tm, ToDoubleFunction<S> f) {
-        return (tm != null && tm.size() > 2) ? tm.values().stream().mapToDouble(f).reduce(Math::max).orElse(0.0):0.0;
+        return (tm != null && tm.size() > 2) ? tm.values().stream().mapToDouble(f).reduce(Math::max).orElse(0.0) : 0.0;
     }
 
     public static <T> double getMax(NavigableMap<T, Double> tm) {
-        return (tm != null && tm.size() > 2) ? tm.values().stream().reduce(Math::max).orElse(0.0):0.0;
+        return (tm != null && tm.size() > 2) ? tm.values().stream().reduce(Math::max).orElse(0.0) : 0.0;
     }
 
     public static double getMaxRtn(NavigableMap<LocalTime, Double> tm) {
-        return (tm.size() > 0) ? (double) Math.round((getMax(tm)/tm.firstEntry().getValue() - 1) * 1000d) / 10d : 0.0;
+        return (tm.size() > 0) ? (double) Math.round((getMax(tm) / tm.firstEntry().getValue() - 1) * 1000d) / 10d : 0.0;
     }
 
     public static <T> double getLast(NavigableMap<T, Double> tm) {
@@ -337,15 +336,15 @@ public class Utility {
 
     public static <T extends NavigableMap<LocalTime, Double>> void getIndustryVolYtd(Map<String, T> mp) {
         CompletableFuture.supplyAsync(()
-                -> mp.entrySet().stream().filter(GraphIndustry.NO_GC)
-                .collect(groupingBy(e -> ChinaStock.industryNameMap.get(e.getKey()),
-                        mapping(Map.Entry::getValue, Collectors.reducing(Utility.mapBinOp(GraphIndustry.TRADING_HOURS)))))
+                        -> mp.entrySet().stream().filter(GraphIndustry.NO_GC)
+                        .collect(groupingBy(e -> ChinaStock.industryNameMap.get(e.getKey()),
+                                mapping(Map.Entry::getValue, Collectors.reducing(Utility.mapBinOp(GraphIndustry.TRADING_HOURS)))))
 //                                , Collectors.collectingAndThen(toList(),
 //                                e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(GraphIndustry.TRADING_HOURS))
 //                                        .collect(groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, summingDouble(Map.Entry::getValue)))))))
         )
                 .thenAccept(m -> m.keySet().forEach(s -> {
-                    mp.put(s, (T)(m.get(s).orElse(new ConcurrentSkipListMap<>())));
+                    mp.put(s, (T) (m.get(s).orElse(new ConcurrentSkipListMap<>())));
                 }));
     }
 
@@ -480,28 +479,56 @@ public class Utility {
     }
 
     public static <T> double reduceMap(DoubleBinaryOperator o, NavigableMap<T, Double>... mps) {
-        return Arrays.stream(mps).flatMap(e->e.entrySet().stream()).mapToDouble(Map.Entry::getValue).reduce(o).orElse(0.0);
+        return Arrays.stream(mps).flatMap(e -> e.entrySet().stream()).mapToDouble(Map.Entry::getValue).reduce(o).orElse(0.0);
     }
 
-    public static <T,S> double reduceMap(DoubleBinaryOperator o, ToDoubleFunction<S> f, NavigableMap<T, S>... mps) {
-        return Arrays.stream(mps).flatMap(e->e.entrySet().stream()).map(Map.Entry::getValue).mapToDouble(f).reduce(o).orElse(0.0);
+    public static <T, S> double reduceMap(DoubleBinaryOperator o, ToDoubleFunction<S> f, NavigableMap<T, S>... mps) {
+        return Arrays.stream(mps).flatMap(e -> e.entrySet().stream()).map(Map.Entry::getValue).mapToDouble(f).reduce(o).orElse(0.0);
     }
 
-    public static <T extends Temporal,S> NavigableMap<LocalDateTime, S> mergeMap(NavigableMap<T, S>... mps) {
+    public static <S> NavigableMap<LocalDateTime, S> mergeMap(NavigableMap<? extends Temporal, S>... mps) {
         NavigableMap<LocalDateTime, S> res = new ConcurrentSkipListMap<>();
-
-        for(NavigableMap<T,S> mp:mps) {
-            if(mp.size()>0) {
-                for(Map.Entry<T,S> e : mp.entrySet()) {
-                    if(e.getKey().getClass()==LocalTime.class) {
-                        res.put(LocalDateTime.of(LocalDate.now(),(LocalTime)e.getKey()),e.getValue());
-                    } else if(e.getKey().getClass()==LocalDateTime.class) {
-                        res.put((LocalDateTime)e.getKey(), e.getValue());
+        for (NavigableMap<? extends Temporal, S> mp : mps) {
+            if (mp.size() > 0) {
+                for (Map.Entry<? extends Temporal, S> e : mp.entrySet()) {
+                    if (e.getKey().getClass() == LocalTime.class) {
+                        res.put(LocalDateTime.of(LocalDate.now(), (LocalTime) e.getKey()), e.getValue());
+                    } else if (e.getKey().getClass() == LocalDateTime.class) {
+                        res.put((LocalDateTime) e.getKey(), e.getValue());
                     }
                 }
             }
         }
-
         return res;
+    }
+
+    public static NavigableMap<LocalTime, SimpleBar> priceMap1mTo5M(NavigableMap<LocalTime, SimpleBar> mp) {
+        NavigableMap<LocalTime, SimpleBar> res = new ConcurrentSkipListMap<>();
+        for (Map.Entry e : mp.entrySet()) {
+            LocalTime t = roundTo5((LocalTime) e.getKey());
+            SimpleBar sb = (SimpleBar) e.getValue();
+            if (!res.containsKey(t)) {
+                res.put(t, (SimpleBar) e.getValue());
+            } else {
+                res.get(t).updateBar(sb);
+            }
+        }
+        return res;
+    }
+
+    public static NavigableMap<LocalDateTime, SimpleBar>  priceMapToLDT(NavigableMap<LocalTime, SimpleBar> mp) {
+        NavigableMap<LocalDateTime, SimpleBar> res = new ConcurrentSkipListMap<>();
+        for(Map.Entry e:mp.entrySet()) {
+             res.put(LocalDateTime.of(LocalDate.now(),(LocalTime)e.getKey()),(SimpleBar) e.getValue());
+        }
+        return res;
+    }
+
+    public static LocalTime roundTo5(LocalTime t) {
+        return (t.getMinute() % 5 == 0) ? t : t.plusMinutes(5 - t.getMinute() % 5);
+    }
+
+    public static LocalDateTime roundTo5Ldt(LocalDateTime t) {
+        return LocalDateTime.of(t.toLocalDate(), roundTo5(t.truncatedTo(ChronoUnit.MINUTES).toLocalTime()));
     }
 }

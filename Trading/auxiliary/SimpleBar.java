@@ -110,6 +110,10 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         }
     }
 
+    public void updateBar(SimpleBar sb) {
+        updateBar(sb.getOpen(),sb.getHigh(),sb.getLow(),sb.getClose());
+    }
+
     public void updateBar(double o, double h, double l, double c) {
         if(h > high) {
             high = h;

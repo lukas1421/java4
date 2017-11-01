@@ -31,7 +31,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+
 import static java.time.temporal.ChronoUnit.SECONDS;
+
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
@@ -42,7 +44,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
+
 import static java.util.Optional.ofNullable;
+
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -427,10 +431,8 @@ public final class ChinaData extends JPanel {
     public static void outputRecentTradingDate() {
         System.out.println(" most recent trading date " + SinaStock.mostRecentTradingDay.toString());
         File output = new File(ChinaMain.GLOBALPATH + "mostRecentTradingDate.txt");
-
         //MorningTask.clearFile(usTestOutput);
-        MorningTask.simpleWriteToFile(SinaStock.mostRecentTradingDay.toString(),false,output);
-
+        MorningTask.simpleWriteToFile(SinaStock.mostRecentTradingDay.toString(), false, output);
     }
 
     static void getTodayTDX(LocalDate dat) {
@@ -845,7 +847,7 @@ public final class ChinaData extends JPanel {
         }
     }
 
-//    @Override
+    //    @Override
 //    public void handleHist(String name, String date, double open, double high, double low, double close) {
 //        System.out.println(" not used ");
 //    }
