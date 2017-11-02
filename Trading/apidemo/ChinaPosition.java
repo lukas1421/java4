@@ -506,7 +506,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             //}
 
 
-            netPNLMap = Utility.mapCominberGen((a, b) -> a + b, mtmPNLMap, tradePNLMap);
+            netPNLMap = Utility.mapCominberGen(Double::sum, mtmPNLMap, tradePNLMap);
             mtmDeltaSharpe = SharpeUtility.computeMinuteSharpeFromMtmDeltaMp(mtmDeltaMap);
 
             minuteNetPnlSharpe = SharpeUtility.computeMinuteNetPnlSharpe(netPNLMap);

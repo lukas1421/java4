@@ -5,6 +5,7 @@ import apidemo.ChinaData;
 import apidemo.ChinaStock;
 import auxiliary.SimpleBar;
 import graph.GraphIndustry;
+import historical.HistChinaStocks;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 import sun.java2d.pipe.SpanShapeRenderer;
@@ -162,7 +163,7 @@ public class Utility {
     @SafeVarargs
     public static <T> NavigableMap<T, Double> mapCominberGen(NavigableMap<T, Double>... mps) {
         return Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new,
-                Collectors.reducing(0.0, Map.Entry::getValue, (a, b) -> a + b)));
+                Collectors.reducing(0.0, Map.Entry::getValue, Double::sum)));
     }
 
     public static String getStrTabbed(Object... cs) {
@@ -496,7 +497,7 @@ public class Utility {
             if (mp.size() > 0) {
                 for (Map.Entry<? extends Temporal, S> e : mp.entrySet()) {
                     if (e.getKey().getClass() == LocalTime.class) {
-                        res.put(LocalDateTime.of(LocalDate.now(), (LocalTime) e.getKey()), e.getValue());
+                        res.put(LocalDateTime.of(HistChinaStocks.recentTradingDate, (LocalTime) e.getKey()), e.getValue());
                     } else if (e.getKey().getClass() == LocalDateTime.class) {
                         res.put((LocalDateTime) e.getKey(), e.getValue());
                     }

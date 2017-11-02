@@ -73,7 +73,6 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
     public void setWtdMtmPnl(double p) {
         currentMtmPnl = Math.round(p*100d)/100d;
-
     }
 
     GraphBarTemporal(String s) {

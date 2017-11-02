@@ -147,7 +147,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
                         g.drawString(lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 5);
                     }
                 }
-            } else {
+            } else if(dispGran== DisplayGranularity._5MDATA){
                 if (lt.equals(tm.firstKey())) {
                     g.drawString(lt.toLocalDate().toString(), x, getHeight() - 5);
                 } else {
@@ -306,12 +306,12 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
 
         trades = priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
-                ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>());
+                ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), HistChinaStocks.recentTradingDate);
 
 
         if (HistChinaStocks.chinaTradeMap.containsKey(name) && HistChinaStocks.chinaTradeMap.get(name).size()>0) {
             trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(name), priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
-                    ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>()));
+                    ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), HistChinaStocks.recentTradingDate));
             //System.out.println(" merged trade is " + trades);
         }
 
@@ -334,13 +334,13 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         //this.tmLDT = priceMapToLDT(priceMap1mTo5M(tmIn));
 
         if (dispGran == DisplayGranularity._1MDATA) {
-            this.tm = priceMapToLDT(tmIn);
+            this.tm = priceMapToLDT(tmIn, HistChinaStocks.recentTradingDate);
         } else if (dispGran == DisplayGranularity._5MDATA) {
 
             if (HistChinaStocks.chinaWtd.containsKey(name) && HistChinaStocks.chinaWtd.get(name).size() > 0) {
                 this.tm = mergeMap(HistChinaStocks.chinaWtd.get(name), Utility.priceMap1mTo5M(tmIn));
             } else {
-                this.tm = priceMapToLDT(priceMap1mTo5M(tmIn));
+                this.tm = priceMapToLDT(priceMap1mTo5M(tmIn), HistChinaStocks.recentTradingDate);
             }
 
         }

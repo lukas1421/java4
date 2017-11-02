@@ -103,7 +103,7 @@ public class HistChinaStocks extends JPanel {
 
     private static final DateTimeFormatter DATE_PATTERN = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
-    private static LocalDate recentTradingDate;
+    public static LocalDate recentTradingDate;
 
     private int modelRow;
     int indexRow;
@@ -113,9 +113,9 @@ public class HistChinaStocks extends JPanel {
     public HistChinaStocks() {
         String line;
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream("mostRecentTradingDate.txt")))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH+"mostRecentTradingDate.txt")))) {
             line = reader.readLine();
-            recentTradingDate = LocalDate.parse(line, DateTimeFormatter.ofPattern("yyyy/MM/dd"));
+            recentTradingDate = LocalDate.parse(line, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         } catch(IOException io) {
             io.printStackTrace();
         }
@@ -153,7 +153,6 @@ public class HistChinaStocks extends JPanel {
                     wtdTradePnlMap.put(al1.get(0), 0.0);
                     lastWeekCloseMap.put(al1.get(0), 0.0);
                     wtdMtmPnlMap.put(al1.get(0), 0.0);
-
                 }
             }
 
@@ -607,7 +606,7 @@ public class HistChinaStocks extends JPanel {
                 try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxMinutePath + tickerFull)))) {
                     while ((line = reader1.readLine()) != null) {
                         List<String> al1 = Arrays.asList(line.split("\t"));
-                        if (al1.get(0).startsWith("2017/10") && LocalDate.parse(al1.get(0), DATE_PATTERN).isAfter(MONDAY_OF_WEEK.minusDays(1))) {
+                        if (al1.get(0).startsWith("2017/") && LocalDate.parse(al1.get(0), DATE_PATTERN).isAfter(MONDAY_OF_WEEK.minusDays(1))) {
                             //found = true;
                             LocalDate d = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
                             LocalTime lt = Utility.roundTo5(stringToLocalTime(al1.get(1)));
