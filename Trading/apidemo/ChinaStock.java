@@ -1,28 +1,20 @@
 package apidemo;
 
-import static apidemo.ChinaData.*;
-import static apidemo.ChinaDataYesterday.*;
-import static apidemo.ChinaSizeRatio.*;
-import static apidemo.ChinaStockHelper.*;
-import static utility.Utility.maxGen;
-import static utility.Utility.minGen;
-
-import auxiliary.Strategy;
-import auxiliary.Strategy.StratType;
 import auxiliary.Bench;
 import auxiliary.SimpleBar;
+import auxiliary.Strategy;
+import auxiliary.Strategy.StratType;
 import graph.GraphBar;
 import graph.GraphFillable;
 import graph.GraphIndustry;
-import graph.GraphSize;
-import utility.*;
+import utility.BiFunction1;
+import utility.BiFunction2;
+import utility.Utility;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import javax.swing.*;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -30,61 +22,30 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.*;
+import java.util.stream.Collectors;
 
+import static apidemo.ChinaData.*;
+import static apidemo.ChinaDataYesterday.*;
+import static apidemo.ChinaSizeRatio.*;
+import static apidemo.ChinaStockHelper.*;
 import static java.lang.Double.max;
 import static java.lang.Double.min;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.lang.System.out;
-
-import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.Optional;
-
 import static java.util.Optional.ofNullable;
-
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.BiFunction;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
-import java.util.function.ToDoubleBiFunction;
-import java.util.function.ToDoubleFunction;
-import java.util.function.ToIntBiFunction;
-import java.util.stream.Collectors;
-
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.JToggleButton;
-import javax.swing.RowFilter;
-import javax.swing.SwingUtilities;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableRowSorter;
+import static utility.Utility.maxGen;
+import static utility.Utility.minGen;
 
 public final class ChinaStock extends JPanel {
 
@@ -637,6 +598,7 @@ public final class ChinaStock extends JPanel {
                     pureRefreshTable();
                 }, 5, 30, TimeUnit.SECONDS);
 
+
                 ftes.scheduleAtFixedRate(() -> {
                     System.out.println(" computeing graph industry ");
                     GraphIndustry.compute();
@@ -673,7 +635,7 @@ public final class ChinaStock extends JPanel {
                 }, 0, 5, TimeUnit.SECONDS);
 
                 ftes.scheduleAtFixedRate(() -> {
-                    ChinaBigGraph.refresh();
+                    //ChinaBigGraph.refresh();
                     ChinaStock.refreshGraphs();
                 }, 0, 1, TimeUnit.SECONDS);
 
@@ -1756,7 +1718,7 @@ public final class ChinaStock extends JPanel {
                 .filter(e -> (e.getKey().equals(priceMapBar.get(name).firstKey()))
                         || (e.getValue().getHigh() > ofNullable(priceMapBar.get(name).lowerEntry(e.getKey())).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)
                         && e.getValue().getHigh() >= ofNullable(priceMapBar.get(name).higherEntry(e.getKey())).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)))
-                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getHigh(), (a, b) -> a, ConcurrentSkipListMap::new));
+                .collect(Collectors.toMap(e -> (LocalTime)e.getKey(), e -> ((SimpleBar)e.getValue()).getHigh(), (a, b) -> a, ConcurrentSkipListMap::new));
 
         if (tm.size() > 2) {
             LocalTime lastKey = priceMapBar.get(name).lastKey();

@@ -1,7 +1,9 @@
 package graph;
 
 import TradeType.Trade;
-import apidemo.*;
+import apidemo.ChinaData;
+import apidemo.ChinaPosition;
+import apidemo.ChinaStock;
 import auxiliary.SimpleBar;
 import historical.HistChinaStocks;
 import utility.Utility;
@@ -18,9 +20,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaKeyMonitor.dispGran;
 import static apidemo.ChinaStock.NORMAL_STOCK;
-import static java.lang.Math.abs;
-import static java.lang.Math.log;
-import static java.lang.Math.round;
+import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.*;
 
@@ -200,7 +200,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         double mtmPnl = Math.round(ChinaPosition.getMtmPnl(name) / 100d) / 10d;
         double trPnl = Math.round(ChinaPosition.getTradePnl(name) / 100d) / 10d;
 
-        g2.setColor(mtmPnl > 0 ? new Color(50, 150, 0) : Color.red);
+        g2.setColor(mtmPnl > 0 ? new Color(30, 150, 0) : Color.red);
         g2.drawString("M " + Double.toString(mtmPnl) + "k", getWidth() * 5 / 6, 45);
 
         g2.setColor(trPnl > 0 ? new Color(50, 150, 0) : Color.red);

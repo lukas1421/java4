@@ -306,6 +306,8 @@ public class HistChinaStocks extends JPanel {
         JButton getTodayTradesButton = new JButton("Today trades");
         JButton liveUpdateButton = new JButton("Compute");
         JButton stopButton = new JButton("stop");
+        JButton noFutButton = new JButton(" no fut");
+        JButton futOnlyButton = new JButton ("fut only");
 
 
         refreshButton.addActionListener(al -> {
@@ -396,6 +398,14 @@ public class HistChinaStocks extends JPanel {
                     chinaTradeMap.put(s, res);
                 }
             }
+        });
+
+        noFutButton.addActionListener(al->{
+
+        });
+
+        futOnlyButton.addActionListener(al->{
+
 
         });
 
@@ -429,16 +439,17 @@ public class HistChinaStocks extends JPanel {
         double sumDelta = chinaWtd.entrySet().stream().filter(p).mapToDouble(e->getCurrentDelta(e.getKey())).sum();
         System.out.println(" sum delta is " + sumDelta);
         return (int)Math.round(chinaWtd.entrySet().stream().filter(e->getCurrentPos(e.getKey())>0).filter(p)
-                .sorted(reverseThis(Comparator.comparingDouble(e->getCurrentDelta(e.getKey()))))
-                .peek(e->System.out.println(e.getKey() + " Delta: " + getCurrentDelta(e.getKey())
-                        + " pos: " + getCurrentPos(e.getKey()) + " p: "+ SharpeUtility.getPercentile(e.getValue())
-                        + " first " + e.getValue().firstEntry()
-                        + " last " + e.getValue().lastEntry()
-                        + " max " + e.getValue().entrySet().stream().mapToDouble(e1->e1.getValue().getHigh()).max().orElse(0.0)
-                        + " min " + e.getValue().entrySet().stream().mapToDouble(e1->e1.getValue().getLow()).min().orElse(0.0)))
-
                 .mapToDouble(e->getCurrentDelta(e.getKey())/sumDelta*SharpeUtility.getPercentile(e.getValue()))
                 .sum());
+
+//                        .sorted(reverseThis(Comparator.comparingDouble(e->getCurrentDelta(e.getKey()))))
+//                .peek(e->System.out.println(e.getKey() + " Delta: " + getCurrentDelta(e.getKey())
+//                        + " pos: " + getCurrentPos(e.getKey()) + " p: "+ SharpeUtility.getPercentile(e.getValue())
+//                        + " first " + e.getValue().firstEntry()
+//                        + " last " + e.getValue().lastEntry()
+//                        + " max " + e.getValue().entrySet().stream().mapToDouble(e1->e1.getValue().getHigh()).max().orElse(0.0)
+//                        + " min " + e.getValue().entrySet().stream().mapToDouble(e1->e1.getValue().getLow()).min().orElse(0.0)))
+
     }
 
     static double getCurrentDelta(String name) {

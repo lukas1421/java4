@@ -4,30 +4,28 @@ import auxiliary.SimpleBar;
 import auxiliary.VolBar;
 import utility.Utility;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.net.URLConnection;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.sizeTotalMap;
-import static apidemo.ChinaStock.sizeMap;
 import static apidemo.ChinaStock.*;
 import static apidemo.XU.indexPriceSina;
 import static apidemo.XU.indexVol;
-
-import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.NavigableMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.function.Predicate;
 
 public class SinaStock implements Runnable {
 
@@ -55,7 +53,7 @@ public class SinaStock implements Runnable {
     public static volatile LocalDate mostRecentTradingDay = LocalDate.now();
 
     public static final double OPEN = getOpen();
-    static double rtn = 0.0;
+    static volatile double rtn = 0.0;
     static double sinaVol = 0.0;
     static double currPrice = 0.0;
     static final Predicate<LocalDateTime> FUT_OPEN_PRED = (lt)

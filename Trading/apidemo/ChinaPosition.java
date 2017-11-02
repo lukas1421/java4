@@ -213,7 +213,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     gpnl.repaint();
                 });
             });
-
         });
 
         getOpenButton.addActionListener(l -> {
@@ -623,7 +622,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
-            if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31))) || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
+            if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
+                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
                 if (lt.equals(LocalTime.of(9, 0))) {
                     xuOpenPrice = open;
                     System.out.println(" today open is " + xuOpenPrice);
@@ -673,7 +673,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         int costCol = 0;
         int stockCodeCol = 0;
 
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "openPosition.txt"), "gbk"))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(ChinaMain.GLOBALPATH + "openPosition.txt"), "gbk"))) {
+
             while ((line = reader1.readLine()) != null) {
                 dataList = Arrays.asList(line.split("\\s+"));
                 System.out.println(Arrays.asList(line.split("\\s+")));
@@ -881,7 +883,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     //System.out.println("委托时间" + dataList.indexOf("委托时间"));
                 }
 
-                if (dataList.size() > 10 && !dataList.get(stockCodeCol).startsWith("2") && (dataList.get(statusCol).equals("已成") || dataList.get(statusCol).equals("部成"))
+                if (dataList.size() > 10 && !dataList.get(stockCodeCol).startsWith("2") && (dataList.get(statusCol).equals("已成")
+                        || dataList.get(statusCol).equals("部成"))
                         && (dataList.get(buySellCol).equals("证券买入") || dataList.get(buySellCol).equals("证券卖出"))) {
 
                     String ticker = Utility.addSHSZ(dataList.get(stockCodeCol));
@@ -1059,7 +1062,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 .sorted(Utility.reverseThis(Comparator.comparingDouble(Entry::getValue)))
                 .map(e -> Utility.getStr(ChinaStock.nameMap.get(e.getKey()), ":", e.getValue()))
                 .collect(Collectors.toCollection(LinkedList::new));
-
     }
 
     private static boolean relevantStock(String stock) {

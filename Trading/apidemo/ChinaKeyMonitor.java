@@ -5,42 +5,16 @@ import graph.GraphMonitor;
 import graph.GraphMonitorFactory;
 import utility.Utility;
 
-import static apidemo.ChinaPosition.fxMap;
-import static apidemo.ChinaStock.industryNameMap;
-import static apidemo.ChinaStock.sharpeMap;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
-import static java.lang.Math.pow;
-import static java.lang.Math.sqrt;
-
+import java.io.*;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -48,16 +22,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
+
+import static apidemo.ChinaPosition.fxMap;
+import static apidemo.ChinaStock.industryNameMap;
+import static apidemo.ChinaStock.sharpeMap;
+import static java.lang.Math.pow;
+import static java.lang.Math.sqrt;
 
 public class ChinaKeyMonitor extends JPanel implements Runnable {
 
@@ -753,6 +723,8 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
             sp.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
+
+                    //if(SwingUtilities.)
                     JViewport jv;
                     if (p.getComponent(0) instanceof JViewport) {
                         jv = (JViewport) p.getComponent(0);
@@ -777,6 +749,8 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                             }
                         }
                     }
+
+
                 }
             });
         });

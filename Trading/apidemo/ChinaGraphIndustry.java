@@ -2,26 +2,17 @@ package apidemo;
 
 import graph.GraphIndustry;
 
-import static graph.GraphIndustry.sectorMapInOrder;
-import static graph.GraphIndustry.sectorNamesInOrder;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+
+import static graph.GraphIndustry.sectorMapInOrder;
+import static graph.GraphIndustry.sectorNamesInOrder;
 import static java.util.stream.Collectors.toList;
-import javax.swing.BorderFactory;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.SwingUtilities;
 
 public final class ChinaGraphIndustry extends JPanel {
 
@@ -80,7 +71,7 @@ public final class ChinaGraphIndustry extends JPanel {
                         GraphIndustry.selectedNameIndus = text;
                         ChinaStock.setIndustryFilter(ChinaStock.shortLongIndusMap.get(text));
                         ChinaStock.setGraphGen(ChinaStock.shortLongIndusMap.get(text), ChinaStock.graph6);
-                        ChinaBigGraph.setGraph(ChinaStock.shortLongIndusMap.get(text));
+                        //ChinaBigGraph.setGraph(ChinaStock.shortLongIndusMap.get(text));
                         ChinaIndex.setSector(ChinaStock.shortLongIndusMap.get(text));
                         pureRefresh();
                     });
@@ -177,7 +168,7 @@ public final class ChinaGraphIndustry extends JPanel {
         } else {
             switch (linkStatus) {
                 case STRONG:
-                    ChinaBigGraph.setGraph(GraphIndustry.topStockInRiser);
+                    //ChinaBigGraph.setGraph(GraphIndustry.topStockInRiser);
                     //ChinaStock.setGraphGen(ChinaStock.shortLongIndusMap.get(GraphIndustry.quickestRiser), ChinaStock.graph5);
                     break;
                 case SELECTION:

@@ -1,19 +1,8 @@
 package apidemo;
 
-import static utility.Utility.getStr;
-
 import TradeType.IBTrade;
 import auxiliary.SimpleBar;
-import client.CommissionReport;
-import client.Contract;
-import client.Execution;
-import client.ExecutionFilter;
-import client.Order;
-import client.OrderState;
-import client.OrderStatus;
-import client.OrderType;
-import client.TickType;
-import client.Types;
+import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
 import controller.ApiController.ITopMktDataHandler;
@@ -21,12 +10,8 @@ import graph.GraphBarGen;
 import handler.HistoricalHandler;
 import utility.Utility;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
-import java.awt.LayoutManager;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.time.LocalDate;
@@ -34,33 +19,13 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JDialog;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JToggleButton;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
+
+import static utility.Utility.getStr;
 
 public final class XUTrader extends JPanel implements HistoricalHandler {
 
@@ -208,7 +173,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
 
         connect4001.addActionListener(l -> {
             System.out.println(" trying to connect 4001");
-
             try {
                 apcon.connect("127.0.0.1", 4001, connectionID.incrementAndGet(), "");
             } catch (Exception ex) {

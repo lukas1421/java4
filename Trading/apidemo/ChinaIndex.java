@@ -5,78 +5,41 @@ import graph.GraphBigIndex;
 import graph.GraphIndustry;
 import utility.Utility;
 
-import static apidemo.ChinaData.priceMapBarYtd;
-import static apidemo.ChinaData.sizeTotalMap;
-import static apidemo.ChinaDataYesterday.amMaxY;
-import static apidemo.ChinaDataYesterday.closeMapY;
-import static apidemo.ChinaDataYesterday.getAMCOY;
-import static apidemo.ChinaDataYesterday.getCOY;
-import static apidemo.ChinaDataYesterday.getPMCOY;
-import static apidemo.ChinaDataYesterday.maxMapY;
-import static apidemo.ChinaDataYesterday.minMapY;
-import static apidemo.ChinaDataYesterday.openMapY;
-import static apidemo.ChinaDataYesterday.retAMCOY;
-import static apidemo.ChinaDataYesterday.retCHY;
-import static apidemo.ChinaDataYesterday.retCLY;
-import static apidemo.ChinaDataYesterday.retHOY;
-import static apidemo.ChinaDataYesterday.retLOY;
-import static apidemo.ChinaDataYesterday.retPMCOY;
-import static apidemo.ChinaSizeRatio.getVRPercentile;
-import static utility.Utility.AM940T;
-import static utility.Utility.AMCLOSET;
-import static utility.Utility.AMOPENT;
-import static utility.Utility.AM_PRED;
-import static utility.Utility.BAR_HIGH;
-import static utility.Utility.BAR_LOW;
-import static utility.Utility.IS_OPEN_PRED;
-import static utility.Utility.PMOPENT;
-import static utility.Utility.PM_PRED;
-import static utility.Utility.TIMEMAX;
-import static apidemo.ChinaStock.nameMap;
-import static utility.Utility.noZeroArrayGen;
-import static utility.Utility.normalMapGen;
-import static apidemo.ChinaStock.returnMap;
-import static graph.GraphIndustry.getIndustryOpen;
-import static graph.GraphIndustry.industryMapBar;
-import static apidemo.SinaStock.weightMapA50;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import static java.lang.Double.min;
-import static java.lang.Math.round;
-import static java.lang.System.out;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.Collectors;
+
+import static apidemo.ChinaData.priceMapBarYtd;
+import static apidemo.ChinaData.sizeTotalMap;
+import static apidemo.ChinaDataYesterday.*;
+import static apidemo.ChinaSizeRatio.getVRPercentile;
+import static apidemo.ChinaStock.nameMap;
+import static apidemo.ChinaStock.returnMap;
+import static apidemo.SinaStock.weightMapA50;
+import static graph.GraphIndustry.getIndustryOpen;
+import static graph.GraphIndustry.industryMapBar;
+import static java.lang.Double.min;
+import static java.lang.Math.round;
+import static java.lang.System.out;
 import static java.util.stream.Collectors.mapping;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JToggleButton;
-import javax.swing.SwingUtilities;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableRowSorter;
+import static utility.Utility.*;
 
 final class ChinaIndex extends JPanel {
 
@@ -407,14 +370,14 @@ final class ChinaIndex extends JPanel {
     static void computeFTSESumWeight() {
         ftseSectorSumWeightMap = weightMapA50.entrySet().stream()
                 .collect(Collectors.groupingBy(e -> ChinaStock.shortIndustryMap.get(e.getKey()),
-                         Collectors.summingDouble(e -> e.getValue())));
+                         Collectors.summingDouble(Entry::getValue)));
     }
 
     static void computeFTSESectorWeightedReturn() {
         ftseSectorWtRtnMap = weightMapA50.entrySet().stream().collect(Collectors.groupingByConcurrent(e -> ChinaStock.shortIndustryMap.get(e.getKey()),
                 Collectors.collectingAndThen(Collectors.toList(),
-                        l -> l.stream().collect(Collectors.summingDouble(e -> returnMap.getOrDefault(e.getKey(), 0.0) * e.getValue()))
-                        / l.stream().collect(Collectors.summingDouble(e -> e.getValue())))));
+                        l -> (Double) l.stream().mapToDouble(e -> returnMap.getOrDefault(e.getKey(), 0.0) * e.getValue()).sum()
+                        / (Double) l.stream().mapToDouble(Entry::getValue).sum() )));
     }
 
     private class BarModel_INDEX extends AbstractTableModel {

@@ -5,44 +5,26 @@ import apidemo.ChinaStockHelper;
 import auxiliary.SimpleBar;
 import utility.Utility;
 
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaData.priceMapBarYtd;
-import static apidemo.ChinaData.sizeTotalMap;
-import static utility.Utility.AMCLOSET;
-import static utility.Utility.AMOPENT;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import static java.lang.Math.round;
+import javax.swing.*;
+import java.awt.*;
 import java.time.LocalTime;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import javax.swing.JComponent;
-import java.util.function.Predicate;
-import static java.util.stream.Collectors.*;
-import static utility.Utility.BAR_HIGH;
-import static utility.Utility.BAR_LOW;
-import static utility.Utility.IS_OPEN_PRED;
-import static utility.Utility.TIMEMAX;
-import static utility.Utility.TIME_BETWEEN;
-import static utility.Utility.getStr;
-import java.awt.Font;
 import java.time.temporal.ChronoUnit;
-import static java.util.Comparator.comparingDouble;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import static java.util.Map.Entry.comparingByValue;
-import java.util.NavigableMap;
+import java.util.*;
+import java.util.List;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+import static apidemo.ChinaData.*;
+import static java.lang.Math.round;
+import static java.util.Comparator.comparingDouble;
+import static java.util.Map.Entry.comparingByValue;
+import static java.util.stream.Collectors.*;
+import static utility.Utility.*;
 
 public class GraphIndustry extends JComponent {
 
@@ -239,7 +221,7 @@ public class GraphIndustry extends JComponent {
                                             (a, b) -> a, LinkedHashMap::new)))
                                     .thenAcceptAsync(sm -> {
                                         sectorMapInOrder = sm;
-                                        sectorNamesInOrder = sm.keySet().stream().collect(toCollection(LinkedList::new));
+                                        sectorNamesInOrder = new LinkedList<>(sm.keySet());
                                     });
                         });
 
