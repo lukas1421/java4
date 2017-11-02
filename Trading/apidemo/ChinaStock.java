@@ -30,11 +30,13 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+
 import static java.lang.Double.max;
 import static java.lang.Double.min;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.lang.System.out;
+
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -48,7 +50,9 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
+
 import static java.util.Optional.ofNullable;
+
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -64,8 +68,10 @@ import java.util.function.ToDoubleBiFunction;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntBiFunction;
 import java.util.stream.Collectors;
+
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
+
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -618,32 +624,46 @@ public final class ChinaStock extends JPanel {
         });
 
         JToggleButton computeButton = new JToggleButton("ComputeT");
+
         computeButton.addActionListener((ActionEvent al) -> {
 
             if (computeButton.isSelected()) {
+                //System.out.println(" begin T ");
                 ftes = Executors.newScheduledThreadPool(10);
-                ftes.scheduleAtFixedRate(ChinaCompute.getChinaCompute(), 0, 5, TimeUnit.SECONDS);
+                //ftes.scheduleAtFixedRate(ChinaCompute.getChinaCompute(), 0, 5, TimeUnit.SECONDS);
+
                 ftes.scheduleAtFixedRate(() -> {
-                    out.println("refreshing cstock model" + LocalTime.now());
+                    //out.println("refreshing cstock model" + LocalTime.now());
                     pureRefreshTable();
                 }, 5, 30, TimeUnit.SECONDS);
 
                 ftes.scheduleAtFixedRate(() -> {
+                    System.out.println(" computeing graph industry ");
                     GraphIndustry.compute();
                 }, 0, 1000, TimeUnit.MILLISECONDS);
 
+                //above is tested
+
+
                 ftes.scheduleAtFixedRate(() -> {
+                    //System.out.println(" refreshing chinagraphindistry ");
                     ChinaGraphIndustry.refresh();
                 }, 0, 3000, TimeUnit.MILLISECONDS);
 
                 ftes.scheduleAtFixedRate(() -> {
+                    //System.out.println(" ChinaSizeRatio.computeSizeRatio ");
                     ChinaSizeRatio.computeSizeRatio();
                 }, 0, 1, TimeUnit.SECONDS);
+
+
+                //System.out.println(" ChinaIndex.computeAll ");
 
                 ftes.scheduleAtFixedRate(() -> {
                     ChinaIndex.computeAll();
                 }, 0, 5, TimeUnit.SECONDS);
 
+
+                //tested
                 ftes.scheduleAtFixedRate(() -> {
                     ChinaIndex.updateIndexTable();
                 }, 0, 15, TimeUnit.SECONDS);
@@ -651,6 +671,7 @@ public final class ChinaStock extends JPanel {
                 ftes.scheduleAtFixedRate(() -> {
                     ChinaIndex.repaintGraph();
                 }, 0, 5, TimeUnit.SECONDS);
+
                 ftes.scheduleAtFixedRate(() -> {
                     ChinaBigGraph.refresh();
                     ChinaStock.refreshGraphs();
@@ -663,6 +684,8 @@ public final class ChinaStock extends JPanel {
                     });
                 }, 0, 500, TimeUnit.MILLISECONDS);
 
+
+                //System.out.println(" end computeT ");
             } else {
                 ftes.shutdown();
                 out.println("computing stopped" + LocalTime.now());
@@ -1103,13 +1126,15 @@ public final class ChinaStock extends JPanel {
     }
 
     static void refreshGraphs() {
-        graph1.refresh();
-        graph2.refresh();
-        graph3.refresh();
-        graph4.refresh();
-        graph5.refresh();
-        graph6.refresh();
-        graphPanel.repaint();
+        SwingUtilities.invokeLater(() -> {
+            graph1.refresh();
+            graph2.refresh();
+            graph3.refresh();
+            graph4.refresh();
+            graph5.refresh();
+            graph6.refresh();
+            graphPanel.repaint();
+        });
     }
 
     void toggleFilterOn() {
@@ -1214,7 +1239,8 @@ public final class ChinaStock extends JPanel {
         }
 
         if (lastEntryTime.isAfter(Utility.AMOPENT) && lastEntryTime.isBefore(Utility.PMCLOSET)) {
-            if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AM935T) && Utility.noZeroArrayGen(name, maxMap, minMap, openMap) && Utility.NORMAL_MAP.test(sizeRatioMap, name)) {
+            if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AM935T)
+                    && Utility.noZeroArrayGen(name, maxMap, minMap, openMap) && Utility.NORMAL_MAP.test(sizeRatioMap, name)) {
 
                 double amhoY = amHOY.getOrDefault(name, 0.0);
                 //double percentileY = ChinaDataYesterday.percentileY.getOrDefault(name, 0.0);
@@ -1630,7 +1656,7 @@ public final class ChinaStock extends JPanel {
     static double getPMFirst10(String name) {
         return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(Utility.PM1310T))
                 ? round(1000d * log(priceMapBar.get(name).ceilingEntry(Utility.PM1310T).getValue().getClose()
-                        / (priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen()))) / 10d : 0.0;
+                / (priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen()))) / 10d : 0.0;
     }
 
     static double getAMMin(String name) {
@@ -1664,7 +1690,7 @@ public final class ChinaStock extends JPanel {
     static double getVR(String name, LocalTime lt) {
         return Utility.normalMapGen(name, sizeTotalMapYtd, sizeTotalMap)
                 ? round(10d * ofNullable(sizeTotalMap.get(name).floorEntry(lt)).map(Entry::getValue).orElse(0.0)
-                        / (ofNullable(sizeTotalMapYtd.get(name).floorEntry(lt)).filter(e -> e.getValue() != 0.0).map(Entry::getValue).orElse(Double.MAX_VALUE))) / 10d : 0.0;
+                / (ofNullable(sizeTotalMapYtd.get(name).floorEntry(lt)).filter(e -> e.getValue() != 0.0).map(Entry::getValue).orElse(Double.MAX_VALUE))) / 10d : 0.0;
     }
 
     static double getFirst1Ret(String name) {
@@ -1728,9 +1754,9 @@ public final class ChinaStock extends JPanel {
 
         NavigableMap<LocalTime, Double> tm = priceMapBar.get(name).entrySet().parallelStream()
                 .filter(e -> (e.getKey().equals(priceMapBar.get(name).firstKey()))
-                || (e.getValue().getHigh() > ofNullable(priceMapBar.get(name).lowerEntry(e.getKey())).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)
-                && e.getValue().getHigh() >= ofNullable(priceMapBar.get(name).higherEntry(e.getKey())).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)))
-                .collect(Collectors.toMap(e->e.getKey(), e -> e.getValue().getHigh(), (a, b) -> a, ConcurrentSkipListMap::new));
+                        || (e.getValue().getHigh() > ofNullable(priceMapBar.get(name).lowerEntry(e.getKey())).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)
+                        && e.getValue().getHigh() >= ofNullable(priceMapBar.get(name).higherEntry(e.getKey())).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)))
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().getHigh(), (a, b) -> a, ConcurrentSkipListMap::new));
 
         if (tm.size() > 2) {
             LocalTime lastKey = priceMapBar.get(name).lastKey();
@@ -1823,7 +1849,7 @@ public final class ChinaStock extends JPanel {
         final double ma = ma20Map.getOrDefault(name, 0.0);
         return (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET) && LAST_KEY_AFTER.test(name, Utility.AMOPENT) && Utility.NO_ZERO.test(ma20Map, name))
                 ? priceMapBar.get(name).entrySet().parallelStream().filter(e1 -> e1.getValue().getHigh() > ma)
-                        .findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.PMCLOSET;
+                .findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.PMCLOSET;
     }
 
     static LocalTime getMA20FirstFallTime(String name) {
@@ -2203,7 +2229,7 @@ public final class ChinaStock extends JPanel {
                 case 8:
                     return (NORMAL_STOCK.test(name) && LAST_KEY_AFTER.test(name, Utility.PMOPENT))
                             ? (double) round(1000d * (priceMapBar.get(name).lastEntry().getValue().getClose()
-                                    / priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen() - 1)) / 10d : 0.0;
+                            / priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen() - 1)) / 10d : 0.0;
 
                 // 卡差
                 case 9:
@@ -2260,7 +2286,7 @@ public final class ChinaStock extends JPanel {
                     return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)
                             && priceMapBar.get(name).firstKey().isBefore(Utility.AMCLOSET) && getAMMax(name) != 0.0)
                             ? Math.round(1000d * (getAMMax(name) / DEFAULTOPEN.applyAsDouble(name)
-                                    - priceMapBar.get(name).floorEntry(Utility.AMCLOSET).getValue().getClose() / getAMMax(name))) / 10d : 0.0;
+                            - priceMapBar.get(name).floorEntry(Utility.AMCLOSET).getValue().getClose() / getAMMax(name))) / 10d : 0.0;
 
                 //amMnT
                 case 20:
@@ -2294,7 +2320,7 @@ public final class ChinaStock extends JPanel {
                 case 27:
                     return (NORMAL_STOCK.test(name) && LAST_KEY_AFTER.test(name, Utility.PMOPENT) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET))
                             ? round(1000d * (priceMapBar.get(name).floorEntry(Utility.PM1310T).getValue().getClose()
-                                    / priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen() - 1)) / 10d : 0.0;
+                            / priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen() - 1)) / 10d : 0.0;
 
                 //pmF10MinT
                 case 28:
@@ -2514,7 +2540,7 @@ public final class ChinaStock extends JPanel {
                         double first10Max = priceMapBar.get(name).entrySet().parallelStream().filter(e -> e.getKey().isBefore(Utility.AM941T)).map(Entry::getValue).mapToDouble(SimpleBar::getHigh).max().orElse(0.0);
                         LocalTime amFirstBreak = priceMapBar.get(name).entrySet().parallelStream()
                                 .filter(e -> e.getKey().isAfter(Utility.AM940T) && e.getKey().isBefore(Utility.AMCLOSET) && e.getValue()
-                                .getHigh() > first10Max).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
+                                        .getHigh() > first10Max).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
                         return amFirstBreak;
                     }
                     return Utility.AMCLOSET;

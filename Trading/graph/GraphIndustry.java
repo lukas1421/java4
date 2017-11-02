@@ -219,7 +219,7 @@ public class GraphIndustry extends JComponent {
                         mapping(e -> getReturnMap(e.getValue()), collectingAndThen(toList(),
                                 e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(TRADING_HOURS))
                                         .collect(groupingByConcurrent(Entry::getKey,
-                                                ConcurrentSkipListMap::new, averagingDouble(e2 -> e2.getValue()))))))))
+                                                ConcurrentSkipListMap::new, averagingDouble(Entry::getValue))))))))
                 .thenAccept(
                         m -> {
                             industryPriceMap = m;

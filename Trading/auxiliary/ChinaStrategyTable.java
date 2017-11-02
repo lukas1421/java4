@@ -59,7 +59,7 @@ public final class ChinaStrategyTable extends JPanel {
 //                        System.out.println(" selected name " + selectedName);
 //                        System.out.println(" index row " + Index_row);
 //                        System.out.println(" model row " + modelRow);                        
-                        ChinaBigGraph.setGraph(selectedName);
+                        //ChinaBigGraph.setGraph(selectedName);
                     } else {
                         comp.setBackground((Index_row % 2 == 0) ? Color.lightGray : Color.white);
                     }

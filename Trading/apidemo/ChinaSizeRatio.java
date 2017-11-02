@@ -12,26 +12,35 @@ import static apidemo.ChinaStock.nameMap;
 import static utility.Utility.normalMapGen;
 import static apidemo.ChinaStock.symbolNames;
 import static apidemo.ChinaStock.symbolNamesFull;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+
 import static java.lang.Math.round;
+
 import java.time.LocalTime;
 import java.util.Comparator;
+
 import static java.util.Comparator.naturalOrder;
+
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
+
 import static java.util.Optional.ofNullable;
+
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import static java.util.stream.Collectors.toMap;
+
 import javax.swing.Box;
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -282,16 +291,19 @@ public final class ChinaSizeRatio extends JPanel {
     }
 
     public static void computeSizeRatio() {
-        if (!sizeTotalMap.isEmpty()) {
+
+        if (!sizeTotalMap.isEmpty() && !sizeTotalMapYtd.isEmpty()) {
             sizeTotalMap.keySet().forEach((key) -> {
                 sizeTotalMap.get(key).keySet().forEach((t) -> {
-                    try {
-                        if (sizeTotalMapYtd.containsKey(key) && sizeTotalMapYtd.get(key).getOrDefault(t, 0.0) != 0.0) {
-                            sizeRatioMap.get(key).put(t, (double) (sizeTotalMap.get(key).get(t) / sizeTotalMapYtd.get(key).get(t)));
+                    if (sizeTotalMapYtd.containsKey(key) && sizeTotalMapYtd.get(key).containsKey(t)) {
+                        if(sizeRatioMap.contains(key)) {
+                            sizeRatioMap.get(key).put(t,
+                                    (double) (sizeTotalMap.get(key).floorEntry(t).getValue() / sizeTotalMapYtd.get(key).floorEntry(t).getValue()));
+                        } else {
+                            sizeRatioMap.put(key, new ConcurrentSkipListMap<>());
                         }
-                    } catch (Exception x) {
-                        //System.out.println( " key is " + key);
                     }
+
                 });
             });
         }

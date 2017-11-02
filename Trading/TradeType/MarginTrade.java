@@ -10,8 +10,6 @@ public class MarginTrade extends Trade {
         super(p, s);
     }
 
-
-
     @Override
     public double getTradingCost(String name) {
         double brokerage = Math.max(5, Math.round(price * abs(size) * 3 / 100) / 100d);
@@ -30,9 +28,6 @@ public class MarginTrade extends Trade {
 
         return (-1d * size * price) - brokerage - guohu - stamp;
     }
-
-
-
 
     @Override
     public double getTradingCostCustomBrokerage(String name, double rate) {

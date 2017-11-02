@@ -166,7 +166,7 @@ final class ChinaIndex extends JPanel {
                         //System.out.println(" selected index " + selectedIndex);
                         //System.out.println(" check " + industryMapBar.get(selectedIndex));
                         CompletableFuture.runAsync(() -> {
-                            ChinaBigGraph.setGraph(selectedIndex);
+                            //ChinaBigGraph.setGraph(selectedIndex);
                         });
 
                         CompletableFuture.runAsync(() -> {
@@ -253,56 +253,61 @@ final class ChinaIndex extends JPanel {
     }
 
     static void computeAll() {
-        GraphIndustry.compute();
-        ChinaSizeRatio.computeSizeRatio();
+        try {
+            GraphIndustry.compute();
+            ChinaSizeRatio.computeSizeRatio();
 
-        industryLongNameOnly.forEach((String name) -> {
-            if (normalMapGen(name, industryMapBar)) {
-                LocalTime lastTime = industryMapBar.get(name).lastKey();
-                double last = industryMapBar.get(name).lastEntry().getValue().getClose();
-                double open = Optional.ofNullable(industryMapBar.get(name).floorEntry(AMOPENT))
-                        .map(Entry::getValue).map(SimpleBar::getOpen).orElse(getIndustryOpen(name));
-                double close = Optional.ofNullable(priceMapBarYtd.get(name)).map(e -> e.lastEntry())
-                        .map(Entry::getValue).map(SimpleBar::getClose)
-                        .orElse(Optional.ofNullable(industryMapBar.get(name)).map(e -> e.firstEntry())
-                                .map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0));
-                //System.out.println( " name " + name + " close " + close );
+            industryLongNameOnly.forEach((String name) -> {
+                if (normalMapGen(name, industryMapBar)) {
+                    LocalTime lastTime = industryMapBar.get(name).lastKey();
+                    double last = industryMapBar.get(name).lastEntry().getValue().getClose();
+                    double open = Optional.ofNullable(industryMapBar.get(name).floorEntry(AMOPENT))
+                            .map(Entry::getValue).map(SimpleBar::getOpen).orElse(getIndustryOpen(name));
+                    double close = Optional.ofNullable(priceMapBarYtd.get(name)).map(e -> e.lastEntry())
+                            .map(Entry::getValue).map(SimpleBar::getClose)
+                            .orElse(Optional.ofNullable(industryMapBar.get(name)).map(e -> e.firstEntry())
+                                    .map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0));
+                    //System.out.println( " name " + name + " close " + close );
 
-                double max = GETMAX_INDUS.applyAsDouble(name, IS_OPEN_PRED);
-                double min = GETMIN_INDUS.applyAsDouble(name, IS_OPEN_PRED);
-                amMaxTMap.put(name, GETMAXT_INDUS.apply(name, AM_PRED));
-                maxTMap.put(name, GETMAXT_INDUS.apply(name, IS_OPEN_PRED));
-                minTMap.put(name, GETMAXT_INDUS.apply(name, IS_OPEN_PRED));
-                LocalTime amMaxT = GETMAXT_INDUS.apply(name, AM_PRED);
-                LocalTime amMinT = GETMAXT_INDUS.apply(name, AM_PRED);
-                rangeMap.put(name, (max / min) - 1);
-                f1Map.put(name, getRtn(industryMapBar.get(name), AMOPENT, AMOPENT));
-                f10Map.put(name, getRtn(industryMapBar.get(name), AMOPENT, AM940T));
-                opcMap.put(name, open / close - 1);
-                hoMap.put(name, max / open - 1);
-                ddMap.put(name, last / max - 1);
-                hoddrMap.put(name, ((max / open) - (last / max)) / (max / min - 1));
-                sizeMap.put(name, sizeTotalMap.get(name).lastEntry().getValue());
-                vrMap.put(name, ChinaSizeRatio.computeSizeRatioLast(name));
-                vrPMap.put(name, getVRPercentile(name));
-                pricePercentileMap.put(name, (int) round(100 * (last - min) / (max - min)));
-                coMap.put(name, last / open - 1);
-                ccMap.put(name, last / close - 1);
-                clMap.put(name, last / min - 1);
-                loMap.put(name, min / open - 1);
-                trMap.put(name, ChinaStock.getTrueRange3day(name));
-                amcoMap.put(name, (industryMapBar.get(name).floorEntry(AMCLOSET).getValue().getClose() / open) - 1);
-                pmcoMap.put(name, lastTime.isAfter(LocalTime.of(12, 59, 59)) ? last / industryMapBar.get(name).floorEntry(AMCLOSET).getValue().getClose() - 1 : 0.0);
-                if (lastTime.isAfter(PMOPENT)) {
-                    pmMinTMap.put(name, GETMINT_INDUS.apply(name, PM_PRED));
+                    double max = GETMAX_INDUS.applyAsDouble(name, IS_OPEN_PRED);
+                    double min = GETMIN_INDUS.applyAsDouble(name, IS_OPEN_PRED);
+                    amMaxTMap.put(name, GETMAXT_INDUS.apply(name, AM_PRED));
+                    maxTMap.put(name, GETMAXT_INDUS.apply(name, IS_OPEN_PRED));
+                    minTMap.put(name, GETMAXT_INDUS.apply(name, IS_OPEN_PRED));
+                    LocalTime amMaxT = GETMAXT_INDUS.apply(name, AM_PRED);
+                    LocalTime amMinT = GETMAXT_INDUS.apply(name, AM_PRED);
+                    rangeMap.put(name, (max / min) - 1);
+                    f1Map.put(name, getRtn(industryMapBar.get(name), AMOPENT, AMOPENT));
+                    f10Map.put(name, getRtn(industryMapBar.get(name), AMOPENT, AM940T));
+                    opcMap.put(name, open / close - 1);
+                    hoMap.put(name, max / open - 1);
+                    ddMap.put(name, last / max - 1);
+                    hoddrMap.put(name, ((max / open) - (last / max)) / (max / min - 1));
+                    sizeMap.put(name, sizeTotalMap.get(name).lastEntry().getValue());
+                    vrMap.put(name, ChinaSizeRatio.computeSizeRatioLast(name));
+                    vrPMap.put(name, getVRPercentile(name));
+                    pricePercentileMap.put(name, (int) round(100 * (last - min) / (max - min)));
+                    coMap.put(name, last / open - 1);
+                    ccMap.put(name, last / close - 1);
+                    clMap.put(name, last / min - 1);
+                    loMap.put(name, min / open - 1);
+                    trMap.put(name, ChinaStock.getTrueRange3day(name));
+                    amcoMap.put(name, (industryMapBar.get(name).floorEntry(AMCLOSET).getValue().getClose() / open) - 1);
+                    pmcoMap.put(name, lastTime.isAfter(LocalTime.of(12, 59, 59)) ? last / industryMapBar.get(name).floorEntry(AMCLOSET).getValue().getClose() - 1 : 0.0);
+                    if (lastTime.isAfter(PMOPENT)) {
+                        pmMinTMap.put(name, GETMINT_INDUS.apply(name, PM_PRED));
+                    }
                 }
-            }
-        });
 
-        computeFTSEKiyodo();
-        computeFTSESumWeight();
-        computeFTSESectorWeightedReturn();
-        checkTradability();
+            });
+
+            computeFTSEKiyodo();
+            computeFTSESumWeight();
+            computeFTSESectorWeightedReturn();
+            checkTradability();
+        } catch (Exception x) {
+            x.printStackTrace();
+        }
     }
 
     static void updateIndexTable() {
