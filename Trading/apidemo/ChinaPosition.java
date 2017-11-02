@@ -1,16 +1,5 @@
 package apidemo;
 
-import static apidemo.ChinaData.priceMapBar;
-import static java.util.stream.Collectors.*;
-import static utility.Utility.BAR_HIGH;
-import static utility.Utility.BAR_LOW;
-import static apidemo.ChinaStock.closeMap;
-import static apidemo.ChinaStock.nameMap;
-import static apidemo.ChinaStock.openMap;
-import static apidemo.ChinaStock.priceMap;
-import static apidemo.ChinaStock.symbolNames;
-import static utility.Utility.getStr;
-
 import TradeType.FutureTrade;
 import TradeType.MarginTrade;
 import TradeType.NormalTrade;
@@ -27,18 +16,15 @@ import handler.HistoricalHandler;
 import utility.SharpeUtility;
 import utility.Utility;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.Rectangle;
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -46,31 +32,22 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.List;
 import java.util.Map.Entry;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.function.*;
+import java.util.concurrent.*;
+import java.util.function.DoublePredicate;
+import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 import java.util.stream.Stream;
-import javax.swing.ButtonGroup;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JRadioButton;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JToggleButton;
-import javax.swing.RowFilter;
-import javax.swing.SwingUtilities;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableRowSorter;
+
+import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaStock.*;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
+import static utility.Utility.*;
 
 public class ChinaPosition extends JPanel implements HistoricalHandler {
 
@@ -1076,14 +1053,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return Math.round(d * 100d) / 100d;
     }
 
-    private static <T> Comparator<T> reverseThis(Comparator<T> in) {
-        return in.reversed();
-    }
-
     private static LinkedList<String> getPnl5mChg() {
         Set<String> ptf = symbolNames.stream().filter(ChinaPosition::relevantStock).collect(toCollection(HashSet::new));
         return ptf.stream().collect(Collectors.toMap(s -> s, ChinaPosition::getPnLChange5m)).entrySet().stream()
-                .sorted(reverseThis(Comparator.comparingDouble(Entry::getValue)))
+                .sorted(Utility.reverseThis(Comparator.comparingDouble(Entry::getValue)))
                 .map(e -> Utility.getStr(ChinaStock.nameMap.get(e.getKey()), ":", e.getValue()))
                 .collect(Collectors.toCollection(LinkedList::new));
 
@@ -1232,7 +1205,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         double netPnlAll = tickerNetpnl.entrySet().stream().mapToDouble(Map.Entry::getValue).sum();
 
-        res = tickerNetpnl.entrySet().stream().sorted(reverseThis(Comparator.comparingDouble(e -> Math.abs(e.getValue()))))
+        res = tickerNetpnl.entrySet().stream().sorted(Utility.reverseThis(Comparator.comparingDouble(e -> Math.abs(e.getValue()))))
                 .map(Map.Entry::getKey).map(s -> Utility.getStr(nameMap.get(s),
                         tickerNetpnl.getOrDefault(s, 0.0), Math.round(100d * tickerNetpnl.getOrDefault(s, 0.0) / netPnlAll), "%"))
                 .collect(Collectors.toCollection(LinkedList::new));

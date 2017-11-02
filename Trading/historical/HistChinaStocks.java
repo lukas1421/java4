@@ -3,9 +3,7 @@ package historical;
 import TradeType.MarginTrade;
 import TradeType.NormalTrade;
 import TradeType.Trade;
-import apidemo.ChinaData;
 import apidemo.ChinaMain;
-import apidemo.ChinaPosition;
 import auxiliary.SimpleBar;
 import graph.GraphBarTemporal;
 import graph.GraphChinaPnl;
@@ -20,7 +18,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
-import java.nio.Buffer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -37,9 +34,7 @@ import java.util.stream.Stream;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaPosition.tradesMap;
-import static utility.Utility.mergeMap;
-import static utility.Utility.mergeTradeMap;
-import static utility.Utility.priceMap1mTo5M;
+import static utility.Utility.*;
 
 public class HistChinaStocks extends JPanel {
 
@@ -94,6 +89,9 @@ public class HistChinaStocks extends JPanel {
     private static NavigableMap<LocalDate, Double> netPnlByWeekday = new ConcurrentSkipListMap<>();
     private static NavigableMap<LocalDate, Double> netPnlByWeekdayAM = new ConcurrentSkipListMap<>();
     private static NavigableMap<LocalDate, Double> netPnlByWeekdayPM = new ConcurrentSkipListMap<>();
+
+    int avgPercentile;
+    int weightedAvgPercentile;
 
     private static String tdxDayPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export\\" : "J:\\TDX\\T0002\\export\\";
@@ -208,6 +206,17 @@ public class HistChinaStocks extends JPanel {
                                 } else {
                                     graphWtdPnl.clearGraph();
                                 }
+                            });
+
+                            CompletableFuture.runAsync(()->{
+                                avgPercentile = computeAvgPercentile(e->e.getKey().equals(selectedStock));
+                                weightedAvgPercentile = computeDeltaWeightedPercentile(e->e.getKey().equals(selectedStock));
+
+                                SwingUtilities.invokeLater(()->{
+                                    graphWtdPnl.setAvgPerc(avgPercentile);
+                                    graphWtdPnl.setDeltaWeightedAveragePerc(weightedAvgPercentile);
+                                });
+
                             });
 
                         }).thenRun(() -> {
@@ -410,6 +419,37 @@ public class HistChinaStocks extends JPanel {
     }
 
 
+    static int computeAvgPercentile(Predicate<? super Map.Entry<String, ?>> p) {
+        return (int)Math.round(chinaWtd.entrySet().stream().filter(e->getCurrentPos(e.getKey())!=0)
+                .filter(p).mapToDouble(e->SharpeUtility.getPercentile(e.getValue())).average().orElse(0.0));
+    }
+
+    static int computeDeltaWeightedPercentile(Predicate<? super Map.Entry<String,?>> p) {
+        //double sumDelta = stockList.stream().mapToDouble(s->getCurrentPos(s)*priceMap.getOrDefault(s,0.0)).sum();
+        double sumDelta = chinaWtd.entrySet().stream().filter(p).mapToDouble(e->getCurrentDelta(e.getKey())).sum();
+        System.out.println(" sum delta is " + sumDelta);
+        return (int)Math.round(chinaWtd.entrySet().stream().filter(e->getCurrentPos(e.getKey())>0).filter(p)
+                .sorted(reverseThis(Comparator.comparingDouble(e->getCurrentDelta(e.getKey()))))
+                .peek(e->System.out.println(e.getKey() + " Delta: " + getCurrentDelta(e.getKey())
+                        + " pos: " + getCurrentPos(e.getKey()) + " p: "+ SharpeUtility.getPercentile(e.getValue())
+                        + " first " + e.getValue().firstEntry()
+                        + " last " + e.getValue().lastEntry()
+                        + " max " + e.getValue().entrySet().stream().mapToDouble(e1->e1.getValue().getHigh()).max().orElse(0.0)
+                        + " min " + e.getValue().entrySet().stream().mapToDouble(e1->e1.getValue().getLow()).min().orElse(0.0)))
+
+                .mapToDouble(e->getCurrentDelta(e.getKey())/sumDelta*SharpeUtility.getPercentile(e.getValue()))
+                .sum());
+    }
+
+    static double getCurrentDelta(String name) {
+        return getCurrentPos(name)*priceMap.getOrDefault(name,0.0);
+    }
+
+
+    static int getCurrentPos(String name) {
+        return chinaTradeMap.get(name).entrySet().stream().mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
+    }
+
     private static void refreshAll() {
         CompletableFuture.runAsync(() -> {
             graphWtdPnl.fillInGraph("");
@@ -417,6 +457,8 @@ public class HistChinaStocks extends JPanel {
             graphWtdPnl.setTrade(computeWtdTradePnl(e -> true));
             graphWtdPnl.setNet(computeNet(e -> true));
             graphWtdPnl.setWeekdayMtm(netPnlByWeekday, netPnlByWeekdayAM, netPnlByWeekdayPM);
+            graphWtdPnl.setAvgPerc(computeAvgPercentile(e->true));
+            graphWtdPnl.setDeltaWeightedAveragePerc(computeDeltaWeightedPercentile(e->true));
         }).thenRun(() -> {
             SwingUtilities.invokeLater(() -> {
                 model.fireTableDataChanged();
@@ -524,7 +566,6 @@ public class HistChinaStocks extends JPanel {
         LocalDateTime ytdClose = LocalDateTime.of(d.minusDays(1), LocalTime.of(15, 0));
         double prevV = mp.firstKey().isBefore(ytdClose) ? mp.floorEntry(ytdClose).getValue() : 0.0;
         return lastV - prevV;
-
     }
 
     static double computePMNetPnlForGivenDate(NavigableMap<LocalDateTime, Double> mp, LocalDate d) {
@@ -852,7 +893,7 @@ public class HistChinaStocks extends JPanel {
 
         @Override
         public int getColumnCount() {
-            return 25;
+            return 30;
         }
 
         @Override
@@ -906,6 +947,8 @@ public class HistChinaStocks extends JPanel {
                     return "w Mtm";
                 case 23:
                     return "w net";
+                case 24:
+                    return "perc";
                 default:
                     return "";
 
@@ -979,6 +1022,8 @@ public class HistChinaStocks extends JPanel {
                     return wtdMtmPnlMap.getOrDefault(name, 0.0);
                 case 23:
                     return wtdTradePnlMap.getOrDefault(name, 0.0) + wtdMtmPnlMap.getOrDefault(name, 0.0);
+                case 24:
+                    return SharpeUtility.getPercentile(chinaWtd.get(name));
                 default:
                     return null;
 
@@ -1002,6 +1047,8 @@ public class HistChinaStocks extends JPanel {
                     return Integer.class;
                 case 19:
                     return Long.class;
+                case 24:
+                    return Integer.class;
                 default:
                     return Double.class;
             }

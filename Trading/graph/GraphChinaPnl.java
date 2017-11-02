@@ -8,7 +8,8 @@ import java.awt.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
-import java.util.*;
+import java.util.Map;
+import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.ToDoubleFunction;
@@ -26,6 +27,10 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
     NavigableMap<LocalDate, Double> mtmByDay = new ConcurrentSkipListMap<>();
     NavigableMap<LocalDate, Double> mtmByAm = new ConcurrentSkipListMap<>();
     NavigableMap<LocalDate, Double> mtmByPm = new ConcurrentSkipListMap<>();
+
+    int averagePerc ;
+    int deltaWeightedAveragePerc;
+
 
     NavigableMap<T, Double> deltaMap;
 
@@ -61,6 +66,15 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         mtmByAm = am;
         mtmByPm = pm;
     }
+
+    public void setAvgPerc(int p) {
+        averagePerc = p;
+    }
+
+    public void setDeltaWeightedAveragePerc(int p) {
+        deltaWeightedAveragePerc = p;
+    }
+
 
 
     @Override
@@ -123,7 +137,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
 
             try {
                 if (lt.equals(tradeMap.lastKey())) {
-                    g.drawString("Trade: " + Math.round(tradeMap.lastEntry().getValue()), x + 10, close);
+                    g.drawString("Trade: " + Math.round(tradeMap.lastEntry().getValue()), x - 10, close);
                 }
             } catch (Exception ex) {
                 System.out.println(" trade map last key issue : size is " + tradeMap.size() + " " + tradeMap);
@@ -221,6 +235,8 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         g2.setFont(g.getFont().deriveFont(20F));
         g2.drawString(name, 0, 20);
         g2.drawString(chineseName, getWidth() / 10, 20);
+        g2.drawString("" +averagePerc, getWidth()*5/8, 20);
+        g2.drawString("" +deltaWeightedAveragePerc, getWidth()*5/8+30, 20);
         g2.drawString("" + (mtmMap.size() > 0 ? Math.round(mtmMap.lastEntry().getValue()) : 0.0), getWidth() * 2 / 10, 20);
         g2.drawString(Long.toString(Math.round(max)), getWidth() - 60, 20);
         g2.drawString(Long.toString(Math.round(min)), getWidth() - 60,getHeight() - 20);
@@ -279,6 +295,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
             this.repaint();
         });
     }
+
 
     @Override
     public void refresh() {

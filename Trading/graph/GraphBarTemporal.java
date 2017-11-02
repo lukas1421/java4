@@ -31,6 +31,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     int openY;
     int last = 0;
     double rtn = 0;
+    int percentile;
     NavigableMap<T, SimpleBar> mainMap;
     NavigableMap<T, Integer> histTradesMap;
     int netCurrentPosition;
@@ -176,8 +177,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         g.setColor(Color.black);
 
         height = (int) (getHeight() - 70);
-        min = Utility.getMinGen(mainMap, SimpleBar::getLow);
-        max = Utility.getMaxGen(mainMap, SimpleBar::getHigh);
+        min = Utility.reduceMapToDouble(mainMap, SimpleBar::getLow, Math::min);
+        max = Utility.reduceMapToDouble(mainMap, SimpleBar::getHigh, Math::max);
         //minRtn = getMinRtn();
         //maxRtn = getMaxRtn();
         last = 0;
@@ -256,12 +257,13 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
             x += WIDTH_BAR;
         }
 
+
         g2.setColor(Color.red);
         g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.5F));
         g2.setStroke(BS3);
 
-        g2.drawString(Double.toString(max), getWidth() - 40, 15);
-        g2.drawString(Double.toString(min), getWidth() - 40, getHeight() - 33);
+        g2.drawString(Double.toString(max), getWidth() - 60, 15);
+        g2.drawString(Double.toString(min), getWidth() - 60, getHeight() - 33);
         //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2);
         //g2.drawString("周" + Integer.toString(wtdP), getWidth() - 40, getHeight() / 2);
 
@@ -272,6 +274,10 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         if (!Optional.ofNullable(chineseName).orElse("").equals("")) {
             g2.drawString(chineseName, getWidth() / 8, 15);
         }
+
+
+        g2.drawString(Integer.toString(getPercentile()) + "% ", getWidth()*2/8, 15);
+        g2.drawString(""+getLast(), getWidth()*3/8,15);
 
         g2.drawString(" pos: " + Integer.toString(netCurrentPosition), getWidth()*7/8, getHeight()/6);
         g2.drawString(" Trade pnl " + Double.toString(currentTradePnl), getWidth()*7/8, getHeight()*2/6);
@@ -329,6 +335,23 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         double pct = (v - min) / span;
         double val = pct * height + .5;
         return height - (int) val + 20;
+    }
+
+    double getLast() {
+        if(mainMap.size()>0) {
+           return mainMap.lastEntry().getValue().getClose();
+        }
+        return 0.0;
+    }
+
+    int getPercentile() {
+        if(mainMap.size()>0) {
+            double mx = mainMap.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
+            double mn = mainMap.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(Double.MIN_VALUE);
+            double last = mainMap.lastEntry().getValue().getClose();
+            return (int)Math.round(100d*(last-mn)/(mx-mn));
+        }
+        return 0;
     }
 
 

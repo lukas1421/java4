@@ -8,7 +8,6 @@ import graph.GraphIndustry;
 import historical.HistChinaStocks;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
-import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.io.*;
 import java.sql.Blob;
@@ -24,9 +23,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.*;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
 import java.util.stream.Stream;
 
 import static apidemo.ChinaMain.tdxPath;
@@ -34,7 +31,8 @@ import static apidemo.ChinaStock.priceMap;
 import static apidemo.ChinaStock.symbolNames;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
 
 public class Utility {
 
@@ -214,6 +212,10 @@ public class Utility {
 
     public static <T, S> double getMaxGen(NavigableMap<T, S> tm, ToDoubleFunction<S> f) {
         return (tm != null && tm.size() > 2) ? tm.values().stream().mapToDouble(f).reduce(Math::max).orElse(0.0) : 0.0;
+    }
+
+    public static <T, S> double reduceMapToDouble(NavigableMap<T, S> tm, ToDoubleFunction<S> f, DoubleBinaryOperator o) {
+        return (tm != null && tm.size() > 0) ? tm.values().stream().mapToDouble(f).reduce(o).orElse(0.0) : 0.0;
     }
 
     public static <T> double getMax(NavigableMap<T, Double> tm) {
@@ -510,8 +512,8 @@ public class Utility {
     @SafeVarargs
     public static NavigableMap<LocalDateTime, ? super Trade> mergeTradeMap(NavigableMap<LocalDateTime, ? super Trade>... mps) {
         NavigableMap<LocalDateTime, ? super Trade> res = new ConcurrentSkipListMap<>();
-        res = Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.toMap(e -> (LocalDateTime)(e.getKey()),
-                Map.Entry::getValue, (a, b) -> a,ConcurrentSkipListMap::new));
+        res = Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.toMap(e -> (LocalDateTime) (e.getKey()),
+                Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
         return res;
     }
 
@@ -520,6 +522,7 @@ public class Utility {
         NavigableMap<LocalTime, SimpleBar> res = new ConcurrentSkipListMap<>();
         for (Map.Entry e : mp.entrySet()) {
             LocalTime t = roundTo5((LocalTime) e.getKey());
+            //very important to make a new SB, otherwise will pollute original mp
             SimpleBar sb = new SimpleBar((SimpleBar) e.getValue());
 
             if (!res.containsKey(t)) {
@@ -531,10 +534,14 @@ public class Utility {
         return res;
     }
 
-    public static <T> NavigableMap<LocalDateTime, T> priceMapToLDT(NavigableMap<LocalTime,T> mp, LocalDate ld) {
+    public static <T> NavigableMap<LocalDateTime, T> priceMapToLDT(NavigableMap<LocalTime, T> mp, LocalDate ld) {
         NavigableMap<LocalDateTime, T> res = new ConcurrentSkipListMap<>();
         for (Map.Entry e : mp.entrySet()) {
-            res.put(LocalDateTime.of(ld, (LocalTime) e.getKey()), (T)(e.getValue()));
+            //SimpleBar sb = new SimpleBar((SimpleBar)e.getValue());
+            LocalTime lt = (LocalTime) e.getKey();
+            if (lt.isBefore(LocalTime.of(15, 1))) {
+                res.put(LocalDateTime.of(ld,lt), (T) (e.getValue()));
+            }
         }
         return res;
     }
@@ -545,5 +552,9 @@ public class Utility {
 
     public static LocalDateTime roundTo5Ldt(LocalDateTime t) {
         return LocalDateTime.of(t.toLocalDate(), roundTo5(t.truncatedTo(ChronoUnit.MINUTES).toLocalTime()));
+    }
+
+    public static <T> Comparator<T> reverseThis(Comparator<T> in) {
+        return in.reversed();
     }
 }

@@ -24,7 +24,7 @@ public class SharpeUtility {
     public static <T extends Temporal> NavigableMap<T, Double>
     getReturnSeries(NavigableMap<T, SimpleBar> in, T startPoint) {
 
-        NavigableMap<T,SimpleBar> inSub = in.tailMap(startPoint,true);
+        NavigableMap<T, SimpleBar> inSub = in.tailMap(startPoint, true);
         NavigableMap<T, Double> res = new TreeMap<>();
 
         if (in.size() > 0) {
@@ -63,8 +63,9 @@ public class SharpeUtility {
     public static int getPercentile(NavigableMap<? extends Temporal, SimpleBar> mp) {
         if (mp.size() > 0) {
             double last = mp.lastEntry().getValue().getClose();
-            double max = mp.entrySet().stream().map(Map.Entry::getValue).mapToDouble(SimpleBar::getHigh).max().getAsDouble();
-            double min = mp.entrySet().stream().map(Map.Entry::getValue).mapToDouble(SimpleBar::getLow).min().getAsDouble();
+            double max = mp.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().getAsDouble();
+            double min = mp.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().getAsDouble();
+            //System.out.println(" last max min " + last + " " + max + " " + min);
             return (int) Math.round(100d * (last - min) / (max - min));
         }
         return 0;
@@ -74,10 +75,10 @@ public class SharpeUtility {
      * This method takes in a map of arbitrage type and spits out a return map
      *
      * @param <T>
-     * @param mp the map to operate on ( could be bar or double)
-     * @param getDiff takes in two values and computeYtd the return
-     * @param getClose depending on data type, get the close, either identity or
-     * SimpleBar::getClose
+     * @param mp             the map to operate on ( could be bar or double)
+     * @param getDiff        takes in two values and computeYtd the return
+     * @param getClose       depending on data type, get the close, either identity or
+     *                       SimpleBar::getClose
      * @param getFirstReturn function to get the first return
      * @return the return map Map<String, Double>
      */
@@ -102,7 +103,7 @@ public class SharpeUtility {
     public static double computeMinuteSharpeFromMtmDeltaMp(NavigableMap<LocalTime, Double> mtmDeltaMp) {
         //System.out.println(" computeYtd minute sharpe from mtm mp ");
         NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
-        retMap = genReturnMap(mtmDeltaMp, (u, v) -> u / v - 1, d -> d, d -> 0.0, LocalTime.of(15,1));
+        retMap = genReturnMap(mtmDeltaMp, (u, v) -> u / v - 1, d -> d, d -> 0.0, LocalTime.of(15, 1));
 
         double minuteMean = Utility.computeMean(retMap);
         double minuteSD = Utility.computeSD(retMap);
@@ -115,7 +116,7 @@ public class SharpeUtility {
 
     public static double computeMinuteNetPnlSharpe(NavigableMap<LocalTime, Double> netPnlMp) {
         NavigableMap<LocalTime, Double> diffMap = new TreeMap<>();
-        diffMap = genReturnMap(netPnlMp, (u, v) -> u - v, d -> d, d -> 0.0, LocalTime.of(15,1));
+        diffMap = genReturnMap(netPnlMp, (u, v) -> u - v, d -> d, d -> 0.0, LocalTime.of(15, 1));
         double minuteMean = Utility.computeMean(diffMap);
         double minuteSD = Utility.computeSD(diffMap);
         if (minuteSD != 0.0) {
@@ -129,7 +130,7 @@ public class SharpeUtility {
         NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
         if (mp.size() > 0) {
             retMap = genReturnMap(mp, (u, v) -> u / v - 1, SimpleBar::getClose, SimpleBar::getBarReturn,
-                    LocalTime.of(16,1));
+                    LocalTime.of(16, 1));
             double minuteMean = Utility.computeMean(retMap);
             double minuteSD = Utility.computeSD(retMap);
             if (minuteSD != 0.0) {
@@ -144,7 +145,7 @@ public class SharpeUtility {
         NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
         if (mp.size() > 0) {
             retMap = genReturnMap(mp, (u, v) -> u / v - 1, SimpleBar::getClose, SimpleBar::getBarReturn,
-                    LocalTime.of(16,1));
+                    LocalTime.of(16, 1));
             double minuteMean = Utility.computeMean(retMap);
             double minuteSD = Utility.computeSD(retMap);
             if (minuteSD != 0.0) {
