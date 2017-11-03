@@ -1,13 +1,13 @@
 package auxiliary;
 
-import apidemo.ChinaMain;
+import apidemo.TradingConstants;
 import graph.Graph;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridLayout;
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -16,17 +16,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-//import java.util;s
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+
 import static java.util.stream.Collectors.toList;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableRowSorter;
+
+//import java.util;s
 
 public class Backtesting extends JPanel {
 
@@ -49,7 +44,7 @@ public class Backtesting extends JPanel {
 
             List<Integer> numbers;
 
-            numbers = Files.lines(Paths.get(ChinaMain.GLOBALPATH + "Table2.txt"))
+            numbers = Files.lines(Paths.get(TradingConstants.GLOBALPATH + "Table2.txt"))
                     .map(line -> line.split("\\s+"))
                     .flatMap(Arrays::stream)
                     .map(Integer::valueOf)

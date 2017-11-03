@@ -1,35 +1,28 @@
 package auxiliary;
 
 import apidemo.ChinaMain;
-import auxiliary.TopModel;
+import apidemo.TradingConstants;
+import client.Types;
+import controller.ApiController.IHistoricalDataHandler;
+import controller.Bar;
 import util.HtmlButton;
 import util.NewTabbedPanel;
 import util.TCombo;
 import util.VerticalPanel;
-import client.Types;
-import controller.ApiController.IHistoricalDataHandler;
-import controller.Bar;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
+
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
+
 import static java.util.stream.Collectors.toList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellRenderer;
 
 public final class HistData extends JPanel implements IHistoricalDataHandler {
 
@@ -94,7 +87,7 @@ public final class HistData extends JPanel implements IHistoricalDataHandler {
         // HashMap<Double,Double> map2 = new HashMap<Double,Double>();
 
         //m2      
-        numbers = Files.lines(Paths.get(ChinaMain.GLOBALPATH + "Table2.txt"))
+        numbers = Files.lines(Paths.get(TradingConstants.GLOBALPATH + "Table2.txt"))
                 .map(line -> line.split("\\s+"))
                 .flatMap(Arrays::stream)
                 .map(Integer::valueOf)

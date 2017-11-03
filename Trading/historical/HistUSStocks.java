@@ -1,7 +1,7 @@
 package historical;
 
-import apidemo.ChinaMain;
 import apidemo.MorningTask;
+import apidemo.TradingConstants;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
@@ -67,7 +67,7 @@ public class HistUSStocks extends JPanel  {
 
 
     public static List<String> usNameList = new LinkedList<>();
-    public static File usTestOutput = new File(ChinaMain.GLOBALPATH + "usTestData.txt");
+    public static File usTestOutput = new File(TradingConstants.GLOBALPATH + "usTestData.txt");
 
     static volatile AtomicInteger uniqueID = new AtomicInteger(60000);
     static volatile String selectedStock = "";
@@ -87,14 +87,14 @@ public class HistUSStocks extends JPanel  {
     GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
     GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
 
-    public static File outputYtd = new File(ChinaMain.GLOBALPATH + "usSharpeYtd.txt");
-    public static File outputWtd = new File(ChinaMain.GLOBALPATH + "usSharpeWtd.txt");
+    public static File outputYtd = new File(TradingConstants.GLOBALPATH + "usSharpeYtd.txt");
+    public static File outputWtd = new File(TradingConstants.GLOBALPATH + "usSharpeWtd.txt");
 
 
     public HistUSStocks() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + USCurrent), "gbk"))) {
+                new FileInputStream(TradingConstants.GLOBALPATH + USCurrent), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 USALLYtd.put(al1.get(0), new TreeMap<>());

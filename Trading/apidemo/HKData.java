@@ -41,7 +41,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
     int modelRow;
     int indexRow;
     static TableRowSorter<BarModel_HKData> sorter;
-    File testOutput = new File(ChinaMain.GLOBALPATH + "hkTestData.txt");
+    File testOutput = new File(TradingConstants.GLOBALPATH + "hkTestData.txt");
 
     public HKData() {
 
@@ -56,7 +56,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
 
         String line;
         try (BufferedReader reader1 = new BufferedReader(
-                new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "hkMainList.txt")))) {
+                new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "hkMainList.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 hkPriceBar.put(al1.get(0), new ConcurrentSkipListMap<>());

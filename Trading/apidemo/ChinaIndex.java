@@ -103,7 +103,7 @@ final class ChinaIndex extends JPanel {
     //static final Predicate<? super Entry<LocalTime,SimpleBar>> IS_OPEN_PRED = e->e.getKey().isAfter(AM929T);
     ChinaIndex() {
         try (BufferedReader reader1 = new BufferedReader(
-                new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "Industry.txt"), "gbk"))) {
+                new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "Industry.txt"), "gbk"))) {
 
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));

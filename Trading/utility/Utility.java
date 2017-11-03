@@ -26,9 +26,9 @@ import java.util.function.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static apidemo.ChinaMain.tdxPath;
 import static apidemo.ChinaStock.priceMap;
 import static apidemo.ChinaStock.symbolNames;
+import static apidemo.TradingConstants.tdxPath;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.util.stream.Collectors.groupingBy;

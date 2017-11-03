@@ -1,7 +1,5 @@
 package apidemo;
 
-import static utility.Utility.pd;
-
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
@@ -12,7 +10,6 @@ import handler.HistoricalHandler;
 import utility.Utility;
 
 import java.io.*;
-//import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
@@ -30,11 +27,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static utility.Utility.pd;
+
+//import java.net.InetSocketAddress;
+
 public final class MorningTask implements HistoricalHandler {
 
-    public static File output = new File(ChinaMain.GLOBALPATH + "morningOutput.txt");
-    static File bocOutput = new File(ChinaMain.GLOBALPATH + "BOCUSD.txt");
-    static File fxOutput = new File(ChinaMain.GLOBALPATH + "fx.txt");
+    public static File output = new File(TradingConstants.GLOBALPATH + "morningOutput.txt");
+    static File bocOutput = new File(TradingConstants.GLOBALPATH + "BOCUSD.txt");
+    static File fxOutput = new File(TradingConstants.GLOBALPATH + "fx.txt");
     static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export\\" : "J:\\TDX\\T0002\\export\\";
     static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
@@ -456,12 +457,12 @@ public final class MorningTask implements HistoricalHandler {
 
     static void processShcomp() {
 
-        final String tdxPath = ChinaMain.tdxPath;
-        File output = new File(ChinaMain.GLOBALPATH + "shcomp.txt");
+        final String tdxPath = TradingConstants.tdxPath;
+        File output = new File(TradingConstants.GLOBALPATH + "shcomp.txt");
         LocalDate t = LocalDate.now();
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + "mostRecentTradingDate.txt"), "gbk"))) {
+                new FileInputStream(TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt"), "gbk"))) {
             String line;
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));

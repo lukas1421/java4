@@ -122,7 +122,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 //        } catch (IOException x) {
 //            x.printStackTrace();
 //        }
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "wtdSumSumSq.txt")))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "wtdSumSumSq.txt")))) {
             String line;
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
@@ -987,7 +987,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 
     static void outputSampleStock() {
         //System.out.println(" writing 000905 ");
-        File output = new File(ChinaMain.GLOBALPATH + "test000905.txt");
+        File output = new File(TradingConstants.GLOBALPATH + "test000905.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, false))) {
             ChinaData.priceMapBar.get("sh000905").entrySet().stream().forEach(e -> {
                 try {
@@ -1012,7 +1012,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
     }
 
     static void readSharpeFromFile(String file, Map<String, Double> mp) {
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + file)))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + file)))) {
             String line;
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));

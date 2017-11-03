@@ -122,7 +122,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     ChinaPosition() {
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + "fx.txt")))) {
+                new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 //System.out.println(" al1 " + al1);
@@ -337,7 +337,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         List<String> res;
         Pattern p = Pattern.compile("sh|sz");
         Matcher m;
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "wtdMaxMin.txt"), "gbk"))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "wtdMaxMin.txt"), "gbk"))) {
             while ((line1 = reader1.readLine()) != null) {
                 res = Arrays.asList(line1.split("\\s+"));
                 m = p.matcher(res.get(0));
@@ -674,7 +674,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         int stockCodeCol = 0;
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + "openPosition.txt"), "gbk"))) {
+                new FileInputStream(TradingConstants.GLOBALPATH + "openPosition.txt"), "gbk"))) {
 
             while ((line = reader1.readLine()) != null) {
                 dataList = Arrays.asList(line.split("\\s+"));
@@ -727,7 +727,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         int stockCodeCol = 10;
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader
-                (new FileInputStream(ChinaMain.GLOBALPATH + "openPositionMargin.txt"), "gbk"))) {
+                (new FileInputStream(TradingConstants.GLOBALPATH + "openPositionMargin.txt"), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
                 dataList = Arrays.asList(line.split("\\s+"));
                 System.out.println(Arrays.asList(line.split("\\s+")));
@@ -775,12 +775,12 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         int buySellCol = 0;
         int beizhuCol = 0;
 
-        File output = new File(ChinaMain.GLOBALPATH + "currentPositionProcessed.txt");
+        File output = new File(TradingConstants.GLOBALPATH + "currentPositionProcessed.txt");
         MorningTask.clearFile(output);
         //MorningTask.simpleWriteToFile("", false, hkTestOutput); //clear content
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + "currentPosition.txt"), "gbk"))) {
+                new FileInputStream(TradingConstants.GLOBALPATH + "currentPosition.txt"), "gbk"))) {
 
             while ((line = reader1.readLine()) != null) {
                 dataList = Arrays.asList(line.split("\\s+"));
@@ -865,7 +865,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         //System.out.println(" getting current margin position ");
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + "marginCurrentPosition.txt"), "gbk"))) {
+                new FileInputStream(TradingConstants.GLOBALPATH + "marginCurrentPosition.txt"), "gbk"))) {
 
             while ((line = reader1.readLine()) != null) {
                 dataList = Arrays.asList(line.split("\\s+"));

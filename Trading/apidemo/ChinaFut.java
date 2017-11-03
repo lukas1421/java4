@@ -3,17 +3,9 @@ package apidemo;
 import auxiliary.GraphXU;
 import graph.GraphChinaFut;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
@@ -23,16 +15,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 
 public class ChinaFut extends JPanel implements Runnable {
 
@@ -60,8 +45,8 @@ public class ChinaFut extends JPanel implements Runnable {
     GraphXU graph5 = new GraphXU();
     GraphXU graph6 = new GraphXU();
 
-    static File source = new File(ChinaMain.GLOBALPATH + "chinafut.ser");
-    static File backup = new File(ChinaMain.GLOBALPATH + "chinafutbackup.ser");
+    static File source = new File(TradingConstants.GLOBALPATH + "chinafut.ser");
+    static File backup = new File(TradingConstants.GLOBALPATH + "chinafutbackup.ser");
 
     public ChinaFut() {
 

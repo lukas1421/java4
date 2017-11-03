@@ -3,51 +3,31 @@ package apidemo;
 //import static apidemo.XU.graphCreated;
 //import static apidemo.XU.indexPrice;
 //import static apidemo.XU.indexPriceSina;
+
 import auxiliary.GraphXU;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
+import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.TreeMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static java.util.stream.Collectors.toMap;
 import java.util.stream.IntStream;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellRenderer;
+
+import static java.util.stream.Collectors.toMap;
 
 final class Shcomp extends JPanel implements Runnable {
 
@@ -84,15 +64,15 @@ final class Shcomp extends JPanel implements Runnable {
 
     BarModel m_model = new BarModel();
 
-    static File source = new File(ChinaMain.GLOBALPATH + "SHCOMP.ser");
-    static File backup = new File(ChinaMain.GLOBALPATH + "SHCOMPBackup.ser");
+    static File source = new File(TradingConstants.GLOBALPATH + "SHCOMP.ser");
+    static File backup = new File(TradingConstants.GLOBALPATH + "SHCOMPBackup.ser");
 
     Predicate<? super Entry<LocalTime, ?>> tradingRange = e -> ((e.getKey().isAfter(LocalTime.of(9, 29)) && e.getKey().isBefore(LocalTime.of(11, 30)))
             || (e.getKey().isAfter(LocalTime.of(13, 0)) && e.getKey().isBefore(LocalTime.of(15, 0))));
 
     Shcomp() {
         {
-            try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "prob.txt")))) {
+            try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "prob.txt")))) {
                 while ((line = reader1.readLine()) != null) {
                     List<String> al1 = Arrays.asList(line.split("\t"));
                     list.add(al1);
@@ -144,7 +124,7 @@ final class Shcomp extends JPanel implements Runnable {
 
         btnSave.addActionListener(al -> {
             CompletableFuture.runAsync(() -> {
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(ChinaMain.GLOBALPATH + "SHCOMP.ser"))) {
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(TradingConstants.GLOBALPATH + "SHCOMP.ser"))) {
                     saveMap.put(1, shcompPrice);
                     saveMap.put(2, dProb);
                     saveMap.put(3, maxProb);
@@ -161,7 +141,7 @@ final class Shcomp extends JPanel implements Runnable {
 
         btnLoad.addActionListener(al -> {
             CompletableFuture.runAsync(() -> {
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(ChinaMain.GLOBALPATH + "SHCOMP.ser"))) {
+                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(TradingConstants.GLOBALPATH + "SHCOMP.ser"))) {
                     saveMap = (ConcurrentHashMap<Integer, Object>) ois.readObject();
                     //System.out.println("ois readobject" + (loadMap = (ConcurrentHashMap<Integer, Object>)ois.readObject()));
                     shcompPrice = (ConcurrentSkipListMap<LocalTime, Double>) saveMap.get(1);

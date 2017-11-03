@@ -66,7 +66,7 @@ public class SinaStock implements Runnable {
             || (lt.isAfter(LocalTime.of(12, 58)) && lt.isBefore(LocalTime.of(15, 05)));
 
     private SinaStock() {
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "FTSEA50Ticker.txt")))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "FTSEA50Ticker.txt")))) {
             List<String> dataA50;
             while ((line = reader1.readLine()) != null) {
                 dataA50 = Arrays.asList(line.split("\t"));

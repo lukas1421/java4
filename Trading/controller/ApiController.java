@@ -4,6 +4,7 @@ package controller;
 
 import apidemo.ChinaMain;
 import apidemo.HKData;
+import apidemo.TradingConstants;
 import client.*;
 import client.Types.*;
 import controller.ApiConnection.ILogger;
@@ -107,7 +108,7 @@ public class ApiController implements EWrapper {
         }
 
         try {
-            numbers = Files.lines(Paths.get(apidemo.ChinaMain.GLOBALPATH + "Table2.txt"))
+            numbers = Files.lines(Paths.get(TradingConstants.GLOBALPATH + "Table2.txt"))
                     .map(line -> line.split("\\s+"))
                     .flatMap(Arrays::stream)
                     .map(Integer::valueOf)
@@ -917,7 +918,7 @@ public class ApiController implements EWrapper {
         ct.symbol("XINA50");
         ct.exchange("SGX");
         ct.currency("USD");
-        ct.lastTradeDateOrContractMonth(apidemo.ChinaMain.GLOBALA50EXPIRY);
+        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50EXPIRY);
         ct.secType(SecType.FUT);
         //m_symReqMap.put(reqId,"XINA50");
         m_topMktDataMap.put(reqId, handler);
@@ -931,7 +932,7 @@ public class ApiController implements EWrapper {
         c.exchange("SGX");
         c.currency("USD");
         c.secType(Types.SecType.FUT);
-        c.lastTradeDateOrContractMonth(apidemo.ChinaMain.GLOBALA50EXPIRY);
+        c.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50EXPIRY);
 
         c.right(Types.Right.None);
         c.secIdType(Types.SecIdType.None);
@@ -965,7 +966,7 @@ public class ApiController implements EWrapper {
         c.exchange("SGX");
         c.currency("USD");
         c.secType(Types.SecType.FUT);
-        c.lastTradeDateOrContractMonth(apidemo.ChinaMain.GLOBALA50EXPIRY);
+        c.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50EXPIRY);
 
         String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));

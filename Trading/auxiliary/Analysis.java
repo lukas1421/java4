@@ -1,52 +1,29 @@
 package auxiliary;
 
-import apidemo.ChinaMain;
-import graph.Graph;
 import apidemo.LiveData;
+import apidemo.TradingConstants;
+import graph.Graph;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import javax.swing.*;
+import javax.swing.RowFilter.ComparisonType;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import static java.lang.Math.log;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Optional;
-import java.util.SortedMap;
-import java.util.NavigableMap;
-import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.stream.Collectors;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JScrollPane;
-import javax.swing.table.AbstractTableModel;
 
-import javax.swing.JPanel;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.RowFilter;
-import javax.swing.RowFilter.ComparisonType;
-import javax.swing.table.TableRowSorter;
+import static java.lang.Math.log;
 
 public class Analysis extends JPanel {
     //static class BarResultsPanel extends NewTabbedPanel.NewTabPanel implements ApiController.IHistoricalDataHandler, ApiController.IRealTimeBarHandler {
@@ -111,7 +88,7 @@ public class Analysis extends JPanel {
             actThresh = 10;
             maxRepThresh = 100;
 
-            InputStreamReader reader = new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "Table6.txt"), "gbk");
+            InputStreamReader reader = new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "Table6.txt"), "gbk");
             BufferedReader reader1 = new BufferedReader(reader);
             //HashMap<Integer, String> map = new HashMap<Integer, String>();
 

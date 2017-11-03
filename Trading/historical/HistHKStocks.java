@@ -1,7 +1,7 @@
 package historical;
 
-import apidemo.ChinaMain;
 import apidemo.MorningTask;
+import apidemo.TradingConstants;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
@@ -49,7 +49,7 @@ public class HistHKStocks extends JPanel {
 
     public static final LocalDate MONDAY_OF_WEEK = getMondayOfWeek(LocalDateTime.now());
 
-    public final static File hkTestOutput = new File(ChinaMain.GLOBALPATH + "hkTestData.txt");
+    public final static File hkTestOutput = new File(TradingConstants.GLOBALPATH + "hkTestData.txt");
 
     //ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
     static ApiController apcon = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
@@ -63,8 +63,8 @@ public class HistHKStocks extends JPanel {
     private static volatile Map<String, HKResult> HKResultMapWtd = new HashMap<>();
 
     public static List<String> hkNameList = new LinkedList<>();
-    public static File outputYtd = new File(ChinaMain.GLOBALPATH + "hkSharpeYtd.txt");
-    public static File outputWtd = new File(ChinaMain.GLOBALPATH + "hkSharpeWtd.txt");
+    public static File outputYtd = new File(TradingConstants.GLOBALPATH + "hkSharpeYtd.txt");
+    public static File outputWtd = new File(TradingConstants.GLOBALPATH + "hkSharpeWtd.txt");
 
     static volatile AtomicInteger uniqueID = new AtomicInteger(70000);
 
@@ -90,7 +90,7 @@ public class HistHKStocks extends JPanel {
         String line;
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + "hkMainList.txt"), "gbk"))) {
+                new FileInputStream(TradingConstants.GLOBALPATH + "hkMainList.txt"), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 hkYtdAll.put(al1.get(0), new TreeMap<>());

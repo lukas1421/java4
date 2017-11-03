@@ -3,7 +3,7 @@ package historical;
 import TradeType.MarginTrade;
 import TradeType.NormalTrade;
 import TradeType.Trade;
-import apidemo.ChinaMain;
+import apidemo.TradingConstants;
 import auxiliary.SimpleBar;
 import graph.GraphBarTemporal;
 import graph.GraphChinaPnl;
@@ -103,6 +103,9 @@ public class HistChinaStocks extends JPanel {
 
     public static LocalDate recentTradingDate;
 
+    static volatile Predicate<? super Map.Entry<String, ?>> MTM_PRED = m -> true;
+
+
     private int modelRow;
     int indexRow;
     private static volatile String selectedStock = "";
@@ -111,7 +114,7 @@ public class HistChinaStocks extends JPanel {
     public HistChinaStocks() {
         String line;
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH+"mostRecentTradingDate.txt")))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH+"mostRecentTradingDate.txt")))) {
             line = reader.readLine();
             recentTradingDate = LocalDate.parse(line, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         } catch(IOException io) {
@@ -309,9 +312,26 @@ public class HistChinaStocks extends JPanel {
         JButton getTodayTradesButton = new JButton("Today trades");
         JButton liveUpdateButton = new JButton("Compute");
         JButton stopButton = new JButton("stop");
-        JButton noFutButton = new JButton(" no fut");
-        JButton futOnlyButton = new JButton ("fut only");
+        JToggleButton noFutButton = new JToggleButton(" no fut");
+        JToggleButton futOnlyButton = new JToggleButton ("fut only");
 
+        noFutButton.addActionListener(l->{
+            if (noFutButton.isSelected()) {
+                MTM_PRED = m -> !m.getKey().equals("SGXA50");
+            } else {
+                MTM_PRED = m -> true;
+            }
+
+        });
+
+        futOnlyButton.addActionListener(l->{
+            if (futOnlyButton.isSelected()) {
+                MTM_PRED = m -> !m.getKey().equals("SGXA50");
+            } else {
+                MTM_PRED = m -> true;
+            }
+
+        });
 
         refreshButton.addActionListener(al -> {
             refreshAll();
@@ -331,7 +351,6 @@ public class HistChinaStocks extends JPanel {
         wtdButton.addActionListener(al -> {
             CompletableFuture.runAsync(HistChinaStocks::computeWtd).thenRun(() -> {
                 System.out.println(" wtd ended ");
-                //refreshAll();
                 SwingUtilities.invokeLater(() -> {
                     model.fireTableDataChanged();
                     this.repaint();
@@ -343,7 +362,6 @@ public class HistChinaStocks extends JPanel {
             CompletableFuture.runAsync(HistChinaStocks::loadTradeList).thenRun(() -> {
                 System.out.println(" loading trade list finished ");
                 computeButton.doClick();
-                //refreshAll();
             });
         });
 
@@ -421,6 +439,8 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(updatePriceButton);
         controlPanel.add(getTodayDataButton);
         controlPanel.add(getTodayTradesButton);
+        controlPanel.add(noFutButton);
+        controlPanel.add(futOnlyButton);
 
         this.setLayout(new BorderLayout());
         this.add(controlPanel, BorderLayout.NORTH);
@@ -467,24 +487,23 @@ public class HistChinaStocks extends JPanel {
     private static void refreshAll() {
         CompletableFuture.runAsync(() -> {
             graphWtdPnl.fillInGraph("");
-            graphWtdPnl.setMtm(computeWtdMtmPnl(e -> true));
-            graphWtdPnl.setTrade(computeWtdTradePnl(e -> true));
-            graphWtdPnl.setNet(computeNet(e -> true));
+            graphWtdPnl.setMtm(computeWtdMtmPnl(MTM_PRED));
+            graphWtdPnl.setTrade(computeWtdTradePnl(MTM_PRED));
+            graphWtdPnl.setNet(computeNet(MTM_PRED));
             graphWtdPnl.setWeekdayMtm(netPnlByWeekday, netPnlByWeekdayAM, netPnlByWeekdayPM);
-            graphWtdPnl.setAvgPerc(computeAvgPercentile(e->true));
-            graphWtdPnl.setDeltaWeightedAveragePerc(computeDeltaWeightedPercentile(e->true));
+            graphWtdPnl.setAvgPerc(computeAvgPercentile(MTM_PRED));
+            graphWtdPnl.setDeltaWeightedAveragePerc(computeDeltaWeightedPercentile(MTM_PRED));
         }).thenRun(() -> {
             SwingUtilities.invokeLater(() -> {
                 model.fireTableDataChanged();
                 graphWtdPnl.repaint();
-                //repaint();
             });
         });
 
 
     }
 
-    private static NavigableMap<LocalDateTime, Double> computeWtdMtmPnl(Predicate<? super Map.Entry> p) {
+    private static NavigableMap<LocalDateTime, Double> computeWtdMtmPnl(Predicate<? super Map.Entry<String,?>> p) {
         Map<String, Integer> weekOpenPositionMap = new HashMap<>();
         for (String s : chinaTradeMap.keySet()) {
             int openPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONDAY_OF_WEEK))
@@ -512,7 +531,7 @@ public class HistChinaStocks extends JPanel {
     }
 
 
-    private static NavigableMap<LocalDateTime, Double> computeWtdTradePnl(Predicate<? super Map.Entry> p) {
+    private static NavigableMap<LocalDateTime, Double> computeWtdTradePnl(Predicate<? super Map.Entry<String,?>> p) {
         weekTradePnlMap = chinaTradeMap.entrySet().stream().filter(p).map(e ->
                 computeTrade(e.getKey(), chinaWtd.get(e.getKey()), e.getValue()))
                 .reduce(mapOp).orElse(new ConcurrentSkipListMap<>());
@@ -541,7 +560,7 @@ public class HistChinaStocks extends JPanel {
         return res;
     }
 
-    private static NavigableMap<LocalDateTime, Double> computeNet(Predicate<? super Map.Entry> p) {
+    private static NavigableMap<LocalDateTime, Double> computeNet(Predicate<? super Map.Entry<String,?>> p) {
         NavigableMap<LocalDateTime, Double> res = mapOp.apply(computeWtdMtmPnl(p), computeWtdTradePnl(p));
         computeNetPnlByWeekday(res);
         return res;
@@ -726,7 +745,7 @@ public class HistChinaStocks extends JPanel {
             chinaTradeMap.put(k, new ConcurrentSkipListMap<>());
         });
 
-        File f = new File(ChinaMain.GLOBALPATH + "tradeHistoryRecap.txt");
+        File f = new File(TradingConstants.GLOBALPATH + "tradeHistoryRecap.txt");
         String line;
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(f), "GBK"))) {
 

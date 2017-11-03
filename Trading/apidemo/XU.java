@@ -1,69 +1,46 @@
 package apidemo;
 
 //import static auxiliary.Analysis.symbolNames;
-import static apidemo.ChinaData.priceMapBar;
-import static utility.Utility.blobify;
-import static utility.Utility.getStr;
-import static saving.Hibtask.unblob;
-// com.ib.controller.TickType;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.TreeMap;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellRenderer;
 
 import auxiliary.GraphXU;
 import auxiliary.SimpleBar;
+import client.TickType;
+import client.Types.MktDataType;
 import controller.ApiController.ITopMktDataHandler;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import static java.lang.Double.max;
-import static java.lang.Double.min;
-import static java.lang.Math.round;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.NavigableMap;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import javax.swing.JButton;
-
 import graph.GraphBar;
 import graph.GraphXUSI;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import static graph.GraphXUSI.AM900;
-import client.TickType;
-import client.Types.MktDataType;
 import saving.HibernateUtil;
 import saving.XuSave;
 import utility.Utility;
 
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
 import java.util.Map.Entry;
-import javax.swing.SwingUtilities;
+import java.util.concurrent.*;
+
+import static apidemo.ChinaData.priceMapBar;
+import static graph.GraphXUSI.AM900;
+import static java.lang.Double.max;
+import static java.lang.Double.min;
+import static java.lang.Math.round;
+import static saving.Hibtask.unblob;
+import static utility.Utility.blobify;
+import static utility.Utility.getStr;
+
+// com.ib.controller.TickType;
 
 public final class XU extends JPanel implements ITopMktDataHandler {
 
@@ -98,8 +75,8 @@ public final class XU extends JPanel implements ITopMktDataHandler {
     String V2 = "V2";
     String prev = "";
     //String current = V1;
-    static final File SOURCE = new File(ChinaMain.GLOBALPATH + "XU.ser");
-    static final File BACKUP = new File(ChinaMain.GLOBALPATH + "XUBACKUP.ser");
+    static final File SOURCE = new File(TradingConstants.GLOBALPATH + "XU.ser");
+    static final File BACKUP = new File(TradingConstants.GLOBALPATH + "XUBACKUP.ser");
 
     public static boolean graphCreated = false;
 

@@ -3,40 +3,24 @@ package apidemo;
 import client.ContractDetails;
 import client.TickType;
 import client.Types.MktDataType;
+import controller.ApiController.IInternalHandler1;
+import controller.ApiController.ITopMktDataHandler1;
 import controller.Bar;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.io.IOException;
+
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import java.awt.*;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import static java.util.stream.Collectors.toList;
-import javax.swing.JScrollPane;
-import javax.swing.table.AbstractTableModel;
-import controller.ApiController.ITopMktDataHandler1;
-import controller.ApiController.IInternalHandler1;
-import java.io.File;
-
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import javax.swing.JButton;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.*;
 
-import javax.swing.JPanel;
-import javax.swing.JTable;
+import static java.util.stream.Collectors.toList;
 
 public final class LiveData extends JPanel implements ITopMktDataHandler1, IInternalHandler1 {
 
@@ -52,8 +36,8 @@ public final class LiveData extends JPanel implements ITopMktDataHandler1, IInte
     ArrayList<LocalTime> tradeTime = new ArrayList<>();
     ExecutorService es = Executors.newCachedThreadPool();
 
-    static File source = new File(ChinaMain.GLOBALPATH + "HKSS.ser");
-    static File backup = new File(ChinaMain.GLOBALPATH + "HKSSBackup.ser");
+    static File source = new File(TradingConstants.GLOBALPATH + "HKSS.ser");
+    static File backup = new File(TradingConstants.GLOBALPATH + "HKSSBackup.ser");
 
     public ConcurrentHashMap<Integer, ConcurrentSkipListMap<LocalTime, Double>> getMap() {
         System.out.println(" passing map ");
@@ -63,7 +47,7 @@ public final class LiveData extends JPanel implements ITopMktDataHandler1, IInte
     LiveData() {
 
         try {
-            List<Integer> numbers = Files.lines(Paths.get(ChinaMain.GLOBALPATH + "Table2.txt"))
+            List<Integer> numbers = Files.lines(Paths.get(TradingConstants.GLOBALPATH + "Table2.txt"))
                     .map(Integer::valueOf).peek(System.out::println)
                     .distinct()
                     .collect(toList());
@@ -152,7 +136,7 @@ public final class LiveData extends JPanel implements ITopMktDataHandler1, IInte
     void init1() throws IOException {
         System.out.println("reading file started");
         List<Integer> numbers;
-        numbers = Files.lines(Paths.get(ChinaMain.GLOBALPATH + "Table2.txt"))
+        numbers = Files.lines(Paths.get(TradingConstants.GLOBALPATH + "Table2.txt"))
                 .map(Integer::valueOf)
                 .distinct()
                 .collect(toList());

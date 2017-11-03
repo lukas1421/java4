@@ -35,8 +35,8 @@ public class HKStock extends JPanel {
     static JTable tab;
 
     static TableRowSorter<BarModel_HKStock> sorter;
-    final File hkstockFile= new File(ChinaMain.GLOBALPATH+"hkMainList.txt");
-    final File ahFile= new File(ChinaMain.GLOBALPATH+"AHList.txt");
+    final File hkstockFile= new File(TradingConstants.GLOBALPATH+"hkMainList.txt");
+    final File ahFile= new File(TradingConstants.GLOBALPATH+"AHList.txt");
     String line;
     public static List<String> symbolNamesHK = new LinkedList<>();
     public static Map<String, String> haMap  = new HashMap<>();

@@ -1,72 +1,5 @@
 package apidemo;
 
-import static utility.Utility.AMCLOSET;
-import static utility.Utility.AMOPENT;
-import static utility.Utility.AM_PRED;
-import static utility.Utility.BAR_HIGH;
-import static utility.Utility.BAR_LOW;
-import static utility.Utility.IS_OPEN_PRED;
-import static utility.Utility.PMOPENT;
-import static utility.Utility.PM_PRED;
-import static apidemo.ChinaStock.nameMap;
-import static utility.Utility.noZeroArrayGen;
-import static apidemo.ChinaStock.selectedNameStock;
-import static apidemo.ChinaStock.symbolNamesFull;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-
-import static java.lang.Double.min;
-import static java.lang.Math.log;
-import static java.lang.Math.round;
-
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
-import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.function.BiPredicate;
-import java.util.function.Predicate;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.JToggleButton;
-import javax.swing.RowFilter;
-import javax.swing.SwingUtilities;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableRowSorter;
-
 import auxiliary.SimpleBar;
 import graph.GraphIndustry;
 import org.hibernate.Session;
@@ -74,6 +7,30 @@ import org.hibernate.SessionFactory;
 import saving.ChinaSaveOHLCYV;
 import saving.HibernateUtil;
 import utility.Utility;
+
+import javax.swing.*;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableRowSorter;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.util.*;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.concurrent.*;
+import java.util.function.BiPredicate;
+import java.util.function.Predicate;
+
+import static apidemo.ChinaStock.*;
+import static java.lang.Double.min;
+import static java.lang.Math.log;
+import static java.lang.Math.round;
+import static utility.Utility.*;
 
 //process yesterday data
 public final class ChinaDataYesterday extends JPanel {
@@ -85,8 +42,8 @@ public final class ChinaDataYesterday extends JPanel {
     static ConcurrentHashMap<Integer, Map<String, ?>> saveMap = new ConcurrentHashMap<Integer, Map<String, ?>>();
     private int modelRow;
     static BarModel_YTD m_model;
-    static File source = new File(ChinaMain.GLOBALPATH + "CHINASSYesterday.ser");
-    static File backup = new File(ChinaMain.GLOBALPATH + "CHINABackupYesterday.ser");
+    static File source = new File(TradingConstants.GLOBALPATH + "CHINASSYesterday.ser");
+    static File backup = new File(TradingConstants.GLOBALPATH + "CHINABackupYesterday.ser");
     static ExecutorService es = Executors.newCachedThreadPool();
     public static volatile Map<String, Double> openMapY = new ConcurrentHashMap();
     public static volatile Map<String, Double> closeMapY = new ConcurrentHashMap();
@@ -172,7 +129,7 @@ public final class ChinaDataYesterday extends JPanel {
 
     ChinaDataYesterday() {
 
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "ma20.txt")))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "ma20.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 ma20Map.put(al1.get(0), Double.parseDouble(al1.get(1)));

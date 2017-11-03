@@ -80,7 +80,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
         ct.symbol("XINA50");
         ct.exchange("SGX");
         ct.currency("USD");
-        ct.lastTradeDateOrContractMonth(apidemo.ChinaMain.GLOBALA50EXPIRY);
+        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50EXPIRY);
         ct.secType(Types.SecType.FUT);
 
         JLabel currTimeLabel = new JLabel(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());

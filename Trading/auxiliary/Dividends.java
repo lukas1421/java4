@@ -1,7 +1,7 @@
 package auxiliary;
 
 import apidemo.ChinaData;
-import apidemo.ChinaMain;
+import apidemo.TradingConstants;
 import utility.Utility;
 
 import java.io.BufferedReader;
@@ -101,7 +101,7 @@ public class Dividends {
         Matcher m;
 
         Map<String, Dividends> adjFactor = new HashMap<>();
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ChinaMain.GLOBALPATH + "div.txt"), "gbk"))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "div.txt"), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
                 l = Arrays.asList(line.split("\\t+"));
                 m = p.matcher(l.get(1));

@@ -78,8 +78,6 @@ public final class ChinaMain implements IConnectionHandler {
     static volatile JLabel systemTime = new JLabel(Utility.timeNowToString());
     static volatile JLabel systemNotif = new JLabel("");
 
-    public static final String GLOBALPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";
-    public static final String GLOBALA50EXPIRY = "20171129";
     public static final int GLOBALWIDTH = 1900;
     public static volatile double CNHHKD = 1.18;
     final static int PORT_IBAPI = 4001;
@@ -139,9 +137,6 @@ public final class ChinaMain implements IConnectionHandler {
     private volatile AnaCompute anacompute = new AnaCompute();
     private volatile StratCompute stratcompute = new StratCompute();
     private final ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
-
-    public static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
-            ? "G:\\export_1m\\" : "J:\\TDX\\T0002\\export_1m\\";
 
     public ArrayList<String> accountList() {
         return m_acctList;

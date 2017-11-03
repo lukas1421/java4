@@ -78,17 +78,17 @@ public final class ChinaData extends JPanel {
     LocalTime lastLoadTime = Utility.AM929T;
     public static LocalTime lastDataTime = Utility.AM929T;
 
-    static File source = new File(ChinaMain.GLOBALPATH + "CHINASS.ser");
-    static File backup = new File(ChinaMain.GLOBALPATH + "CHINABackup.ser");
-    static File source2 = new File(ChinaMain.GLOBALPATH + "CHINASS2.ser");
-    static File backup2 = new File(ChinaMain.GLOBALPATH + "CHINABackup2.ser");
-    static File priceDetailedSource = new File(ChinaMain.GLOBALPATH + "priceDetailed.ser");
-    static File priceDetailedBackup = new File(ChinaMain.GLOBALPATH + "priceDetailedBackup.ser");
-    static File priceBarSource = new File(ChinaMain.GLOBALPATH + "priceBar.ser");
-    static File priceBarBackup = new File(ChinaMain.GLOBALPATH + "priceBarBackup.ser");
-    static File priceBarYtdSource = new File(ChinaMain.GLOBALPATH + "priceBarYtd.ser");
+    static File source = new File(TradingConstants.GLOBALPATH + "CHINASS.ser");
+    static File backup = new File(TradingConstants.GLOBALPATH + "CHINABackup.ser");
+    static File source2 = new File(TradingConstants.GLOBALPATH + "CHINASS2.ser");
+    static File backup2 = new File(TradingConstants.GLOBALPATH + "CHINABackup2.ser");
+    static File priceDetailedSource = new File(TradingConstants.GLOBALPATH + "priceDetailed.ser");
+    static File priceDetailedBackup = new File(TradingConstants.GLOBALPATH + "priceDetailedBackup.ser");
+    static File priceBarSource = new File(TradingConstants.GLOBALPATH + "priceBar.ser");
+    static File priceBarBackup = new File(TradingConstants.GLOBALPATH + "priceBarBackup.ser");
+    static File priceBarYtdSource = new File(TradingConstants.GLOBALPATH + "priceBarYtd.ser");
 
-    static File shcompSource = new File(ChinaMain.GLOBALPATH + "shcomp.txt");
+    static File shcompSource = new File(TradingConstants.GLOBALPATH + "shcomp.txt");
     public static JButton btnSave2;
     static ExecutorService es = Executors.newCachedThreadPool();
     static final Predicate<? super Entry<LocalTime, Double>> IS_OPEN = e -> e.getKey().isAfter(Utility.AM929T) && e.getValue() != 0.0;
@@ -392,7 +392,7 @@ public final class ChinaData extends JPanel {
 
     public static void outputPrices() {
         System.out.println(" outputting prices");
-        File output = new File(ChinaMain.GLOBALPATH + "pricesTodayYtd.csv");
+        File output = new File(TradingConstants.GLOBALPATH + "pricesTodayYtd.csv");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, false))) {
             symbolNames.forEach(s -> {
                 try {
@@ -410,7 +410,7 @@ public final class ChinaData extends JPanel {
 
     public static void outputRecentTradingDate() {
         System.out.println(" most recent trading date " + SinaStock.mostRecentTradingDay.toString());
-        File output = new File(ChinaMain.GLOBALPATH + "mostRecentTradingDate.txt");
+        File output = new File(TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt");
         //MorningTask.clearFile(usTestOutput);
         MorningTask.simpleWriteToFile(SinaStock.mostRecentTradingDay.toString(), false, output);
     }
@@ -444,7 +444,7 @@ public final class ChinaData extends JPanel {
         int lineNo = 0;
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
+                new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
             String line;
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));

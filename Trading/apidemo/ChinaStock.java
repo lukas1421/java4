@@ -235,7 +235,7 @@ public final class ChinaStock extends JPanel {
 
     public ChinaStock() {
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + "ChinaAllWeight.txt")))) {
+                new FileInputStream(TradingConstants.GLOBALPATH + "ChinaAllWeight.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 weightMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
@@ -256,7 +256,7 @@ public final class ChinaStock extends JPanel {
         }
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + "ChinaAll.txt"), "gbk"))) {
+                new FileInputStream(TradingConstants.GLOBALPATH + "ChinaAll.txt"), "gbk"))) {
 
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
@@ -284,7 +284,7 @@ public final class ChinaStock extends JPanel {
 //            ex.printStackTrace();
 //        }
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + "bench.txt"), "gbk"))) {
+                new FileInputStream(TradingConstants.GLOBALPATH + "bench.txt"), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 benchFullMap.put(al1.get(0), new Bench(al1.get(2), Double.parseDouble(al1.get(3))));
@@ -297,7 +297,7 @@ public final class ChinaStock extends JPanel {
         }
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(ChinaMain.GLOBALPATH + "sharpe.txt"), "gbk"))) {
+                new FileInputStream(TradingConstants.GLOBALPATH + "sharpe.txt"), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 sharpeMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
