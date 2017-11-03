@@ -3,9 +3,7 @@ package apidemo;
 import auxiliary.SimpleBar;
 import auxiliary.Strategy;
 import auxiliary.VolBar;
-import client.ExecutionFilter;
 import graph.GraphIndustry;
-import handler.SGXReportHandler;
 import historical.HistChinaStocks;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -196,7 +194,7 @@ public final class ChinaData extends JPanel {
 
         JButton saveHibYtdButton = new JButton("Save Hib Ytd");
         JButton saveHibY2Button = new JButton("Save Hib Y2");
-        JButton getSGXTradesButton = new JButton(" SGX Trades");
+
 
         //buttonUpPanel.add(btnSave);            buttonUpPanel.add(Box.createHorizontalStrut(10));
         //buttonUpPanel.add(btnSaveBar);         buttonUpPanel.add(Box.createHorizontalStrut(10));
@@ -244,8 +242,7 @@ public final class ChinaData extends JPanel {
         buttonDownPanel.add(retrieveTodayButton);
         buttonDownPanel.add(outputPricesButton);
         buttonDownPanel.add(Box.createHorizontalStrut(10));
-        buttonDownPanel.add(getSGXTradesButton);
-        buttonDownPanel.add(Box.createHorizontalStrut(10));
+
 
         add(jp, BorderLayout.NORTH);
 
@@ -378,17 +375,10 @@ public final class ChinaData extends JPanel {
             outputPrices();
         });
 
-        getSGXTradesButton.addActionListener(al->{
-            getSGXTrades();
-        });
 
     }
 
-    public static void getSGXTrades() {
 
-        controller().reqExecutions(new ExecutionFilter(), new SGXReportHandler());
-
-    }
 
     public static void outputPrices() {
         System.out.println(" outputting prices");

@@ -407,10 +407,8 @@ public class Utility {
     public static void getFilesFromTDXGen(LocalDate ld, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp1
             , Map<String, ? extends NavigableMap<LocalTime, Double>> mp2) {
 
-        //String tdxPath = "J:\\TDX\\T0002\\export_1m\\";
         LocalDate t = ld;
 
-        //boolean found = false;
         System.out.println(" localdate is " + t);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
@@ -511,7 +509,7 @@ public class Utility {
 
     @SafeVarargs
     public static NavigableMap<LocalDateTime, ? super Trade> mergeTradeMap(NavigableMap<LocalDateTime, ? super Trade>... mps) {
-        NavigableMap<LocalDateTime, ? super Trade> res = new ConcurrentSkipListMap<>();
+        NavigableMap<LocalDateTime, ? super Trade> res;
         res = Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.toMap(e -> ((LocalDateTime)e.getKey()),
                 Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
         return res;
@@ -547,7 +545,7 @@ public class Utility {
     }
 
     public static LocalTime roundTo5(LocalTime t) {
-        return max(LocalTime.of(9,35),(t.getMinute() % 5 == 0) ? t : t.plusMinutes(5 - t.getMinute() % 5));
+        return max(LocalTime.of(9,0),(t.getMinute() % 5 == 0) ? t : t.plusMinutes(5 - t.getMinute() % 5));
     }
 
     public static LocalDateTime roundTo5Ldt(LocalDateTime t) {
