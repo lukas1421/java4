@@ -38,7 +38,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
     double min;
     int height;
 
-    public static final int WIDTH_PNL = 5;
+    public static final int WIDTH_PNL = 4;
 
     public GraphChinaPnl() {
         mtmMap = new ConcurrentSkipListMap<>();
@@ -54,7 +54,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
 
     public void setTrade(NavigableMap<T, Double> input) {
         tradeMap = input;
-        //System.out.println(" print trade map in graph china pnl " + tradeMap);
+        System.out.println(" print trade map in graph china pnl " + tradeMap);
     }
 
     public void setNet(NavigableMap<T, Double> input) {

@@ -3,6 +3,7 @@ package utility;
 import TradeType.Trade;
 import apidemo.ChinaData;
 import apidemo.ChinaStock;
+import apidemo.MorningTask;
 import auxiliary.SimpleBar;
 import graph.GraphIndustry;
 import historical.HistChinaStocks;
@@ -566,5 +567,42 @@ public class Utility {
 
     public static <T> Comparator<T> reverseThis(Comparator<T> in) {
         return in.reversed();
+    }
+
+    public static void simpleWriteToFile(String s, boolean b, File f) {
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(f, b))) {
+            out.append(s);
+            out.newLine();
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+    }
+
+    public static void clearFile(File f) {
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(f, false))) {
+            out.flush();
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+    }
+
+    //        static void simpleWrite(LinkedList<String> s) {
+//        try (BufferedWriter out = new BufferedWriter(new FileWriter(usTestOutput))){
+//            String toWrite;
+//            while((toWrite=s.poll())!=null) {
+//                out.append(toWrite);
+//                out.newLine();
+//            }
+//        } catch ( IOException x) {
+//            x.printStackTrace();
+//        }
+//    }
+    public static void simpleWrite(String s, boolean b) {
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(MorningTask.output, b))) {
+            out.append(s);
+            out.newLine();
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
     }
 }

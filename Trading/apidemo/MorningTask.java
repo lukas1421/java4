@@ -49,7 +49,7 @@ public final class MorningTask implements HistoricalHandler {
     public static void runThis() {
         MorningTask mt = new MorningTask();
 
-        MorningTask.clearFile(output);
+        Utility.clearFile(output);
         //processShcomp();
         mt.getFX();
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
@@ -76,43 +76,6 @@ public final class MorningTask implements HistoricalHandler {
         }, 5, TimeUnit.SECONDS);
     }
 
-
-    //        static void simpleWrite(LinkedList<String> s) {
-//        try (BufferedWriter out = new BufferedWriter(new FileWriter(usTestOutput))){
-//            String toWrite;
-//            while((toWrite=s.poll())!=null) {
-//                out.append(toWrite);
-//                out.newLine();
-//            }
-//        } catch ( IOException x) {
-//            x.printStackTrace();
-//        }
-//    }
-    static void simpleWrite(String s, boolean b) {
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, b))) {
-            out.append(s);
-            out.newLine();
-        } catch (IOException x) {
-            x.printStackTrace();
-        }
-    }
-
-    public static void clearFile(File f) {
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(f, false))) {
-            out.flush();
-        } catch (IOException x) {
-            x.printStackTrace();
-        }
-    }
-
-    public static void simpleWriteToFile(String s, boolean b, File f) {
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(f, b))) {
-            out.append(s);
-            out.newLine();
-        } catch (IOException x) {
-            x.printStackTrace();
-        }
-    }
 
     static void writeIndexTDX(BufferedWriter out) {
         String line;
@@ -368,8 +331,8 @@ public final class MorningTask implements HistoricalHandler {
                 System.out.println("l " + l);
 
                 if (l.size() > 0) {
-                    clearFile(bocOutput);
-                    simpleWriteToFile("BOCFX" + "\t" + Double.parseDouble(l.get(4)) / 100d + "\t" + l.get(5) + "\t" + l.get(6), true,bocOutput);
+                    Utility.clearFile(bocOutput);
+                    Utility.simpleWriteToFile("BOCFX" + "\t" + Double.parseDouble(l.get(4)) / 100d + "\t" + l.get(5) + "\t" + l.get(6), true,bocOutput);
                     //simpleWrite("BOCFX" + "\t" + Double.parseDouble(l.get(4)) / 100d + "\t" + l.get(5) + "\t" + l.get(6), true);
                 }
 
@@ -386,7 +349,7 @@ public final class MorningTask implements HistoricalHandler {
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(bocOutput), "GBK"))) {
             while ((line = reader1.readLine()) != null) {
                 System.out.println(" outputting BOCFX " + line);
-                simpleWrite(line,true);
+                Utility.simpleWrite(line,true);
             }
         } catch (IOException io) {
             io.printStackTrace();
@@ -408,14 +371,14 @@ public final class MorningTask implements HistoricalHandler {
 
             switch (cal.get(Calendar.HOUR_OF_DAY)) {
                 case 13:
-                    simpleWrite("HK NOON" + "\t" + c + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), false);
+                    Utility.simpleWrite("HK NOON" + "\t" + c + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), false);
                     break;
                 case 16:
-                    simpleWrite("HK CLOSE" + "\t" + c + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
+                    Utility.simpleWrite("HK CLOSE" + "\t" + c + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
                     break;
                 case 4:
-                    simpleWrite("US CLOSE" + "\t" + c + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
-                    simpleWriteToFile("SGXA50" + "\t" + c, false, fxOutput);
+                    Utility.simpleWrite("US CLOSE" + "\t" + c + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
+                    Utility.simpleWriteToFile("SGXA50" + "\t" + c, false, fxOutput);
                     break;
             }
 
@@ -536,9 +499,9 @@ public final class MorningTask implements HistoricalHandler {
                 convertLTtoString(ammint), pmopen, pm1310, pmclose, pmmax, pmmin,
                 convertLTtoString(pmmaxt), convertLTtoString(pmmint));
 
-        clearFile(output);
-        simpleWriteToFile(headers, true, output);
-        simpleWriteToFile(data, true, output);
+        Utility.clearFile(output);
+        Utility.simpleWriteToFile(headers, true, output);
+        Utility.simpleWriteToFile(data, true, output);
 
     }
 
@@ -569,14 +532,14 @@ public final class MorningTask implements HistoricalHandler {
 
             switch (cal.get(Calendar.HOUR_OF_DAY)) {
                 case 13:
-                    simpleWrite("HK NOON" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), false);
+                    Utility.simpleWrite("HK NOON" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), false);
                     break;
                 case 16:
-                    simpleWrite("HK CLOSE" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
+                    Utility.simpleWrite("HK CLOSE" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
                     break;
                 case 4:
-                    simpleWrite("US CLOSE" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
-                    simpleWriteToFile("SGXA50" + "\t" + close, false, fxOutput);
+                    Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
+                    Utility.simpleWriteToFile("SGXA50" + "\t" + close, false, fxOutput);
                     break;
             }
         }

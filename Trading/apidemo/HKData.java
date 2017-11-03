@@ -45,7 +45,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
 
     public HKData() {
 
-        MorningTask.clearFile(testOutput);
+        Utility.clearFile(testOutput);
 
         for (LocalTime t = LocalTime.of(9, 19); t.isBefore(LocalTime.of(16, 1)); t = t.plusMinutes(1)) {
             if (t.isAfter(LocalTime.of(11, 59)) && t.isBefore(LocalTime.of(13, 0))) {
@@ -166,7 +166,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
             hkPriceBar.get(name).put(lt, new SimpleBar(open, high, low, close));
             if(name.equals("700")) {
                 System.out.println(" outputting tencent");
-                MorningTask.simpleWriteToFile(Utility.getStrTabbed(lt, open, high, low, close), true,
+                Utility.simpleWriteToFile(Utility.getStrTabbed(lt, open, high, low, close), true,
                         testOutput);
             }
 

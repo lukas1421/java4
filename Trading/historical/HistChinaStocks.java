@@ -58,6 +58,7 @@ public class HistChinaStocks extends JPanel {
 
     private File chinaInput = new File(GLOBALPATH + "ChinaAll.txt");
     private File priceInput = new File(GLOBALPATH + "pricesTodayYtd.csv");
+    private File sgxOutput = new File(GLOBALPATH+"sgxWtdOutput.txt");
 
     private static List<String> stockList = new LinkedList<>();
     private static volatile Map<String, NavigableMap<LocalDate, SimpleBar>> chinaYtd = new HashMap<>();
@@ -319,10 +320,10 @@ public class HistChinaStocks extends JPanel {
         JButton getSGXTradesButton = new JButton(" SGX Trades");
         JToggleButton noFutButton = new JToggleButton(" no fut");
         JToggleButton futOnlyButton = new JToggleButton("fut only");
+        JButton outputWtdButton = new JButton(" output wtd ");
 
 
-
-        getSGXTradesButton.addActionListener(al->{
+        getSGXTradesButton.addActionListener(al -> {
             getSGXTrades();
         });
 
@@ -351,6 +352,20 @@ public class HistChinaStocks extends JPanel {
                 MTM_PRED = m -> true;
             }
 
+        });
+
+        outputWtdButton.addActionListener(l -> {
+            if (chinaWtd.containsKey(selectedStock)) {
+                System.out.println(" outputting to file for " + selectedStock);
+                clearFile(sgxOutput);
+                chinaWtd.get(selectedStock).entrySet().forEach(e ->
+                        simpleWriteToFile(
+                                Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
+                                        , e.getValue().getLow()
+                                        , e.getValue().getClose()), true, sgxOutput));
+            } else {
+                System.out.println(" cannot find stock for outtputting ytd " + selectedStock);
+            }
         });
 
         refreshButton.addActionListener(al -> {
@@ -441,14 +456,6 @@ public class HistChinaStocks extends JPanel {
             }
         });
 
-        noFutButton.addActionListener(al -> {
-
-        });
-
-        futOnlyButton.addActionListener(al -> {
-
-
-        });
 
         controlPanel.setLayout(new FlowLayout());
         controlPanel.add(refreshButton);
@@ -463,6 +470,7 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(getSGXTradesButton);
         controlPanel.add(noFutButton);
         controlPanel.add(futOnlyButton);
+        controlPanel.add(outputWtdButton);
 
 
         this.setLayout(new BorderLayout());
@@ -488,7 +496,8 @@ public class HistChinaStocks extends JPanel {
 
 
             if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
-                if (lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(16, 1))) {
+                if ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
+                        || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(16, 1)))) {
 
                     LocalDateTime ldt = LocalDateTime.of(ld, lt);
                     LocalDateTime ltTo5 = Utility.roundTo5Ldt(ldt);
@@ -508,9 +517,11 @@ public class HistChinaStocks extends JPanel {
     }
 
     public static void getSGXTrades() {
+
+        HistChinaStocks.chinaTradeMap.put("SGXA50", new ConcurrentSkipListMap<>());
+
         ChinaMain.controller().reqExecutions(new ExecutionFilter(), new SGXReportHandler());
     }
-
 
 
     static int computeAvgPercentile(Predicate<? super Map.Entry<String, ?>> p) {
@@ -618,6 +629,10 @@ public class HistChinaStocks extends JPanel {
         if (currPos == 0) {
             return new ConcurrentSkipListMap<>();
         }
+        if (ticker.equals("SGXA50")) {
+            System.out.println(" SGX trade map is " + res);
+        }
+
         return res;
     }
 

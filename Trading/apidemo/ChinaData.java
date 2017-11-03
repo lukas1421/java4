@@ -402,7 +402,7 @@ public final class ChinaData extends JPanel {
         System.out.println(" most recent trading date " + SinaStock.mostRecentTradingDay.toString());
         File output = new File(TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt");
         //MorningTask.clearFile(usTestOutput);
-        MorningTask.simpleWriteToFile(SinaStock.mostRecentTradingDay.toString(), false, output);
+        Utility.simpleWriteToFile(SinaStock.mostRecentTradingDay.toString(), false, output);
     }
 
     static void getTodayTDX(LocalDate dat) {

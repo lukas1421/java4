@@ -776,7 +776,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         int beizhuCol = 0;
 
         File output = new File(TradingConstants.GLOBALPATH + "currentPositionProcessed.txt");
-        MorningTask.clearFile(output);
+        clearFile(output);
         //MorningTask.simpleWriteToFile("", false, hkTestOutput); //clear content
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
@@ -839,7 +839,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     String outputString = Utility.getStrTabbed(LocalDate.now().toString(), dataList.get(fillTimeCol), "Stock", " ", "CNY",
                             ticker.substring(0, 2).toUpperCase(), " ", "'" + dataList.get(stockCodeCol), dataList.get(buySellCol).equals("买入") ? "B" : "S",
                             "O", (dataList.get(buySellCol).equals("买入") ? "" : "-") + dataList.get(fillAmtCol), "1", dataList.get(fillPriceCol));
-                    MorningTask.simpleWriteToFile(outputString, true, output);
+                    simpleWriteToFile(outputString, true, output);
 
                     //hkTestOutput here to currentPositionProcessed
                 }

@@ -1,6 +1,5 @@
 package historical;
 
-import apidemo.MorningTask;
 import apidemo.TradingConstants;
 import auxiliary.SimpleBar;
 import client.Contract;
@@ -195,9 +194,9 @@ public class HistHKStocks extends JPanel {
 
         outputYtdButton.addActionListener(al -> {
             if (hkYtdAll.containsKey(selectedStock)) {
-                MorningTask.clearFile(hkTestOutput);
+                Utility.clearFile(hkTestOutput);
                 hkYtdAll.get(selectedStock).entrySet().forEach(e ->
-                        MorningTask.simpleWriteToFile(
+                        Utility.simpleWriteToFile(
                                 Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
                                         , e.getValue().getLow()
                                         , e.getValue().getClose()), true, hkTestOutput));
@@ -208,9 +207,9 @@ public class HistHKStocks extends JPanel {
 
         outputWtdButton.addActionListener(al -> {
             if (hkWtdAll.containsKey(selectedStock)) {
-                MorningTask.clearFile(hkTestOutput);
+                Utility.clearFile(hkTestOutput);
                 hkWtdAll.get(selectedStock).entrySet().forEach(e ->
-                        MorningTask.simpleWriteToFile(
+                        Utility.simpleWriteToFile(
                                 Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
                                         , e.getValue().getLow()
                                         , e.getValue().getClose()), true, hkTestOutput));
@@ -252,14 +251,14 @@ public class HistHKStocks extends JPanel {
 
     void requestAllHKStocksYtd() {
         stocksProcessedYtd = new AtomicLong(0);
-        MorningTask.clearFile(HistHKStocks.outputYtd);
+        Utility.clearFile(HistHKStocks.outputYtd);
         hkYtdAll.keySet().forEach(k -> request1StockYtd(k));
         //request1StockYtd("700");
     }
 
     void requestAllHKStocksWtd() {
         stocksProcessedWtd = new AtomicLong(0);
-        MorningTask.clearFile(HistHKStocks.outputWtd);
+        Utility.clearFile(HistHKStocks.outputWtd);
         hkWtdAll.keySet().forEach(k -> request1StockWtd(k));
         //request1StockWtd("700");
     }

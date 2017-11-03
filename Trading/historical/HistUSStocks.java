@@ -1,6 +1,5 @@
 package historical;
 
-import apidemo.MorningTask;
 import apidemo.TradingConstants;
 import auxiliary.SimpleBar;
 import client.Contract;
@@ -198,9 +197,9 @@ public class HistUSStocks extends JPanel  {
         JButton outputYtdButton = new JButton("Output Y");
         outputYtdButton.addActionListener(al->{
             if(USALLYtd.containsKey(selectedStock)) {
-                MorningTask.clearFile(usTestOutput);
+                Utility.clearFile(usTestOutput);
                 USALLYtd.get(selectedStock).entrySet().forEach(e->
-                        MorningTask.simpleWriteToFile(
+                        Utility.simpleWriteToFile(
                                 Utility.getStrTabbed(e.getKey(),e.getValue().getOpen(),e.getValue().getHigh()
                                         ,e.getValue().getLow()
                                         ,e.getValue().getClose()), true, usTestOutput));
@@ -212,9 +211,9 @@ public class HistUSStocks extends JPanel  {
         JButton outputWtdButton = new JButton("Output W");
         outputWtdButton.addActionListener(al-> {
             if(USALLWtd.containsKey(selectedStock)) {
-                MorningTask.clearFile(usTestOutput);
+                Utility.clearFile(usTestOutput);
                 USALLWtd.get(selectedStock).entrySet().forEach(e ->
-                        MorningTask.simpleWriteToFile(
+                        Utility.simpleWriteToFile(
                                 Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
                                         , e.getValue().getLow()
                                         , e.getValue().getClose()), true, usTestOutput));
@@ -270,13 +269,13 @@ public class HistUSStocks extends JPanel  {
 
     void requestAllUSStocksYtd() {
         stocksProcessedYtd = new AtomicLong(0);
-        MorningTask.clearFile(HistUSStocks.outputYtd);
+        Utility.clearFile(HistUSStocks.outputYtd);
         USALLYtd.keySet().forEach(k -> request1StockYtd(k));
     }
 
     void requestAllUSStocksWtd() {
         stocksProcessedWtd = new AtomicLong(0);
-        MorningTask.clearFile(HistUSStocks.outputWtd);
+        Utility.clearFile(HistUSStocks.outputWtd);
         USALLWtd.keySet().forEach(k -> request1StockWtd(k));
     }
 
