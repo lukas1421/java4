@@ -11,6 +11,7 @@ public class FutPositionHandler implements ApiController.IPositionHandler {
         if (contract.symbol().equals("XINA50")) {
             System.out.println(" XU position is " + position);
             ChinaPosition.xuCurrentPosition = (int) position;
+
         }
     }
 

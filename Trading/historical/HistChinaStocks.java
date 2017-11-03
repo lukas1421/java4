@@ -158,13 +158,9 @@ public class HistChinaStocks extends JPanel {
             e.printStackTrace();
         }
 
-
         graphPanel = new JPanel();
-
         model = new BarModel_China();
-
         tab = new JTable(model) {
-
             @Override
             public Component prepareRenderer(TableCellRenderer renderer, int indexRow, int indexCol) {
                 try {
@@ -173,6 +169,13 @@ public class HistChinaStocks extends JPanel {
                         modelRow = this.convertRowIndexToModel(indexRow);
                         selectedStock = stockList.get(modelRow);
                         comp.setBackground(Color.GREEN);
+
+                        if(chinaTradeMap.get(selectedStock).size()>0) {
+                            System.out.println(" trades are " + chinaTradeMap.get(selectedStock));
+                        } else {
+                            System.out.println(" trades not available ");
+                        }
+
                         CompletableFuture.runAsync(() -> {
                             CompletableFuture.runAsync(() -> {
                                 graphYtd.fillInGraphChinaGen(selectedStock, chinaYtd);
@@ -437,7 +440,7 @@ public class HistChinaStocks extends JPanel {
     static int computeDeltaWeightedPercentile(Predicate<? super Map.Entry<String,?>> p) {
         //double sumDelta = stockList.stream().mapToDouble(s->getCurrentPos(s)*priceMap.getOrDefault(s,0.0)).sum();
         double sumDelta = chinaWtd.entrySet().stream().filter(p).mapToDouble(e->getCurrentDelta(e.getKey())).sum();
-        System.out.println(" sum delta is " + sumDelta);
+        //System.out.println(" sum delta is " + sumDelta);
         return (int)Math.round(chinaWtd.entrySet().stream().filter(e->getCurrentPos(e.getKey())>0).filter(p)
                 .mapToDouble(e->getCurrentDelta(e.getKey())/sumDelta*SharpeUtility.getPercentile(e.getValue()))
                 .sum());
@@ -771,8 +774,18 @@ public class HistChinaStocks extends JPanel {
         for (String s : chinaTradeMap.keySet()) {
             NavigableMap<LocalDateTime, Integer> res =
                     chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
+                            .peek(e->{
+                                if(s.equals("SGXA50")) {
+                                    System.out.println(e);
+                                }
+                            })
                             .collect(Collectors.groupingBy(e1 -> Utility.roundTo5Ldt(e1.getKey()), ConcurrentSkipListMap::new,
                                     Collectors.summingInt(e1 -> ((Trade) e1.getValue()).getSizeAll())));
+
+            if(s.equals("SGXA50")) {
+                System.out.println(chinaTradeMap.get(s));
+                System.out.println(" SGXA50 compute net shares traded wtd " + res );
+            }
             netSharesTradedWtd.put(s, res);
         }
         //graphWtd.setTradesMap();

@@ -32,7 +32,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
     static ApiController apcon = new ApiController(new XUConnectionHandler(),
             new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
 
-    // ApiController apcon = new ApiController(new IConnectionHandler.DefaultConnectionHandler(),new ApiConnection.ILogger.DefaultLogger(),new ApiConnection.ILogger.DefaultLogger());
+    // ApiController apcon = new ApiController(new IConnectionHandler.DefaultConnectionHandler()
+    // ,new ApiConnection.ILogger.DefaultLogger(),new ApiConnection.ILogger.DefaultLogger());
+
     public final Contract ct = new Contract();
     List<Integer> orderList = new LinkedList<>();
     //AtomicInteger orderInitial = new AtomicInteger(3000001);

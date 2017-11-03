@@ -1,30 +1,23 @@
 package apidemo;
 
-import static apidemo.ChinaDataYesterday.convertTimeToInt;
-import static apidemo.ChinaMain.controller;
-import static apidemo.ChinaStock.*;
-import static historical.HistChinaStocks.chinaWtd;
-import static utility.Utility.blobify;
-import static utility.Utility.getStr;
+import auxiliary.SimpleBar;
+import auxiliary.Strategy;
+import auxiliary.VolBar;
+import client.ExecutionFilter;
+import graph.GraphIndustry;
+import handler.SGXReportHandler;
+import historical.HistChinaStocks;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import saving.*;
+import utility.Utility;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import javax.swing.*;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -32,51 +25,23 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-
-import static java.time.temporal.ChronoUnit.SECONDS;
-
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.Optional;
-
-import static java.util.Optional.ofNullable;
-
-import java.util.TreeMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-import javax.swing.table.TableCellRenderer;
 
-import graph.GraphIndustry;
-import historical.HistChinaStocks;
-import saving.ChinaSaveInterface2Blob;
-import auxiliary.SimpleBar;
-import auxiliary.Strategy;
-import auxiliary.VolBar;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import saving.*;
-import utility.Utility;
+import static apidemo.ChinaDataYesterday.convertTimeToInt;
+import static apidemo.ChinaMain.controller;
+import static apidemo.ChinaStock.*;
+import static historical.HistChinaStocks.chinaWtd;
+import static java.time.temporal.ChronoUnit.SECONDS;
+import static java.util.Optional.ofNullable;
+import static utility.Utility.blobify;
+import static utility.Utility.getStr;
 
 public final class ChinaData extends JPanel {
 
@@ -231,6 +196,7 @@ public final class ChinaData extends JPanel {
 
         JButton saveHibYtdButton = new JButton("Save Hib Ytd");
         JButton saveHibY2Button = new JButton("Save Hib Y2");
+        JButton getSGXTradesButton = new JButton(" SGX Trades");
 
         //buttonUpPanel.add(btnSave);            buttonUpPanel.add(Box.createHorizontalStrut(10));
         //buttonUpPanel.add(btnSaveBar);         buttonUpPanel.add(Box.createHorizontalStrut(10));
@@ -277,6 +243,8 @@ public final class ChinaData extends JPanel {
         buttonDownPanel.add(retrieveAllButton);
         buttonDownPanel.add(retrieveTodayButton);
         buttonDownPanel.add(outputPricesButton);
+        buttonDownPanel.add(Box.createHorizontalStrut(10));
+        buttonDownPanel.add(getSGXTradesButton);
         buttonDownPanel.add(Box.createHorizontalStrut(10));
 
         add(jp, BorderLayout.NORTH);
@@ -409,6 +377,16 @@ public final class ChinaData extends JPanel {
         outputPricesButton.addActionListener(l -> {
             outputPrices();
         });
+
+        getSGXTradesButton.addActionListener(al->{
+            getSGXTrades();
+        });
+
+    }
+
+    public static void getSGXTrades() {
+
+        controller().reqExecutions(new ExecutionFilter(), new SGXReportHandler());
 
     }
 

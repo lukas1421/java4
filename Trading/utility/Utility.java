@@ -512,7 +512,7 @@ public class Utility {
     @SafeVarargs
     public static NavigableMap<LocalDateTime, ? super Trade> mergeTradeMap(NavigableMap<LocalDateTime, ? super Trade>... mps) {
         NavigableMap<LocalDateTime, ? super Trade> res = new ConcurrentSkipListMap<>();
-        res = Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.toMap(e -> (LocalDateTime) (e.getKey()),
+        res = Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.toMap(e -> ((LocalDateTime)e.getKey()),
                 Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
         return res;
     }
@@ -540,18 +540,31 @@ public class Utility {
             //SimpleBar sb = new SimpleBar((SimpleBar)e.getValue());
             LocalTime lt = (LocalTime) e.getKey();
             if (lt.isBefore(LocalTime.of(15, 1))) {
-                res.put(LocalDateTime.of(ld,lt), (T) (e.getValue()));
+                res.put(LocalDateTime.of(ld,lt), (T)e.getValue());
             }
         }
         return res;
     }
 
     public static LocalTime roundTo5(LocalTime t) {
-        return (t.getMinute() % 5 == 0) ? t : t.plusMinutes(5 - t.getMinute() % 5);
+
+        return max(LocalTime.of(9,35),(t.getMinute() % 5 == 0) ? t : t.plusMinutes(5 - t.getMinute() % 5));
     }
 
     public static LocalDateTime roundTo5Ldt(LocalDateTime t) {
         return LocalDateTime.of(t.toLocalDate(), roundTo5(t.truncatedTo(ChronoUnit.MINUTES).toLocalTime()));
+    }
+
+    public static LocalTime min(LocalTime... lts) {
+        return Arrays.stream(lts).reduce(LocalTime.MAX,localTimeGen(LocalTime::isBefore));
+    }
+
+    public static LocalTime max(LocalTime... lts) {
+        return Arrays.stream(lts).reduce(LocalTime.MIN,localTimeGen(LocalTime::isAfter));
+    }
+
+    public static BinaryOperator<LocalTime> localTimeGen(BiPredicate<LocalTime, LocalTime> bp) {
+        return (a,b)-> bp.test(a,b)?a:b;
     }
 
     public static <T> Comparator<T> reverseThis(Comparator<T> in) {

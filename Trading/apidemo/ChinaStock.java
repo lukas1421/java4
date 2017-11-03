@@ -600,7 +600,7 @@ public final class ChinaStock extends JPanel {
 
 
                 ftes.scheduleAtFixedRate(() -> {
-                    System.out.println(" computeing graph industry ");
+                    //System.out.println(" computeing graph industry ");
                     GraphIndustry.compute();
                 }, 0, 1000, TimeUnit.MILLISECONDS);
 
