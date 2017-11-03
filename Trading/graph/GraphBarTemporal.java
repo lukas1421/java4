@@ -64,8 +64,11 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
     public void setTradesMap(NavigableMap<T, Integer> tm) {
         //System.out.println(" trade history is " + tm);
+
         histTradesMap = tm;
         netCurrentPosition = tm.entrySet().stream().mapToInt(Map.Entry::getValue).sum();
+
+        System.out.println(" setting trades map " + tm + " net current position " + netCurrentPosition);
     }
 
     public void setTradePnl(double p) {
@@ -148,7 +151,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         } else {
             this.setNavigableMap(new ConcurrentSkipListMap<>());
         }
-        SwingUtilities.invokeLater(()->{this.repaint();});
+        SwingUtilities.invokeLater(this::repaint);
 
     }
 
@@ -206,6 +209,11 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
             if(histTradesMap.containsKey(lt)) {
                 int q = histTradesMap.get(lt);
+
+                if(!name.equals("SGXA50")) {
+                    q = (int)Math.round(q/1000.0);
+                }
+
                 if(lt.getClass()==LocalDateTime.class) {
                     g.setColor(Color.blue);
                     g.drawString(((LocalDateTime)lt).toLocalTime().toString(), x, getHeight()-20);
@@ -217,7 +225,11 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                     Polygon p = new Polygon(new int[]{xCord - 10, xCord, xCord + 10}, new int[]{yCord + 10, yCord, yCord + 10}, 3);
                     g.drawPolygon(p);
                     g.fillPolygon(p);
-                    g.drawString(Long.toString(Math.round(q/1000.0)), xCord, yCord+25);
+                    g.drawString(Integer.toString(q), xCord, yCord+25);
+
+//                    if(name.equals("SGXA50")) {
+//                        System.out.println(" SGXA50 trades found  + hist trades map is " + histTradesMap);
+//                    }
                     //g.drawString();
                 } else {
                     g.setColor(Color.black);
@@ -226,7 +238,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                     Polygon p1 = new Polygon(new int[]{xCord - 10, xCord, xCord + 10}, new int[]{yCord - 10, yCord, yCord - 10}, 3);
                     g.drawPolygon(p1);
                     g.fillPolygon(p1);
-                    g.drawString(Long.toString(Math.round(q/1000.0)), xCord, yCord-25);
+                    g.drawString(Integer.toString(q), xCord, yCord-25);
                 }
 
                 //g.drawString(lt.toString(), x, getHeight()-40);

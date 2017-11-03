@@ -547,7 +547,6 @@ public class Utility {
     }
 
     public static LocalTime roundTo5(LocalTime t) {
-
         return max(LocalTime.of(9,35),(t.getMinute() % 5 == 0) ? t : t.plusMinutes(5 - t.getMinute() % 5));
     }
 

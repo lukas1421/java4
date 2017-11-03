@@ -771,6 +771,9 @@ public class HistChinaStocks extends JPanel {
     }
 
     private static void computeNetSharesTradedWtd() {
+
+        System.out.println(" compute net shares traded wtd ");
+
         for (String s : chinaTradeMap.keySet()) {
             NavigableMap<LocalDateTime, Integer> res =
                     chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
@@ -782,11 +785,14 @@ public class HistChinaStocks extends JPanel {
                             .collect(Collectors.groupingBy(e1 -> Utility.roundTo5Ldt(e1.getKey()), ConcurrentSkipListMap::new,
                                     Collectors.summingInt(e1 -> ((Trade) e1.getValue()).getSizeAll())));
 
+
+            netSharesTradedWtd.put(s, res);
+
             if(s.equals("SGXA50")) {
                 System.out.println(chinaTradeMap.get(s));
                 System.out.println(" SGXA50 compute net shares traded wtd " + res );
+                System.out.println( " net shares traded wtd s " + netSharesTradedWtd.get(s));
             }
-            netSharesTradedWtd.put(s, res);
         }
         //graphWtd.setTradesMap();
     }
