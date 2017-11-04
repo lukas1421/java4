@@ -90,9 +90,9 @@ public class HistChinaStocks extends JPanel {
     static volatile NavigableMap<LocalDateTime, Double> weekTradePnlMap = new ConcurrentSkipListMap<>();
     static volatile NavigableMap<LocalDateTime, Double> weekNetMap = new ConcurrentSkipListMap<>();
 
-    private static NavigableMap<LocalDate, Double> netPnlByWeekday = new ConcurrentSkipListMap<>();
-    private static NavigableMap<LocalDate, Double> netPnlByWeekdayAM = new ConcurrentSkipListMap<>();
-    private static NavigableMap<LocalDate, Double> netPnlByWeekdayPM = new ConcurrentSkipListMap<>();
+    static volatile NavigableMap<LocalDate, Double> netPnlByWeekday = new ConcurrentSkipListMap<>();
+    static volatile NavigableMap<LocalDate, Double> netPnlByWeekdayAM = new ConcurrentSkipListMap<>();
+    static volatile NavigableMap<LocalDate, Double> netPnlByWeekdayPM = new ConcurrentSkipListMap<>();
 
     int avgPercentile;
     int weightedAvgPercentile;
@@ -347,7 +347,7 @@ public class HistChinaStocks extends JPanel {
 
         futOnlyButton.addActionListener(l -> {
             if (futOnlyButton.isSelected()) {
-                MTM_PRED = m -> !m.getKey().equals("SGXA50");
+                MTM_PRED = m -> m.getKey().equals("SGXA50");
             } else {
                 MTM_PRED = m -> true;
             }
@@ -557,16 +557,20 @@ public class HistChinaStocks extends JPanel {
     }
 
     private static void refreshAll() {
+        System.out.println(" mtm_ pred " + MTM_PRED);
         CompletableFuture.runAsync(() -> {
             graphWtdPnl.fillInGraph("");
-            graphWtdPnl.setMtm(computeWtdMtmPnl(MTM_PRED));
             graphWtdPnl.setTrade(computeWtdTradePnl(MTM_PRED));
             graphWtdPnl.setNet(computeNet(MTM_PRED));
-            graphWtdPnl.setWeekdayMtm(netPnlByWeekday, netPnlByWeekdayAM, netPnlByWeekdayPM);
             graphWtdPnl.setAvgPerc(computeAvgPercentile(MTM_PRED));
             graphWtdPnl.setDeltaWeightedAveragePerc(computeDeltaWeightedPercentile(MTM_PRED));
         }).thenRun(() -> {
             SwingUtilities.invokeLater(() -> {
+                graphWtdPnl.setMtm(computeWtdMtmPnl(MTM_PRED));
+                if(selectedStock.equals("SGXA50")) {
+                    System.out.println(weekMtmMap);
+                }
+                graphWtdPnl.setWeekdayMtm(netPnlByWeekday, netPnlByWeekdayAM, netPnlByWeekdayPM);
                 model.fireTableDataChanged();
                 graphWtdPnl.repaint();
             });
@@ -629,9 +633,9 @@ public class HistChinaStocks extends JPanel {
         if (currPos == 0) {
             return new ConcurrentSkipListMap<>();
         }
-        if (ticker.equals("SGXA50")) {
-            System.out.println(" SGX trade map is " + res);
-        }
+//        if (ticker.equals("SGXA50")) {
+//            System.out.println(" SGX trade map is " + res);
+//        }
 
         return res;
     }

@@ -54,7 +54,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
 
     public void setTrade(NavigableMap<T, Double> input) {
         tradeMap = input;
-        System.out.println(" print trade map in graph china pnl " + tradeMap);
+        //System.out.println(" print trade map in graph china pnl " + tradeMap);
     }
 
     public void setNet(NavigableMap<T, Double> input) {
