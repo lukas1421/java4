@@ -45,7 +45,6 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
     @Override
     public void tradeReportEnd() {
         System.out.println(" trade report end");
-
     }
 
     @Override

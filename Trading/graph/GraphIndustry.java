@@ -259,9 +259,7 @@ public class GraphIndustry extends JComponent {
                                         collectingAndThen(reducing(SimpleBar.addSB()), e1 -> e1.orElseGet(SimpleBar::new))))))))))
                 .thenAccept(m -> {
                     industryMapBar = m;
-
-                    CompletableFuture.runAsync(() -> processIndustry());
-
+                    CompletableFuture.runAsync(GraphIndustry::processIndustry);
                     industryMapBar.keySet().forEach(s -> {
                         if (industryMapBar.get(s).size() > 0) {
 
@@ -282,8 +280,8 @@ public class GraphIndustry extends JComponent {
                                 ChinaStock.priceMap.put(s, industryMapBar.get(s).lastEntry().getValue().getClose());
                             });
                             CompletableFuture.runAsync(() -> {
-                                ChinaStock.closeMap.put(s, Optional.ofNullable(priceMapBarYtd.get(s)).map(e -> e.lastEntry()).map(Entry::getValue).map(SimpleBar::getClose)
-                                        .orElse(Optional.ofNullable(industryMapBar.get(s)).map(e -> e.firstEntry()).map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0)));
+                                ChinaStock.closeMap.put(s, Optional.ofNullable(priceMapBarYtd.get(s)).map(ConcurrentSkipListMap::lastEntry).map(Entry::getValue).map(SimpleBar::getClose)
+                                        .orElse(Optional.ofNullable(industryMapBar.get(s)).map(ConcurrentSkipListMap::firstEntry).map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0)));
                             });
                         }
                     });
@@ -322,7 +320,7 @@ public class GraphIndustry extends JComponent {
     public static double getIndustryOpen(String sector) {
         try {
             return ChinaStock.openMap.entrySet().stream().filter(NO_GC)
-                    .filter(e -> ChinaStock.industryNameMap.get(e.getKey()).equals(sector)).collect(summingDouble(Entry::getValue));
+                    .filter(e -> ChinaStock.industryNameMap.get(e.getKey()).equals(sector)).mapToDouble(Entry::getValue).sum();
         } catch (Exception x) {
             System.out.println(" sector wrong " + sector);
             x.printStackTrace();
@@ -336,7 +334,7 @@ public class GraphIndustry extends JComponent {
                         .collect(groupingByConcurrent(e -> ChinaStock.industryNameMap.get(e.getKey()),
                                 mapping(Entry::getValue, Collectors.collectingAndThen(toList(),
                                         e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(TRADING_HOURS))
-                                .collect(groupingBy(Entry::getKey, ConcurrentSkipListMap::new, summingDouble(e1 -> e1.getValue()))))))))
+                                .collect(groupingBy(Entry::getKey, ConcurrentSkipListMap::new, summingDouble(Entry::getValue))))))))
                 .thenAccept(
                         mp -> mp.keySet().forEach(s -> {
                             if (mp.get(s).size() > 0) {

@@ -32,8 +32,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     int last = 0;
     double rtn = 0;
     int percentile;
-    NavigableMap<T, SimpleBar> mainMap;
-    NavigableMap<T, Integer> histTradesMap;
+    NavigableMap<T, SimpleBar> mainMap = new ConcurrentSkipListMap<>();
+    NavigableMap<T, Integer> histTradesMap = new ConcurrentSkipListMap<>();
     int netCurrentPosition;
     double currentTradePnl;
     double currentMtmPnl;
@@ -64,11 +64,9 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
     public void setTradesMap(NavigableMap<T, Integer> tm) {
         //System.out.println(" trade history is " + tm);
-
         histTradesMap = tm;
         netCurrentPosition = tm.entrySet().stream().mapToInt(Map.Entry::getValue).sum();
-
-        System.out.println(" setting trades map " + tm + " net current position " + netCurrentPosition);
+        //System.out.println(" setting trades map " + tm + " net current position " + netCurrentPosition);
     }
 
     public void setTradePnl(double p) {
