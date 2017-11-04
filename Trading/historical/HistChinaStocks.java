@@ -938,7 +938,6 @@ public class HistChinaStocks extends JPanel {
                 .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommission(s)).sum();
         int netPosition = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(cutoff))
                 .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
-
         return fxMap.getOrDefault(s, 1.0) * (netPosition * priceMap.getOrDefault(s, 0.0) + costBasis);
     }
 
@@ -948,7 +947,6 @@ public class HistChinaStocks extends JPanel {
                     .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommission(s)).sum();
             int netPosition = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
-
             wtdTradePnlMap.put(s, fxMap.getOrDefault(s, 1.0) * (netPosition * priceMap.getOrDefault(s, 0.0) + costBasis));
         }
     }
