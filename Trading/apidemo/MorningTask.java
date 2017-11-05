@@ -248,8 +248,6 @@ public final class MorningTask implements HistoricalHandler {
                 while ((line = reader2.readLine()) != null) {
                     Matcher m = p.matcher(line);
                     while (m.find()) {
-                        //System.out.println (" found " + line);
-                        //out.write("FTSE A50 " + m.group().replace(",", ""));
                         System.out.println(m.group());
                         List<String> sp = Arrays.asList(m.group(1).replace(",", "")
                                 .split("</td><td>")); //m.group()

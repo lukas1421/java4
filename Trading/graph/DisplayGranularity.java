@@ -1,9 +1,10 @@
 package graph;
 
 public enum DisplayGranularity {
-    DAYDATA(0), _1MDATA(1),_5MDATA(5);
+    DAYDATA(0), _1MDATA(1), _5MDATA(5);
 
     int minuteDiff;
+
     DisplayGranularity(int m) {
         minuteDiff = m;
     }

@@ -1,13 +1,10 @@
 package auxiliary;
 
 import apidemo.ChinaData;
-import auxiliary.SimpleBar;
 
-import static apidemo.ChinaData.tradeTime;
-import static apidemo.ChinaStock.nameMap;
-import static apidemo.ChinaStock.symbolNames;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import java.awt.*;
 import java.time.LocalTime;
 import java.util.Iterator;
 import java.util.Map;
@@ -17,13 +14,10 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-import javax.swing.table.AbstractTableModel;
+
+import static apidemo.ChinaData.tradeTime;
+import static apidemo.ChinaStock.nameMap;
+import static apidemo.ChinaStock.symbolNames;
 
 public class ChinaPeakAnalysis extends JPanel {
 
@@ -77,14 +71,14 @@ public class ChinaPeakAnalysis extends JPanel {
         });
     }
 
-    public static void analyse(String name) {
+    public void analyse(String name) {
 
-        TreeMap<LocalTime, Double> tm = new TreeMap(ChinaData.priceMapBar.get(name).entrySet().stream()
+        TreeMap<LocalTime, Double> tm = ChinaData.priceMapBar.get(name).entrySet().stream()
                 .filter(e -> e.getValue().getClose() > Optional.ofNullable(ChinaData.priceMapBar.get(name)
                         .get(e.getKey().minusMinutes(1L))).map(SimpleBar::getClose).orElse(Double.MAX_VALUE)
                 && e.getValue().getClose() >= Optional.ofNullable(ChinaData.priceMapBar.get(name).get(e.getKey().plusMinutes(1L))).map(SimpleBar::getClose)
                         .orElse(Double.MAX_VALUE))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+                .collect(Collectors.groupingBy(Entry::getKey,TreeMap::new, Collectors.summingDouble(e->e.getValue().getClose())));
 
         Iterator<Map.Entry<LocalTime, Double>> it = tm.entrySet().iterator();
         Entry<LocalTime, Double> en;

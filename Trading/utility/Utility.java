@@ -139,11 +139,11 @@ public class Utility {
     }
 
     public static <T> BinaryOperator<NavigableMap<T, Double>> mapBinOp() {
-        return (a, b) -> mapCominberGen((x, y) -> x + y, a, b);
+        return (a, b) -> mapCominberGen(Double::sum, a, b);
     }
 
     public static <T> BinaryOperator<NavigableMap<T, Double>> mapBinOp(Predicate<? super Map.Entry<T, ?>> p) {
-        return (a, b) -> mapCominberGen((x, y) -> x + y, p, a, b);
+        return (a, b) -> mapCominberGen(Double::sum, p, a, b);
     }
 
     @SafeVarargs

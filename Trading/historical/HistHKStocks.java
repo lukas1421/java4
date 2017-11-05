@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 public class HistHKStocks extends JPanel {
 
@@ -99,7 +98,7 @@ public class HistHKStocks extends JPanel {
             }
         } catch (IOException ex) {
         }
-        hkNameList = hkYtdAll.keySet().stream().collect(Collectors.toList());
+        hkNameList = new ArrayList<>(hkYtdAll.keySet());
         System.out.println(" hk name list " + hkNameList);
 
         m_model = new BarModel_HK();
@@ -195,11 +194,10 @@ public class HistHKStocks extends JPanel {
         outputYtdButton.addActionListener(al -> {
             if (hkYtdAll.containsKey(selectedStock)) {
                 Utility.clearFile(hkTestOutput);
-                hkYtdAll.get(selectedStock).entrySet().forEach(e ->
-                        Utility.simpleWriteToFile(
-                                Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
-                                        , e.getValue().getLow()
-                                        , e.getValue().getClose()), true, hkTestOutput));
+                hkYtdAll.get(selectedStock).forEach((key, value) -> Utility.simpleWriteToFile(
+                        Utility.getStrTabbed(key, value.getOpen(), value.getHigh()
+                                , value.getLow()
+                                , value.getClose()), true, hkTestOutput));
             } else {
                 System.out.println(" cannot find stock for outtputting ytd " + selectedStock);
             }
@@ -208,11 +206,10 @@ public class HistHKStocks extends JPanel {
         outputWtdButton.addActionListener(al -> {
             if (hkWtdAll.containsKey(selectedStock)) {
                 Utility.clearFile(hkTestOutput);
-                hkWtdAll.get(selectedStock).entrySet().forEach(e ->
-                        Utility.simpleWriteToFile(
-                                Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
-                                        , e.getValue().getLow()
-                                        , e.getValue().getClose()), true, hkTestOutput));
+                hkWtdAll.get(selectedStock).forEach((key, value) -> Utility.simpleWriteToFile(
+                        Utility.getStrTabbed(key, value.getOpen(), value.getHigh()
+                                , value.getLow()
+                                , value.getClose()), true, hkTestOutput));
             } else {
                 System.out.println(" cannot find stock for outputting wtd " + selectedStock);
             }

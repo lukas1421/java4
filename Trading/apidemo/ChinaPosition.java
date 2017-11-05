@@ -108,9 +108,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     static volatile double xuOpenPrice;
     static volatile double xuPreviousClose;
 
-    static volatile Predicate<? super Map.Entry<String, ?>> NO_FUT_PRED = m -> !m.getKey().equals("SGXA50");
+    //static volatile Predicate<? super Map.Entry<String, ?>> NO_FUT_PRED = m -> !m.getKey().equals("SGXA50");
     static volatile Predicate<? super Map.Entry<String, ?>> GEN_MTM_PRED = m -> true;
-    //static Predicate<Map<String, ?>> NO_FUT_PRED = m-> m.get
 
     @Override
     public void scrollRectToVisible(Rectangle aRect) {
@@ -120,15 +119,12 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     public static volatile boolean buySellTogether = true;
 
     ChinaPosition() {
-
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                //System.out.println(" al1 " + al1);
                 fxMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
             }
-            //System.out.println(" fx map is " + fxMap);
         } catch (IOException x) {
             x.printStackTrace();
         }
@@ -479,8 +475,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
             todayNetPnl = Optional.ofNullable(tradePNLMap.lastEntry()).map(Entry::getValue).orElse(0.0) + netYtdPnl
                     + Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0);
-            //}
-
 
             netPNLMap = Utility.mapCominberGen(Double::sum, mtmPNLMap, tradePNLMap);
             mtmDeltaSharpe = SharpeUtility.computeMinuteSharpeFromMtmDeltaMp(mtmDeltaMap);

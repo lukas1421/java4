@@ -85,7 +85,6 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
                         ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
-        //System.out.println(" mainMap in set navigable map is " + mainMap);
     }
 
     public NavigableMap<T, SimpleBar> getNavigableMap() {
@@ -134,7 +133,6 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         SwingUtilities.invokeLater(()->{
             this.repaint();
         });
-
     }
 
     public void fillInGraphChinaGen(String name, Map<String, NavigableMap<T, SimpleBar>> mp) {
