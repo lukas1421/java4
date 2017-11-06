@@ -984,7 +984,8 @@ public class HistChinaStocks extends JPanel {
                          .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
                  weekOpenPositionMap.put(s, posBeforeThisWeek);
                  wtdMtmPnlMap.put(s, fxMap.getOrDefault(s, 1.0)
-                         * (posBeforeThisWeek * (priceMapForHist.getOrDefault(s, 0.0) - lastWeekCloseMap.getOrDefault(s, 0.0))));
+                         * (posBeforeThisWeek * (chinaWtd.get(s).lastEntry().getValue().getClose()
+                         - lastWeekCloseMap.getOrDefault(s, chinaWtd.get(s).firstEntry().getValue().getOpen()))));
              }
         }
     }
@@ -1141,7 +1142,7 @@ public class HistChinaStocks extends JPanel {
             };
 
             if(name.equals("SGXA50")) {
-                costBasisMap.put(name,lastWeekCloseMap.getOrDefault("SGXA50",0.0)*currentPositionMap.getOrDefault(name,0));
+                costBasisMap.put(name,-1.0*fx*lastWeekCloseMap.getOrDefault("SGXA50",0.0)*currentPositionMap.getOrDefault(name,0));
             }
 
 
