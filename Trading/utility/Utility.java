@@ -334,9 +334,7 @@ public class Utility {
     }
 
     public static void fixPriceMap(Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp) {
-        mp.entrySet().forEach((e) -> {
-            fixNavigableMap(e.getKey(), e.getValue());
-        });
+        mp.forEach(Utility::fixNavigableMap);
     }
 
     public static <T extends NavigableMap<LocalTime, Double>> void getIndustryVolYtd(Map<String, T> mp) {
@@ -408,12 +406,10 @@ public class Utility {
     public static void getFilesFromTDXGen(LocalDate ld, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp1
             , Map<String, ? extends NavigableMap<LocalTime, Double>> mp2) {
 
-        LocalDate t = ld;
-
-        System.out.println(" localdate is " + t);
+        System.out.println(" localdate is " + ld);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-        final String dateString = t.format(formatter);
+        final String dateString = ld.format(formatter);
         System.out.println(" date is " + dateString);
 
         symbolNames.forEach(e -> {
@@ -491,60 +487,106 @@ public class Utility {
         return Arrays.stream(mps).flatMap(e -> e.entrySet().stream()).map(Map.Entry::getValue).mapToDouble(f).reduce(o).orElse(0.0);
     }
 
+
+    static <T extends Temporal> LocalDateTime convertToLDT(T t, LocalDate ld) {
+        if (t.getClass() == LocalDateTime.class) {
+            return (LocalDateTime) t;
+        } else if (t.getClass() == LocalTime.class) {
+            return LocalDateTime.of(ld, (LocalTime) t);
+        }
+        throw new IllegalArgumentException(" cannot convert ");
+    }
+
+    //static LocalDateTime convertToLDT2(? extends Temporal )
+
     @SafeVarargs
     public static <S> NavigableMap<LocalDateTime, S> mergeMap(NavigableMap<? extends Temporal, S>... mps) {
-        NavigableMap<LocalDateTime, S> res = new ConcurrentSkipListMap<>();
-        for (NavigableMap<? extends Temporal, S> mp : mps) {
-            if (mp.size() > 0) {
-                for (Map.Entry<? extends Temporal, S> e : mp.entrySet()) {
-                    if (e.getKey().getClass() == LocalTime.class) {
-                        res.put(LocalDateTime.of(HistChinaStocks.recentTradingDate, (LocalTime) e.getKey()), e.getValue());
-                    } else if (e.getKey().getClass() == LocalDateTime.class) {
-                        res.put((LocalDateTime) e.getKey(), e.getValue());
-                    }
-                }
-            }
-        }
-        return res;
+        //NavigableMap<LocalDateTime, S> res = new ConcurrentSkipListMap<>();
+
+        return Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(
+                Collectors.toMap(e -> convertToLDT(e.getKey(), HistChinaStocks.recentTradingDate)
+                        , e -> e.getValue(), (a,b)->a, ConcurrentSkipListMap::new));
+
+
+//        Stream.of(mps).flatMap(e->e.entrySet().stream()).forEach(e->{
+//            if (e.getKey().getClass() == LocalTime.class) {
+//                res.put(LocalDateTime.of(HistChinaStocks.recentTradingDate, (LocalTime) e.getKey()), e.getValue());
+//            } else if (e.getKey().getClass() == LocalDateTime.class) {
+//                res.put((LocalDateTime) e.getKey(), e.getValue());
+//            }
+//        });
+
+//        for (NavigableMap<? extends Temporal, S> mp : mps) {
+//            if (mp.size() > 0) {
+//                for (Map.Entry<? extends Temporal, S> e : mp.entrySet()) {
+//                    if (e.getKey().getClass() == LocalTime.class) {
+//                        res.put(LocalDateTime.of(HistChinaStocks.recentTradingDate, (LocalTime) e.getKey()), e.getValue());
+//                    } else if (e.getKey().getClass() == LocalDateTime.class) {
+//                        res.put((LocalDateTime) e.getKey(), e.getValue());
+//                    }
+//                }
+//            }
+//        }
+        //return res;
     }
 
     @SafeVarargs
     public static NavigableMap<LocalDateTime, ? super Trade> mergeTradeMap(NavigableMap<LocalDateTime, ? super Trade>... mps) {
-        return Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.toMap(e -> ((LocalDateTime)e.getKey()),
-                Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
+        return Stream.of(mps).flatMap(e -> e.entrySet().stream())
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
     }
 
 
     public static NavigableMap<LocalTime, SimpleBar> priceMap1mTo5M(NavigableMap<LocalTime, SimpleBar> mp) {
         NavigableMap<LocalTime, SimpleBar> res = new ConcurrentSkipListMap<>();
-        for (Map.Entry e : mp.entrySet()) {
-            LocalTime t = roundTo5((LocalTime) e.getKey());
-            //very important to make a new SB, otherwise will pollute original mp
-            SimpleBar sb = new SimpleBar((SimpleBar) e.getValue());
 
+        mp.forEach((key, value) -> {
+            LocalTime t = roundTo5(key);
+            SimpleBar sb = new SimpleBar(value);
             if (!res.containsKey(t)) {
                 res.put(t, sb);
             } else {
                 res.get(t).updateBar(sb);
             }
-        }
+        });
+
+//        for (Map.Entry e : mp.entrySet()) {
+//            LocalTime t = roundTo5((LocalTime) e.getKey());
+//            //very important to make a new SB, otherwise will pollute original mp
+//            SimpleBar sb = new SimpleBar((SimpleBar) e.getValue());
+//
+//            if (!res.containsKey(t)) {
+//                res.put(t, sb);
+//            } else {
+//                res.get(t).updateBar(sb);
+//            }
+//        }
         return res;
     }
 
     public static <T> NavigableMap<LocalDateTime, T> priceMapToLDT(NavigableMap<LocalTime, T> mp, LocalDate ld) {
+
+
         NavigableMap<LocalDateTime, T> res = new ConcurrentSkipListMap<>();
-        for (Map.Entry e : mp.entrySet()) {
-            //SimpleBar sb = new SimpleBar((SimpleBar)e.getValue());
-            LocalTime lt = (LocalTime) e.getKey();
-            if (lt.isBefore(LocalTime.of(15, 1))) {
-                res.put(LocalDateTime.of(ld,lt), (T)e.getValue());
+
+        mp.forEach((key, value) -> {
+            if (key.isBefore(LocalTime.of(15, 1))) {
+                res.put(LocalDateTime.of(ld, key), value);
             }
-        }
+        });
+//
+//        for (Map.Entry e : mp.entrySet()) {
+//            //SimpleBar sb = new SimpleBar((SimpleBar)e.getValue());
+//            LocalTime lt = (LocalTime) e.getKey();
+//            if (lt.isBefore(LocalTime.of(15, 1))) {
+//                res.put(LocalDateTime.of(ld,lt), (T)e.getValue());
+//            }
+//        }
         return res;
     }
 
     public static LocalTime roundTo5(LocalTime t) {
-        return max(LocalTime.of(9,0),(t.getMinute() % 5 == 0) ? t : t.plusMinutes(5 - t.getMinute() % 5));
+        return max(LocalTime.of(9, 0), (t.getMinute() % 5 == 0) ? t : t.plusMinutes(5 - t.getMinute() % 5));
     }
 
     public static LocalDateTime roundTo5Ldt(LocalDateTime t) {
@@ -552,15 +594,15 @@ public class Utility {
     }
 
     public static LocalTime min(LocalTime... lts) {
-        return Arrays.stream(lts).reduce(LocalTime.MAX,localTimeGen(LocalTime::isBefore));
+        return Arrays.stream(lts).reduce(LocalTime.MAX, localTimeGen(LocalTime::isBefore));
     }
 
     public static LocalTime max(LocalTime... lts) {
-        return Arrays.stream(lts).reduce(LocalTime.MIN,localTimeGen(LocalTime::isAfter));
+        return Arrays.stream(lts).reduce(LocalTime.MIN, localTimeGen(LocalTime::isAfter));
     }
 
     public static BinaryOperator<LocalTime> localTimeGen(BiPredicate<LocalTime, LocalTime> bp) {
-        return (a,b)-> bp.test(a,b)?a:b;
+        return (a, b) -> bp.test(a, b) ? a : b;
     }
 
     public static <T> Comparator<T> reverseThis(Comparator<T> in) {

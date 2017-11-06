@@ -147,7 +147,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
                         g.drawString(lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 5);
                     }
                 }
-            } else if(dispGran== DisplayGranularity._5MDATA){
+            } else if (dispGran == DisplayGranularity._5MDATA) {
                 if (lt.equals(tm.firstKey())) {
                     g.drawString(lt.toLocalDate().toString(), x, getHeight() - 5);
                 } else {
@@ -309,7 +309,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
                 ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), HistChinaStocks.recentTradingDate);
 
 
-        if (HistChinaStocks.chinaTradeMap.containsKey(name) && HistChinaStocks.chinaTradeMap.get(name).size()>0) {
+        if (HistChinaStocks.chinaTradeMap.containsKey(name) && HistChinaStocks.chinaTradeMap.get(name).size() > 0) {
             trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(name), priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
                     ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), HistChinaStocks.recentTradingDate));
             //System.out.println(" merged trade is " + trades);
