@@ -501,20 +501,21 @@ public class Utility {
 
     @SafeVarargs
     public static <S> NavigableMap<LocalDateTime, S> mergeMap(NavigableMap<? extends Temporal, S>... mps) {
-        //NavigableMap<LocalDateTime, S> res = new ConcurrentSkipListMap<>();
+//        NavigableMap<LocalDateTime, S> res = Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(
+//                Collectors.toMap(e -> convertToLDT(e.getKey(), HistChinaStocks.recentTradingDate)
+//                        , Map.Entry::getValue, (a, b)->a, ConcurrentSkipListMap::new));
 
-        return Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(
-                Collectors.toMap(e -> convertToLDT(e.getKey(), HistChinaStocks.recentTradingDate)
-                        , e -> e.getValue(), (a,b)->a, ConcurrentSkipListMap::new));
+        NavigableMap<LocalDateTime, S> res = new ConcurrentSkipListMap<>();
+        Stream.of(mps).flatMap(e->e.entrySet().stream()).forEach(e->{
+            if (e.getKey().getClass() == LocalTime.class) {
+                res.put(LocalDateTime.of(HistChinaStocks.recentTradingDate, (LocalTime) e.getKey()), e.getValue());
+            } else if (e.getKey().getClass() == LocalDateTime.class) {
+                res.put((LocalDateTime) e.getKey(), e.getValue());
+            }
+        });
 
+        return res;
 
-//        Stream.of(mps).flatMap(e->e.entrySet().stream()).forEach(e->{
-//            if (e.getKey().getClass() == LocalTime.class) {
-//                res.put(LocalDateTime.of(HistChinaStocks.recentTradingDate, (LocalTime) e.getKey()), e.getValue());
-//            } else if (e.getKey().getClass() == LocalDateTime.class) {
-//                res.put((LocalDateTime) e.getKey(), e.getValue());
-//            }
-//        });
 
 //        for (NavigableMap<? extends Temporal, S> mp : mps) {
 //            if (mp.size() > 0) {
