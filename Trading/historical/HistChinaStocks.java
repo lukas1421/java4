@@ -218,6 +218,7 @@ public class HistChinaStocks extends JPanel {
                                     weekMtmMap = computeWtdMtmPnl(e -> e.getKey().equals(selectedStock));
                                     weekTradePnlMap = computeWtdTradePnl(e -> e.getKey().equals(selectedStock));
                                     weekNetMap = computeNet(e -> e.getKey().equals(selectedStock));
+                                    System.out.println(" seleced stock is " + selectedStock + " " + weekNetMap);
 
                                     SwingUtilities.invokeLater(() -> {
                                         graphWtdPnl.setMtm(weekMtmMap);
@@ -415,9 +416,6 @@ public class HistChinaStocks extends JPanel {
             CompletableFuture.runAsync(() -> {
                 getSGXPosition();
                 getSGXTrades();
-            }).thenRun(() -> {
-                int pos = currentPositionMap.getOrDefault("SGXA50", 0) - wtdChgInPosition.getOrDefault("SGXA50", 0);
-                weekOpenPositionMap.put("SGXA50", pos);
             });
             //computeButton.doClick();
             //refreshAll();
@@ -531,7 +529,7 @@ public class HistChinaStocks extends JPanel {
 
             if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
                 if ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
-                        || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(16, 1)))) {
+                        || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1)))) {
 
                     LocalDateTime ldt = LocalDateTime.of(ld, lt);
                     LocalDateTime ltTo5 = Utility.roundTo5Ldt(ldt);
@@ -638,6 +636,9 @@ public class HistChinaStocks extends JPanel {
 
     private static NavigableMap<LocalDateTime, Double> computeWtdMtmPnl(Predicate<? super Map.Entry<String, ?>> p) {
 
+        weekOpenPositionMap.put("SGXA50", currentPositionMap.getOrDefault("SGXA50", 0)
+                - wtdChgInPosition.getOrDefault("SGXA50", 0));
+
         if (weekOpenPositionMap.entrySet().stream().filter(p).mapToInt(Map.Entry::getValue).sum() != 0) {
             weekMtmMap = weekOpenPositionMap.entrySet().stream().filter(p).map(e ->
                     computeMtm(e.getKey(), e.getValue(), chinaWtd.get(e.getKey()), lastWeekCloseMap.getOrDefault(e.getKey(), 0.0))).
@@ -694,6 +695,7 @@ public class HistChinaStocks extends JPanel {
 
     private static NavigableMap<LocalDateTime, Double> computeNet(Predicate<? super Map.Entry<String, ?>> p) {
         NavigableMap<LocalDateTime, Double> res = mapOp.apply(computeWtdMtmPnl(p), computeWtdTradePnl(p));
+        //System.out.println(" computeNet is " + )
         computeNetPnlByWeekday(res);
         return res;
     }
@@ -963,7 +965,7 @@ public class HistChinaStocks extends JPanel {
     }
 
     static double computeWtdTradePnlFor1Stock(String name) {
-        if(chinaWtd.containsKey(name) && chinaWtd.get(name).size()>0) {
+        if (chinaWtd.containsKey(name) && chinaWtd.get(name).size() > 0) {
             double price = chinaWtd.get(name).lastEntry().getValue().getClose();
             int pos = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
@@ -986,6 +988,10 @@ public class HistChinaStocks extends JPanel {
                 wtdMtmPnlMap.put(s, fxMap.getOrDefault(s, 1.0)
                         * (posBeforeThisWeek * (chinaWtd.get(s).lastEntry().getValue().getClose()
                         - lastWeekCloseMap.getOrDefault(s, chinaWtd.get(s).firstEntry().getValue().getOpen()))));
+            } else {
+                int openPos = currentPositionMap.getOrDefault("SGXA50", 0) - wtdChgInPosition.getOrDefault("SGXA50", 0);
+                wtdMtmPnlMap.put(s, fxMap.getOrDefault(s, 1.0) * (openPos) * (chinaWtd.get(s).lastEntry().getValue().getClose()
+                        - lastWeekCloseMap.getOrDefault(s, chinaWtd.get(s).firstEntry().getValue().getOpen())));
             }
         }
     }
@@ -1146,7 +1152,6 @@ public class HistChinaStocks extends JPanel {
             if (chinaWtd.containsKey(name) && chinaWtd.get(name).size() > 0) {
                 price = chinaWtd.get(name).lastEntry().getValue().getClose();
             }
-            ;
 
             if (name.equals("SGXA50")) {
                 costBasisMap.put(name, -1.0 * fx * lastWeekCloseMap.getOrDefault("SGXA50", 0.0) * currentPositionMap.getOrDefault(name, 0));
@@ -1181,7 +1186,9 @@ public class HistChinaStocks extends JPanel {
                 case 12:
                     return chinaTradeMap.get(name).size();
                 case 13:
-                    return weekOpenPositionMap.getOrDefault(name, 0);
+                    return currentPositionMap.getOrDefault(name, 0) -
+                            wtdChgInPosition.getOrDefault(name, 0);
+                //return weekOpenPositionMap.getOrDefault(name, 0);
                 case 14:
                     return wtdChgInPosition.getOrDefault(name, 0);
                 case 15:
@@ -1210,7 +1217,8 @@ public class HistChinaStocks extends JPanel {
                 case 23:
                     return lastWeekCloseMap.getOrDefault(name, 0.0);
                 case 24:
-                    return Math.round(100d * weekOpenPositionMap.getOrDefault(name, 0) *
+                    return Math.round(100d * fxMap.getOrDefault(name,1.0)*(currentPositionMap.getOrDefault(name, 0) -
+                            wtdChgInPosition.getOrDefault(name, 0)) *
                             (price - lastWeekCloseMap.getOrDefault(name, 0.0))) / 100d;
                 //return wtdMtmPnlMap.getOrDefault(name, 0.0);
                 case 25:

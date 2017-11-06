@@ -43,7 +43,8 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReportEnd() {
-        int sgxLotsTraded = HistChinaStocks.chinaTradeMap.get("SGXA50").entrySet().stream()
+        int sgxLotsTraded = HistChinaStocks.chinaTradeMap.get("SGXA50").entrySet().stream().filter(e->e.getKey().toLocalDate()
+                .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
                 .mapToInt(e->((Trade)e.getValue()).getSizeAll()).sum();
 
         HistChinaStocks.wtdChgInPosition.put("SGXA50", sgxLotsTraded);
