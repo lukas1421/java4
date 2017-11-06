@@ -220,16 +220,16 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         temp = 20;
         for(Map.Entry e:mtmByAm.entrySet()) {
             temp = temp +20;
-            g2.drawString(""+Math.round((Double)e.getValue()), getWidth()*15/16, temp);
+            g2.drawString(""+Math.round((Double)e.getValue()), getWidth()*7/8, temp);
         }
-        g2.drawString(""+Math.round(mtmByAm.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth()*15/16, temp+20);
+        g2.drawString(""+Math.round(mtmByAm.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth()*7/8, temp+20);
 
         temp = 20;
         for(Map.Entry e:mtmByPm.entrySet()) {
             temp = temp +20;
-            g2.drawString(""+Math.round((Double)e.getValue()), getWidth()*7/8, temp);
+            g2.drawString(""+Math.round((Double)e.getValue()), getWidth()*15/16, temp);
         }
-        g2.drawString(""+ Math.round(mtmByPm.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth()*7/8, temp+20);
+        g2.drawString(""+ Math.round(mtmByPm.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth()*15/16, temp+20);
 
         g.setColor(Color.black);
         g2.setFont(g.getFont().deriveFont(20F));
