@@ -23,13 +23,12 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
         LocalDateTime ldtRoundto5 = Utility.roundTo5Ldt(ldt);
 
         if (ldt.toLocalDate().isAfter(Utility.getMondayOfWeek(ldt).minusDays(1L))) {
-
-            System.out.println(" exec " + execution.side() + "　" + execution.time() + " " + execution.cumQty()
-                    + " " + execution.price() + " " + execution.orderRef() + " " + execution.orderId() + " " + execution.permId() + " "
-                    + execution.shares());
-            System.out.println(" time string " + ldt.toString());
-            System.out.println(" time is " + ldt.toLocalTime());
-            System.out.println(" day is " + LocalDateTime.now().getDayOfMonth());
+//            System.out.println(" exec " + execution.side() + "　" + execution.time() + " " + execution.cumQty()
+//                    + " " + execution.price() + " " + execution.orderRef() + " " + execution.orderId() + " " + execution.permId() + " "
+//                    + execution.shares());
+//            System.out.println(" time string " + ldt.toString());
+//            System.out.println(" time is " + ldt.toLocalTime());
+//            System.out.println(" day is " + LocalDateTime.now().getDayOfMonth());
 
             if (HistChinaStocks.chinaTradeMap.get("SGXA50").containsKey(ldtRoundto5)) {
                 System.out.println(" lt is " + ldtRoundto5);
@@ -44,6 +43,10 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReportEnd() {
+        int sgxLotsTraded = HistChinaStocks.chinaTradeMap.get("SGXA50").entrySet().stream()
+                .mapToInt(e->((Trade)e.getValue()).getSizeAll()).sum();
+
+        HistChinaStocks.wtdChgInPosition.put("SGXA50", sgxLotsTraded);
         System.out.println(" trade report end");
     }
 

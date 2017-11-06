@@ -139,10 +139,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         this.name = name;
         setName(name);
         setChineseName(HistChinaStocks.nameMap.getOrDefault(name,""));
-
         if (mp.containsKey(name) && mp.get(name).size() > 0) {
-            //System.out.println(" in graph bar temporal setting " + name);
-            //System.out.println(mp.get(name));
             this.setNavigableMap(mp.get(name));
         } else {
             this.setNavigableMap(new ConcurrentSkipListMap<>());
