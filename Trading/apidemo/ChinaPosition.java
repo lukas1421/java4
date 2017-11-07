@@ -1051,9 +1051,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 + getBuyTradePnl(name) + getSellTradePnl(name))) / 100d;
     }
 
-    static double r(double d) {
-        return Math.round(d * 100d) / 100d;
-    }
+//    static double r(double d) {
+//        return Math.round(d * 100d) / 100d;
+//    }
 
     private static LinkedList<String> getPnl5mChg() {
         Set<String> ptf = symbolNames.stream().filter(ChinaPosition::relevantStock).collect(toCollection(HashSet::new));
@@ -1397,7 +1397,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 30:
                     return (currPrice != 0.0) ? Math.round((((wtdMaxMap.getOrDefault(name, 0.0) + wtdMinMap.getOrDefault(name, 0.0)) / 2) / currPrice - 1) * 1000d) / 10d : 0.0;
                 case 31:
-                    return getTodayTotalPnl(name);
+                    return r(getTodayTotalPnl(name));
 
                 default:
                     return null;

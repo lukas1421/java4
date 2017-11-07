@@ -107,6 +107,10 @@ public class HistChinaStocks extends JPanel {
 
     int avgPercentile;
     int weightedAvgPercentile;
+    static volatile boolean filterOn =  false;
+    static final int CHG_POS_COL = 14;
+    static final int CURR_POS_COL= 15;
+
 
     private static String tdxDayPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export\\" : "J:\\TDX\\T0002\\export\\";
@@ -220,7 +224,11 @@ public class HistChinaStocks extends JPanel {
                                     weekMtmMap = computeWtdMtmPnl(e -> e.getKey().equals(selectedStock));
                                     weekTradePnlMap = computeWtdTradePnl(e -> e.getKey().equals(selectedStock));
                                     weekNetMap = computeNet(e -> e.getKey().equals(selectedStock));
-                                    System.out.println(" seleced stock is " + selectedStock + " " + weekNetMap);
+                                    System.out.println(" seleced stock is " + selectedStock + "  trade : "
+                                            + wtdTradePnlMap.getOrDefault(selectedStock, 0.0) + "  mtm: "
+                                            + wtdMtmPnlMap.getOrDefault(selectedStock,0.0));
+
+
 
                                     SwingUtilities.invokeLater(() -> {
                                         graphWtdPnl.setMtm(weekMtmMap);
@@ -337,7 +345,21 @@ public class HistChinaStocks extends JPanel {
         JToggleButton noFutButton = new JToggleButton(" no fut");
         JToggleButton futOnlyButton = new JToggleButton("fut only");
         JButton outputWtdButton = new JButton(" output wtd ");
+        JButton activeOnlyButton = new JButton("Active Only");
 
+
+        activeOnlyButton.addActionListener(l->{
+            if (filterOn) {
+                sorter.setRowFilter(null);
+                filterOn = false;
+            } else {
+                List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
+                filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, CHG_POS_COL));
+                filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, CURR_POS_COL));
+                sorter.setRowFilter(RowFilter.orFilter(filters));
+                filterOn = true;
+            }
+        });
 
         sgxTradesButton.addActionListener(al -> {
             getSGXPosition();
@@ -381,6 +403,7 @@ public class HistChinaStocks extends JPanel {
         refreshButton.addActionListener(al -> {
             //computeButton.doClick();
             refreshAll();
+
         });
 
         ytdButton.addActionListener(al -> {
@@ -436,7 +459,11 @@ public class HistChinaStocks extends JPanel {
                 CompletableFuture.runAsync(() -> {
                     computeWtdMtmPnl(e -> true);
                 });
-            }).thenRun(() -> SwingUtilities.invokeLater(this::repaint));
+            }).thenRun(() -> SwingUtilities.invokeLater(()->{
+                model.fireTableDataChanged();
+                this.repaint();
+            }));
+
         });
 
         updatePriceButton.addActionListener(al -> {
@@ -491,6 +518,7 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(noFutButton);
         controlPanel.add(futOnlyButton);
         controlPanel.add(outputWtdButton);
+        controlPanel.add(activeOnlyButton);
 
         this.setLayout(new BorderLayout());
         this.add(controlPanel, BorderLayout.NORTH);
@@ -966,7 +994,9 @@ public class HistChinaStocks extends JPanel {
                     .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommission(s)).sum();
             int netPosition = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
-            wtdTradePnlMap.put(s, fxMap.getOrDefault(s, 1.0) * (netPosition * priceMapForHist.getOrDefault(s, 0.0) + costBasis));
+
+            wtdTradePnlMap.put(s, fxMap.getOrDefault(s, 1.0) * (netPosition *
+                    chinaWtd.get(s).lastEntry().getValue().getClose()+ costBasis));
         }
     }
 
@@ -1216,17 +1246,17 @@ public class HistChinaStocks extends JPanel {
                         return 0L;
                     }
                 case 22:
-                    return computeWtdTradePnlFor1Stock(name);
+                    return r(computeWtdTradePnlFor1Stock(name));
                 //return wtdTradePnlMap.getOrDefault(name, 0.0);
                 case 23:
                     return lastWeekCloseMap.getOrDefault(name, 0.0);
                 case 24:
-                    return Math.round(100d * fxMap.getOrDefault(name, 1.0) * (currentPositionMap.getOrDefault(name, 0) -
+                    return r(fxMap.getOrDefault(name, 1.0) * (currentPositionMap.getOrDefault(name, 0) -
                             wtdChgInPosition.getOrDefault(name, 0)) *
-                            (price - lastWeekCloseMap.getOrDefault(name, 0.0))) / 100d;
+                            (price - lastWeekCloseMap.getOrDefault(name, 0.0)));
                 //return wtdMtmPnlMap.getOrDefault(name, 0.0);
                 case 25:
-                    return wtdTradePnlMap.getOrDefault(name, 0.0) + wtdMtmPnlMap.getOrDefault(name, 0.0);
+                    return r(wtdTradePnlMap.getOrDefault(name, 0.0) + wtdMtmPnlMap.getOrDefault(name, 0.0));
                 case 26:
                     return SharpeUtility.getPercentile(chinaWtd.get(name));
                 default:

@@ -654,4 +654,9 @@ public class Utility {
             x.printStackTrace();
         }
     }
+
+    public static double r(double d) {
+        return Math.round(100d*d)/100d;
+    }
+
 }
