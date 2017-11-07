@@ -624,9 +624,14 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                     System.out.println(Utility.getStrCheckNull(dt, open, high, low, close));
                 }
+            } else {
+                if(!ld.equals(currDate)) {
+                    xuPreviousClose = close;
+                }
             }
 
         } else {
+            System.out.println(" xu open and close " + xuOpenPrice+ " " + xuPreviousClose);
             System.out.println(getStr(date, open, high, low, close));
         }
     }

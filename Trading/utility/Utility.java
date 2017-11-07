@@ -595,15 +595,23 @@ public class Utility {
     }
 
     public static LocalTime min(LocalTime... lts) {
-        return Arrays.stream(lts).reduce(LocalTime.MAX, localTimeGen(LocalTime::isBefore));
+        return Arrays.stream(lts).reduce(LocalTime.MAX, temporalGen(LocalTime::isBefore));
     }
 
     public static LocalTime max(LocalTime... lts) {
-        return Arrays.stream(lts).reduce(LocalTime.MIN, localTimeGen(LocalTime::isAfter));
+        return Arrays.stream(lts).reduce(LocalTime.MIN, temporalGen(LocalTime::isAfter));
+    }
+
+    public static LocalDate max(LocalDate... lds) {
+        return Arrays.stream(lds).reduce(LocalDate.MIN,temporalGen(LocalDate::isAfter));
     }
 
     public static BinaryOperator<LocalTime> localTimeGen(BiPredicate<LocalTime, LocalTime> bp) {
         return (a, b) -> bp.test(a, b) ? a : b;
+    }
+
+    public static <T> BinaryOperator<T> temporalGen(BiPredicate<T,T> bp) {
+        return (a,b) -> bp.test(a,b)?a:b;
     }
 
     public static <T> Comparator<T> reverseThis(Comparator<T> in) {
