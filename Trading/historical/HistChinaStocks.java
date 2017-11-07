@@ -114,7 +114,7 @@ public class HistChinaStocks extends JPanel {
 
     private static final DateTimeFormatter DATE_PATTERN = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
-    public static LocalDate recentTradingDate;
+    public static volatile LocalDate recentTradingDate;
 
     static volatile Predicate<? super Map.Entry<String, ?>> MTM_PRED = m -> true;
 
@@ -416,7 +416,7 @@ public class HistChinaStocks extends JPanel {
             CompletableFuture.runAsync(() -> {
                 getSGXPosition();
                 getSGXTrades();
-            });
+            }).thenRun(()->SwingUtilities.invokeLater(this::repaint));
             //computeButton.doClick();
             //refreshAll();
         });
@@ -436,25 +436,11 @@ public class HistChinaStocks extends JPanel {
                 CompletableFuture.runAsync(() -> {
                     computeWtdMtmPnl(e -> true);
                 });
-            }).thenRun(() -> {
-                SwingUtilities.invokeLater(this::repaint);
-            });
+            }).thenRun(() -> SwingUtilities.invokeLater(this::repaint));
         });
 
         updatePriceButton.addActionListener(al -> {
-            String line1;
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(priceInput)))) {
-                while ((line1 = reader.readLine()) != null) {
-                    List<String> l = Arrays.asList(line1.split(","));
-                    if (l.size() >= 2) {
-                        priceMapForHist.put(l.get(0), Double.parseDouble(l.get(1)));
-                    } else {
-                        System.out.println(" line is wrong " + line1);
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            updatePrices();
             SwingUtilities.invokeLater(() -> {
                 model.fireTableDataChanged();
             });
@@ -496,17 +482,15 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(ytdButton);
         controlPanel.add(wtdButton);
 
-
         controlPanel.add(loadTradesButton);
         controlPanel.add(computeButton);
-        //controlPanel.add(updatePriceButton);
+        controlPanel.add(updatePriceButton);
 
         controlPanel.add(sgxDataButton);
         controlPanel.add(sgxTradesButton);
         controlPanel.add(noFutButton);
         controlPanel.add(futOnlyButton);
         controlPanel.add(outputWtdButton);
-
 
         this.setLayout(new BorderLayout());
         this.add(controlPanel, BorderLayout.NORTH);
@@ -516,6 +500,15 @@ public class HistChinaStocks extends JPanel {
         tab.setAutoCreateRowSorter(true);
         sorter = (TableRowSorter<BarModel_China>) tab.getRowSorter();
     }
+
+    static void updatePrices() {
+        chinaWtd.forEach((k, v) -> {
+            if (v.size() > 0) {
+                priceMapForHist.put(k, v.lastEntry().getValue().getClose());
+            }
+        });
+    }
+
 
     static void handleSGXA50WtdData(String date, double open, double high, double low, double close, int volume) {
 
@@ -553,7 +546,7 @@ public class HistChinaStocks extends JPanel {
 
     public static void getSGXPosition() {
         System.out.println(" getting sgx position ");
-        HistChinaStocks.currentPositionMap.put("SGXA50", 0);
+        //HistChinaStocks.currentPositionMap.put("SGXA50", 0);
         ChinaMain.controller().reqPositions(new SGXPositionHandler());
     }
 
@@ -1050,8 +1043,6 @@ public class HistChinaStocks extends JPanel {
         public double getPerc() {
             return perc;
         }
-
-
     }
 
 
@@ -1135,26 +1126,25 @@ public class HistChinaStocks extends JPanel {
         @Override
         public Object getValueAt(int row, int col) {
             String name = stockList.get(row);
-            int currPos = 0;
             double price = 0.0;
-            double fx = fxMap.getOrDefault(name, 1.0);
+            //double fx = fxMap.getOrDefault(name, 1.0);
 
 //            if (netSharesTradedByDay.containsKey(name) && netSharesTradedByDay.get(name).size() > 0) {
 //                currPos = netSharesTradedByDay.get(name).entrySet().stream().mapToInt(Map.Entry::getValue).sum();
 //            }
-
-            if (chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size() > 0) {
-                currPos = chinaTradeMap.get(name).entrySet().stream().map(e -> ((Trade) e.getValue()).getSizeAll())
-                        .reduce(Integer::sum).get();
-                currentPositionMap.put(name, currPos);
-            }
+//            if (chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size() > 0) {
+//                currPos = chinaTradeMap.get(name).entrySet().stream().map(e -> ((Trade) e.getValue()).getSizeAll())
+//                        .reduce(Integer::sum).get();
+//                currentPositionMap.put(name, currPos);
+//            }
 
             if (chinaWtd.containsKey(name) && chinaWtd.get(name).size() > 0) {
                 price = chinaWtd.get(name).lastEntry().getValue().getClose();
             }
 
             if (name.equals("SGXA50")) {
-                costBasisMap.put(name, -1.0 * fx * lastWeekCloseMap.getOrDefault("SGXA50", 0.0) * currentPositionMap.getOrDefault(name, 0));
+                costBasisMap.put(name, -1.0 * fxMap.getOrDefault(name, 1.0) * lastWeekCloseMap.getOrDefault("SGXA50", 0.0) *
+                        currentPositionMap.getOrDefault(name, 0));
             }
 
 
@@ -1199,14 +1189,15 @@ public class HistChinaStocks extends JPanel {
                     //return priceMapForHist.getOrDefault(name, 0.0);
                     return price;
                 case 18:
-                    return fx * price * currPos;
+                    return fxMap.getOrDefault(name, 1.0) * price * currentPositionMap.getOrDefault(name, 0);
                 case 19:
                     return costBasisMap.getOrDefault(name, 0.0);
                 case 20:
-                    return fx * price * currPos + costBasisMap.getOrDefault(name, 0.0);
+                    return fxMap.getOrDefault(name, 1.0)
+                            * price * currentPositionMap.getOrDefault(name, 0) + costBasisMap.getOrDefault(name, 0.0);
                 case 21:
                     if (totalTradingCostMap.getOrDefault(name, 1.0) != 0.0) {
-                        return Math.round((price * currPos
+                        return Math.round((price * currentPositionMap.getOrDefault(name, 0)
                                 + costBasisMap.getOrDefault(name, 0.0)) / (totalTradingCostMap.getOrDefault(name, 1.0)));
                     } else {
                         return 0L;
@@ -1217,7 +1208,7 @@ public class HistChinaStocks extends JPanel {
                 case 23:
                     return lastWeekCloseMap.getOrDefault(name, 0.0);
                 case 24:
-                    return Math.round(100d * fxMap.getOrDefault(name,1.0)*(currentPositionMap.getOrDefault(name, 0) -
+                    return Math.round(100d * fxMap.getOrDefault(name, 1.0) * (currentPositionMap.getOrDefault(name, 0) -
                             wtdChgInPosition.getOrDefault(name, 0)) *
                             (price - lastWeekCloseMap.getOrDefault(name, 0.0))) / 100d;
                 //return wtdMtmPnlMap.getOrDefault(name, 0.0);

@@ -399,10 +399,10 @@ public final class ChinaData extends JPanel {
     }
 
     public static void outputRecentTradingDate() {
-        System.out.println(" most recent trading date " + SinaStock.mostRecentTradingDay.toString());
+        System.out.println(" most recent trading date " + HistChinaStocks.recentTradingDate.toString());
         File output = new File(TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt");
         //MorningTask.clearFile(usTestOutput);
-        Utility.simpleWriteToFile(SinaStock.mostRecentTradingDay.toString(), false, output);
+        Utility.simpleWriteToFile(HistChinaStocks.recentTradingDate.toString(), false, output);
     }
 
     static void getTodayTDX(LocalDate dat) {

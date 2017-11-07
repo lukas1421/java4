@@ -2,6 +2,7 @@ package apidemo;
 
 import auxiliary.SimpleBar;
 import auxiliary.VolBar;
+import historical.HistChinaStocks;
 import utility.Utility;
 
 import java.io.BufferedReader;
@@ -50,7 +51,7 @@ public class SinaStock implements Runnable {
     public static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
     Matcher matcher;
     String line;
-    public static volatile LocalDate mostRecentTradingDay = LocalDate.now();
+    //public static volatile LocalDate mostRecentTradingDay = LocalDate.now();
 
     public static final double OPEN = getOpen();
     static volatile double rtn = 0.0;
@@ -150,7 +151,7 @@ public class SinaStock implements Runnable {
                         minMap.put(ticker, Utility.pd(datalist, 5));
                         returnMap.put(ticker, 100d * (Utility.pd(datalist, 3) / Utility.pd(datalist, 2) - 1));
                         sizeMap.put(ticker, Math.round(Utility.pd(datalist, 9) / 1000000d));
-                        mostRecentTradingDay = LocalDate.parse(datalist.get(30));
+                        HistChinaStocks.recentTradingDate = LocalDate.parse(datalist.get(30));
                         //ChinaData.outputRecentTradingDate();
                         //System.out.println(" most recent trading day " + mostRecentTradingDay);
                         //System.out.println(" last data available date " + datalist.get(30) + " " + datalist.get(31));

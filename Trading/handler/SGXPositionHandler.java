@@ -13,7 +13,7 @@ public class SGXPositionHandler implements ApiController.IPositionHandler {
 
             SwingUtilities.invokeLater(() -> {
                 if (contract.symbol().equals("XINA50")) {
-                    System.out.println(" current position is ");
+                    System.out.println(" current position is " + position);
                     HistChinaStocks.currentPositionMap.put("SGXA50", (int)position);
                 }
             });
