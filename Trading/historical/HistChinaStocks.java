@@ -29,10 +29,7 @@ import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -124,7 +121,7 @@ public class HistChinaStocks extends JPanel {
 
     private static volatile Predicate<? super Map.Entry<String, ?>> MTM_PRED = m -> true;
 
-    static ScheduledExecutorService exe = Executors.newScheduledThreadPool(10);
+    static ScheduledExecutorService computeExe = Executors.newScheduledThreadPool(10);
 
     private int modelRow;
     int indexRow;
@@ -353,11 +350,16 @@ public class HistChinaStocks extends JPanel {
 
         autoComputeButton.addActionListener(l->{
             if(autoComputeButton.isSelected()) {
+                computeExe = Executors.newScheduledThreadPool(10);
+                computeExe.scheduleAtFixedRate(()->{
+                    getTodayDataButton.doClick();
+                    getTodayTradesButton.doClick();
+                    refreshAll();
+                }, 0L, 15L, TimeUnit.SECONDS);
 
             } else {
-
+                computeExe.shutdown();
             }
-
         });
 
         activeOnlyButton.addActionListener(l -> {
@@ -493,9 +495,11 @@ public class HistChinaStocks extends JPanel {
         getTodayDataButton.addActionListener(al -> {
             for (String s : chinaWtd.keySet()) {
                 if (priceMapBar.containsKey(s) && priceMapBar.get(s).size() > 0) {
-                    NavigableMap<LocalDateTime, SimpleBar> res = mergeMap(chinaWtd.get(s),
+                    NavigableMap<LocalDateTime, SimpleBar> wtdNew = mergeMap(chinaWtd.get(s),
                             Utility.priceMapToLDT(priceMap1mTo5M(priceMapBar.get(s)), recentTradingDate));
-                    chinaWtd.put(s, res);
+                    chinaWtd.put(s, wtdNew);
+                    NavigableMap<LocalDate, SimpleBar> ytdNew = mergeMapGen(chinaYtd.get(s),reduceMapToBar(priceMapBar.get(s), recentTradingDate));
+                    chinaYtd.put(s, ytdNew);
                 }
             }
             SwingUtilities.invokeLater(() -> {
@@ -536,6 +540,7 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(futOnlyButton);
         controlPanel.add(outputWtdButton);
         controlPanel.add(activeOnlyButton);
+        controlPanel.add(autoComputeButton);
 
         this.setLayout(new BorderLayout());
         this.add(controlPanel, BorderLayout.NORTH);
