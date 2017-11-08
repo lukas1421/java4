@@ -598,11 +598,19 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         xuOpenPostion = xuCurrentPosition - xuBotPos - xuSoldPos;
 
+        double defaultOpen = 0.0;
+        //add default for open here
+        if(priceMapBar.get("SGXA50").size()>0) {
+            defaultOpen = priceMapBar.get("SGXA50").firstEntry().getValue().getClose();
+        }
+
+
         System.out.println(" REFRESHING XU open bot sold current " + xuOpenPostion + " " + xuBotPos + " " + xuSoldPos + " " + xuCurrentPosition);
         openPositionMap.put("SGXA50", xuOpenPostion);
-        costMap.put("SGXA50", closeMap.getOrDefault("SGXA50", 0.0));
-        openMap.put("SGXA50", xuOpenPrice);
-        ChinaStock.closeMap.put("SGXA50", xuOpenPrice);
+        ChinaStock.closeMap.put("SGXA50", xuOpenPrice==0.0?defaultOpen:xuOpenPrice);
+        costMap.put("SGXA50", closeMap.getOrDefault("SGXA50", defaultOpen));
+        openMap.put("SGXA50", xuOpenPrice==0.0?defaultOpen:xuOpenPrice);
+
         //ChinaStock.closeMap.put("SGXA50", priceMapBar.get("SGXA50").firstEntry().getValue().getOpen());
     }
 
@@ -1045,8 +1053,14 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     double getNetPnl(String name) {
+
+        double defaultPrice = 0.0;
+        if(priceMapBar.containsKey(name) && priceMapBar.get(name).size()>0) {
+            defaultPrice = priceMapBar.get(name).lastEntry().getValue().getClose();
+        }
+
         double fx = fxMap.getOrDefault(name, 1.0);
-        return Math.round(100d * (fx * ((priceMap.getOrDefault(name, 0.0) -
+        return Math.round(100d * (fx * ((priceMap.getOrDefault(name, defaultPrice) -
                 costMap.getOrDefault(name, 0.0)) * openPositionMap.getOrDefault(name, 0))
                 + getBuyTradePnl(name) + getSellTradePnl(name))) / 100d;
     }
@@ -1178,8 +1192,15 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     public static double getMtmPnl(String name) {
+
+        double defaultPrice = 0.0;
+        if(priceMapBar.containsKey(name) && priceMapBar.get(name).size()>0){
+            defaultPrice = priceMapBar.get(name).lastEntry().getValue().getClose();
+        }
+
         if (openPositionMap.containsKey(name)) {
-            return r((priceMap.getOrDefault(name, 0.0) - closeMap.getOrDefault(name, 0.0)) * openPositionMap.getOrDefault(name, 0) * fxMap.getOrDefault(name, 1.0));
+            return r((priceMap.getOrDefault(name, defaultPrice) - closeMap.getOrDefault(name, defaultPrice))
+                    * openPositionMap.getOrDefault(name, 0) * fxMap.getOrDefault(name, 1.0));
         }
         return 0.0;
     }
@@ -1331,7 +1352,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         public Object getValueAt(int rowIn, int col) {
             String name = symbolNames.get(rowIn);
             int openpos = openPositionMap.getOrDefault(name, 0);
-            double currPrice = ChinaStock.priceMap.getOrDefault(name, 0.0);
+            double defaultPrice = 0.0;
+            if(priceMapBar.containsKey(name) && priceMapBar.get(name).size()>0) {
+                defaultPrice = priceMapBar.get(name).lastEntry().getValue().getClose();
+            }
+            double currPrice = ChinaStock.priceMap.getOrDefault(name, defaultPrice);
 
             switch (col) {
                 case 0:
@@ -1349,17 +1374,17 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 6:
                     return ChinaStock.openMap.getOrDefault(name, 0.0);
                 case 7:
-                    return ChinaStock.priceMap.getOrDefault(name, 0.0);
+                    return ChinaStock.priceMap.getOrDefault(name, defaultPrice);
                 case 8:
                     return closeMap.getOrDefault(name, 0.0) == 0.0 ? 0 : Math.round(1000d * (priceMap.getOrDefault(name, 0.0) / closeMap.getOrDefault(name, 0.0) - 1)) / 10d;
                 case 9:
                     return r(fxMap.getOrDefault(name, 1.0) * (openMap.getOrDefault(name, 0.0) - closeMap.getOrDefault(name, 0.0)) * openpos);
                 case 10:
-                    return r(fxMap.getOrDefault(name, 1.0) * (priceMap.getOrDefault(name, 0.0) - closeMap.getOrDefault(name, 0.0)) * openpos);
+                    return r(fxMap.getOrDefault(name, 1.0) * (currPrice - closeMap.getOrDefault(name, 0.0)) * openpos);
                 case 11:
                     return r(fxMap.getOrDefault(name, 1.0) * (closeMap.getOrDefault(name, 0.0) - costMap.getOrDefault(name, 0.0)) * openpos);
                 case 12:
-                    return r(fxMap.getOrDefault(name, 1.0) * (priceMap.getOrDefault(name, 0.0) - costMap.getOrDefault(name, 0.0)) * openpos);
+                    return r(fxMap.getOrDefault(name, 1.0) * (currPrice - costMap.getOrDefault(name, 0.0)) * openpos);
                 case 13:
                     return getTotalTodayBought(name);
                 case 14:
@@ -1391,11 +1416,14 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 27:
                     return getPercentileWrapper(name);
                 case 28:
-                    return Math.max(wtdMaxMap.getOrDefault(name, 0.0), ChinaStock.maxMap.getOrDefault(name, Double.MIN_VALUE));
+                    return Math.max(wtdMaxMap.getOrDefault(name, 0.0), ChinaStock.maxMap.getOrDefault(name,
+                            wtdMaxMap.getOrDefault(name, 0.0)));
                 case 29:
-                    return Math.min(wtdMinMap.getOrDefault(name, 0.0), ChinaStock.minMap.getOrDefault(name, Double.MAX_VALUE));
+                    return Math.min(wtdMinMap.getOrDefault(name, 0.0), ChinaStock.minMap.getOrDefault(name,
+                            wtdMinMap.getOrDefault(name, 0.0)));
                 case 30:
-                    return (currPrice != 0.0) ? Math.round((((wtdMaxMap.getOrDefault(name, 0.0) + wtdMinMap.getOrDefault(name, 0.0)) / 2) / currPrice - 1) * 1000d) / 10d : 0.0;
+                    return (currPrice != 0.0) ? Math.round((((wtdMaxMap.getOrDefault(name, 0.0)
+                            + wtdMinMap.getOrDefault(name, 0.0)) / 2) / currPrice - 1) * 1000d) / 10d : 0.0;
                 case 31:
                     return r(getTodayTotalPnl(name));
 

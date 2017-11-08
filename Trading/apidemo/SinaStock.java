@@ -78,6 +78,7 @@ public class SinaStock implements Runnable {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void run() {
 

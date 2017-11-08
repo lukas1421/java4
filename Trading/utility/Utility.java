@@ -42,7 +42,7 @@ public class Utility {
     //static final Entry<LocalTime, SimpleBar> dummyBar =  new AbstractMap.SimpleEntry<>(LocalTime.of(23,59), SimpleBar.getInstance());
     //static final Entry<LocalTime, Double> dummyMap =  new AbstractMap.SimpleEntry<>(LocalTime.of(23,59), 0.0);
     public static final Predicate<? super Map.Entry<LocalTime, ?>> AM_PRED = e ->
-            e.getKey().isAfter(LocalTime.of(9, 29, 59)) && e.getKey().isBefore(LocalTime.of(11, 30, 01));
+            e.getKey().isAfter(LocalTime.of(9, 29, 59)) && e.getKey().isBefore(LocalTime.of(11, 30, 1));
     public static final Predicate<? super Map.Entry<LocalTime, ?>> PM_PRED = e ->
             e.getKey().isAfter(LocalTime.of(12, 59, 59)) && e.getKey().isBefore(LocalTime.of(15, 0, 1));
     //static final Comparator<? super Entry<LocalTime,SimpleBar>> BAR_HIGH = (e1,e2)->e1.getValue().getHigh()>=e2.getValue().getHigh()?1:-1;
@@ -53,6 +53,7 @@ public class Utility {
             (e1, e2) -> e1.getValue().getHigh() >= e2.getValue().getHigh() ? 1 : -1;
     //Map.Entry.comparingByValue(Comparator.comparingDouble(SimpleBar::getHigh));
 
+    @SuppressWarnings("ComparatorMethodParameterNotUsed")
     public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_LOW =
             (e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
 
@@ -143,7 +144,7 @@ public class Utility {
         return (a, b) -> mapCominberGen(Double::sum, a, b);
     }
 
-    public static <T> BinaryOperator<NavigableMap<T, Double>> mapBinOp(Predicate<? super Map.Entry<T, ?>> p) {
+    private static <T> BinaryOperator<NavigableMap<T, Double>> mapBinOp(Predicate<? super Map.Entry<T, ?>> p) {
         return (a, b) -> mapCominberGen(Double::sum, p, a, b);
     }
 
@@ -154,7 +155,7 @@ public class Utility {
     }
 
     @SafeVarargs
-    public static <T> NavigableMap<T, Double> mapCominberGen(BinaryOperator<Double> o, Predicate<? super Map.Entry<T, ?>> p, NavigableMap<T, Double>... mps) {
+    private static <T> NavigableMap<T, Double> mapCominberGen(BinaryOperator<Double> o, Predicate<? super Map.Entry<T, ?>> p, NavigableMap<T, Double>... mps) {
         return Stream.of(mps).flatMap(e -> e.entrySet().stream().filter(p))
                 .collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new,
                         Collectors.reducing(0.0, Map.Entry::getValue, o)));
@@ -303,15 +304,15 @@ public class Utility {
                 func.applyAsDouble(tm1.firstEntry().getValue()) - 1) * 1000d) / 10d : 0.0;
     }
 
-    public static void fixNavigableMap(String name, NavigableMap<LocalTime, SimpleBar> nm) {
-        nm.entrySet().forEach(e -> {
-            if (e.getValue().getHLRange() > 0.03) {
+    private static void fixNavigableMap(String name, NavigableMap<LocalTime, SimpleBar> nm) {
+        nm.forEach((key, value) -> {
+            if (value.getHLRange() > 0.03) {
                 System.out.println(" name wrong is " + name);
-                double close = nm.lowerEntry(e.getKey()).getValue().getClose();
-                nm.get(e.getKey()).updateClose(close);
-                nm.get(e.getKey()).updateHigh(close);
-                nm.get(e.getKey()).updateLow(close);
-                nm.get(e.getKey()).updateOpen(close);
+                double close = nm.lowerEntry(key).getValue().getClose();
+                nm.get(key).updateClose(close);
+                nm.get(key).updateHigh(close);
+                nm.get(key).updateLow(close);
+                nm.get(key).updateOpen(close);
 
             }
         });
@@ -319,7 +320,7 @@ public class Utility {
     }
 
     public static void fixVolNavigableMap(String s, NavigableMap<LocalTime, Double> nm) {
-        nm.descendingKeySet().stream().forEachOrdered(k -> {
+        nm.descendingKeySet().forEach(k -> {
             double thisValue = nm.get(k);
 
             if (s.equals("sz300315")) {
@@ -340,6 +341,7 @@ public class Utility {
         mp.forEach(Utility::fixNavigableMap);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T extends NavigableMap<LocalTime, Double>> void getIndustryVolYtd(Map<String, T> mp) {
         CompletableFuture.supplyAsync(()
                         -> mp.entrySet().stream().filter(GraphIndustry.NO_GC)
@@ -371,9 +373,7 @@ public class Utility {
 
         mp.keySet().forEach((String name) -> {
             res.put(name, new ConcurrentSkipListMap<>());
-            mp.get(name).keySet().forEach((LocalTime t) -> {
-                res.get(name).put(t, mp.get(name).get(t));
-            });
+            mp.get(name).keySet().forEach((LocalTime t) -> res.get(name).put(t, mp.get(name).get(t)));
             System.out.println(" for key " + name + " result " + res.get(name));
         });
         System.out.println(" converting done ");
@@ -519,9 +519,7 @@ public class Utility {
     public static <T extends Temporal,S> NavigableMap<T,S> mergeMapGen(NavigableMap<T,S>...mps) {
         return Stream.of(mps).flatMap(e->e.entrySet().stream()).collect(
                 Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,(a, b)->a,ConcurrentSkipListMap::new));
-
     }
-
 
     @SafeVarargs
     public static NavigableMap<LocalDateTime, ? super Trade> mergeTradeMap(NavigableMap<LocalDateTime, ? super Trade>... mps) {
@@ -591,7 +589,7 @@ public class Utility {
         return (a, b) -> bp.test(a, b) ? a : b;
     }
 
-    public static <T> BinaryOperator<T> temporalGen(BiPredicate<T,T> bp) {
+    private static <T> BinaryOperator<T> temporalGen(BiPredicate<T, T> bp) {
         return (a,b) -> bp.test(a,b)?a:b;
     }
 
