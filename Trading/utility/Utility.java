@@ -48,6 +48,7 @@ public class Utility {
     //static final Comparator<? super Entry<LocalTime,SimpleBar>> BAR_HIGH = (e1,e2)->e1.getValue().getHigh()>=e2.getValue().getHigh()?1:-1;
     //static final Comparator<? super Entry<LocalTime,SimpleBar>> BAR_HIGH = Comparator.comparingDouble(e->e.getValue().getHigh());
 
+    @SuppressWarnings("ComparatorMethodParameterNotUsed")
     public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_HIGH =
             (e1, e2) -> e1.getValue().getHigh() >= e2.getValue().getHigh() ? 1 : -1;
     //Map.Entry.comparingByValue(Comparator.comparingDouble(SimpleBar::getHigh));
@@ -238,6 +239,7 @@ public class Utility {
      * @param mp   hashmap of stock and value
      * @return all of these maps contains info about this stock
      */
+    @SafeVarargs
     public static boolean noZeroArrayGen(String name, Map<String, ? extends Number>... mp) {
         boolean res = true;
         for (Map<String, ? extends Number> m : mp) {
@@ -246,6 +248,7 @@ public class Utility {
         return res;
     }
 
+    @SafeVarargs
     public static boolean normalMapGen(String name, Map<String, ? extends Map<LocalTime, ?>>... mp) {
         boolean res = true;
         for (Map<String, ? extends Map<LocalTime, ?>> m : mp) {
@@ -512,10 +515,11 @@ public class Utility {
         return res;
     }
 
+    @SafeVarargs
     public static <T extends Temporal,S> NavigableMap<T,S> mergeMapGen(NavigableMap<T,S>...mps) {
-        //NavigableMap<T,S> res = new ConcurrentSkipListMap<>();
-        return Stream.of(mps).flatMap(e->e.entrySet().stream()).collect(Collectors.toMap(e->e.getKey(),e->e.getValue(),(a,b)->a,ConcurrentSkipListMap::new));
-        //return res;
+        return Stream.of(mps).flatMap(e->e.entrySet().stream()).collect(
+                Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,(a, b)->a,ConcurrentSkipListMap::new));
+
     }
 
 
