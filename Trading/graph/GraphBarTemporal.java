@@ -37,6 +37,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     int netCurrentPosition;
     double currentTradePnl;
     double currentMtmPnl;
+    double currentNetPnl;
     String name;
     String chineseName;
     String bench;
@@ -285,9 +286,10 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         g2.drawString(Integer.toString(getPercentile()) + "% ", getWidth()*2/8, 15);
         g2.drawString(""+getLast(), getWidth()*3/8,15);
 
-        g2.drawString(" pos: " + Integer.toString(netCurrentPosition), getWidth()*7/8, getHeight()/6);
-        g2.drawString(" Trade pnl " + Double.toString(currentTradePnl), getWidth()*7/8, getHeight()*2/6);
-        g2.drawString(" mtm pnl " + Double.toString(currentMtmPnl), getWidth()*7/8, getHeight()*3/6);
+        g2.drawString("pos: " + Integer.toString(netCurrentPosition), getWidth()*7/8, getHeight()/6);
+        g2.drawString("Trade pnl " + Double.toString(currentTradePnl), getWidth()*7/8, getHeight()*2/6);
+        g2.drawString("mtm pnl " + Double.toString(currentMtmPnl), getWidth()*7/8, getHeight()*3/6);
+        g2.drawString("Net pnl " + Double.toString(currentTradePnl+currentMtmPnl), getWidth()*7/8, getHeight()*4/6);
 
 
         if (!Optional.ofNullable(bench).orElse("").equals("")) {
