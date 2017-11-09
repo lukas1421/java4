@@ -1073,7 +1073,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     private static LinkedList<String> getPnl5mChg() {
         Set<String> ptf = symbolNames.stream().filter(ChinaPosition::relevantStock).collect(toCollection(HashSet::new));
         return ptf.stream().collect(Collectors.toMap(s -> s, ChinaPosition::getPnLChange5m)).entrySet().stream()
-                .sorted(Utility.reverseThis(Comparator.comparingDouble(Entry::getValue)))
+                .sorted((Comparator.comparingDouble((ToDoubleFunction<Map.Entry<String,Double>>) Entry::getValue).reversed()))
                 .map(e -> Utility.getStr(ChinaStock.nameMap.get(e.getKey()), ":", e.getValue()))
                 .collect(Collectors.toCollection(LinkedList::new));
     }
@@ -1083,7 +1083,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 (tradesMap.containsKey(stock) && tradesMap.get(stock).size() > 0);
     }
 
-    static double getPnLChange5m(String name) {
+    private static double getPnLChange5m(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
         if (ChinaStock.NORMAL_STOCK.test(name)) {
             LocalTime lastKey = ChinaData.priceMapBar.get(name).lastKey().isAfter(LocalTime.of(15, 0)) ? LocalTime.of(15, 0) : ChinaData.priceMapBar.get(name).lastKey();
@@ -1167,7 +1167,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     public static double getPotentialReturnToMid(String name) {
-
         double curr = 0.0;
         double maxT = 0.0;
         double minT = 0.0;
@@ -1214,13 +1213,13 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
 
-    static double getTodayTotalPnl(String name) {
+    private static double getTodayTotalPnl(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
         return Math.round(100d * (getMtmPnl(name) + getBuyTradePnl(name) + getSellTradePnl(name))) / 100d;
     }
 
     //todo
-    static synchronized LinkedList<String> topPnlKiyodoList() {
+    private static synchronized LinkedList<String> topPnlKiyodoList() {
         LinkedList<String> res;
 
         Map<String, Double> tickerNetpnl = priceMapBar.entrySet().stream().filter(e -> relevantStock(e.getKey()))
@@ -1228,7 +1227,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         double netPnlAll = tickerNetpnl.entrySet().stream().mapToDouble(Map.Entry::getValue).sum();
 
-        res = tickerNetpnl.entrySet().stream().sorted(Utility.reverseThis(Comparator.comparingDouble(e -> Math.abs(e.getValue()))))
+        res = tickerNetpnl.entrySet().stream().sorted((Comparator.comparingDouble((Map.Entry<String,Double> e) ->  Math.abs(e.getValue())).reversed()))
                 .map(Map.Entry::getKey).map(s -> Utility.getStr(nameMap.get(s),
                         tickerNetpnl.getOrDefault(s, 0.0), Math.round(100d * tickerNetpnl.getOrDefault(s, 0.0) / netPnlAll), "%"))
                 .collect(Collectors.toCollection(LinkedList::new));
@@ -1347,7 +1346,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     return String.class;
                 case 27:
                     return Integer.class;
-
                 default:
                     return Double.class;
             }

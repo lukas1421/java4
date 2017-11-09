@@ -28,7 +28,7 @@ import static utility.Utility.reduceDouble;
 
 public final class GraphBar extends JComponent implements GraphFillable {
 
-    static final int WIDTH_BAR = 3;
+    private static final int WIDTH_BAR = 3;
     int height;
     double min;
     double max;

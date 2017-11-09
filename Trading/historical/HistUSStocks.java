@@ -30,67 +30,63 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
-import static historical.HistHKStocks.getMondayOfWeek;
+import static utility.Utility.getMondayOfWeek;
 
 public class HistUSStocks extends JPanel  {
 
     static final String USCHINASTOCKFILE = "USChinaStocks.txt";
-    static final String USALLFILE = "USAll.txt";
+    private static final String USALLFILE = "USAll.txt";
     static final String USFAMOUSFILE = "USFamous.txt";
-    static final String USCurrent= USALLFILE;
+    private static final String USCurrent= USALLFILE;
 
     private static volatile Semaphore sm = new Semaphore(50);
-    public static final LocalDate MONDAY_OF_WEEK = getMondayOfWeek(LocalDateTime.now());
+    private static final LocalDate MONDAY_OF_WEEK = getMondayOfWeek(LocalDateTime.now());
 
-    static final String CUTOFFTIME = getDataCutoff();
-    static final int DAYSTOREQUESTYtd = (int) Math.round(ChronoUnit.DAYS.between(
+    private static final String CUTOFFTIME = getDataCutoff();
+    private static final int DAYSTOREQUESTYtd = (int) Math.round(ChronoUnit.DAYS.between(
             LocalDate.of(LocalDate.now().getYear() - 1, Month.DECEMBER, 31),
             LocalDate.now())*252/365) ;
 
-    static final int DAYSTOREQUESTWtd = (int) ChronoUnit.DAYS.between(
+    private static final int DAYSTOREQUESTWtd = (int) ChronoUnit.DAYS.between(
             getMondayOfWeek(LocalDateTime.now()), LocalDate.now()) + 2;
 
-    static ApiController apcon = new ApiController(
+    private static ApiController apcon = new ApiController(
             new ApiController.IConnectionHandler.DefaultConnectionHandler(),
             new ApiConnection.ILogger.DefaultLogger(),
             new ApiConnection.ILogger.DefaultLogger());
 
     //public Contract ctUS = new Contract();
     //public static NavigableMap<LocalDate, SimpleBar> USSINGLE = new TreeMap<>();
-    public static volatile Map<String, NavigableMap<LocalDate, SimpleBar>> USALLYtd = new HashMap<>();
-    public static volatile Map<String, NavigableMap<LocalDateTime, SimpleBar>> USALLWtd = new HashMap<>();
+    private static volatile Map<String, NavigableMap<LocalDate, SimpleBar>> USALLYtd = new HashMap<>();
+    private static volatile Map<String, NavigableMap<LocalDateTime, SimpleBar>> USALLWtd = new HashMap<>();
     private static volatile Map<String, USResult> USResultMapYtd = new HashMap<>();
     private static volatile Map<String, USResult> USResultMapWtd = new HashMap<>();
 
 
-    public static List<String> usNameList = new LinkedList<>();
-    public static File usTestOutput = new File(TradingConstants.GLOBALPATH + "usTestData.txt");
+    private static List<String> usNameList = new LinkedList<>();
+    private static File usTestOutput = new File(TradingConstants.GLOBALPATH + "usTestData.txt");
 
-    static volatile AtomicInteger uniqueID = new AtomicInteger(60000);
-    static volatile String selectedStock = "";
+    private static volatile AtomicInteger uniqueID = new AtomicInteger(60000);
+    private static volatile String selectedStock = "";
     //public static volatile Map<Integer, String> idStockMap = new HashMap<>();
 
-    static BarModel_US m_model;
-    static JPanel graphPanel;
-    static JTable tab;
-    int modelRow;
-    int indexRow;
-    static TableRowSorter<BarModel_US> sorter;
-    public static volatile JLabel totalStocksLabelYtd = new JLabel("Total Y");
-    public static volatile JLabel totalStocksLabelWtd = new JLabel("Total W");
-    public static volatile AtomicLong stocksProcessedYtd = new AtomicLong(0);
-    public static volatile AtomicLong stocksProcessedWtd = new AtomicLong(0);
+    private static BarModel_US m_model;
+    private int modelRow;
+    private static volatile JLabel totalStocksLabelYtd = new JLabel("Total Y");
+    private static volatile JLabel totalStocksLabelWtd = new JLabel("Total W");
+    private static volatile AtomicLong stocksProcessedYtd = new AtomicLong(0);
+    private static volatile AtomicLong stocksProcessedWtd = new AtomicLong(0);
 
-    GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
-    GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
+    private GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
+    private GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
 
-    public static File outputYtd = new File(TradingConstants.GLOBALPATH + "usSharpeYtd.txt");
-    public static File outputWtd = new File(TradingConstants.GLOBALPATH + "usSharpeWtd.txt");
+    private static File outputYtd = new File(TradingConstants.GLOBALPATH + "usSharpeYtd.txt");
+    private static File outputWtd = new File(TradingConstants.GLOBALPATH + "usSharpeWtd.txt");
 
 
-    public HistUSStocks() {
+    @SuppressWarnings("unchecked")
+    private HistUSStocks() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + USCurrent), "gbk"))) {
@@ -102,15 +98,16 @@ public class HistUSStocks extends JPanel  {
                 USResultMapWtd.put(al1.get(0), new USResult());
             }
         } catch (IOException ex) {
+            ex.printStackTrace();
         }
 
-        usNameList = USALLYtd.keySet().stream().collect(Collectors.toList());
+        usNameList = new ArrayList<>(USALLYtd.keySet());
         System.out.println(" us name list " + usNameList);
 
         m_model = new BarModel_US();
-        graphPanel = new JPanel();
+        JPanel graphPanel = new JPanel();
 
-        tab = new JTable(m_model) {
+        JTable tab = new JTable(m_model) {
             @Override
             public Component prepareRenderer(TableCellRenderer renderer, int Index_row, int Index_col) {
                 try {
@@ -198,11 +195,10 @@ public class HistUSStocks extends JPanel  {
         outputYtdButton.addActionListener(al->{
             if(USALLYtd.containsKey(selectedStock)) {
                 Utility.clearFile(usTestOutput);
-                USALLYtd.get(selectedStock).entrySet().forEach(e->
-                        Utility.simpleWriteToFile(
-                                Utility.getStrTabbed(e.getKey(),e.getValue().getOpen(),e.getValue().getHigh()
-                                        ,e.getValue().getLow()
-                                        ,e.getValue().getClose()), true, usTestOutput));
+                USALLYtd.get(selectedStock).forEach((key, value) -> Utility.simpleWriteToFile(
+                        Utility.getStrTabbed(key, value.getOpen(), value.getHigh()
+                                , value.getLow()
+                                , value.getClose()), true, usTestOutput));
             } else {
                 System.out.println(" cannot find stock for outtputting ytd " + selectedStock);
             }
@@ -212,11 +208,10 @@ public class HistUSStocks extends JPanel  {
         outputWtdButton.addActionListener(al-> {
             if(USALLWtd.containsKey(selectedStock)) {
                 Utility.clearFile(usTestOutput);
-                USALLWtd.get(selectedStock).entrySet().forEach(e ->
-                        Utility.simpleWriteToFile(
-                                Utility.getStrTabbed(e.getKey(), e.getValue().getOpen(), e.getValue().getHigh()
-                                        , e.getValue().getLow()
-                                        , e.getValue().getClose()), true, usTestOutput));
+                USALLWtd.get(selectedStock).forEach((key, value) -> Utility.simpleWriteToFile(
+                        Utility.getStrTabbed(key, value.getOpen(), value.getHigh()
+                                , value.getLow()
+                                , value.getClose()), true, usTestOutput));
             } else {
                 System.out.println(" cannot find stock for outputting wtd " + selectedStock);
             }
@@ -248,10 +243,10 @@ public class HistUSStocks extends JPanel  {
         add(graphPanel,BorderLayout.SOUTH);
 
         tab.setAutoCreateRowSorter(true);
-        sorter = (TableRowSorter<BarModel_US>) tab.getRowSorter();
+        TableRowSorter<BarModel_US> sorter = (TableRowSorter<BarModel_US>) tab.getRowSorter();
     }
 
-    public static void refreshYtd() {
+    private static void refreshYtd() {
         SwingUtilities.invokeLater(() -> {
             totalStocksLabelYtd.setText(Long.toString(stocksProcessedYtd.get()) + "/" + Long.toString(USALLYtd.size()));
             //System.out.println(" refreshing all ");
@@ -259,7 +254,7 @@ public class HistUSStocks extends JPanel  {
         });
     }
 
-    public static void refreshWtd() {
+    private static void refreshWtd() {
         SwingUtilities.invokeLater(() -> {
             totalStocksLabelWtd.setText(Long.toString(stocksProcessedWtd.get()) + "/" + Long.toString(USALLWtd.size()));
             //System.out.println(" refreshing all ");
@@ -267,19 +262,19 @@ public class HistUSStocks extends JPanel  {
         });
     }
 
-    void requestAllUSStocksYtd() {
+    private void requestAllUSStocksYtd() {
         stocksProcessedYtd = new AtomicLong(0);
         Utility.clearFile(HistUSStocks.outputYtd);
-        USALLYtd.keySet().forEach(k -> request1StockYtd(k));
+        USALLYtd.keySet().forEach(this::request1StockYtd);
     }
 
-    void requestAllUSStocksWtd() {
+    private void requestAllUSStocksWtd() {
         stocksProcessedWtd = new AtomicLong(0);
         Utility.clearFile(HistUSStocks.outputWtd);
-        USALLWtd.keySet().forEach(k -> request1StockWtd(k));
+        USALLWtd.keySet().forEach(this::request1StockWtd);
     }
 
-    Contract generateUSContract(String stock) {
+    private Contract generateUSContract(String stock) {
         Contract ct = new Contract();
         ct.symbol(stock);
         ct.currency("USD");
@@ -288,7 +283,7 @@ public class HistUSStocks extends JPanel  {
         return ct;
     }
 
-    void request1StockYtd(String stock) {
+    private void request1StockYtd(String stock) {
         CompletableFuture.runAsync(() -> {
             //System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
             //System.out.println(" available " + sm.availablePermits());
@@ -308,7 +303,7 @@ public class HistUSStocks extends JPanel  {
         });
     }
 
-    void request1StockWtd(String stock) {
+    private void request1StockWtd(String stock) {
         CompletableFuture.runAsync(() -> {
             //System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
             //System.out.println(" available " + sm.availablePermits());
@@ -328,21 +323,17 @@ public class HistUSStocks extends JPanel  {
         });
     }
 
-    static String getDataCutoff() {
+    private static String getDataCutoff() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
     }
 
-    void connectToTWS(int port) {
+    private void connectToTWS() {
         System.out.println(" trying to connect");
         try {
-            apcon.connect("127.0.0.1", port, 101, "");
+            apcon.connect("127.0.0.1", 7496, 101, "");
         } catch (Exception ex) {
             System.out.println(" connect to tws failed ");
         }
-    }
-
-    static ApiController getAPICon() {
-        return apcon;
     }
 
     public static void computeAll() {
@@ -358,7 +349,7 @@ public class HistUSStocks extends JPanel  {
         });
     }
 
-    public static void computeYtd(String stock) {
+    private static void computeYtd(String stock) {
         NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(USALLYtd.get(stock),
                 LocalDate.of(2016, Month.DECEMBER, 31));
         double mean = SharpeUtility.getMean(ret);
@@ -369,7 +360,7 @@ public class HistUSStocks extends JPanel  {
         System.out.println(Utility.getStrTabbed(" stock mean sd sr perc", stock, mean, sd, sr, perc));
     }
 
-    public static void computeWtd(String stock) {
+    private static void computeWtd(String stock) {
         System.out.println(" computing Wtd starts for stock " + stock);
         NavigableMap<LocalDateTime, Double> ret = SharpeUtility.getReturnSeries(USALLWtd.get(stock),
                 LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1), LocalTime.MIN));
@@ -389,11 +380,9 @@ public class HistUSStocks extends JPanel  {
         HistUSStocks us = new HistUSStocks();
         jf.add(us);
         jf.setLayout(new FlowLayout());
-        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         jf.setVisible(true);
-        CompletableFuture.runAsync(() -> {
-            us.connectToTWS(7496);
-        });
+        CompletableFuture.runAsync(us::connectToTWS);
     }
 
 
@@ -440,15 +429,11 @@ public class HistUSStocks extends JPanel  {
             //System.out.println(" current permit after done " + HistHKStocks.sm.availablePermits());
             computeWtd(name);
             refreshWtd();
-
         }
     }
 
-
-
-    public LocalDate convertStringToDate(String date) {
-        LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
-        return ld;
+    private LocalDate convertStringToDate(String date) {
+        return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
     }
 
     private class USResult {
@@ -457,13 +442,6 @@ public class HistUSStocks extends JPanel  {
         double sd;
         double sr;
         double perc;
-
-        USResult(double m, double s, double r, double p) {
-            mean = m;
-            sd = s;
-            sr = r;
-            perc = p;
-        }
 
         void fillResult(double m, double s, double r, double p) {
             mean = Math.round(1000d * m) / 10d;
@@ -479,19 +457,19 @@ public class HistUSStocks extends JPanel  {
             perc = 0.0;
         }
 
-        public double getMean() {
+        double getMean() {
             return mean;
         }
 
-        public double getSd() {
+        double getSd() {
             return sd;
         }
 
-        public double getSr() {
+        double getSr() {
             return sr;
         }
 
-        public double getPerc() {
+        double getPerc() {
             return perc;
         }
     }

@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
 
-public class HistChinaHelper {
+class HistChinaHelper {
 
     private HistChinaHelper() {
         throw new UnsupportedOperationException();

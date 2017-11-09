@@ -17,7 +17,10 @@ import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.io.*;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -28,6 +31,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static utility.Utility.getMondayOfWeek;
 
 public class HistHKStocks extends JPanel {
 
@@ -456,13 +461,6 @@ public class HistHKStocks extends JPanel {
         }
     }
 
-    public static LocalDate getMondayOfWeek(LocalDateTime ld) {
-        LocalDate res = ld.toLocalDate();
-        while (!res.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
-            res = res.minusDays(1);
-        }
-        return res;
-    }
 
 
     public static void main(String[] args) {

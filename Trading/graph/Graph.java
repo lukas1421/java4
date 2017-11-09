@@ -3,32 +3,29 @@ package graph;
 import apidemo.ChinaData;
 import apidemo.ChinaDataYesterday;
 import apidemo.ChinaStock;
-import graph.GraphFillable;
+import auxiliary.SimpleBar;
 import utility.Utility;
 
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaData.sizeTotalMap;
-import static apidemo.ChinaData.sizeTotalMapYtd;
-import static apidemo.ChinaDataYesterday.*;
-import static apidemo.ChinaStock.*;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import static java.lang.Math.log;
+import javax.swing.*;
+import java.awt.*;
 import java.time.LocalTime;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.NavigableMap;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
+
+import static apidemo.ChinaData.*;
+import static apidemo.ChinaDataYesterday.*;
+import static apidemo.ChinaStock.*;
+import static java.lang.Math.log;
 import static java.util.stream.Collectors.toMap;
-import javax.swing.JComponent;
 
 public class Graph extends JComponent implements GraphFillable {
 
-    static final int WIDTH_GR = 3;
+    private static final int WIDTH_GR = 3;
     int height;
     double min;
     double max;
@@ -60,9 +57,9 @@ public class Graph extends JComponent implements GraphFillable {
         this.name = s;
     }
 
-    public void setNavigableMap(NavigableMap<LocalTime, ?> tm) {
-        this.tm = (tm != null) ? new ConcurrentSkipListMap<>(tm.entrySet().stream().map(e -> (Entry<LocalTime, Double>) e)
-                .filter(e -> e.getValue() != 0.0).collect(toMap(Entry::getKey, Entry::getValue))) : new ConcurrentSkipListMap<>();
+    public <S> void setNavigableMap(NavigableMap<LocalTime, S> tm, ToDoubleFunction<S> f, Predicate<S> zeroCondition) {
+        this.tm = (tm != null) ? new ConcurrentSkipListMap<>(tm.entrySet().stream().filter(e->!zeroCondition.test(e.getValue()))
+                .collect(toMap(Entry::getKey, e->f.applyAsDouble(e.getValue())))) : new ConcurrentSkipListMap<>();
     }
 
     public ConcurrentSkipListMap<LocalTime, Double> getNavigableMap() {
@@ -107,7 +104,7 @@ public class Graph extends JComponent implements GraphFillable {
             setChineseName(ChinaStock.nameMap.get(name));
             setSize1(sizeMap.getOrDefault(name, 0L));
             if (Utility.NORMAL_MAP.test(priceMapBar, name)) {
-                this.setNavigableMap(ChinaData.priceMapBar.get(name));
+                this.setNavigableMap(ChinaData.priceMapBar.get(name), SimpleBar::getClose, SimpleBar::containsZero);
             }
         }
     }

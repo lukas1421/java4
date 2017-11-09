@@ -615,8 +615,8 @@ public class HistChinaStocks extends JPanel {
     }
 
     /**
-     * @param p
-     * @return
+     * @param p predicate to filter which stocks to do
+     * @return return weighted avg delta
      */
     private static int computeDeltaWeightedPercentile(Predicate<? super Map.Entry<String, ?>> p) {
         //double sumDelta = stockList.stream().mapToDouble(s->getCurrentPos(s)*priceMap.getOrDefault(s,0.0)).sum();

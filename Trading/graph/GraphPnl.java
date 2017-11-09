@@ -4,32 +4,21 @@ import TradeType.Trade;
 import apidemo.ChinaPosition;
 import utility.Utility;
 
-import static utility.Utility.TIMEMAX;
-import static utility.Utility.getStr;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import static java.lang.Math.log;
-import static java.lang.Math.round;
+import javax.swing.*;
+import java.awt.*;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
+import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.swing.JComponent;
-import javax.swing.SwingUtilities;
+
+import static java.lang.Math.log;
+import static java.lang.Math.round;
+import static utility.Utility.*;
 
 public final class GraphPnl extends JComponent {
 
@@ -410,7 +399,8 @@ public final class GraphPnl extends JComponent {
             }
         }
 
-        g.drawString("NET: " + Math.round(100d * Optional.ofNullable(netMap.lastEntry()).map(Entry::getValue).orElse(0.0)) / 100d, x + WIDTH_PNL, last - 10);
+        g.drawString("NET: " + Math.round(100d * Optional.ofNullable(netMap.lastEntry())
+                .map(Entry::getValue).orElse(0.0)) / 100d, x + WIDTH_PNL, last - 10);
 
         g2.setColor(Color.red);
         g2.setStroke(new BasicStroke(3));
@@ -538,14 +528,15 @@ public final class GraphPnl extends JComponent {
         return height - (int) val + 50;
     }
 
-    public <T> Comparator<T> reverseThis(Comparator<T> comp) {
-        return comp.reversed();
-    }
+//    public <T> Comparator<T> reverseThis(Comparator<T> comp) {
+//        return comp.reversed();
+//    }
 
     Map<Integer, String> getPtfCompoString(NavigableMap<String, Double> bench, double delta, Map<String, Double> mtm) {
         Map<Integer, String> res = new LinkedHashMap<>();
         LinkedList<String> sortedBench = bench.entrySet().stream()
-                .sorted(reverseThis(Comparator.comparingDouble(Map.Entry::getValue))).collect(Collectors.mapping(Map.Entry::getKey, Collectors.toCollection(LinkedList::new)));
+                .sorted(Comparator.comparingDouble((ToDoubleFunction<Entry<String, Double>>) Entry::getValue).reversed()).map(Entry::getKey)
+                .collect(Collectors.toCollection(LinkedList::new));
         Iterator<String> it = sortedBench.iterator();
 
 //        Map<String, Double> mtmPnlAll = ChinaPosition.openPositionMap.entrySet().stream().filter(e->e.getValue()>0)
@@ -553,7 +544,7 @@ public final class GraphPnl extends JComponent {
 //                        Collectors.summingDouble(e-> (ChinaStock.priceMap.getOrDefault(e.getKey(),0.0) - ChinaStock.closeMap.getOrDefault(e.getKey(), 0.0))*(e.getValue()))));
         double netMtmAll = Double.MAX_VALUE;
         if (mtm.size() > 0) {
-            netMtmAll = mtm.entrySet().stream().collect(Collectors.summingDouble(e -> e.getValue()));
+            netMtmAll = mtm.entrySet().stream().mapToDouble(Entry::getValue).sum();
         }
         //"大: " + Long.toString(round(benchMap.getOrDefault("大", 0.0)/1000d))+" k   " + Double.toString(round(100d*benchMap.getOrDefault("大", 0.0)/currentDelta))+ " % "
         int i = 0;
@@ -683,14 +674,12 @@ public final class GraphPnl extends JComponent {
         return tm.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse(TIMEMAX);
     }
 
-    static double r(double d) {
-        return Math.round(d * 100d) / 100d;
-    }
+    //static double r(double d) {return Math.round(d * 100d) / 100d;}
 
     private int getDayVRPercentile() {
         if (tm.size() > 0) {
-            double maxD = tm.entrySet().stream().max(Map.Entry.comparingByValue()).map(e -> e.getValue()).orElse(0.0);
-            double minD = tm.entrySet().stream().min(Map.Entry.comparingByValue()).map(e -> e.getValue()).orElse(0.0);
+            double maxD = tm.entrySet().stream().max(Map.Entry.comparingByValue()).map(Entry::getValue).orElse(0.0);
+            double minD = tm.entrySet().stream().min(Map.Entry.comparingByValue()).map(Entry::getValue).orElse(0.0);
             double lastD = tm.lastEntry().getValue();
             return (int) Math.round(100d * (lastD - minD) / (maxD - minD));
         }
