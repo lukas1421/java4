@@ -1,37 +1,25 @@
 package auxiliary;
 
-import static apidemo.ChinaData.strategyTotalMap;
-import static apidemo.ChinaStock.symbolNames;
-
-import apidemo.ChinaBigGraph;
 import apidemo.ChinaData;
-import apidemo.ChinaMain;
 import apidemo.ChinaStock;
-import auxiliary.Strategy;
+import apidemo.TradingConstants;
 import auxiliary.Strategy.StratType;
-import auxiliary.SimpleBar;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.util.Map;
-import javax.swing.JPanel;
-import javax.swing.JTable;
+import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.*;
 import java.time.LocalTime;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
+
+import static apidemo.ChinaData.strategyTotalMap;
+import static apidemo.ChinaStock.symbolNames;
 import static java.util.stream.Collectors.*;
-import javax.swing.JButton;
-import javax.swing.JScrollPane;
-import javax.swing.JToggleButton;
-import javax.swing.SwingUtilities;
 
 public final class ChinaStrategyTable extends JPanel {
 
@@ -76,7 +64,7 @@ public final class ChinaStrategyTable extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.width = ChinaMain.GLOBALWIDTH;
+                d.width = TradingConstants.GLOBALWIDTH;
                 return d;
             }
         };

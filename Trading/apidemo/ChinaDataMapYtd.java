@@ -1,21 +1,16 @@
 package apidemo;
 
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
 import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.ChinaData.tradeTime;
 import static apidemo.ChinaStock.nameMap;
 import static apidemo.ChinaStock.symbolNamesFull;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellRenderer;
 
 /**
  *
@@ -60,7 +55,7 @@ final class ChinaDataMapYtd extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.width = ChinaMain.GLOBALWIDTH;
+                d.width = TradingConstants.GLOBALWIDTH;
                 return d;
             }
         };

@@ -4,13 +4,12 @@ import graph.GraphBig;
 import graph.GraphBigYtd;
 import graph.GraphIndustry;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.time.LocalTime;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
+
 import static apidemo.ChinaStock.industryNameMap;
 
 public final class ChinaBigGraph extends JPanel {
@@ -29,7 +28,7 @@ public final class ChinaBigGraph extends JPanel {
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
                 d.height = TOP_GRAPH_HEIGHT;
-                d.width = ChinaMain.GLOBALWIDTH;
+                d.width = TradingConstants.GLOBALWIDTH;
                 return d;
             }
         };
@@ -39,7 +38,7 @@ public final class ChinaBigGraph extends JPanel {
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
                 d.height = YTD_GRAPH_HEIGHT;
-                d.width = ChinaMain.GLOBALWIDTH;
+                d.width = TradingConstants.GLOBALWIDTH;
                 return d;
             }
         };

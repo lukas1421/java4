@@ -1,18 +1,13 @@
 package apidemo;
 
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import java.awt.*;
+
 import static apidemo.ChinaData.sizeTotalMapYtd;
 import static apidemo.ChinaData.tradeTime;
 import static apidemo.ChinaStock.nameMap;
 import static apidemo.ChinaStock.symbolNames;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingUtilities;
-import javax.swing.table.AbstractTableModel;
 
 class ChinaSizeDataYtd extends JPanel {
 
@@ -25,7 +20,7 @@ class ChinaSizeDataYtd extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.width = ChinaMain.GLOBALWIDTH;
+                d.width = TradingConstants.GLOBALWIDTH;
                 return d;
             }
         };

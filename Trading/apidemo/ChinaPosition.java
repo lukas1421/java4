@@ -313,7 +313,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
                 d.height = 600;
-                d.width = ChinaMain.GLOBALWIDTH;
+                d.width = TradingConstants.GLOBALWIDTH;
                 return d;
             }
         };

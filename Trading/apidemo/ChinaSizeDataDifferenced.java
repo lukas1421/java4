@@ -80,7 +80,7 @@ class ChinaSizeDataDifferenced extends JPanel {
         JScrollPane scroll = new JScrollPane(tab) {
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.width = ChinaMain.GLOBALWIDTH;
+                d.width = TradingConstants.GLOBALWIDTH;
                 return d;
             }
         };

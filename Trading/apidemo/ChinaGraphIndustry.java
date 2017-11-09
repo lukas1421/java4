@@ -30,7 +30,7 @@ public final class ChinaGraphIndustry extends JPanel {
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
                 d.height = BIG_GRAPH_HEIGHT;
-                d.width = ChinaMain.GLOBALWIDTH;
+                d.width = TradingConstants.GLOBALWIDTH;
                 return d;
             }
         };

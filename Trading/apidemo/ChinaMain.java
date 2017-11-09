@@ -78,10 +78,6 @@ public final class ChinaMain implements IConnectionHandler {
     static volatile JLabel systemTime = new JLabel(Utility.timeNowToString());
     static volatile JLabel systemNotif = new JLabel("");
 
-    public static final int GLOBALWIDTH = 1900;
-    public static volatile double CNHHKD = 1.18;
-    final static int PORT_IBAPI = 4001;
-    final static int PORT_NORMAL = 7496;
     //private final Data data = new Data();
     //private final HistData histdata = new HistData();
     //private LiveData livedata = new LiveData();
