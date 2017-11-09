@@ -77,7 +77,7 @@ public class Backtesting extends JPanel {
                     comp.setBackground(Color.CYAN);
 
                     if (mapCopy.size() > 0) {
-                        graph1.setNavigableMap(mapCopy.get(symbolNames.get(modelRow)));
+                        graph1.setNavigableMap(mapCopy.get(symbolNames.get(modelRow)), d->d, d->d==0.0);
                     }
 
                     if (this.getParent().getParent().getParent().getComponentCount() == 3) {
@@ -132,7 +132,7 @@ public class Backtesting extends JPanel {
             if (mapCopy.size() > 0) {
                 try {
                     System.out.println("mapcopy size " + mapCopy.size());
-                    graph1.setNavigableMap(mapCopy.get(symbolNames.get(modelRow)));
+                    graph1.setNavigableMap(mapCopy.get(symbolNames.get(modelRow)),d->d,d-> d==0.0);
                 } catch (Exception e) {
                     e.printStackTrace();
                     System.out.println("incorrect symbol input");
@@ -164,7 +164,7 @@ public class Backtesting extends JPanel {
                     graphCreated = true;
                     this.repaint();
                 } else {
-                    graph1.setNavigableMap(mapCopy.get(symbolNames.get(modelRow)));
+                    graph1.setNavigableMap(mapCopy.get(symbolNames.get(modelRow)), d->d, d->d==0.0);
                     //  System.out.println("model row is " + modelRow);
                     //  System.out.println("symbol names . get modelrow " + symbolNames.get(modelRow).toString());
                     //  System.out.println(mapCopy.get(symbolNames.get(modelRow)).toString());

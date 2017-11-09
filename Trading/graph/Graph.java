@@ -62,6 +62,10 @@ public class Graph extends JComponent implements GraphFillable {
                 .collect(toMap(Entry::getKey, e->f.applyAsDouble(e.getValue())))) : new ConcurrentSkipListMap<>();
     }
 
+    public void setNavigableMap(NavigableMap<LocalTime, Double> tm) {
+        setNavigableMap(tm, d->d, d->d==0.0);
+    }
+
     public ConcurrentSkipListMap<LocalTime, Double> getNavigableMap() {
         return this.tm;
     }

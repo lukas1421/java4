@@ -4,7 +4,7 @@ import utility.Utility;
 
 public class FutureTrade extends Trade {
 
-    public final double COST_PER_LOT = 1.505;
+    private final double COST_PER_LOT = 1.505;
 
     public FutureTrade(double p, int s) {
         super(p, s);
