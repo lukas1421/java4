@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
-import java.util.stream.Collectors;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.tradeTime;
@@ -548,8 +547,8 @@ public final class ChinaStockHelper {
     }
 
     static void roundAllData() {
-        ChinaData.priceMapBarYtd.entrySet().stream().forEach((e) -> Utility.roundMap(e.getValue()));
-        ChinaData.priceMapBarY2.entrySet().stream().forEach((e) -> Utility.roundMap(e.getValue()));
+        ChinaData.priceMapBarYtd.entrySet().forEach((e) -> Utility.roundMap(e.getValue()));
+        ChinaData.priceMapBarY2.entrySet().forEach((e) -> Utility.roundMap(e.getValue()));
     }
 
     public static void buildA50FromSS(double open) {
@@ -560,9 +559,9 @@ public final class ChinaStockHelper {
 
         ChinaData.tradeTimePure.forEach(t -> {
             System.out.println(" t " + t);
-            double rtn = weightMapA50.entrySet().stream().collect(Collectors.summingDouble(e
+            double rtn = weightMapA50.entrySet().stream().mapToDouble(e
                     -> (priceMapBar.get(e.getKey()).ceilingEntry(t).getValue().getClose()
-                    / closeMap.getOrDefault(e.getKey(), priceMapBar.get(e.getKey()).firstEntry().getValue().getOpen()) - 1) * e.getValue() / 100));
+                    / closeMap.getOrDefault(e.getKey(), priceMapBar.get(e.getKey()).firstEntry().getValue().getOpen()) - 1) * e.getValue() / 100).sum();
 
             if (t.isBefore(LocalTime.of(9, 30))) {
                 priceMapBar.get("FTSEA50").put(t, new SimpleBar(open));
@@ -611,7 +610,7 @@ public final class ChinaStockHelper {
         buildA50Gen(openY2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2, new HashMap<>());
     }
 
-    public static void buildA50Gen(double open, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp, Map<String, ? extends NavigableMap<LocalTime, Double>> volmp, Map<String, Double> closeMp) {
+    static void buildA50Gen(double open, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp, Map<String, ? extends NavigableMap<LocalTime, Double>> volmp, Map<String, Double> closeMp) {
 
         if (mp.containsKey("FTSEA50")) {
             mp.get("FTSEA50").entrySet().removeIf(e -> e.getKey().isBefore(LocalTime.of(9, 30)));
@@ -619,7 +618,7 @@ public final class ChinaStockHelper {
 
         ChinaData.tradeTimePure.forEach(t -> {
             System.out.println(" t " + t);
-            double rtn = weightMapA50.entrySet().stream().collect(Collectors.summingDouble(e -> {
+            double rtn = weightMapA50.entrySet().stream().mapToDouble(e -> {
                 double res = 0.0;
                 if (mp.containsKey(e.getKey()) && mp.get(e.getKey()).size() > 0 && mp.get(e.getKey()).lastKey().isAfter(t.minusMinutes(1L))) {
                     res = (mp.get(e.getKey()).ceilingEntry(t).getValue().getClose()
@@ -629,7 +628,7 @@ public final class ChinaStockHelper {
                 }
                 return res;
                 //return mp.get(e.getKey()).ceilingEntry(t).getValue().getClose()/closeMp.getOrDefault(e.getKey(),0.0)-1)*e.getValue()/100;
-            }));
+            }).sum();
 
             //System.out.println(" RETURN " + t.toString() + " " + rtn);
             if (t.isBefore(LocalTime.of(9, 30))) {
@@ -660,7 +659,7 @@ public final class ChinaStockHelper {
         });
     }
 
-    public static void buildGenForYtd(String... tickers) {
+    static void buildGenForYtd(String... tickers) {
         for (String ticker : tickers) {
             if (ChinaStock.NORMAL_STOCK.test(ticker)) {
                 System.out.println("building " + ticker);
@@ -679,8 +678,8 @@ public final class ChinaStockHelper {
         }
     }
 
-    public static void computeMinuteSharpeAll() {
-        ChinaData.priceMapBar.entrySet().stream().forEach(e -> {
+    static void computeMinuteSharpeAll() {
+        ChinaData.priceMapBar.entrySet().forEach(e -> {
             double minSharp = SharpeUtility.computeMinuteSharpe(e.getValue().tailMap(LocalTime.of(9, 30), true));
             //System.out.println(e.getKey() + " minsharp " + minSharp);
 //            if (e.getKey().equals("sh601398")) {
@@ -695,7 +694,7 @@ public final class ChinaStockHelper {
         return retMap.entrySet().stream().mapToDouble(e -> f.applyAsDouble(e.getValue())).sum();
     }
 
-    static NavigableMap<LocalTime, Double> getReturnMapFromPMB(String name) {
+    private static NavigableMap<LocalTime, Double> getReturnMapFromPMB(String name) {
         NavigableMap<LocalTime, SimpleBar> mp = priceMapBar.get(name).tailMap(LocalTime.of(9, 30), true);
         NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
         if (mp.size() > 0) {

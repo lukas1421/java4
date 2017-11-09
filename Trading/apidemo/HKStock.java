@@ -34,23 +34,24 @@ public class HKStock extends JPanel {
     int indexRow;
     static JTable tab;
 
-    static TableRowSorter<BarModel_HKStock> sorter;
-    final File hkstockFile= new File(TradingConstants.GLOBALPATH+"hkMainList.txt");
-    final File ahFile= new File(TradingConstants.GLOBALPATH+"AHList.txt");
+    private static TableRowSorter<BarModel_HKStock> sorter;
+    private final File hkstockFile= new File(TradingConstants.GLOBALPATH+"hkMainList.txt");
+    private final File ahFile= new File(TradingConstants.GLOBALPATH+"AHList.txt");
     String line;
-    public static List<String> symbolNamesHK = new LinkedList<>();
-    public static Map<String, String> haMap  = new HashMap<>();
+    private static List<String> symbolNamesHK = new LinkedList<>();
+    private static Map<String, String> haMap  = new HashMap<>();
     public static Map<String, String> hkNameMap = new HashMap<>();
 
-    static String hkstock1 = "700";
-    static String hkstock2 = "2823";
-    static String hkstock3 = "2822";
-    static String hkstock4 = "3188";
-    static String hkstock5 = "3147";
-    static String hkstock6 = "1398";
+    private static String hkstock1 = "700";
+    private static String hkstock2 = "2823";
+    private static String hkstock3 = "2822";
+    private static String hkstock4 = "3188";
+    private static String hkstock5 = "3147";
+    private static String hkstock6 = "1398";
 
 
-    public HKStock() {
+    @SuppressWarnings("unchecked")
+    HKStock() {
 
         System.out.println(" initializing hk stock ");
         try(BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(hkstockFile),"GBK"))){
@@ -167,7 +168,7 @@ public class HKStock extends JPanel {
 
     }
 
-    static JScrollPane genNewScrollPane(JComponent g) {
+    private static JScrollPane genNewScrollPane(JComponent g) {
         return new JScrollPane(g) {
             @Override
             public Dimension getPreferredSize() {
@@ -279,7 +280,7 @@ public class HKStock extends JPanel {
 
     }
 
-    static void refreshAll () {
+    private static void refreshAll() {
         //System.out.print(" refreshing all ");
         SwingUtilities.invokeLater(()->{
             graphPanel.repaint();
@@ -287,7 +288,7 @@ public class HKStock extends JPanel {
         });
     }
 
-    static double getHPremiumOverA(String name) {
+    private static double getHPremiumOverA(String name) {
         double currentHKPrice = hkCurrPrice.getOrDefault(name, 0.0);
         double currentAPrice = getASharePrice(name)* TradingConstants.CNHHKD;
 
@@ -297,7 +298,7 @@ public class HKStock extends JPanel {
         return 0.0;
     }
 
-    static double getASharePrice(String hkTicker) {
+    private static double getASharePrice(String hkTicker) {
         String aShare = haMap.getOrDefault(hkTicker,"");
         if(!aShare.equals("")) {
             String aShareTicker = Utility.addSHSZ(aShare);
@@ -306,7 +307,7 @@ public class HKStock extends JPanel {
         return 0.0;
     }
 
-    static double computeTodayHKSharpe(String name) {
+    private static double computeTodayHKSharpe(String name) {
         if(HKData.hkPriceBar.containsKey(name)) {
             return SharpeUtility.computeMinuteSharpeHK(HKData.hkPriceBar.get(name)
                     .subMap(LocalTime.of(9,30),true, LocalTime.of(16,0),true), name);
@@ -314,7 +315,7 @@ public class HKStock extends JPanel {
         return 0.0;
     }
 
-    static double computeTodayReturn(String name) {
+    private static double computeTodayReturn(String name) {
 
         if(HKData.hkPriceBar.containsKey(name) && HKData.hkPriceBar.get(name).size()>0) {
             //double open = HKData.hkPriceBar.get(name).firstEntry().getValue().getOpen();
@@ -333,7 +334,7 @@ public class HKStock extends JPanel {
         HKStock hks = new HKStock();
         jf.add(hks);
         jf.setVisible(true);
-        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
     }
 

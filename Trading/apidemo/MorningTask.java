@@ -264,7 +264,7 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
-    static void writeXIN0U(BufferedWriter out) {
+    private static void writeXIN0U(BufferedWriter out) {
         System.out.println((" getting XIN0U"));
         String line;
         urlString = "https://finance.yahoo.com/quote/XIN0UN.FGI?ltr=1";
@@ -282,7 +282,7 @@ public final class MorningTask implements HistoricalHandler {
                     while (m.find()) {
                         System.out.println(m.group(1));
                         System.out.println("XIN0U" + "\t" + m.group(1));
-                        out.append("XIN0U" + "\t" + m.group(1));
+                        out.append("XIN0U" + "\t").append(m.group(1));
                         out.newLine();
                     }
                 }
@@ -342,7 +342,7 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
-    public static void getBOCFX2() {
+    private static void getBOCFX2() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(bocOutput), "GBK"))) {
             while ((line = reader1.readLine()) != null) {
@@ -388,7 +388,7 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
-    void getFX() {
+    private void getFX() {
         ApiController ap = new ApiController(new DefaultConnectionHandler(), new DefaultLogger(), new DefaultLogger());
         try {
             //ap.connect( "127.0.0.1", 4001, 2,"" );
@@ -416,7 +416,7 @@ public final class MorningTask implements HistoricalHandler {
                 Types.BarSize._1_hour, Types.WhatToShow.MIDPOINT, false);
     }
 
-    static void processShcomp() {
+    private static void processShcomp() {
 
         final String tdxPath = TradingConstants.tdxPath;
         File output = new File(TradingConstants.GLOBALPATH + "shcomp.txt");
@@ -470,41 +470,37 @@ public final class MorningTask implements HistoricalHandler {
         double c940 = dataMap.ceilingEntry(LocalTime.of(9, 40)).getValue().getClose();
         double amclose = dataMap.floorEntry(LocalTime.of(11, 30)).getValue().getClose();
         double ammax = dataMap.entrySet().stream().filter(e -> e.getKey().isBefore(LocalTime.of(11, 31)))
-                .map(Map.Entry::getValue).mapToDouble(SimpleBar::getHigh).max().getAsDouble();
+                .map(Map.Entry::getValue).mapToDouble(SimpleBar::getHigh).max().orElse(0.0);
         double ammin = dataMap.entrySet().stream().filter(e -> e.getKey().isBefore(LocalTime.of(11, 31)))
-                .map(Map.Entry::getValue).mapToDouble(SimpleBar::getLow).min().getAsDouble();
+                .map(Map.Entry::getValue).mapToDouble(SimpleBar::getLow).min().orElse(0.0);
         LocalTime ammaxt = dataMap.entrySet().stream().filter(e -> e.getKey().isBefore(LocalTime.of(11, 31)))
-                .max(Comparator.comparingDouble(e -> e.getValue().getHigh())).map(Map.Entry::getKey).get();
+                .max(Comparator.comparingDouble(e -> e.getValue().getHigh())).map(Map.Entry::getKey).orElse(LocalTime.MIN);
         LocalTime ammint = dataMap.entrySet().stream().filter(e -> e.getKey().isBefore(LocalTime.of(11, 31)))
-                .min(Comparator.comparingDouble(e -> e.getValue().getLow())).map(Map.Entry::getKey).get();
+                .min(Comparator.comparingDouble(e -> e.getValue().getLow())).map(Map.Entry::getKey).orElse(LocalTime.MAX);
 
         double pmopen = dataMap.ceilingEntry(LocalTime.of(13, 0)).getValue().getOpen();
         double pm1310 = dataMap.ceilingEntry(LocalTime.of(13, 10)).getValue().getClose();
         double pmclose = dataMap.floorEntry(LocalTime.of(15, 0)).getValue().getClose();
         double pmmax = dataMap.entrySet().stream().filter(e -> e.getKey().isAfter(LocalTime.of(12, 59))).
-                map(Map.Entry::getValue).mapToDouble(SimpleBar::getHigh).max().getAsDouble();
+                map(Map.Entry::getValue).mapToDouble(SimpleBar::getHigh).max().orElse(0.0);
         double pmmin = dataMap.entrySet().stream().filter(e -> e.getKey().isAfter(LocalTime.of(12, 59))).
-                map(Map.Entry::getValue).mapToDouble(SimpleBar::getLow).min().getAsDouble();
+                map(Map.Entry::getValue).mapToDouble(SimpleBar::getLow).min().orElse(0.0);
         LocalTime pmmaxt = dataMap.entrySet().stream().filter(e -> e.getKey().isAfter(LocalTime.of(12, 59)))
-                .max(Comparator.comparingDouble(e -> e.getValue().getHigh())).map(Map.Entry::getKey).get();
+                .max(Comparator.comparingDouble(e -> e.getValue().getHigh())).map(Map.Entry::getKey).orElse(LocalTime.MIN);
         LocalTime pmmint = dataMap.entrySet().stream().filter(e -> e.getKey().isAfter(LocalTime.of(12, 59)))
-                .min(Comparator.comparingDouble(e -> e.getValue().getLow())).map(Map.Entry::getKey).get();
+                .min(Comparator.comparingDouble(e -> e.getValue().getLow())).map(Map.Entry::getKey).orElse(LocalTime.MAX);
 
         /*        final String headers = ChinaStockHelper.getStrTabbed("AmOpen","931","935","940","AmClose",
                 "AmMax","AmMin","AmMaxT","AmMinT","PmOpen","Pm1310","PmClose","PmMax","PmMin","PmMaxT","PmMinT");
         String data;*/
-        data = Utility.getStrTabbed(amopen, c931, c935, c940, amclose, ammax, ammin, convertLTtoString(ammaxt),
-                convertLTtoString(ammint), pmopen, pm1310, pmclose, pmmax, pmmin,
-                convertLTtoString(pmmaxt), convertLTtoString(pmmint));
+        data = Utility.getStrTabbed(amopen, c931, c935, c940, amclose, ammax, ammin, Utility.convertLTtoString(ammaxt),
+                Utility.convertLTtoString(ammint), pmopen, pm1310, pmclose, pmmax, pmmin,
+                Utility.convertLTtoString(pmmaxt), Utility.convertLTtoString(pmmint));
 
         Utility.clearFile(output);
         Utility.simpleWriteToFile(headers, true, output);
         Utility.simpleWriteToFile(data, true, output);
 
-    }
-
-    static String convertLTtoString(LocalTime t) {
-        return Integer.toString(t.getHour() * 100 + t.getMinute());
     }
 
     public static void main(String[] args) {
@@ -546,7 +542,6 @@ public final class MorningTask implements HistoricalHandler {
     @Override
     public void actionUponFinish(String name) {
         System.out.println(" data is finished ");
-
     }
 
 }

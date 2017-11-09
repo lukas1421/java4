@@ -16,15 +16,15 @@ import static java.util.stream.Collectors.toList;
 
 public final class ChinaGraphIndustry extends JPanel {
 
-    static GraphIndustry gi = new GraphIndustry();
-    static List<JLabel> labelList = new LinkedList();
-    static JPanel below;
+    private static GraphIndustry gi = new GraphIndustry();
+    private static List<JLabel> labelList = new LinkedList();
+    private static JPanel below;
     static volatile boolean sectorFixed = false;
-    static final float INDUSTRY_LABEL_SIZE = 30F;
-    static final int BIG_GRAPH_HEIGHT = 600;
-    static volatile LINKEDTO linkStatus = LINKEDTO.NOTHING;
+    private static final float INDUSTRY_LABEL_SIZE = 30F;
+    private static final int BIG_GRAPH_HEIGHT = 600;
+    private static volatile LINKEDTO linkStatus = LINKEDTO.NOTHING;
 
-    public ChinaGraphIndustry() {
+    ChinaGraphIndustry() {
         JScrollPane chartScroll = new JScrollPane(gi) {
             @Override
             public Dimension getPreferredSize() {
@@ -62,7 +62,7 @@ public final class ChinaGraphIndustry extends JPanel {
         });
 
         labelList.forEach(l -> {
-            String text = l.getText();
+            //String text = l.getText();
             l.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
@@ -91,15 +91,9 @@ public final class ChinaGraphIndustry extends JPanel {
             linkStatus = LINKEDTO.NOTHING;
         }
 
-        rb1.addActionListener(l -> {
-            linkStatus = LINKEDTO.STRONG;
-        });
-        rb2.addActionListener(l -> {
-            linkStatus = LINKEDTO.SELECTION;
-        });
-        rb3.addActionListener(l -> {
-            linkStatus = LINKEDTO.NOTHING;
-        });
+        rb1.addActionListener(l -> linkStatus = LINKEDTO.STRONG);
+        rb2.addActionListener(l -> linkStatus = LINKEDTO.SELECTION);
+        rb3.addActionListener(l -> linkStatus = LINKEDTO.NOTHING);
 
         ButtonGroup bg = new ButtonGroup();
         bg.add(rb1);
@@ -157,14 +151,14 @@ public final class ChinaGraphIndustry extends JPanel {
         }
     }
 
-    static Color getLabelColor(double d, double max, double min) {
+    private static Color getLabelColor(double d, double max, double min) {
         return (d >= 0) ? new Color(0, (int) (127 + 127 * d / max), 0) : new Color((int) (170 + 84 * d / min), 0, 0);
     }
 
-    static void linkWithAll() {
+    private static void linkWithAll() {
         //System.out.println( " linked status is " + linkStatus);        
         if (linkStatus == null) {
-
+            System.out.println(" link status is null ");
         } else {
             switch (linkStatus) {
                 case STRONG:
