@@ -225,6 +225,8 @@ public class Utility {
         return (tm != null && tm.size() > 2) ? tm.values().stream().reduce(Math::max).orElse(0.0) : 0.0;
     }
 
+
+
     public static double getMaxRtn(NavigableMap<LocalTime, Double> tm) {
         return (tm.size() > 0) ? (double) Math.round((getMax(tm) / tm.firstEntry().getValue() - 1) * 1000d) / 10d : 0.0;
     }
@@ -638,4 +640,7 @@ public class Utility {
         return Math.round(100d*d)/100d;
     }
 
+    public static String convertLTtoString(LocalTime t) {
+        return Integer.toString(t.getHour() * 100 + t.getMinute());
+    }
 }

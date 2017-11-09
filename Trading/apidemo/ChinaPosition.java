@@ -13,6 +13,7 @@ import controller.ApiController;
 import graph.GraphPnl;
 import handler.FutPositionHandler;
 import handler.HistoricalHandler;
+import historical.HistChinaStocks;
 import utility.SharpeUtility;
 import utility.Utility;
 
@@ -1298,7 +1299,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 22:
                     return "Total Tr Pnl";
                 case 23:
-                    return "Total pnl";
+                    return "T Total Pnl";
                 case 24:
                     return "P%";
                 case 25:
@@ -1312,9 +1313,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 29:
                     return "wkMin";
                 case 30:
-                    return "deviation";
+                    return "dev";
                 case 31:
-                    return "Today Total Pnl";
+                    return "Total pnl";
 
                 default:
                     return null;
@@ -1332,6 +1333,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     return Integer.class;
                 case 13:
                     return Integer.class;
+                case 14:
+                    return Long.class;
+                case 18:
+                    return Long.class;
                 case 17:
                     return Integer.class;
                 case 21:
@@ -1358,6 +1363,13 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             }
             double currPrice = ChinaStock.priceMap.getOrDefault(name, defaultPrice);
 
+            double wkMaxHist = Double.MIN_VALUE;
+            double wkMinHist = Double.MAX_VALUE;
+            if(HistChinaStocks.chinaWtd.containsKey(name) && HistChinaStocks.chinaWtd.get(name).size()>0) {
+                wkMaxHist = reduceMapToDouble(HistChinaStocks.chinaWtd.get(name), SimpleBar::getHigh, Math::max);
+                wkMinHist = reduceMapToDouble(HistChinaStocks.chinaWtd.get(name), SimpleBar::getLow, Math::min);
+            }
+
             switch (col) {
                 case 0:
                     return name;
@@ -1374,9 +1386,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 6:
                     return ChinaStock.openMap.getOrDefault(name, 0.0);
                 case 7:
-                    return ChinaStock.priceMap.getOrDefault(name, defaultPrice);
+                    return r(ChinaStock.priceMap.getOrDefault(name, defaultPrice));
                 case 8:
-                    return closeMap.getOrDefault(name, 0.0) == 0.0 ? 0 : Math.round(1000d * (priceMap.getOrDefault(name, 0.0) / closeMap.getOrDefault(name, 0.0) - 1)) / 10d;
+                    return closeMap.getOrDefault(name, 0.0) == 0.0 ? 0
+                            : Math.round(1000d * (priceMap.getOrDefault(name, 0.0) / closeMap.getOrDefault(name, 0.0) - 1)) / 10d;
                 case 9:
                     return r(fxMap.getOrDefault(name, 1.0) * (openMap.getOrDefault(name, 0.0) - closeMap.getOrDefault(name, 0.0)) * openpos);
                 case 10:
@@ -1388,7 +1401,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 13:
                     return getTotalTodayBought(name);
                 case 14:
-                    return r(getTotalDeltaBought(name) / 1000d);
+                    return Math.round(getTotalDeltaBought(name) / 1000d);
                 case 15:
                     return r(getAvgBCost(name));
                 case 16:
@@ -1396,7 +1409,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 17:
                     return getTotalTodaySold(name);
                 case 18:
-                    return r(getTotalDeltaSold(name) / 1000d);
+                    return Math.round(getTotalDeltaSold(name) / 1000d);
                 case 19:
                     return r(getAvgSCost(name));
                 case 20:
@@ -1406,7 +1419,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 22:
                     return r(getBuyTradePnl(name) + getSellTradePnl(name));
                 case 23:
-                    return r(getNetPnl(name));
+                    return r(getTodayTotalPnl(name));
                 case 24:
                     return ChinaStock.getPercentileBar(name);
                 case 25:
@@ -1416,16 +1429,18 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 27:
                     return getPercentileWrapper(name);
                 case 28:
-                    return Math.max(wtdMaxMap.getOrDefault(name, 0.0), ChinaStock.maxMap.getOrDefault(name,
-                            wtdMaxMap.getOrDefault(name, 0.0)));
+                    return r(maxGen(wtdMaxMap.getOrDefault(name, 0.0), ChinaStock.maxMap.getOrDefault(name,
+                            wtdMaxMap.getOrDefault(name, 0.0)), wkMaxHist));
                 case 29:
-                    return Math.min(wtdMinMap.getOrDefault(name, 0.0), ChinaStock.minMap.getOrDefault(name,
-                            wtdMinMap.getOrDefault(name, 0.0)));
+                    return r(minGen(wtdMinMap.getOrDefault(name, 0.0), ChinaStock.minMap.getOrDefault(name,
+                            wtdMinMap.getOrDefault(name, 0.0)), wkMinHist));
                 case 30:
-                    return (currPrice != 0.0) ? Math.round((((wtdMaxMap.getOrDefault(name, 0.0)
-                            + wtdMinMap.getOrDefault(name, 0.0)) / 2) / currPrice - 1) * 1000d) / 10d : 0.0;
+                    return (currPrice != 0.0) ? Math.round((((maxGen(wtdMaxMap.getOrDefault(name, 0.0), ChinaStock.maxMap.getOrDefault(name,
+                            wtdMaxMap.getOrDefault(name, 0.0)), wkMaxHist)
+                            + minGen(wtdMinMap.getOrDefault(name, 0.0), ChinaStock.minMap.getOrDefault(name,
+                            wtdMinMap.getOrDefault(name, 0.0)), wkMinHist)) / 2) / currPrice - 1) * 1000d) / 10d : 0.0;
                 case 31:
-                    return r(getTodayTotalPnl(name));
+                    return r(getNetPnl(name));
 
                 default:
                     return null;
