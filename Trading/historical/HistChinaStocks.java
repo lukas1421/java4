@@ -1165,8 +1165,7 @@ public class HistChinaStocks extends JPanel {
         public Object getValueAt(int row, int col) {
             String name = stockList.get(row);
             double price = 0.0;
-            //double fx = fxMap.getOrDefault(name, 1.0);
-
+            double fx = fxMap.getOrDefault(name, 1.0);
 //            if (netSharesTradedByDay.containsKey(name) && netSharesTradedByDay.get(name).size() > 0) {
 //                currPos = netSharesTradedByDay.get(name).entrySet().stream().mapToInt(Map.Entry::getValue).sum();
 //            }
@@ -1180,9 +1179,16 @@ public class HistChinaStocks extends JPanel {
                 price = chinaWtd.get(name).lastEntry().getValue().getClose();
             }
 
+
             if (name.equals("SGXA50")) {
-                costBasisMap.put(name, -1.0 * fxMap.getOrDefault(name, 1.0) * lastWeekCloseMap.getOrDefault("SGXA50", 0.0) *
-                        currentPositionMap.getOrDefault(name, 0));
+                double thisWeekCostBasis = chinaTradeMap.get("SGXA50").entrySet().stream()
+                        .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommissionCustomBrokerage("SGXA50", 0.0)).sum();
+                double thisWeekTradingCost = chinaTradeMap.get("SGXA50").entrySet().stream()
+                        .mapToDouble(e -> ((Trade) e.getValue()).getTradingCostCustomBrokerage("SGXA50", 0.0)).sum();
+
+                costBasisMap.put(name, fx * (-1 * lastWeekCloseMap.getOrDefault("SGXA50", 0.0) *
+                        weekOpenPositionMap.getOrDefault(name, 0) + thisWeekCostBasis));
+                totalTradingCostMap.put(name, fx * thisWeekTradingCost);
             }
 
 
@@ -1229,12 +1235,11 @@ public class HistChinaStocks extends JPanel {
                 case 19:
                     return r(costBasisMap.getOrDefault(name, 0.0));
                 case 20:
-                    return r(fxMap.getOrDefault(name, 1.0)
-                            * price * currentPositionMap.getOrDefault(name, 0) + costBasisMap.getOrDefault(name, 0.0));
+                    return r(fx * price * currentPositionMap.getOrDefault(name, 0) + costBasisMap.getOrDefault(name, 0.0));
                 case 21:
                     if (totalTradingCostMap.getOrDefault(name, 1.0) != 0.0) {
-                        return Math.round((price * currentPositionMap.getOrDefault(name, 0)
-                                + costBasisMap.getOrDefault(name, 0.0)) / (totalTradingCostMap.getOrDefault(name, 1.0)));
+                        return Math.round((fx * price* currentPositionMap.getOrDefault(name, 0)
+                                + costBasisMap.getOrDefault(name, 0.0)) / totalTradingCostMap.getOrDefault(name, 1.0));
                     } else {
                         return 0L;
                     }
@@ -1243,7 +1248,7 @@ public class HistChinaStocks extends JPanel {
                 case 23:
                     return lastWeekCloseMap.getOrDefault(name, 0.0);
                 case 24:
-                    return r(fxMap.getOrDefault(name, 1.0) * (currentPositionMap.getOrDefault(name, 0) -
+                    return r(fx * (currentPositionMap.getOrDefault(name, 0) -
                             wtdChgInPosition.getOrDefault(name, 0)) *
                             (price - lastWeekCloseMap.getOrDefault(name, 0.0)));
                 case 25:
