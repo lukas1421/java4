@@ -65,9 +65,6 @@ public class HistChinaStocks extends JPanel {
     private static Map<String, ChinaResult> ytdResult = new HashMap<>();
     private static Map<String, ChinaResult> wtdResult = new HashMap<>();
 
-    private static Predicate<LocalTime> chinaTradingTime = t -> (t.isAfter(LocalTime.of(9, 30)) && t.isBefore(LocalTime.of(11, 31))) ||
-            (t.isAfter(LocalTime.of(12, 59)) && t.isBefore(LocalTime.of(15, 1)));
-
     public static Map<String, NavigableMap<LocalDateTime, ? super Trade>> chinaTradeMap = new HashMap<>();
 
 
@@ -204,17 +201,22 @@ public class HistChinaStocks extends JPanel {
                         comp.setBackground(Color.GREEN);
 
                         CompletableFuture.runAsync(() -> {
-                            CompletableFuture.runAsync(() -> {
+                            //CompletableFuture.runAsync(() -> {
+
+                            SwingUtilities.invokeLater(() -> {
                                 graphYtd.fillInGraphChinaGen(selectedStock, chinaYtd);
                                 graphYtd.setTradesMap(netSharesTradedByDay.get(selectedStock));
                                 graphYtd.setTradePnl(computeCurrentTradePnl(selectedStock, LAST_YEAR_END));
                             });
+                            //});
 
-                            CompletableFuture.runAsync(() -> {
+                            //CompletableFuture.runAsync(() -> {
+                            SwingUtilities.invokeLater(() -> {
                                 graphWtd.fillInGraphChinaGen(selectedStock, chinaWtd);
                                 graphWtd.setTradesMap(netSharesTradedWtd.get(selectedStock));
                                 graphWtd.setTradePnl(computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)));
                                 graphWtd.setWtdMtmPnl(wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
+                                //});
                             });
 
                             CompletableFuture.runAsync(() -> {
@@ -226,8 +228,6 @@ public class HistChinaStocks extends JPanel {
 //                                    System.out.println(" seleced stock is " + selectedStock + "  trade : "
 //                                            + wtdTradePnlMap.getOrDefault(selectedStock, 0.0) + "  mtm: "
 //                                            + wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
-
-                                //System.out.println(" week net map " + weekNetMap);
 
                                 SwingUtilities.invokeLater(() -> {
                                     graphWtdPnl.setMtm(weekMtmMap);
@@ -348,10 +348,10 @@ public class HistChinaStocks extends JPanel {
         JToggleButton autoComputeButton = new JToggleButton("Auto On");
 
 
-        autoComputeButton.addActionListener(l->{
-            if(autoComputeButton.isSelected()) {
+        autoComputeButton.addActionListener(l -> {
+            if (autoComputeButton.isSelected()) {
                 computeExe = Executors.newScheduledThreadPool(10);
-                computeExe.scheduleAtFixedRate(()->{
+                computeExe.scheduleAtFixedRate(() -> {
                     getTodayDataButton.doClick();
                     getTodayTradesButton.doClick();
                     refreshAll();
@@ -498,7 +498,7 @@ public class HistChinaStocks extends JPanel {
                     NavigableMap<LocalDateTime, SimpleBar> wtdNew = mergeMaps(chinaWtd.get(s),
                             Utility.priceMapToLDT(priceMap1mTo5M(priceMapBar.get(s)), recentTradingDate));
                     chinaWtd.put(s, wtdNew);
-                    NavigableMap<LocalDate, SimpleBar> ytdNew = mergeMapGen(chinaYtd.get(s),reduceMapToBar(priceMapBar.get(s), recentTradingDate));
+                    NavigableMap<LocalDate, SimpleBar> ytdNew = mergeMapGen(chinaYtd.get(s), reduceMapToBar(priceMapBar.get(s), recentTradingDate));
                     chinaYtd.put(s, ytdNew);
                 }
             }
@@ -1006,7 +1006,7 @@ public class HistChinaStocks extends JPanel {
                 .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommission(s)).sum();
         int netPosition = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(cutoff))
                 .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
-        if(chinaWtd.containsKey(s) && chinaWtd.get(s).size()>0) {
+        if (chinaWtd.containsKey(s) && chinaWtd.get(s).size() > 0) {
             double price = chinaWtd.get(s).lastEntry().getValue().getClose();
             return fxMap.getOrDefault(s, 1.0) * (netPosition * price + costBasis);
         }

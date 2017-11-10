@@ -252,10 +252,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         JToggleButton autoUpdateButton = new JToggleButton("Auto Update");
         autoUpdateButton.addActionListener(l -> {
             if (autoUpdateButton.isSelected()) {
-                ex = Executors.newScheduledThreadPool(10);
-                ex.scheduleAtFixedRate(() -> {
-                    ChinaPosition.refreshAll();
-                }, 0, 1, TimeUnit.SECONDS);
+                ex = Executors.newScheduledThreadPool(20);
+                ex.scheduleAtFixedRate(ChinaPosition::refreshAll, 0, 1, TimeUnit.SECONDS);
             } else {
                 ex.shutdown();
                 //System.out.println(" refreshing pnl stopped " + LocalTime.now());
@@ -350,7 +348,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     private static void refreshAll() {
+
         mtmPnlCompute(GEN_MTM_PRED, "all");
+
         SwingUtilities.invokeLater(() -> {
             m_model.fireTableDataChanged();
         });

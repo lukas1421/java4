@@ -78,6 +78,19 @@ public class Utility {
     public static final BetweenTime<LocalTime, Boolean> TIME_BETWEEN = (t1, b1, t2, b2) -> (t -> t.isAfter(b1 ? t1.minusMinutes(1) : t1) && t.isBefore(b2 ? t2.plusMinutes(1) : t2));
     public static final GenTimePred<LocalTime, Boolean> ENTRY_BTWN_GEN = (t1, b1, t2, b2) -> (e -> e.getKey().isAfter(b1 ? t1.minusMinutes(1) : t1) && e.getKey().isBefore(b2 ? t2.plusMinutes(1) : t2));
     public static BiPredicate<? super Map<String, ? extends Map<LocalTime, ?>>, String> NORMAL_MAP = (mp, name) -> mp.containsKey(name) && !mp.get(name).isEmpty() && mp.get(name).size() > 0;
+    public static Predicate<LocalTime> chinaTradingTime = t -> (t.isAfter(LocalTime.of(9, 30)) && t.isBefore(LocalTime.of(11, 31))) ||
+            (t.isAfter(LocalTime.of(12, 59)) && t.isBefore(LocalTime.of(15, 1)));
+
+
+    public static Predicate<LocalTime> tradingTimePred(LocalTime t1, boolean b1, LocalTime t2, boolean b2,
+                                                       LocalTime t3, boolean b3, LocalTime t4, boolean b4) {
+        return t -> (t.isAfter(b1 ? t1.minusMinutes(1) : t1) && t.isBefore(b2 ? t2.plusMinutes(1) : t2)) ||
+                (t.isAfter(b3 ? t3.minusMinutes(1) : t3) && t.isBefore(b4 ? t4.plusMinutes(1) : t4));
+    }
+
+    public static Predicate<LocalTime> chinaTradingTimePred =
+            tradingTimePred(LocalTime.of(9, 30), true, LocalTime.of(11, 30), true
+                    , LocalTime.of(13, 0), true, LocalTime.of(15, 0), true);
 
     private Utility() {
         throw new UnsupportedOperationException(" cannot instantiate utility class ");
@@ -168,7 +181,7 @@ public class Utility {
     }
 
 
-    public static String getStrGen(CharSequence delim, Object...cs) {
+    public static String getStrGen(CharSequence delim, Object... cs) {
         return Stream.of(cs).map(Object::toString).collect(Collectors.joining(delim));
     }
 
@@ -181,7 +194,6 @@ public class Utility {
 //        }
 //        return b.toString().trim();
     }
-
 
 
     public static String getStrComma(Object... cs) {
@@ -208,7 +220,7 @@ public class Utility {
 
     public static String getStrCheckNull(Object... cs) {
 
-        return Stream.of(cs).map(e -> e==null?" NULL ":e.toString()).collect(Collectors.joining(" "));
+        return Stream.of(cs).map(e -> e == null ? " NULL " : e.toString()).collect(Collectors.joining(" "));
 
 //        StringBuilder b = new StringBuilder();
 //        for (Object ss : cs) {
@@ -223,7 +235,7 @@ public class Utility {
 
 
     public static <T> double getMin(NavigableMap<T, Double> tm) {
-        return reduceMapToDouble(tm, d->d, Math::min);
+        return reduceMapToDouble(tm, d -> d, Math::min);
     }
 
     public static <T, S> double getMinGen(NavigableMap<T, S> tm, ToDoubleFunction<S> f) {
@@ -239,7 +251,7 @@ public class Utility {
     }
 
     public static <T> double getMax(NavigableMap<T, Double> tm) {
-        return reduceMapToDouble(tm, d->d, Math::max);
+        return reduceMapToDouble(tm, d -> d, Math::max);
     }
 
     public static double getMaxRtn(NavigableMap<LocalTime, Double> tm) {
@@ -260,7 +272,7 @@ public class Utility {
     @SafeVarargs
     public static boolean noZeroArrayGen(String name, Map<String, ? extends Number>... mp) {
 
-        return Stream.of(mp).allMatch(m->NO_ZERO.test(m,name));
+        return Stream.of(mp).allMatch(m -> NO_ZERO.test(m, name));
 
 //        boolean res = true;
 //        for (Map<String, ? extends Number> m : mp) {
@@ -272,7 +284,7 @@ public class Utility {
     @SafeVarargs
     public static boolean normalMapGen(String name, Map<String, ? extends Map<LocalTime, ?>>... mp) {
 
-        return Stream.of(mp).allMatch(m->NORMAL_MAP.test(m,name));
+        return Stream.of(mp).allMatch(m -> NORMAL_MAP.test(m, name));
 //        boolean res = true;
 //        for (Map<String, ? extends Map<LocalTime, ?>> m : mp) {
 //            res = res && NORMAL_MAP.test(m, name);
@@ -526,7 +538,8 @@ public class Utility {
     @SafeVarargs
     public static <S> NavigableMap<LocalDateTime, S> mergeMaps(NavigableMap<? extends Temporal, S>... mps) {
         NavigableMap<LocalDateTime, S> res = new ConcurrentSkipListMap<>();
-        Stream.of(mps).flatMap(e->e.entrySet().stream()).forEach(e->{
+
+        Stream.of(mps).flatMap(e -> e.entrySet().stream()).forEach(e -> {
             if (e.getKey().getClass() == LocalTime.class) {
                 res.put(LocalDateTime.of(HistChinaStocks.recentTradingDate, (LocalTime) e.getKey()), e.getValue());
             } else if (e.getKey().getClass() == LocalDateTime.class) {
@@ -536,10 +549,22 @@ public class Utility {
         return res;
     }
 
+    public static <T extends Temporal, S> NavigableMap<T, S> trimMapWithLocalTimePred(NavigableMap<T, S> mp, Predicate<LocalTime> p) {
+        return mp.entrySet().stream().filter(e -> e.getKey().getClass() == LocalTime.class ? p.test((LocalTime) e.getKey()) :
+                p.test(((LocalDateTime) e.getKey()).toLocalTime()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
+                        ConcurrentSkipListMap::new));
+
+    }
+
+//    public static <T extends Temporal> boolean testLocalTime(Predicate<LocalTime> p) {
+//
+//    }
+
     @SafeVarargs
-    public static <T extends Temporal,S> NavigableMap<T,S> mergeMapGen(NavigableMap<T,S>...mps) {
-        return Stream.of(mps).flatMap(e->e.entrySet().stream()).collect(
-                Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,(a, b)->a,ConcurrentSkipListMap::new));
+    public static <T extends Temporal, S> NavigableMap<T, S> mergeMapGen(NavigableMap<T, S>... mps) {
+        return Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(
+                Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
     }
 
     @SafeVarargs
@@ -550,12 +575,12 @@ public class Utility {
     }
 
 
-    public static NavigableMap<LocalDate, SimpleBar> reduceMapToBar(NavigableMap<LocalTime,SimpleBar> mp, LocalDate ld) {
+    public static NavigableMap<LocalDate, SimpleBar> reduceMapToBar(NavigableMap<LocalTime, SimpleBar> mp, LocalDate ld) {
         NavigableMap<LocalDate, SimpleBar> res = new ConcurrentSkipListMap<>();
-        if(mp.size()>0) {
+        if (mp.size() > 0) {
             double open = mp.firstEntry().getValue().getOpen();
             double high = reduceMapToDouble(mp, SimpleBar::getHigh, Math::max);
-            double low =  reduceMapToDouble(mp, SimpleBar::getLow, Math::min);
+            double low = reduceMapToDouble(mp, SimpleBar::getLow, Math::min);
             double close = mp.lastEntry().getValue().getClose();
             res.put(ld, new SimpleBar(open, high, low, close));
             return res;
@@ -565,13 +590,19 @@ public class Utility {
 
     public static NavigableMap<LocalTime, SimpleBar> priceMap1mTo5M(NavigableMap<LocalTime, SimpleBar> mp) {
         NavigableMap<LocalTime, SimpleBar> res = new ConcurrentSkipListMap<>();
+        Predicate<LocalTime> p =
+                tradingTimePred(LocalTime.of(9, 30), true, LocalTime.of(11, 30), true
+                        , LocalTime.of(13, 0), true, LocalTime.of(15, 0), true);
+
         mp.forEach((key, value) -> {
             LocalTime t = roundTo5(key);
             SimpleBar sb = new SimpleBar(value);
-            if (!res.containsKey(t)) {
-                res.put(t, sb);
-            } else {
-                res.get(t).updateBar(sb);
+            if (p.test(t)) {
+                if (!res.containsKey(t)) {
+                    res.put(t, sb);
+                } else {
+                    res.get(t).updateBar(sb);
+                }
             }
         });
         return res;
@@ -579,8 +610,13 @@ public class Utility {
 
     public static <T> NavigableMap<LocalDateTime, T> priceMapToLDT(NavigableMap<LocalTime, T> mp, LocalDate ld) {
         NavigableMap<LocalDateTime, T> res = new ConcurrentSkipListMap<>();
+        Predicate<LocalTime> p =
+                tradingTimePred(LocalTime.of(9, 30), true, LocalTime.of(11, 30), true
+                        , LocalTime.of(13, 0), true, LocalTime.of(15, 0), true);
+
         mp.forEach((key, value) -> {
-            if (key.isBefore(LocalTime.of(15, 1))) {
+            //if (key.isBefore(LocalTime.of(15, 1))) {
+            if (p.test(key)) {
                 res.put(LocalDateTime.of(ld, key), value);
             }
         });
@@ -604,7 +640,7 @@ public class Utility {
     }
 
     public static LocalDate max(LocalDate... lds) {
-        return Arrays.stream(lds).reduce(LocalDate.MIN,temporalGen(LocalDate::isAfter));
+        return Arrays.stream(lds).reduce(LocalDate.MIN, temporalGen(LocalDate::isAfter));
     }
 
     public static BinaryOperator<LocalTime> localTimeGen(BiPredicate<LocalTime, LocalTime> bp) {
@@ -612,7 +648,7 @@ public class Utility {
     }
 
     private static <T> BinaryOperator<T> temporalGen(BiPredicate<T, T> bp) {
-        return (a,b) -> bp.test(a,b)?a:b;
+        return (a, b) -> bp.test(a, b) ? a : b;
     }
 
 //    public static <T> Comparator<T> reverseThis(Comparator<T> in) {
@@ -657,7 +693,7 @@ public class Utility {
     }
 
     public static double r(double d) {
-        return Math.round(100d*d)/100d;
+        return Math.round(100d * d) / 100d;
     }
 
     public static String convertLTtoString(LocalTime t) {

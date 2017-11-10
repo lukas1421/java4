@@ -338,9 +338,9 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         } else if (dispGran == DisplayGranularity._5MDATA) {
 
             if (HistChinaStocks.chinaWtd.containsKey(name) && HistChinaStocks.chinaWtd.get(name).size() > 0) {
-                this.tm = mergeMaps(HistChinaStocks.chinaWtd.get(name), Utility.priceMap1mTo5M(tmIn));
+                this.tm = trimMapWithLocalTimePred(mergeMaps(HistChinaStocks.chinaWtd.get(name), Utility.priceMap1mTo5M(tmIn)),chinaTradingTimePred);
             } else {
-                this.tm = priceMapToLDT(priceMap1mTo5M(tmIn), HistChinaStocks.recentTradingDate);
+                this.tm = trimMapWithLocalTimePred(priceMapToLDT(priceMap1mTo5M(tmIn), HistChinaStocks.recentTradingDate), chinaTradingTimePred);
             }
 
         }
