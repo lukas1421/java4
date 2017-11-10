@@ -2,8 +2,8 @@ package TradeType;
 
 public class IBTrade {
 
-    double price;
-    int size;
+    private double price;
+    private int size;
 
     public IBTrade(double p, int s) {
         price = p;

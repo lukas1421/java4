@@ -3,25 +3,23 @@ package saving;
 import auxiliary.SimpleBar;
 import utility.Utility;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.time.LocalTime;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
-import static apidemo.ChinaData.*;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaData.sizeTotalMap;
+
+@SuppressWarnings("JpaDataSourceORMInspection")
 @javax.persistence.Entity
 @Table(name = "CHINASAVE")
 public class ChinaSave implements Serializable, ChinaSaveInterface2Blob {
 
     private static final long serialVersionUID = 888888L;
-    static final ChinaSave CS = new ChinaSave();
+    private static final ChinaSave CS = new ChinaSave();
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,7 +36,7 @@ public class ChinaSave implements Serializable, ChinaSaveInterface2Blob {
     public ChinaSave() {
     }
 
-    public ChinaSave(String name) {
+    private ChinaSave(String name) {
         this.stockName = name;
     }
 
@@ -71,12 +69,14 @@ public class ChinaSave implements Serializable, ChinaSaveInterface2Blob {
         return new ChinaSave(name);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
         //priceMapBar.put(name,(ConcurrentSkipListMap<LocalTime,SimpleBar>)trimSkipMap(mp, LocalTime.of(9,19)));
         priceMapBar.put(name, (ConcurrentSkipListMap<LocalTime, SimpleBar>) Utility.trimSkipMap(mp, LocalTime.of(9, 24)));
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void updateSecondMap(String name, NavigableMap<LocalTime, ?> mp) {
         sizeTotalMap.put(name, (ConcurrentSkipListMap<LocalTime, Double>) Utility.trimSkipMap(mp, LocalTime.of(9, 24)));
@@ -85,7 +85,7 @@ public class ChinaSave implements Serializable, ChinaSaveInterface2Blob {
     @Override
     public int hashCode() {
         int hash = 0;
-        return hash += (stockName != null ? stockName.hashCode() : 0);
+        return hash + (stockName != null ? stockName.hashCode() : 0);
     }
 
     @Override

@@ -2,8 +2,8 @@ package TradeType;
 
 public class PriceSizePair {
 
-    double price;
-    int size;
+    private double price;
+    private int size;
 
     public PriceSizePair(double p, int s) {
         price = p;

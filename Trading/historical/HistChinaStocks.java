@@ -55,7 +55,7 @@ public class HistChinaStocks extends JPanel {
     private static volatile GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
     private static volatile GraphChinaPnl<LocalDateTime> graphWtdPnl = new GraphChinaPnl<>();
 
-    private File priceInput = new File(GLOBALPATH + "pricesTodayYtd.csv");
+    //private File priceInput = new File(GLOBALPATH + "pricesTodayYtd.csv");
     private File sgxOutput = new File(GLOBALPATH + "sgxWtdOutput.txt");
 
     private static List<String> stockList = new LinkedList<>();
@@ -80,7 +80,7 @@ public class HistChinaStocks extends JPanel {
     private static Map<String, Double> lastWeekCloseMap = new HashMap<>();
     private static Map<String, Double> totalTradingCostMap = new HashMap<>();
     private static Map<String, Double> costBasisMap = new HashMap<>();
-    static Map<String, Double> netTradePnlMap = new HashMap<>();
+    //static Map<String, Double> netTradePnlMap = new HashMap<>();
     private static Map<String, Double> wtdTradePnlMap = new HashMap<>();
     private static Map<String, Double> wtdMtmPnlMap = new HashMap<>();
     private static BinaryOperator<NavigableMap<LocalDateTime, Double>> mapOp = (a, b) -> Stream.of(a, b).flatMap(e -> e.entrySet().stream())
@@ -118,13 +118,13 @@ public class HistChinaStocks extends JPanel {
 
     private static volatile Predicate<? super Map.Entry<String, ?>> MTM_PRED = m -> true;
 
-    static ScheduledExecutorService computeExe = Executors.newScheduledThreadPool(10);
+    private static ScheduledExecutorService computeExe = Executors.newScheduledThreadPool(10);
 
     private int modelRow;
-    int indexRow;
     private static volatile String selectedStock = "";
     private TableRowSorter<BarModel_China> sorter;
 
+    @SuppressWarnings("unchecked")
     public HistChinaStocks() {
         String line;
 
@@ -252,11 +252,7 @@ public class HistChinaStocks extends JPanel {
 
                             });
 
-                        }).thenRun(() -> {
-                            SwingUtilities.invokeLater(() -> {
-                                graphPanel.repaint();
-                            });
-                        });
+                        }).thenRun(() -> SwingUtilities.invokeLater(() -> graphPanel.repaint()));
 
                     } else {
                         comp.setBackground((indexRow % 2 == 0) ? Color.lightGray : Color.white);
@@ -274,9 +270,7 @@ public class HistChinaStocks extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    SwingUtilities.invokeLater(() -> {
-                        model.fireTableDataChanged();
-                    });
+                    SwingUtilities.invokeLater(() -> model.fireTableDataChanged());
                 }
             }
         });
@@ -337,8 +331,8 @@ public class HistChinaStocks extends JPanel {
         JButton updatePriceButton = new JButton(" update price ");
         JButton getTodayDataButton = new JButton(" Today Data");
         JButton getTodayTradesButton = new JButton("Today trades");
-        JButton liveUpdateButton = new JButton("Compute");
-        JButton stopButton = new JButton("stop");
+        //JButton liveUpdateButton = new JButton("Compute");
+        //JButton stopButton = new JButton("stop");
         JButton sgxDataButton = new JButton("SGX Data");
         JButton sgxTradesButton = new JButton(" SGX Trades");
         JToggleButton noFutButton = new JToggleButton(" no fut");
@@ -380,11 +374,8 @@ public class HistChinaStocks extends JPanel {
             getSGXTrades();
         });
 
-        sgxDataButton.addActionListener(l -> {
-            CompletableFuture.runAsync(() -> {
-                ChinaMain.controller().getSGXA50HistoricalCustom(20000, HistChinaStocks::handleSGXA50WtdData, 7);
-            });
-        });
+        sgxDataButton.addActionListener(l -> CompletableFuture.runAsync(() ->
+                ChinaMain.controller().getSGXA50HistoricalCustom(20000, HistChinaStocks::handleSGXA50WtdData, 7)));
 
         noFutButton.addActionListener(l -> {
             if (noFutButton.isSelected()) {
@@ -424,16 +415,13 @@ public class HistChinaStocks extends JPanel {
             refreshAll();
         });
 
-        ytdButton.addActionListener(al -> {
-            CompletableFuture.runAsync(HistChinaStocks::computeYtd).thenRun(() -> {
-                System.out.println(" ytd ended ");
-                SwingUtilities.invokeLater(() -> {
-                    model.fireTableDataChanged();
-                    this.repaint();
-                });
+        ytdButton.addActionListener(al -> CompletableFuture.runAsync(HistChinaStocks::computeYtd).thenRun(() -> {
+            System.out.println(" ytd ended ");
+            SwingUtilities.invokeLater(() -> {
+                model.fireTableDataChanged();
+                this.repaint();
             });
-
-        });
+        }));
 
         wtdButton.addActionListener(al -> {
             CompletableFuture.runAsync(HistChinaStocks::computeWtd).thenRun(() -> {
@@ -443,9 +431,7 @@ public class HistChinaStocks extends JPanel {
                     this.repaint();
                 });
             });
-            CompletableFuture.runAsync(() -> {
-                ChinaMain.controller().getSGXA50HistoricalCustom(20000, HistChinaStocks::handleSGXA50WtdData, 7);
-            });
+            CompletableFuture.runAsync(() -> ChinaMain.controller().getSGXA50HistoricalCustom(20000, HistChinaStocks::handleSGXA50WtdData, 7));
         });
 
         loadTradesButton.addActionListener(al -> {
@@ -462,33 +448,27 @@ public class HistChinaStocks extends JPanel {
             //refreshAll();
         });
 
-        computeButton.addActionListener(l -> {
-            CompletableFuture.runAsync(() -> {
-                CompletableFuture.runAsync(HistChinaStocks::computeNetSharesTradedByDay);
+        computeButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
+            CompletableFuture.runAsync(HistChinaStocks::computeNetSharesTradedByDay);
 
-                CompletableFuture.runAsync(HistChinaStocks::computeNetSharesTradedWtd);
+            CompletableFuture.runAsync(HistChinaStocks::computeNetSharesTradedWtd);
 
-                CompletableFuture.runAsync(HistChinaStocks::computeTradingCost);
+            CompletableFuture.runAsync(HistChinaStocks::computeTradingCost);
 
-                CompletableFuture.runAsync(HistChinaStocks::computeWtdCurrentTradePnlAll);
+            CompletableFuture.runAsync(HistChinaStocks::computeWtdCurrentTradePnlAll);
 
-                CompletableFuture.runAsync(HistChinaStocks::computeWtdMtmPnlAll);
+            CompletableFuture.runAsync(HistChinaStocks::computeWtdMtmPnlAll);
 
-                CompletableFuture.runAsync(() -> {
-                    computeWtdMtmPnl(e -> true);
-                });
-            }).thenRun(() -> SwingUtilities.invokeLater(() -> {
-                model.fireTableDataChanged();
-                this.repaint();
-            }));
-
-        });
+            CompletableFuture.runAsync(() -> computeWtdMtmPnl(e -> true));
+        }).thenRun(() -> SwingUtilities.invokeLater(() -> {
+            model.fireTableDataChanged();
+            graphPanel.repaint();
+            this.repaint();
+        })));
 
         updatePriceButton.addActionListener(al -> {
             updatePrices();
-            SwingUtilities.invokeLater(() -> {
-                model.fireTableDataChanged();
-            });
+            SwingUtilities.invokeLater(() -> model.fireTableDataChanged());
         });
 
         getTodayDataButton.addActionListener(al -> {
@@ -501,9 +481,7 @@ public class HistChinaStocks extends JPanel {
                     chinaYtd.put(s, ytdNew);
                 }
             }
-            SwingUtilities.invokeLater(() -> {
-                model.fireTableDataChanged();
-            });
+            SwingUtilities.invokeLater(() -> model.fireTableDataChanged());
         });
 
         getTodayTradesButton.addActionListener(al -> {
@@ -516,9 +494,7 @@ public class HistChinaStocks extends JPanel {
                     }
                 }
             }).thenRun(HistChinaStocks::computePosition);
-            SwingUtilities.invokeLater(() -> {
-                model.fireTableDataChanged();
-            });
+            SwingUtilities.invokeLater(() -> model.fireTableDataChanged());
         });
 
 
@@ -568,6 +544,8 @@ public class HistChinaStocks extends JPanel {
             cal.setTime(dt);
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+
+            System.out.println(" vol " + volume);
 
 
             if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
@@ -653,17 +631,15 @@ public class HistChinaStocks extends JPanel {
             graphWtdPnl.setNet(computeNet(MTM_PRED));
             graphWtdPnl.setAvgPerc(computeAvgPercentile(MTM_PRED));
             graphWtdPnl.setDeltaWeightedAveragePerc(computeDeltaWeightedPercentile(MTM_PRED));
-        }).thenRun(() -> {
-            SwingUtilities.invokeLater(() -> {
-                graphWtdPnl.setMtm(computeWtdMtmPnl(MTM_PRED));
+        }).thenRun(() -> SwingUtilities.invokeLater(() -> {
+            graphWtdPnl.setMtm(computeWtdMtmPnl(MTM_PRED));
 //                if (selectedStock.equals("SGXA50")) {
 //                    System.out.println(" SGXA50 week mtm map : " + weekMtmMap);
 //                }
-                graphWtdPnl.setWeekdayMtm(netPnlByWeekday, netPnlByWeekdayAM, netPnlByWeekdayPM);
-                model.fireTableDataChanged();
-                graphWtdPnl.repaint();
-            });
-        });
+            graphWtdPnl.setWeekdayMtm(netPnlByWeekday, netPnlByWeekdayAM, netPnlByWeekdayPM);
+            model.fireTableDataChanged();
+            graphWtdPnl.repaint();
+        }));
     }
 
     private static void computePosition() {
@@ -726,7 +702,7 @@ public class HistChinaStocks extends JPanel {
         NavigableMap<LocalDateTime, Double> res = new ConcurrentSkipListMap<>();
         int currPos = 0;
         double costBasis = 0.0;
-        double mv = 0.0;
+        double mv;
         double fx = fxMap.getOrDefault(ticker, 1.0);
         for (LocalDateTime lt : prices.keySet()) {
 
@@ -760,13 +736,13 @@ public class HistChinaStocks extends JPanel {
 
 
         netPnlByWeekday = mp.keySet().stream().map(LocalDateTime::toLocalDate).distinct().collect(Collectors.toMap(d -> d,
-                d -> computeNetPnlForGivenDate(mp, (LocalDate) d), (a, b) -> a, ConcurrentSkipListMap::new));
+                d -> computeNetPnlForGivenDate(mp, d), (a, b) -> a, ConcurrentSkipListMap::new));
 
         netPnlByWeekdayAM = mp.keySet().stream().map(LocalDateTime::toLocalDate).distinct().collect(Collectors.toMap(d -> d,
-                d -> computeAMNetPnlForGivenDate(mp, (LocalDate) d), (a, b) -> a, ConcurrentSkipListMap::new));
+                d -> computeAMNetPnlForGivenDate(mp, d), (a, b) -> a, ConcurrentSkipListMap::new));
 
         netPnlByWeekdayPM = mp.keySet().stream().map(LocalDateTime::toLocalDate).distinct().collect(Collectors.toMap(d -> d,
-                d -> computePMNetPnlForGivenDate(mp, (LocalDate) d), (a, b) -> a, ConcurrentSkipListMap::new));
+                d -> computePMNetPnlForGivenDate(mp, d), (a, b) -> a, ConcurrentSkipListMap::new));
 //        System.out.println(" net by week day " + netPnlByWeekday + " " + netPnlByWeekday.values().stream().mapToDouble(e-> e).sum());
 //        System.out.println(" am " + netPnlByWeekdayAM + " " + netPnlByWeekdayAM.values().stream().mapToDouble(e-> e).sum());
 //        System.out.println(" pm " + netPnlByWeekdayPM + " " +  netPnlByWeekdayPM.values().stream().mapToDouble(e-> e).sum());
@@ -801,7 +777,7 @@ public class HistChinaStocks extends JPanel {
         CompletableFuture.runAsync(() -> {
             for (String s : stockList) {
                 String tickerFull = s.substring(0, 2).toUpperCase() + "#" + s.substring(2) + ".txt";
-                double totalSize = 0.0;
+                //double totalSize = 0.0;
                 CompletableFuture.runAsync(() -> {
                     String line;
                     if (s.substring(0, 2).toUpperCase().equals("SH") || s.substring(0, 2).toUpperCase().equals("SZ")) {
@@ -912,9 +888,7 @@ public class HistChinaStocks extends JPanel {
 
     private static void loadTradeList() {
         System.out.println(" loading trade list ");
-        chinaTradeMap.keySet().forEach(k -> {
-            chinaTradeMap.put(k, new ConcurrentSkipListMap<>());
-        });
+        chinaTradeMap.keySet().forEach(k -> chinaTradeMap.put(k, new ConcurrentSkipListMap<>()));
 
         File f = new File(TradingConstants.GLOBALPATH + "tradeHistoryRecap.txt");
         String line;
@@ -1079,12 +1053,12 @@ public class HistChinaStocks extends JPanel {
             perc = 0.0;
         }
 
-        ChinaResult(double m, double s, double r, double p) {
-            meanRtn = Math.round(1000d * m) / 10d;
-            sd = Math.round(1000d * s * Math.sqrt(252)) / 10d;
-            sr = Math.round(100d * r) / 100d;
-            perc = p;
-        }
+//        ChinaResult(double m, double s, double r, double p) {
+//            meanRtn = Math.round(1000d * m) / 10d;
+//            sd = Math.round(1000d * s * Math.sqrt(252)) / 10d;
+//            sr = Math.round(100d * r) / 100d;
+//            perc = p;
+//        }
 
         void fillResult(double m, double s, double r, double p) {
             meanRtn = Math.round(1000d * m) / 10d;

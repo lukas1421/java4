@@ -3,11 +3,8 @@ package TradeType;
 import apidemo.ChinaStock;
 import utility.Utility;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.abs;
 
@@ -15,9 +12,8 @@ public abstract class Trade {
 
     protected double price;
     protected int size;
-    boolean mergeStatus =  false;
     //Map<Integer, PriceSizePair>  tradeTracker = new HashMap<>();
-    AtomicInteger tradeCount = new AtomicInteger(0);
+    //AtomicInteger tradeCount = new AtomicInteger(0);
     List<? super Trade> mergeList = new LinkedList<>();
 
 
@@ -46,24 +42,22 @@ public abstract class Trade {
         return mergeList.stream().mapToDouble(t->((Trade)t).getCostWithCommission(name)).sum();
     }
 
-    public boolean getMergeStatus() {
-        return mergeStatus;
-    }
-
-    public List<? super Trade> getMergeList() {
-        return mergeList;
-    }
+//    public boolean getMergeStatus() {
+//        return mergeStatus;
+//    }
+//
+//    public List<? super Trade> getMergeList() {
+//        return mergeList;
+//    }
 
     public void merge2(Trade t) {
         mergeList.add(t);
-        mergeStatus = true;
     }
 
     public void merge(Trade t) {
         //tradeTracker.put(tradeCount.incrementAndGet(),new PriceSizePair(t.getPrice(),t.getSize()));
         //mergeList.get(0)
         mergeList.add(t);
-        mergeStatus = true;
         int sizeNew = size + t.getSize();
         price = (getCost() + t.getCost()) / sizeNew;
         size = sizeNew;
@@ -82,7 +76,7 @@ public abstract class Trade {
 //        l.stream().forEach(t->((Trade)t).);
 //    }
 
-    public double getCost() {
+    private double getCost() {
         return size * price;
     }
 
