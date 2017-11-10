@@ -422,7 +422,6 @@ public class HistChinaStocks extends JPanel {
         refreshButton.addActionListener(al -> {
             //computeButton.doClick();
             refreshAll();
-
         });
 
         ytdButton.addActionListener(al -> {
