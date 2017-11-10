@@ -1389,11 +1389,14 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     return closeMap.getOrDefault(name, 0.0) == 0.0 ? 0
                             : Math.round(1000d * (priceMap.getOrDefault(name, 0.0) / closeMap.getOrDefault(name, 0.0) - 1)) / 10d;
                 case 9:
-                    return r(fxMap.getOrDefault(name, 1.0) * (openMap.getOrDefault(name, 0.0) - closeMap.getOrDefault(name, 0.0)) * openpos);
+                    return r(fxMap.getOrDefault(name, 1.0) *
+                            (openMap.getOrDefault(name, 0.0) - closeMap.getOrDefault(name, 0.0)) * openpos);
                 case 10:
-                    return r(fxMap.getOrDefault(name, 1.0) * (currPrice - closeMap.getOrDefault(name, 0.0)) * openpos);
+                    return r(fxMap.getOrDefault(name, 1.0) *
+                            (currPrice - closeMap.getOrDefault(name, 0.0)) * openpos);
                 case 11:
-                    return r(fxMap.getOrDefault(name, 1.0) * (closeMap.getOrDefault(name, 0.0) - costMap.getOrDefault(name, 0.0)) * openpos);
+                    return r(fxMap.getOrDefault(name, 1.0) * (closeMap.getOrDefault(name, 0.0)
+                            - costMap.getOrDefault(name, 0.0)) * openpos);
                 case 12:
                     return r(fxMap.getOrDefault(name, 1.0) * (currPrice - costMap.getOrDefault(name, 0.0)) * openpos);
                 case 13:

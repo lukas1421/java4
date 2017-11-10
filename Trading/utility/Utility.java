@@ -167,54 +167,71 @@ public class Utility {
                 Collectors.reducing(0.0, Map.Entry::getValue, Double::sum)));
     }
 
-    public static String getStrTabbed(Object... cs) {
-        StringBuilder b = new StringBuilder();
-        for (Object ss : cs) {
-            b.append(ss.toString()).append("\t");
-        }
-        return b.toString().trim();
+
+    public static String getStrGen(CharSequence delim, Object...cs) {
+        return Stream.of(cs).map(Object::toString).collect(Collectors.joining(delim));
     }
 
+    public static String getStrTabbed(Object... cs) {
+        return getStrGen("\t", cs);
+
+//        StringBuilder b = new StringBuilder();
+//        for (Object ss : cs) {
+//            b.append(ss.toString()).append("\t");
+//        }
+//        return b.toString().trim();
+    }
+
+
+
     public static String getStrComma(Object... cs) {
-        StringBuilder b = new StringBuilder();
-        for (Object ss : cs) {
-            b.append(ss.toString()).append(",");
-        }
-        return b.toString().trim();
+        return getStrGen(",", cs);
+
+//        return Stream.of(cs).map(Object::toString).collect(Collectors.joining(","));
+
+//        StringBuilder b = new StringBuilder();
+//        for (Object ss : cs) {
+//            b.append(ss.toString()).append(",");
+//        }
+//        return b.toString().trim();
     }
 
     public static String getStr(Object... cs) {
-        StringBuilder b = new StringBuilder();
-        for (Object ss : cs) {
-            b.append(ss.toString()).append(" ");
-        }
-        return b.toString();
+        return getStrGen(" ", cs);
+
+//        StringBuilder b = new StringBuilder();
+//        for (Object ss : cs) {
+//            b.append(ss.toString()).append(" ");
+//        }
+//        return b.toString();
     }
 
     public static String getStrCheckNull(Object... cs) {
-        StringBuilder b = new StringBuilder();
-        for (Object ss : cs) {
-            if (ss != null) {
-                b.append(ss.toString()).append(" ");
-            } else {
-                b.append(" NULL ");
-            }
-        }
-        return b.toString();
+
+        return Stream.of(cs).map(e -> e==null?" NULL ":e.toString()).collect(Collectors.joining(" "));
+
+//        StringBuilder b = new StringBuilder();
+//        for (Object ss : cs) {
+//            if (ss != null) {
+//                b.append(ss.toString()).append(" ");
+//            } else {
+//                b.append(" NULL ");
+//            }
+//        }
+//        return b.toString();
     }
 
 
     public static <T> double getMin(NavigableMap<T, Double> tm) {
-        return (tm != null && tm.size() > 2) ? tm.entrySet().stream().min(Map.Entry.comparingByValue()).
-                map(Map.Entry::getValue).orElse(0.0) : 0.0;
+        return reduceMapToDouble(tm, d->d, Math::min);
     }
 
     public static <T, S> double getMinGen(NavigableMap<T, S> tm, ToDoubleFunction<S> f) {
-        return (tm != null && tm.size() > 2) ? tm.values().stream().mapToDouble(f).reduce(Math::min).orElse(0.0) : 0.0;
+        return reduceMapToDouble(tm, f, Math::min);
     }
 
     public static <T, S> double getMaxGen(NavigableMap<T, S> tm, ToDoubleFunction<S> f) {
-        return (tm != null && tm.size() > 2) ? tm.values().stream().mapToDouble(f).reduce(Math::max).orElse(0.0) : 0.0;
+        return reduceMapToDouble(tm, f, Math::max);
     }
 
     public static <T, S> double reduceMapToDouble(NavigableMap<T, S> tm, ToDoubleFunction<S> f, DoubleBinaryOperator o) {
@@ -222,10 +239,8 @@ public class Utility {
     }
 
     public static <T> double getMax(NavigableMap<T, Double> tm) {
-        return (tm != null && tm.size() > 2) ? tm.values().stream().reduce(Math::max).orElse(0.0) : 0.0;
+        return reduceMapToDouble(tm, d->d, Math::max);
     }
-
-
 
     public static double getMaxRtn(NavigableMap<LocalTime, Double> tm) {
         return (tm.size() > 0) ? (double) Math.round((getMax(tm) / tm.firstEntry().getValue() - 1) * 1000d) / 10d : 0.0;
@@ -244,20 +259,25 @@ public class Utility {
      */
     @SafeVarargs
     public static boolean noZeroArrayGen(String name, Map<String, ? extends Number>... mp) {
-        boolean res = true;
-        for (Map<String, ? extends Number> m : mp) {
-            res = res && NO_ZERO.test(m, name);
-        }
-        return res;
+
+        return Stream.of(mp).allMatch(m->NO_ZERO.test(m,name));
+
+//        boolean res = true;
+//        for (Map<String, ? extends Number> m : mp) {
+//            res = res && NO_ZERO.test(m, name);
+//        }
+//        return res;
     }
 
     @SafeVarargs
     public static boolean normalMapGen(String name, Map<String, ? extends Map<LocalTime, ?>>... mp) {
-        boolean res = true;
-        for (Map<String, ? extends Map<LocalTime, ?>> m : mp) {
-            res = res && NORMAL_MAP.test(m, name);
-        }
-        return res;
+
+        return Stream.of(mp).allMatch(m->NORMAL_MAP.test(m,name));
+//        boolean res = true;
+//        for (Map<String, ? extends Map<LocalTime, ?>> m : mp) {
+//            res = res && NORMAL_MAP.test(m, name);
+//        }
+//        return res;
     }
 
     public static LocalDate getPreviousWorkday(LocalDate ld) {
@@ -359,11 +379,11 @@ public class Utility {
     }
 
     public static double minGen(double... l) {
-        return Arrays.stream(l).reduce(Math::min).orElse(0.0);
+        return reduceDouble(Math::min, l);
     }
 
     public static double maxGen(double... l) {
-        return Arrays.stream(l).reduce(Math::max).orElse(0.0);
+        return reduceDouble(Math::max, l);
     }
 
     public static double reduceDouble(DoubleBinaryOperator op, double... num) {
@@ -483,15 +503,14 @@ public class Utility {
     }
 
     @SafeVarargs
-    public static <T> double reduceMap(DoubleBinaryOperator o, NavigableMap<T, Double>... mps) {
+    public static <T> double reduceMaps(DoubleBinaryOperator o, NavigableMap<T, Double>... mps) {
         return Arrays.stream(mps).flatMap(e -> e.entrySet().stream()).mapToDouble(Map.Entry::getValue).reduce(o).orElse(0.0);
     }
 
     @SafeVarargs
-    public static <T, S> double reduceMap(DoubleBinaryOperator o, ToDoubleFunction<S> f, NavigableMap<T, S>... mps) {
+    public static <T, S> double reduceMapGen(DoubleBinaryOperator o, ToDoubleFunction<S> f, NavigableMap<T, S>... mps) {
         return Arrays.stream(mps).flatMap(e -> e.entrySet().stream()).map(Map.Entry::getValue).mapToDouble(f).reduce(o).orElse(0.0);
     }
-
 
     static <T extends Temporal> LocalDateTime convertToLDT(T t, LocalDate ld) {
         if (t.getClass() == LocalDateTime.class) {
@@ -505,7 +524,7 @@ public class Utility {
     //static LocalDateTime convertToLDT2(? extends Temporal )
 
     @SafeVarargs
-    public static <S> NavigableMap<LocalDateTime, S> mergeMap(NavigableMap<? extends Temporal, S>... mps) {
+    public static <S> NavigableMap<LocalDateTime, S> mergeMaps(NavigableMap<? extends Temporal, S>... mps) {
         NavigableMap<LocalDateTime, S> res = new ConcurrentSkipListMap<>();
         Stream.of(mps).flatMap(e->e.entrySet().stream()).forEach(e->{
             if (e.getKey().getClass() == LocalTime.class) {
@@ -526,7 +545,8 @@ public class Utility {
     @SafeVarargs
     public static NavigableMap<LocalDateTime, ? super Trade> mergeTradeMap(NavigableMap<LocalDateTime, ? super Trade>... mps) {
         return Stream.of(mps).flatMap(e -> e.entrySet().stream())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
     }
 
 
@@ -534,8 +554,8 @@ public class Utility {
         NavigableMap<LocalDate, SimpleBar> res = new ConcurrentSkipListMap<>();
         if(mp.size()>0) {
             double open = mp.firstEntry().getValue().getOpen();
-            double high = mp.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
-            double low = mp.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
+            double high = reduceMapToDouble(mp, SimpleBar::getHigh, Math::max);
+            double low =  reduceMapToDouble(mp, SimpleBar::getLow, Math::min);
             double close = mp.lastEntry().getValue().getClose();
             res.put(ld, new SimpleBar(open, high, low, close));
             return res;
@@ -595,9 +615,9 @@ public class Utility {
         return (a,b) -> bp.test(a,b)?a:b;
     }
 
-    public static <T> Comparator<T> reverseThis(Comparator<T> in) {
-        return in.reversed();
-    }
+//    public static <T> Comparator<T> reverseThis(Comparator<T> in) {
+//        return in.reversed();
+//    }
 
     public static void simpleWriteToFile(String s, boolean b, File f) {
         try (BufferedWriter out = new BufferedWriter(new FileWriter(f, b))) {

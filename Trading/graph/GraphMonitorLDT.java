@@ -22,9 +22,7 @@ import static apidemo.ChinaData.price5mWtd;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaStock.NORMAL_STOCK;
 import static java.util.Optional.ofNullable;
-import static utility.Utility.BAR_HIGH;
-import static utility.Utility.BAR_LOW;
-import static utility.Utility.mergeMap;
+import static utility.Utility.*;
 
 public class GraphMonitorLDT extends JComponent implements GraphFillable  {
     static final int WIDTH_MON = 2;
@@ -289,10 +287,10 @@ public class GraphMonitorLDT extends JComponent implements GraphFillable  {
 
         //trades needs to be this weeks's trades
         trades = ChinaPosition.tradesMap.containsKey(name)?
-                Utility.mergeMap(ChinaPosition.tradesMap.get(name)):new ConcurrentSkipListMap<>();
+                Utility.mergeMaps(ChinaPosition.tradesMap.get(name)):new ConcurrentSkipListMap<>();
 
         if (NORMAL_STOCK.test(name)) {
-            price5mWtd.put(name,(ConcurrentSkipListMap<LocalDateTime, SimpleBar>)mergeMap(HistChinaStocks.chinaWtd.get(name),
+            price5mWtd.put(name,(ConcurrentSkipListMap<LocalDateTime, SimpleBar>) mergeMaps(HistChinaStocks.chinaWtd.get(name),
                     Utility.priceMap1mTo5M(priceMapBar.get(name))));
             this.setNavigableMap(price5mWtd.get(name));
             //getYtdY2CloseP(name);
