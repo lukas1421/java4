@@ -657,9 +657,9 @@ public class HistChinaStocks extends JPanel {
         }).thenRun(() -> {
             SwingUtilities.invokeLater(() -> {
                 graphWtdPnl.setMtm(computeWtdMtmPnl(MTM_PRED));
-                if (selectedStock.equals("SGXA50")) {
-                    System.out.println(" SGXA50 week mtm map : " + weekMtmMap);
-                }
+//                if (selectedStock.equals("SGXA50")) {
+//                    System.out.println(" SGXA50 week mtm map : " + weekMtmMap);
+//                }
                 graphWtdPnl.setWeekdayMtm(netPnlByWeekday, netPnlByWeekdayAM, netPnlByWeekdayPM);
                 model.fireTableDataChanged();
                 graphWtdPnl.repaint();

@@ -119,6 +119,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     public static volatile boolean buySellTogether = true;
 
+    @SuppressWarnings("unchecked")
     ChinaPosition() {
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
