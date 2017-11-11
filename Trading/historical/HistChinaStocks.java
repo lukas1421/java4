@@ -62,6 +62,8 @@ public class HistChinaStocks extends JPanel {
     private static volatile Map<String, NavigableMap<LocalDate, SimpleBar>> chinaYtd = new HashMap<>();
     public static volatile Map<String, NavigableMap<LocalDateTime, SimpleBar>> chinaWtd = new HashMap<>();
 
+    private static volatile Map<String, NavigableMap<LocalDate, Double>> ytdVolTraded = new HashMap<>();
+
     private static Map<String, ChinaResult> ytdResult = new HashMap<>();
     private static Map<String, ChinaResult> wtdResult = new HashMap<>();
 
@@ -124,7 +126,6 @@ public class HistChinaStocks extends JPanel {
     private static volatile String selectedStock = "";
     private TableRowSorter<BarModel_China> sorter;
 
-    @SuppressWarnings("unchecked")
     public HistChinaStocks() {
         String line;
 
@@ -167,6 +168,7 @@ public class HistChinaStocks extends JPanel {
                 if (!al1.get(0).equals("sh204001") && (al1.get(0).startsWith("sh") || al1.get(0).startsWith("sz")
                         || al1.get(0).startsWith("SGX"))) {
                     chinaYtd.put(al1.get(0), new ConcurrentSkipListMap<>());
+                    ytdVolTraded.put(al1.get(0), new ConcurrentSkipListMap<>());
                     chinaWtd.put(al1.get(0), new ConcurrentSkipListMap<>());
                     stockList.add(al1.get(0));
                     nameMap.put(al1.get(0), al1.get(1));
@@ -207,6 +209,8 @@ public class HistChinaStocks extends JPanel {
                                 graphYtd.fillInGraphChinaGen(selectedStock, chinaYtd);
                                 graphYtd.setTradesMap(netSharesTradedByDay.get(selectedStock));
                                 graphYtd.setTradePnl(computeCurrentTradePnl(selectedStock, LAST_YEAR_END));
+                                graphYtd.setWtdVolTraded(computeWtdVolTraded(selectedStock));
+                                graphYtd.setWtdVolPerc(computeWVolPerc(selectedStock));
                             });
                             //});
 
@@ -524,6 +528,7 @@ public class HistChinaStocks extends JPanel {
 
         tab.setAutoCreateRowSorter(true);
 
+        //noinspection unchecked
         sorter = (TableRowSorter<BarModel_China>) tab.getRowSorter();
     }
 
@@ -789,6 +794,7 @@ public class HistChinaStocks extends JPanel {
                                     if (chinaYtd.containsKey(s)) {
                                         chinaYtd.get(s).put(d, new SimpleBar(Double.parseDouble(al1.get(1)), Double.parseDouble(al1.get(2))
                                                 , Double.parseDouble(al1.get(3)), Double.parseDouble(al1.get(4))));
+                                        ytdVolTraded.get(s).put(d, Double.parseDouble(al1.get(6)));
                                     } else {
                                         throw new IllegalStateException(" cannot find stock " + s);
                                     }
@@ -986,6 +992,24 @@ public class HistChinaStocks extends JPanel {
         return 0.0;
     }
 
+    private static double computeWtdVolTraded(String s) {
+        return (ytdVolTraded.containsKey(s) && ytdVolTraded.get(s).size() > 0) ?
+                ytdVolTraded.get(s).entrySet().stream().filter(e -> e.getKey().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
+                        .mapToDouble(Map.Entry::getValue).sum() : 0.0;
+    }
+
+    private static double computeWVolPerc(String s) {
+        if(ytdVolTraded.containsKey(s) && ytdVolTraded.get(s).size()>0) {
+            Map<LocalDate, Double> res = ytdVolTraded.get(s).entrySet().stream().collect(Collectors.groupingBy(e -> getMondayOfWeek(e.getKey()),
+                    ConcurrentSkipListMap::new, Collectors.averagingDouble(Map.Entry::getValue)));
+            double v = ytdVolTraded.get(s).entrySet().stream().filter(e -> e.getKey().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
+                    .mapToDouble(Map.Entry::getValue).average().orElse(0.0);
+            //System.out.println(" week avg vol is " + res + " v " + v);
+            return SharpeUtility.getPercentileGen(res, v);
+        }
+        return 0.0;
+    }
+
     private static void computeWtdCurrentTradePnlAll() {
         for (String s : chinaTradeMap.keySet()) {
             double costBasis = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
@@ -1155,6 +1179,8 @@ public class HistChinaStocks extends JPanel {
                     return "w net";
                 case 26:
                     return "perc";
+                case 27:
+                    return "vol perc";
                 default:
                     return "";
 
@@ -1241,7 +1267,7 @@ public class HistChinaStocks extends JPanel {
                     return r(fx * price * currentPositionMap.getOrDefault(name, 0) + costBasisMap.getOrDefault(name, 0.0));
                 case 21:
                     if (totalTradingCostMap.getOrDefault(name, 1.0) != 0.0) {
-                        return Math.round((fx * price* currentPositionMap.getOrDefault(name, 0)
+                        return Math.round((fx * price * currentPositionMap.getOrDefault(name, 0)
                                 + costBasisMap.getOrDefault(name, 0.0)) / totalTradingCostMap.getOrDefault(name, 1.0));
                     } else {
                         return 0L;
@@ -1258,6 +1284,8 @@ public class HistChinaStocks extends JPanel {
                     return r(wtdTradePnlMap.getOrDefault(name, 0.0) + wtdMtmPnlMap.getOrDefault(name, 0.0));
                 case 26:
                     return SharpeUtility.getPercentile(chinaWtd.get(name));
+                case 27:
+                    return computeWVolPerc(name);
                 default:
                     return null;
 

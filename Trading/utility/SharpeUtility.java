@@ -9,6 +9,7 @@ import auxiliary.SimpleBar;
 
 import java.time.LocalTime;
 import java.time.temporal.Temporal;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -63,10 +64,25 @@ public class SharpeUtility {
     public static int getPercentile(NavigableMap<? extends Temporal, SimpleBar> mp) {
         if (mp.size() > 0) {
             double last = mp.lastEntry().getValue().getClose();
-            double max = mp.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().getAsDouble();
-            double min = mp.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().getAsDouble();
+            double max = Utility.reduceMapToDouble(mp,SimpleBar::getHigh, Math::max);
+            //mp.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().getAsDouble();
+            double min = Utility.reduceMapToDouble(mp, SimpleBar::getLow, Math::min);
+            //mp.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().getAsDouble();
             //System.out.println(" last max min " + last + " " + max + " " + min);
             return (int) Math.round(100d * (last - min) / (max - min));
+        }
+        return 0;
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public static <T extends Temporal> double getPercentileGen(Map<T, Double> mp, double x) {
+        if (mp.size() > 0) {
+            double max = Utility.reduceMapToDouble(mp, d->d, Math::max);
+            double min = Utility.reduceMapToDouble(mp, d->d, Math::min);
+            Map.Entry<T,Double> maxEntry = mp.entrySet().stream().max(Comparator.comparingDouble(Map.Entry::getValue)).get();
+            Map.Entry<T,Double> minEntry = mp.entrySet().stream().min(Comparator.comparingDouble(Map.Entry::getValue)).get();
+            System.out.println(" max min x is " + maxEntry + " " + minEntry + " " + x);
+            return (int) Math.round(1000d * (x - min) / (max - min))/10d;
         }
         return 0;
     }

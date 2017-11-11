@@ -31,6 +31,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     private int netCurrentPosition;
     private double currentTradePnl;
     private double currentMtmPnl;
+    private double wtdVol = 0.0;
+    private double wtdVolPerc = 0.0;
     //double currentNetPnl;
     String name;
     String chineseName;
@@ -64,6 +66,14 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
     public void setTradePnl(double p) {
         currentTradePnl = Math.round(p*100d)/100d;
+    }
+
+    public void setWtdVolTraded(double v) {
+        wtdVol = v;
+    }
+
+    public void setWtdVolPerc(double p) {
+        wtdVolPerc = p;
     }
 
     public void setWtdMtmPnl(double p) {
@@ -262,7 +272,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         g2.drawString("Trade pnl " + Double.toString(currentTradePnl), getWidth()*7/8, getHeight()*2/6);
         g2.drawString("mtm pnl " + Double.toString(currentMtmPnl), getWidth()*7/8, getHeight()*3/6);
         g2.drawString("Net pnl " + Double.toString(currentTradePnl+currentMtmPnl), getWidth()*7/8, getHeight()*4/6);
-
+        g2.drawString("wtd vol " + Math.round(wtdVol/100000000) + "亿", getWidth()*7/8, getHeight()*5/6);
+        g2.drawString("wvol%  " + wtdVolPerc, getWidth()*7/8, getHeight()*6/6);
 
         if (!Optional.ofNullable(bench).orElse("").equals("")) {
             g2.drawString("(" + bench + ")", getWidth() * 2 / 8, 15);

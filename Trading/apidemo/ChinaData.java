@@ -138,9 +138,7 @@ public final class ChinaData extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    SwingUtilities.invokeLater(() -> {
-                        m_model.fireTableDataChanged();
-                    });
+                    SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
                 }
             }
         });
@@ -267,6 +265,7 @@ public final class ChinaData extends JPanel {
         btnLoadBar.addActionListener(al -> {
             CompletableFuture.runAsync(() -> {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(priceBarSource))) {
+                    //noinspection unchecked
                     priceMapBar = (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>>) ois.readObject();
                 } catch (IOException | ClassNotFoundException e3) {
                     e3.printStackTrace();
@@ -374,13 +373,9 @@ public final class ChinaData extends JPanel {
         outputPricesButton.addActionListener(l -> {
             outputPrices();
         });
-
-
     }
 
-
-
-    public static void outputPrices() {
+    static void outputPrices() {
         System.out.println(" outputting prices");
         File output = new File(TradingConstants.GLOBALPATH + "pricesTodayYtd.csv");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, false))) {
@@ -398,20 +393,20 @@ public final class ChinaData extends JPanel {
         }
     }
 
-    public static void outputRecentTradingDate() {
+    static void outputRecentTradingDate() {
         System.out.println(" most recent trading date " + HistChinaStocks.recentTradingDate.toString());
         File output = new File(TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt");
         //MorningTask.clearFile(usTestOutput);
         Utility.simpleWriteToFile(HistChinaStocks.recentTradingDate.toString(), false, output);
     }
 
-    static void getTodayTDX(LocalDate dat) {
+    private static void getTodayTDX(LocalDate dat) {
         CompletableFuture.runAsync(() -> {
             Utility.getFilesFromTDXGen(dat, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
         });
     }
 
-    static void getFromTDX(LocalDate today, LocalDate ytd, LocalDate y2) {
+    private static void getFromTDX(LocalDate today, LocalDate ytd, LocalDate y2) {
 
         CompletableFuture.runAsync(() -> {
             Utility.getFilesFromTDXGen(today, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
@@ -467,6 +462,7 @@ public final class ChinaData extends JPanel {
     public static void loadPriceBar() {
         CompletableFuture.runAsync(() -> {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(priceBarSource))) {
+                //noinspection unchecked
                 priceMapBar = (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>>) ois.readObject();
             } catch (IOException | ClassNotFoundException ex) {
                 ex.printStackTrace();
@@ -594,11 +590,7 @@ public final class ChinaData extends JPanel {
             CompletableFuture.runAsync(() -> {
                 Utility.getIndustryVolYtd(sizeTotalMapY2);
             });
-        }).thenAccept(
-                v -> {
-                    ChinaMain.updateSystemNotif(Utility.getStr(" Loading HIB-Y2 done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
-                }
-        );
+        }).thenAccept(v -> ChinaMain.updateSystemNotif(Utility.getStr(" Loading HIB-Y2 done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
     }
 
     public void loadHibernateY2() {
@@ -680,7 +672,7 @@ public final class ChinaData extends JPanel {
         System.out.println(" done writing to shcomp ");
     }
 
-    static void writeShcomp2() {
+    private static void writeShcomp2() {
 
         CompletableFuture.runAsync(() -> {
 
@@ -742,7 +734,7 @@ public final class ChinaData extends JPanel {
         return 0.0;
     }
 
-    public static void handleSGX50HistData(String date, double open, double high, double low, double close, int volume) {
+    private static void handleSGX50HistData(String date, double open, double high, double low, double close, int volume) {
 
 //        LocalDate currDate = LocalDate.now();
 //        long daysToSubtract = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 3L : 1L;
@@ -857,6 +849,7 @@ public final class ChinaData extends JPanel {
 
         @Override
         public String getColumnName(int col) {
+            //noinspection Duplicates
             switch (col) {
                 case 0:
                     return "T";
@@ -869,6 +862,7 @@ public final class ChinaData extends JPanel {
 
         @Override
         public Class getColumnClass(int col) {
+            //noinspection Duplicates
             switch (col) {
                 case 0:
                     return String.class;

@@ -133,6 +133,14 @@ public class Utility {
         return res;
     }
 
+    public static LocalDate getMondayOfWeek(LocalDate ld) {
+        LocalDate res = ld;
+        while (!res.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
+            res = res.minusDays(1);
+        }
+        return res;
+    }
+
     public static Blob blobify(NavigableMap<LocalTime, ?> mp, Session s) {
         ByteArrayOutputStream bos;
         try (ObjectOutputStream out = new ObjectOutputStream(bos = new ByteArrayOutputStream())) {
@@ -236,23 +244,23 @@ public class Utility {
     }
 
 
-    public static <T> double getMin(NavigableMap<T, Double> tm) {
+    public static <T> double getMin(Map<T, Double> tm) {
         return reduceMapToDouble(tm, d -> d, Math::min);
     }
 
-    public static <T, S> double getMinGen(NavigableMap<T, S> tm, ToDoubleFunction<S> f) {
+    public static <T, S> double getMinGen(Map<T, S> tm, ToDoubleFunction<S> f) {
         return reduceMapToDouble(tm, f, Math::min);
     }
 
-    public static <T, S> double getMaxGen(NavigableMap<T, S> tm, ToDoubleFunction<S> f) {
+    public static <T, S> double getMaxGen(Map<T, S> tm, ToDoubleFunction<S> f) {
         return reduceMapToDouble(tm, f, Math::max);
     }
 
-    public static <T, S> double reduceMapToDouble(NavigableMap<T, S> tm, ToDoubleFunction<S> f, DoubleBinaryOperator o) {
+    public static <T, S> double reduceMapToDouble(Map<T, S> tm, ToDoubleFunction<S> f, DoubleBinaryOperator o) {
         return (tm != null && tm.size() > 0) ? tm.values().stream().mapToDouble(f).reduce(o).orElse(0.0) : 0.0;
     }
 
-    public static <T> double getMax(NavigableMap<T, Double> tm) {
+    public static <T> double getMax(Map<T, Double> tm) {
         return reduceMapToDouble(tm, d -> d, Math::max);
     }
 
