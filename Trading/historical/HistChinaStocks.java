@@ -73,6 +73,7 @@ public class HistChinaStocks extends JPanel {
     private static volatile Map<String, Integer> weekOpenPositionMap = new HashMap<>();
     public static volatile Map<String, Integer> wtdChgInPosition = new HashMap<>();
     public static volatile Map<String, Integer> currentPositionMap = new HashMap<>();
+    public static volatile Map<String, Long> sharesOut = new HashMap<>();
 
     private static Map<String, NavigableMap<LocalDate, Integer>> netSharesTradedByDay = new HashMap<>();
     private static Map<String, NavigableMap<LocalDateTime, Integer>> netSharesTradedWtd = new HashMap<>();
@@ -128,6 +129,17 @@ public class HistChinaStocks extends JPanel {
 
     public HistChinaStocks() {
         String line;
+
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "sharesOut.txt")))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                sharesOut.put(al1.get(0), Long.parseLong(al1.get(1).trim()));
+            }
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
@@ -999,7 +1011,7 @@ public class HistChinaStocks extends JPanel {
     }
 
     private static double computeWVolPerc(String s) {
-        if(ytdVolTraded.containsKey(s) && ytdVolTraded.get(s).size()>0) {
+        if (ytdVolTraded.containsKey(s) && ytdVolTraded.get(s).size() > 0) {
             Map<LocalDate, Double> res = ytdVolTraded.get(s).entrySet().stream().collect(Collectors.groupingBy(e -> getMondayOfWeek(e.getKey()),
                     ConcurrentSkipListMap::new, Collectors.averagingDouble(Map.Entry::getValue)));
             double v = ytdVolTraded.get(s).entrySet().stream().filter(e -> e.getKey().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
@@ -1181,6 +1193,8 @@ public class HistChinaStocks extends JPanel {
                     return "perc";
                 case 27:
                     return "vol perc";
+                case 28:
+                    return "w turnover";
                 default:
                     return "";
 
@@ -1286,6 +1300,9 @@ public class HistChinaStocks extends JPanel {
                     return SharpeUtility.getPercentile(chinaWtd.get(name));
                 case 27:
                     return computeWVolPerc(name);
+                case 28:
+                    return (sharesOut.getOrDefault(name, 0L) != 0 && price!=0.0) ?
+                            Math.round(1000d * (computeWtdVolTraded(name) / (price * sharesOut.get(name)))) / 10d : 0.0;
                 default:
                     return null;
 

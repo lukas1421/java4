@@ -81,7 +81,7 @@ public class SharpeUtility {
             double min = Utility.reduceMapToDouble(mp, d->d, Math::min);
             Map.Entry<T,Double> maxEntry = mp.entrySet().stream().max(Comparator.comparingDouble(Map.Entry::getValue)).get();
             Map.Entry<T,Double> minEntry = mp.entrySet().stream().min(Comparator.comparingDouble(Map.Entry::getValue)).get();
-            System.out.println(" max min x is " + maxEntry + " " + minEntry + " " + x);
+            //System.out.println(" max min x is " + maxEntry + " " + minEntry + " " + x);
             return (int) Math.round(1000d * (x - min) / (max - min))/10d;
         }
         return 0;
