@@ -26,44 +26,39 @@ import static utility.Utility.*;
 
 public class GraphMonitor extends JComponent implements GraphFillable {
 
-    static final int WIDTH_MON = 2;
+    private static final int WIDTH_MON = 2;
     String name;
     String chineseName;
     NavigableMap<LocalDateTime, SimpleBar> tm;
-    NavigableMap<LocalDateTime, ? super Trade> trades = new ConcurrentSkipListMap<>();
+    private NavigableMap<LocalDateTime, ? super Trade> trades = new ConcurrentSkipListMap<>();
 
-    NavigableMap<LocalDateTime, SimpleBar> tmLDT;
-    NavigableMap<LocalDateTime, ? super Trade> tradesLdt = new ConcurrentSkipListMap<>();
+    //private NavigableMap<LocalDateTime, SimpleBar> tmLDT;
+    //NavigableMap<LocalDateTime, ? super Trade> tradesLdt = new ConcurrentSkipListMap<>();
 
-    double maxToday;
-    double minToday;
+    private double maxToday;
+    private double minToday;
     double minRtn;
     double maxRtn;
     int height;
-    int width;
-    int closeY;
-    int highY;
-    int lowY;
-    int openY;
     int last = 0;
     double rtn = 0;
     int size;
-    String bench;
-    double ytdSharpe;
-    double minSharpe;
-    double wtdSharpe;
-    static final BasicStroke BS3 = new BasicStroke(3);
-    int ytdCloseP;
-    int ytdY2CloseP;
-    int current2DayP;
-    int current3DayP;
-    int wtdP;
+    private String bench;
+    private double ytdSharpe;
+    private double minSharpe;
+    private double wtdSharpe;
+    private static final BasicStroke BS3 = new BasicStroke(3);
+    private int ytdCloseP;
+    private int ytdY2CloseP;
+    private int current2DayP;
+    private int current3DayP;
+    private int wtdP;
 
-    public GraphMonitor() {
+    GraphMonitor() {
         name = "";
         chineseName = "";
         this.tm = new ConcurrentSkipListMap<>();
-        this.tmLDT = new ConcurrentSkipListMap<>();
+        //this.tmLDT = new ConcurrentSkipListMap<>();
     }
 
     @Override
@@ -86,7 +81,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
 
-        height = (int) (getHeight() - 70);
+        height = getHeight() - 70;
         minToday = getMin();
         maxToday = getMax();
         minRtn = getMinRtn();
@@ -95,10 +90,10 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
         int x = 5;
         for (LocalDateTime lt : tm.keySet()) {
-            openY = getY(tm.floorEntry(lt).getValue().getOpen());
-            highY = getY(tm.floorEntry(lt).getValue().getHigh());
-            lowY = getY(tm.floorEntry(lt).getValue().getLow());
-            closeY = getY(tm.floorEntry(lt).getValue().getClose());
+            int openY = getY(tm.floorEntry(lt).getValue().getOpen());
+            int highY = getY(tm.floorEntry(lt).getValue().getHigh());
+            int lowY = getY(tm.floorEntry(lt).getValue().getLow());
+            int closeY = getY(tm.floorEntry(lt).getValue().getClose());
 
             if (closeY < openY) {
                 g.setColor(new Color(0, 140, 0));
@@ -118,23 +113,17 @@ public class GraphMonitor extends JComponent implements GraphFillable {
                     Trade t = (Trade) e.getValue();
                     if (t.getSize() > 0) {
                         g.setColor(Color.blue);
-                        int xCord = x;
-                        int yCord = lowY;
-                        Polygon p = new Polygon(new int[]{xCord - 10, xCord, xCord + 10}, new int[]{yCord + 10, yCord, yCord + 10}, 3);
+                        Polygon p = new Polygon(new int[]{x - 10, x, x + 10}, new int[]{lowY + 10, lowY, lowY + 10}, 3);
                         g.drawPolygon(p);
                         g.fillPolygon(p);
                     } else {
                         g.setColor(Color.black);
-                        int xCord = x;
-                        int yCord = highY;
-                        Polygon p1 = new Polygon(new int[]{xCord - 10, xCord, xCord + 10}, new int[]{yCord - 10, yCord, yCord - 10}, 3);
+                        Polygon p1 = new Polygon(new int[]{x - 10, x, x + 10}, new int[]{highY - 10, highY, highY - 10}, 3);
                         g.drawPolygon(p1);
                         g.fillPolygon(p1);
                     }
                 }
-                ;
             }
-            ;
 
             g.setColor(Color.black);
 
@@ -245,7 +234,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         return (tm.size() > 0) ? round(1000d * tm.lastEntry().getValue().getClose()) / 1000d : 0.0;
     }
 
-    void setSize1(long s) {
+    private void setSize1(long s) {
         this.size = (int) s;
     }
 
@@ -253,15 +242,15 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         this.bench = s;
     }
 
-    void setYtdSharpe(double s) {
+    private void setYtdSharpe(double s) {
         this.ytdSharpe = s;
     }
 
-    void setMinSharpe(double s) {
+    private void setMinSharpe(double s) {
         this.minSharpe = s;
     }
 
-    void setWtdSharpe(double s) {
+    private void setWtdSharpe(double s) {
         this.wtdSharpe = Math.round(s * 100d) / 100d;
     }
 
@@ -274,7 +263,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         return 0.0;
     }
 
-    public void clearGraph() {
+    void clearGraph() {
         this.name = "";
         setName("");
         setChineseName("");
@@ -364,7 +353,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         return 0.0;
     }
 
-    void getYtdY2CloseP(String name) {
+    private void getYtdY2CloseP(String name) {
         double current;
         double maxT;
         double minT;
