@@ -95,6 +95,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
             int lowY = getY(tm.floorEntry(lt).getValue().getLow());
             int closeY = getY(tm.floorEntry(lt).getValue().getClose());
 
+            //noinspection Duplicates
             if (closeY < openY) {
                 g.setColor(new Color(0, 140, 0));
                 g.fillRect(x, closeY, 3, openY - closeY);
@@ -263,6 +264,8 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         return 0.0;
     }
 
+
+    @SuppressWarnings("Duplicates")
     void clearGraph() {
         this.name = "";
         setName("");

@@ -1,57 +1,46 @@
 package graph;
 
-import auxiliary.SimpleBar;
 import apidemo.XUTrader;
+import auxiliary.SimpleBar;
 
-import static utility.Utility.AMOPENT;
-import static utility.Utility.BAR_HIGH;
-import static utility.Utility.BAR_LOW;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import static java.lang.Math.abs;
-import static java.lang.Math.log;
-import static java.lang.Math.round;
+import javax.swing.*;
+import java.awt.*;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.NavigableMap;
-import static java.util.Optional.ofNullable;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.stream.Collectors;
+
+import static java.lang.Math.*;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-import javax.swing.JComponent;
+import static utility.Utility.*;
 
 public class GraphBarGen extends JComponent {
 
-    static final int WIDTH_BAR = 5;
+    private static final int WIDTH_BAR = 5;
     int height;
     double min;
     double max;
     double maxRtn;
     double minRtn;
-    int closeY;
-    int highY;
-    int lowY;
-    int openY;
     int last = 0;
     double rtn = 0;
     NavigableMap<LocalTime, SimpleBar> tm;
     String name;
     String chineseName;
-    String bench;
+    private String bench;
     LocalTime maxAMT;
     LocalTime minAMT;
     volatile int size;
-    static final BasicStroke BS3 = new BasicStroke(3);
-    int wtdP;
+    private static final BasicStroke BS3 = new BasicStroke(3);
+    private int wtdP;
 
-    public GraphBarGen(NavigableMap<LocalTime, SimpleBar> tm) {
-        this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue()
-                .containsZero()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
-    }
+//    public GraphBarGen(NavigableMap<LocalTime, SimpleBar> tm) {
+//        this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue()
+//                .containsZero()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+//                (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
+//    }
 
     public GraphBarGen() {
         name = "";
@@ -67,10 +56,6 @@ public class GraphBarGen extends JComponent {
                         ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
     }
 
-    public NavigableMap<LocalTime, SimpleBar> getNavigableMap() {
-        return this.tm;
-    }
-
     @Override
     public void setName(String s) {
         this.name = s;
@@ -83,10 +68,6 @@ public class GraphBarGen extends JComponent {
 
     public void setChineseName(String s) {
         this.chineseName = s;
-    }
-
-    public void setSize1(long s) {
-        this.size = (int) s;
     }
 
     public void setBench(String s) {
@@ -108,7 +89,7 @@ public class GraphBarGen extends JComponent {
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
 
-        height = (int) (getHeight() - 70);
+        height = getHeight() - 70;
         min = getMin();
         max = getMax();
         minRtn = getMinRtn();
@@ -118,10 +99,10 @@ public class GraphBarGen extends JComponent {
 
         int x = 5;
         for (LocalTime lt : tm.keySet()) {
-            openY = getY(tm.floorEntry(lt).getValue().getOpen());
-            highY = getY(tm.floorEntry(lt).getValue().getHigh());
-            lowY = getY(tm.floorEntry(lt).getValue().getLow());
-            closeY = getY(tm.floorEntry(lt).getValue().getClose());
+            int openY = getY(tm.floorEntry(lt).getValue().getOpen());
+            int highY = getY(tm.floorEntry(lt).getValue().getHigh());
+            int lowY = getY(tm.floorEntry(lt).getValue().getLow());
+            int closeY = getY(tm.floorEntry(lt).getValue().getClose());
 
             if (closeY < openY) {  //close>open
                 g.setColor(new Color(0, 140, 0));
@@ -182,31 +163,30 @@ public class GraphBarGen extends JComponent {
         g2.setColor(getForeground());
 
         if (XUTrader.showTrades) {
-            XUTrader.tradesMap.entrySet().stream().forEach(e -> {
+            XUTrader.tradesMap.forEach((key, value) -> {
                 //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getHeight()-20);
-                if (e.getValue().getSize() > 0) {
+                if (value.getSize() > 0) {
                     g.setColor(Color.blue);
-
                     //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getYForLTBuy(e.getKey())+20);
-                    int xCord = getXForLT(e.getKey());
+                    int xCord = getXForLT(key);
                     //int yCord = getYForLTBuy(e.getKey());
-                    int yCord = getY(e.getValue().getPrice());
+                    int yCord = getY(value.getPrice());
                     g.drawPolygon(new int[]{xCord - 1, xCord, xCord + 1}, new int[]{yCord + 2, yCord, yCord + 2}, 3);
 
                 } else {
                     g.setColor(Color.black);
                     //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getYForLTSell(e.getKey())-20);
-                    int xCord = getXForLT(e.getKey());
+                    int xCord = getXForLT(key);
                     //int yCord = getYForLTSell(e.getKey());
-                    int yCord = getY(e.getValue().getPrice());
+                    int yCord = getY(value.getPrice());
                     g.drawPolygon(new int[]{xCord - 1, xCord, xCord + 1}, new int[]{yCord - 3, yCord, yCord - 3}, 3);
                 }
-                System.out.println(e.getKey());
+                System.out.println(key);
             });
         }
     }
 
-    public int getXForLT(LocalTime t) {
+    private int getXForLT(LocalTime t) {
         long timeDiff = ChronoUnit.MINUTES.between(LocalTime.of(9, 0), t);
         if (t.isAfter(LocalTime.of(11, 30))) {
             timeDiff = timeDiff - 90;
@@ -215,23 +195,23 @@ public class GraphBarGen extends JComponent {
         return (int) (WIDTH_BAR * timeDiff + 5);
     }
 
-    public int getYForLTSell(LocalTime t) {
-        SimpleBar sb = (SimpleBar) XUTrader.xuData.floorEntry(t).getValue();
-        if (sb.normalBar()) {
-            return getY(sb.getHigh());
-        } else {
-            throw new IllegalArgumentException("BAGAYARO");
-        }
-    }
-
-    public int getYForLTBuy(LocalTime t) {
-        SimpleBar sb = (SimpleBar) XUTrader.xuData.floorEntry(t).getValue();
-        if (sb.normalBar()) {
-            return getY(sb.getLow());
-        } else {
-            throw new IllegalArgumentException("BAGAYARO");
-        }
-    }
+//    public int getYForLTSell(LocalTime t) {
+//        SimpleBar sb = (SimpleBar) XUTrader.xuData.floorEntry(t).getValue();
+//        if (sb.normalBar()) {
+//            return getY(sb.getHigh());
+//        } else {
+//            throw new IllegalArgumentException("BAGAYARO");
+//        }
+//    }
+//
+//    public int getYForLTBuy(LocalTime t) {
+//        SimpleBar sb = (SimpleBar) XUTrader.xuData.floorEntry(t).getValue();
+//        if (sb.normalBar()) {
+//            return getY(sb.getLow());
+//        } else {
+//            throw new IllegalArgumentException("BAGAYARO");
+//        }
+//    }
 
     /**
      * Convert bar value to y coordinate.
@@ -271,7 +251,7 @@ public class GraphBarGen extends JComponent {
 
     public double getMinRtn() {
         if (tm.size() > 0) {
-            double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(e -> e.getOpen()).orElse(0.0);
+            double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
             double finalP = getMin();
             return (Math.abs(finalP - initialP) > 0.0001) ? (double) round(log(getMin() / initialP) * 1000d) / 10d : 0;
         }

@@ -22,49 +22,46 @@ import static utility.Utility.*;
 
 public final class GraphPnl extends JComponent {
 
-    final static int WIDTH_PNL = 5;
+    private final static int WIDTH_PNL = 5;
 
     static NavigableMap<LocalTime, Double> tm;
-    static NavigableMap<LocalTime, Double> mtmMap;
-    static NavigableMap<LocalTime, Double> tradeMap;
-    static NavigableMap<LocalTime, Double> netMap;
-    static NavigableMap<LocalTime, Double> buyMap;
-    static NavigableMap<LocalTime, Double> sellMap;
-    static NavigableMap<LocalTime, Double> netDeltaMap;
-    static NavigableMap<String, Double> benchMap;
-    static Map<String, Double> benchMtmMap;
-    static LinkedList<String> pnl1mList;
-    String winner1;
-    String winner2;
-    String winner3;
-    String loser1;
-    String loser2;
-    String loser3;
-    volatile String big1;
-    volatile String big2;
-    volatile String big3;
+    private static NavigableMap<LocalTime, Double> mtmMap;
+    private static NavigableMap<LocalTime, Double> tradeMap;
+    private static NavigableMap<LocalTime, Double> netMap;
+    private static NavigableMap<LocalTime, Double> buyMap;
+    private static NavigableMap<LocalTime, Double> sellMap;
+    private static NavigableMap<LocalTime, Double> netDeltaMap;
+    private static NavigableMap<String, Double> benchMap;
+    private static Map<String, Double> benchMtmMap;
+    private static LinkedList<String> pnl1mList;
+    private String winner1;
+    private String winner2;
+    private String winner3;
+    private String loser1;
+    private String loser2;
+    private String loser3;
+    private volatile String big1;
+    private volatile String big2;
+    private volatile String big3;
 
 
-    static double openDelta;
-    static double boughtDelta;
-    static double soldDelta;
-    static double currentDelta;
-    static double netYtdPnl;
-    static double todayNetPnl;
-    static double mtmPnl;
-    static double mtmDeltaSharpe;
+    private static double openDelta;
+    private static double boughtDelta;
+    private static double soldDelta;
+    private static double currentDelta;
+    private static double netYtdPnl;
+    private static double todayNetPnl;
+    private static double mtmPnl;
+    private static double mtmDeltaSharpe;
 
-    static double minuteNetPnlSharpe;
+    private static double minuteNetPnlSharpe;
 
-    static double buyPnl;
-    static double sellPnl;
+    private static double buyPnl;
+    private static double sellPnl;
 
     private int height;
     private double min;
     private double max;
-    private int close;
-    private int last = 0;
-    private double rtn = 0;
 
     String name = "";
     String chineseName = "";
@@ -73,17 +70,17 @@ public final class GraphPnl extends JComponent {
     private LocalTime minAMT;
     private volatile int size;
 
-    static final LocalTime AMCLOSET = LocalTime.of(11, 30);
+    private static final LocalTime AMCLOSET = LocalTime.of(11, 30);
     static final LocalTime AMOPENT = LocalTime.of(9, 30);
-    static final LocalTime PMOPENT = LocalTime.of(13, 0);
+    private static final LocalTime PMOPENT = LocalTime.of(13, 0);
     static final LocalTime PMCLOSET = LocalTime.of(15, 0);
-    static final Predicate<? super Map.Entry<LocalTime, ? extends Number>> AMPRED = e -> e.getKey().isBefore(AMCLOSET);
-    static final Predicate<? super Map.Entry<LocalTime, ? extends Number>> PMPRED = e -> e.getKey().isAfter(PMOPENT);
-    static final Predicate<? super Map.Entry<LocalTime, ? extends Number>> TRADING_PRED = e
+    private static final Predicate<? super Map.Entry<LocalTime, ? extends Number>> AMPRED = e -> e.getKey().isBefore(AMCLOSET);
+    private static final Predicate<? super Map.Entry<LocalTime, ? extends Number>> PMPRED = e -> e.getKey().isAfter(PMOPENT);
+    private static final Predicate<? super Map.Entry<LocalTime, ? extends Number>> TRADING_PRED = e
             -> (e.getKey().isAfter(LocalTime.of(9, 15)) && e.getKey().isBefore(LocalTime.of(11, 31)))
             || (e.getKey().isAfter(LocalTime.of(12, 59)) && e.getKey().isBefore(LocalTime.of(15, 1)));
 
-//    public GraphPnl(NavigableMap<LocalTime, Double> mainMap) {
+    //    public GraphPnl(NavigableMap<LocalTime, Double> mainMap) {
 //        this.mainMap = mainMap.entrySet().stream().filter(e->e.getValue()!=0).collect(Collectors.toMap(Map.Entry::getKey,Map.Entry::getValue, (u,v)->u, ConcurrentSkipListMap::new));
 //    } 
     public GraphPnl() {
@@ -152,11 +149,11 @@ public final class GraphPnl extends JComponent {
     }
 
     public void setBenchMap(NavigableMap<String, Double> m) {
-        this.benchMap = m;
+        benchMap = m;
     }
 
     public void setMtmBenchMap(Map<String, Double> m) {
-        this.benchMtmMap = m;
+        benchMtmMap = m;
     }
 
     public void setNavigableMap(NavigableMap<LocalTime, Double> mtmmap, NavigableMap<LocalTime, Double> trademap, NavigableMap<LocalTime, Double> netmap) {
@@ -236,9 +233,7 @@ public final class GraphPnl extends JComponent {
     }
 
     public void refresh() {
-        SwingUtilities.invokeLater(() -> {
-            repaint();
-        });
+        SwingUtilities.invokeLater(this::repaint);
     }
 
     @Override
@@ -259,15 +254,16 @@ public final class GraphPnl extends JComponent {
         LocalTime netmint = getNetPnlMinTime();
         LocalTime netmaxt = getNetPnlMaxTime();
 
-        rtn = getReturn();
+        double rtn = getReturn();
         int x = 5;
 
         g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.5F));
         g2.setStroke(new BasicStroke(2));
 
-        last = 0;
+        int last = 0;
         //int x = 5;
         g2.setColor(Color.CYAN);
+        int close;
         for (LocalTime lt : netDeltaMap.keySet()) {
             close = getYDelta(netDeltaMap.floorEntry(lt).getValue());
             last = (last == 0) ? close : last;
@@ -484,9 +480,9 @@ public final class GraphPnl extends JComponent {
         g2.drawString("Mtm Sharpe: " + Double.toString(mtmDeltaSharpe), getWidth() / 7 * 6, getHeight() / 3 + 130);
         g2.drawString("netpnl Sharpe: " + Double.toString(minuteNetPnlSharpe), getWidth() / 7 * 5, getHeight() / 3 + 130);
 
-        g2.drawString("big1 " +big1, getWidth() / 7 * 5, getHeight() / 3 + 150);
-        g2.drawString("big2 " +big2, getWidth() / 7 * 5, getHeight() / 3 + 170);
-        g2.drawString("big3 " +big3, getWidth() / 7 * 5, getHeight() / 3 + 190);
+        g2.drawString("big1 " + big1, getWidth() / 7 * 5, getHeight() / 3 + 150);
+        g2.drawString("big2 " + big2, getWidth() / 7 * 5, getHeight() / 3 + 170);
+        g2.drawString("big3 " + big3, getWidth() / 7 * 5, getHeight() / 3 + 190);
 
         g2.setColor(Color.red);
         g2.setFont(g.getFont().deriveFont(20F));
@@ -494,7 +490,7 @@ public final class GraphPnl extends JComponent {
         g2.drawString("Bought Delta: " + Double.toString(Math.round(boughtDelta / 1000d)) + " K", getWidth() / 7 * 6, getHeight() / 3 + 170);
         g2.drawString("Sold Delta: " + Double.toString(Math.round(soldDelta / 1000d)) + " K", getWidth() / 7 * 6, getHeight() / 3 + 190);
         g2.drawString("rtn on +Delta: " + Double.toString(Math.round(buyPnl / boughtDelta * 1000d) / 10d) + " %", getWidth() / 7 * 6, getHeight() / 3 + 210);
-        g2.drawString("rtn on -Delta: " + (soldDelta!=0.0?(Double.toString(Math.round(-1 * sellPnl / soldDelta * 1000d) / 10d) + " %"):""), getWidth() / 7 * 6, getHeight() / 3 + 230);
+        g2.drawString("rtn on -Delta: " + (soldDelta != 0.0 ? (Double.toString(Math.round(-1 * sellPnl / soldDelta * 1000d) / 10d) + " %") : ""), getWidth() / 7 * 6, getHeight() / 3 + 230);
 
         int heightStart = getHeight() / 3 + 250;
         g2.drawString("w1 " + winner1, getWidth() / 7 * 6, heightStart);
@@ -509,9 +505,6 @@ public final class GraphPnl extends JComponent {
         g2.drawString(LocalTime.now().toString(), getWidth() - 170, 50);
     }
 
-    /**
-     * Convert bar value to y coordinate.
-     */
     private int getY(double v) {
         double span = max - min;
         double pct = (v - min) / span;
@@ -528,10 +521,6 @@ public final class GraphPnl extends JComponent {
         return height - (int) val + 50;
     }
 
-//    public <T> Comparator<T> reverseThis(Comparator<T> comp) {
-//        return comp.reversed();
-//    }
-
     Map<Integer, String> getPtfCompoString(NavigableMap<String, Double> bench, double delta, Map<String, Double> mtm) {
         Map<Integer, String> res = new LinkedHashMap<>();
         LinkedList<String> sortedBench = bench.entrySet().stream()
@@ -539,19 +528,18 @@ public final class GraphPnl extends JComponent {
                 .collect(Collectors.toCollection(LinkedList::new));
         Iterator<String> it = sortedBench.iterator();
 
-//        Map<String, Double> mtmPnlAll = ChinaPosition.openPositionMap.entrySet().stream().filter(e->e.getValue()>0)
-//                .collect(Collectors.groupingBy(e-> ChinaStock.benchSimpleMap.getOrDefault(e.getKey(),""),
-//                        Collectors.summingDouble(e-> (ChinaStock.priceMap.getOrDefault(e.getKey(),0.0) - ChinaStock.closeMap.getOrDefault(e.getKey(), 0.0))*(e.getValue()))));
         double netMtmAll = Double.MAX_VALUE;
         if (mtm.size() > 0) {
             netMtmAll = mtm.entrySet().stream().mapToDouble(Entry::getValue).sum();
         }
-        //"大: " + Long.toString(round(benchMap.getOrDefault("大", 0.0)/1000d))+" k   " + Double.toString(round(100d*benchMap.getOrDefault("大", 0.0)/currentDelta))+ " % "
+
         int i = 0;
         while (it.hasNext()) {
             String s = it.next();
-            String resStr = s + " : " + Long.toString(round(bench.getOrDefault(s, 0.0) / 1000d)) + " k " + Long.toString(round(100d * bench.getOrDefault(s, 0.0) / delta)) + " % "
-                    + " ||||| 盈: " + round(mtm.getOrDefault(s, 0.0) / 100d) / 10d + " k   " + Long.toString(round(100d * mtm.getOrDefault(s, 0.0) / netMtmAll)) + " % ";
+            String resStr = s + " : " + Long.toString(round(bench.getOrDefault(s, 0.0) / 1000d))
+                    + " k " + Long.toString(round(100d * bench.getOrDefault(s, 0.0) / delta)) + " % "
+                    + " ||||| 盈: " + round(mtm.getOrDefault(s, 0.0) / 100d) / 10d + " k   "
+                    + Long.toString(round(100d * mtm.getOrDefault(s, 0.0) / netMtmAll)) + " % ";
 
             res.put(i, resStr);
             i++;
@@ -584,38 +572,33 @@ public final class GraphPnl extends JComponent {
         return Math.round(100d * netDeltaMap.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getValue).orElse(0.0)) / 100d;
     }
 
-    LocalTime getNetPnlMaxTime() {
+    private LocalTime getNetPnlMaxTime() {
         return netMap.entrySet().stream().max(Map.Entry.comparingByValue()).map(Entry::getKey).orElse(LocalTime.MAX);
     }
 
-    LocalTime getNetPnlMinTime() {
+    private LocalTime getNetPnlMinTime() {
         return netMap.entrySet().stream().min(Map.Entry.comparingByValue()).map(Entry::getKey).orElse(LocalTime.MAX);
     }
 
     private double getMinAM() {
         return (tm.size() > 0 && tm.firstKey().isBefore(LocalTime.of(12, 0)))
-                ? Math.round(100d * tm.entrySet().stream().filter(AMPRED).min(Map.Entry.comparingByValue()).get().getValue()) / 100d : 0.0;
+                ? Math.round(100d * tm.entrySet().stream().filter(AMPRED).min(Map.Entry.comparingByValue()).map(Entry::getValue).orElse(0.0)) / 100d : 0.0;
+        //.get().getValue()) / 100d : 0.0;
     }
 
     private double getMaxAM() {
-        if (tm.size() > 0 && tm.firstKey().isBefore(AMCLOSET)) {
-            return Math.round(100d * tm.entrySet().stream().filter(AMPRED).max(Map.Entry.comparingByValue()).get().getValue()) / 100d;
-        }
-        return 0.0;
+        return (tm.size() > 0 && tm.firstKey().isBefore(AMCLOSET)) ?
+                Math.round(100d * tm.entrySet().stream().filter(AMPRED).max(Map.Entry.comparingByValue()).map(Entry::getValue).orElse(0.0)) / 100d : 0.0;
     }
 
     private double getMinPM() {
-        if (tm.size() > 0 && tm.lastKey().isAfter(PMOPENT)) {
-            return Math.round(100d * tm.entrySet().stream().filter(PMPRED).min(Map.Entry.comparingByValue()).get().getValue()) / 100d;
-        }
-        return 0.0;
+        return (tm.size() > 0 && tm.lastKey().isAfter(PMOPENT)) ?
+                Math.round(100d * tm.entrySet().stream().filter(PMPRED).min(Map.Entry.comparingByValue()).map(Entry::getValue).orElse(0.0)) / 100d : 0.0;
     }
 
     private double getMaxPM() {
-        if (tm.size() > 0 && tm.lastKey().isAfter(PMOPENT)) {
-            return Math.round(100d * tm.entrySet().stream().filter(PMPRED).max(Map.Entry.comparingByValue()).get().getValue()) / 100d;
-        }
-        return 0.0;
+        return (tm.size() > 0 && tm.lastKey().isAfter(PMOPENT)) ?
+                Math.round(100d * tm.entrySet().stream().filter(PMPRED).max(Map.Entry.comparingByValue()).map(Entry::getValue).orElse(0.0)) / 100d : 0.0;
     }
 
     private double get925() {
@@ -638,13 +621,13 @@ public final class GraphPnl extends JComponent {
         return (tm.size() > 0) ? (double) 100 * Math.round(log(tm.lastEntry().getValue() / tm.firstEntry().getValue()) * 1000d) / 1000d : 0.0;
     }
 
-    private double getMaxRtn() {
-        return (tm.size() > 0) ? (Math.round(log(getMax() / tm.firstEntry().getValue()) * 1000d) / 10d) : 0.0;
-    }
-
-    private double getMinRtn() {
-        return (tm.size() > 0) ? (Math.round(log(getMin() / tm.firstEntry().getValue()) * 1000d) / 10d) : 0.0;
-    }
+//    private double getMaxRtn() {
+//        return (tm.size() > 0) ? (Math.round(log(getMax() / tm.firstEntry().getValue()) * 1000d) / 10d) : 0.0;
+//    }
+//
+//    private double getMinRtn() {
+//        return (tm.size() > 0) ? (Math.round(log(getMin() / tm.firstEntry().getValue()) * 1000d) / 10d) : 0.0;
+//    }
 
     private double getLast() {
         return (tm.size() > 0) ? Math.round(100d * tm.lastEntry().getValue()) / 100d : 0;

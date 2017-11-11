@@ -36,32 +36,32 @@ import static utility.Utility.getMondayOfWeek;
 
 public class HistHKStocks extends JPanel {
 
-    static final String CUTOFFTIME = getDataCutoff();
-    static final int DAYSTOREQUESTYTD = (int) Math.round(ChronoUnit.DAYS.between(
+    private static final String CUTOFFTIME = getDataCutoff();
+    private static final int DAYSTOREQUESTYTD = (int) Math.round(ChronoUnit.DAYS.between(
             LocalDate.of(LocalDate.now().getYear() - 1, Month.DECEMBER, 31), LocalDate.now()) * 252 / 365);
 
-    static final int DAYSTOREQUESTWTD = (int) ChronoUnit.DAYS.between(
+    private static final int DAYSTOREQUESTWTD = (int) ChronoUnit.DAYS.between(
             getMondayOfWeek(LocalDateTime.now()), LocalDate.now()) + 1;
 
 
     //public static volatile long totalBeingProcessed = 0;
-    public static volatile AtomicLong stocksProcessedYtd = new AtomicLong(0);
-    public static volatile AtomicLong stocksProcessedWtd = new AtomicLong(0);
+    static volatile AtomicLong stocksProcessedYtd = new AtomicLong(0);
+    static volatile AtomicLong stocksProcessedWtd = new AtomicLong(0);
 
     private static volatile Semaphore sm = new Semaphore(50);
 
-    public static final LocalDate MONDAY_OF_WEEK = getMondayOfWeek(LocalDateTime.now());
+    private static final LocalDate MONDAY_OF_WEEK = getMondayOfWeek(LocalDateTime.now());
 
-    public final static File hkTestOutput = new File(TradingConstants.GLOBALPATH + "hkTestData.txt");
+    private final static File hkTestOutput = new File(TradingConstants.GLOBALPATH + "hkTestData.txt");
 
     //ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
-    static ApiController apcon = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
+    private static ApiController apcon = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
             new ApiConnection.ILogger.DefaultLogger(),
             new ApiConnection.ILogger.DefaultLogger());
 
     //public static volatile Contract ctHK = new Contract();
-    public static volatile Map<String, NavigableMap<LocalDate, SimpleBar>> hkYtdAll = new HashMap<>();
-    public static volatile Map<String, NavigableMap<LocalDateTime, SimpleBar>> hkWtdAll = new HashMap<>();
+    static volatile Map<String, NavigableMap<LocalDate, SimpleBar>> hkYtdAll = new HashMap<>();
+    static volatile Map<String, NavigableMap<LocalDateTime, SimpleBar>> hkWtdAll = new HashMap<>();
     private static volatile Map<String, HKResult> HKResultMapYtd = new HashMap<>();
     private static volatile Map<String, HKResult> HKResultMapWtd = new HashMap<>();
 

@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.DoubleBinaryOperator;
-import java.util.function.ToDoubleFunction;
 
 public class GraphChinaPnl<T extends Temporal> extends JComponent implements GraphFillable {
 
@@ -20,25 +19,24 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
     String name = "";
     String chineseName = "";
 
-    volatile NavigableMap<T, Double> mtmMap = new ConcurrentSkipListMap<>();
-    volatile NavigableMap<T, Double> tradeMap = new ConcurrentSkipListMap<>();
-    volatile NavigableMap<T, Double> netMap = new ConcurrentSkipListMap<>();
+    private volatile NavigableMap<T, Double> mtmMap = new ConcurrentSkipListMap<>();
+    private volatile NavigableMap<T, Double> tradeMap = new ConcurrentSkipListMap<>();
+    private volatile NavigableMap<T, Double> netMap = new ConcurrentSkipListMap<>();
 
-    NavigableMap<LocalDate, Double> mtmByDay = new ConcurrentSkipListMap<>();
-    NavigableMap<LocalDate, Double> mtmByAm = new ConcurrentSkipListMap<>();
-    NavigableMap<LocalDate, Double> mtmByPm = new ConcurrentSkipListMap<>();
+    private NavigableMap<LocalDate, Double> mtmByDay = new ConcurrentSkipListMap<>();
+    private NavigableMap<LocalDate, Double> mtmByAm = new ConcurrentSkipListMap<>();
+    private NavigableMap<LocalDate, Double> mtmByPm = new ConcurrentSkipListMap<>();
 
-    int averagePerc ;
-    int deltaWeightedAveragePerc;
+    private int averagePerc ;
+    private int deltaWeightedAveragePerc;
 
-
-    NavigableMap<T, Double> deltaMap;
+    //NavigableMap<T, Double> deltaMap;
 
     double max;
     double min;
     int height;
 
-    public static final int WIDTH_PNL = 4;
+    private static final int WIDTH_PNL = 4;
 
     public GraphChinaPnl() {
         mtmMap = new ConcurrentSkipListMap<>();
@@ -101,6 +99,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
             last = close;
 
             //System.out.println(" mtm map lt " + lt + " first key " + mtmMap.firstKey());
+            //noinspection Duplicates
             if (lt.equals(mtmMap.firstKey())) {
                 g.drawString(lt.toString(), x, getHeight() - 10);
             } else if (lt.equals(mtmMap.lastKey())) {
@@ -144,6 +143,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
             }
 
             if (mtmMap.size() == 0) {
+                //noinspection Duplicates
                 if (lt.equals(tradeMap.firstKey())) {
                     g.drawString(lt.toString(), x, getHeight() - 10);
                 } else if (lt.equals(tradeMap.lastKey())) {
@@ -257,10 +257,10 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         return Utility.reduceMaps(Math::max, mtmMap, tradeMap, netMap);
     }
 
-    static public <T> T getEarliestT(NavigableMap<T, Double> mp, ToDoubleFunction<NavigableMap<T, Double>> f) {
-        double target = f.applyAsDouble(mp);
-        return mp.entrySet().stream().filter(e -> e.getValue() == target).findFirst().map(Map.Entry::getKey).orElse(mp.firstKey());
-    }
+//    static public <T> T getEarliestT(NavigableMap<T, Double> mp, ToDoubleFunction<NavigableMap<T, Double>> f) {
+//        double target = f.applyAsDouble(mp);
+//        return mp.entrySet().stream().filter(e -> e.getValue() == target).findFirst().map(Map.Entry::getKey).orElse(mp.firstKey());
+//    }
 
     private static <T> T getEarliestT2(NavigableMap<T, Double> mp, DoubleBinaryOperator b) {
         if (mp.size() > 0) {
@@ -271,16 +271,16 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         }
     }
 
-    public void clearGraph() {
-        SwingUtilities.invokeLater(() -> {
-            name = "";
-            chineseName = "";
-            mtmMap = new ConcurrentSkipListMap<>();
-            tradeMap = new ConcurrentSkipListMap<>();
-            netMap = new ConcurrentSkipListMap<>();
-            this.repaint();
-        });
-    }
+//    public void clearGraph() {
+//        SwingUtilities.invokeLater(() -> {
+//            name = "";
+//            chineseName = "";
+//            mtmMap = new ConcurrentSkipListMap<>();
+//            tradeMap = new ConcurrentSkipListMap<>();
+//            netMap = new ConcurrentSkipListMap<>();
+//            this.repaint();
+//        });
+//    }
 
     @Override
     public void fillInGraph(String nam) {
@@ -291,9 +291,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
             name = nam;
             chineseName = HistChinaStocks.nameMap.getOrDefault(nam, "");
         }
-        SwingUtilities.invokeLater(() -> {
-            this.repaint();
-        });
+        SwingUtilities.invokeLater(this::repaint);
     }
 
 

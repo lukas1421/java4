@@ -19,41 +19,34 @@ import java.util.stream.Collectors;
 public class GraphBarTemporal<T extends Temporal> extends JComponent implements GraphFillable{
 
 
-    static final int WIDTH_BAR = 4;
+    private static final int WIDTH_BAR = 4;
     int height;
     double min;
     double max;
-    double maxRtn;
-    double minRtn;
-    int closeY;
-    int highY;
-    int lowY;
-    int openY;
     int last = 0;
     double rtn = 0;
-    int percentile;
-    NavigableMap<T, SimpleBar> mainMap = new ConcurrentSkipListMap<>();
-    NavigableMap<T, Integer> histTradesMap = new ConcurrentSkipListMap<>();
-    int netCurrentPosition;
-    double currentTradePnl;
-    double currentMtmPnl;
-    double currentNetPnl;
+    //int percentile;
+    private NavigableMap<T, SimpleBar> mainMap = new ConcurrentSkipListMap<>();
+    private NavigableMap<T, Integer> histTradesMap = new ConcurrentSkipListMap<>();
+    private int netCurrentPosition;
+    private double currentTradePnl;
+    private double currentMtmPnl;
+    //double currentNetPnl;
     String name;
     String chineseName;
-    String bench;
-    double sharpe;
+    private String bench;
     T maxAMT;
     T minAMT;
     volatile int size;
-    static final BasicStroke BS3 = new BasicStroke(3);
+    private static final BasicStroke BS3 = new BasicStroke(3);
 
-    int wtdP;
+    //int wtdP;
 
-    public GraphBarTemporal(NavigableMap<T, SimpleBar> tm1) {
-        this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
-    }
+//    public GraphBarTemporal(NavigableMap<T, SimpleBar> tm1) {
+//        this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero())
+//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+//                (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
+//    }
 
     public GraphBarTemporal() {
         name = "";
@@ -64,7 +57,6 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     }
 
     public void setTradesMap(NavigableMap<T, Integer> tm) {
-        //System.out.println(" trade history is " + tm);
         histTradesMap = tm;
         netCurrentPosition = tm.entrySet().stream().mapToInt(Map.Entry::getValue).sum();
         //System.out.println(" setting trades map " + tm + " net current position " + netCurrentPosition);
@@ -78,18 +70,11 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         currentMtmPnl = Math.round(p*100d)/100d;
     }
 
-    GraphBarTemporal(String s) {
-        this.name = s;
-    }
 
     public void setNavigableMap(NavigableMap<T, SimpleBar> tm1) {
         this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
                         ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
-    }
-
-    public NavigableMap<T, SimpleBar> getNavigableMap() {
-        return this.mainMap;
     }
 
     @Override
@@ -106,16 +91,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         this.chineseName = s;
     }
 
-    public void setSize1(long s) {
-        this.size = (int) s;
-    }
-
     public void setBench(String s) {
         this.bench = s;
-    }
-
-    public void setSharpe(double s) {
-        this.sharpe = s;
     }
 
 
@@ -131,9 +108,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         } else {
             this.setNavigableMap(new ConcurrentSkipListMap<>());
         }
-        SwingUtilities.invokeLater(()->{
-            this.repaint();
-        });
+        SwingUtilities.invokeLater(this::repaint);
     }
 
     public void fillInGraphChinaGen(String name, Map<String, NavigableMap<T, SimpleBar>> mp) {
@@ -173,7 +148,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
 
-        height = (int) (getHeight() - 70);
+        height = getHeight() - 70;
         min = Utility.reduceMapToDouble(mainMap, SimpleBar::getLow, Math::min);
         max = Utility.reduceMapToDouble(mainMap, SimpleBar::getHigh, Math::max);
         //minRtn = getMinRtn();
@@ -183,11 +158,12 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
         int x = 5;
         for (T lt : mainMap.keySet()) {
-            openY = getY(mainMap.floorEntry(lt).getValue().getOpen());
-            highY = getY(mainMap.floorEntry(lt).getValue().getHigh());
-            lowY = getY(mainMap.floorEntry(lt).getValue().getLow());
-            closeY = getY(mainMap.floorEntry(lt).getValue().getClose());
+            int openY = getY(mainMap.floorEntry(lt).getValue().getOpen());
+            int highY = getY(mainMap.floorEntry(lt).getValue().getHigh());
+            int lowY = getY(mainMap.floorEntry(lt).getValue().getLow());
+            int closeY = getY(mainMap.floorEntry(lt).getValue().getClose());
 
+            //noinspection Duplicates
             if (closeY < openY) {  //close>open
                 g.setColor(new Color(0, 140, 0));
                 g.fillRect(x, closeY, 3, openY - closeY);
@@ -215,12 +191,10 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                 }
                 if (q > 0) {
                     g.setColor(Color.blue);
-                    int xCord = x;
-                    int yCord = lowY;
-                    Polygon p = new Polygon(new int[]{xCord - 10, xCord, xCord + 10}, new int[]{yCord + 10, yCord, yCord + 10}, 3);
+                    Polygon p = new Polygon(new int[]{x - 10, x, x + 10}, new int[]{lowY + 10, lowY, lowY + 10}, 3);
                     g.drawPolygon(p);
                     g.fillPolygon(p);
-                    g.drawString(Integer.toString(qRounded), xCord, yCord+25);
+                    g.drawString(Integer.toString(qRounded), x, lowY +25);
 
 //                    if(name.equals("SGXA50")) {
 //                        System.out.println(" SGXA50 trades found  + hist trades map is " + histTradesMap);
@@ -228,12 +202,10 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                     //g.drawString();
                 } else {
                     g.setColor(Color.black);
-                    int xCord = x;
-                    int yCord = highY;
-                    Polygon p1 = new Polygon(new int[]{xCord - 10, xCord, xCord + 10}, new int[]{yCord - 10, yCord, yCord - 10}, 3);
+                    Polygon p1 = new Polygon(new int[]{x - 10, x, x + 10}, new int[]{highY - 10, highY, highY - 10}, 3);
                     g.drawPolygon(p1);
                     g.fillPolygon(p1);
-                    g.drawString(Integer.toString(qRounded), xCord, yCord-25);
+                    g.drawString(Integer.toString(qRounded), x, highY -25);
                 }
 
                 //g.drawString(lt.toString(), x, getHeight()-40);
@@ -248,7 +220,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                 g.drawString(lt.toString(), x, getHeight() - 40);
             } else {
                 if (lt.getClass() == LocalDate.class) {
-                    LocalDate ltn = (LocalDate) lt;
+                    @SuppressWarnings({"ConstantConditions"}) LocalDate ltn = (LocalDate) lt;
                     if (ltn.getMonth() != ((LocalDate) mainMap.lowerKey(lt)).getMonth()) {
                         g.drawString(Integer.toString(ltn.getMonth().getValue()), x, getHeight() - 40);
                     }
@@ -352,7 +324,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         return 0.0;
     }
 
-    int getPercentile() {
+    private int getPercentile() {
         if(mainMap.size()>0) {
             double mx = mainMap.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
             double mn = mainMap.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(Double.MIN_VALUE);
