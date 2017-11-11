@@ -4,42 +4,32 @@ import apidemo.ChinaDataYesterday;
 import apidemo.ChinaStock;
 import apidemo.ChinaStockHelper;
 import auxiliary.SimpleBar;
-import graph.GraphFillable;
 import utility.Utility;
 
-import static apidemo.ChinaData.priceMapBar;
-import static utility.Utility.BAR_LOW;
-import static apidemo.ChinaData.*;
-import static apidemo.ChinaDataYesterday.*;
-import static apidemo.ChinaStock.*;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import javax.swing.*;
+import java.awt.*;
 import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
-import static java.util.Optional.ofNullable;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
-import static java.util.stream.Collectors.toMap;
-import javax.swing.JComponent;
+
+import static apidemo.ChinaData.*;
+import static apidemo.ChinaDataYesterday.*;
+import static apidemo.ChinaStock.*;
 import static apidemo.ChinaStockHelper.*;
 import static java.lang.Double.min;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
+import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toMap;
+import static utility.Utility.BAR_LOW;
 
 public class GraphBigIndex extends JComponent implements GraphFillable {
 
-    /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
-     */
     private static final int WIDTHINDEX = 2;
     private int height;
     private int heightVol;
@@ -61,7 +51,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
     NavigableMap<LocalTime, SimpleBar> tmY2;
     NavigableMap<LocalTime, Double> tmVolY2;
 
-    static final BasicStroke BS2 = new BasicStroke(2);
+    private static final BasicStroke BS2 = new BasicStroke(2);
 
     String name;
     String chineseName;
@@ -72,12 +62,9 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
 //    final static Comparator<? super Entry<LocalTime,? extends SimpleBar>> BAR_LOW = (e1,e2)->e1.getValue().getLow()>=e2.getValue().getLow()?1:-1;
 //    static final Entry<LocalTime, Double> dummyMap =  new AbstractMap.SimpleEntry<>(LocalTime.of(23,59), 0.0);
 //    static final Entry<LocalTime, SimpleBar> dummyBar =  new AbstractMap.SimpleEntry<>(LocalTime.of(23,59), new SimpleBar(0.0));
-    static final Comparator<? super Map.Entry<LocalTime, Double>> GREATER = (e1, e2) -> e1.getValue() >= e2.getValue() ? 1 : -1;
-    static final Predicate<? super Map.Entry<LocalTime, SimpleBar>> CONTAINS_NO_ZERO = e -> !e.getValue().containsZero();
+    private static final Comparator<? super Map.Entry<LocalTime, Double>> GREATER = Comparator.comparingDouble(Map.Entry::getValue);
+    private static final Predicate<? super Map.Entry<LocalTime, SimpleBar>> CONTAINS_NO_ZERO = e -> !e.getValue().containsZero();
 
-//    GraphBigYtd(TreeMap<LocalTime, SimpleBar>mainMap) {
-//        this.tmYtd = mainMap;
-//    }
     public GraphBigIndex() {
         name = "";
         chineseName = "";
@@ -98,10 +85,9 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
         }
     }
 
-    public void setNavigableMapVol(NavigableMap<LocalTime, Double> tmvol) {
+    private void setNavigableMapVol(NavigableMap<LocalTime, Double> tmvol) {
         if (tmvol != null) {
             NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
-
             tmvol.keySet().forEach((t) -> {
                 double previousValue = Optional.ofNullable(tmvol.lowerEntry(t)).map(Map.Entry::getValue).orElse(0.0);
                 res.put(t, tmvol.get(t) - previousValue);

@@ -46,25 +46,27 @@ public class SinaStock implements Runnable {
     //static final String listNames =  weightMap.entrySet().stream().map(Map.Entry::getKey).collect(joining(","));
     //System.out.println(" list name is " + listNames);
     static String urlString;
-    static String urlStringSH;
-    static String urlStringSZ;
-    public static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
+    private static String urlStringSH;
+    private static String urlStringSZ;
+    private static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
     Matcher matcher;
     String line;
     //public static volatile LocalDate mostRecentTradingDay = LocalDate.now();
 
     public static final double OPEN = getOpen();
     static volatile double rtn = 0.0;
-    static double sinaVol = 0.0;
-    static double currPrice = 0.0;
-    static final Predicate<LocalDateTime> FUT_OPEN_PRED = (lt)
+    private static double sinaVol = 0.0;
+    private static double currPrice = 0.0;
+    private static final Predicate<LocalDateTime> FUT_OPEN_PRED = (lt)
             -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) && !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
             && lt.toLocalTime().isAfter(LocalTime.of(9, 0, 30));
 
     public final Predicate<LocalTime> FUT_OPEN = (lt) -> lt.isAfter(LocalTime.of(9, 0, 0));
 
-    public static final Predicate<LocalTime> DATA_COLLECTION_TIME = (LocalTime lt) -> (lt.isAfter(LocalTime.of(9, 14)) && lt.isBefore(LocalTime.of(11, 35)))
-            || (lt.isAfter(LocalTime.of(12, 58)) && lt.isBefore(LocalTime.of(15, 05)));
+    private static final Predicate<LocalDateTime> DATA_COLLECTION_TIME =
+             lt -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) && !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
+                     && (lt.toLocalTime().isAfter(LocalTime.of(9, 14)) && lt.toLocalTime().isBefore(LocalTime.of(11, 35)))
+                    || (lt.toLocalTime().isAfter(LocalTime.of(12, 58)) && lt.toLocalTime().isBefore(LocalTime.of(15, 5)));
 
     private SinaStock() {
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "FTSEA50Ticker.txt")))) {
@@ -81,8 +83,6 @@ public class SinaStock implements Runnable {
     @SuppressWarnings("unchecked")
     @Override
     public void run() {
-
-        //listNameSH = 
         //urlString = "http://hq.sinajs.cn/list=" + listNames;
         urlStringSH = "http://hq.sinajs.cn/list=" + listNameSH;
         urlStringSZ = "http://hq.sinajs.cn/list=" + listNameSZ;
@@ -92,37 +92,38 @@ public class SinaStock implements Runnable {
             URL urlSZ = new URL(urlStringSZ);
             URLConnection urlconnSH = urlSH.openConnection();
             URLConnection urlconnSZ = urlSZ.openConnection();
-            LocalTime lt = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+            //LocalTime lt = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+            LocalDateTime ldt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
 
-            getInfoFromURLConn(lt, urlconnSH);
-            getInfoFromURLConn(lt, urlconnSZ);
+            getInfoFromURLConn(ldt, urlconnSH);
+            getInfoFromURLConn(ldt, urlconnSZ);
 
-            if (FUT_OPEN.test(LocalTime.now())) {
+            if (FUT_OPEN_PRED.test(LocalDateTime.now())) {
                 rtn = weightMapA50.entrySet().stream().mapToDouble(a -> returnMap.getOrDefault(a.getKey(), 0.0) * a.getValue()).sum();
                 currPrice = OPEN * (1 + (Math.round(rtn) / 10000d));
 
                 sinaVol = weightMapA50.entrySet().stream()
                         .mapToDouble(a -> sizeMap.getOrDefault(a.getKey(), 0L).doubleValue() * a.getValue() / 100d).sum();
 
-                if (indexPriceSina.containsKey(lt)) {
-                    indexPriceSina.get(lt).add(currPrice);
+                if (indexPriceSina.containsKey(ldt.toLocalTime())) {
+                    indexPriceSina.get(ldt.toLocalTime()).add(currPrice);
                 } else {
-                    indexPriceSina.put(lt, new SimpleBar(currPrice));
+                    indexPriceSina.put(ldt.toLocalTime(), new SimpleBar(currPrice));
                 }
 
                 if (priceMapBar.containsKey("FTSEA50")) {
-                    if (priceMapBar.get("FTSEA50").containsKey(lt)) {
-                        priceMapBar.get("FTSEA50").get(lt).add(currPrice);
+                    if (priceMapBar.get("FTSEA50").containsKey(ldt.toLocalTime())) {
+                        priceMapBar.get("FTSEA50").get(ldt.toLocalTime()).add(currPrice);
                     } else {
-                        priceMapBar.get("FTSEA50").put(lt, new SimpleBar(currPrice));
+                        priceMapBar.get("FTSEA50").put(ldt.toLocalTime(), new SimpleBar(currPrice));
                     }
                 } else {
                     priceMapBar.put("FTSEA50", (ConcurrentSkipListMap) indexPriceSina);
                 }
-                indexVol.put(lt, sinaVol);
+                indexVol.put(ldt.toLocalTime(), sinaVol);
                 openMap.put("FTSEA50", OPEN);
                 sizeMap.put("FTSEA50", Math.round(sinaVol));
-                sizeTotalMap.get("FTSEA50").put(lt, sinaVol);
+                sizeTotalMap.get("FTSEA50").put(ldt.toLocalTime(), sinaVol);
                 //sizeTotalMap.put("FTSEA50", (ConcurrentSkipListMap)indexVol);
             }
         } catch (IOException ex) {
@@ -130,11 +131,12 @@ public class SinaStock implements Runnable {
         }
     }
 
-    static void getInfoFromURLConn(LocalTime lt, URLConnection conn) {
+    private static void getInfoFromURLConn(LocalDateTime ldt, URLConnection conn) {
 
         String line;
         Matcher matcher;
         List<String> datalist;
+        LocalTime lt = ldt.toLocalTime();
 
         try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(conn.getInputStream(), "gbk"))) {
             while ((line = reader2.readLine()) != null) {
@@ -157,7 +159,7 @@ public class SinaStock implements Runnable {
                         //System.out.println(" most recent trading day " + mostRecentTradingDay);
                         //System.out.println(" last data available date " + datalist.get(30) + " " + datalist.get(31));
 
-                        if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker) && DATA_COLLECTION_TIME.test(lt)) {
+                        if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker) && DATA_COLLECTION_TIME.test(ldt)) {
                             double last = Utility.pd(datalist, 3);
                             //priceMapPlain.get(ticker).put(lt,last);
                             sizeTotalMap.get(ticker).put(lt, Utility.pd(datalist, 9) / 1000000d);
@@ -224,15 +226,12 @@ public class SinaStock implements Runnable {
     enum BidAsk {
         BID(0), ASK(1);
         int val;
-
         BidAsk(int i) {
             val = i;
         }
-
         int getValue() {
             return val;
         }
-
         void setValue(int i) {
             val = i;
         }

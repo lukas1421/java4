@@ -25,6 +25,7 @@ import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static utility.Utility.reduceDouble;
+import static utility.Utility.reduceMapToDouble;
 
 public final class GraphBar extends JComponent implements GraphFillable {
 
@@ -306,11 +307,13 @@ public final class GraphBar extends JComponent implements GraphFillable {
 
 
     double getMin() {
-        return (tm.size() > 0) ? tm.entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0) : 0.0;
+        return (tm.size() > 0) ? reduceMapToDouble(tm,SimpleBar::getLow, Math::min) : 0.0;
+        //tm.entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0)
     }
 
     double getMax() {
-        return (tm.size() > 0) ? tm.entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
+        return (tm.size() > 0) ? reduceMapToDouble(tm,SimpleBar::getHigh,Math::max) : 0.0;
+        //tm.entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)
     }
 
     double getRtn() {

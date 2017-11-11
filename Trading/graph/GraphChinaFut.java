@@ -1,11 +1,9 @@
 package graph;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import utility.Utility;
+
+import javax.swing.*;
+import java.awt.*;
 import java.time.LocalTime;
 import java.util.AbstractMap;
 import java.util.Map;
@@ -15,8 +13,6 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
-
-import javax.swing.*;
 
 public class GraphChinaFut extends JComponent {
 
@@ -32,15 +28,15 @@ public class GraphChinaFut extends JComponent {
     private int last = 0;
     private int last1 = 0;
     private double rtn;
-    ConcurrentSkipListMap<LocalTime, Double> futureP = new ConcurrentSkipListMap<>();
+    private ConcurrentSkipListMap<LocalTime, Double> futureP = new ConcurrentSkipListMap<>();
     TreeMap<LocalTime, Integer> tmVol;
     String name;
     String chineseName;
-    long activity;
+    private long activity;
     private boolean detailed = false;
     private double openFuture = 0;
     private double openIndex = 0;
-    Font orig;
+    private Font orig;
 
     ConcurrentSkipListMap<LocalTime, Double> indexP = new ConcurrentSkipListMap<>();
 
@@ -81,7 +77,7 @@ public class GraphChinaFut extends JComponent {
         } else {
             throw new NullPointerException("Issue with input");
         }
-        SwingUtilities.invokeLater(()->{
+        SwingUtilities.invokeLater(() -> {
             repaint();
         });
 
@@ -90,15 +86,12 @@ public class GraphChinaFut extends JComponent {
 
     public void setSkipMap(ConcurrentSkipListMap<LocalTime, Double> fut, ConcurrentSkipListMap<LocalTime, Double> ind) {
         if (fut != null && ind != null) {
-            futureP = fut.entrySet().stream()
-                    .filter(a -> a.getKey().getSecond() < 5)
-                    .collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue()
-                            , (a, b) -> a, ConcurrentSkipListMap::new));
+            futureP = fut.entrySet().stream().filter(a -> a.getKey().getSecond() < 5)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
 
             indexP = ind.entrySet().stream()
                     .filter(a -> a.getKey().getSecond() < 5)
-                    .collect(Collectors.toMap(a -> a.getKey(), a -> a.getValue()
-                            , (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
             //System.out.println(" XU " + xu);
 
 //                if(xu.lastKey().isAfter(LocalTime.of(9,1))) {
@@ -112,7 +105,7 @@ public class GraphChinaFut extends JComponent {
         } else {
             throw new NullPointerException("Issue with input");
         }
-        SwingUtilities.invokeLater(()->{
+        SwingUtilities.invokeLater(() -> {
             repaint();
         });
     }
@@ -122,25 +115,21 @@ public class GraphChinaFut extends JComponent {
             futureP = fut.entrySet().stream()
                     .filter(a -> a.getKey().isAfter(LocalTime.of(LocalTime.now().getHour(), 0)))
                     .filter(a -> a.getKey().getSecond() % 10 == 0)
-                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue,
-                            (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
 
             indexP = ind.entrySet().stream()
                     .filter(a -> a.getKey().isAfter(LocalTime.of(LocalTime.now().getHour(), 0)))
                     .filter(a -> a.getKey().getSecond() % 10 == 0)
-                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue,
-                            (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
 
             detailed = true;
         } else {
             throw new NullPointerException("Issue with input");
         }
-        SwingUtilities.invokeLater(()->{
-            repaint();
-        });
+        SwingUtilities.invokeLater(this::repaint);
     }
 
-     public void setSkipMapD(ConcurrentSkipListMap<LocalTime, Double> fut, ConcurrentSkipListMap<LocalTime, Double> ind) {
+    public void setSkipMapD(ConcurrentSkipListMap<LocalTime, Double> fut, ConcurrentSkipListMap<LocalTime, Double> ind) {
         if (fut != null && ind != null) {
 
             futureP = fut.entrySet().stream()
@@ -164,9 +153,7 @@ public class GraphChinaFut extends JComponent {
         } else {
             throw new NullPointerException("Issue with input");
         }
-         SwingUtilities.invokeLater(()->{
-             repaint();
-         });
+        SwingUtilities.invokeLater(this::repaint);
         // System.out.println("repainting");
     }
 
@@ -280,9 +267,6 @@ public class GraphChinaFut extends JComponent {
         //g.drawLine( 0, y, mainMap.size() * width, y);
     }
 
-    /**
-     * Convert bar value to y coordinate.
-     */
     private int getYXU(double v) {
         if (maxFuture - minFuture > 0.0001) {
             double span = maxFuture - minFuture;
@@ -305,32 +289,11 @@ public class GraphChinaFut extends JComponent {
         }
     }
 
-//	@Override public Dimension getPreferredSize() {
-//                return new Dimension(50,50);
-//	}
     private double getMin(ConcurrentSkipListMap<LocalTime, Double> tm) {
-        try {
-            if (tm.size() > 0) {
-                //   System.out.println("tm1 is " + tm1);
-                return tm.entrySet().stream().min((entry1, entry2) -> entry1.getValue() >= entry2.getValue() ? 1 : -1).get().getValue();
-                //return Math.round(100d*Stream.of(xua,sina).flatMap(x->x.entrySet().stream()).min((entry1,entry2)-> entry1.getValue()>=entry2.getValue() ? 1:-1).get().getValue())/100d;
-            }
-        } catch (NullPointerException e) {
-            System.out.println(" mapcopy is empty");
-            throw e;
-        }
-        return 0;
+        return Utility.reduceMapToDouble(tm, d -> d, Math::min);
     }
 
     private double getMax(ConcurrentSkipListMap<LocalTime, Double> tm) {
-        try {
-            if (tm.size() > 0) {
-                return tm.entrySet().stream().max((entry1, entry2) -> entry1.getValue() >= entry2.getValue() ? 1 : -1).get().getValue();
-                //return Math.round(100d*Stream.of(xua,sina).flatMap(x->x.entrySet().stream()).max((entry1,entry2)-> entry1.getValue()>=entry2.getValue() ? 1:-1).get().getValue())/100d;
-            }
-        } catch (NullPointerException e) {
-            return 0;
-        }
-        return 0;
+        return Utility.reduceMapToDouble(tm, d->d, Math::max);
     }
 }

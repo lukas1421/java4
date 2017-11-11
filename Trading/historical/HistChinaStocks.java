@@ -1186,6 +1186,9 @@ public class HistChinaStocks extends JPanel {
                 double thisWeekTradingCost = chinaTradeMap.get("SGXA50").entrySet().stream()
                         .mapToDouble(e -> ((Trade) e.getValue()).getTradingCostCustomBrokerage("SGXA50", 0.0)).sum();
 
+//                System.out.println(" SGX cost basis " + thisWeekCostBasis + " fx " + fx + " weekopenposition " + weekOpenPositionMap.get("SGXA50")
+//                                + " last week close " + lastWeekCloseMap.get("SGXA50"));
+
                 costBasisMap.put(name, fx * (-1 * lastWeekCloseMap.getOrDefault("SGXA50", 0.0) *
                         weekOpenPositionMap.getOrDefault(name, 0) + thisWeekCostBasis));
                 totalTradingCostMap.put(name, fx * thisWeekTradingCost);

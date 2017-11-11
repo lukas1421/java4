@@ -271,41 +271,44 @@ public class GraphIndustry extends JComponent {
                             });
 
                             CompletableFuture.runAsync(() -> {
-                                ChinaStock.maxMap.put(s, industryMapBar.get(s).entrySet().stream().filter(IS_OPEN_PRED).max(BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0));
+                                ChinaStock.maxMap.put(s, industryMapBar.get(s).entrySet().stream()
+                                        .filter(IS_OPEN_PRED).max(BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0));
                             });
                             CompletableFuture.runAsync(() -> {
-                                ChinaStock.minMap.put(s, industryMapBar.get(s).entrySet().stream().filter(IS_OPEN_PRED).min(BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0));
+                                ChinaStock.minMap.put(s, industryMapBar.get(s).entrySet().stream()
+                                        .filter(IS_OPEN_PRED).min(BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0));
                             });
                             CompletableFuture.runAsync(() -> {
                                 ChinaStock.priceMap.put(s, industryMapBar.get(s).lastEntry().getValue().getClose());
                             });
                             CompletableFuture.runAsync(() -> {
-                                ChinaStock.closeMap.put(s, Optional.ofNullable(priceMapBarYtd.get(s)).map(ConcurrentSkipListMap::lastEntry).map(Entry::getValue).map(SimpleBar::getClose)
-                                        .orElse(Optional.ofNullable(industryMapBar.get(s)).map(ConcurrentSkipListMap::firstEntry).map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0)));
+                                ChinaStock.closeMap.put(s, Optional.ofNullable(priceMapBarYtd.get(s))
+                                        .map(ConcurrentSkipListMap::lastEntry).map(Entry::getValue).map(SimpleBar::getClose)
+                                        .orElse(Optional.ofNullable(industryMapBar.get(s)).map(ConcurrentSkipListMap::firstEntry)
+                                                .map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0)));
                             });
                         }
                     });
                 });
     }
 
-    public static void processIndustry() {
+    private static void processIndustry() {
 
-        industryMapBar.entrySet().forEach((Entry<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> e) -> {
+        industryMapBar.forEach((indusName, value) -> {
 
-            String indusName = e.getKey();
-            SimpleBar lastBar = e.getValue().lastEntry().getValue();
+            SimpleBar lastBar = value.lastEntry().getValue();
             double lastHigh = lastBar.getHigh();
             double lastClose = lastBar.getClose();
-            LocalTime lastKey = e.getValue().lastKey();
-            double lastSize = sizeTotalMap.get(e.getKey()).lastEntry().getValue();
+            LocalTime lastKey = value.lastKey();
+            double lastSize = sizeTotalMap.get(indusName).lastEntry().getValue();
 
-            double prevHigh = e.getValue().headMap(lastKey, false).entrySet().stream()
+            double prevHigh = value.headMap(lastKey, false).entrySet().stream()
                     .max(comparingByValue(comparingDouble(SimpleBar::getHigh))).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
-            double prevLow = e.getValue().headMap(lastKey, false).entrySet().stream()
+            double prevLow = value.headMap(lastKey, false).entrySet().stream()
                     .min(comparingByValue(comparingDouble(SimpleBar::getLow))).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
 
-            LocalTime highT = e.getValue().entrySet().stream().max(comparingByValue(comparingDouble(SimpleBar::getHigh))).map(Entry::getKey).orElse(TIMEMAX);
-            LocalTime lowT = e.getValue().entrySet().stream().min(comparingByValue(comparingDouble(SimpleBar::getLow))).map(Entry::getKey).orElse(TIMEMAX);
+            LocalTime highT = value.entrySet().stream().max(comparingByValue(comparingDouble(SimpleBar::getHigh))).map(Entry::getKey).orElse(TIMEMAX);
+            LocalTime lowT = value.entrySet().stream().min(comparingByValue(comparingDouble(SimpleBar::getLow))).map(Entry::getKey).orElse(TIMEMAX);
 
             String topRiser = getTopStockForRiser(indusName);
 

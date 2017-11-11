@@ -37,7 +37,9 @@ import static java.util.stream.Collectors.mapping;
 
 public class Utility {
 
-    public static final BiPredicate<? super Map<String, ? extends Number>, String> NO_ZERO = (mp, name) -> mp.containsKey(name) && mp.get(name).doubleValue() != 0.0;
+    public static final BiPredicate<? super Map<String, ? extends Number>, String> NO_ZERO
+            = (mp, name) -> mp.containsKey(name) && mp.get(name).doubleValue() != 0.0;
+
     public static final Predicate<? super Map.Entry<LocalTime, SimpleBar>> CONTAINS_NO_ZERO = e -> !e.getValue().containsZero();
     //static final Entry<LocalTime, SimpleBar> dummyBar =  new AbstractMap.SimpleEntry<>(LocalTime.of(23,59), SimpleBar.getInstance());
     //static final Entry<LocalTime, Double> dummyMap =  new AbstractMap.SimpleEntry<>(LocalTime.of(23,59), 0.0);
@@ -271,25 +273,12 @@ public class Utility {
      */
     @SafeVarargs
     public static boolean noZeroArrayGen(String name, Map<String, ? extends Number>... mp) {
-
         return Stream.of(mp).allMatch(m -> NO_ZERO.test(m, name));
-
-//        boolean res = true;
-//        for (Map<String, ? extends Number> m : mp) {
-//            res = res && NO_ZERO.test(m, name);
-//        }
-//        return res;
     }
 
     @SafeVarargs
     public static boolean normalMapGen(String name, Map<String, ? extends Map<LocalTime, ?>>... mp) {
-
         return Stream.of(mp).allMatch(m -> NORMAL_MAP.test(m, name));
-//        boolean res = true;
-//        for (Map<String, ? extends Map<LocalTime, ?>> m : mp) {
-//            res = res && NORMAL_MAP.test(m, name);
-//        }
-//        return res;
     }
 
     public static LocalDate getPreviousWorkday(LocalDate ld) {
@@ -309,7 +298,8 @@ public class Utility {
         mp.keySet().forEach((String key) -> {
             res.put(key, new ConcurrentSkipListMap<>());
             mp.get(key).keySet().forEach(t -> {
-                if ((t.isAfter(LocalTime.of(9, 14)) && t.isBefore(LocalTime.of(11, 35))) || (t.isAfter(LocalTime.of(12, 59)) && t.isBefore(LocalTime.of(15, 1)))) {
+                if ((t.isAfter(LocalTime.of(9, 14)) && t.isBefore(LocalTime.of(11, 35)))
+                        || (t.isAfter(LocalTime.of(12, 59)) && t.isBefore(LocalTime.of(15, 1)))) {
                     if (t.isBefore(LocalTime.now().plusMinutes(5))) {
                         res.get(key).put(t, mp.get(key).get(t));
                     }
@@ -322,7 +312,8 @@ public class Utility {
     public static <T> NavigableMap<LocalTime, T> trimSkipMap(NavigableMap<LocalTime, T> mp, LocalTime startTime) {
         NavigableMap<LocalTime, T> res = new ConcurrentSkipListMap<>();
         mp.keySet().forEach(t -> {
-            if ((t.isAfter(startTime) && t.isBefore(LocalTime.of(11, 31))) || (t.isAfter(LocalTime.of(12, 59)) && t.isBefore(LocalTime.of(15, 1)))) {
+            if ((t.isAfter(startTime) && t.isBefore(LocalTime.of(11, 31)))
+                    || (t.isAfter(LocalTime.of(12, 59)) && t.isBefore(LocalTime.of(15, 1)))) {
                 res.put(t, mp.get(t));
             }
         });
