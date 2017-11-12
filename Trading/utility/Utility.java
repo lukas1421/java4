@@ -133,6 +133,11 @@ public class Utility {
         return res;
     }
 
+    public static LocalDate getFirstDayofMonth(LocalDateTime ld) {
+        LocalDate res = ld.toLocalDate();
+        return LocalDate.of(res.getYear(),res.getMonth(), 1);
+    }
+
     public static LocalDate getMondayOfWeek(LocalDate ld) {
         LocalDate res = ld;
         while (!res.getDayOfWeek().equals(DayOfWeek.MONDAY)) {

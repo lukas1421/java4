@@ -228,17 +228,22 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                 g.drawString(lt.toString(), x, getHeight() - 40);
             } else if (lt.equals(mainMap.lastKey())) {
                 g.drawString(lt.toString(), x, getHeight() - 40);
+                g.setColor(Color.red);
+                g.drawString(""+mainMap.lastEntry().getValue().getClose(), x, getHeight() - 10);
+                g.setColor(Color.black);
             } else {
                 if (lt.getClass() == LocalDate.class) {
                     @SuppressWarnings({"ConstantConditions"}) LocalDate ltn = (LocalDate) lt;
                     if (ltn.getMonth() != ((LocalDate) mainMap.lowerKey(lt)).getMonth()) {
                         g.drawString(Integer.toString(ltn.getMonth().getValue()), x, getHeight() - 40);
+                        g.drawString(""+mainMap.lowerEntry(lt).getValue().getClose(), x, getHeight()-20);
                     }
 
                 } else if (lt.getClass() == LocalDateTime.class) {
                     LocalDateTime ldt = (LocalDateTime) lt;
                     if (ldt.getDayOfMonth() != ((LocalDateTime) mainMap.lowerKey(lt)).getDayOfMonth()) {
                         g.drawString(Integer.toString(ldt.getDayOfMonth()), x, getHeight() - 40);
+                        g.drawString(""+mainMap.lowerEntry(lt).getValue().getClose(), x, getHeight()-20);
                     }
 
                 }

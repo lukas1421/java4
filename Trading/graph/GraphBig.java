@@ -5,34 +5,27 @@ import apidemo.ChinaDataYesterday;
 import apidemo.ChinaStock;
 import apidemo.ChinaStockHelper;
 import auxiliary.SimpleBar;
-import graph.GraphFillable;
 import utility.Utility;
 
-import static apidemo.ChinaData.getVolZScore;
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaData.sizeTotalMap;
-import static apidemo.ChinaData.sizeTotalMapYtd;
-import static apidemo.ChinaDataYesterday.*;
-import static apidemo.ChinaStock.*;
-import static apidemo.ChinaStockHelper.*;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import static java.lang.Double.min;
-import static java.lang.Math.log;
-import static java.lang.Math.round;
+import javax.swing.*;
+import java.awt.*;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
-import static java.util.Optional.ofNullable;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
+
+import static apidemo.ChinaData.*;
+import static apidemo.ChinaDataYesterday.*;
+import static apidemo.ChinaStock.*;
+import static apidemo.ChinaStockHelper.*;
+import static java.lang.Double.min;
+import static java.lang.Math.log;
+import static java.lang.Math.round;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-import javax.swing.JComponent;
 
 public class GraphBig extends JComponent implements GraphFillable {
 
@@ -41,36 +34,24 @@ public class GraphBig extends JComponent implements GraphFillable {
     private int heightVol;
     private double min;
     private double max;
-    private double maxRtn;
-    private double minRtn;
+    private double size;
 
-    private int closeY;
-    private int highY;
-    private int lowY;
-    private int openY;
-
-    private int volumeY;
-    private int volumeLowerBound;
-
-    private int last = 0;
-    private double rtn = 0;
     // private int close;
     // private int open;
     //private final ArrayList<Bar> m_rows;
     NavigableMap<LocalTime, SimpleBar> tm;
-    NavigableMap<LocalTime, Double> tmVol;
+    private NavigableMap<LocalTime, Double> tmVol;
 
-    NavigableMap<LocalTime, SimpleBar> tmYtd;
-    NavigableMap<LocalTime, Double> tmVolYtd;
+    private NavigableMap<LocalTime, SimpleBar> tmYtd;
+    private NavigableMap<LocalTime, Double> tmVolYtd;
 
     String name;
     String chineseName;
     private LocalTime maxAMT;
     private LocalTime minAMT;
-    private volatile int size;
 
-    double minuteSharpe;
-    double ytdSharpe;
+    private double minuteSharpe;
+    private double ytdSharpe;
 
     // private double m_current = 118;
     //public void current( double v) { m_current = v; }
@@ -101,7 +82,7 @@ public class GraphBig extends JComponent implements GraphFillable {
         fillInGraph(name);
     }
 
-    public void setNavigableMapVol(NavigableMap<LocalTime, Double> tmvol) {
+    private void setNavigableMapVol(NavigableMap<LocalTime, Double> tmvol) {
         if (tmvol != null) {
             NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
             tmvol.keySet().forEach((t) -> {
@@ -115,7 +96,8 @@ public class GraphBig extends JComponent implements GraphFillable {
     }
 
     public void setNavigableMapYtd(NavigableMap<LocalTime, SimpleBar> tm) {
-        tmYtd = (tm != null) ? new ConcurrentSkipListMap<>(tm.entrySet().stream().filter(Utility.CONTAINS_NO_ZERO).collect(Collectors.toMap(Entry::getKey, Entry::getValue)))
+        tmYtd = (tm != null) ? new ConcurrentSkipListMap<>(tm.entrySet().stream().filter(Utility.CONTAINS_NO_ZERO)
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue)))
                 : new ConcurrentSkipListMap<>();
     }
 
@@ -150,8 +132,8 @@ public class GraphBig extends JComponent implements GraphFillable {
         chineseName = s;
     }
 
-    public void setSize1(long s) {
-        this.size = (int) (s != 0L ? s : 0L);
+    private void setSize1(long s) {
+        size = (int)s;
     }
 
     public void setMaxAMT(LocalTime t) {
@@ -193,9 +175,6 @@ public class GraphBig extends JComponent implements GraphFillable {
 //            } else {
 //                this.setNavigableMapVolYtd(new ConcurrentSkipListMap<>());
 //            }
-        } else {
-
-            //throw new RuntimeException(" cannot fill in graph " + name);
         }
     }
 
@@ -208,30 +187,31 @@ public class GraphBig extends JComponent implements GraphFillable {
         heightVol = (int) ((getHeight() - height) * 0.5);
         min = getMin();
         max = getMax();
-        minRtn = getMinRtn();
-        maxRtn = getMaxRtn();
-        last = 0;
-        rtn = getReturn();
+        double minRtn = getMinRtn();
+        double maxRtn = getMaxRtn();
+        int last = 0;
+        double rtn = getReturn();
 
         int x = 25;
 
         for (LocalTime lt : tm.keySet()) {
 
-            openY = getY(tm.floorEntry(lt).getValue().getOpen());
-            highY = getY(tm.floorEntry(lt).getValue().getHigh());
-            lowY = getY(tm.floorEntry(lt).getValue().getLow());
-            closeY = getY(tm.floorEntry(lt).getValue().getClose());
+            int openY = getY(tm.floorEntry(lt).getValue().getOpen());
+            int highY = getY(tm.floorEntry(lt).getValue().getHigh());
+            int lowY = getY(tm.floorEntry(lt).getValue().getLow());
+            int closeY = getY(tm.floorEntry(lt).getValue().getClose());
 
-            volumeY = getYVol(ofNullable(tmVol.floorEntry(lt)).map(Entry::getValue).orElse(0.0));
+            int volumeY = getYVol(ofNullable(tmVol.floorEntry(lt)).map(Entry::getValue).orElse(0.0));
             //  System.out.println( " lt is " + lt.toString());
             //  System.out.println( " value is " + ofNullable(tmVol.floorEntry(lt).getValue()).orElse(0L));
             //  System.out.println( " volume Y " + volumeY);
             //  System.out.println( " max is  " + getMaxVol());
             //System.out.println( " getYVOL  " + getYVol());
 
-            volumeLowerBound = getYVol(0L);
+            int volumeLowerBound = getYVol(0L);
 
-            if (closeY < openY) {  //close>open    
+            //noinspection Duplicates
+            if (closeY < openY) {  //close>open
                 g.setColor(new Color(0, 180, 0));
                 g.fillRect(x, closeY, 3, openY - closeY);
                 g.fillRect(x, volumeY, 3, volumeLowerBound - volumeY);
@@ -358,13 +338,13 @@ public class GraphBig extends JComponent implements GraphFillable {
         return height - (int) val + 20;
     }
 
-    static String padZeroMinute(int m) {
-        return (m < 10) ? ("0" + Integer.toString(m)) : (Integer.toString(m));
-        //(("0"+Integer.toString(m)):(Integer.toString(m)));
-    }
+//    static String padZeroMinute(int m) {
+//        return (m < 10) ? ("0" + Integer.toString(m)) : (Integer.toString(m));
+//        //(("0"+Integer.toString(m)):(Integer.toString(m)));
+//    }
 
     private int getYVol(double v) {
-        double pct = (double) v / getMaxVol();
+        double pct = v / getMaxVol();
         double val = pct * heightVol;
         return height + heightVol - (int) val + 40;
     }

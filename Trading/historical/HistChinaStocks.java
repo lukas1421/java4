@@ -46,6 +46,7 @@ public class HistChinaStocks extends JPanel {
 
     private static final LocalDate LAST_YEAR_END = LocalDate.of(2016, 12, 31);
     public static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now());
+    public static final LocalDate MONTH_FIRST_DAY = Utility.getFirstDayofMonth(LocalDateTime.now());
 
     public static final String GLOBALPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";
 
@@ -73,8 +74,7 @@ public class HistChinaStocks extends JPanel {
     private static volatile Map<String, Integer> weekOpenPositionMap = new HashMap<>();
     public static volatile Map<String, Integer> wtdChgInPosition = new HashMap<>();
     public static volatile Map<String, Integer> currentPositionMap = new HashMap<>();
-    public static volatile Map<String, Long> sharesOut = new HashMap<>();
-
+    private static volatile Map<String, Long> sharesOut = new HashMap<>();
     private static Map<String, NavigableMap<LocalDate, Integer>> netSharesTradedByDay = new HashMap<>();
     private static Map<String, NavigableMap<LocalDateTime, Integer>> netSharesTradedWtd = new HashMap<>();
 
@@ -553,6 +553,58 @@ public class HistChinaStocks extends JPanel {
         });
     }
 
+    private static int monthOpenPos(String name) {
+        if(chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size()>0) {
+            int mtdOpenPos = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONTH_FIRST_DAY))
+                    .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
+            return mtdOpenPos;
+        }
+        return 0;
+    }
+
+    private static int mtdChgPos(String name) {
+
+        if(chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size()>0) {
+            int chgPos = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONTH_FIRST_DAY.minusDays(1L)))
+                    .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
+            return chgPos;
+        }
+        return 0;
+
+    }
+
+    private static double mtdMtm (String name) {
+
+        if(chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size()>0) {
+
+            int mtdOpenPos = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONTH_FIRST_DAY))
+                    .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
+
+            //System.out.println(getStr(" name mtdopenpos monthFDay ", name, mtdOpenPos, MONTH_FIRST_DAY));
+            if(chinaYtd.containsKey(name) && chinaYtd.get(name).size()>0) {
+                double price = chinaYtd.get(name).lastEntry().getValue().getClose();
+                double lastMonthClose = Optional.ofNullable(chinaYtd.get(name).floorEntry(MONTH_FIRST_DAY.minusDays(1L)))
+                        .map(Map.Entry::getValue).map(SimpleBar::getClose).orElse(chinaYtd.get(name).ceilingEntry(MONTH_FIRST_DAY).getValue().getOpen());
+
+                //System.out.println(getStr(" name openPos price lastMonth close ", mtdOpenPos, price, lastMonthClose));
+                return mtdOpenPos * (price - lastMonthClose);
+            }
+        }
+        return 0.0;
+    }
+
+    private static double mtdTradePnl(String name) {
+        if(chinaYtd.containsKey(name) && chinaYtd.get(name).size()>0) {
+            double price = chinaYtd.get(name).lastEntry().getValue().getClose();
+            int traded = chinaTradeMap.get(name).entrySet().stream().filter(e->e.getKey().toLocalDate().isAfter(MONTH_FIRST_DAY.minusDays(1L)))
+                    .mapToInt(e->((Trade)e.getValue()).getSizeAll()).sum();
+            double cost = chinaTradeMap.get(name).entrySet().stream().filter(e->e.getKey().toLocalDate().isAfter(MONTH_FIRST_DAY.minusDays(1L)))
+                    .mapToDouble(e->((Trade)e.getValue()).getCostWithCommission(name)).sum();
+            return price*traded+cost;
+        }
+        return 0.0;
+    }
+
 
     private static void handleSGXA50WtdData(String date, double open, double high, double low, double close, int volume) {
 
@@ -988,7 +1040,7 @@ public class HistChinaStocks extends JPanel {
 
     private static void computeNetSharesTradedWtd() {
 
-        System.out.println(" compute net shares traded wtd ");
+        //System.out.println(" compute net shares traded wtd ");
 
         for (String s : chinaTradeMap.keySet()) {
             NavigableMap<LocalDateTime, Integer> res =
@@ -1180,7 +1232,7 @@ public class HistChinaStocks extends JPanel {
 
         @Override
         public int getColumnCount() {
-            return 30;
+            return 35;
         }
 
         @Override
@@ -1246,6 +1298,16 @@ public class HistChinaStocks extends JPanel {
                     return "w turnover";
                 case 29:
                     return "chg sharpe";
+                case 30:
+                    return "Mtd Mtm";
+                case 31:
+                    return "Mtm Trade";
+                case 32:
+                    return "Mtm Net";
+                case 33:
+                    return "Mo Open pos";
+                case 34:
+                    return "Mo chg pos";
                 default:
                     return "";
 
@@ -1350,6 +1412,16 @@ public class HistChinaStocks extends JPanel {
                             Math.round(1000d * (computeWtdVolTraded(name) / (price * sharesOut.get(name)))) / 10d : 0.0;
                 case 29:
                     return r(sharpeWeekChg(name));
+                case 30:
+                    return r(mtdMtm(name));
+                case 31:
+                    return r(mtdTradePnl(name));
+                case 32:
+                    return r(mtdMtm(name)+mtdTradePnl(name));
+                case 33:
+                    return monthOpenPos(name);
+                case 34:
+                    return mtdChgPos(name);
                 default:
                     return null;
 
@@ -1378,6 +1450,10 @@ public class HistChinaStocks extends JPanel {
                 case 21:
                     return Long.class;
                 case 26:
+                    return Integer.class;
+                case 33:
+                    return Integer.class;
+                case 34:
                     return Integer.class;
                 default:
                     return Double.class;
