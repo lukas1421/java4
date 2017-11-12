@@ -918,14 +918,14 @@ public class HistChinaStocks extends JPanel {
 
             double sum1 = ret.values().stream().mapToDouble(e->e).sum();
             double sum2 = ret2.values().stream().mapToDouble(e->e).sum();
-            double sumsq1 = ret.values().stream().mapToDouble(e->Math.pow(e,2)).sum();
-            double sumsq2 = ret2.values().stream().mapToDouble(e->Math.pow(e,2)).sum();
-            double sumdiff = sum1-sum2;
-            double sumsqdiff =sumsq1 - sumsq2;
+            double sumSq1 = ret.values().stream().mapToDouble(e->Math.pow(e,2)).sum();
+            double sumSq2 = ret2.values().stream().mapToDouble(e->Math.pow(e,2)).sum();
+            double sumDiff = sum1-sum2;
+            double sumSqDiff =sumSq1 - sumSq2;
             int size1 = ret.size();
-            int sizediff = ret.size()-ret2.size();
-            double sharpNow = (sum1/size1)/(Math.sqrt((sumsq1/size1-Math.pow(sum1/size1,2))*size1/(size1-1)))*Math.sqrt(252);
-            double sharpPrev = (sumdiff/sizediff)/(Math.sqrt((sumsqdiff/sizediff-Math.pow(sumdiff/sizediff,2))*sizediff/(sizediff-1)))*Math.sqrt(252);
+            int sizeDiff = ret.size()-ret2.size();
+            double sharpNow = (sum1/size1)/(Math.sqrt((sumSq1/size1-Math.pow(sum1/size1,2))*size1/(size1-1)))*Math.sqrt(252);
+            double sharpPrev = (sumDiff/sizeDiff)/(Math.sqrt((sumSqDiff/sizeDiff-Math.pow(sumDiff/sizeDiff,2))*sizeDiff/(sizeDiff-1)))*Math.sqrt(252);
             //System.out.println(getStr("name sharpe now previous ",name, sharpNow, sharpPrev));
             //System.out.println(getStr(" size1 sizediff size2 sum1 sum2 sumsq1 sumsq2 ", size1, sizediff, ret2.size(), sum1,sum2, sumsq1, sumsq2));
             return sharpNow-sharpPrev;
