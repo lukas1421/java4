@@ -9,10 +9,7 @@ import auxiliary.SimpleBar;
 
 import java.time.LocalTime;
 import java.time.temporal.Temporal;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.function.DoubleBinaryOperator;
 import java.util.function.ToDoubleFunction;
 
@@ -30,9 +27,11 @@ public class SharpeUtility {
             T firstKey = inSub.firstKey();
             inSub.keySet().forEach(t -> {
                 if (t.equals(firstKey)) {
-                    res.put(t, inSub.get(t).getBarReturn());
+                    //res.put(t, in.get(t).getBarReturn());
+                    double prev = Optional.ofNullable(in.lowerEntry(t)).map(Map.Entry::getValue).map(SimpleBar::getClose).orElse(in.get(t).getOpen());
+                    res.put(t, in.get(t).getClose()/prev -1);
                 } else {
-                    res.put(t, inSub.get(t).getClose() / inSub.lowerEntry(t).getValue().getClose() - 1);
+                    res.put(t, in.get(t).getClose() / in.lowerEntry(t).getValue().getClose() - 1);
                 }
             });
             //res.entrySet().forEach(System.out::println);

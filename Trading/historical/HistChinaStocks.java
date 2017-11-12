@@ -896,12 +896,41 @@ public class HistChinaStocks extends JPanel {
                 double sr = SharpeUtility.getSharpe(ret, 48);
                 double perc = SharpeUtility.getPercentile(chinaWtd.get(s));
                 wtdResult.get(s).fillResult(mean, sdDay, sr, perc);
-                System.out.println(" stock size first last mean sd sr " + getStr(s, ret.size(), ret.firstEntry(), ret.lastEntry(), mean, sdDay,sr));
+                //System.out.println(" stock size first last mean sd sr " + getStr(s, ret.size(), ret.firstEntry(), ret.lastEntry(), mean, sdDay,sr));
             } else {
                 System.out.println(" name is less than 1 " + tickerFull);
             }
         }
         System.out.println(" wtd processing end ");
+    }
+
+    private static double sharpeWeekChg(String name) {
+
+        //LocalDate ld = getMondayOfWeek()
+        //MONDAY_OF_WEEK
+        if (chinaYtd.containsKey(name) && chinaYtd.get(name).size() > 1) {
+
+            NavigableMap<LocalDate, Double> ret =SharpeUtility.getReturnSeries(chinaYtd.get(name),
+                    LocalDate.of(2016, Month.DECEMBER, 31));
+
+            NavigableMap<LocalDate,Double>  ret2 = SharpeUtility.getReturnSeries(chinaYtd.get(name),
+                    MONDAY_OF_WEEK.minusDays(1));
+
+            double sum1 = ret.values().stream().mapToDouble(e->e).sum();
+            double sum2 = ret2.values().stream().mapToDouble(e->e).sum();
+            double sumsq1 = ret.values().stream().mapToDouble(e->Math.pow(e,2)).sum();
+            double sumsq2 = ret2.values().stream().mapToDouble(e->Math.pow(e,2)).sum();
+            double sumdiff = sum1-sum2;
+            double sumsqdiff =sumsq1 - sumsq2;
+            int size1 = ret.size();
+            int sizediff = ret.size()-ret2.size();
+            double sharpNow = (sum1/size1)/(Math.sqrt((sumsq1/size1-Math.pow(sum1/size1,2))*size1/(size1-1)))*Math.sqrt(252);
+            double sharpPrev = (sumdiff/sizediff)/(Math.sqrt((sumsqdiff/sizediff-Math.pow(sumdiff/sizediff,2))*sizediff/(sizediff-1)))*Math.sqrt(252);
+            //System.out.println(getStr("name sharpe now previous ",name, sharpNow, sharpPrev));
+            //System.out.println(getStr(" size1 sizediff size2 sum1 sum2 sumsq1 sumsq2 ", size1, sizediff, ret2.size(), sum1,sum2, sumsq1, sumsq2));
+            return sharpNow-sharpPrev;
+        }
+        return 0.0;
     }
 
 
@@ -1215,6 +1244,8 @@ public class HistChinaStocks extends JPanel {
                     return "vol perc";
                 case 28:
                     return "w turnover";
+                case 29:
+                    return "chg sharpe";
                 default:
                     return "";
 
@@ -1317,6 +1348,8 @@ public class HistChinaStocks extends JPanel {
                 case 28:
                     return (sharesOut.getOrDefault(name, 0L) != 0 && price != 0.0) ?
                             Math.round(1000d * (computeWtdVolTraded(name) / (price * sharesOut.get(name)))) / 10d : 0.0;
+                case 29:
+                    return r(sharpeWeekChg(name));
                 default:
                     return null;
 
