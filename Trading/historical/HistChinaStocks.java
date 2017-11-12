@@ -890,12 +890,13 @@ public class HistChinaStocks extends JPanel {
             //do computation
             if (chinaWtd.containsKey(s) && chinaWtd.get(s).size() > 1) {
                 NavigableMap<LocalDateTime, Double> ret = SharpeUtility.getReturnSeries(chinaWtd.get(s),
-                        LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1), LocalTime.MIN));
-                double mean = SharpeUtility.getMean(ret);
-                double sdDay = SharpeUtility.getSD(ret) * Math.sqrt(240);
-                double sr = SharpeUtility.getSharpe(ret, 240);
+                        LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1), LocalTime.MAX));
+                double mean = SharpeUtility.getMean(ret)*48;
+                double sdDay = SharpeUtility.getSD(ret) * Math.sqrt(48);
+                double sr = SharpeUtility.getSharpe(ret, 48);
                 double perc = SharpeUtility.getPercentile(chinaWtd.get(s));
                 wtdResult.get(s).fillResult(mean, sdDay, sr, perc);
+                System.out.println(" stock size first last mean sd sr " + getStr(s, ret.size(), ret.firstEntry(), ret.lastEntry(), mean, sdDay,sr));
             } else {
                 System.out.println(" name is less than 1 " + tickerFull);
             }
