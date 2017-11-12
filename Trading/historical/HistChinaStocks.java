@@ -427,7 +427,10 @@ public class HistChinaStocks extends JPanel {
         });
 
         refreshButton.addActionListener(al -> {
-            //computeButton.doClick();
+            SwingUtilities.invokeLater(() -> {
+                model.fireTableDataChanged();
+                this.repaint();
+            });
             refreshAll();
         });
 
@@ -460,8 +463,6 @@ public class HistChinaStocks extends JPanel {
                 getSGXPosition();
                 getSGXTrades();
             }).thenRun(() -> SwingUtilities.invokeLater(this::repaint));
-            //computeButton.doClick();
-            //refreshAll();
         });
 
         computeButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
@@ -744,7 +745,6 @@ public class HistChinaStocks extends JPanel {
 
     private static NavigableMap<LocalDateTime, Double> computeNet(Predicate<? super Map.Entry<String, ?>> p) {
         NavigableMap<LocalDateTime, Double> res = mapOp.apply(computeWtdMtmPnl(p), computeWtdTradePnl(p));
-        //System.out.println(" computeNet is " + )
         computeNetPnlByWeekday(res);
         return res;
     }
@@ -1047,6 +1047,25 @@ public class HistChinaStocks extends JPanel {
         }
     }
 
+    private static double computeWtdMtmFor1Stock(String s) {
+        if (chinaWtd.containsKey(s) && chinaWtd.get(s).size() > 0) {
+            if (!s.equals("SGXA50")) {
+                int openPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONDAY_OF_WEEK))
+                        .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
+
+                return fxMap.getOrDefault(s, 1.0)
+                        * (openPos * (chinaWtd.get(s).lastEntry().getValue().getClose()
+                        - lastWeekCloseMap.getOrDefault(s, chinaWtd.get(s).firstEntry().getValue().getOpen())));
+            } else {
+                int openPos = currentPositionMap.getOrDefault("SGXA50", 0) - wtdChgInPosition.getOrDefault("SGXA50", 0);
+
+                return openPos!=0?fxMap.getOrDefault(s, 1.0) * (openPos) * (chinaWtd.get(s).lastEntry().getValue().getClose()
+                        - lastWeekCloseMap.getOrDefault(s, chinaWtd.get(s).firstEntry().getValue().getOpen())):0.0;
+            }
+        }
+        return 0.0;
+    }
+
 
     private static void computeWtdMtmPnlAll() {
         for (String s : chinaTradeMap.keySet()) {
@@ -1206,28 +1225,20 @@ public class HistChinaStocks extends JPanel {
             String name = stockList.get(row);
             double price = 0.0;
             double fx = fxMap.getOrDefault(name, 1.0);
-//            if (netSharesTradedByDay.containsKey(name) && netSharesTradedByDay.get(name).size() > 0) {
-//                currPos = netSharesTradedByDay.get(name).entrySet().stream().mapToInt(Map.Entry::getValue).sum();
-//            }
-//            if (chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size() > 0) {
-//                currPos = chinaTradeMap.get(name).entrySet().stream().map(e -> ((Trade) e.getValue()).getSizeAll())
-//                        .reduce(Integer::sum).get();
-//                currentPositionMap.put(name, currPos);
-//            }
 
             if (chinaWtd.containsKey(name) && chinaWtd.get(name).size() > 0) {
                 price = chinaWtd.get(name).lastEntry().getValue().getClose();
             }
 
 
+            double mtm = r(computeWtdMtmFor1Stock(name));
+            double trade = r(computeWtdTradePnlFor1Stock(name)) ;
+
             if (name.equals("SGXA50")) {
                 double thisWeekCostBasis = chinaTradeMap.get("SGXA50").entrySet().stream()
                         .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommissionCustomBrokerage("SGXA50", 0.0)).sum();
                 double thisWeekTradingCost = chinaTradeMap.get("SGXA50").entrySet().stream()
                         .mapToDouble(e -> ((Trade) e.getValue()).getTradingCostCustomBrokerage("SGXA50", 0.0)).sum();
-
-//                System.out.println(" SGX cost basis " + thisWeekCostBasis + " fx " + fx + " weekopenposition " + weekOpenPositionMap.get("SGXA50")
-//                                + " last week close " + lastWeekCloseMap.get("SGXA50"));
 
                 costBasisMap.put(name, fx * (-1 * lastWeekCloseMap.getOrDefault("SGXA50", 0.0) *
                         weekOpenPositionMap.getOrDefault(name, 0) + thisWeekCostBasis));
@@ -1287,21 +1298,23 @@ public class HistChinaStocks extends JPanel {
                         return 0L;
                     }
                 case 22:
-                    return r(computeWtdTradePnlFor1Stock(name));
+                    return trade;
                 case 23:
                     return lastWeekCloseMap.getOrDefault(name, 0.0);
                 case 24:
-                    return r(fx * (currentPositionMap.getOrDefault(name, 0) -
-                            wtdChgInPosition.getOrDefault(name, 0)) *
-                            (price - lastWeekCloseMap.getOrDefault(name, 0.0)));
+                    return mtm;
+//                            r(fx * (currentPositionMap.getOrDefault(name, 0) -
+//                            wtdChgInPosition.getOrDefault(name, 0)) *
+//                            (price - lastWeekCloseMap.getOrDefault(name, 0.0)));
                 case 25:
-                    return r(wtdTradePnlMap.getOrDefault(name, 0.0) + wtdMtmPnlMap.getOrDefault(name, 0.0));
+                    return r(mtm+trade);
+                    //return r(wtdTradePnlMap.getOrDefault(name, 0.0) + wtdMtmPnlMap.getOrDefault(name, 0.0));
                 case 26:
                     return SharpeUtility.getPercentile(chinaWtd.get(name));
                 case 27:
                     return computeWVolPerc(name);
                 case 28:
-                    return (sharesOut.getOrDefault(name, 0L) != 0 && price!=0.0) ?
+                    return (sharesOut.getOrDefault(name, 0L) != 0 && price != 0.0) ?
                             Math.round(1000d * (computeWtdVolTraded(name) / (price * sharesOut.get(name)))) / 10d : 0.0;
                 default:
                     return null;
