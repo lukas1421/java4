@@ -46,7 +46,7 @@ public class HistChinaStocks extends JPanel {
 
     private static final LocalDate LAST_YEAR_END = LocalDate.of(2016, 12, 31);
     public static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now());
-    public static final LocalDate MONTH_FIRST_DAY = Utility.getFirstDayofMonth(LocalDateTime.now());
+    private static final LocalDate MONTH_FIRST_DAY = Utility.getFirstDayofMonth(LocalDateTime.now());
 
     public static final String GLOBALPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";
 
@@ -555,9 +555,8 @@ public class HistChinaStocks extends JPanel {
 
     private static int monthOpenPos(String name) {
         if(chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size()>0) {
-            int mtdOpenPos = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONTH_FIRST_DAY))
+            return chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONTH_FIRST_DAY))
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
-            return mtdOpenPos;
         }
         return 0;
     }
@@ -565,9 +564,8 @@ public class HistChinaStocks extends JPanel {
     private static int mtdChgPos(String name) {
 
         if(chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size()>0) {
-            int chgPos = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONTH_FIRST_DAY.minusDays(1L)))
+            return chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONTH_FIRST_DAY.minusDays(1L)))
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
-            return chgPos;
         }
         return 0;
 

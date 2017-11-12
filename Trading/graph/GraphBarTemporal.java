@@ -245,7 +245,9 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                         Method m = getLocalDateOf();
                         if (lt.equals(mainMap.lastKey())) {
 
+                            @SuppressWarnings("unchecked")
                             T monthBegin = (T) m.invoke(null, ltn.getYear(), ltn.getMonth(), 1);
+
                             g.drawString("(" + Math.round(1000d * (mainMap.lastEntry().getValue().getClose()
                                             / Optional.ofNullable(mainMap.lowerEntry(monthBegin)).map(Map.Entry::getValue).map(SimpleBar::getClose)
                                             .orElse(mainMap.firstEntry().getValue().getOpen()) - 1)) / 10d + "%)"
@@ -370,11 +372,12 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         return 0.0;
     }
 
-    static Method getLocalDateOf() throws NoSuchMethodException {
+    private static Method getLocalDateOf() throws NoSuchMethodException {
         Class[] arg = new Class[3];
         arg[0] = Integer.TYPE;
         arg[1] = Month.class;
         arg[2] = Integer.TYPE;
+        //noinspection JavaReflectionMemberAccess
         return LocalDate.class.getMethod("of", arg);
     }
 
