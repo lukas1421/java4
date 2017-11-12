@@ -6,8 +6,11 @@ import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.temporal.Temporal;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -16,7 +19,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class GraphBarTemporal<T extends Temporal> extends JComponent implements GraphFillable{
+public class GraphBarTemporal<T extends Temporal> extends JComponent implements GraphFillable {
 
 
     private static final int WIDTH_BAR = 4;
@@ -65,7 +68,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     }
 
     public void setTradePnl(double p) {
-        currentTradePnl = Math.round(p*100d)/100d;
+        currentTradePnl = Math.round(p * 100d) / 100d;
     }
 
     public void setWtdVolTraded(double v) {
@@ -77,7 +80,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     }
 
     public void setWtdMtmPnl(double p) {
-        currentMtmPnl = Math.round(p*100d)/100d;
+        currentMtmPnl = Math.round(p * 100d) / 100d;
     }
 
 
@@ -124,7 +127,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     public void fillInGraphChinaGen(String name, Map<String, NavigableMap<T, SimpleBar>> mp) {
         this.name = name;
         setName(name);
-        setChineseName(HistChinaStocks.nameMap.getOrDefault(name,""));
+        setChineseName(HistChinaStocks.nameMap.getOrDefault(name, ""));
         if (mp.containsKey(name) && mp.get(name).size() > 0) {
             this.setNavigableMap(mp.get(name));
         } else {
@@ -145,7 +148,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         //fillInGraphHKGen(name, mainMap);
     }
 
-    public void refresh(Consumer<String> cons){
+    public void refresh(Consumer<String> cons) {
         cons.accept(name);
     }
 
@@ -187,24 +190,24 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
             g.drawLine(x + 1, highY, x + 1, lowY);
 
 
-            if(histTradesMap.containsKey(lt)) {
+            if (histTradesMap.containsKey(lt)) {
                 int q = histTradesMap.get(lt);
                 int qRounded = q;
 
-                if(!name.equals("SGXA50")) {
-                    qRounded = (int)Math.round(q/1000.0);
+                if (!name.equals("SGXA50")) {
+                    qRounded = (int) Math.round(q / 1000.0);
                 }
 
-                if(lt.getClass()==LocalDateTime.class) {
+                if (lt.getClass() == LocalDateTime.class) {
                     g.setColor(Color.blue);
-                    g.drawString(((LocalDateTime)lt).toLocalTime().toString(), x, getHeight()-20);
+                    g.drawString(((LocalDateTime) lt).toLocalTime().toString(), x, getHeight() - 20);
                 }
                 if (q > 0) {
                     g.setColor(Color.blue);
                     Polygon p = new Polygon(new int[]{x - 10, x, x + 10}, new int[]{lowY + 10, lowY, lowY + 10}, 3);
                     g.drawPolygon(p);
                     g.fillPolygon(p);
-                    g.drawString(Integer.toString(qRounded), x, lowY +25);
+                    g.drawString(Integer.toString(qRounded), x, lowY + 25);
 
 //                    if(name.equals("SGXA50")) {
 //                        System.out.println(" SGXA50 trades found  + hist trades map is " + histTradesMap);
@@ -215,7 +218,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                     Polygon p1 = new Polygon(new int[]{x - 10, x, x + 10}, new int[]{highY - 10, highY, highY - 10}, 3);
                     g.drawPolygon(p1);
                     g.fillPolygon(p1);
-                    g.drawString(Integer.toString(qRounded), x, highY -25);
+                    g.drawString(Integer.toString(qRounded), x, highY - 25);
                 }
 
                 //g.drawString(lt.toString(), x, getHeight()-40);
@@ -226,28 +229,55 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
             if (lt.equals(mainMap.firstKey())) {
                 g.drawString(lt.toString(), x, getHeight() - 40);
-            } else if (lt.equals(mainMap.lastKey())) {
-                g.drawString(lt.toString(), x, getHeight() - 40);
-                g.setColor(Color.red);
-                g.drawString(""+mainMap.lastEntry().getValue().getClose(), x, getHeight() - 10);
-                g.setColor(Color.black);
             } else {
+                if (lt.equals(mainMap.lastKey())) {
+                    g.drawString(lt.toString(), x, getHeight() - 40);
+                    g.setColor(Color.red);
+                    g.drawString("" + mainMap.lastEntry().getValue().getClose(), x, getHeight() - 10);
+
+                    g.setColor(Color.black);
+                }
+
                 if (lt.getClass() == LocalDate.class) {
                     @SuppressWarnings({"ConstantConditions"}) LocalDate ltn = (LocalDate) lt;
-                    if (ltn.getMonth() != ((LocalDate) mainMap.lowerKey(lt)).getMonth()) {
-                        g.drawString(Integer.toString(ltn.getMonth().getValue()), x, getHeight() - 40);
-                        g.drawString(""+mainMap.lowerEntry(lt).getValue().getClose(), x, getHeight()-20);
+
+                    try {
+                        Method m = getLocalDateOf();
+                        if (lt.equals(mainMap.lastKey())) {
+
+                            T monthBegin = (T) m.invoke(null, ltn.getYear(), ltn.getMonth(), 1);
+                            g.drawString("(" + Math.round(1000d * (mainMap.lastEntry().getValue().getClose()
+                                            / Optional.ofNullable(mainMap.lowerEntry(monthBegin)).map(Map.Entry::getValue).map(SimpleBar::getClose)
+                                            .orElse(mainMap.firstEntry().getValue().getOpen()) - 1)) / 10d + "%)"
+                                    , x + 40, getHeight() - 10);
+                        }
+
+                        if (ltn.getMonth() != ((LocalDate) mainMap.lowerKey(lt)).getMonth()) {
+                            g.drawString(Integer.toString(ltn.getMonth().getValue()), x, getHeight() - 40);
+
+                            @SuppressWarnings("unchecked")
+                            T monthBegin = (T) m.invoke(null, ltn.getYear()+(ltn.getMonth().equals(Month.JANUARY)?-1:0), ltn.getMonth().minus(1L), 1);
+                            g.drawString("" + Math.round(1000d * (mainMap.lowerEntry(lt).getValue().getClose()
+                                            / Optional.ofNullable(mainMap.lowerEntry(monthBegin)).map(Map.Entry::getValue).map(SimpleBar::getClose)
+                                            .orElse(mainMap.firstEntry().getValue().getOpen()) - 1)) / 10d + "%"
+                                    , x, getHeight() - 20);
+
+                        }
+                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                        e.printStackTrace();
                     }
+
 
                 } else if (lt.getClass() == LocalDateTime.class) {
                     LocalDateTime ldt = (LocalDateTime) lt;
                     if (ldt.getDayOfMonth() != ((LocalDateTime) mainMap.lowerKey(lt)).getDayOfMonth()) {
                         g.drawString(Integer.toString(ldt.getDayOfMonth()), x, getHeight() - 40);
-                        g.drawString(""+mainMap.lowerEntry(lt).getValue().getClose(), x, getHeight()-20);
+                        g.drawString("" + mainMap.lowerEntry(lt).getValue().getClose(), x, getHeight() - 10);
                     }
 
                 }
             }
+
             x += WIDTH_BAR;
         }
 
@@ -270,15 +300,15 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         }
 
 
-        g2.drawString(Integer.toString(getPercentile()) + "% ", getWidth()*2/8, 15);
-        g2.drawString(""+getLast(), getWidth()*3/8,15);
+        g2.drawString(Integer.toString(getPercentile()) + "% ", getWidth() * 2 / 8, 15);
+        g2.drawString("" + getLast(), getWidth() * 3 / 8, 15);
 
-        g2.drawString("pos: " + Integer.toString(netCurrentPosition), getWidth()*7/8, getHeight()/6);
-        g2.drawString("Trade pnl " + Double.toString(currentTradePnl), getWidth()*7/8, getHeight()*2/6);
-        g2.drawString("mtm pnl " + Double.toString(currentMtmPnl), getWidth()*7/8, getHeight()*3/6);
-        g2.drawString("Net pnl " + Double.toString(currentTradePnl+currentMtmPnl), getWidth()*7/8, getHeight()*4/6);
-        g2.drawString("wtd vol " + Math.round(wtdVol/100000000) + "亿", getWidth()*7/8, getHeight()*5/6);
-        g2.drawString("wvol%  " + wtdVolPerc, getWidth()*7/8, getHeight()*6/6);
+        g2.drawString("pos: " + Integer.toString(netCurrentPosition), getWidth() * 7 / 8, getHeight() / 6);
+        g2.drawString("Trade pnl " + Double.toString(currentTradePnl), getWidth() * 7 / 8, getHeight() * 2 / 6);
+        g2.drawString("mtm pnl " + Double.toString(currentMtmPnl), getWidth() * 7 / 8, getHeight() * 3 / 6);
+        g2.drawString("Net pnl " + Double.toString(currentTradePnl + currentMtmPnl), getWidth() * 7 / 8, getHeight() * 4 / 6);
+        g2.drawString("wtd vol " + Math.round(wtdVol / 100000000) + "亿", getWidth() * 7 / 8, getHeight() * 5 / 6);
+        g2.drawString("wvol%  " + wtdVolPerc, getWidth() * 7 / 8, getHeight() * 6 / 6);
 
         if (!Optional.ofNullable(bench).orElse("").equals("")) {
             g2.drawString("(" + bench + ")", getWidth() * 2 / 8, 15);
@@ -334,18 +364,26 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     }
 
     double getLast() {
-        if(mainMap.size()>0) {
-           return mainMap.lastEntry().getValue().getClose();
+        if (mainMap.size() > 0) {
+            return mainMap.lastEntry().getValue().getClose();
         }
         return 0.0;
     }
 
+    static Method getLocalDateOf() throws NoSuchMethodException {
+        Class[] arg = new Class[3];
+        arg[0] = Integer.TYPE;
+        arg[1] = Month.class;
+        arg[2] = Integer.TYPE;
+        return LocalDate.class.getMethod("of", arg);
+    }
+
     private int getPercentile() {
-        if(mainMap.size()>0) {
+        if (mainMap.size() > 0) {
             double mx = mainMap.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
             double mn = mainMap.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(Double.MIN_VALUE);
             double last = mainMap.lastEntry().getValue().getClose();
-            return (int)Math.round(100d*(last-mn)/(mx-mn));
+            return (int) Math.round(100d * (last - mn) / (mx - mn));
         }
         return 0;
     }

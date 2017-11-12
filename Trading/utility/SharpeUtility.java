@@ -23,7 +23,7 @@ public class SharpeUtility {
         NavigableMap<T, SimpleBar> inSub = in.tailMap(startPoint, true);
         NavigableMap<T, Double> res = new TreeMap<>();
 
-        if (in.size() > 0) {
+        if (inSub.size() > 0) {
             T firstKey = inSub.firstKey();
             inSub.keySet().forEach(t -> {
                 if (t.equals(firstKey)) {
