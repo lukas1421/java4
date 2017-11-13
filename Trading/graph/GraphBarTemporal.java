@@ -198,6 +198,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                     qRounded = (int) Math.round(q / 1000.0);
                 }
 
+                //lt.getClass() == LocalDateTime.class
                 if (lt.getClass() == LocalDateTime.class) {
                     g.setColor(Color.blue);
                     g.drawString(((LocalDateTime) lt).toLocalTime().toString(), x, getHeight() - 20);
@@ -268,8 +269,6 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
                     }
-
-
                 } else if (lt.getClass() == LocalDateTime.class) {
                     LocalDateTime ldt = (LocalDateTime) lt;
                     if (ldt.getDayOfMonth() != ((LocalDateTime) mainMap.lowerKey(lt)).getDayOfMonth()) {
