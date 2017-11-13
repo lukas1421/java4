@@ -1666,7 +1666,7 @@ public class ApiController implements EWrapper {
             String symb = r.getContract().symbol();
 
             if (r.getCustomFunctionNeeded()) {
-                System.out.println(" date open volume" + date + " " + open + " " + volume);
+                //System.out.println(" date open volume" + date + " " + open + " " + volume);
                 r.getDataConsumer().apply(date, open, high, low, close, volume);
             } else {
                 HistoricalHandler hh = (HistoricalHandler) r.getHandler();

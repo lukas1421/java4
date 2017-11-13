@@ -513,8 +513,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 gpnl.setChineseName(nameMap.get(nam));
                 gpnl.setMinuteNetPnlSharpe(minuteNetPnlSharpe);
                 gpnl.setMtmDeltaSharpe(mtmDeltaSharpe);
-
-                gpnl.refresh();
+                gpnl.repaint();
             });
         });
 

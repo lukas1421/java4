@@ -262,7 +262,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                             g.drawString("" + Math.round(1000d * (mainMap.lowerEntry(lt).getValue().getClose()
                                             / Optional.ofNullable(mainMap.lowerEntry(monthBegin)).map(Map.Entry::getValue).map(SimpleBar::getClose)
                                             .orElse(mainMap.firstEntry().getValue().getOpen()) - 1)) / 10d + "%"
-                                    , x, getHeight() - 20);
+                                    , x-40, getHeight() - 20);
 
                         }
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {

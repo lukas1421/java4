@@ -629,7 +629,7 @@ public class HistChinaStocks extends JPanel {
                     }
                 }
             } else {
-                System.out.println(" updating close of SGXA50 ");
+                //System.out.println(" updating close of SGXA50 ");
                 HistChinaStocks.lastWeekCloseMap.put("SGXA50", close);
             }
         } else {
@@ -682,7 +682,10 @@ public class HistChinaStocks extends JPanel {
     }
 
     private static double getCurrentDelta(String name) {
-        return fxMap.getOrDefault(name, 1.0) * getCurrentPos(name) * priceMapForHist.getOrDefault(name, 0.0);
+        if(chinaWtd.containsKey(name) && chinaWtd.get(name).size()>0) {
+            return fxMap.getOrDefault(name, 1.0) * getCurrentPos(name) * chinaWtd.get(name).lastEntry().getValue().getClose();
+        }
+        return 0.0;
     }
 
 
@@ -701,9 +704,6 @@ public class HistChinaStocks extends JPanel {
             graphWtdPnl.setDeltaWeightedAveragePerc(computeDeltaWeightedPercentile(MTM_PRED));
         }).thenRun(() -> SwingUtilities.invokeLater(() -> {
             graphWtdPnl.setMtm(computeWtdMtmPnl(MTM_PRED));
-//                if (selectedStock.equals("SGXA50")) {
-//                    System.out.println(" SGXA50 week mtm map : " + weekMtmMap);
-//                }
             graphWtdPnl.setWeekdayMtm(netPnlByWeekday, netPnlByWeekdayAM, netPnlByWeekdayPM);
             model.fireTableDataChanged();
             graphWtdPnl.repaint();
@@ -726,17 +726,13 @@ public class HistChinaStocks extends JPanel {
     }
 
     private static NavigableMap<LocalDateTime, Double> computeWtdMtmPnl(Predicate<? super Map.Entry<String, ?>> p) {
-
         weekOpenPositionMap.put("SGXA50", currentPositionMap.getOrDefault("SGXA50", 0)
                 - wtdChgInPosition.getOrDefault("SGXA50", 0));
-
         //if (weekOpenPositionMap.entrySet().stream().filter(p).mapToInt(Map.Entry::getValue).sum() != 0) {
         weekMtmMap = weekOpenPositionMap.entrySet().stream().filter(p).map(e ->
                 computeMtm(e.getKey(), e.getValue(), chinaWtd.get(e.getKey()), lastWeekCloseMap.getOrDefault(e.getKey(), 0.0))).
                 reduce(mapOp).orElse(new ConcurrentSkipListMap<>());
         return weekMtmMap;
-        //}
-        //return new ConcurrentSkipListMap<>();
     }
 
     private static NavigableMap<LocalDateTime, Double> computeMtm(String ticker, int openPos, NavigableMap<LocalDateTime, SimpleBar> prices, double lastWeekClose) {
@@ -756,7 +752,6 @@ public class HistChinaStocks extends JPanel {
 //        }
         return res;
     }
-
 
     private static NavigableMap<LocalDateTime, Double> computeWtdTradePnl(Predicate<? super Map.Entry<String, ?>> p) {
         weekTradePnlMap = chinaTradeMap.entrySet().stream().filter(p).map(e ->
@@ -810,6 +805,7 @@ public class HistChinaStocks extends JPanel {
 
         netPnlByWeekdayPM = mp.keySet().stream().map(LocalDateTime::toLocalDate).distinct().collect(Collectors.toMap(d -> d,
                 d -> computePMNetPnlForGivenDate(mp, d), (a, b) -> a, ConcurrentSkipListMap::new));
+
 //        System.out.println(" net by week day " + netPnlByWeekday + " " + netPnlByWeekday.values().stream().mapToDouble(e-> e).sum());
 //        System.out.println(" am " + netPnlByWeekdayAM + " " + netPnlByWeekdayAM.values().stream().mapToDouble(e-> e).sum());
 //        System.out.println(" pm " + netPnlByWeekdayPM + " " +  netPnlByWeekdayPM.values().stream().mapToDouble(e-> e).sum());
@@ -1327,9 +1323,9 @@ public class HistChinaStocks extends JPanel {
             double trade = r(computeWtdTradePnlFor1Stock(name)) ;
 
             if (name.equals("SGXA50")) {
-                double thisWeekCostBasis = chinaTradeMap.get("SGXA50").entrySet().stream()
+                double thisWeekCostBasis = chinaTradeMap.get("SGXA50").entrySet().stream().filter(e->e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
                         .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommissionCustomBrokerage("SGXA50", 0.0)).sum();
-                double thisWeekTradingCost = chinaTradeMap.get("SGXA50").entrySet().stream()
+                double thisWeekTradingCost = chinaTradeMap.get("SGXA50").entrySet().stream().filter(e->e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
                         .mapToDouble(e -> ((Trade) e.getValue()).getTradingCostCustomBrokerage("SGXA50", 0.0)).sum();
 
                 costBasisMap.put(name, fx * (-1 * lastWeekCloseMap.getOrDefault("SGXA50", 0.0) *
