@@ -80,7 +80,7 @@ public class HistChinaStocks extends JPanel {
 
     private static Map<String, Double> priceMapForHist = new HashMap<>();
 
-    private static Map<String, Double> lastWeekCloseMap = new HashMap<>();
+    private static volatile Map<String, Double> lastWeekCloseMap = new HashMap<>();
     private static Map<String, Double> totalTradingCostMap = new HashMap<>();
     private static Map<String, Double> costBasisMap = new HashMap<>();
     //static Map<String, Double> netTradePnlMap = new HashMap<>();
@@ -633,6 +633,7 @@ public class HistChinaStocks extends JPanel {
             } else {
                 //System.out.println(" updating close of SGXA50 ");
                 HistChinaStocks.lastWeekCloseMap.put("SGXA50", close);
+                System.out.println(" sgxa50 close " + lastWeekCloseMap.getOrDefault("SGXA50",0.0));
             }
         } else {
             priceMapForHist.put("SGXA50", chinaWtd.get("SGXA50").lastEntry().getValue().getClose());
@@ -1327,11 +1328,13 @@ public class HistChinaStocks extends JPanel {
             if (name.equals("SGXA50")) {
                 double thisWeekCostBasis = chinaTradeMap.get("SGXA50").entrySet().stream().filter(e->e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
                         .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommissionCustomBrokerage("SGXA50", 0.0)).sum();
+
                 double thisWeekTradingCost = chinaTradeMap.get("SGXA50").entrySet().stream().filter(e->e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
                         .mapToDouble(e -> ((Trade) e.getValue()).getTradingCostCustomBrokerage("SGXA50", 0.0)).sum();
 
                 costBasisMap.put(name, fx * (-1 * lastWeekCloseMap.getOrDefault("SGXA50", 0.0) *
                         weekOpenPositionMap.getOrDefault(name, 0) + thisWeekCostBasis));
+
                 totalTradingCostMap.put(name, fx * thisWeekTradingCost);
             }
 
