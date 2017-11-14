@@ -12,6 +12,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -139,10 +140,13 @@ public class GraphMonitor extends JComponent implements GraphFillable {
                 }
             } else if (dispGran == DisplayGranularity._5MDATA) {
                 if (lt.equals(tm.firstKey())) {
-                    g.drawString(lt.toLocalDate().toString(), x, getHeight() - 5);
+                    g.drawString(lt.toLocalDate().format(DateTimeFormatter.ofPattern("MM-dd")), x, getHeight() - 5);
+                } else if(lt.equals(tm.lastKey())) {
+                    g.drawString(lt.format(DateTimeFormatter.ofPattern("HH:mm")), x, getHeight() - 5);
                 } else {
                     if (lt.getDayOfMonth() != tm.lowerKey(lt).getDayOfMonth()) {
-                        g.drawString(lt.toLocalDate().toString(), x, getHeight() - 5);
+                        g.drawString(lt.toLocalDate().format(DateTimeFormatter.ofPattern("MM-dd")), x, getHeight() - 5);
+
                     }
                 }
             }

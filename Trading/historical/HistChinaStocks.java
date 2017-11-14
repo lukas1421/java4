@@ -582,7 +582,9 @@ public class HistChinaStocks extends JPanel {
             if(chinaYtd.containsKey(name) && chinaYtd.get(name).size()>0) {
                 double price = chinaYtd.get(name).lastEntry().getValue().getClose();
                 double lastMonthClose = Optional.ofNullable(chinaYtd.get(name).floorEntry(MONTH_FIRST_DAY.minusDays(1L)))
-                        .map(Map.Entry::getValue).map(SimpleBar::getClose).orElse(chinaYtd.get(name).ceilingEntry(MONTH_FIRST_DAY).getValue().getOpen());
+                        .map(Map.Entry::getValue).map(SimpleBar::getClose)
+                        .orElse(Optional.of(chinaYtd.get(name).ceilingEntry(MONTH_FIRST_DAY)).map(Map.Entry::getValue).map(SimpleBar::getOpen)
+                                .orElse(0.0));
 
                 //System.out.println(getStr(" name openPos price lastMonth close ", mtdOpenPos, price, lastMonthClose));
                 return mtdOpenPos * (price - lastMonthClose);

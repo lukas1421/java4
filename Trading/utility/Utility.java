@@ -615,7 +615,7 @@ public class Utility {
     public static <T> NavigableMap<LocalDateTime, T> priceMapToLDT(NavigableMap<LocalTime, T> mp, LocalDate ld) {
         NavigableMap<LocalDateTime, T> res = new ConcurrentSkipListMap<>();
         Predicate<LocalTime> p =
-                tradingTimePred(LocalTime.of(9, 30), true, LocalTime.of(11, 30), true
+                tradingTimePred(LocalTime.of(9, 29), true, LocalTime.of(11, 30), true
                         , LocalTime.of(13, 0), true, LocalTime.of(15, 0), true);
 
         mp.forEach((key, value) -> {
