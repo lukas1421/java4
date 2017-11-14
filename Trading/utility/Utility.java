@@ -568,7 +568,7 @@ public class Utility {
     @SafeVarargs
     public static <T extends Temporal, S> NavigableMap<T, S> mergeMapGen(NavigableMap<T, S>... mps) {
         return Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(
-                Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
+                Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> b, ConcurrentSkipListMap::new));
     }
 
     @SafeVarargs

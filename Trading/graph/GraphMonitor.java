@@ -142,7 +142,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
                 if (lt.equals(tm.firstKey())) {
                     g.drawString(lt.toLocalDate().format(DateTimeFormatter.ofPattern("MM-dd")), x, getHeight() - 5);
                 } else if(lt.equals(tm.lastKey())) {
-                    g.drawString(lt.format(DateTimeFormatter.ofPattern("HH:mm")), x, getHeight() - 5);
+                    g.drawString(lt.format(DateTimeFormatter.ofPattern("HH:mm")), x+20, getHeight() - 5);
                 } else {
                     if (lt.getDayOfMonth() != tm.lowerKey(lt).getDayOfMonth()) {
                         g.drawString(lt.toLocalDate().format(DateTimeFormatter.ofPattern("MM-dd")), x, getHeight() - 5);

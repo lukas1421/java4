@@ -265,6 +265,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                                             .orElse(mainMap.firstEntry().getValue().getOpen()) - 1)) / 10d + "%"
                                     , x-40, getHeight() - 20);
 
+                            g.drawString("" + mainMap.lowerEntry(lt).getValue().getClose(), x, getHeight()-7);
+
                         }
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                         e.printStackTrace();
