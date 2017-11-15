@@ -763,6 +763,42 @@ public class HistChinaStocks extends JPanel {
         return res;
     }
 
+    private static double computeTrendPnlSum(String name) {
+        double fx = fxMap.getOrDefault(name, 1.0);
+        System.out.println(" computing trend pnl for " + name);
+        if(chinaWtd.get(name).size()>0) {
+            //, int openPos, NavigableMap<LocalDateTime, SimpleBar> prices, double lastWeekClose
+            int openPos = weekOpenPositionMap.getOrDefault(name, 0);
+            NavigableMap<LocalDateTime, SimpleBar> prices = chinaWtd.get(name);
+            double lastWeekClose = lastWeekCloseMap.getOrDefault(name,0.0);
+            if (prices.size() > 0) {
+                return prices.entrySet().stream().map(Map.Entry::getKey).map(LocalDateTime::toLocalDate).distinct()
+                        .mapToDouble(s -> fx * openPos * (prices.floorEntry(LocalDateTime.of(s, LocalTime.of(12, 0))).getValue().getClose() -
+                                Optional.ofNullable(prices.floorEntry(LocalDateTime.of(s.minusDays(1), LocalTime.of(15,0))))
+                                        .map(Map.Entry::getValue).map(SimpleBar::getClose).orElse(lastWeekClose))).peek(System.out::println).sum();
+            }
+        }
+        return 0.0;
+    }
+
+    private static double computeOwedPnl(String name) {
+        double fx = fxMap.getOrDefault(name, 1.0);
+        System.out.println(" computing owed pnl for " + name);
+        if(chinaWtd.get(name).size()>0) {
+            //, int openPos, NavigableMap<LocalDateTime, SimpleBar> prices, double lastWeekClose
+            int openPos = weekOpenPositionMap.getOrDefault(name, 0);
+            NavigableMap<LocalDateTime, SimpleBar> prices = chinaWtd.get(name);
+            if (prices.size() > 0) {
+                return prices.entrySet().stream().map(Map.Entry::getKey).map(LocalDateTime::toLocalDate).distinct()
+                        .mapToDouble(s -> fx * openPos * (prices.floorEntry(LocalDateTime.of(s, LocalTime.of(15, 0))).getValue().getClose() -
+                                Optional.ofNullable(prices.floorEntry(LocalDateTime.of(s, LocalTime.of(11,35))))
+                                        .map(Map.Entry::getValue).map(SimpleBar::getClose).orElse(0.0))).peek(System.out::println).sum();
+            }
+        }
+        return 0.0;
+    }
+
+
     private static NavigableMap<LocalDateTime, Double> computeWtdTradePnl(Predicate<? super Map.Entry<String, ?>> p) {
         weekTradePnlMap = chinaTradeMap.entrySet().stream().filter(p).map(e ->
                 computeTrade(e.getKey(), chinaWtd.get(e.getKey()), e.getValue()))
@@ -898,7 +934,6 @@ public class HistChinaStocks extends JPanel {
                     });
                 });
             }
-
         }).thenRun(() -> {
             System.out.println(" ytd processing end ");
             refreshAll();
@@ -1314,6 +1349,11 @@ public class HistChinaStocks extends JPanel {
                     return "Mo chg pos";
                 case 35:
                     return "New High Date";
+                case 36:
+                    return "Trend pnl";
+                case 37:
+                    return "Owed pnl";
+
                 default:
                     return "";
 
@@ -1433,7 +1473,10 @@ public class HistChinaStocks extends JPanel {
                 case 35:
                     return chinaYtd.get(name).entrySet().stream().max(Comparator.comparingDouble(e -> e.getValue().getHigh())).map(Map.Entry::getKey)
                             .orElse(LocalDate.MIN);
-
+                case 36:
+                    return r(computeTrendPnlSum(name));
+                case 37:
+                    return r(computeOwedPnl(name));
                 default:
                     return null;
 
