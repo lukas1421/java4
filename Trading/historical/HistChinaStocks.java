@@ -214,6 +214,11 @@ public class HistChinaStocks extends JPanel {
                         selectedStock = stockList.get(modelRow);
                         comp.setBackground(Color.GREEN);
 
+
+                        if (selectedStock.equals("SGXA50")) {
+                            chinaTradeMap.entrySet().stream().filter(e -> e.getKey().equals("SGXA50")).forEach(System.out::println);
+                        }
+
                         CompletableFuture.runAsync(() -> {
                             //CompletableFuture.runAsync(() -> {
 
@@ -504,10 +509,12 @@ public class HistChinaStocks extends JPanel {
         getTodayTradesButton.addActionListener(al -> {
             CompletableFuture.runAsync(() -> {
                 for (String s : chinaTradeMap.keySet()) {
-                    if (tradesMap.containsKey(s) && tradesMap.get(s).size() > 0) {
-                        NavigableMap<LocalDateTime, ? super Trade> res = mergeTradeMap(chinaTradeMap.get(s),
-                                Utility.priceMapToLDT(tradesMap.get(s), recentTradingDate));
-                        chinaTradeMap.put(s, res);
+                    if (!s.equals("SGXA50")) {
+                        if (tradesMap.containsKey(s) && tradesMap.get(s).size() > 0) {
+                            NavigableMap<LocalDateTime, ? super Trade> res = mergeTradeMap(chinaTradeMap.get(s),
+                                    Utility.priceMapToLDT(tradesMap.get(s), recentTradingDate));
+                            chinaTradeMap.put(s, res);
+                        }
                     }
                 }
             }).thenRun(HistChinaStocks::computePosition);
@@ -554,7 +561,7 @@ public class HistChinaStocks extends JPanel {
     }
 
     private static int monthOpenPos(String name) {
-        if(chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size()>0) {
+        if (chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size() > 0) {
             return chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONTH_FIRST_DAY))
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
         }
@@ -563,7 +570,7 @@ public class HistChinaStocks extends JPanel {
 
     private static int mtdChgPos(String name) {
 
-        if(chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size()>0) {
+        if (chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size() > 0) {
             return chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONTH_FIRST_DAY.minusDays(1L)))
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
         }
@@ -571,15 +578,15 @@ public class HistChinaStocks extends JPanel {
 
     }
 
-    private static double mtdMtm (String name) {
+    private static double mtdMtm(String name) {
 
-        if(chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size()>0) {
+        if (chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size() > 0) {
 
             int mtdOpenPos = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONTH_FIRST_DAY))
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
 
             //System.out.println(getStr(" name mtdopenpos monthFDay ", name, mtdOpenPos, MONTH_FIRST_DAY));
-            if(chinaYtd.containsKey(name) && chinaYtd.get(name).size()>0) {
+            if (chinaYtd.containsKey(name) && chinaYtd.get(name).size() > 0) {
                 double price = chinaYtd.get(name).lastEntry().getValue().getClose();
                 double lastMonthClose = Optional.ofNullable(chinaYtd.get(name).floorEntry(MONTH_FIRST_DAY.minusDays(1L)))
                         .map(Map.Entry::getValue).map(SimpleBar::getClose)
@@ -594,13 +601,13 @@ public class HistChinaStocks extends JPanel {
     }
 
     private static double mtdTradePnl(String name) {
-        if(chinaYtd.containsKey(name) && chinaYtd.get(name).size()>0) {
+        if (chinaYtd.containsKey(name) && chinaYtd.get(name).size() > 0) {
             double price = chinaYtd.get(name).lastEntry().getValue().getClose();
-            int traded = chinaTradeMap.get(name).entrySet().stream().filter(e->e.getKey().toLocalDate().isAfter(MONTH_FIRST_DAY.minusDays(1L)))
-                    .mapToInt(e->((Trade)e.getValue()).getSizeAll()).sum();
-            double cost = chinaTradeMap.get(name).entrySet().stream().filter(e->e.getKey().toLocalDate().isAfter(MONTH_FIRST_DAY.minusDays(1L)))
-                    .mapToDouble(e->((Trade)e.getValue()).getCostWithCommission(name)).sum();
-            return price*traded+cost;
+            int traded = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONTH_FIRST_DAY.minusDays(1L)))
+                    .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
+            double cost = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONTH_FIRST_DAY.minusDays(1L)))
+                    .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommission(name)).sum();
+            return price * traded + cost;
         }
         return 0.0;
     }
@@ -633,7 +640,7 @@ public class HistChinaStocks extends JPanel {
             } else {
                 //System.out.println(" updating close of SGXA50 ");
                 HistChinaStocks.lastWeekCloseMap.put("SGXA50", close);
-                System.out.println(" sgxa50 close " + lastWeekCloseMap.getOrDefault("SGXA50",0.0));
+                System.out.println(" sgxa50 close " + lastWeekCloseMap.getOrDefault("SGXA50", 0.0));
             }
         } else {
             priceMapForHist.put("SGXA50", chinaWtd.get("SGXA50").lastEntry().getValue().getClose());
@@ -652,7 +659,7 @@ public class HistChinaStocks extends JPanel {
     private static void getSGXTrades() {
 
         System.out.println(" getting sgx trades ");
-        HistChinaStocks.chinaTradeMap.put("SGXA50", new ConcurrentSkipListMap<>());
+        chinaTradeMap.put("SGXA50", new ConcurrentSkipListMap<>());
         ChinaMain.controller().reqExecutions(new ExecutionFilter(), new SGXReportHandler());
     }
 
@@ -685,7 +692,7 @@ public class HistChinaStocks extends JPanel {
     }
 
     private static double getCurrentDelta(String name) {
-        if(chinaWtd.containsKey(name) && chinaWtd.get(name).size()>0) {
+        if (chinaWtd.containsKey(name) && chinaWtd.get(name).size() > 0) {
             return fxMap.getOrDefault(name, 1.0) * getCurrentPos(name) * chinaWtd.get(name).lastEntry().getValue().getClose();
         }
         return 0.0;
@@ -940,7 +947,7 @@ public class HistChinaStocks extends JPanel {
             if (chinaWtd.containsKey(s) && chinaWtd.get(s).size() > 1) {
                 NavigableMap<LocalDateTime, Double> ret = SharpeUtility.getReturnSeries(chinaWtd.get(s),
                         LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1), LocalTime.MAX));
-                double mean = SharpeUtility.getMean(ret)*48;
+                double mean = SharpeUtility.getMean(ret) * 48;
                 double sdDay = SharpeUtility.getSD(ret) * Math.sqrt(48);
                 double sr = SharpeUtility.getSharpe(ret, 48);
                 double perc = SharpeUtility.getPercentile(chinaWtd.get(s));
@@ -959,25 +966,25 @@ public class HistChinaStocks extends JPanel {
         //MONDAY_OF_WEEK
         if (chinaYtd.containsKey(name) && chinaYtd.get(name).size() > 1) {
 
-            NavigableMap<LocalDate, Double> ret =SharpeUtility.getReturnSeries(chinaYtd.get(name),
+            NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(chinaYtd.get(name),
                     LocalDate.of(2016, Month.DECEMBER, 31));
 
-            NavigableMap<LocalDate,Double>  ret2 = SharpeUtility.getReturnSeries(chinaYtd.get(name),
+            NavigableMap<LocalDate, Double> ret2 = SharpeUtility.getReturnSeries(chinaYtd.get(name),
                     MONDAY_OF_WEEK.minusDays(1));
 
-            double sum1 = ret.values().stream().mapToDouble(e->e).sum();
-            double sum2 = ret2.values().stream().mapToDouble(e->e).sum();
-            double sumSq1 = ret.values().stream().mapToDouble(e->Math.pow(e,2)).sum();
-            double sumSq2 = ret2.values().stream().mapToDouble(e->Math.pow(e,2)).sum();
-            double sumDiff = sum1-sum2;
-            double sumSqDiff =sumSq1 - sumSq2;
+            double sum1 = ret.values().stream().mapToDouble(e -> e).sum();
+            double sum2 = ret2.values().stream().mapToDouble(e -> e).sum();
+            double sumSq1 = ret.values().stream().mapToDouble(e -> Math.pow(e, 2)).sum();
+            double sumSq2 = ret2.values().stream().mapToDouble(e -> Math.pow(e, 2)).sum();
+            double sumDiff = sum1 - sum2;
+            double sumSqDiff = sumSq1 - sumSq2;
             int size1 = ret.size();
-            int sizeDiff = ret.size()-ret2.size();
-            double sharpNow = (sum1/size1)/(Math.sqrt((sumSq1/size1-Math.pow(sum1/size1,2))*size1/(size1-1)))*Math.sqrt(252);
-            double sharpPrev = (sumDiff/sizeDiff)/(Math.sqrt((sumSqDiff/sizeDiff-Math.pow(sumDiff/sizeDiff,2))*sizeDiff/(sizeDiff-1)))*Math.sqrt(252);
+            int sizeDiff = ret.size() - ret2.size();
+            double sharpNow = (sum1 / size1) / (Math.sqrt((sumSq1 / size1 - Math.pow(sum1 / size1, 2)) * size1 / (size1 - 1))) * Math.sqrt(252);
+            double sharpPrev = (sumDiff / sizeDiff) / (Math.sqrt((sumSqDiff / sizeDiff - Math.pow(sumDiff / sizeDiff, 2)) * sizeDiff / (sizeDiff - 1))) * Math.sqrt(252);
             //System.out.println(getStr("name sharpe now previous ",name, sharpNow, sharpPrev));
             //System.out.println(getStr(" size1 sizediff size2 sum1 sum2 sumsq1 sumsq2 ", size1, sizediff, ret2.size(), sum1,sum2, sumsq1, sumsq2));
-            return sharpNow-sharpPrev;
+            return sharpNow - sharpPrev;
         }
         return 0.0;
     }
@@ -1138,8 +1145,8 @@ public class HistChinaStocks extends JPanel {
             } else {
                 int openPos = currentPositionMap.getOrDefault("SGXA50", 0) - wtdChgInPosition.getOrDefault("SGXA50", 0);
 
-                return openPos!=0?fxMap.getOrDefault(s, 1.0) * (openPos) * (chinaWtd.get(s).lastEntry().getValue().getClose()
-                        - lastWeekCloseMap.getOrDefault(s, chinaWtd.get(s).firstEntry().getValue().getOpen())):0.0;
+                return openPos != 0 ? fxMap.getOrDefault(s, 1.0) * (openPos) * (chinaWtd.get(s).lastEntry().getValue().getClose()
+                        - lastWeekCloseMap.getOrDefault(s, chinaWtd.get(s).firstEntry().getValue().getOpen())) : 0.0;
             }
         }
         return 0.0;
@@ -1229,7 +1236,7 @@ public class HistChinaStocks extends JPanel {
 
         @Override
         public int getColumnCount() {
-            return 35;
+            return 40;
         }
 
         @Override
@@ -1305,6 +1312,8 @@ public class HistChinaStocks extends JPanel {
                     return "Mo Open pos";
                 case 34:
                     return "Mo chg pos";
+                case 35:
+                    return "New High Date";
                 default:
                     return "";
 
@@ -1321,15 +1330,14 @@ public class HistChinaStocks extends JPanel {
                 price = chinaWtd.get(name).lastEntry().getValue().getClose();
             }
 
-
             double mtm = r(computeWtdMtmFor1Stock(name));
-            double trade = r(computeWtdTradePnlFor1Stock(name)) ;
+            double trade = r(computeWtdTradePnlFor1Stock(name));
 
             if (name.equals("SGXA50")) {
-                double thisWeekCostBasis = chinaTradeMap.get("SGXA50").entrySet().stream().filter(e->e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
+                double thisWeekCostBasis = chinaTradeMap.get("SGXA50").entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
                         .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommissionCustomBrokerage("SGXA50", 0.0)).sum();
 
-                double thisWeekTradingCost = chinaTradeMap.get("SGXA50").entrySet().stream().filter(e->e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
+                double thisWeekTradingCost = chinaTradeMap.get("SGXA50").entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
                         .mapToDouble(e -> ((Trade) e.getValue()).getTradingCostCustomBrokerage("SGXA50", 0.0)).sum();
 
                 costBasisMap.put(name, fx * (-1 * lastWeekCloseMap.getOrDefault("SGXA50", 0.0) *
@@ -1365,7 +1373,8 @@ public class HistChinaStocks extends JPanel {
                 case 11:
                     return chinaWtd.get(name).size();
                 case 12:
-                    return chinaTradeMap.get(name).size();
+                    return chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
+                            .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
                 case 13:
                     return currentPositionMap.getOrDefault(name, 0) -
                             wtdChgInPosition.getOrDefault(name, 0);
@@ -1400,8 +1409,8 @@ public class HistChinaStocks extends JPanel {
 //                            wtdChgInPosition.getOrDefault(name, 0)) *
 //                            (price - lastWeekCloseMap.getOrDefault(name, 0.0)));
                 case 25:
-                    return r(mtm+trade);
-                    //return r(wtdTradePnlMap.getOrDefault(name, 0.0) + wtdMtmPnlMap.getOrDefault(name, 0.0));
+                    return r(mtm + trade);
+                //return r(wtdTradePnlMap.getOrDefault(name, 0.0) + wtdMtmPnlMap.getOrDefault(name, 0.0));
                 case 26:
                     return SharpeUtility.getPercentile(chinaWtd.get(name));
                 case 27:
@@ -1416,11 +1425,15 @@ public class HistChinaStocks extends JPanel {
                 case 31:
                     return r(mtdTradePnl(name));
                 case 32:
-                    return r(mtdMtm(name)+mtdTradePnl(name));
+                    return r(mtdMtm(name) + mtdTradePnl(name));
                 case 33:
                     return monthOpenPos(name);
                 case 34:
                     return mtdChgPos(name);
+                case 35:
+                    return chinaYtd.get(name).entrySet().stream().max(Comparator.comparingDouble(e -> e.getValue().getHigh())).map(Map.Entry::getKey)
+                            .orElse(LocalDate.MIN);
+
                 default:
                     return null;
 
@@ -1454,6 +1467,8 @@ public class HistChinaStocks extends JPanel {
                     return Integer.class;
                 case 34:
                     return Integer.class;
+                case 35:
+                    return LocalDate.class;
                 default:
                     return Double.class;
             }
