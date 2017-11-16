@@ -14,10 +14,7 @@ import java.net.Proxy;
 import java.net.URL;
 import java.net.URLConnection;
 import java.text.SimpleDateFormat;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -366,6 +363,14 @@ public final class MorningTask implements HistoricalHandler {
             System.out.println(" Date " + dt.toString() + " close " + c);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
             System.out.println(sdf.format(dt));
+            System.out.println(" adding printline here ");
+            System.out.println(" zone ids " + ZoneId.getAvailableZoneIds());
+            ZoneId chinaZone = ZoneId.systemDefault();
+            System.out.println(" china zone " + chinaZone);
+            LocalDateTime ldt = LocalDateTime.ofInstant(cal.toInstant(),chinaZone);
+            System.out.println(" ldt is " + ldt);
+            System.out.println(" time in ny " + ldt.atZone(ZoneId.of("EST")));
+            //ZonedDateTime zdt =
 
             switch (cal.get(Calendar.HOUR_OF_DAY)) {
                 case 13:
@@ -524,17 +529,35 @@ public final class MorningTask implements HistoricalHandler {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
             System.out.println(sdf.format(dt));
 
-            switch (cal.get(Calendar.HOUR_OF_DAY)) {
+            ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
+            ZoneId nyZone = ZoneId.of("America/New_York");
+            //System.out.println(" china zone " + chinaZone);
+            LocalDateTime ldt = LocalDateTime.ofInstant(cal.toInstant(),chinaZone);
+            ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
+            //System.out.println(" ldt is " + ldt);
+            //System.out.println(" time in ny " + ldt.atZone(nyZone));
+            System.out.println( zdt.getZone());
+            System.out.println( zdt.withZoneSameInstant(nyZone));
+
+            switch (zdt.withZoneSameInstant(nyZone).getHour()) {
+                case 16:
+                    Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
+                    Utility.simpleWriteToFile("SGXA50" + "\t" + close, false, fxOutput);
+                    break;
+            }
+
+            //cal.get(Calendar.HOUR_OF_DAY)
+            switch (zdt.getHour()) {
                 case 13:
                     Utility.simpleWrite("HK NOON" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), false);
                     break;
                 case 16:
                     Utility.simpleWrite("HK CLOSE" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
                     break;
-                case 4:
-                    Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
-                    Utility.simpleWriteToFile("SGXA50" + "\t" + close, false, fxOutput);
-                    break;
+//                case 4:
+//                    Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
+//                    Utility.simpleWriteToFile("SGXA50" + "\t" + close, false, fxOutput);
+//                    break;
             }
         }
     }
