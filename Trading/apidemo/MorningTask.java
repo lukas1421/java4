@@ -518,26 +518,25 @@ public final class MorningTask implements HistoricalHandler {
 
     @Override
     public void handleHist(String name, String date, double open, double high, double low, double close) {
-        System.out.println(" handling historical data ");
+        //System.out.println(" FX ");
 
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);
-            System.out.println(" Date " + dt.toString() + " close " + close);
 
             ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
             ZoneId nyZone = ZoneId.of("America/New_York");
             LocalDateTime ldt = LocalDateTime.ofInstant(dt.toInstant(),chinaZone);
             ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
-            System.out.println(" hour is " + ldt.getHour());
-            //System.out.println(" zdt " + zdt);
-            //System.out.println(" zdt at ny " + zdt.withZoneSameInstant(nyZone));
+            //System.out.println(" hour is " + ldt.getHour());
 
             switch (zdt.getHour()) {
                 case 13:
+                    System.out.println(" Date " + dt.toString() + " close " + close);
                     Utility.simpleWrite("HK NOON" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                             + "\t" + zdt.getHour(), false);
                     break;
                 case 16:
+                    System.out.println(" Date " + dt.toString() + " close " + close);
                     Utility.simpleWrite("HK CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                             + "\t" + zdt.getHour(), true);
                     break;
@@ -545,6 +544,7 @@ public final class MorningTask implements HistoricalHandler {
 
             switch (zdt.withZoneSameInstant(nyZone).getHour()) {
                 case 16:
+                    System.out.println(" Date " + dt.toString() + " close " + close);
                     Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                             + "\t" + zdt.getHour(), true);
                     Utility.simpleWriteToFile("SGXA50" + "\t" + close, false, fxOutput);
@@ -552,10 +552,8 @@ public final class MorningTask implements HistoricalHandler {
             }
         }
     }
-
     @Override
     public void actionUponFinish(String name) {
         System.out.println(" data is finished ");
     }
-
 }
