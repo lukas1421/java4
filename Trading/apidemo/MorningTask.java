@@ -522,42 +522,33 @@ public final class MorningTask implements HistoricalHandler {
 
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(dt);
-            System.out.println(" hour is " + cal.get(Calendar.HOUR_OF_DAY));
             System.out.println(" Date " + dt.toString() + " close " + close);
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
-            System.out.println(sdf.format(dt));
 
             ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
             ZoneId nyZone = ZoneId.of("America/New_York");
-            //System.out.println(" china zone " + chinaZone);
-            LocalDateTime ldt = LocalDateTime.ofInstant(cal.toInstant(),chinaZone);
+            LocalDateTime ldt = LocalDateTime.ofInstant(dt.toInstant(),chinaZone);
             ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
-            //System.out.println(" ldt is " + ldt);
-            //System.out.println(" time in ny " + ldt.atZone(nyZone));
-            System.out.println( zdt.getZone());
-            System.out.println( zdt.withZoneSameInstant(nyZone));
+            System.out.println(" hour is " + ldt.getHour());
+            //System.out.println(" zdt " + zdt);
+            //System.out.println(" zdt at ny " + zdt.withZoneSameInstant(nyZone));
 
-            switch (zdt.withZoneSameInstant(nyZone).getHour()) {
+            switch (zdt.getHour()) {
+                case 13:
+                    Utility.simpleWrite("HK NOON" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                            + "\t" + zdt.getHour(), false);
+                    break;
                 case 16:
-                    Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
-                    Utility.simpleWriteToFile("SGXA50" + "\t" + close, false, fxOutput);
+                    Utility.simpleWrite("HK CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                            + "\t" + zdt.getHour(), true);
                     break;
             }
 
-            //cal.get(Calendar.HOUR_OF_DAY)
-            switch (zdt.getHour()) {
-                case 13:
-                    Utility.simpleWrite("HK NOON" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), false);
-                    break;
+            switch (zdt.withZoneSameInstant(nyZone).getHour()) {
                 case 16:
-                    Utility.simpleWrite("HK CLOSE" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
+                    Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                            + "\t" + zdt.getHour(), true);
+                    Utility.simpleWriteToFile("SGXA50" + "\t" + close, false, fxOutput);
                     break;
-//                case 4:
-//                    Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
-//                    Utility.simpleWriteToFile("SGXA50" + "\t" + close, false, fxOutput);
-//                    break;
             }
         }
     }
