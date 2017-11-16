@@ -765,7 +765,7 @@ public class HistChinaStocks extends JPanel {
 
     private static double computeTrendPnlSum(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
-        System.out.println(" computing trend pnl for " + name);
+        //System.out.println(" computing trend pnl for " + name);
         if(chinaWtd.get(name).size()>0) {
             //, int openPos, NavigableMap<LocalDateTime, SimpleBar> prices, double lastWeekClose
             int openPos = weekOpenPositionMap.getOrDefault(name, 0);
@@ -775,7 +775,7 @@ public class HistChinaStocks extends JPanel {
                 return prices.entrySet().stream().map(Map.Entry::getKey).map(LocalDateTime::toLocalDate).distinct()
                         .mapToDouble(s -> fx * openPos * (prices.floorEntry(LocalDateTime.of(s, LocalTime.of(12, 0))).getValue().getClose() -
                                 Optional.ofNullable(prices.floorEntry(LocalDateTime.of(s.minusDays(1), LocalTime.of(15,0))))
-                                        .map(Map.Entry::getValue).map(SimpleBar::getClose).orElse(lastWeekClose))).peek(System.out::println).sum();
+                                        .map(Map.Entry::getValue).map(SimpleBar::getClose).orElse(lastWeekClose))).sum();
             }
         }
         return 0.0;
@@ -783,16 +783,15 @@ public class HistChinaStocks extends JPanel {
 
     private static double computeOwedPnl(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
-        System.out.println(" computing owed pnl for " + name);
+        //System.out.println(" computing owed pnl for " + name);
         if(chinaWtd.get(name).size()>0) {
-            //, int openPos, NavigableMap<LocalDateTime, SimpleBar> prices, double lastWeekClose
             int openPos = weekOpenPositionMap.getOrDefault(name, 0);
             NavigableMap<LocalDateTime, SimpleBar> prices = chinaWtd.get(name);
             if (prices.size() > 0) {
                 return prices.entrySet().stream().map(Map.Entry::getKey).map(LocalDateTime::toLocalDate).distinct()
                         .mapToDouble(s -> fx * openPos * (prices.floorEntry(LocalDateTime.of(s, LocalTime.of(15, 0))).getValue().getClose() -
                                 Optional.ofNullable(prices.floorEntry(LocalDateTime.of(s, LocalTime.of(11,35))))
-                                        .map(Map.Entry::getValue).map(SimpleBar::getClose).orElse(0.0))).peek(System.out::println).sum();
+                                        .map(Map.Entry::getValue).map(SimpleBar::getClose).orElse(0.0))).sum();
             }
         }
         return 0.0;
@@ -1353,10 +1352,10 @@ public class HistChinaStocks extends JPanel {
                     return "Trend pnl";
                 case 37:
                     return "Owed pnl";
-
+                case 38:
+                    return "trend-owed";
                 default:
                     return "";
-
             }
         }
 
@@ -1376,13 +1375,10 @@ public class HistChinaStocks extends JPanel {
             if (name.equals("SGXA50")) {
                 double thisWeekCostBasis = chinaTradeMap.get("SGXA50").entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
                         .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommissionCustomBrokerage("SGXA50", 0.0)).sum();
-
                 double thisWeekTradingCost = chinaTradeMap.get("SGXA50").entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
                         .mapToDouble(e -> ((Trade) e.getValue()).getTradingCostCustomBrokerage("SGXA50", 0.0)).sum();
-
                 costBasisMap.put(name, fx * (-1 * lastWeekCloseMap.getOrDefault("SGXA50", 0.0) *
                         weekOpenPositionMap.getOrDefault(name, 0) + thisWeekCostBasis));
-
                 totalTradingCostMap.put(name, fx * thisWeekTradingCost);
             }
 
@@ -1477,6 +1473,8 @@ public class HistChinaStocks extends JPanel {
                     return r(computeTrendPnlSum(name));
                 case 37:
                     return r(computeOwedPnl(name));
+                case 38:
+                    return r(computeTrendPnlSum(name)-computeOwedPnl(name));
                 default:
                     return null;
 
