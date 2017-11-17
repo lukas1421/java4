@@ -405,7 +405,7 @@ public final class MorningTask implements HistoricalHandler {
         c.right(Types.Right.None);
         c.secIdType(Types.SecIdType.None);
 
-        LocalDateTime lt = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS);
+        LocalDateTime lt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
         String formatTime = lt.format(dtf);
 
@@ -521,24 +521,25 @@ public final class MorningTask implements HistoricalHandler {
             ZoneId nyZone = ZoneId.of("America/New_York");
             LocalDateTime ldt = LocalDateTime.ofInstant(dt.toInstant(),chinaZone);
             ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
-            //System.out.println(" hour is " + ldt.getHour());
+            //System.out.println(" zdt " + zdt);
 
             switch (zdt.getHour()) {
-                case 13:
-                    System.out.println(" Date " + dt.toString() + " HK noon " + close);
+                case 12:
+                    System.out.println(" Date " + ldt.toString() + " HK noon " + close);
                     Utility.simpleWrite("HK NOON" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                             + "\t" + zdt.getHour(), false);
                     break;
-                case 16:
-                    System.out.println(" Date " + dt.toString() + " HK close " + close);
+
+                case 15:
+                    System.out.println(" Date " + ldt.toString() + " HK close " + close);
                     Utility.simpleWrite("HK CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                             + "\t" + zdt.getHour(), true);
                     break;
             }
 
             switch (zdt.withZoneSameInstant(nyZone).getHour()) {
-                case 16:
-                    System.out.println(" Date " + dt.toString() + " US close " + close);
+                case 15:
+                    System.out.println(" Date " + ldt.toString() + " US close " + close);
                     Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                             + "\t" + zdt.getHour(), true);
                     Utility.simpleWriteToFile("SGXA50" + "\t" + close, false, fxOutput);
