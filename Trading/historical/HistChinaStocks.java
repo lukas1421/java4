@@ -806,23 +806,6 @@ public class HistChinaStocks extends JPanel {
     }
 
 
-//    private static NavigableMap<LocalDateTime, ? super Trade> roundMapKeyTo5(NavigableMap<LocalDateTime, ? super Trade> inp) {
-//        NavigableMap<LocalDateTime, ? super Trade> res = new ConcurrentSkipListMap<>();
-//
-//
-//        inp.forEach((k,v)->{
-//            LocalDateTime newKey = roundTo5Ldt(k);
-//            if(!res.containsKey(newKey)) {
-//                res.put(newKey, (Trade) v);
-//            } else {
-//                //res.get
-//                //noinspection SuspiciousMethodCalls
-//                ((Trade)res.get(newKey)).merge2((Trade)v);
-//            }
-//        });
-//        return res;
-//    }
-
     private static NavigableMap<LocalDateTime, Double> computeTrade(String ticker, NavigableMap<LocalDateTime, SimpleBar> prices,
                                                                     NavigableMap<LocalDateTime, ? super Trade> trades) {
         NavigableMap<LocalDateTime, Double> res = new ConcurrentSkipListMap<>();
@@ -850,9 +833,6 @@ public class HistChinaStocks extends JPanel {
         if (currPos == 0) {
             return new ConcurrentSkipListMap<>();
         }
-
-//        System.out.println(" ticker name trade pnl trades" + ticker + " " + nameMap.getOrDefault(ticker," ") + " " + res.lastEntry()
-//                + trades);
 
         return res;
     }

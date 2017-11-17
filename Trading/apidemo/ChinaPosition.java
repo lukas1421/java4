@@ -839,7 +839,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                                 }
                             }
                         } else {
-                            throw new IllegalArgumentException(" ticker not allowed " + ticker);
+                            System.out.println(" ticker not allowed + ticker ");
+                            //throw new IllegalArgumentException(" ticker not allowed " + ticker);
                         }
                     } catch (Exception x) {
                         x.printStackTrace();
