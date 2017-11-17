@@ -31,19 +31,17 @@ import static utility.Utility.pd;
 public final class MorningTask implements HistoricalHandler {
 
     public static File output = new File(TradingConstants.GLOBALPATH + "morningOutput.txt");
-    static File bocOutput = new File(TradingConstants.GLOBALPATH + "BOCUSD.txt");
-    static File fxOutput = new File(TradingConstants.GLOBALPATH + "fx.txt");
-    static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
+    private static File bocOutput = new File(TradingConstants.GLOBALPATH + "BOCUSD.txt");
+    private static File fxOutput = new File(TradingConstants.GLOBALPATH + "fx.txt");
+    private static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export\\" : "J:\\TDX\\T0002\\export\\";
-    static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
-    static String indices = "sh000300,sh000001,sz399006,sz399001,sh000905,sh000016";
-    static String urlString;
-    //static String line;
-    static List<String> dataList = new ArrayList<>();
+    private static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
+    private static String indices = "sh000300,sh000001,sz399006,sz399001,sh000905,sh000016";
+    private static String urlString;
     //static Proxy proxy = new Proxy(Proxy.Type.HTTP,new InetSocketAddress("127.0.0.1",1080));
-    static Proxy proxy = Proxy.NO_PROXY;
+    private static Proxy proxy = Proxy.NO_PROXY;
 
-    public static void runThis() {
+    private static void runThis() {
         MorningTask mt = new MorningTask();
 
         Utility.clearFile(output);
@@ -64,17 +62,13 @@ public final class MorningTask implements HistoricalHandler {
 
         System.out.println("done and starting exiting sequence in 5");
         ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
-        es.scheduleAtFixedRate(() -> {
-            System.out.println(" countDown ... ");
-        }, 0, 1, TimeUnit.SECONDS);
+        es.scheduleAtFixedRate(() -> System.out.println(" countDown ... "), 0, 1, TimeUnit.SECONDS);
 
-        es.schedule(() -> {
-            System.exit(0);
-        }, 5, TimeUnit.SECONDS);
+        es.schedule(() -> System.exit(0), 5, TimeUnit.SECONDS);
     }
 
 
-    static void writeIndexTDX(BufferedWriter out) {
+    private static void writeIndexTDX(BufferedWriter out) {
         String line;
         List<String> ind = Arrays.asList(indices.split(","));
         System.out.println(ind);
@@ -82,7 +76,6 @@ public final class MorningTask implements HistoricalHandler {
         String previousLine = "";
         for (String s : ind) {
             String name = s.substring(0, 2).toUpperCase() + "#" + s.substring(2) + ".txt";
-            String filePath = tdxPath + name + ".txt";
             currentLine = "";
             previousLine = "";
             try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxPath + name), "GBK"))) {
@@ -114,7 +107,7 @@ public final class MorningTask implements HistoricalHandler {
             try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream(), "gbk"))) {
                 while ((line = reader2.readLine()) != null) {
                     Matcher matcher = DATA_PATTERN.matcher(line);
-                    dataList = Arrays.asList(line.split(","));
+                    List<String> dataList = Arrays.asList(line.split(","));
                     if (matcher.find()) {
                         out.write(Utility.getStrTabbed(matcher.group(1), pd(dataList, 3), pd(dataList, 2),
                                 Double.toString(Math.round(10000d * (pd(dataList, 3) / pd(dataList, 2) - 1)) / 100d) + "%"));
@@ -129,7 +122,7 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
-    static void writeETF(BufferedWriter out) {
+    private static void writeETF(BufferedWriter out) {
         String line;
         List<String> etfs = Arrays.asList("2823:HK", "2822:HK", "3147:HK", "3188:HK", "FXI:US", "CNXT:US", "ASHR:US", "ASHS:US");
         Pattern p = Pattern.compile("(?<=\\\"price\\\":)(\\d+(.\\d+)?)");
@@ -186,7 +179,7 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
-    static void writeA50(BufferedWriter out) {
+    private static void writeA50(BufferedWriter out) {
 
         urlString = "https://www.investing.com/indices/ftse-china-a50";
         String line;
@@ -216,7 +209,7 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
-    static LocalDate getLastBizDate(LocalDate inDate) {
+    private static LocalDate getLastBizDate(LocalDate inDate) {
         if (inDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
             return inDate.minusDays(3);
         } else {
@@ -224,7 +217,7 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
-    static void writeA50FT(BufferedWriter out) {
+    private static void writeA50FT(BufferedWriter out) {
         String line;
         urlString = "https://markets.ft.com/data/indices/tearsheet/historical?s=FTXIN9:FSI";
         Pattern p;
@@ -249,7 +242,7 @@ public final class MorningTask implements HistoricalHandler {
                         List<String> sp = Arrays.asList(m.group(1).replace(",", "")
                                 .split("</td><td>")); //m.group()
                         System.out.println(Double.parseDouble(sp.get(4)));
-                        out.append("FTSEA50 2" + "\t" + sp.get(4));
+                        out.append("FTSEA50 2" + "\t").append(sp.get(4));
                         out.newLine();
                     }
                 }
@@ -271,7 +264,7 @@ public final class MorningTask implements HistoricalHandler {
         //Proxy proxy = proxy;
         try {
             URL url = new URL(urlString);
-            URLConnection urlconn = url.openConnection(proxy);
+            @SuppressWarnings("SpellCheckingInspection") URLConnection urlconn = url.openConnection(proxy);
             //URLConnection urlconn = url.openConnection();
             try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream()))) {
                 while ((line = reader2.readLine()) != null) {
@@ -339,6 +332,7 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     private static void getBOCFX2() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(bocOutput), "GBK"))) {
@@ -363,7 +357,7 @@ public final class MorningTask implements HistoricalHandler {
             System.out.println(" Date " + dt.toString() + " close " + c);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
             System.out.println(sdf.format(dt));
-            System.out.println(" adding printline here ");
+            System.out.println(" adding print line here ");
             System.out.println(" zone ids " + ZoneId.getAvailableZoneIds());
             ZoneId chinaZone = ZoneId.systemDefault();
             System.out.println(" china zone " + chinaZone);
@@ -421,6 +415,7 @@ public final class MorningTask implements HistoricalHandler {
                 Types.BarSize._1_hour, Types.WhatToShow.MIDPOINT, false);
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     private static void processShcomp() {
 
         final String tdxPath = TradingConstants.tdxPath;
@@ -511,7 +506,6 @@ public final class MorningTask implements HistoricalHandler {
     public static void main(String[] args) {
         //MorningTask mt = new MorningTask();
         //mt.getIndices();
-
         //MorningTask.getFX();
         MorningTask.runThis();
     }
