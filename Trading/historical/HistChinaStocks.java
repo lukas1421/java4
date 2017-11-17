@@ -800,10 +800,28 @@ public class HistChinaStocks extends JPanel {
 
     private static NavigableMap<LocalDateTime, Double> computeWtdTradePnl(Predicate<? super Map.Entry<String, ?>> p) {
         weekTradePnlMap = chinaTradeMap.entrySet().stream().filter(p).map(e ->
-                computeTrade(e.getKey(), chinaWtd.get(e.getKey()), e.getValue()))
+                computeTrade(e.getKey(), chinaWtd.get(e.getKey()), (e.getValue())))
                 .reduce(mapOp).orElse(new ConcurrentSkipListMap<>());
         return weekTradePnlMap;
     }
+
+
+//    private static NavigableMap<LocalDateTime, ? super Trade> roundMapKeyTo5(NavigableMap<LocalDateTime, ? super Trade> inp) {
+//        NavigableMap<LocalDateTime, ? super Trade> res = new ConcurrentSkipListMap<>();
+//
+//
+//        inp.forEach((k,v)->{
+//            LocalDateTime newKey = roundTo5Ldt(k);
+//            if(!res.containsKey(newKey)) {
+//                res.put(newKey, (Trade) v);
+//            } else {
+//                //res.get
+//                //noinspection SuspiciousMethodCalls
+//                ((Trade)res.get(newKey)).merge2((Trade)v);
+//            }
+//        });
+//        return res;
+//    }
 
     private static NavigableMap<LocalDateTime, Double> computeTrade(String ticker, NavigableMap<LocalDateTime, SimpleBar> prices,
                                                                     NavigableMap<LocalDateTime, ? super Trade> trades) {
@@ -812,12 +830,15 @@ public class HistChinaStocks extends JPanel {
         double costBasis = 0.0;
         double mv;
         double fx = fxMap.getOrDefault(ticker, 1.0);
+
+        //NavigableMap<> = roundMapKeyTo5(trades);
+
         for (LocalDateTime lt : prices.keySet()) {
 
-            if (trades.subMap(lt, true, lt.plusMinutes(5), false).size() > 0) {
-                currPos += trades.subMap(lt, true, lt.plusMinutes(5), false)
+            if (trades.subMap(lt.minusMinutes(5L), false, lt, true).size() > 0) {
+                currPos += trades.subMap(lt.minusMinutes(5L), false, lt, true)
                         .entrySet().stream().mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
-                costBasis += trades.subMap(lt, true, lt.plusMinutes(5), false)
+                costBasis += trades.subMap(lt.minusMinutes(5L), false, lt, true)
                         .entrySet().stream().mapToDouble(e -> ((Trade) e.getValue()).getCostAll(ticker)).sum();
             }
             mv = currPos * prices.get(lt).getClose();
@@ -829,6 +850,9 @@ public class HistChinaStocks extends JPanel {
         if (currPos == 0) {
             return new ConcurrentSkipListMap<>();
         }
+
+//        System.out.println(" ticker name trade pnl trades" + ticker + " " + nameMap.getOrDefault(ticker," ") + " " + res.lastEntry()
+//                + trades);
 
         return res;
     }

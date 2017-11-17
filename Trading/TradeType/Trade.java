@@ -3,6 +3,7 @@ package TradeType;
 import apidemo.ChinaStock;
 import utility.Utility;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -14,7 +15,7 @@ public abstract class Trade {
     protected int size;
     //Map<Integer, PriceSizePair>  tradeTracker = new HashMap<>();
     //AtomicInteger tradeCount = new AtomicInteger(0);
-    List<? super Trade> mergeList = new LinkedList<>();
+    List<? super Trade> mergeList = Collections.synchronizedList(new LinkedList<>());
 
 
 

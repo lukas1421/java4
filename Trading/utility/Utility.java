@@ -50,14 +50,14 @@ public class Utility {
     //static final Comparator<? super Entry<LocalTime,SimpleBar>> BAR_HIGH = (e1,e2)->e1.getValue().getHigh()>=e2.getValue().getHigh()?1:-1;
     //static final Comparator<? super Entry<LocalTime,SimpleBar>> BAR_HIGH = Comparator.comparingDouble(e->e.getValue().getHigh());
 
-    @SuppressWarnings("ComparatorMethodParameterNotUsed")
-    public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_HIGH =
-            (e1, e2) -> e1.getValue().getHigh() >= e2.getValue().getHigh() ? 1 : -1;
+    //@SuppressWarnings("ComparatorMethodParameterNotUsed")
+    public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_HIGH = Comparator.comparingDouble(e->e.getValue().getHigh());
+//            (e1, e2) -> e1.getValue().getHigh() >= e2.getValue().getHigh() ? 1 : -1;
     //Map.Entry.comparingByValue(Comparator.comparingDouble(SimpleBar::getHigh));
 
     @SuppressWarnings("ComparatorMethodParameterNotUsed")
-    public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_LOW =
-            (e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
+    public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_LOW = Comparator.comparingDouble(e->e.getValue().getLow());
+            //(e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
 
     public static final Predicate<? super Map.Entry<LocalTime, ?>> IS_OPEN_PRED = e -> e.getKey().isAfter(LocalTime.of(9, 29, 59));
     public static final LocalTime AM914T = LocalTime.of(9, 14, 0);
@@ -71,7 +71,6 @@ public class Utility {
     public static final LocalTime AM950T = LocalTime.of(9, 50, 0);
     public static final LocalTime AM1000T = LocalTime.of(10, 0);
     public static final LocalTime AMCLOSET = LocalTime.of(11, 30, 0);
-    public static final LocalTime AM1131T = LocalTime.of(11, 31, 0);
     public static final LocalTime PMOPENT = LocalTime.of(13, 0, 0);
     public static final LocalTime PM1309T = LocalTime.of(13, 9, 0);
     public static final LocalTime PM1310T = LocalTime.of(13, 10, 0);
@@ -84,15 +83,15 @@ public class Utility {
             (t.isAfter(LocalTime.of(12, 59)) && t.isBefore(LocalTime.of(15, 1)));
 
 
-    public static Predicate<LocalTime> tradingTimePred(LocalTime t1, boolean b1, LocalTime t2, boolean b2,
-                                                       LocalTime t3, boolean b3, LocalTime t4, boolean b4) {
-        return t -> (t.isAfter(b1 ? t1.minusMinutes(1) : t1) && t.isBefore(b2 ? t2.plusMinutes(1) : t2)) ||
-                (t.isAfter(b3 ? t3.minusMinutes(1) : t3) && t.isBefore(b4 ? t4.plusMinutes(1) : t4));
+    private static Predicate<LocalTime> tradingTimePred(LocalTime t1, LocalTime t2,
+                                                        LocalTime t3, LocalTime t4) {
+        return t -> (t.isAfter(t1.minusMinutes(1)) && t.isBefore(t2.plusMinutes(1))) ||
+                (t.isAfter(t3.minusMinutes(1)) && t.isBefore(t4.plusMinutes(1)));
     }
 
     public static Predicate<LocalTime> chinaTradingTimePred =
-            tradingTimePred(LocalTime.of(9, 30), true, LocalTime.of(11, 30), true
-                    , LocalTime.of(13, 0), true, LocalTime.of(15, 0), true);
+            tradingTimePred(LocalTime.of(9, 30), LocalTime.of(11, 30),
+                    LocalTime.of(13, 0), LocalTime.of(15, 0));
 
     private Utility() {
         throw new UnsupportedOperationException(" cannot instantiate utility class ");
@@ -158,94 +157,67 @@ public class Utility {
         return null;
     }
 
+    @SuppressWarnings("unused")
     @SafeVarargs
     public static NavigableMap<LocalTime, Double> mapSynthesizer(NavigableMap<LocalTime, Double>... mps) {
         return Stream.of(mps).flatMap(e -> e.entrySet().stream())
                 .collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, Collectors.summingDouble(Map.Entry::getValue)));
     }
 
+    @SuppressWarnings("unused")
     public static <T> BinaryOperator<NavigableMap<T, Double>> mapBinOp(BinaryOperator<Double> o) {
-        return (a, b) -> mapCominberGen(o, a, b);
+        return (a, b) -> mapCombinerGen(o, a, b);
     }
 
     public static <T> BinaryOperator<NavigableMap<T, Double>> mapBinOp() {
-        return (a, b) -> mapCominberGen(Double::sum, a, b);
+        return (a, b) -> mapCombinerGen(Double::sum, a, b);
     }
 
     private static <T> BinaryOperator<NavigableMap<T, Double>> mapBinOp(Predicate<? super Map.Entry<T, ?>> p) {
-        return (a, b) -> mapCominberGen(Double::sum, p, a, b);
+        return (a, b) -> mapCombinerGen(Double::sum, p, a, b);
     }
 
     @SafeVarargs
-    public static <T> NavigableMap<T, Double> mapCominberGen(BinaryOperator<Double> o, NavigableMap<T, Double>... mps) {
+    public static <T> NavigableMap<T, Double> mapCombinerGen(BinaryOperator<Double> o, NavigableMap<T, Double>... mps) {
         return Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new,
                 Collectors.reducing(0.0, Map.Entry::getValue, o)));
     }
 
     @SafeVarargs
-    private static <T> NavigableMap<T, Double> mapCominberGen(BinaryOperator<Double> o, Predicate<? super Map.Entry<T, ?>> p, NavigableMap<T, Double>... mps) {
+    private static <T> NavigableMap<T, Double> mapCombinerGen(BinaryOperator<Double> o, Predicate<? super Map.Entry<T, ?>> p, NavigableMap<T, Double>... mps) {
         return Stream.of(mps).flatMap(e -> e.entrySet().stream().filter(p))
                 .collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new,
                         Collectors.reducing(0.0, Map.Entry::getValue, o)));
     }
 
+    @SuppressWarnings("unused")
     @SafeVarargs
-    public static <T> NavigableMap<T, Double> mapCominberGen(NavigableMap<T, Double>... mps) {
+    public static <T> NavigableMap<T, Double> mapCombinerGen(NavigableMap<T, Double>... mps) {
         return Stream.of(mps).flatMap(e -> e.entrySet().stream()).collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new,
                 Collectors.reducing(0.0, Map.Entry::getValue, Double::sum)));
     }
 
 
-    public static String getStrGen(CharSequence delim, Object... cs) {
+    @SuppressWarnings("SpellCheckingInspection")
+    private static String getStrGen(CharSequence delim, Object... cs) {
         return Stream.of(cs).map(Object::toString).collect(Collectors.joining(delim));
     }
 
     public static String getStrTabbed(Object... cs) {
         return getStrGen("\t", cs);
-
-//        StringBuilder b = new StringBuilder();
-//        for (Object ss : cs) {
-//            b.append(ss.toString()).append("\t");
-//        }
-//        return b.toString().trim();
     }
 
 
     public static String getStrComma(Object... cs) {
         return getStrGen(",", cs);
-
-//        return Stream.of(cs).map(Object::toString).collect(Collectors.joining(","));
-
-//        StringBuilder b = new StringBuilder();
-//        for (Object ss : cs) {
-//            b.append(ss.toString()).append(",");
-//        }
-//        return b.toString().trim();
     }
 
     public static String getStr(Object... cs) {
         return getStrGen(" ", cs);
-
-//        StringBuilder b = new StringBuilder();
-//        for (Object ss : cs) {
-//            b.append(ss.toString()).append(" ");
-//        }
-//        return b.toString();
     }
 
     public static String getStrCheckNull(Object... cs) {
-
         return Stream.of(cs).map(e -> e == null ? " NULL " : e.toString()).collect(Collectors.joining(" "));
-
-//        StringBuilder b = new StringBuilder();
-//        for (Object ss : cs) {
-//            if (ss != null) {
-//                b.append(ss.toString()).append(" ");
-//            } else {
-//                b.append(" NULL ");
-//            }
-//        }
-//        return b.toString();
     }
 
 
@@ -253,10 +225,12 @@ public class Utility {
         return reduceMapToDouble(tm, d -> d, Math::min);
     }
 
+    @SuppressWarnings("unused")
     public static <T, S> double getMinGen(Map<T, S> tm, ToDoubleFunction<S> f) {
         return reduceMapToDouble(tm, f, Math::min);
     }
 
+    @SuppressWarnings("unused")
     public static <T, S> double getMaxGen(Map<T, S> tm, ToDoubleFunction<S> f) {
         return reduceMapToDouble(tm, f, Math::max);
     }
@@ -294,18 +268,16 @@ public class Utility {
         return Stream.of(mp).allMatch(m -> NORMAL_MAP.test(m, name));
     }
 
+
     public static LocalDate getPreviousWorkday(LocalDate ld) {
-        if (ld.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
-            return ld.minusDays(3L);
-        } else {
-            return ld.minusDays(1L);
-        }
+        return ld.minusDays(ld.getDayOfWeek().equals(DayOfWeek.MONDAY)?3L:1L);
     }
 
     public static double pd(List<String> l, int index) {
         return (l.size() > index) ? Double.parseDouble(l.get(index)) : 0.0;
     }
 
+    @SuppressWarnings("unused")
     public static <T> Map<String, ? extends NavigableMap<LocalTime, T>> trimMap(Map<String, ? extends NavigableMap<LocalTime, T>> mp) {
         Map<String, NavigableMap<LocalTime, T>> res = new ConcurrentHashMap<>();
         mp.keySet().forEach((String key) -> {
@@ -406,6 +378,7 @@ public class Utility {
         return Arrays.stream(num).reduce(op).orElse(0.0);
     }
 
+    @SuppressWarnings("unused")
     public static Map<String, ? extends NavigableMap<LocalTime, Double>> mapConverter(Map<String, ? extends NavigableMap<LocalTime, Double>> mp) {
         ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> res = new ConcurrentHashMap<>();
 
@@ -496,9 +469,7 @@ public class Utility {
                     } else {
                         System.out.println(" for " + e + " filling done");
                         SimpleBar sb = new SimpleBar(priceMap.getOrDefault(e, 0.0));
-                        ChinaData.tradeTimePure.forEach(ti -> {
-                            mp1.get(e).put(ti, sb);
-                        });
+                        ChinaData.tradeTimePure.forEach(ti -> mp1.get(e).put(ti, sb));
                         //System.out.println( "last key "+e+ " "+ mp1.get(e).lastEntry());
                         //System.out.println( "noon last key "+e+ " " + mp1.get(e).ceilingEntry(LocalTime.of(11,30)).toString());
                     }
@@ -523,11 +494,13 @@ public class Utility {
         return Arrays.stream(mps).flatMap(e -> e.entrySet().stream()).mapToDouble(Map.Entry::getValue).reduce(o).orElse(0.0);
     }
 
+    @SuppressWarnings("unused")
     @SafeVarargs
     public static <T, S> double reduceMapGen(DoubleBinaryOperator o, ToDoubleFunction<S> f, NavigableMap<T, S>... mps) {
         return Arrays.stream(mps).flatMap(e -> e.entrySet().stream()).map(Map.Entry::getValue).mapToDouble(f).reduce(o).orElse(0.0);
     }
 
+    @SuppressWarnings("unused")
     static <T extends Temporal> LocalDateTime convertToLDT(T t, LocalDate ld) {
         if (t.getClass() == LocalDateTime.class) {
             return (LocalDateTime) t;
@@ -595,8 +568,8 @@ public class Utility {
     public static NavigableMap<LocalTime, SimpleBar> priceMap1mTo5M(NavigableMap<LocalTime, SimpleBar> mp) {
         NavigableMap<LocalTime, SimpleBar> res = new ConcurrentSkipListMap<>();
         Predicate<LocalTime> p =
-                tradingTimePred(LocalTime.of(9, 30), true, LocalTime.of(11, 30), true
-                        , LocalTime.of(13, 0), true, LocalTime.of(15, 0), true);
+                tradingTimePred(LocalTime.of(9, 30), LocalTime.of(11, 30),
+                        LocalTime.of(13, 0), LocalTime.of(15, 0));
 
         mp.forEach((key, value) -> {
             LocalTime t = roundTo5(key);
@@ -615,8 +588,8 @@ public class Utility {
     public static <T> NavigableMap<LocalDateTime, T> priceMapToLDT(NavigableMap<LocalTime, T> mp, LocalDate ld) {
         NavigableMap<LocalDateTime, T> res = new ConcurrentSkipListMap<>();
         Predicate<LocalTime> p =
-                tradingTimePred(LocalTime.of(9, 29), true, LocalTime.of(11, 30), true
-                        , LocalTime.of(13, 0), true, LocalTime.of(15, 0), true);
+                tradingTimePred(LocalTime.of(9, 29), LocalTime.of(11, 30),
+                        LocalTime.of(13, 0), LocalTime.of(15, 0));
 
         mp.forEach((key, value) -> {
             //if (key.isBefore(LocalTime.of(15, 1))) {
@@ -647,6 +620,7 @@ public class Utility {
         return Arrays.stream(lds).reduce(LocalDate.MIN, temporalGen(LocalDate::isAfter));
     }
 
+    @SuppressWarnings("unused")
     public static BinaryOperator<LocalTime> localTimeGen(BiPredicate<LocalTime, LocalTime> bp) {
         return (a, b) -> bp.test(a, b) ? a : b;
     }
