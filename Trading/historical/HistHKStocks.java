@@ -65,18 +65,17 @@ public class HistHKStocks extends JPanel {
     private static volatile Map<String, HKResult> HKResultMapYtd = new HashMap<>();
     private static volatile Map<String, HKResult> HKResultMapWtd = new HashMap<>();
 
-    public static List<String> hkNameList = new LinkedList<>();
-    public static File outputYtd = new File(TradingConstants.GLOBALPATH + "hkSharpeYtd.txt");
-    public static File outputWtd = new File(TradingConstants.GLOBALPATH + "hkSharpeWtd.txt");
+    private static List<String> hkNameList = new LinkedList<>();
+    private static File outputYtd = new File(TradingConstants.GLOBALPATH + "hkSharpeYtd.txt");
+    private static File outputWtd = new File(TradingConstants.GLOBALPATH + "hkSharpeWtd.txt");
 
-    static volatile AtomicInteger uniqueID = new AtomicInteger(70000);
+    private static volatile AtomicInteger uniqueID = new AtomicInteger(70000);
 
-    static volatile String selectedStock = "";
+    private static volatile String selectedStock = "";
 
     //public static volatile Map<Integer, String> idStockMap = new HashMap<>();
 
-    static BarModel_HK m_model;
-    static JTable tab;
+    private static BarModel_HK m_model;
     int modelRow;
     int indexRow;
     static JPanel graphPanel;
@@ -135,7 +134,7 @@ public class HistHKStocks extends JPanel {
         graphPanel.add(jp2);
 
 
-        tab = new JTable(m_model) {
+        JTable tab = new JTable(m_model) {
             @Override
             public Component prepareRenderer(TableCellRenderer renderer, int indexRow, int indexCol) {
                 try {
@@ -147,7 +146,7 @@ public class HistHKStocks extends JPanel {
                         comp.setBackground(Color.GREEN);
                         graphYtd.fillInGraphHKGen(selectedStock, hkYtdAll);
                         graphWtd.fillInGraphHKGen(selectedStock, hkWtdAll);
-                        SwingUtilities.invokeLater(()->{
+                        SwingUtilities.invokeLater(() -> {
                             graphPanel.repaint();
                         });
 

@@ -78,12 +78,15 @@ public class HistChinaStocks extends JPanel {
     private static Map<String, NavigableMap<LocalDate, Integer>> netSharesTradedByDay = new HashMap<>();
     private static Map<String, NavigableMap<LocalDateTime, Integer>> netSharesTradedWtd = new HashMap<>();
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private static Map<String, Double> priceMapForHist = new HashMap<>();
 
     private static volatile Map<String, Double> lastWeekCloseMap = new HashMap<>();
     private static Map<String, Double> totalTradingCostMap = new HashMap<>();
     private static Map<String, Double> costBasisMap = new HashMap<>();
     //static Map<String, Double> netTradePnlMap = new HashMap<>();
+
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private static Map<String, Double> wtdTradePnlMap = new HashMap<>();
     private static Map<String, Double> wtdMtmPnlMap = new HashMap<>();
     private static BinaryOperator<NavigableMap<LocalDateTime, Double>> mapOp = (a, b) -> Stream.of(a, b).flatMap(e -> e.entrySet().stream())
@@ -613,7 +616,7 @@ public class HistChinaStocks extends JPanel {
     }
 
 
-    private static void handleSGXA50WtdData(String date, double open, double high, double low, double close, int volume) {
+    private static void handleSGXA50WtdData(String date, double open, double high, double low, double close, @SuppressWarnings("unused") int volume) {
 
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);
@@ -622,7 +625,7 @@ public class HistChinaStocks extends JPanel {
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
-            System.out.println(" vol " + volume);
+            //System.out.println(" vol " + volume);
 
 
             if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
@@ -640,7 +643,7 @@ public class HistChinaStocks extends JPanel {
             } else {
                 //System.out.println(" updating close of SGXA50 ");
                 HistChinaStocks.lastWeekCloseMap.put("SGXA50", close);
-                System.out.println(" sgxa50 close " + lastWeekCloseMap.getOrDefault("SGXA50", 0.0));
+                //System.out.println(" sgxa50 close " + lastWeekCloseMap.getOrDefault("SGXA50", 0.0));
             }
         } else {
             priceMapForHist.put("SGXA50", chinaWtd.get("SGXA50").lastEntry().getValue().getClose());
@@ -814,10 +817,9 @@ public class HistChinaStocks extends JPanel {
         double mv;
         double fx = fxMap.getOrDefault(ticker, 1.0);
 
-        //NavigableMap<> = roundMapKeyTo5(trades);
 
         for (LocalDateTime lt : prices.keySet()) {
-
+            //note that prices start from 9:35 to 15:00, it needs to back-include trade in slot
             if (trades.subMap(lt.minusMinutes(5L), false, lt, true).size() > 0) {
                 currPos += trades.subMap(lt.minusMinutes(5L), false, lt, true)
                         .entrySet().stream().mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();

@@ -598,9 +598,7 @@ public final class XU extends JPanel implements ITopMktDataHandler {
                 ChinaData.sizeTotalMap.get("SGXA50").put(lt, 1d * size);
                 break;
         }
-        SwingUtilities.invokeLater(() -> {
-            m_model.fireTableDataChanged();
-        });
+        SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
     }
 
     @Override

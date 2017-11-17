@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.sizeTotalMap;
 
-@SuppressWarnings("JpaDataSourceORMInspection")
+@SuppressWarnings({"JpaDataSourceORMInspection", "SpellCheckingInspection"})
 @javax.persistence.Entity
 @Table(name = "CHINASAVE")
 public class ChinaSave implements Serializable, ChinaSaveInterface2Blob {

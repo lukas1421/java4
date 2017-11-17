@@ -4,41 +4,40 @@ import apidemo.ChinaData;
 import auxiliary.VolBar;
 import utility.Utility;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.time.LocalTime;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
 
+@SuppressWarnings({"JpaDataSourceORMInspection", "SpellCheckingInspection"})
 @javax.persistence.Entity
 @Table(name = "CHINASAVEBIDASK")
 public class ChinaSaveBidAsk implements Serializable, ChinaSaveInterface2Blob {
 
     private static final long serialVersionUID = 1L;
-    static final ChinaSaveBidAsk CSBA = new ChinaSaveBidAsk();
+    private static final ChinaSaveBidAsk CSBA = new ChinaSaveBidAsk();
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private
     String stockName;
 
     @Column(name = "BID")
     @Lob
+    private
     Blob bidMapBlob;
 
     @Column(name = "ASK")
     @Lob
+    private
     Blob askMapBlob;
 
     public ChinaSaveBidAsk() {
     }
 
-    public ChinaSaveBidAsk(String name) {
+    private ChinaSaveBidAsk(String name) {
         stockName = name;
     }
 
@@ -93,11 +92,13 @@ public class ChinaSaveBidAsk implements Serializable, ChinaSaveInterface2Blob {
 
     @Override
     public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
+        //noinspection unchecked
         ChinaData.bidMap.put(name, (ConcurrentSkipListMap<LocalTime, VolBar>) Utility.trimSkipMap(mp, LocalTime.of(9, 14)));
     }
 
     @Override
     public void updateSecondMap(String name, NavigableMap<LocalTime, ?> mp) {
+        //noinspection unchecked
         ChinaData.askMap.put(name, (ConcurrentSkipListMap<LocalTime, VolBar>) Utility.trimSkipMap(mp, LocalTime.of(9, 14)));
     }
 
