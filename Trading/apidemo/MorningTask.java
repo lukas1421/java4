@@ -524,13 +524,15 @@ public final class MorningTask implements HistoricalHandler {
             //System.out.println(" zdt " + zdt);
 
             switch (zdt.getHour()) {
-                case 12:
+                // hk time 14:00 (13:59)
+                case 13:
                     System.out.println(" Date " + ldt.toString() + " HK noon " + close);
                     Utility.simpleWrite("HK NOON" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                             + "\t" + zdt.getHour(), false);
                     break;
 
-                case 15:
+                    // hk time 17:00 (16:59)
+                case 16:
                     System.out.println(" Date " + ldt.toString() + " HK close " + close);
                     Utility.simpleWrite("HK CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                             + "\t" + zdt.getHour(), true);
@@ -538,6 +540,7 @@ public final class MorningTask implements HistoricalHandler {
             }
 
             switch (zdt.withZoneSameInstant(nyZone).getHour()) {
+                // NY time 15:59 (could be HK time 4:59 (winter) or 3:59 (summer)
                 case 15:
                     System.out.println(" Date " + ldt.toString() + " US close " + close);
                     Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))

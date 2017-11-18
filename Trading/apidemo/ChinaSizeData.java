@@ -9,7 +9,7 @@ import static apidemo.ChinaData.tradeTime;
 import static apidemo.ChinaStock.nameMap;
 import static apidemo.ChinaStock.symbolNames;
 
-public final class ChinaSizeData extends JPanel {
+final class ChinaSizeData extends JPanel {
 
     BarModel_Size m_model;
 
@@ -30,11 +30,7 @@ public final class ChinaSizeData extends JPanel {
         tab.setAutoCreateRowSorter(true);
         JPanel jp = new JPanel();
         JButton btnRefresh = new JButton("Refresh");
-        btnRefresh.addActionListener(l -> {
-            SwingUtilities.invokeLater(() -> {
-                m_model.fireTableDataChanged();
-            });
-        });
+        btnRefresh.addActionListener(l -> SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged()));
         jp.add(Box.createHorizontalStrut(100));
         jp.add(btnRefresh);
         add(jp, BorderLayout.NORTH);
@@ -54,6 +50,7 @@ public final class ChinaSizeData extends JPanel {
 
         @Override
         public String getColumnName(int col) {
+            //noinspection Duplicates
             switch (col) {
                 case 0:
                     return "T";

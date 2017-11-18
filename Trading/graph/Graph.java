@@ -42,6 +42,7 @@ public class Graph extends JComponent implements GraphFillable {
     public volatile int size;
 
     public Graph(NavigableMap<LocalTime, Double> tm) {
+        //noinspection unchecked
         this.tm = new ConcurrentSkipListMap(tm.entrySet().stream().filter(e -> e.getValue() != 0.0).collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
     }
 

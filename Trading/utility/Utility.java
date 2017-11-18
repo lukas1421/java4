@@ -677,4 +677,12 @@ public class Utility {
     public static String convertLTtoString(LocalTime t) {
         return Integer.toString(t.getHour() * 100 + t.getMinute());
     }
+
+    public static double pr(double d) {
+        return Math.round(d * 1000d) / 10d;
+    }
+
+    public static double pr2(double d) {
+        return Math.round(d * 10d) / 10d;
+    }
 }

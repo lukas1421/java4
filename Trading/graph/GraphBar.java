@@ -80,7 +80,7 @@ public final class GraphBar extends JComponent implements GraphFillable {
         this.chineseName = s;
     }
 
-    public void setSize1(long s) {
+    private void setSize1(long s) {
         this.size = (int) s;
     }
 
@@ -368,7 +368,8 @@ public final class GraphBar extends JComponent implements GraphFillable {
     }
 
     private double getCurrentPercentile() {
-        return (Utility.noZeroArrayGen(name, priceMap, maxMap, minMap)) ? min(100.0, round(100d * ((priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name))))) : 0.0;
+        return (Utility.noZeroArrayGen(name, priceMap, maxMap, minMap)) ?
+                min(100.0, round(100d * ((priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name))))) : 0.0;
     }
 
     private double getRetCHY() {

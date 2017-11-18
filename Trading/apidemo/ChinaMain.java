@@ -62,7 +62,7 @@ public final class ChinaMain implements IConnectionHandler {
     private final JFrame m_frame9 = new JFrame();
     private final JFrame m_frame10 = new JFrame();
     private final JFrame m_frame11 = new JFrame();
-    private final JFrame m_frame12 = new JFrame();
+    //private final JFrame m_frame12 = new JFrame();
 
     private final NewTabbedPanel m_tabbedPanel = new NewTabbedPanel(true);
     public static ConnectionPanel m_connectionPanel;
@@ -74,9 +74,9 @@ public final class ChinaMain implements IConnectionHandler {
     //private final ComboPanel m_comboPanel = new ComboPanel();
     //private final StratPanel m_stratPanel = new StratPanel();
     private final JTextArea m_msg = new JTextArea();
-    static volatile JLabel twsTime = new JLabel(Utility.timeNowToString());
-    static volatile JLabel systemTime = new JLabel(Utility.timeNowToString());
-    static volatile JLabel systemNotif = new JLabel("");
+    private static volatile JLabel twsTime = new JLabel(Utility.timeNowToString());
+    private static volatile JLabel systemTime = new JLabel(Utility.timeNowToString());
+    private static volatile JLabel systemNotif = new JLabel("");
 
     //private final Data data = new Data();
     //private final HistData histdata = new HistData();
@@ -127,8 +127,6 @@ public final class ChinaMain implements IConnectionHandler {
     private SinaStock sinastock1 = SinaStock.getInstance();
 
     private ExecutorService pool;
-
-    public static long counter = 0L;
 
     private volatile AnaCompute anacompute = new AnaCompute();
     private volatile StratCompute stratcompute = new StratCompute();
@@ -238,16 +236,14 @@ public final class ChinaMain implements IConnectionHandler {
         };
 
         JButton runAnalysis = new JButton("Run Analysis");
-        runAnalysis.addActionListener((ae) -> {
-            Analysis.compute(LiveData.map1);
-        });
+        runAnalysis.addActionListener((ae) -> Analysis.compute(LiveData.map1));
 
         JButton startPool = new JButton("start Analysis");
         JButton startPool2 = new JButton("start Backtesting");
         JButton startXU = new JButton("ON XU");
         JButton startHK = new JButton(" ON HK");
         JButton stopXU = new JButton("Kill XU");
-        JButton onShcomp = new JButton("ON shcomp/ChinaFut");
+        //JButton onShcomp = new JButton("ON shcomp/ChinaFut");
         JButton offShcomp = new JButton("Kill Shcomp/ChinaFut");
         JButton saveAll = new JButton("saveAll");
 
@@ -270,14 +266,10 @@ public final class ChinaMain implements IConnectionHandler {
         });
 
         JButton loadYesterday = new JButton("Load Yest");
-        loadYesterday.addActionListener((ae) -> {
-            ChinaDataYesterday.loadYesterdayData();
-        });
+        loadYesterday.addActionListener((ae) -> ChinaDataYesterday.loadYesterdayData());
 
         JButton loadChinaBar = new JButton("Load Bar");
-        loadChinaBar.addActionListener((ae) -> {
-            ChinaData.loadPriceBar();
-        });
+        loadChinaBar.addActionListener((ae) -> ChinaData.loadPriceBar());
 
         JButton showIdeaGraphs = new JButton("show Ideas");
         showIdeaGraphs.addActionListener((ae) -> {
@@ -291,21 +283,16 @@ public final class ChinaMain implements IConnectionHandler {
         });
 
         JButton showPMGraphs = new JButton("Show PM");
-        showPMGraphs.addActionListener((ae) -> {
-            m_frame6.setVisible(!m_frame6.isVisible());
-        });
+        showPMGraphs.addActionListener((ae) -> m_frame6.setVisible(!m_frame6.isVisible()));
+
         JButton vrPageToggle = new JButton("Show VR");
-        vrPageToggle.addActionListener((ae) -> {
-            m_frame3.setVisible(!m_frame3.isVisible());
-        });
+        vrPageToggle.addActionListener((ae) -> m_frame3.setVisible(!m_frame3.isVisible()));
+
         JButton computeVR = new JButton("Compute VR");
-        computeVR.addActionListener((ae) -> {
-            ChinaSizeRatio.computeSizeRatio();
-        });
+        computeVR.addActionListener((ae) -> ChinaSizeRatio.computeSizeRatio());
+
         JButton showBigGraph = new JButton("Big Graph");
-        showBigGraph.addActionListener((ae) -> {
-            m_frame7.setVisible(!m_frame7.isVisible());
-        });
+        showBigGraph.addActionListener((ae) -> m_frame7.setVisible(!m_frame7.isVisible()));
 
         JButton computeIndustry = new JButton("Industry");
         computeIndustry.addActionListener((ae) -> {
@@ -314,18 +301,13 @@ public final class ChinaMain implements IConnectionHandler {
         });
 
         JButton showBA = new JButton("BA");
-        showBA.addActionListener((ae) -> {
-            m_frame9.setVisible(!m_frame9.isVisible());
-        });
+        showBA.addActionListener((ae) -> m_frame9.setVisible(!m_frame9.isVisible()));
 
         JButton suspendIndex = new JButton("stop index");
-        suspendIndex.addActionListener(l -> {
-            xu.suspendIndex();
-        });
+        suspendIndex.addActionListener(l -> xu.suspendIndex());
+
         JButton killAllDiags = new JButton("Kill Diags");
-        killAllDiags.addActionListener(l -> {
-            ChinaStockHelper.killAllDialogs();
-        });
+        killAllDiags.addActionListener(l -> ChinaStockHelper.killAllDialogs());
 
         //JButton tdxButton = new JButton("TDX");
         JButton fillHolesButton = new JButton("FillHoles");
@@ -341,9 +323,7 @@ public final class ChinaMain implements IConnectionHandler {
 
         JButton forwardfillButton = new JButton("fwdFill");
 
-        forwardfillButton.addActionListener(l -> {
-            ChinaStockHelper.fwdFillHolesInData();
-        });
+        forwardfillButton.addActionListener(l -> ChinaStockHelper.fwdFillHolesInData());
 
         JButton fixMapButton = new JButton("fix Map");
 
@@ -372,14 +352,10 @@ public final class ChinaMain implements IConnectionHandler {
         });
 
         JButton dividendButton = new JButton("Dividends");
-        dividendButton.addActionListener(l -> {
-            Dividends.dealWithDividends();
-        });
+        dividendButton.addActionListener(l -> Dividends.dealWithDividends());
 
         JButton roundDataButton = new JButton("Round");
-        roundDataButton.addActionListener(l -> {
-            ChinaStockHelper.roundAllData();
-        });
+        roundDataButton.addActionListener(l -> ChinaStockHelper.roundAllData());
 
         startPool.addActionListener((ae) -> {
             pool = Executors.newCachedThreadPool();
@@ -399,27 +375,17 @@ public final class ChinaMain implements IConnectionHandler {
             }
         });
 
-        startHK.addActionListener(al -> {
-            M_CONTROLLER.reqHKLiveData();
-        });
+        startHK.addActionListener(al -> M_CONTROLLER.reqHKLiveData());
 
-        stopXU.addActionListener((ae) -> {
-            M_CONTROLLER.cancelTopMktData(xu);
-        });
+        stopXU.addActionListener((ae) -> M_CONTROLLER.cancelTopMktData(xu));
 
         JButton stopAnalysis = new JButton("Stop Analysis");
 
-        stopAnalysis.addActionListener((ae) -> {
-            pool.shutdownNow();
-        });
+        stopAnalysis.addActionListener((ae) -> pool.shutdownNow());
 
-        offShcomp.addActionListener((ae) -> {
-            ses.shutdown();
-        });
+        offShcomp.addActionListener((ae) -> ses.shutdown());
 
-        saveAll.addActionListener((al) -> {
-            XU.saveXU();
-        });
+        saveAll.addActionListener((al) -> XU.saveXU());
 
         threadManager.add(getSinaData);
         //threadManager.add(loadChinaBar);
@@ -480,10 +446,8 @@ public final class ChinaMain implements IConnectionHandler {
                 int ans = JOptionPane.showConfirmDialog(null, "are you sure", "", JOptionPane.YES_NO_OPTION);
                 if (ans == JOptionPane.YES_OPTION) {
                     System.out.println(" yes pressed");
-                    m_frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                    CompletableFuture.runAsync(() -> {
-                        XU.saveHibXU();
-                    }).thenRun(() -> {
+                    m_frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                    CompletableFuture.runAsync(XU::saveHibXU).thenRun(() -> {
                         System.out.println(" disposing ");
                         m_frame.dispose();
                     });
@@ -574,6 +538,7 @@ public final class ChinaMain implements IConnectionHandler {
         CompletableFuture.runAsync(() -> {
             try {
                 //System.out.println(" get default connection option "+ m_connectionConfiguration.getDefaultConnectOptions() != null ? "non null" : "null");
+                //noinspection ConstantConditions
                 controller().connect("127.0.0.1", 7496, 0, m_connectionConfiguration.getDefaultConnectOptions() != null ? "" : null);
 
             } catch (Exception ex) {
@@ -599,14 +564,13 @@ public final class ChinaMain implements IConnectionHandler {
         this.m_connectionConfiguration = null;
     }
 
+    @SuppressWarnings("Duplicates")
     @Override
     public void connected() {
         show("connected");
         System.out.println(" connected from connected ");
         ChinaMain.m_connectionPanel.setConnectionStatus("connected");
-        controller().reqCurrentTime((long time) -> {
-            show("Server date/time is " + Formats.fmtDate(time * 1000));
-        });
+        controller().reqCurrentTime((long time) -> show("Server date/time is " + Formats.fmtDate(time * 1000)));
         controller().reqBulletins(true, (int msgId, NewsType newsType, String message, String exchange) -> {
             String str = String.format("Received bulletin:  type=%s  exchange=%s", newsType, exchange);
             show(str);
@@ -651,8 +615,11 @@ public final class ChinaMain implements IConnectionHandler {
 
     public final class ConnectionPanel extends JPanel {
 
+        @SuppressWarnings("ConstantConditions")
         private final JTextField m_host = new JTextField(m_connectionConfiguration.getDefaultHost(), 10);
+        @SuppressWarnings("ConstantConditions")
         private final JTextField m_port = new JTextField(m_connectionConfiguration.getDefaultPort(), 7);
+        @SuppressWarnings("ConstantConditions")
         private final JTextField m_connectOptionsTF = new JTextField(m_connectionConfiguration.getDefaultConnectOptions(), 30);
         private final JTextField m_clientId = new JTextField("0", 7);
         private volatile JLabel m_status = new JLabel("Disconnected");
@@ -661,7 +628,7 @@ public final class ChinaMain implements IConnectionHandler {
                 + "version 954.1 or newer: "
                 + "<b>TWS: 7497; IB Gateway: 4002</b></html>");
 
-        public ConnectionPanel() {
+        ConnectionPanel() {
             HtmlButton connect7496 = new HtmlButton("Connect7496") {
                 @Override
                 public void actionPerformed() {
@@ -716,7 +683,7 @@ public final class ChinaMain implements IConnectionHandler {
             m_status.setText(s);
         }
 
-        protected void onConnect(String portNum) {
+        void onConnect(String portNum) {
             int port = Integer.parseInt(portNum);
             int clientId = Integer.parseInt(m_clientId.getText());
             System.out.println(" port " + portNum + " client id " + clientId
@@ -749,28 +716,28 @@ public final class ChinaMain implements IConnectionHandler {
         //systemNotif.setBackground(shiftColor(systemNotif.getBackground()));
     }
 
-    static Color shiftColor(Color c) {
+    private static Color shiftColor(Color c) {
         return new Color(c.getRed(), (c.getGreen() + 50) % 250, c.getBlue());
     }
 
-    private static class Logger implements ILogger {
-
-        final private JTextArea m_area;
-
-        Logger(JTextArea area) {
-            m_area = area;
-        }
-
-        @Override
-        public void log(final String str) {
-            SwingUtilities.invokeLater(() -> {
-                LocalTime start = LocalTime.now();
-                System.out.println(" start " + LocalTime.now());
-                m_area.append(str);
-                Dimension d = m_area.getSize();
-                m_area.scrollRectToVisible(new Rectangle(0, d.height, 1, 1));
-                LocalTime end = LocalTime.now();
-            });
-        }
-    }
+//    private static class Logger implements ILogger {
+//
+//        final private JTextArea m_area;
+//
+//        Logger(JTextArea area) {
+//            m_area = area;
+//        }
+//
+//        @Override
+//        public void log(final String str) {
+//            SwingUtilities.invokeLater(() -> {
+//                LocalTime start = LocalTime.now();
+//                System.out.println(" start " + LocalTime.now());
+//                m_area.append(str);
+//                Dimension d = m_area.getSize();
+//                m_area.scrollRectToVisible(new Rectangle(0, d.height, 1, 1));
+//                LocalTime end = LocalTime.now();
+//            });
+//        }
+//    }
 }

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleBiFunction;
@@ -37,67 +38,64 @@ import static graph.GraphIndustry.getIndustryOpen;
 import static graph.GraphIndustry.industryMapBar;
 import static java.lang.Double.min;
 import static java.lang.Math.round;
-import static java.lang.System.out;
 import static java.util.stream.Collectors.mapping;
 import static utility.Utility.*;
 
 final class ChinaIndex extends JPanel {
 
-    static List<String> industryLongNameOnly = new ArrayList<>(100);
-    static Map<String, String> industryLongShortMap = new HashMap<>();
+    private static List<String> industryLongNameOnly = new ArrayList<>(100);
+    private static Map<String, String> industryLongShortMap = new HashMap<>();
     static BarModel_INDEX m_model;
     static JTable tab;
     static JPanel graphPanel;
     String line;
-    int modelRow;
-    int indexRow;
-    static TableRowSorter<BarModel_INDEX> sorter;
+    private int modelRow;
     private static volatile String selectedIndex;
-    static volatile GraphBigIndex gYtd = new GraphBigIndex();
-    static volatile boolean LINKALL = false;
+    private static volatile GraphBigIndex gYtd = new GraphBigIndex();
+    private static volatile boolean LINKALL = false;
 
     static Map<String, Double> amMin = new ConcurrentHashMap<>();
     static Map<String, Double> amMax = new ConcurrentHashMap<>();
-    static Map<String, LocalTime> amMaxTMap = new ConcurrentHashMap<>();
-    static Map<String, LocalTime> pmMinTMap = new ConcurrentHashMap<>();
-    static Map<String, LocalTime> minTMap = new ConcurrentHashMap<>();
-    static Map<String, LocalTime> maxTMap = new ConcurrentHashMap<>();
-    static Map<String, Double> opcMap = new ConcurrentHashMap<>();
-    static Map<String, Double> rangeMap = new ConcurrentHashMap<>();
-    static Map<String, Double> f1Map = new ConcurrentHashMap<>();
-    static Map<String, Double> f10Map = new ConcurrentHashMap<>();
-    static Map<String, Double> hoMap = new ConcurrentHashMap<>();
-    static Map<String, Double> ddMap = new ConcurrentHashMap<>();
-    static Map<String, Double> hoddrMap = new ConcurrentHashMap<>();
-    static Map<String, Double> sizeMap = new ConcurrentHashMap<>();
-    static Map<String, Double> vrMap = new ConcurrentHashMap<>();
-    static Map<String, Integer> vrPMap = new ConcurrentHashMap<>();
-    static Map<String, Integer> pricePercentileMap = new ConcurrentHashMap<>();
-    static Map<String, Double> coMap = new ConcurrentHashMap<>();
-    static Map<String, Double> ccMap = new ConcurrentHashMap<>();
-    static Map<String, Double> clMap = new ConcurrentHashMap<>();
-    static Map<String, Double> loMap = new ConcurrentHashMap<>();
-    static Map<String, Double> amhoMap = new ConcurrentHashMap<>();
+    private static Map<String, LocalTime> amMaxTMap = new ConcurrentHashMap<>();
+    private static Map<String, LocalTime> pmMinTMap = new ConcurrentHashMap<>();
+    private static Map<String, LocalTime> minTMap = new ConcurrentHashMap<>();
+    private static Map<String, LocalTime> maxTMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> opcMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> rangeMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> f1Map = new ConcurrentHashMap<>();
+    private static Map<String, Double> f10Map = new ConcurrentHashMap<>();
+    private static Map<String, Double> hoMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> ddMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> hoddrMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> sizeMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> vrMap = new ConcurrentHashMap<>();
+    private static Map<String, Integer> vrPMap = new ConcurrentHashMap<>();
+    private static Map<String, Integer> pricePercentileMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> coMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> ccMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> clMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> loMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> amhoMap = new ConcurrentHashMap<>();
 
-    static Map<String, Integer> trMap = new ConcurrentHashMap<>();
-    static Map<String, Double> amcoMap = new ConcurrentHashMap<>();
-    static Map<String, Double> pmcoMap = new ConcurrentHashMap<>();
+    private static Map<String, Integer> trMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> amcoMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> pmcoMap = new ConcurrentHashMap<>();
 
-    static Map<String, Double> ftseKiyodoMap = new ConcurrentHashMap<>();
-    static Map<String, Double> ftseSectorSumWeightMap = new ConcurrentHashMap<>();
-    static Map<String, Double> ftseSectorWtRtnMap = new ConcurrentHashMap<>();
-    static Map<String, Boolean> tradabilityMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> ftseKiyodoMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> ftseSectorSumWeightMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> ftseSectorWtRtnMap = new ConcurrentHashMap<>();
+    private static Map<String, Boolean> tradabilityMap = new ConcurrentHashMap<>();
 
-    static ToDoubleBiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>> GETMAX_INDUS = (name, p) -> industryMapBar
+    private static ToDoubleBiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>> GETMAX_INDUS = (name, p) -> industryMapBar
             .get(name).entrySet().stream().filter(p).max(BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
 
-    static ToDoubleBiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>> GETMIN_INDUS = (name, p) -> industryMapBar
+    private static ToDoubleBiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>> GETMIN_INDUS = (name, p) -> industryMapBar
             .get(name).entrySet().stream().filter(p).min(BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
 
-    static BiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>, LocalTime> GETMAXT_INDUS = (name, p) -> industryMapBar
+    private static BiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>, LocalTime> GETMAXT_INDUS = (name, p) -> industryMapBar
             .get(name).entrySet().stream().filter(p).max(BAR_HIGH).map(Entry::getKey).orElse(TIMEMAX);
 
-    static BiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>, LocalTime> GETMINT_INDUS = (name, p) -> industryMapBar
+    private static BiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>, LocalTime> GETMINT_INDUS = (name, p) -> industryMapBar
             .get(name).entrySet().stream().filter(p).min(BAR_LOW).map(Entry::getKey).orElse(TIMEMAX);
 
     //static final Predicate<? super Entry<LocalTime,SimpleBar>> IS_OPEN_PRED = e->e.getKey().isAfter(AM929T);
@@ -132,11 +130,7 @@ final class ChinaIndex extends JPanel {
                             //ChinaBigGraph.setGraph(selectedIndex);
                         });
 
-                        CompletableFuture.runAsync(() -> {
-                            gYtd.fillInGraph(selectedIndex);
-                        }).thenRunAsync(() -> {
-                            gYtd.refresh();
-                        });
+                        CompletableFuture.runAsync(() -> gYtd.fillInGraph(selectedIndex)).thenRunAsync(() -> gYtd.refresh());
 
                         CompletableFuture.runAsync(() -> {
                             ChinaStock.setIndustryFilter(selectedIndex);
@@ -145,11 +139,11 @@ final class ChinaIndex extends JPanel {
 
                         comp.setBackground(Color.GREEN);
 
-                        try {
-                        } catch (Exception ex) {
-                            out.println("Graphing issue, keep graphing");
-                            ex.printStackTrace();
-                        }
+//                        try {
+//                        } catch (Exception ex) {
+//                            out.println("Graphing issue, keep graphing");
+//                            ex.printStackTrace();
+//                        }
                     } else {
                         comp.setBackground((Index_row % 2 == 0) ? Color.lightGray : Color.white);
                     }
@@ -172,9 +166,7 @@ final class ChinaIndex extends JPanel {
 
         JPanel controlPanel = new JPanel();
         JButton computeButton = new JButton("Compute");
-        computeButton.addActionListener(l -> {
-            computeAll();
-        });
+        computeButton.addActionListener(l -> computeAll());
         controlPanel.add(computeButton);
 
         JButton refreshTableButton = new JButton("refresh");
@@ -187,9 +179,7 @@ final class ChinaIndex extends JPanel {
         controlPanel.add(refreshTableButton);
 
         JToggleButton linkedAllButton = new JToggleButton("UnLink");
-        linkedAllButton.addActionListener(l -> {
-            LINKALL = !LINKALL;
-        });
+        linkedAllButton.addActionListener(l -> LINKALL = !LINKALL);
         controlPanel.add(linkedAllButton);
 
         graphPanel = new JPanel();
@@ -212,7 +202,9 @@ final class ChinaIndex extends JPanel {
         add(graphPanel, BorderLayout.SOUTH);
 
         tab.setAutoCreateRowSorter(true);
-        sorter = (TableRowSorter<BarModel_INDEX>) tab.getRowSorter();
+        //noinspection unchecked
+        TableRowSorter<BarModel_INDEX> sorter = (TableRowSorter<BarModel_INDEX>) tab.getRowSorter();
+        //sorter.
     }
 
     static void computeAll() {
@@ -226,9 +218,9 @@ final class ChinaIndex extends JPanel {
                     double last = industryMapBar.get(name).lastEntry().getValue().getClose();
                     double open = Optional.ofNullable(industryMapBar.get(name).floorEntry(AMOPENT))
                             .map(Entry::getValue).map(SimpleBar::getOpen).orElse(getIndustryOpen(name));
-                    double close = Optional.ofNullable(priceMapBarYtd.get(name)).map(e -> e.lastEntry())
+                    double close = Optional.ofNullable(priceMapBarYtd.get(name)).map(ConcurrentSkipListMap::lastEntry)
                             .map(Entry::getValue).map(SimpleBar::getClose)
-                            .orElse(Optional.ofNullable(industryMapBar.get(name)).map(e -> e.firstEntry())
+                            .orElse(Optional.ofNullable(industryMapBar.get(name)).map(ConcurrentSkipListMap::firstEntry)
                                     .map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0));
                     //System.out.println( " name " + name + " close " + close );
 
@@ -237,8 +229,8 @@ final class ChinaIndex extends JPanel {
                     amMaxTMap.put(name, GETMAXT_INDUS.apply(name, AM_PRED));
                     maxTMap.put(name, GETMAXT_INDUS.apply(name, IS_OPEN_PRED));
                     minTMap.put(name, GETMAXT_INDUS.apply(name, IS_OPEN_PRED));
-                    LocalTime amMaxT = GETMAXT_INDUS.apply(name, AM_PRED);
-                    LocalTime amMinT = GETMAXT_INDUS.apply(name, AM_PRED);
+//                    LocalTime amMaxT = GETMAXT_INDUS.apply(name, AM_PRED);
+//                    LocalTime amMinT = GETMAXT_INDUS.apply(name, AM_PRED);
                     rangeMap.put(name, (max / min) - 1);
                     f1Map.put(name, getRtn(industryMapBar.get(name), AMOPENT, AMOPENT));
                     f10Map.put(name, getRtn(industryMapBar.get(name), AMOPENT, AM940T));
@@ -274,9 +266,7 @@ final class ChinaIndex extends JPanel {
     }
 
     static void updateIndexTable() {
-        SwingUtilities.invokeLater(() -> {
-            m_model.fireTableDataChanged();
-        });
+        SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
     }
 
     static void repaintGraph() {
@@ -288,31 +278,17 @@ final class ChinaIndex extends JPanel {
 
     public static void setGraph(String nam) {
         if (nam != null) {
-            CompletableFuture.runAsync(() -> {
-                gYtd.fillInGraph(nam);
-            }).thenRun(() -> {
-                SwingUtilities.invokeLater(() -> {
-                    gYtd.repaint();
-                });
-            });
+            CompletableFuture.runAsync(() -> gYtd.fillInGraph(nam)).thenRun(() -> SwingUtilities.invokeLater(() -> gYtd.repaint()));
             //lastSetTime = LocalTime.now();
             //currentStock = nam;
         }
     }
 
-    double pr(double d) {
-        return Math.round(d * 1000d) / 10d;
-    }
+//    static double r(double d) {
+//        return Math.round(d * 100d) / 100d;
+//    }
 
-    double pr2(double d) {
-        return Math.round(d * 10d) / 10d;
-    }
-
-    double r(double d) {
-        return Math.round(d * 100d) / 100d;
-    }
-
-    static double getRtn(NavigableMap<LocalTime, SimpleBar> mp, LocalTime t1, LocalTime t2) {
+    private static double getRtn(NavigableMap<LocalTime, SimpleBar> mp, LocalTime t1, LocalTime t2) {
         if (t1.isAfter(Utility.AM929T) && t2.isAfter(Utility.AM929T)) {
             if (mp.containsKey(t2) && mp.containsKey(t1)) {
                 return mp.floorEntry(t2).getValue().getClose() / mp.floorEntry(t1).getValue().getOpen() - 1;
@@ -330,8 +306,8 @@ final class ChinaIndex extends JPanel {
         System.out.println(SinaStock.weightMapA50.entrySet().stream()
                 .filter(e -> ChinaStock.shortIndustryMap.get(e.getKey()).equals(name)).sorted(Comparator.comparingDouble(e -> returnMap.get(e.getKey())))
                 .collect(Collectors.groupingBy(Entry::getKey,
-                         mapping(e1 -> Utility.getStr(nameMap.get(e1.getKey()), "weight", e1.getValue(), " return ", round(10000d * returnMap.getOrDefault(e1.getKey(), 0.0)) / 10000d),
-                                 Collectors.joining(",")))));
+                        mapping(e1 -> Utility.getStr(nameMap.get(e1.getKey()), "weight", e1.getValue(), " return ", round(10000d * returnMap.getOrDefault(e1.getKey(), 0.0)) / 10000d),
+                                Collectors.joining(",")))));
 
         System.out.println("avg return ");
 
@@ -339,17 +315,15 @@ final class ChinaIndex extends JPanel {
                 .filter(e -> ChinaStock.shortIndustryMap.get(e.getKey()).equals(name)).collect(Collectors.averagingDouble(e -> returnMap.get(e.getKey()))));
 
         System.out.println(" weighted return ");
-        System.out.println(SinaStock.weightMapA50.entrySet().stream()
-                .filter(e -> ChinaStock.shortIndustryMap.get(e.getKey()).equals(name)).collect(Collectors.summingDouble(e -> e.getValue() * returnMap.get(e.getKey())))
-                / SinaStock.weightMapA50.entrySet().stream().filter(e -> ChinaStock.shortIndustryMap.get(e.getKey()).equals(name)).collect(Collectors
-                        .summingDouble(e -> e.getValue())));
+        System.out.println((Double) SinaStock.weightMapA50.entrySet().stream()
+                .filter(e -> ChinaStock.shortIndustryMap.get(e.getKey()).equals(name)).mapToDouble(e -> e.getValue() * returnMap.get(e.getKey())).sum()
+                / (Double) SinaStock.weightMapA50.entrySet().stream().filter(e -> ChinaStock.shortIndustryMap.get(e.getKey()).equals(name)).mapToDouble(Entry::getValue).sum());
     }
 
-    static void checkTradability() {
-        industryLongNameOnly.forEach(name -> {
-            tradabilityMap.put(name, f10Map.getOrDefault(name, 0.0) > 0.0 && maxTMap.getOrDefault(name, TIMEMAX).isAfter(AM940T) && trMap.getOrDefault(name, 100) < 50
-                    && (getPMCOY(name) < 0.0 || (getCOY(name) < 0.0 && getAMCOY(name) > 0.0)));
-        });
+    private static void checkTradability() {
+        industryLongNameOnly.forEach(name ->
+                tradabilityMap.put(name, f10Map.getOrDefault(name, 0.0) > 0.0 && maxTMap.getOrDefault(name, TIMEMAX).isAfter(AM940T) && trMap.getOrDefault(name, 100) < 50
+                        && (getPMCOY(name) < 0.0 || (getCOY(name) < 0.0 && getAMCOY(name) > 0.0))));
     }
 
     static void setSector(String name) {
@@ -359,7 +333,7 @@ final class ChinaIndex extends JPanel {
         }
     }
 
-    static void computeFTSEKiyodo() {
+    private static void computeFTSEKiyodo() {
         if (SinaStock.rtn != 0.0) {
             ftseKiyodoMap = weightMapA50.entrySet().stream().collect(
                     Collectors.groupingBy(e -> ChinaStock.shortIndustryMap.get(e.getKey()),
@@ -367,17 +341,17 @@ final class ChinaIndex extends JPanel {
         }
     }
 
-    static void computeFTSESumWeight() {
+    private static void computeFTSESumWeight() {
         ftseSectorSumWeightMap = weightMapA50.entrySet().stream()
                 .collect(Collectors.groupingBy(e -> ChinaStock.shortIndustryMap.get(e.getKey()),
-                         Collectors.summingDouble(Entry::getValue)));
+                        Collectors.summingDouble(Entry::getValue)));
     }
 
-    static void computeFTSESectorWeightedReturn() {
+    private static void computeFTSESectorWeightedReturn() {
         ftseSectorWtRtnMap = weightMapA50.entrySet().stream().collect(Collectors.groupingByConcurrent(e -> ChinaStock.shortIndustryMap.get(e.getKey()),
                 Collectors.collectingAndThen(Collectors.toList(),
                         l -> (Double) l.stream().mapToDouble(e -> returnMap.getOrDefault(e.getKey(), 0.0) * e.getValue()).sum()
-                        / (Double) l.stream().mapToDouble(Entry::getValue).sum() )));
+                                / (Double) l.stream().mapToDouble(Entry::getValue).sum())));
     }
 
     private class BarModel_INDEX extends AbstractTableModel {

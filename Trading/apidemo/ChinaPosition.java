@@ -26,7 +26,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -53,23 +52,25 @@ import static utility.Utility.*;
 public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     static String line;
+    @SuppressWarnings("unchecked")
     volatile static Map<String, Integer> openPositionMap = new HashMap();
+    @SuppressWarnings("unchecked")
     private static Map<String, Double> costMap = new HashMap();
     public volatile static Map<String, ConcurrentSkipListMap<LocalTime, ? super Trade>> tradesMap = new ConcurrentHashMap<>();
     private static Map<String, ConcurrentSkipListMap<LocalTime, Double>> tradePnlMap = new ConcurrentHashMap<>();
     public static volatile HashMap<String, Double> wtdMaxMap = new HashMap<>();
     public static volatile HashMap<String, Double> wtdMinMap = new HashMap<>();
     private static String selectedNameStock;
-    static double beginningNAV;
-    static volatile NavigableMap<String, Double> ytdPNLMap;
+    //static double beginningNAV;
+    //static volatile NavigableMap<String, Double> ytdPNLMap;
     private static volatile NavigableMap<LocalTime, Double> mtmPNLMap;
     private static volatile NavigableMap<LocalTime, Double> tradePNLMap = new ConcurrentSkipListMap<>();
     private static volatile NavigableMap<LocalTime, Double> netPNLMap;
-    static volatile NavigableMap<LocalTime, Double> mapToDisplay = mtmPNLMap;
+    //static volatile NavigableMap<LocalTime, Double> mapToDisplay = mtmPNLMap;
     private static volatile NavigableMap<LocalTime, Double> boughtPNLMap = new ConcurrentSkipListMap<>();
     private static volatile NavigableMap<LocalTime, Double> soldPNLMap = new ConcurrentSkipListMap<>();
-    static volatile NavigableMap<LocalTime, Double> boughtDeltaMap;
-    static volatile NavigableMap<LocalTime, Double> soldDeltaMap;
+    //static volatile NavigableMap<LocalTime, Double> boughtDeltaMap;
+    //static volatile NavigableMap<LocalTime, Double> soldDeltaMap;
     private static volatile NavigableMap<LocalTime, Double> netDeltaMap;
     private static volatile NavigableMap<LocalTime, Double> mtmDeltaMap;
     private static volatile NavigableMap<String, Double> benchExposureMap;
@@ -89,8 +90,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     private static double openDelta = 0.0;
     private static double netDelta = 0.0;
     private static double soldDelta = 0.0;
-    static volatile LinkedList<String> chg5m = new LinkedList<>();
-    static volatile LinkedList<String> topKiyodo = new LinkedList<>();
+    //static volatile LinkedList<String> chg5m = new LinkedList<>();
+    //static volatile LinkedList<String> topKiyodo = new LinkedList<>();
 
     private static GraphPnl gpnl = new GraphPnl();
 
@@ -144,9 +145,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     selectedNameStock = ChinaStock.symbolNames.get(modelRow);
                     mtmPnlCompute(e -> e.getKey().equals(selectedNameStock), selectedNameStock);
 
-                    CompletableFuture.runAsync(() -> {
-                        ChinaBigGraph.setGraph(selectedNameStock);
-                    });
+                    CompletableFuture.runAsync(() -> ChinaBigGraph.setGraph(selectedNameStock));
                 }
                 return comp;
             }
@@ -195,19 +194,15 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         JButton getCurrentButton = new JButton("getCurrent");
         JButton getWtdMaxMinButton = new JButton("getWtdMaxMin");
 
-        refreshButton.addActionListener((ActionEvent l) -> {
-            CompletableFuture.runAsync(() -> {
-                getCurrentPositionNormal();
-                getCurrentPositionMargin();
-                refreshFuture();
-                mtmPnlCompute(GEN_MTM_PRED, "all");
-            }).thenRun(() -> {
-                SwingUtilities.invokeLater(() -> {
-                    m_model.fireTableDataChanged();
-                    gpnl.repaint();
-                });
-            });
-        });
+        refreshButton.addActionListener((ActionEvent l) -> CompletableFuture.runAsync(() -> {
+            getCurrentPositionNormal();
+            getCurrentPositionMargin();
+            refreshFuture();
+            mtmPnlCompute(GEN_MTM_PRED, "all");
+        }).thenRun(() -> SwingUtilities.invokeLater(() -> {
+            m_model.fireTableDataChanged();
+            gpnl.repaint();
+        })));
 
         getOpenButton.addActionListener(l -> {
             getOpenPositionsNormal();
@@ -215,9 +210,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         });
 
         getCurrentButton.addActionListener(l -> {
-            symbolNames.forEach((String name) -> {
-                tradesMap.put(name, new ConcurrentSkipListMap<>());
-            });
+            symbolNames.forEach((String name) -> tradesMap.put(name, new ConcurrentSkipListMap<>()));
             getCurrentPositionNormal();
             getCurrentPositionMargin();
         });
@@ -508,27 +501,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             gpnl.repaint();
         }));
 
-        CompletableFuture.runAsync(() -> {
-            gpnl.setBigKiyodoMap(topPnlKiyodoList());
-            //System.out.println(" kiyodo before " + topKiyodo);
-        }).thenRun(() -> {
-            SwingUtilities.invokeLater(() -> {
-                //System.out.println(" kiyodo after " + topKiyodo);
-                gpnl.repaint();
-            });
-        });
+        //System.out.println(" kiyodo after " + topKiyodo);
+        CompletableFuture.runAsync(() -> gpnl.setBigKiyodoMap(topPnlKiyodoList()))
+                .thenRun(() -> SwingUtilities.invokeLater(gpnl::repaint));
 
-        CompletableFuture.runAsync(() -> {
-            //chg5m = ;
-            gpnl.setPnl1mChgMap(getPnl5mChg());
-            //System.out.println(" chg 5 pm before " + chg5m);
-        }).thenRun(() -> {
-            SwingUtilities.invokeLater(() -> {
-                gpnl.repaint();
-                //System.out.println(" chg 5 pm after " + chg5m);
-
-            });
-        });
+        CompletableFuture.runAsync(() -> gpnl.setPnl1mChgMap(getPnl5mChg())).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.repaint()));
 
     }
 
@@ -556,9 +533,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         //.filter(e->((e.isAfter(LocalTime.of(9,30)) && e.isBefore(LocalTime.of(11,30))) || (e.isAfter(LocalTime.of(12,59)) && e.isBefore(LocalTime.of(15,1)))))
         //double fx = fxMap.getOrDefault(m, close)
         NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
-        m.keySet().stream().filter(e -> e.isBefore(LocalTime.of(15, 1))).forEach(k -> {
-            res.put(k, fx * openPos * (m.get(k).getClose() - close));
-        });
+        m.keySet().stream().filter(e -> e.isBefore(LocalTime.of(15, 1))).forEach(k -> res.put(k, fx * openPos * (m.get(k).getClose() - close)));
         return res;
     }
 
@@ -621,7 +596,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 if (lt.equals(LocalTime.of(9, 0))) {
                     xuOpenPrice = open;
                     System.out.println(" today open is " + xuOpenPrice);
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                    //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                     System.out.println(Utility.getStrCheckNull(dt, open, high, low, close));
                 }
             } else {
@@ -762,18 +737,18 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     static void getCurrentPositionNormal() {
-        int chineseNameCol = 0;
-        int openPosCol = 0;
-        int orderTimeCol = 0;
+        //int chineseNameCol = 0;
+        //int openPosCol = 0;
+        //int orderTimeCol = 0;
         int fillTimeCol = 0;
         int statusCol = 0;
-        int costCol = 0;
+        //int costCol = 0;
         int fillAmtCol = 0;
         int stockCodeCol = 0;
         int fillPriceCol = 0;
-        int dateCol = 0;
+        //int dateCol = 0;
         int buySellCol = 0;
-        int beizhuCol = 0;
+        //int beizhuCol = 0;
 
         File output = new File(TradingConstants.GLOBALPATH + "currentPositionProcessed.txt");
         clearFile(output);
@@ -786,14 +761,14 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
                 //noinspection Duplicates
                 if (dataList.size() > 0 && dataList.get(0).equals("证券名称")) {
-                    orderTimeCol = dataList.indexOf("成交时间");
+                    //orderTimeCol = dataList.indexOf("成交时间");
                     fillTimeCol = dataList.indexOf("委托时间");
                     buySellCol = dataList.indexOf("买卖标志");
                     statusCol = dataList.indexOf("状态说明");
                     fillAmtCol = dataList.indexOf("成交数量");
                     fillPriceCol = dataList.indexOf("成交价格");
                     stockCodeCol = dataList.indexOf("证券代码");
-                    beizhuCol = dataList.indexOf("备注");
+                    //beizhuCol = dataList.indexOf("备注");
                     //System.out.println(ChinaStockHelper.getStr(orderTimeCol,buySellCol,statusCol,fillAmtCol,fillPriceCol,stockCodeCol));
                     //System.out.println("委托时间" + dataList.indexOf("委托时间"));
                 }
@@ -855,7 +830,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         int fillTimeCol = 0;
         int statusCol = 0;
-        int orderTimeCol = 0;
+        //int orderTimeCol = 0;
         int fillAmtCol = 0;
         int stockCodeCol = 0;
         int fillPriceCol = 0;
@@ -873,7 +848,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
                 //noinspection Duplicates
                 if (dataList.size() > 0 && dataList.get(0).equals("证券名称")) {
-                    orderTimeCol = dataList.indexOf("成交时间");
+                    //orderTimeCol = dataList.indexOf("成交时间");
                     fillTimeCol = dataList.indexOf("委托时间");
                     buySellCol = dataList.indexOf("买卖标志");
                     statusCol = dataList.indexOf("状态说明");
@@ -964,10 +939,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             Map<String, Integer> trades = tradesMap.entrySet().stream().filter(e -> e.getValue().size() > 0)
                     .collect(Collectors.toMap(Entry::getKey, e -> (Integer) e.getValue().entrySet().stream()
                             .mapToInt(e1 -> ((Trade) e1.getValue()).getSize()).sum()));
-            Map<String, Integer> res = Stream.of(openPositionMap, trades).flatMap(e -> e.entrySet().stream())
-                    .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.summingInt(Entry::getValue)));
 
-            return res;
+            return Stream.of(openPositionMap, trades).flatMap(e -> e.entrySet().stream())
+                    .collect(Collectors.groupingBy(Entry::getKey, Collectors.summingInt(Entry::getValue)));
         }
         return new HashMap<>();
     }
@@ -1085,14 +1059,14 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             double previousP = ChinaData.priceMapBar.get(name).ceilingEntry(lastKey.minusMinutes(5)).getValue().getClose();
             int openPos = openPositionMap.getOrDefault(name, 0);
             //int tradedPos = 0;
-            int posThisMinute;
+            //int posThisMinute;
             double tradeChgPnlAfter = 0.0;
             int tradedPosBefore = 0;
 
             if (tradesMap.containsKey(name)) {
                 //tradedPos = tradesMap.get(name).entrySet().stream().filter(e-> e.getKey().isBefore(lastKey)).collect(summingInt(e->e.getValue().getSize()));
-                posThisMinute = tradesMap.get(name).entrySet().stream().filter(e -> e.getKey()
-                        .truncatedTo(ChronoUnit.MINUTES).equals(lastKey)).mapToInt(e -> ((Trade) e.getValue()).getSize()).sum();
+//                posThisMinute = tradesMap.get(name).entrySet().stream().filter(e -> e.getKey()
+//                        .truncatedTo(ChronoUnit.MINUTES).equals(lastKey)).mapToInt(e -> ((Trade) e.getValue()).getSize()).sum();
 
                 tradedPosBefore = tradesMap.get(name).entrySet().stream().filter(e -> e.getKey().isBefore(lastKey.minusMinutes(5L)))
                         .mapToInt(e -> ((Trade) e.getValue()).getSize()).sum();
@@ -1138,27 +1112,27 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return getPercentile(max, min, curr);
     }
 
-    static int getChangeInPercentileToday(String name) {
-        double curr = 0.0;
-        double maxT = 0.0;
-        double minT = 0.0;
-        if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
-            curr = priceMapBar.get(name).lastEntry().getValue().getClose();
-            maxT = priceMapBar.get(name).entrySet().stream().max(BAR_HIGH).map(Entry::getValue)
-                    .map(SimpleBar::getHigh).orElse(0.0);
-            minT = priceMapBar.get(name).entrySet().stream().min(BAR_LOW).map(Entry::getValue)
-                    .map(SimpleBar::getHigh).orElse(0.0);
-        }
-
-        double max = Math.max(maxT, wtdMaxMap.getOrDefault(name, 0.0));
-        double min = Math.min(minT, wtdMinMap.getOrDefault(name, 0.0));
-        double open = openMap.getOrDefault(name, 0.0);
-
-        if (max != 0.0 && min != 0.0 && curr != 0.0 && open != 0.0 && max != min) {
-            return (int) Math.round(100d * (curr - open) / (max - min));
-        }
-        return 0;
-    }
+//    static int getChangeInPercentileToday(String name) {
+//        double curr = 0.0;
+//        double maxT = 0.0;
+//        double minT = 0.0;
+//        if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
+//            curr = priceMapBar.get(name).lastEntry().getValue().getClose();
+//            maxT = priceMapBar.get(name).entrySet().stream().max(BAR_HIGH).map(Entry::getValue)
+//                    .map(SimpleBar::getHigh).orElse(0.0);
+//            minT = priceMapBar.get(name).entrySet().stream().min(BAR_LOW).map(Entry::getValue)
+//                    .map(SimpleBar::getHigh).orElse(0.0);
+//        }
+//
+//        double max = Math.max(maxT, wtdMaxMap.getOrDefault(name, 0.0));
+//        double min = Math.min(minT, wtdMinMap.getOrDefault(name, 0.0));
+//        double open = openMap.getOrDefault(name, 0.0);
+//
+//        if (max != 0.0 && min != 0.0 && curr != 0.0 && open != 0.0 && max != min) {
+//            return (int) Math.round(100d * (curr - open) / (max - min));
+//        }
+//        return 0;
+//    }
 
     public static double getPotentialReturnToMid(String name) {
         double curr = 0.0;
@@ -1208,7 +1182,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
 
     private static double getTodayTotalPnl(String name) {
-        double fx = fxMap.getOrDefault(name, 1.0);
+        //double fx = fxMap.getOrDefault(name, 1.0);
         return Math.round(100d * (getMtmPnl(name) + getBuyTradePnl(name) + getSellTradePnl(name))) / 100d;
     }
 
