@@ -16,7 +16,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -59,13 +58,13 @@ public final class ChinaData extends JPanel {
     public static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>> price5mWtd
             = new ConcurrentSkipListMap<>();
 
-    static ConcurrentHashMap<Integer, ConcurrentHashMap<String, ?>> saveMap = new ConcurrentHashMap<>();
-    ConcurrentHashMap<Integer, ConcurrentHashMap<String, ?>> saveMap2 = new ConcurrentHashMap<>();
+    //static ConcurrentHashMap<Integer, ConcurrentHashMap<String, ?>> saveMap = new ConcurrentHashMap<>();
+    //ConcurrentHashMap<Integer, ConcurrentHashMap<String, ?>> saveMap2 = new ConcurrentHashMap<>();
 
     public static volatile Map<String, Double> priceMinuteSharpe = new HashMap<>();
     public static volatile Map<String, Double> wtdSharpe = new HashMap<>();
 
-    public static volatile Map<Integer, LocalDate> dateMap = new HashMap<>();
+    static volatile Map<Integer, LocalDate> dateMap = new HashMap<>();
     static volatile Map<LocalDate, Double> ftseOpenMap = new HashMap<>();
 
     public static List<LocalTime> tradeTime = new LinkedList<>();
@@ -76,20 +75,21 @@ public final class ChinaData extends JPanel {
     LocalTime lastLoadTime = Utility.AM929T;
     public static LocalTime lastDataTime = Utility.AM929T;
 
-    static File source = new File(TradingConstants.GLOBALPATH + "CHINASS.ser");
-    static File backup = new File(TradingConstants.GLOBALPATH + "CHINABackup.ser");
-    static File source2 = new File(TradingConstants.GLOBALPATH + "CHINASS2.ser");
-    static File backup2 = new File(TradingConstants.GLOBALPATH + "CHINABackup2.ser");
-    static File priceDetailedSource = new File(TradingConstants.GLOBALPATH + "priceDetailed.ser");
-    static File priceDetailedBackup = new File(TradingConstants.GLOBALPATH + "priceDetailedBackup.ser");
-    static File priceBarSource = new File(TradingConstants.GLOBALPATH + "priceBar.ser");
-    static File priceBarBackup = new File(TradingConstants.GLOBALPATH + "priceBarBackup.ser");
-    static File priceBarYtdSource = new File(TradingConstants.GLOBALPATH + "priceBarYtd.ser");
+//    static File source = new File(TradingConstants.GLOBALPATH + "CHINASS.ser");
+//    static File backup = new File(TradingConstants.GLOBALPATH + "CHINABackup.ser");
+//    static File source2 = new File(TradingConstants.GLOBALPATH + "CHINASS2.ser");
+//    static File backup2 = new File(TradingConstants.GLOBALPATH + "CHINABackup2.ser");
+//    static File priceDetailedSource = new File(TradingConstants.GLOBALPATH + "priceDetailed.ser");
+//    static File priceDetailedBackup = new File(TradingConstants.GLOBALPATH + "priceDetailedBackup.ser");
 
-    static File shcompSource = new File(TradingConstants.GLOBALPATH + "shcomp.txt");
+    private static File priceBarSource = new File(TradingConstants.GLOBALPATH + "priceBar.ser");
+//    static File priceBarBackup = new File(TradingConstants.GLOBALPATH + "priceBarBackup.ser");
+    private static File priceBarYtdSource = new File(TradingConstants.GLOBALPATH + "priceBarYtd.ser");
+
+    private static File shcompSource = new File(TradingConstants.GLOBALPATH + "shcomp.txt");
     public static JButton btnSave2;
     static ExecutorService es = Executors.newCachedThreadPool();
-    static final Predicate<? super Entry<LocalTime, Double>> IS_OPEN = e -> e.getKey().isAfter(Utility.AM929T) && e.getValue() != 0.0;
+    private static final Predicate<? super Entry<LocalTime, Double>> IS_OPEN = e -> e.getKey().isAfter(Utility.AM929T) && e.getValue() != 0.0;
 
     public ChinaData() {
         LocalTime lt = LocalTime.of(9, 19);
@@ -165,8 +165,8 @@ public final class ChinaData extends JPanel {
         jp.add(buttonUpPanel);
         jp.add(buttonDownPanel);
 
-        JButton btnSave = new JButton("Save1");
-        JButton btnSaveBar = new JButton("Save Bar");
+        //JButton btnSave = new JButton("Save1");
+        //JButton btnSaveBar = new JButton("Save Bar");
         JButton saveHibernate = new JButton("save hib");
         JButton saveOHLCButton = new JButton("Save OHLC");
         JButton btnSaveBarYtd = new JButton("Save Bar YTD");
@@ -262,16 +262,14 @@ public final class ChinaData extends JPanel {
 //            }
 //            System.out.println(" saving bar done");
 //        });
-        btnLoadBar.addActionListener(al -> {
-            CompletableFuture.runAsync(() -> {
-                try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(priceBarSource))) {
-                    //noinspection unchecked
-                    priceMapBar = (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>>) ois.readObject();
-                } catch (IOException | ClassNotFoundException e3) {
-                    e3.printStackTrace();
-                }
-            }, es);
-        });
+        btnLoadBar.addActionListener(al -> CompletableFuture.runAsync(() -> {
+            try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(priceBarSource))) {
+                //noinspection unchecked
+                priceMapBar = (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>>) ois.readObject();
+            } catch (IOException | ClassNotFoundException e3) {
+                e3.printStackTrace();
+            }
+        }, es));
 
         saveHibernate.addActionListener(al -> withHibernate());
         saveOHLCButton.addActionListener(al -> saveChinaOHLC());
@@ -360,23 +358,14 @@ public final class ChinaData extends JPanel {
     }
 
     private static void getTodayTDX(LocalDate dat) {
-        CompletableFuture.runAsync(() -> {
-            Utility.getFilesFromTDXGen(dat, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
-        });
+        CompletableFuture.runAsync(() -> Utility.getFilesFromTDXGen(dat, ChinaData.priceMapBar, ChinaData.sizeTotalMap));
     }
 
     private static void getFromTDX(LocalDate today, LocalDate ytd, LocalDate y2) {
 
-        CompletableFuture.runAsync(() -> {
-            Utility.getFilesFromTDXGen(today, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
-        });
-        CompletableFuture.runAsync(() -> {
-            Utility.getFilesFromTDXGen(ytd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
-        });
-
-        CompletableFuture.runAsync(() -> {
-            Utility.getFilesFromTDXGen(y2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
-        });
+        CompletableFuture.runAsync(() -> Utility.getFilesFromTDXGen(today, ChinaData.priceMapBar, ChinaData.sizeTotalMap));
+        CompletableFuture.runAsync(() -> Utility.getFilesFromTDXGen(ytd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd));
+        CompletableFuture.runAsync(() -> Utility.getFilesFromTDXGen(y2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2));
     }
 
     private static void retrieveDataAll() {
@@ -404,9 +393,7 @@ public final class ChinaData extends JPanel {
         System.out.println(" get date Map  " + dateMap.toString());
         System.out.println(" get ftse open map " + ftseOpenMap.toString());
 
-        CompletableFuture.runAsync(() -> {
-            controller().getSGXA50HistoricalCustom(20000, ChinaData::handleSGX50HistData, 7);
-        });
+        CompletableFuture.runAsync(() -> controller().getSGXA50HistoricalCustom(20000, ChinaData::handleSGX50HistData, 7));
 
         // get from tdx
         getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0));
@@ -646,9 +633,7 @@ public final class ChinaData extends JPanel {
                 }
             }
         }).thenAccept(
-                v -> {
-                    ChinaMain.updateSystemNotif(Utility.getStr(" Write SHCOMP ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
-                }
+                v -> ChinaMain.updateSystemNotif(Utility.getStr(" Write SHCOMP ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)))
         );
 
     }
@@ -657,9 +642,7 @@ public final class ChinaData extends JPanel {
         if (Utility.normalMapGen(name, sizeTotalMap)) {
             NavigableMap<LocalTime, Double> tm = ChinaData.sizeTotalMap.get(name);
             NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
-            tm.keySet().forEach((LocalTime t) -> {
-                res.put(t, tm.get(t) - ofNullable(tm.lowerEntry(t)).map(Entry::getValue).orElse(0.0));
-            });
+            tm.keySet().forEach((LocalTime t) -> res.put(t, tm.get(t) - ofNullable(tm.lowerEntry(t)).map(Entry::getValue).orElse(0.0)));
             double last = res.lastEntry().getValue();
             final double average = res.entrySet().stream().filter(IS_OPEN)
                     .mapToDouble(Map.Entry::getValue).average().orElse(0.0);
@@ -712,7 +695,7 @@ public final class ChinaData extends JPanel {
             if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
                     || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
 
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 //System.out.println(getStr(dt, open, high, low, close));
                 double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get("SGXA50").lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
                 ChinaData.priceMapBar.get("SGXA50").put(lt, new SimpleBar(open, high, low, close));
@@ -720,7 +703,7 @@ public final class ChinaData extends JPanel {
             }
 
             if (ld.equals(ytd) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31))) || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 //System.out.println(getStr(dt, open, high, low, close));
                 ChinaData.priceMapBarYtd.get("SGXA50").put(lt, new SimpleBar(open, high, low, close));
                 double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get("SGXA50").lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
@@ -735,7 +718,7 @@ public final class ChinaData extends JPanel {
                 ChinaData.sizeTotalMapY2.get("SGXA50").put(lt, volume * 1d + previousVol);
             }
         } else {
-            //System.out.println(getStr(date, open, high, low, close));
+            System.out.println(getStr(date, open, high, low, close));
         }
     }
 
@@ -822,6 +805,7 @@ public final class ChinaData extends JPanel {
                 case 1:
                     return nameMap.get(name);
                 default:
+                    //noinspection Duplicates
                     try {
                         if (priceMapBar.containsKey(name)) {
                             return (priceMapBar.get(name).containsKey(tradeTime.get(col - 2))) ? priceMapBar.get(name).get(tradeTime.get(col - 2)).getClose() : 0.0;
