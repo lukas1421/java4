@@ -690,8 +690,8 @@ public final class ChinaData extends JPanel {
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
-            System.out.println(" currdate ytd y2 " + currDate + " " + ytd + " " + y2);
-            System.out.println(" Date open high low ld lt " + dt + " " + open + " " + close + " " + ld + " " + lt);
+            //System.out.println(" currdate ytd y2 " + currDate + " " + ytd + " " + y2);
+            //System.out.println(" Date open high low ld lt " + dt + " " + open + " " + close + " " + ld + " " + lt);
 
             if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
 
