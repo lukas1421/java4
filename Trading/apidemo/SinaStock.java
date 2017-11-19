@@ -64,8 +64,8 @@ public class SinaStock implements Runnable {
     public final Predicate<LocalTime> FUT_OPEN = (lt) -> lt.isAfter(LocalTime.of(9, 0, 0));
 
     private static final Predicate<LocalDateTime> DATA_COLLECTION_TIME =
-             lt -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) && !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
-                     && (lt.toLocalTime().isAfter(LocalTime.of(9, 14)) && lt.toLocalTime().isBefore(LocalTime.of(11, 35)))
+            lt -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) && !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
+                    && (lt.toLocalTime().isAfter(LocalTime.of(9, 14)) && lt.toLocalTime().isBefore(LocalTime.of(11, 35)))
                     || (lt.toLocalTime().isAfter(LocalTime.of(12, 58)) && lt.toLocalTime().isBefore(LocalTime.of(15, 5)));
 
     private SinaStock() {
@@ -179,10 +179,14 @@ public class SinaStock implements Runnable {
                         //updateBidAskMap(ticker, lt, datalist, BidAsk.BID, bidMap);
                         //updateBidAskMap(ticker, lt, datalist, BidAsk.ASK, askMap);
                     } else {
-                        ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(Utility.pd(datalist, 2)));
+                        if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker) && DATA_COLLECTION_TIME.test(ldt)) {
+                            ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(Utility.pd(datalist, 2)));
+                        }
+
                         ChinaStock.closeMap.put(ticker, Utility.pd(datalist, 2));
                         ChinaStock.priceMap.put(ticker, Utility.pd(datalist, 2));
                         ChinaStock.returnMap.put(ticker, 0.0);
+
                     }
                 }
             }
@@ -226,12 +230,15 @@ public class SinaStock implements Runnable {
     enum BidAsk {
         BID(0), ASK(1);
         int val;
+
         BidAsk(int i) {
             val = i;
         }
+
         int getValue() {
             return val;
         }
+
         void setValue(int i) {
             val = i;
         }

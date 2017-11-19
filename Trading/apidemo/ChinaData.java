@@ -65,7 +65,7 @@ public final class ChinaData extends JPanel {
     public static volatile Map<String, Double> priceMinuteSharpe = new HashMap<>();
     public static volatile Map<String, Double> wtdSharpe = new HashMap<>();
 
-    static volatile Map<Integer, LocalDate> dateMap = new HashMap<>();
+    public static volatile Map<Integer, LocalDate> dateMap = new HashMap<>();
     static volatile Map<LocalDate, Double> ftseOpenMap = new HashMap<>();
 
     public static List<LocalTime> tradeTime = new LinkedList<>();
@@ -690,6 +690,8 @@ public final class ChinaData extends JPanel {
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
+            System.out.println(" currdate ytd y2 " + currDate + " " + ytd + " " + y2);
+            System.out.println(" Date open high low ld lt " + dt + " " + open + " " + close + " " + ld + " " + lt);
 
             if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
 
