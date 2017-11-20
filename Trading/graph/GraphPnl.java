@@ -130,9 +130,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
     @Override
     public void mouseMoved(MouseEvent e) {
         mouseXCord = e.getX();
-        System.out.println(" printing position of mouse ");
-        System.out.println("x y " + e.getX() + " " + e.getY());
-        System.out.println(" x y " + e.getXOnScreen() + " " + e.getYOnScreen());
+        this.repaint();
     }
 
     public GraphPnl(String s) {
@@ -592,7 +590,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
         return res;
     }
 
-    static int roundDownTo5(int xcord) {
+    private static int roundDownTo5(int xcord) {
         return (xcord/5)*5;
     }
 
