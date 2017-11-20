@@ -6,6 +6,8 @@ import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -20,7 +22,7 @@ import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static utility.Utility.*;
 
-public final class GraphPnl extends JComponent {
+public final class GraphPnl extends JComponent implements MouseMotionListener {
 
     private final static int WIDTH_PNL = 5;
 
@@ -43,6 +45,7 @@ public final class GraphPnl extends JComponent {
     private volatile String big1;
     private volatile String big2;
     private volatile String big3;
+    private volatile int mouseXCord;
 
 
     private static double openDelta;
@@ -95,6 +98,41 @@ public final class GraphPnl extends JComponent {
         netDeltaMap = new ConcurrentSkipListMap<>();
         benchMap = new ConcurrentSkipListMap<>();
         benchMtmMap = new HashMap<>();
+        addMouseMotionListener(this);
+
+//
+//        this.addMouseListener(new MouseAdapter() {
+//            @Override
+//            public void mouseEntered(MouseEvent e) {
+//                super.mouseEntered(e);
+//                System.out.println(" entered " + e.getLocationOnScreen());
+//            }
+//
+//            @Override
+//            public void mouseExited(MouseEvent e) {
+//                System.out.println(" exited " + e.getLocationOnScreen());
+//            }
+//
+//            @Override
+//            public void mouseMoved(MouseEvent e) {
+//                System.out.println(" printing position of mouse ");
+//                System.out.println( "x y "  + e.getX() + e.getY() );
+//                System.out.println(" x y " + e.getXOnScreen() + " " + e.getYOnScreen());
+//            }
+//        });
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        System.out.println(" drag detected " + e.getLocationOnScreen());
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        mouseXCord = e.getX();
+        System.out.println(" printing position of mouse ");
+        System.out.println("x y " + e.getX() + " " + e.getY());
+        System.out.println(" x y " + e.getXOnScreen() + " " + e.getYOnScreen());
     }
 
     public GraphPnl(String s) {
@@ -269,6 +307,8 @@ public final class GraphPnl extends JComponent {
             last = (last == 0) ? close : last;
             g.drawLine(x, last, x + WIDTH_PNL, close);
             last = close;
+
+
             x += WIDTH_PNL;
         }
 
@@ -314,7 +354,6 @@ public final class GraphPnl extends JComponent {
                     mult = -1 * mult;
 
                 }
-
             }
             if (tradeMap.size() > 0) {
                 g.drawString("Trade: " + Math.round(100d * Optional.ofNullable(tradeMap.lastEntry()).map(Entry::getValue).orElse(0.0)) / 100d, x + WIDTH_PNL, last + 10);
@@ -378,6 +417,12 @@ public final class GraphPnl extends JComponent {
             last = (last == 0) ? close : last;
             g.drawLine(x, last, x + WIDTH_PNL, close);
             last = close;
+
+            if(roundDownTo5(mouseXCord)==x) {
+                g.drawString(lt.toString()+" " + Math.round(netMap.floorEntry(lt).getValue()),x, close +50);
+            }
+
+
             x += WIDTH_PNL;
 
             if (lt.equals(netMap.firstKey())) {
@@ -547,6 +592,10 @@ public final class GraphPnl extends JComponent {
         return res;
     }
 
+    static int roundDownTo5(int xcord) {
+        return (xcord/5)*5;
+    }
+
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(50, 50);
@@ -678,4 +727,6 @@ public final class GraphPnl extends JComponent {
         }
         return 0;
     }
+
+
 }

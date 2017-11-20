@@ -1095,7 +1095,7 @@ public class HistChinaStocks extends JPanel {
             netSharesTradedWtd.put(s, res);
 
             if (s.equals("SGXA50")) {
-                System.out.println(chinaTradeMap.get(s));
+                //System.out.println(chinaTradeMap.get(s));
                 System.out.println(" SGXA50 compute net shares traded wtd " + res);
                 System.out.println(" net shares traded wtd s " + netSharesTradedWtd.get(s));
             }

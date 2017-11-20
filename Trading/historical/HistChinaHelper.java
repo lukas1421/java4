@@ -12,7 +12,6 @@ class HistChinaHelper {
         throw new UnsupportedOperationException();
     }
 
-
     static double getTradingCostCustom(String name, LocalDate ld, Trade t) {
         if (ld.isBefore(LocalDate.of(2016, Month.NOVEMBER, 3))) {
             return t.getTradingCostCustomBrokerage(name, 3.1);

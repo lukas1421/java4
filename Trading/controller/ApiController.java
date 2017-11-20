@@ -462,9 +462,7 @@ public class ApiController implements EWrapper {
         contract.exchange(contractIn.exchange());
 
         Position position = new Position(contract, account, positionIn, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL);
-        m_accountHandlers.forEach((handler) -> {
-            handler.updatePortfolio(position);
-        });
+        m_accountHandlers.forEach((handler) -> handler.updatePortfolio(position));
         recEOM();
     }
 

@@ -76,17 +76,15 @@ public class HistHKStocks extends JPanel {
     //public static volatile Map<Integer, String> idStockMap = new HashMap<>();
 
     private static BarModel_HK m_model;
-    int modelRow;
-    int indexRow;
-    static JPanel graphPanel;
-    GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
-    GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
-    static TableRowSorter<BarModel_HK> sorter;
+    private int modelRow;
+    private static JPanel graphPanel;
+    private GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
+    private GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
 
-    public static JLabel totalStocksLabelYtd = new JLabel("Total Ytd");
-    public static JLabel totalStocksLabelWtd = new JLabel("Total Wtd");
+    private static JLabel totalStocksLabelYtd = new JLabel("Total Ytd");
+    private static JLabel totalStocksLabelWtd = new JLabel("Total Wtd");
 
-    public HistHKStocks() {
+    private HistHKStocks() {
         System.out.println(" monday of week " + MONDAY_OF_WEEK);
         System.out.println(" days to request WTD " + DAYSTOREQUESTWTD);
         String line;
@@ -101,6 +99,7 @@ public class HistHKStocks extends JPanel {
                 HKResultMapWtd.put(al1.get(0), new HKResult());
             }
         } catch (IOException ex) {
+            ex.printStackTrace();
         }
         hkNameList = new ArrayList<>(hkYtdAll.keySet());
         System.out.println(" hk name list " + hkNameList);
@@ -146,9 +145,7 @@ public class HistHKStocks extends JPanel {
                         comp.setBackground(Color.GREEN);
                         graphYtd.fillInGraphHKGen(selectedStock, hkYtdAll);
                         graphWtd.fillInGraphHKGen(selectedStock, hkWtdAll);
-                        SwingUtilities.invokeLater(() -> {
-                            graphPanel.repaint();
-                        });
+                        SwingUtilities.invokeLater(() -> graphPanel.repaint());
 
                     } else {
                         comp.setBackground((indexRow % 2 == 0) ? Color.lightGray : Color.white);
@@ -246,26 +243,27 @@ public class HistHKStocks extends JPanel {
         add(graphPanel, BorderLayout.SOUTH);
 
         tab.setAutoCreateRowSorter(true);
-        sorter = (TableRowSorter<BarModel_HK>) tab.getRowSorter();
+        //noinspection unchecked,unused
+        TableRowSorter<BarModel_HK> sorter = (TableRowSorter<BarModel_HK>) tab.getRowSorter();
 
     }
 
-    void requestAllHKStocksYtd() {
+    private void requestAllHKStocksYtd() {
         stocksProcessedYtd = new AtomicLong(0);
         Utility.clearFile(HistHKStocks.outputYtd);
-        hkYtdAll.keySet().forEach(k -> request1StockYtd(k));
+        hkYtdAll.keySet().forEach(this::request1StockYtd);
         //request1StockYtd("700");
     }
 
-    void requestAllHKStocksWtd() {
+    private void requestAllHKStocksWtd() {
         stocksProcessedWtd = new AtomicLong(0);
         Utility.clearFile(HistHKStocks.outputWtd);
-        hkWtdAll.keySet().forEach(k -> request1StockWtd(k));
+        hkWtdAll.keySet().forEach(this::request1StockWtd);
         //request1StockWtd("700");
     }
 
 
-    Contract generateHKContract(String stock) {
+    private Contract generateHKContract(String stock) {
         Contract ct = new Contract();
         ct.symbol(stock);
         ct.exchange("SEHK");
@@ -274,19 +272,19 @@ public class HistHKStocks extends JPanel {
         return ct;
     }
 
-    public static void refreshYtd() {
+    static void refreshYtd() {
         totalStocksLabelYtd.setText(Long.toString(stocksProcessedYtd.get()) + "/" + Long.toString(hkYtdAll.size()));
         //System.out.println(" refreshing YTD ");
         //m_model.fireTableDataChanged();
     }
 
-    public static void refreshWtd() {
+    static void refreshWtd() {
         totalStocksLabelWtd.setText(Long.toString(stocksProcessedWtd.get()) + "/" + Long.toString(hkWtdAll.size()));
         //System.out.println(" refreshing WTD ");
         //m_model.fireTableDataChanged();
     }
 
-    void request1StockYtd(String stock) {
+    private void request1StockYtd(String stock) {
         CompletableFuture.runAsync(() -> {
             //System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
             //System.out.println(" available " + sm.availablePermits());
@@ -309,7 +307,7 @@ public class HistHKStocks extends JPanel {
         });
     }
 
-    void request1StockWtd(String stock) {
+    private void request1StockWtd(String stock) {
         CompletableFuture.runAsync(() -> {
             //System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
             //System.out.println(" available " + sm.availablePermits());
@@ -332,22 +330,24 @@ public class HistHKStocks extends JPanel {
         });
     }
 
-    static String getDataCutoff() {
+    private static String getDataCutoff() {
         return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
     }
 
-    void connectToTWS(int port) {
+    @SuppressWarnings("SameParameterValue")
+    private void connectToTWS(int port) {
         System.out.println(" trying to connect");
         try {
             apcon.connect("127.0.0.1", port, 101, "");
         } catch (Exception ex) {
+            ex.printStackTrace();
         }
         //apcon.client().reqIds(-1);
     }
 
-    static ApiController getAPICon() {
-        return apcon;
-    }
+//    static ApiController getAPICon() {
+//        return apcon;
+//    }
 
 //    public static void computeAll() {
 //        System.out.println(" computing starts ");
@@ -363,7 +363,7 @@ public class HistHKStocks extends JPanel {
 //        });
 //    }
 
-    public static void computeYtd(String stock) {
+    static void computeYtd(String stock) {
         System.out.println(" computing Ytd starts for stock " + stock);
         NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(hkYtdAll.get(stock),
                 LocalDate.of(2016, Month.DECEMBER, 31));
@@ -385,7 +385,7 @@ public class HistHKStocks extends JPanel {
 //        }
     }
 
-    public static void computeWtd(String stock) {
+    static void computeWtd(String stock) {
         System.out.println(" computing Wtd starts for stock " + stock);
         NavigableMap<LocalDateTime, Double> ret = SharpeUtility.getReturnSeries(hkWtdAll.get(stock),
                 LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1), LocalTime.MIN));
@@ -441,11 +441,11 @@ public class HistHKStocks extends JPanel {
             if (ld.isEqual(monOfWeek) || ld.isAfter(monOfWeek)) {
                 //System.out.println(" CORRECT name ld lt open " + name + " " + ld + " " + lt + " " + open);
                 hkWtdAll.get(name).put(ldt, new SimpleBar(open, high, low, close));
-                if (name.equals("700")) {
-//                    System.out.println(" outputting tencent");
-//                    MorningTask.simpleWriteToFile(Utility.getStrTabbed(lt, open, high, low, close), true,
-//                            usTestOutput);
-                }
+//                if (name.equals("700")) {
+////                    System.out.println(" outputting tencent");
+////                    MorningTask.simpleWriteToFile(Utility.getStrTabbed(lt, open, high, low, close), true,
+////                            usTestOutput);
+//                }
             }
         }
 
@@ -469,17 +469,14 @@ public class HistHKStocks extends JPanel {
         HistHKStocks hk = new HistHKStocks();
         jf.add(hk);
         jf.setLayout(new FlowLayout());
-        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         jf.setVisible(true);
-        CompletableFuture.runAsync(() -> {
-            hk.connectToTWS(7496);
-        });
+        CompletableFuture.runAsync(() -> hk.connectToTWS(7496));
     }
 
 
-    public static LocalDate convertStringToDate(String date) {
-        LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
-        return ld;
+    static LocalDate convertStringToDate(String date) {
+        return LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
     }
 
     private class HKResult {
@@ -489,12 +486,12 @@ public class HistHKStocks extends JPanel {
         double sr;
         double perc;
 
-        HKResult(double m, double s, double r, double p) {
-            mean = m;
-            sd = s;
-            sr = r;
-            perc = p;
-        }
+//        HKResult(double m, double s, double r, double p) {
+//            mean = m;
+//            sd = s;
+//            sr = r;
+//            perc = p;
+//        }
 
         void fillResult(double m, double s, double r, double p) {
             mean = Math.round(1000d * m) / 10d;
@@ -510,19 +507,19 @@ public class HistHKStocks extends JPanel {
             perc = 0.0;
         }
 
-        public double getMean() {
+        double getMean() {
             return mean;
         }
 
-        public double getSd() {
+        double getSd() {
             return sd;
         }
 
-        public double getSr() {
+        double getSr() {
             return sr;
         }
 
-        public double getPerc() {
+        double getPerc() {
             return perc;
         }
     }
