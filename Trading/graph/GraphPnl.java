@@ -100,26 +100,6 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
         benchMtmMap = new HashMap<>();
         addMouseMotionListener(this);
 
-//
-//        this.addMouseListener(new MouseAdapter() {
-//            @Override
-//            public void mouseEntered(MouseEvent e) {
-//                super.mouseEntered(e);
-//                System.out.println(" entered " + e.getLocationOnScreen());
-//            }
-//
-//            @Override
-//            public void mouseExited(MouseEvent e) {
-//                System.out.println(" exited " + e.getLocationOnScreen());
-//            }
-//
-//            @Override
-//            public void mouseMoved(MouseEvent e) {
-//                System.out.println(" printing position of mouse ");
-//                System.out.println( "x y "  + e.getX() + e.getY() );
-//                System.out.println(" x y " + e.getXOnScreen() + " " + e.getYOnScreen());
-//            }
-//        });
     }
 
     @Override
@@ -265,8 +245,8 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
         this.minAMT = (t != null) ? t : TIMEMAX;
     }
 
-    public void fillInGraph(String nam) {
-    }
+//    public void fillInGraph(String nam) {
+//    }
 
     public void refresh() {
         SwingUtilities.invokeLater(this::repaint);
@@ -416,8 +396,10 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
             g.drawLine(x, last, x + WIDTH_PNL, close);
             last = close;
 
-            if(roundDownTo5(mouseXCord)==x) {
-                g.drawString(lt.toString()+" " + Math.round(netMap.floorEntry(lt).getValue()),x, close +50);
+            if (roundDownTo5(mouseXCord) == x) {
+                g.drawString(lt.toString() + " " + Math.round(netMap.floorEntry(lt).getValue()), x, close + 50);
+                g.drawOval(x + 2, close, 5, 5);
+                g.fillOval(x + 2, close, 5, 5);
             }
 
 
@@ -591,7 +573,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
     }
 
     private static int roundDownTo5(int xcord) {
-        return (xcord/5)*5;
+        return (xcord / 5) * 5;
     }
 
     @Override
