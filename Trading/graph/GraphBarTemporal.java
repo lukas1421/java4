@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static historical.HistChinaStocks.mtdSharpe;
 import static utility.Utility.r;
 
 public class GraphBarTemporal<T extends Temporal> extends JComponent implements GraphFillable {
@@ -244,6 +245,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                 if (lt.getClass() == LocalDate.class) {
                     @SuppressWarnings({"ConstantConditions"}) LocalDate ltn = (LocalDate) lt;
 
+
+
                     try {
                         Method m = getLocalDateOf();
                         if (lt.equals(mainMap.lastKey())) {
@@ -307,6 +310,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
         g2.drawString(Integer.toString(getPercentile()) + "% ", getWidth() * 2 / 8, 15);
         g2.drawString("" + getLast(), getWidth() * 3 / 8, 15);
+        //if(this.getClass()==LocalDate.class)
+        g2.drawString("Mtd Sharpe: " + r(mtdSharpe.getOrDefault(name,0.0)), getWidth() * 4 / 8, 15);
 
         g2.drawString("pos: " + Integer.toString(netCurrentPosition), getWidth() * 7 / 8, getHeight() / 6);
         g2.drawString("Trade pnl " + Double.toString(r(currentTradePnl)), getWidth() * 7 / 8, getHeight() * 2 / 6);

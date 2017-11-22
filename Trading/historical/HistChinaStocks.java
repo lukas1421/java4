@@ -103,6 +103,7 @@ public class HistChinaStocks extends JPanel {
     private static volatile NavigableMap<LocalDate, Double> netPnlByWeekdayAM = new ConcurrentSkipListMap<>();
     private static volatile NavigableMap<LocalDate, Double> netPnlByWeekdayPM = new ConcurrentSkipListMap<>();
 
+    public static Map<String, Double> mtdSharpe  = new HashMap<>();
     private static Map<String, Double> fxMap = new HashMap<>();
 
     private int avgPercentile;
@@ -182,6 +183,7 @@ public class HistChinaStocks extends JPanel {
 
                 if (!al1.get(0).equals("sh204001") && (al1.get(0).startsWith("sh") || al1.get(0).startsWith("sz")
                         || al1.get(0).startsWith("SGX"))) {
+                    String ticker = al1.get(0);
                     chinaYtd.put(al1.get(0), new ConcurrentSkipListMap<>());
                     ytdVolTraded.put(al1.get(0), new ConcurrentSkipListMap<>());
                     chinaWtd.put(al1.get(0), new ConcurrentSkipListMap<>());
@@ -196,8 +198,9 @@ public class HistChinaStocks extends JPanel {
                     costBasisMap.put(al1.get(0), 0.0);
                     wtdTradePnlMap.put(al1.get(0), 0.0);
                     lastWeekCloseMap.put(al1.get(0), 0.0);
-                    wtdMtmPnlMap.put(al1.get(0), 0.0);
-                    wtdChgInPosition.put(al1.get(0), 0);
+                    wtdMtmPnlMap.put(ticker, 0.0);
+                    wtdChgInPosition.put(ticker, 0);
+                    mtdSharpe.put(ticker, 0.0 );
                 }
             }
 
@@ -217,10 +220,9 @@ public class HistChinaStocks extends JPanel {
                         selectedStock = stockList.get(modelRow);
                         comp.setBackground(Color.GREEN);
 
-
-                        if (selectedStock.equals("SGXA50")) {
-                            chinaTradeMap.entrySet().stream().filter(e -> e.getKey().equals("SGXA50")).forEach(System.out::println);
-                        }
+//                        if (selectedStock.equals("SGXA50")) {
+//                            chinaTradeMap.entrySet().stream().filter(e -> e.getKey().equals("SGXA50")).forEach(System.out::println);
+//                        }
 
                         CompletableFuture.runAsync(() -> {
                             //CompletableFuture.runAsync(() -> {
@@ -1000,6 +1002,17 @@ public class HistChinaStocks extends JPanel {
         System.out.println(" wtd processing end ");
     }
 
+    private static double getMtdSharpe(String name) {
+        if(chinaYtd.containsKey(name) && chinaYtd.get(name).size()>0) {
+            NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(chinaYtd.get(name), MONTH_FIRST_DAY);
+            double sr = SharpeUtility.getSharpe(ret, 252);
+            mtdSharpe.put(name, sr);
+            return sr;
+        }
+
+        return 0.0;
+    }
+
     private static double sharpeWeekChg(String name) {
 
         //LocalDate ld = getMondayOfWeek()
@@ -1360,6 +1373,8 @@ public class HistChinaStocks extends JPanel {
                     return "Owed pnl";
                 case 38:
                     return "trend-owed";
+                case 39:
+                    return "mtd sharpe";
                 default:
                     return "";
             }
@@ -1481,6 +1496,8 @@ public class HistChinaStocks extends JPanel {
                     return r(computeOwedPnl(name));
                 case 38:
                     return r(computeTrendPnlSum(name)-computeOwedPnl(name));
+                case 39:
+                    return r(getMtdSharpe(name));
                 default:
                     return null;
 
