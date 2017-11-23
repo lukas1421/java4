@@ -685,4 +685,12 @@ public class Utility {
     public static double pr2(double d) {
         return Math.round(d * 10d) / 10d;
     }
+
+    public static int roundDownTo5(int xcord) {
+        return (xcord / 5) * 5;
+    }
+
+    public static int roundDownToN(int xcord, int n) {
+        return (xcord / n) * n;
+    }
 }

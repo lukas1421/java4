@@ -572,10 +572,6 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
         return res;
     }
 
-    private static int roundDownTo5(int xcord) {
-        return (xcord / 5) * 5;
-    }
-
     @Override
     public Dimension getPreferredSize() {
         return new Dimension(50, 50);

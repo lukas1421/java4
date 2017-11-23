@@ -5,6 +5,8 @@ import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionListener;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.Temporal;
@@ -13,7 +15,9 @@ import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.DoubleBinaryOperator;
 
-public class GraphChinaPnl<T extends Temporal> extends JComponent implements GraphFillable {
+import static utility.Utility.roundDownToN;
+
+public class GraphChinaPnl<T extends Temporal> extends JComponent implements GraphFillable, MouseMotionListener {
 
 
     String name = "";
@@ -37,12 +41,13 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
     int height;
 
     private static final int WIDTH_PNL = 4;
+    static volatile int mouseXCord;
 
     public GraphChinaPnl() {
         mtmMap = new ConcurrentSkipListMap<>();
         tradeMap = new ConcurrentSkipListMap<>();
         netMap = new ConcurrentSkipListMap<>();
-
+        addMouseMotionListener(this);
     }
 
 
@@ -182,6 +187,12 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
                 last = close;
                 x += WIDTH_PNL;
 
+                if (roundDownToN(mouseXCord,WIDTH_PNL) == x-5) {
+                    g.drawString(lt.toString() + " " + Math.round(netMap.floorEntry(lt).getValue()), x, close + 50);
+                    g.drawOval(x -3, close, 5, 5);
+                    g.fillOval(x - 3 , close, 5, 5);
+                }
+
 
                 try {
                     if (netMap.get(lt) == Utility.reduceMaps(Math::max, netMap) &&
@@ -301,5 +312,16 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
 //        SwingUtilities.invokeLater(()-> {
 //            this.repaint();
 //        });
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        mouseXCord = e.getX();
+        this.repaint();
     }
 }
