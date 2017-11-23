@@ -216,7 +216,6 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
                 } catch (Exception ex) {
                     System.out.println(" lt equals net map last key issue " + lt + " name " + name);
                 }
-
             }
         }
 
