@@ -80,7 +80,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
         ct.symbol("XINA50");
         ct.exchange("SGX");
         ct.currency("USD");
-        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50EXPIRY);
+        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
         ct.secType(Types.SecType.FUT);
 
         JLabel currTimeLabel = new JLabel(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
@@ -595,17 +595,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
         }
     }
 
-    void requestLevel2Data() {
+    private void requestLevel2Data() {
         apcon.reqDeepMktData(ct, 10, new XULevel2Handler());
     }
 
-    void requestExecHistory() {
+    private void requestExecHistory() {
         System.out.println(" requesting exec history ");
         XUTrader.tradesMap = new ConcurrentSkipListMap<>();
         apcon.reqExecutions(new ExecutionFilter(), new XUTradeDefaultHandler());
     }
 
-    void requestXUData() {
+    private void requestXUData() {
         try {
             getAPICon().reqXUDataArray(new XuPriceReceiver());
         } catch (InterruptedException ex) {
@@ -686,7 +686,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
         XUTrader xutrader = new XUTrader();
         jf.add(xutrader);
         jf.setLayout(new FlowLayout());
-        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
 
         jf.setVisible(true);
 
@@ -697,9 +697,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler {
             CompletableFuture.runAsync(() -> {
                 XUTrader.getAPICon().client().reqCurrentTime();
             });
-            CompletableFuture.runAsync(() -> {
-                xutrader.requestXUData();
-            });
+            CompletableFuture.runAsync(xutrader::requestXUData);
         });
     }
 }

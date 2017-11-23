@@ -4,7 +4,10 @@ import TradeType.Trade;
 import apidemo.ChinaData;
 import apidemo.ChinaStock;
 import apidemo.MorningTask;
+import apidemo.TradingConstants;
 import auxiliary.SimpleBar;
+import client.Contract;
+import client.Types;
 import graph.GraphIndustry;
 import historical.HistChinaStocks;
 import org.hibernate.Hibernate;
@@ -693,4 +696,25 @@ public class Utility {
     public static int roundDownToN(int xcord, int n) {
         return (xcord / n) * n;
     }
+
+    public static Contract getFrontFutContract() {
+        Contract ct = new Contract();
+        ct.symbol("XINA50");
+        ct.exchange("SGX");
+        ct.currency("USD");
+        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
+        ct.secType(Types.SecType.FUT);
+        return ct;
+    }
+
+    public static Contract getBackFutContract() {
+        Contract ct = new Contract();
+        ct.symbol("XINA50");
+        ct.exchange("SGX");
+        ct.currency("USD");
+        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50BACKEXPIRY);
+        ct.secType(Types.SecType.FUT);
+        return ct;
+    }
+
 }

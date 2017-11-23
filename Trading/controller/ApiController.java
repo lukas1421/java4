@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaMain.controller;
 import static java.util.stream.Collectors.toList;
+import static utility.Utility.getFrontFutContract;
 
 public class ApiController implements EWrapper {
 
@@ -909,15 +910,16 @@ public class ApiController implements EWrapper {
 //xu data
     public void reqXUDataArray(ITopMktDataHandler handler) throws InterruptedException {
         System.out.println("requesting XU data begins");
-        Contract ct = new Contract();
+        Contract ct = getFrontFutContract();
         int reqId = m_reqId.get();
         reqId = reqId + 9999999;
         boolean isSnapShot = false;
-        ct.symbol("XINA50");
-        ct.exchange("SGX");
-        ct.currency("USD");
-        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50EXPIRY);
-        ct.secType(SecType.FUT);
+        //ct = getFrontFutContract();
+//        ct.symbol("XINA50");
+//        ct.exchange("SGX");
+//        ct.currency("USD");
+//        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
+//        ct.secType(SecType.FUT);
         //m_symReqMap.put(reqId,"XINA50");
         m_topMktDataMap.put(reqId, handler);
         m_client.reqMktData(reqId, ct, "", isSnapShot, Collections.<TagValue>emptyList());
@@ -925,15 +927,15 @@ public class ApiController implements EWrapper {
     }
 
     public void getSGXA50HistoricalCustom(int reqId, HistDataConsumer<String, Double, Integer> dc, int duration) {
-        Contract c = new Contract();
-        c.symbol("XINA50");
-        c.exchange("SGX");
-        c.currency("USD");
-        c.secType(Types.SecType.FUT);
-        c.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50EXPIRY);
-
-        c.right(Types.Right.None);
-        c.secIdType(Types.SecIdType.None);
+        Contract c = getFrontFutContract();
+        //        Contract c = new Contract();
+//        c.symbol("XINA50");
+//        c.exchange("SGX");
+//        c.currency("USD");
+//        c.secType(Types.SecType.FUT);
+//        c.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
+//        c.right(Types.Right.None);
+//        c.secIdType(Types.SecIdType.None);
 
         String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
@@ -959,12 +961,12 @@ public class ApiController implements EWrapper {
 //                Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
 //    }
     public void getSGXA50Historical2(int reqID, HistoricalHandler hh) {
-        Contract c = new Contract();
-        c.symbol("XINA50");
-        c.exchange("SGX");
-        c.currency("USD");
-        c.secType(Types.SecType.FUT);
-        c.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50EXPIRY);
+        Contract c = getFrontFutContract();
+//        c.symbol("XINA50");
+//        c.exchange("SGX");
+//        c.currency("USD");
+//        c.secType(Types.SecType.FUT);
+//        c.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
 
         String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
