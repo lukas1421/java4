@@ -717,4 +717,15 @@ public class Utility {
         return ct;
     }
 
+    public static String ibContractToSymbol(Contract ct) {
+        if (ct.symbol().equals("XINA50")) {
+            switch (ct.lastTradeDateOrContractMonth()) {
+                case TradingConstants.GLOBALA50FRONTEXPIRY:
+                    return "SGXA50";
+                case TradingConstants.GLOBALA50BACKEXPIRY:
+                    return "SGXA50BM";
+            }
+        }
+        return ct.symbol();
+    }
 }

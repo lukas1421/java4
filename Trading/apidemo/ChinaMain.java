@@ -42,6 +42,7 @@ public final class ChinaMain implements IConnectionHandler {
     static {
         NewLookAndFeel.register();
     }
+
     private final IConnectionConfiguration m_connectionConfiguration;
 
     public static volatile Map<Integer, Request> globalRequestMap = new HashMap<>();

@@ -110,7 +110,7 @@ public final class ChinaStock extends JPanel {
     public static volatile Map<String, Boolean> volBroken = new ConcurrentHashMap<>();
     public static volatile Map<String, LocalTime> volBrokenTime = new ConcurrentHashMap<>();
     static volatile Map<String, LocalTime> dialogLastTime = new HashMap<>();
-    static volatile Map<String, Boolean> interestedName = new HashMap<>();
+    private static volatile Map<String, Boolean> interestedName = new HashMap<>();
     static volatile Set<JDialog> dialogTracker = new HashSet<>();
 
     //static final Comparator<? super Entry<LocalTime,Double>> Entry.comparingByValue() = (e1,e2)->e1.getValue()>=e2.getValue()?1:-1;
@@ -398,6 +398,7 @@ public final class ChinaStock extends JPanel {
                     }
                 } catch (Exception x) {
                     x.printStackTrace();
+                    //noinspection unchecked
                     sorter = (TableRowSorter<BarModel_STOCK>) tab.getRowSorter();
                 }
             }
@@ -1703,7 +1704,7 @@ public final class ChinaStock extends JPanel {
         return Utility.TIMEMAX;
     }
 
-    static LocalTime getPMFirstBreakTime(String name) {
+    private static LocalTime getPMFirstBreakTime(String name) {
         if (NORMAL_STOCK.test(name) && priceMapBar.get(name).lastKey().isAfter(Utility.PMOPENT) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET)) {
             double ammax = GETMAX.applyAsDouble(name, Utility.AM_PRED);
             return priceMapBar.get(name).entrySet().parallelStream().filter(e -> e.getKey().isAfter(Utility.PMOPENT) && e.getValue().getHigh() > ammax).findFirst()
@@ -1718,7 +1719,7 @@ public final class ChinaStock extends JPanel {
                 .filter(e -> (e.getKey().equals(priceMapBar.get(name).firstKey()))
                         || (e.getValue().getHigh() > ofNullable(priceMapBar.get(name).lowerEntry(e.getKey())).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)
                         && e.getValue().getHigh() >= ofNullable(priceMapBar.get(name).higherEntry(e.getKey())).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)))
-                .collect(Collectors.toMap(e -> (LocalTime)e.getKey(), e -> ((SimpleBar)e.getValue()).getHigh(), (a, b) -> a, ConcurrentSkipListMap::new));
+                .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().getHigh(), (a, b) -> a, ConcurrentSkipListMap::new));
 
         if (tm.size() > 2) {
             LocalTime lastKey = priceMapBar.get(name).lastKey();

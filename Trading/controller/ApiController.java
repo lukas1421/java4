@@ -926,8 +926,8 @@ public class ApiController implements EWrapper {
         System.out.println("requesting XU data ends");
     }
 
-    public void getSGXA50HistoricalCustom(int reqId, HistDataConsumer<String, Double, Integer> dc, int duration) {
-        Contract c = getFrontFutContract();
+    public void getSGXA50HistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc, int duration) {
+        //Contract c = getFrontFutContract();
         //        Contract c = new Contract();
 //        c.symbol("XINA50");
 //        c.exchange("SGX");
@@ -1651,7 +1651,7 @@ public class ApiController implements EWrapper {
 
             if (r.getCustomFunctionNeeded()) {
                 //System.out.println(" date open volume" + date + " " + open + " " + volume);
-                r.getDataConsumer().apply(date, open, high, low, close, volume);
+                r.getDataConsumer().apply(r.getContract(), date, open, high, low, close, volume);
             } else {
                 HistoricalHandler hh = (HistoricalHandler) r.getHandler();
                 if (!date.startsWith("finished")) {

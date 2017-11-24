@@ -3,6 +3,7 @@ package apidemo;
 import auxiliary.SimpleBar;
 import auxiliary.Strategy;
 import auxiliary.VolBar;
+import client.Contract;
 import graph.GraphIndustry;
 import historical.HistChinaStocks;
 import org.hibernate.Session;
@@ -37,8 +38,7 @@ import static apidemo.ChinaStock.*;
 import static historical.HistChinaStocks.chinaWtd;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Optional.ofNullable;
-import static utility.Utility.blobify;
-import static utility.Utility.getStr;
+import static utility.Utility.*;
 
 public final class ChinaData extends JPanel {
 
@@ -83,7 +83,7 @@ public final class ChinaData extends JPanel {
 //    static File priceDetailedBackup = new File(TradingConstants.GLOBALPATH + "priceDetailedBackup.ser");
 
     private static File priceBarSource = new File(TradingConstants.GLOBALPATH + "priceBar.ser");
-//    static File priceBarBackup = new File(TradingConstants.GLOBALPATH + "priceBarBackup.ser");
+    //    static File priceBarBackup = new File(TradingConstants.GLOBALPATH + "priceBarBackup.ser");
     private static File priceBarYtdSource = new File(TradingConstants.GLOBALPATH + "priceBarYtd.ser");
 
     private static File shcompSource = new File(TradingConstants.GLOBALPATH + "shcomp.txt");
@@ -317,11 +317,15 @@ public final class ChinaData extends JPanel {
             //ChinaStockHelper.buildA50FromSSYtdY2();
         });
 
-        getSGXA50HistButton.addActionListener(l -> CompletableFuture.runAsync(() ->
-                controller().getSGXA50HistoricalCustom(20000, ChinaData::handleSGX50HistData, 7)));
+        getSGXA50HistButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
+            controller().getSGXA50HistoricalCustom(20000, getFrontFutContract(), ChinaData::handleSGX50HistData, 7);
+            controller().getSGXA50HistoricalCustom(20000, getBackFutContract(), ChinaData::handleSGX50HistData, 7);
+        }));
 
-        getSGXA50TodayButton.addActionListener(l -> CompletableFuture.runAsync(() ->
-                controller().getSGXA50HistoricalCustom(50000, ChinaData::handleSGXDataToday, 1)));
+        getSGXA50TodayButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
+            controller().getSGXA50HistoricalCustom(50000, getFrontFutContract(), ChinaData::handleSGXDataToday, 1);
+            controller().getSGXA50HistoricalCustom(50000, getBackFutContract(), ChinaData::handleSGXDataToday, 1);
+        }));
 
         tdxButton.addActionListener(l -> getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0)));
 
@@ -393,7 +397,8 @@ public final class ChinaData extends JPanel {
         System.out.println(" get date Map  " + dateMap.toString());
         System.out.println(" get ftse open map " + ftseOpenMap.toString());
 
-        CompletableFuture.runAsync(() -> controller().getSGXA50HistoricalCustom(20000, ChinaData::handleSGX50HistData, 7));
+        CompletableFuture.runAsync(() -> controller().getSGXA50HistoricalCustom(20000, getFrontFutContract()
+                , ChinaData::handleSGX50HistData, 7));
 
         // get from tdx
         getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0));
@@ -655,8 +660,9 @@ public final class ChinaData extends JPanel {
         return 0.0;
     }
 
-    private static void handleSGX50HistData(String date, double open, double high, double low, double close, int volume) {
+    private static void handleSGX50HistData(Contract c, String date, double open, double high, double low, double close, int volume) {
 
+        String ticker = ibContractToSymbol(c);
 //        LocalDate currDate = LocalDate.now();
 //        long daysToSubtract = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 3L : 1L;
 //        long daysToSubtract1 = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 4L : 2L;
@@ -679,14 +685,14 @@ public final class ChinaData extends JPanel {
             if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
 
                 if ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
-                    ||(lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1)))) {
+                        || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1)))) {
 
                     LocalDateTime ldt = LocalDateTime.of(ld, lt);
                     LocalDateTime ltTo5 = Utility.roundTo5Ldt(ldt);
-                    if (!chinaWtd.get("SGXA50").containsKey(ltTo5)) {
-                        chinaWtd.get("SGXA50").put(ltTo5, new SimpleBar(open, high, low, close));
+                    if (!chinaWtd.get(ticker).containsKey(ltTo5)) {
+                        chinaWtd.get(ticker).put(ltTo5, new SimpleBar(open, high, low, close));
                     } else {
-                        chinaWtd.get("SGXA50").get(ltTo5).updateBar(open, high, low, close);
+                        chinaWtd.get(ticker).get(ltTo5).updateBar(open, high, low, close);
                     }
                 }
             }
@@ -697,34 +703,37 @@ public final class ChinaData extends JPanel {
 
                 //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 //System.out.println(getStr(dt, open, high, low, close));
-                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get("SGXA50").lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
-                ChinaData.priceMapBar.get("SGXA50").put(lt, new SimpleBar(open, high, low, close));
-                ChinaData.sizeTotalMap.get("SGXA50").put(lt, volume * 1d + previousVol);
+                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get(ticker).lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
+                ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(open, high, low, close));
+                ChinaData.sizeTotalMap.get(ticker).put(lt, volume * 1d + previousVol);
             }
 
-            if (ld.equals(ytd) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31))) || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
+            if (ld.equals(ytd) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
+                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
                 //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 //System.out.println(getStr(dt, open, high, low, close));
-                ChinaData.priceMapBarYtd.get("SGXA50").put(lt, new SimpleBar(open, high, low, close));
-                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get("SGXA50").lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
-                ChinaData.sizeTotalMapYtd.get("SGXA50").put(lt, volume * 1d + previousVol);
+                ChinaData.priceMapBarYtd.get(ticker).put(lt, new SimpleBar(open, high, low, close));
+                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get(ticker).lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
+                ChinaData.sizeTotalMapYtd.get(ticker).put(lt, volume * 1d + previousVol);
             }
 
-            if (ld.equals(y2) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31))) || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
+            if (ld.equals(y2) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
+                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
                 //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 //System.out.println(getStr(dt, open, high, low, close));
-                ChinaData.priceMapBarY2.get("SGXA50").put(lt, new SimpleBar(open, high, low, close));
-                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapY2.get("SGXA50").lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
-                ChinaData.sizeTotalMapY2.get("SGXA50").put(lt, volume * 1d + previousVol);
+                ChinaData.priceMapBarY2.get(ticker).put(lt, new SimpleBar(open, high, low, close));
+                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapY2.get(ticker).lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
+                ChinaData.sizeTotalMapY2.get(ticker).put(lt, volume * 1d + previousVol);
             }
         } else {
             System.out.println(getStr(date, open, high, low, close));
         }
     }
 
-    private static void handleSGXDataToday(String date, double open, double high, double low, double close, int volume) {
+    private static void handleSGXDataToday(Contract c, String date, double open, double high, double low, double close, int volume) {
         //System.out.println(" handling SGX today ");
 
+        String ticker = utility.Utility.ibContractToSymbol(c);
         LocalDate currDate = LocalDate.now();
 
         if (!date.startsWith("finished")) {
@@ -737,12 +746,13 @@ public final class ChinaData extends JPanel {
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
             if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(9, 24))
-                    && lt.isBefore(LocalTime.of(11, 31))) || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
+                    && lt.isBefore(LocalTime.of(11, 31))) || (lt.isAfter(LocalTime.of(12, 59))
+                    && lt.isBefore(LocalTime.of(15, 1))))) {
                 //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 System.out.println(getStr(dt, open, high, low, close));
-                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get("SGXA50").lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
-                ChinaData.priceMapBar.get("SGXA50").put(lt, new SimpleBar(open, high, low, close));
-                ChinaData.sizeTotalMap.get("SGXA50").put(lt, volume * 1d + previousVol);
+                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get(ticker).lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
+                ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(open, high, low, close));
+                ChinaData.sizeTotalMap.get(ticker).put(lt, volume * 1d + previousVol);
             }
         } else {
             System.out.println(getStr(date, open, high, low, close));
