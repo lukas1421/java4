@@ -54,13 +54,13 @@ public class Utility {
     //static final Comparator<? super Entry<LocalTime,SimpleBar>> BAR_HIGH = Comparator.comparingDouble(e->e.getValue().getHigh());
 
     //@SuppressWarnings("ComparatorMethodParameterNotUsed")
-    public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_HIGH = Comparator.comparingDouble(e->e.getValue().getHigh());
+    public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_HIGH = Comparator.comparingDouble(e -> e.getValue().getHigh());
 //            (e1, e2) -> e1.getValue().getHigh() >= e2.getValue().getHigh() ? 1 : -1;
     //Map.Entry.comparingByValue(Comparator.comparingDouble(SimpleBar::getHigh));
 
     @SuppressWarnings("ComparatorMethodParameterNotUsed")
-    public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_LOW = Comparator.comparingDouble(e->e.getValue().getLow());
-            //(e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
+    public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_LOW = Comparator.comparingDouble(e -> e.getValue().getLow());
+    //(e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
 
     public static final Predicate<? super Map.Entry<LocalTime, ?>> IS_OPEN_PRED = e -> e.getKey().isAfter(LocalTime.of(9, 29, 59));
     public static final LocalTime AM914T = LocalTime.of(9, 14, 0);
@@ -137,7 +137,7 @@ public class Utility {
 
     public static LocalDate getFirstDayofMonth(LocalDateTime ld) {
         LocalDate res = ld.toLocalDate();
-        return LocalDate.of(res.getYear(),res.getMonth(), 1);
+        return LocalDate.of(res.getYear(), res.getMonth(), 1);
     }
 
     public static LocalDate getMondayOfWeek(LocalDate ld) {
@@ -273,7 +273,7 @@ public class Utility {
 
 
     public static LocalDate getPreviousWorkday(LocalDate ld) {
-        return ld.minusDays(ld.getDayOfWeek().equals(DayOfWeek.MONDAY)?3L:1L);
+        return ld.minusDays(ld.getDayOfWeek().equals(DayOfWeek.MONDAY) ? 3L : 1L);
     }
 
     public static double pd(List<String> l, int index) {
@@ -424,17 +424,16 @@ public class Utility {
             , Map<String, ? extends NavigableMap<LocalTime, Double>> mp2) {
 
         System.out.println(" localdate is " + ld);
-
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-        final String dateString = ld.format(formatter);
+        String dateString = ld.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         System.out.println(" date is " + dateString);
 
-        symbolNames.forEach(e -> {
+        for (String e : symbolNames) {
             //System.out.println(" date stock " + dateString + " " + e);
             boolean found = false;
             String name = (e.substring(0, 2).toUpperCase() + "#" + e.substring(2) + ".txt");
             String line;
             double totalSize = 0.0;
+            //AtomicInteger counter = new AtomicInteger(0);
 
             if (!e.equals("sh204001") && (e.substring(0, 2).toUpperCase().equals("SH") || e.substring(0, 2).toUpperCase().equals("SZ"))) {
                 try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxPath + name)))) {
@@ -446,13 +445,20 @@ public class Utility {
                             LocalTime lt = LocalTime.of(Integer.parseInt(time.substring(0, 2)), Integer.parseInt(time.substring(2)));
                             mp1.get(e).put(lt.minusMinutes(1L), new SimpleBar(Double.parseDouble(al1.get(2)), Double.parseDouble(al1.get(3)),
                                     Double.parseDouble(al1.get(4)), Double.parseDouble(al1.get(5))));
-                            if (Double.parseDouble(al1.get(7)) == 0.0) {
-                                totalSize += (Double.parseDouble(al1.get(6)) / 100);
-                                mp2.get(e).put(lt.minusMinutes(1L), totalSize);
-                            } else {
-                                totalSize += (Double.parseDouble(al1.get(7)) / 1000000);
-                                mp2.get(e).put(lt.minusMinutes(1L), totalSize);
+
+//                            if(e.equals("sh600519")) {
+//                                System.out.println(" counter is " + counter.incrementAndGet());
+//                                System.out.println(" moutai date time vol size " + dateString + " " + lt + " "
+//                                        + (Double.parseDouble(al1.get(7)) / 1000000) +  " " + totalSize);
+//                            }
+
+                            if (lt.equals(LocalTime.of(9, 31))) {
+                                totalSize = 0.0;
                             }
+
+                            totalSize += (Double.parseDouble(al1.get(7)) / 1000000);
+                            mp2.get(e).put(lt.minusMinutes(1L), totalSize);
+                            //  }
                         }
                     }
                     if (found) {
@@ -482,7 +488,7 @@ public class Utility {
                     ex.printStackTrace();
                 }
             }
-        });
+        }
     }
 
     public static String addSHSZ(String s) {
@@ -604,7 +610,7 @@ public class Utility {
     }
 
     public static LocalTime roundTo5(LocalTime t) {
-        return min(max(LocalTime.of(9, 0), (t.getMinute() % 5 == 0) ? t : t.plusMinutes(5 - t.getMinute() % 5)),LocalTime.of(15,0));
+        return min(max(LocalTime.of(9, 0), (t.getMinute() % 5 == 0) ? t : t.plusMinutes(5 - t.getMinute() % 5)), LocalTime.of(15, 0));
     }
 
     public static LocalDateTime roundTo5Ldt(LocalDateTime t) {

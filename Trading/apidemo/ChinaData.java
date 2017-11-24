@@ -366,10 +366,11 @@ public final class ChinaData extends JPanel {
     }
 
     private static void getFromTDX(LocalDate today, LocalDate ytd, LocalDate y2) {
-
-        CompletableFuture.runAsync(() -> Utility.getFilesFromTDXGen(today, ChinaData.priceMapBar, ChinaData.sizeTotalMap));
-        CompletableFuture.runAsync(() -> Utility.getFilesFromTDXGen(ytd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd));
-        CompletableFuture.runAsync(() -> Utility.getFilesFromTDXGen(y2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2));
+        CompletableFuture.runAsync(()-> {
+            Utility.getFilesFromTDXGen(today, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
+            //Utility.getFilesFromTDXGen(ytd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
+            //Utility.getFilesFromTDXGen(y2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
+        });
     }
 
     private static void retrieveDataAll() {
@@ -393,15 +394,22 @@ public final class ChinaData extends JPanel {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-
-        System.out.println(" get date Map  " + dateMap.toString());
-        System.out.println(" get ftse open map " + ftseOpenMap.toString());
+//
+//        System.out.println(" get date Map  " + dateMap.toString());
+//        System.out.println(" get ftse open map " + ftseOpenMap.toString());
 
         CompletableFuture.runAsync(() -> controller().getSGXA50HistoricalCustom(20000, getFrontFutContract()
                 , ChinaData::handleSGX50HistData, 7));
 
-        // get from tdx
-        getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0));
+        CompletableFuture.runAsync(() -> controller().getSGXA50HistoricalCustom(20001, getBackFutContract()
+                , ChinaData::handleSGX50HistData, 7));
+
+// get from tdx
+//        currDate = LocalDate.now();
+//        ytd = currDate.minusDays(1L);
+//        y2 = currDate.minusDays(2L);
+        getFromTDX(LocalDate.now(),LocalDate.now().minusDays(1L),LocalDate.now().minusDays(2L) );
+        //getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0));
         //futures
 
         //build A50
@@ -684,8 +692,8 @@ public final class ChinaData extends JPanel {
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
-            System.out.println(" currdate ytd y2 " + currDate + " " + ytd + " " + y2);
-            System.out.println(" Date open high low ld lt " + dt + " " + open + " " + close + " " + ld + " " + lt);
+            //System.out.println(" currdate ytd y2 " + currDate + " " + ytd + " " + y2);
+            //System.out.println(" Date open high low ld lt " + dt + " " + open + " " + close + " " + ld + " " + lt);
 
             if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
 

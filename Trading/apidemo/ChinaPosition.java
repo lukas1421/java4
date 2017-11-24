@@ -989,7 +989,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     private static double getBuyTradePnl(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
-        double defaultPrice = priceMapBar.get(name).lastEntry().getValue().getClose();
+        double defaultPrice = Optional.ofNullable(priceMapBar.get(name).lastEntry()).map(Entry::getValue).map(SimpleBar::getClose).orElse(0.0);
         double price = ChinaStock.priceMap.getOrDefault(name,0.0)==0.0?
                 defaultPrice:ChinaStock.priceMap.get(name);
 

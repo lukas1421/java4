@@ -335,6 +335,9 @@ public final class ChinaStock extends JPanel {
                                 selectedNameStock = symbolNamesFull.get(modelRow);
                                 selectedBench = benchSimpleMap.getOrDefault(selectedNameStock, "");
 
+                                ChinaData.sizeTotalMap.get(selectedNameStock).entrySet().stream().filter(e->e.getKey().isBefore(LocalTime.of(9,35)))
+                                        .forEach(System.out::println);
+
                                 //System.out.println( " selected stock/bench is " + selectedNameStock + " " + selectedBench);
                                 graph1.fillInGraph(selectedNameStock);
                                 //graph6.fillInGraph(selectedNameStock);
@@ -1100,8 +1103,8 @@ public final class ChinaStock extends JPanel {
         });
     }
 
-    void toggleFilterOn() {
-        if (filterOn == false) {
+    private void toggleFilterOn() {
+        if (!filterOn) {
             List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
             filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, rangeThresh, RANGECOL));
             filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, sizeThresh, SIZECOL));
