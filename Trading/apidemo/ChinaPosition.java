@@ -989,9 +989,22 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     private static double getBuyTradePnl(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
+        double defaultPrice = priceMapBar.get(name).lastEntry().getValue().getClose();
+        double price = ChinaStock.priceMap.getOrDefault(name,0.0)==0.0?
+                defaultPrice:ChinaStock.priceMap.get(name);
+
+
+//        if(name.equals("SGXA50")) {
+//            System.out.println(" printing buying pnl for sgx a50 ");
+//            System.out.println(" fx is " + fx);
+//            System.out.println(" price " + price);
+//            System.out.println(" trade map print " + tradesMap.get(name));
+//
+//        }
+
         return (tradesMap.get(name).size() > 0 && Utility.noZeroArrayGen(name, ChinaStock.priceMap))
                 ? tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).mapToDouble(e -> (((Trade) e.getValue()).getSize())
-                * (ChinaStock.priceMap.getOrDefault(name, 0.0) - ((Trade) e.getValue()).getPrice()) - ((Trade) e.getValue()).getTradingCost(name)).sum() * fx : 0.0;
+                * (price - ((Trade) e.getValue()).getPrice()) - ((Trade) e.getValue()).getTradingCost(name)).sum() * fx : 0.0;
     }
 
     //    static double getTradingCost(String name, Trade td) {
@@ -1430,6 +1443,8 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
+
+        String ticker = ibContractToSymbol(contract);
         System.out.println(" in trade report " + contract.toString());
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
         System.out.println(LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss")));
@@ -1446,12 +1461,12 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
             System.out.println(" time is " + ldt.toLocalTime());
             System.out.println(" day is " + LocalDateTime.now().getDayOfMonth());
 
-            if (ChinaPosition.tradesMap.get("SGXA50").containsKey(lt)) {
+            if (ChinaPosition.tradesMap.get(ticker).containsKey(lt)) {
                 System.out.println(" lt is " + lt);
-                ((Trade) ChinaPosition.tradesMap.get("SGXA50").get(lt)).merge(new FutureTrade(execution.price(), sign * execution.cumQty()));
+                ((Trade) ChinaPosition.tradesMap.get(ticker).get(lt)).merge(new FutureTrade(execution.price(), sign * execution.cumQty()));
             } else {
                 System.out.println(" else lt " + lt);
-                ChinaPosition.tradesMap.get("SGXA50").put(lt, new FutureTrade(execution.price(), sign * execution.cumQty()));
+                ChinaPosition.tradesMap.get(ticker).put(lt, new FutureTrade(execution.price(), sign * execution.cumQty()));
             }
         }
     }

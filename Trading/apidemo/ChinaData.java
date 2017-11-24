@@ -673,6 +673,10 @@ public final class ChinaData extends JPanel {
         LocalDate ytd = ChinaData.dateMap.get(1);
         LocalDate y2 = ChinaData.dateMap.get(0);
 
+        currDate = LocalDate.now();
+        ytd = currDate.minusDays(1L);
+        y2 = currDate.minusDays(2L);
+
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);
             Calendar cal = Calendar.getInstance();

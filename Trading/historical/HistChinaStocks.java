@@ -298,6 +298,8 @@ public class HistChinaStocks extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
+                    sorter.setRowFilter(null);
+                    filterOn = false;
                     SwingUtilities.invokeLater(() -> model.fireTableDataChanged());
                 }
             }
@@ -421,7 +423,7 @@ public class HistChinaStocks extends JPanel {
 
         futOnlyButton.addActionListener(l -> {
             if (futOnlyButton.isSelected()) {
-                MTM_PRED = m -> tickerNotFuture(m.getKey());
+                MTM_PRED = m -> !tickerNotFuture(m.getKey());
             } else {
                 MTM_PRED = m -> true;
             }
@@ -805,7 +807,7 @@ public class HistChinaStocks extends JPanel {
             if (prices.size() > 0) {
                 return prices.entrySet().stream().map(Map.Entry::getKey).map(LocalDateTime::toLocalDate).distinct()
                         .mapToDouble(s -> fx * openPos *
-                                (Optional.of(prices.floorEntry(LocalDateTime.of(s, LocalTime.of(12, 0))))
+                                (Optional.ofNullable(prices.floorEntry(LocalDateTime.of(s, LocalTime.of(12, 0))))
                                         .map(Map.Entry::getValue).map(SimpleBar::getClose).orElse(0.0) -
                                         Optional.ofNullable(prices.floorEntry(LocalDateTime.of(s.minusDays(1), LocalTime.of(15, 0))))
                                                 .map(Map.Entry::getValue).map(SimpleBar::getClose).orElse(lastWeekClose))).sum();
