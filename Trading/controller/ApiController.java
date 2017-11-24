@@ -1090,25 +1090,13 @@ public class ApiController implements EWrapper {
                 //if(TickType.get(tickType) == TickType.LAST) {
                     lh.handlePrice(TickType.get(tickType),
                             r.getContract().symbol(), price, LocalTime.now().truncatedTo(ChronoUnit.MINUTES));
-
             } catch(Exception ex) {
                 System.out.println(" handling price has issues " );
                 ex.printStackTrace();
             }
-
         }
-
-        if (m_topMktDataMap.containsKey(reqId)) {
-            handler = m_topMktDataMap.get(reqId);
-        } else {
-            handler = null;
-        }
-
-        if (m_topMktDataMap1.containsKey(reqId)) {
-            handler1 = m_topMktDataMap1.get(reqId);
-        } else {
-            handler1 = null;
-        }
+        handler = m_topMktDataMap.getOrDefault(reqId, null);
+        handler1 = m_topMktDataMap1.getOrDefault(reqId, null);
 
         if (handler != null) {
 
@@ -1150,11 +1138,7 @@ public class ApiController implements EWrapper {
             handler.tickSize(TickType.get(tickType), size);
         }
 
-        if (m_topMktDataMap1.containsKey(reqId)) {
-            handler1 = m_topMktDataMap1.get(reqId);
-        } else {
-            handler1 = null;
-        }
+        handler1 = m_topMktDataMap1.getOrDefault(reqId, null);
 
         if (handler1 != null) {
             symb = Integer.parseInt(m_symReqMap.get(reqId));

@@ -56,12 +56,12 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 
     public static volatile DisplayGranularity dispGran = DisplayGranularity._1MDATA;
 
-    static volatile ToDoubleFunction<Entry<String,Integer>> positionComparingFunc=
-            e -> fxMap.getOrDefault(e.getKey(),1.0)
-                    *e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0) ;
+    static volatile ToDoubleFunction<Entry<String, Integer>> positionComparingFunc =
+            e -> fxMap.getOrDefault(e.getKey(), 1.0)
+                    * e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0);
 
     static volatile ToDoubleFunction<String> sharpeComparingFunc =
-            s->ChinaStock.sharpeMap.getOrDefault(s,0.0);
+            s -> ChinaStock.sharpeMap.getOrDefault(s, 0.0);
 
     private static final GraphMonitor GRAPH1 = GraphMonitorFactory.generate(1);
     private static final GraphMonitor GRAPH2 = GraphMonitorFactory.generate(2);
@@ -439,7 +439,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                 processGraphMonitors(ChinaPosition.getNetPosition().entrySet().stream().sorted(reverseComparator(
                         Comparator.comparingDouble(positionComparingFunc))).map(Map.Entry::getKey).limit(18)
                         .collect(Collectors.toCollection(LinkedList::new)));
-            } else if(displaySharp) {
+            } else if (displaySharp) {
                 sharpeComparingFunc = s -> ChinaData.priceMinuteSharpe.getOrDefault(s, 0.0);
 
                 processGraphMonitors(sharpMapMaster.get(yqm).keySet()
@@ -458,9 +458,9 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                         Comparator.comparingDouble(positionComparingFunc))).map(Map.Entry::getKey).limit(18)
                         .collect(Collectors.toCollection(LinkedList::new)));
 
-            } else if(displaySharp) {
+            } else if (displaySharp) {
 
-                sharpeComparingFunc = s-> ChinaData.wtdSharpe.getOrDefault(s,0.0);
+                sharpeComparingFunc = s -> ChinaData.wtdSharpe.getOrDefault(s, 0.0);
 
                 processGraphMonitors(sharpMapMaster.get(yqm).keySet()
                         .stream().sorted(reverseComparator(Comparator.comparingDouble(sharpeComparingFunc)))
@@ -475,13 +475,13 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
             if (displayPos) {
                 positionComparingFunc = e -> ChinaStock.sharpeMap.getOrDefault(e.getKey(), 0.0);
                 //LinkedList<String> l = ;
-                System.out.println(" YTD processing for POS " );
+                System.out.println(" YTD processing for POS ");
                 processGraphMonitors(ChinaPosition.getNetPosition().entrySet().stream().sorted(reverseComparator(
                         Comparator.comparingDouble(positionComparingFunc))).map(Map.Entry::getKey).limit(18)
                         .collect(Collectors.toCollection(LinkedList::new)));
 
-            } else if(displaySharp) {
-                sharpeComparingFunc = s -> ChinaStock.sharpeMap.getOrDefault(s,0.0);
+            } else if (displaySharp) {
+                sharpeComparingFunc = s -> ChinaStock.sharpeMap.getOrDefault(s, 0.0);
 
                 processGraphMonitors(sharpMapMaster.get(yqm).keySet()
                         .stream().sorted(reverseComparator(Comparator.comparingDouble(sharpeComparingFunc)))
@@ -511,8 +511,8 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
             displaySharp = !posButton.isSelected();
             displayInterest = !posButton.isSelected();
             displayCorrel = !posButton.isSelected();
-            positionComparingFunc = e -> fxMap.getOrDefault(e.getKey(),1.0)
-                    *e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0);
+            positionComparingFunc = e -> fxMap.getOrDefault(e.getKey(), 1.0)
+                    * e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0);
             refresh();
             System.out.println(" display pos is " + displayPos);
 
@@ -525,7 +525,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
             displaySharp = sharpeButton.isSelected();
             displayInterest = !sharpeButton.isSelected();
             displayCorrel = !sharpeButton.isSelected();
-            sharpeComparingFunc = s->ChinaStock.sharpeMap.getOrDefault(s,0.0);
+            sharpeComparingFunc = s -> ChinaStock.sharpeMap.getOrDefault(s, 0.0);
             refresh();
             //System.out.println(" display sharpe is " + displaySharp);
         });
@@ -553,8 +553,6 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         bg.add(sharpeButton);
         bg.add(interestButton);
         bg.add(correlButton);
-
-
 
 
         JRadioButton sh000001Button = new JRadioButton("主");
@@ -633,14 +631,14 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 
         JRadioButton _1minButton = new JRadioButton("1m");
         JRadioButton _5minButton = new JRadioButton("5m");
-        ButtonGroup granuBG= new ButtonGroup();
+        ButtonGroup granuBG = new ButtonGroup();
         granuBG.add(_1minButton);
         granuBG.add(_5minButton);
         _1minButton.setSelected(true);
 
-        _1minButton.addActionListener(al-> dispGran = DisplayGranularity._1MDATA);
+        _1minButton.addActionListener(al -> dispGran = DisplayGranularity._1MDATA);
 
-        _5minButton.addActionListener(al-> dispGran = DisplayGranularity._5MDATA);
+        _5minButton.addActionListener(al -> dispGran = DisplayGranularity._5MDATA);
 
         //JRadioButton hushenButton = new JRadioButton();
         stopComputeButton.addActionListener(al -> {
@@ -850,7 +848,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
             GraphMonitorFactory.getGraphMonitor(i).fillInGraph(ticker);
             i++;
         }
-        SwingUtilities.invokeLater(()->{
+        SwingUtilities.invokeLater(() -> {
             jp.repaint();
         });
 
@@ -910,12 +908,12 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                 //todayList.stream().peek(System.out::println).map(s -> ChinaStock.industryNameMap.getOrDefault(s, "")).forEach(System.out::println);
                 //todayList.stream().filter(buildPred("板块")).forEach(System.out::println);
                 //todayList.stream().limit(20).forEach(System.out::println);
-                 LinkedList<String> l = ChinaData.priceMinuteSharpe.entrySet().stream().filter(e->buildPred("板块").test(e.getKey()))
-                         .sorted(reverseComparator(Comparator.comparingDouble(Map.Entry::getValue)))
-                         .peek(System.out::println)
+                LinkedList<String> l = ChinaData.priceMinuteSharpe.entrySet().stream().filter(e -> buildPred("板块").test(e.getKey()))
+                        .sorted(reverseComparator(Comparator.comparingDouble(Map.Entry::getValue)))
+                        .peek(System.out::println)
                         .map(Entry::getKey).collect(Collectors.toCollection(LinkedList::new));
-                 System.out.println(" sector list is " + l);
-                 return l;
+                System.out.println(" sector list is " + l);
+                return l;
 //
 //  return todayList.stream().filter(buildPred("板块")).peek(System.out::println)
 //                        .collect(Collectors.toCollection(LinkedList::new));
@@ -929,7 +927,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         return new LinkedList<>();
     }
 
-    static double computeWtdSharpe(String nam) {
+    private static double computeWtdSharpe(String nam) {
         double sumRet = sumRetWtd.getOrDefault(nam, 0.0);
         double sumRetSq = sumRetSqWtd.getOrDefault(nam, 0.0);
         int n = nWtd.getOrDefault(nam, 0);
@@ -962,15 +960,16 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 
     private static LinkedList<String> getTopWtdSharpeList(Predicate<String> pred) {
         //outputSampleStock();
-        ChinaData.priceMapBar.entrySet().stream().forEach(e -> {
-            double wtdSharp = computeWtdSharpe(e.getKey());
-            ChinaData.wtdSharpe.put(e.getKey(), wtdSharp);
+        ChinaData.priceMapBar.forEach((key, value) -> {
+            if (!key.equals("SGXA50")) {
+                double wtdSharp = computeWtdSharpe(key);
+                ChinaData.wtdSharpe.put(key, wtdSharp);
+            }
         });
         //System.out.println(" testing 000905 " + Double.toString(ChinaData.wtdSharpe.getOrDefault("sh000905", 0.0)));
-        LinkedList<String> res = ChinaData.wtdSharpe.entrySet().stream().sorted(reverseComparator(Comparator.comparingDouble(Entry::getValue)))
-                .map(Map.Entry::getKey).filter(pred).collect(Collectors.toCollection(LinkedList::new));
 
-        return res;
+        return ChinaData.wtdSharpe.entrySet().stream().sorted(reverseComparator(Comparator.comparingDouble(Entry::getValue)))
+                .map(Entry::getKey).filter(pred).collect(Collectors.toCollection(LinkedList::new));
     }
 
     private static LinkedList<String> getTopStocksIndexCorrel(String idx) {
@@ -1048,5 +1047,5 @@ enum SharpePeriod {
 }
 
 enum YQM {
-    YTD, QTD,MTD;
+    YTD, QTD, MTD;
 }

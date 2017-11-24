@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaData.wtdSharpe;
 import static apidemo.ChinaPosition.tradesMap;
 import static utility.Utility.*;
 
@@ -649,6 +650,13 @@ public class HistChinaStocks extends JPanel {
             }
         } else {
             priceMapForHist.put("SGXA50", chinaWtd.get("SGXA50").lastEntry().getValue().getClose());
+            System.out.println(" last line for sgx a50 " + getStr(date, open, high, low, close) );
+
+            NavigableMap<LocalDateTime, Double> ret =
+                    SharpeUtility.getReturnSeries(chinaWtd.get("SGXA50"), LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1), LocalTime.MAX));
+            double sgxWtdSharpe = SharpeUtility.getSharpe(ret, 48);
+            wtdSharpe.put("SGXA50", sgxWtdSharpe);
+
             //costBasisMap.put("SGXA50", HistChinaStocks.lastWeekCloseMap.get(close));
             //System.out.println(getStr(date, open, high, low, close));
         }
@@ -750,7 +758,9 @@ public class HistChinaStocks extends JPanel {
         return weekMtmMap;
     }
 
-    private static NavigableMap<LocalDateTime, Double> computeMtm(String ticker, int openPos, NavigableMap<LocalDateTime, SimpleBar> prices, double lastWeekClose) {
+    private static NavigableMap<LocalDateTime, Double> computeMtm(String ticker, int openPos,
+                                                                  NavigableMap<LocalDateTime, SimpleBar> prices, double lastWeekClose) {
+
         NavigableMap<LocalDateTime, Double> res = new ConcurrentSkipListMap<>();
         double fx = fxMap.getOrDefault(ticker, 1.0);
 
