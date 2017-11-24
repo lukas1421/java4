@@ -268,7 +268,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         JToggleButton includeFutToggle = new JToggleButton("NO Fut");
         includeFutToggle.addActionListener(l -> {
             if (includeFutToggle.isSelected()) {
-                GEN_MTM_PRED = m -> !m.getKey().equals("SGXA50");
+                GEN_MTM_PRED = m -> !m.getKey().equals("SGXA50") && !m.getValue().equals("SGXA50BM");
             } else {
                 GEN_MTM_PRED = m -> true;
             }

@@ -728,4 +728,8 @@ public class Utility {
         }
         return ct.symbol();
     }
+
+    public static boolean tickerNotFuture(String s) {
+        return !s.equals("SGXA50") && !s.equals("SGXA50BM");
+    }
 }

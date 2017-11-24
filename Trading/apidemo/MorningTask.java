@@ -546,6 +546,7 @@ public final class MorningTask implements HistoricalHandler {
                     Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                             + "\t" + zdt.getHour(), true);
                     Utility.simpleWriteToFile("SGXA50" + "\t" + close, false, fxOutput);
+                    Utility.simpleWriteToFile("SGXA50BM" + "\t" + close, false, fxOutput);
                     break;
             }
         }

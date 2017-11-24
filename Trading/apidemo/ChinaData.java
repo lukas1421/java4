@@ -319,12 +319,12 @@ public final class ChinaData extends JPanel {
 
         getSGXA50HistButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
             controller().getSGXA50HistoricalCustom(20000, getFrontFutContract(), ChinaData::handleSGX50HistData, 7);
-            controller().getSGXA50HistoricalCustom(20000, getBackFutContract(), ChinaData::handleSGX50HistData, 7);
+            controller().getSGXA50HistoricalCustom(20001, getBackFutContract(), ChinaData::handleSGX50HistData, 7);
         }));
 
         getSGXA50TodayButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
             controller().getSGXA50HistoricalCustom(50000, getFrontFutContract(), ChinaData::handleSGXDataToday, 1);
-            controller().getSGXA50HistoricalCustom(50000, getBackFutContract(), ChinaData::handleSGXDataToday, 1);
+            controller().getSGXA50HistoricalCustom(50001, getBackFutContract(), ChinaData::handleSGXDataToday, 1);
         }));
 
         tdxButton.addActionListener(l -> getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0)));
@@ -663,6 +663,7 @@ public final class ChinaData extends JPanel {
     private static void handleSGX50HistData(Contract c, String date, double open, double high, double low, double close, int volume) {
 
         String ticker = ibContractToSymbol(c);
+        System.out.println(" handle sgx 50 hist data ticker is " + ticker);
 //        LocalDate currDate = LocalDate.now();
 //        long daysToSubtract = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 3L : 1L;
 //        long daysToSubtract1 = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 4L : 2L;
@@ -679,8 +680,8 @@ public final class ChinaData extends JPanel {
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
-            //System.out.println(" currdate ytd y2 " + currDate + " " + ytd + " " + y2);
-            //System.out.println(" Date open high low ld lt " + dt + " " + open + " " + close + " " + ld + " " + lt);
+            System.out.println(" currdate ytd y2 " + currDate + " " + ytd + " " + y2);
+            System.out.println(" Date open high low ld lt " + dt + " " + open + " " + close + " " + ld + " " + lt);
 
             if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
 
