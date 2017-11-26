@@ -35,7 +35,6 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
     private static NavigableMap<LocalTime, Double> netDeltaMap;
     private static NavigableMap<String, Double> benchMap;
     private static Map<String, Double> benchMtmMap;
-    private static LinkedList<String> pnl1mList;
     private String winner1;
     private String winner2;
     private String winner3;
@@ -199,7 +198,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
     }
 
     public void setPnl1mChgMap(LinkedList<String> m) {
-        pnl1mList = m;
+        LinkedList<String> pnl1mList = m;
         String t;
         winner1 = (t = m.poll()) != null ? t : "";
         winner2 = (t = m.poll()) != null ? t : "";

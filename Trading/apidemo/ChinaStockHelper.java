@@ -39,7 +39,6 @@ import static apidemo.SinaStock.weightMapA50;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.lang.System.out;
-import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toCollection;
 
 public final class ChinaStockHelper {
@@ -67,10 +66,10 @@ public final class ChinaStockHelper {
     public static String vr2 = "";
     public static String vr3 = "";
 
-    static ToDoubleFunction<? super NavigableMap<LocalTime, SimpleBar>> HLRANGE = tm -> round(1000d * tm.lastEntry().getValue().getHLRange()) / 10d;
-    static ToDoubleFunction<? super NavigableMap<LocalTime, SimpleBar>> BARRTN = tm -> round(1000d * tm.lastEntry().getValue().getBarReturn()) / 10d;
+    private static ToDoubleFunction<? super NavigableMap<LocalTime, SimpleBar>> HLRANGE = tm -> round(1000d * tm.lastEntry().getValue().getHLRange()) / 10d;
+    private static ToDoubleFunction<? super NavigableMap<LocalTime, SimpleBar>> BARRTN = tm -> round(1000d * tm.lastEntry().getValue().getBarReturn()) / 10d;
 
-    static double getCurrentSize(String name) {
+    private static double getCurrentSize(String name) {
         return Math.round(sizeMap.getOrDefault(name, 0L) / 10d) / 10d;
     }
 
@@ -80,23 +79,26 @@ public final class ChinaStockHelper {
 
             Predicate<? super Entry<String, ?>> sectorFilter = e -> industryNameMap.getOrDefault(e.getKey(), "").equals(sector);
             Predicate<? super Entry<String, ? extends NavigableMap<LocalTime, SimpleBar>>> normalBar = e -> e.getValue().size() > 2 && !e.getValue().lastEntry().getValue().containsZero();
-            Comparator<? super NavigableMap<LocalTime, SimpleBar>> compLastRange = (v1, v2) -> v1.lastEntry().getValue().getHLRange() >= v2.lastEntry().getValue().getHLRange() ? -1 : 1;
-            Comparator<? super NavigableMap<LocalTime, SimpleBar>> compBarRtn = (v1, v2) -> v1.lastEntry().getValue().getBarReturn() >= v2.lastEntry().getValue().getBarReturn() ? -1 : 1;
-            Comparator<? super NavigableMap<LocalTime, SimpleBar>> compDayRtn = (v1, v2) -> computeReturn(v1) >= computeReturn(v2) ? -1 : 1;
+            Comparator<? super NavigableMap<LocalTime, SimpleBar>> compLastRange = Comparator.comparingDouble(v->v.lastEntry().getValue().getHLRange());
+                    //(v1, v2) -> v1.lastEntry().getValue().getHLRange() >= v2.lastEntry().getValue().getHLRange() ? -1 : 1;
+            Comparator<? super NavigableMap<LocalTime, SimpleBar>> compBarRtn = Comparator.comparingDouble(v->v.lastEntry().getValue().getBarReturn());
+                    //(v1, v2) -> v1.lastEntry().getValue().getBarReturn() >= v2.lastEntry().getValue().getBarReturn() ? -1 : 1;
+            Comparator<? super NavigableMap<LocalTime, SimpleBar>> compDayRtn = Comparator.comparingDouble(ChinaStockHelper::computeReturn);
+                    //(v1, v2) -> computeReturn(v1) >= computeReturn(v2) ? -1 : 1;
             Comparator<? super String> compVR = Comparator.comparingDouble(ChinaSizeRatio::computeSizeRatioLast).reversed();
 
             maxLastRangeList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compLastRange)).limit(3)
-                    .collect(mapping(e -> (Utility.getStr("", e.getKey(), nameMap.get(e.getKey()), HLRANGE.applyAsDouble(e.getValue()))), toCollection(LinkedList::new)));
+                    .map(e -> (Utility.getStr("", e.getKey(), nameMap.get(e.getKey()), HLRANGE.applyAsDouble(e.getValue())))).collect(toCollection(LinkedList::new));
 
             maxLastBarRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compBarRtn)).limit(3)
-                    .collect(mapping(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), BARRTN.applyAsDouble(e.getValue()))), toCollection(LinkedList::new)));
+                    .map(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), BARRTN.applyAsDouble(e.getValue())))).collect(toCollection(LinkedList::new));
 
             maxDayRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compDayRtn)).limit(3)
-                    .collect(mapping(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), round(computeReturn(e.getValue()) * 1000d) / 10d, "%")), toCollection(LinkedList::new)));
+                    .map(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), round(computeReturn(e.getValue()) * 1000d) / 10d, "%"))).collect(toCollection(LinkedList::new));
 
             maxVRList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByKey(compVR)).limit(3)
-                    .collect(mapping(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), round(10d * computeSizeRatioLast(e.getKey())) / 10d,
-                    getCurrentSize(e.getKey()))), toCollection(LinkedList::new)));
+                    .map(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), round(10d * computeSizeRatioLast(e.getKey())) / 10d,
+                    getCurrentSize(e.getKey())))).collect(toCollection(LinkedList::new));
 
             String t;
             range1 = ((t = maxLastRangeList.poll()) != null) ? t : "";
@@ -117,7 +119,7 @@ public final class ChinaStockHelper {
         }
     }
 
-    static double computeReturn(NavigableMap<LocalTime, SimpleBar> tm) {
+    private static double computeReturn(NavigableMap<LocalTime, SimpleBar> tm) {
         if (tm.size() > 0) {
             double last = tm.lastEntry().getValue().getClose();
             double open = tm.firstEntry().getValue().getOpen();
@@ -140,7 +142,7 @@ public final class ChinaStockHelper {
     static void checkZerosAndFix() {
         symbolNames.forEach(name -> {
             NavigableMap<LocalTime, SimpleBar> tm = ChinaData.priceMapBar.get(name);
-            tm.descendingKeySet().stream().forEachOrdered(t -> {
+            tm.descendingKeySet().forEach(t -> {
                 if (tm.get(t).containsZero()) {
                     tm.put(t, tm.ceilingEntry(t.plusMinutes(1)).getValue());
                 }
@@ -215,7 +217,7 @@ public final class ChinaStockHelper {
         });
     }
 
-    public static double getBarSharp(String name, Predicate<? super Entry<LocalTime, SimpleBar>> p) {
+    static double getBarSharp(String name, Predicate<? super Entry<LocalTime, SimpleBar>> p) {
         NavigableMap<LocalTime, SimpleBar> tm = ChinaData.priceMapBar.get(name);
         if (tm != null && tm.size() > 2) {
             long len = tm.entrySet().stream().filter(p).count();
@@ -234,11 +236,10 @@ public final class ChinaStockHelper {
 
         LocalDate today = LocalDate.now();
         long daysToSubtract = (today.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 3L : 1L;
-        LocalDate t = today;
-        System.out.println(" localdate is " + t);
+        System.out.println(" localdate is " + today);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
-        final String dateString = t.format(formatter);
+        final String dateString = today.format(formatter);
         System.out.println(" date is " + dateString);
 
         symbolNames.forEach(e -> {
@@ -299,7 +300,7 @@ public final class ChinaStockHelper {
 
         LocalDate today = LocalDate.now();
         long daysToSubtract = (today.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 4L : 2L;
-        LocalDate t = LocalDate.now().minusDays(daysToSubtract);
+        LocalDate t;
         t = LocalDate.of(2017, Month.MAY, 26);
         //boolean found = false;
 
@@ -343,9 +344,7 @@ public final class ChinaStockHelper {
                     if (!found) {
                         System.out.println(" for " + e + " filling done");
                         SimpleBar sb = new SimpleBar(priceMap.get(e));
-                        ChinaData.tradeTime.forEach(ti -> {
-                            ChinaData.priceMapBarYtd.get(e).put(ti, sb);
-                        });
+                        ChinaData.tradeTime.forEach(ti -> ChinaData.priceMapBarYtd.get(e).put(ti, sb));
                         System.out.println("last key " + e + " " + ChinaData.priceMapBarYtd.get(e).lastEntry());
                         System.out.println("noon last key " + e + " " + ChinaData.priceMapBarYtd.get(e).ceilingEntry(LocalTime.of(11, 30)).toString());
                     }
@@ -418,18 +417,12 @@ public final class ChinaStockHelper {
         }
     }
 
-    public static void fixVolMap() {
-        ChinaData.sizeTotalMap.entrySet().forEach(e -> {
-            Utility.fixVolNavigableMap(e.getKey(), e.getValue());
-        });
+    static void fixVolMap() {
+        ChinaData.sizeTotalMap.forEach(Utility::fixVolNavigableMap);
 
-        ChinaData.sizeTotalMapYtd.entrySet().forEach(e -> {
-            Utility.fixVolNavigableMap(e.getKey(), e.getValue());
-        });
+        ChinaData.sizeTotalMapYtd.forEach(Utility::fixVolNavigableMap);
 
-        ChinaData.sizeTotalMapY2.entrySet().forEach(e -> {
-            Utility.fixVolNavigableMap(e.getKey(), e.getValue());
-        });
+        ChinaData.sizeTotalMapY2.forEach(Utility::fixVolNavigableMap);
     }
 
     public LocalTime getMaxPriceRangeTime(String name) {
@@ -459,7 +452,7 @@ public final class ChinaStockHelper {
         return maxTime;
     }
 
-    public static void killAllDialogs() {
+    static void killAllDialogs() {
         dialogTracker.forEach(d -> {
             d.setVisible(false);
             d.dispose();
@@ -518,10 +511,7 @@ public final class ChinaStockHelper {
 
     //weakness indicator
     static boolean ytdWeak(String name) {
-        if (getAMCOY(name) < 0.0 && getPMCOY(name) > 0.0) {
-            return false;
-        }
-        return getCOY(name) < 0.0 || getPMCOY(name) < 0.0;
+        return (!(getAMCOY(name) < 0.0) || !(getPMCOY(name) > 0.0)) && (getCOY(name) < 0.0 || getPMCOY(name) < 0.0);
     }
 
     static boolean lastBarHighest(String name) {
@@ -532,7 +522,7 @@ public final class ChinaStockHelper {
         return GETMAXTIME.apply(name, Utility.IS_OPEN_PRED).equals(lastKey);
     }
 
-    public static void getHistoricalFX() {
+    static void getHistoricalFX() {
         Contract c = new Contract();
         c.symbol("USD");
         c.secType(Types.SecType.CASH);
@@ -547,11 +537,11 @@ public final class ChinaStockHelper {
     }
 
     static void roundAllData() {
-        ChinaData.priceMapBarYtd.entrySet().forEach((e) -> Utility.roundMap(e.getValue()));
-        ChinaData.priceMapBarY2.entrySet().forEach((e) -> Utility.roundMap(e.getValue()));
+        ChinaData.priceMapBarYtd.forEach((key, value) -> Utility.roundMap(value));
+        ChinaData.priceMapBarY2.forEach((key, value) -> Utility.roundMap(value));
     }
 
-    public static void buildA50FromSS(double open) {
+    static void buildA50FromSS(double open) {
 
         priceMapBar.get("FTSEA50").entrySet().removeIf(e -> e.getKey().isBefore(LocalTime.of(9, 29)));
 
@@ -679,13 +669,13 @@ public final class ChinaStockHelper {
     }
 
     static void computeMinuteSharpeAll() {
-        ChinaData.priceMapBar.entrySet().forEach(e -> {
-            double minSharp = SharpeUtility.computeMinuteSharpe(e.getValue().tailMap(LocalTime.of(9, 30), true));
+        ChinaData.priceMapBar.forEach((key, value) -> {
+            double minSharp = SharpeUtility.computeMinuteSharpe(value.tailMap(LocalTime.of(9, 30), true));
             //System.out.println(e.getKey() + " minsharp " + minSharp);
 //            if (e.getKey().equals("sh601398")) {
 //                e.getValue().tailMap(LocalTime.of(9, 30), true).entrySet().forEach(System.out::println);
 //            }
-            ChinaData.priceMinuteSharpe.put(e.getKey(), minSharp);
+            ChinaData.priceMinuteSharpe.put(key, minSharp);
         });
     }
 

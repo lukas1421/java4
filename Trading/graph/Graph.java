@@ -210,17 +210,17 @@ public class Graph extends JComponent implements GraphFillable {
     }
 
     public static double getReturn(NavigableMap<LocalTime, Double> tm) {
-        double initialP = 0;
-        double finalP = 0;
+        double initialP;
+        double finalP;
 
         if (tm.size() > 2 && (Math.abs((finalP = tm.lastEntry().getValue()) -
-                (initialP = tm.entrySet().stream().filter(entry -> entry.getValue() != 0.0).findFirst().get().getValue())) > 0.0001)) {
+                (initialP = tm.entrySet().stream().filter(entry -> entry.getValue() != 0.0).findFirst().map(Entry::getValue).orElse(0.0))) > 0.0001)) {
             return (double) 100 * Math.round(log(finalP / initialP) * 1000d) / 1000d;
         }
         return 0.0;
     }
 
-    public double getRangeY() {
+    private double getRangeY() {
         return (Utility.noZeroArrayGen(name, minMapY, maxMapY)) ? Math.round(100d * Math.log(maxMapY.get(name) / minMapY.get(name))) / 100d : 0.0;
     }
 
@@ -228,69 +228,69 @@ public class Graph extends JComponent implements GraphFillable {
         return tm.size() > 0 ? (double) Math.round((Utility.getMin(tm) / tm.entrySet().stream().findFirst().map(Entry::getValue).orElse(0.0) - 1) * 1000d) / 10d : 0.0;
     }
 
-    public long getSize1() {
+    private long getSize1() {
         return sizeMap.getOrDefault(name, 0L);
     }
 
-    public double getRetOPC() {
+    private double getRetOPC() {
         return (Utility.noZeroArrayGen(name, ChinaStock.closeMap, ChinaStock.openMap))
                 ? Math.round(1000d * Math.log(ChinaStock.openMap.get(name) / ChinaStock.closeMap.get(name))) / 10d : 0.0;
     }
 
-    public double getFirst1(String name) {
+    private double getFirst1(String name) {
         return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(Utility.AMOPENT) && Utility.NO_ZERO.test(openMap, name))
                 ? Math.round(1000d * (priceMapBar.get(name).floorEntry(LocalTime.of(9, 30)).getValue().getClose() /
                 openMap.get(name) - 1)) / 10d : 0.0;
     }
 
-    public double getFirst10(String name) {
+    private double getFirst10(String name) {
         return (Utility.normalMapGen(name, priceMapBar) && priceMapBar.get(name).containsKey(LocalTime.of(9, 31)) && Utility.noZeroArrayGen(name, openMap))
                 ? Math.round(1000d * (priceMapBar.get(name).floorEntry(Utility.AM940T).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
     }
 
-    public int getCurrentMaxMinYP() {
+    private int getCurrentMaxMinYP() {
         return (Utility.noZeroArrayGen(name, minMapY, priceMap)) ? (int) Math.min(100, Math.round(100d * (priceMap.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
-    public double getOpenYP() {
+    private double getOpenYP() {
         return (Utility.NO_ZERO.test(minMapY, name)) ? (int) Math.min(100, Math.round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
-    public int getCloseYP() {
+    private int getCloseYP() {
         return Utility.noZeroArrayGen(name, minMapY, maxMapY, closeMapY)
                 ? (int) Math.min(100, Math.round(100d * (closeMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
-    public double getCurrentPercentile() {
+    private double getCurrentPercentile() {
         return Utility.noZeroArrayGen(name, minMap) ? Math.min(100.0, Math.round(100d * ((priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name))))) : 0.0;
     }
 
     //get some 
-    public double getRetCHY() {
+    private double getRetCHY() {
         return (Utility.noZeroArrayGen(name, closeMapY, maxMapY)) ? Math.min(100.0, Math.round(1000d * Math.log(closeMapY.get(name) / maxMapY.get(name)))) / 10d : 0.0;
     }
 
-    public double getRetCLY() {
+    private double getRetCLY() {
         return (Utility.noZeroArrayGen(name, closeMapY, minMapY)) ? Math.min(100.0, Math.round(1000d * Math.log(closeMapY.get(name) / minMapY.get(name)))) / 10d : 0.0;
     }
 
-    public double getRetCC() {
+    private double getRetCC() {
         return Math.round(1000d * retCCY.getOrDefault(name, 0.0)) / 10d;
     }
 
-    public double getRetCO() {
+    private double getRetCO() {
         return Math.round(1000d * retCOY.getOrDefault(name, 0.0)) / 10d;
     }
 
-    public int getMinTY() {
+    private int getMinTY() {
         return minTY.getOrDefault(name, 0);
     }
 
-    public int getMaxTY() {
+    private int getMaxTY() {
         return maxTY.getOrDefault(name, 0);
     }
 
-    public LocalTime getAMMinT(NavigableMap<LocalTime, Double> tm) {
+    private LocalTime getAMMinT(NavigableMap<LocalTime, Double> tm) {
         if (tm.size() > 0) {
             if (tm.firstKey().isBefore(LocalTime.of(12, 1)) && tm.lastKey().isAfter(LocalTime.of(9, 30))) {
                 return tm.entrySet().stream().filter(entry1 -> entry1.getValue() != 0.0 && entry1.getKey().isAfter(LocalTime.of(9, 29)) && entry1.getKey().isBefore(LocalTime.of(12, 1)))
@@ -300,10 +300,11 @@ public class Graph extends JComponent implements GraphFillable {
         return LocalTime.of(9, 30);
     }
 
-    public LocalTime getAMMaxT(NavigableMap<LocalTime, Double> tm) {
+    private LocalTime getAMMaxT(NavigableMap<LocalTime, Double> tm) {
         if (!tm.isEmpty() & tm.size() > 2 && tm.firstKey().isBefore(LocalTime.of(12, 1)) && tm.lastKey().isAfter(LocalTime.of(9, 30))) {
-            return tm.entrySet().stream().filter(entry -> entry.getValue() != 0.0 && entry.getKey().isAfter(LocalTime.of(9, 29)) && entry.getKey().isBefore(LocalTime.of(12, 1)))
-                    .max(Entry.comparingByValue()).get().getKey();
+            return tm.entrySet().stream().filter(entry -> entry.getValue() != 0.0 && entry.getKey()
+                    .isAfter(LocalTime.of(9, 29)) && entry.getKey().isBefore(LocalTime.of(12, 1)))
+                    .max(Entry.comparingByValue()).map(Entry::getKey).orElse(LocalTime.of(9,30));
         }
         return LocalTime.of(9, 30);
     }
@@ -313,12 +314,12 @@ public class Graph extends JComponent implements GraphFillable {
                 ? Math.round(10d * ChinaStock.sizeMap.get(name) / ChinaDataYesterday.sizeY.get(name)) / 10d : 0.0;
     }
 
-    public Double getSizeSizeYT() {
+    private Double getSizeSizeYT() {
         return (Utility.normalMapGen(name, sizeTotalMapYtd, sizeTotalMapYtd))
                 ? Math.round(10d * sizeTotalMap.get(name).lastEntry().getValue() / sizeTotalMapYtd.get(name).lastEntry().getValue()) / 10d : 0.0;
     }
 
-    public int getPMchgY() {
+    private int getPMchgY() {
         return (Utility.noZeroArrayGen(name, minMapY, amCloseY, closeMapY, maxMapY))
                 ? (int) Math.min(100, Math.round(100d * (closeMapY.get(name) - amCloseY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }

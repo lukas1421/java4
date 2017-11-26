@@ -335,9 +335,6 @@ public final class ChinaStock extends JPanel {
                                 selectedNameStock = symbolNamesFull.get(modelRow);
                                 selectedBench = benchSimpleMap.getOrDefault(selectedNameStock, "");
 
-                                ChinaData.sizeTotalMap.get(selectedNameStock).entrySet().stream().filter(e->e.getKey().isBefore(LocalTime.of(9,35)))
-                                        .forEach(System.out::println);
-
                                 //System.out.println( " selected stock/bench is " + selectedNameStock + " " + selectedBench);
                                 graph1.fillInGraph(selectedNameStock);
                                 //graph6.fillInGraph(selectedNameStock);

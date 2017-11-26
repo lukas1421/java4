@@ -3,13 +3,8 @@ package graph;
 import apidemo.SinaStock;
 import auxiliary.SimpleBar;
 
-import static utility.Utility.getStr;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import javax.swing.*;
+import java.awt.*;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -18,32 +13,31 @@ import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
-import static java.util.stream.Collectors.*;
-import javax.swing.JComponent;
+
+import static java.util.stream.Collectors.toMap;
+import static utility.Utility.getStr;
 
 public class GraphXUSI extends JComponent {
 
-    static final int WIDTH_XU = 4;
+    private static final int WIDTH_XU = 4;
     int height;
-    double minXU;
-    double maxXU;
-    double minSI;
-    double maxSI;
+    private double minXU;
+    private double maxXU;
+    private double minSI;
+    private double maxSI;
     int close;
-    int close1;
     double rtn = 0;
-    NavigableMap<LocalTime, Double> xu = new ConcurrentSkipListMap<>();
-    NavigableMap<LocalTime, Double> sinaIndexTm;
-    NavigableMap<LocalTime, Integer> tmVol;
+    private NavigableMap<LocalTime, Double> xu = new ConcurrentSkipListMap<>();
+    //NavigableMap<LocalTime, Double> sinaIndexTm;
+    //NavigableMap<LocalTime, Integer> tmVol;
     String name;
     String chineseName;
     private boolean detailed = false;
     //private boolean drawable = true;
     private double openXU = 0.0;
     private double openSI = 0.0;
-    Font orig;
     public static final LocalTime AM900 = LocalTime.of(9, 0);
-    NavigableMap<LocalTime, Double> sina = new ConcurrentSkipListMap<>();
+    private NavigableMap<LocalTime, Double> sina = new ConcurrentSkipListMap<>();
 
     public GraphXUSI() {
         name = "";
@@ -67,15 +61,19 @@ public class GraphXUSI extends JComponent {
         repaint();
     }
 
+    @SuppressWarnings("unused")
     public void setSkipMapD(NavigableMap<LocalTime, SimpleBar> xu, NavigableMap<LocalTime, SimpleBar> si) {
         if (xu != null && si != null && xu.size() > 0 && si.size() > 0) {
             this.xu = xu.entrySet().stream().filter(a -> a.getKey().isAfter(LocalTime.now().minusMinutes(20)))
-                    .collect(toMap(Entry::getKey, e -> e.getValue().getClose(), (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getClose(),
+                            (a, b) -> a, ConcurrentSkipListMap::new));
 
             sina = si.entrySet().stream().filter(a -> a.getKey().isAfter(LocalTime.now().minusMinutes(30)))
-                    .collect(toMap(Entry::getKey, e -> e.getValue().getClose(), (a, b) -> a, ConcurrentSkipListMap::new));
+                    .collect(toMap(Map.Entry::getKey, e -> e.getValue().getClose(),
+                            (a, b) -> a, ConcurrentSkipListMap::new));
 
             openXU = Optional.ofNullable(xu.ceilingEntry(AM900)).orElse(xu.firstEntry()).getValue().getOpen();
+
             openSI = SinaStock.OPEN;
 
             detailed = true;
@@ -89,7 +87,7 @@ public class GraphXUSI extends JComponent {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g2.setStroke(new BasicStroke(2));
-        height = (int) (getHeight() - 50);
+        height = getHeight() - 50;
         minXU = getMin(xu);
         minSI = getMin(sina);
         maxXU = getMax(xu);
@@ -97,7 +95,7 @@ public class GraphXUSI extends JComponent {
 
         int last = 0;
         int last1 = 0;
-        orig = g.getFont();
+        Font orig = g.getFont();
 
         int x = 50;
         LocalTime lastDrawT = LocalTime.of(9, 0);
@@ -122,7 +120,7 @@ public class GraphXUSI extends JComponent {
             }
 
             if (sina.containsKey(lt)) {
-                close1 = getYSI(sina.get(lt));
+                int close1 = getYSI(sina.get(lt));
                 last1 = (last1 == 0) ? close1 : last1;
                 g.setColor(Color.red);
                 g.drawLine(x, last1, x + WIDTH_XU, close1);
@@ -181,6 +179,7 @@ public class GraphXUSI extends JComponent {
      * Convert bar value to y coordinate.
      */
     private int getYXU(double v) {
+        //noinspection Duplicates
         if (maxXU - minXU > 0.0001) {
             double span = maxXU - minXU;
             double pct = (v - minXU) / span;
@@ -192,6 +191,7 @@ public class GraphXUSI extends JComponent {
     }
 
     private int getYSI(double v) {
+        //noinspection Duplicates
         if (maxSI - minSI > 0.0001) {
             double span = maxSI - minSI;
             double pct = (v - minSI) / span;

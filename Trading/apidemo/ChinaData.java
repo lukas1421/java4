@@ -368,8 +368,8 @@ public final class ChinaData extends JPanel {
     private static void getFromTDX(LocalDate today, LocalDate ytd, LocalDate y2) {
         CompletableFuture.runAsync(()-> {
             Utility.getFilesFromTDXGen(today, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
-            //Utility.getFilesFromTDXGen(ytd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
-            //Utility.getFilesFromTDXGen(y2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
+            Utility.getFilesFromTDXGen(ytd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
+            Utility.getFilesFromTDXGen(y2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
         });
     }
 
