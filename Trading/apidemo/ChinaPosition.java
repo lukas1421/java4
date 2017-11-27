@@ -448,7 +448,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             fxMap.getOrDefault(e.getKey(), 1.0))).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
 
 
-            //if (tradesMap.entrySet().stream().filter(p).mapToInt(e -> e.getValue().size()).sum() > 0) {
+            //if (tradesMapFront.entrySet().stream().filter(p).mapToInt(e -> e.getValue().size()).sum() > 0) {
             boughtPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
                     .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 > 0))
                     .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
@@ -546,9 +546,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         ChinaMain.controller().reqExecutions(new ExecutionFilter(), new FutPosTradesHandler());
         ChinaMain.controller().getSGXA50Historical2(40000, this);
 
-//        ChinaPosition.xuBotPos = ChinaPosition.tradesMap.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.summingInt(e
+//        ChinaPosition.xuBotPos = ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.summingInt(e
 //                -> ((Trade) e.getValue()).getSize()));
-//        ChinaPosition.xuSoldPos = ChinaPosition.tradesMap.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).collect(Collectors.summingInt(e
+//        ChinaPosition.xuSoldPos = ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).collect(Collectors.summingInt(e
 //                -> ((Trade) e.getValue()).getSize()));
 //        xuOpenPostion = xuCurrentPosition - xuBotPos - xuSoldPos;
 //        System.out.println(" XU open bot sold current " + xuOpenPostion + " " + xuBotPos + " " + xuSoldPos + " " + xuCurrentPosition);
@@ -790,17 +790,17 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             if (dataList.get(buySellCol).equals("买入")) {
                                 if (tradesMap.get(ticker).containsKey(lt)) {
                                     System.out.println("merging normal ... ");
-                                    //tradesMap.get(ticker).get(lt).merge(new Trade(p,size));
+                                    //tradesMapFront.get(ticker).get(lt).merge(new Trade(p,size));
                                     tradesMap.get(ticker).put(lt, new NormalTrade(p, size));
                                 } else {
                                     tradesMap.get(ticker).put(lt, new NormalTrade(p, size));
                                 }
-                                //System.out.println( " name " + ticker + " " + tradesMap.get(ticker));
+                                //System.out.println( " name " + ticker + " " + tradesMapFront.get(ticker));
                             } else if (dataList.get(buySellCol).equals("卖出")) {
-                                //System.out.println( " name " + ticker + " " + tradesMap.get(ticker));
+                                //System.out.println( " name " + ticker + " " + tradesMapFront.get(ticker));
                                 if (tradesMap.get(ticker).containsKey(lt)) {
                                     tradesMap.get(ticker).put(lt, new NormalTrade(p, -1 * size));
-                                    //tradesMap.get(ticker).get(lt).merge(new Trade(p,-1*size));
+                                    //tradesMapFront.get(ticker).get(lt).merge(new Trade(p,-1*size));
                                 } else {
                                     tradesMap.get(ticker).put(lt, new NormalTrade(p, -1 * size));
                                 }
@@ -891,7 +891,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                                     tradesMap.get(ticker).put(lt, new MarginTrade(p, size));
                                 }
                             }
-                            //System.out.println( " name " + ticker + " " + tradesMap.get(ticker));
+                            //System.out.println( " name " + ticker + " " + tradesMapFront.get(ticker));
                         } else if (dataList.get(buySellCol).equals("证券卖出")) {
                             //treat all sells as normal stock with brokerage 2 bp
                             if (dataList.get(beizhuCol).equals("卖券还款")) {
@@ -913,17 +913,17 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
                         //include selling
 //                        else if(dataList.get(buySellCol).equals("卖出")) {
-//                            //System.out.println( " name " + ticker + " " + tradesMap.get(ticker));
-//                            if(tradesMap.get(ticker).containsKey(lt)) {
-//                                tradesMap.get(ticker).put(lt, new NormalTrade(p,-1*size));
-//                                //tradesMap.get(ticker).get(lt).merge(new Trade(p,-1*size));
+//                            //System.out.println( " name " + ticker + " " + tradesMapFront.get(ticker));
+//                            if(tradesMapFront.get(ticker).containsKey(lt)) {
+//                                tradesMapFront.get(ticker).put(lt, new NormalTrade(p,-1*size));
+//                                //tradesMapFront.get(ticker).get(lt).merge(new Trade(p,-1*size));
 //                            } else {
-//                                tradesMap.get(ticker).put(lt, new NormalTrade(p,-1*size));
+//                                tradesMapFront.get(ticker).put(lt, new NormalTrade(p,-1*size));
 //                            }
 //                        }
                     } catch (Exception x) {
                         //System.out.println(" name " + ticker);
-                        //System.out.println ( "tradesmap includes " + tradesMap.containsKey(ticker));
+                        //System.out.println ( "tradesmap includes " + tradesMapFront.containsKey(ticker));
                         x.printStackTrace();
                     }
                 }
@@ -998,7 +998,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //            System.out.println(" printing buying pnl for sgx a50 ");
 //            System.out.println(" fx is " + fx);
 //            System.out.println(" price " + price);
-//            System.out.println(" trade map print " + tradesMap.get(name));
+//            System.out.println(" trade map print " + tradesMapFront.get(name));
 //
 //        }
 
@@ -1077,8 +1077,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             int tradedPosBefore = 0;
 
             if (tradesMap.containsKey(name)) {
-                //tradedPos = tradesMap.get(name).entrySet().stream().filter(e-> e.getKey().isBefore(lastKey)).collect(summingInt(e->e.getValue().getSize()));
-//                posThisMinute = tradesMap.get(name).entrySet().stream().filter(e -> e.getKey()
+                //tradedPos = tradesMapFront.get(name).entrySet().stream().filter(e-> e.getKey().isBefore(lastKey)).collect(summingInt(e->e.getValue().getSize()));
+//                posThisMinute = tradesMapFront.get(name).entrySet().stream().filter(e -> e.getKey()
 //                        .truncatedTo(ChronoUnit.MINUTES).equals(lastKey)).mapToInt(e -> ((Trade) e.getValue()).getSize()).sum();
 
                 tradedPosBefore = tradesMap.get(name).entrySet().stream().filter(e -> e.getKey().isBefore(lastKey.minusMinutes(5L)))
@@ -1476,12 +1476,12 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
 
 //        System.out.println(" printing trades map ");
 //
-//        ChinaPosition.tradesMap.get("SGXA50").entrySet().stream().forEach(System.out::println);
+//        ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().forEach(System.out::println);
 //
-//        ChinaPosition.xuBotPos = ChinaPosition.tradesMap.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.summingInt(e
+//        ChinaPosition.xuBotPos = ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.summingInt(e
 //                -> ((Trade) e.getValue()).getSize()));
 //
-//        ChinaPosition.xuSoldPos = ChinaPosition.tradesMap.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).collect(Collectors.summingInt(e
+//        ChinaPosition.xuSoldPos = ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).collect(Collectors.summingInt(e
 //                -> ((Trade) e.getValue()).getSize()));
 //
 //        System.out.println(" xu bot pos  " + ChinaPosition.xuBotPos + " xu sold pos " + ChinaPosition.xuSoldPos);

@@ -672,18 +672,19 @@ public final class ChinaData extends JPanel {
 
         String ticker = ibContractToSymbol(c);
         System.out.println(" handle sgx 50 hist data ticker is " + ticker);
-//        LocalDate currDate = LocalDate.now();
-//        long daysToSubtract = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 3L : 1L;
-//        long daysToSubtract1 = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 4L : 2L;
-//        LocalDate ytd = currDate.minusDays(daysToSubtract);
-//        LocalDate y2 = currDate.minusDays(daysToSubtract1);
-        LocalDate currDate = ChinaData.dateMap.get(2);
-        LocalDate ytd = ChinaData.dateMap.get(1);
-        LocalDate y2 = ChinaData.dateMap.get(0);
+        LocalDate currDate = LocalDate.now().minusDays(1);
+        long daysToSubtract = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 3L : 1L;
+        long daysToSubtract1 = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 4L : 2L;
+        LocalDate ytd = currDate.minusDays(daysToSubtract);
+        LocalDate y2 = currDate.minusDays(daysToSubtract1);
 
-        currDate = LocalDate.now();
-        ytd = currDate.minusDays(1L);
-        y2 = currDate.minusDays(2L);
+        //        LocalDate currDate = ChinaData.dateMap.get(2);
+//        LocalDate ytd = ChinaData.dateMap.get(1);
+//        LocalDate y2 = ChinaData.dateMap.get(0);
+
+//        currDate = LocalDate.now();
+//        ytd = currDate.minusDays(1L);
+//        y2 = currDate.minusDays(2L);
 
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);

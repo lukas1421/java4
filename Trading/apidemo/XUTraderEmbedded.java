@@ -43,11 +43,11 @@
 //
 //    GraphBarGen xuGraph = new GraphBarGen();
 //
-//    public static NavigableMap<LocalTime, SimpleBar> xuData = new ConcurrentSkipListMap<>();
+//    public static NavigableMap<LocalTime, SimpleBar> xuFrontData = new ConcurrentSkipListMap<>();
 //
-//    public static volatile int netPosition;
-//    public static volatile int netBoughtPosition;
-//    public static volatile int netSoldPosition;
+//    public static volatile int netPositionFront;
+//    public static volatile int netBoughtPositionFront;
+//    public static volatile int netSoldPositionFront;
 //    public static volatile boolean showTrades = false;
 //    static volatile boolean connectionStatus = false;
 //    static volatile JLabel connectionLabel = new JLabel();
@@ -104,7 +104,7 @@
 //                String time = (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).getSecond() != 0)
 //                        ? (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()) : (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + ":00");
 //                currTimeLabel.setText(time);
-//                xuGraph.fillInGraph(xuData);
+//                xuGraph.fillInGraph(xuFrontData);
 //                xuGraph.refresh();
 //                apcon.reqPositions(new XUPositionHandler());
 //                repaint();
@@ -166,7 +166,7 @@
 //        JButton graphButton = new JButton("graph");
 //        graphButton.addActionListener(l -> {
 //            System.out.println(" graphing ");
-//            xuGraph.setNavigableMap(xuData);
+//            xuGraph.setNavigableMap(xuFrontData);
 //            xuGraph.refresh();
 //            repaint();
 //        });

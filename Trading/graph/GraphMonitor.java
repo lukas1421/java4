@@ -296,8 +296,8 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
 //        if(HistChinaStocks.chinaTradeMap.containsKey(name)) {
 //            trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(name),
-//                    ChinaPosition.tradesMap.containsKey(name)?
-//                    ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>());
+//                    ChinaPosition.tradesMapFront.containsKey(name)?
+//                    ChinaPosition.tradesMapFront.get(name) : new ConcurrentSkipListMap<>());
 //        } else {
 
 

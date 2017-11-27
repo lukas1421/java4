@@ -153,9 +153,9 @@ public class GraphBarGen extends JComponent {
         g2.drawString(Double.toString(getReturn()) + "%", getWidth() / 8, 15);
         g2.drawString("开: " + Double.toString(getOpen()), getWidth() * 2 / 8, 15);
         g2.drawString(Double.toString(getLast()), getWidth() * 3 / 8, 15);
-        g2.drawString("Pos: " + XUTrader.netPosition, getWidth() * 4 / 8, 15);
-        g2.drawString("B: " + XUTrader.netBoughtPosition, getWidth() * 5 / 8, 15);
-        g2.drawString("S: " + XUTrader.netSoldPosition, getWidth() * 6 / 8, 15);
+        g2.drawString("Pos: " + XUTrader.netPositionFront, getWidth() * 4 / 8, 15);
+        g2.drawString("B: " + XUTrader.netBoughtPositionFront, getWidth() * 5 / 8, 15);
+        g2.drawString("S: " + XUTrader.netSoldPositionFront, getWidth() * 6 / 8, 15);
 
         g2.setColor(new Color(0, 255 * (100 - wtdP) / 100, 0));
         //g2.fillRect(0,0, getWidth(), getHeight());
@@ -163,7 +163,7 @@ public class GraphBarGen extends JComponent {
         g2.setColor(getForeground());
 
         if (XUTrader.showTrades) {
-            XUTrader.tradesMap.forEach((key, value) -> {
+            XUTrader.tradesMapFront.forEach((key, value) -> {
                 //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getHeight()-20);
                 if (value.getSize() > 0) {
                     g.setColor(Color.blue);
