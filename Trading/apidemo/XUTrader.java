@@ -28,10 +28,12 @@ import static utility.Utility.getStr;
 
 public final class XUTrader extends JPanel implements HistoricalHandler, ApiController.IDeepMktDataHandler,
         ApiController.ITradeReportHandler, ApiController.IOrderHandler, ApiController.ILiveOrderHandler
-        , ApiController.IPositionHandler {
+        , ApiController.IPositionHandler, ApiController.IConnectionHandler {
 
-    static ApiController apcon = new ApiController(new XUConnectionHandler(),
-            new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
+    static ApiController apcon;
+
+    //new ApiController(new XUConnectionHandler(),
+    //new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
 
     // ApiController apcon = new ApiController(new IConnectionHandler.DefaultConnectionHandler()
     // ,new ApiConnection.ILogger.DefaultLogger(),new ApiConnection.ILogger.DefaultLogger());
@@ -72,21 +74,31 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         this.orderIdNo = orderIdNo;
     }
 
-    public XUTrader getThis() {
-        return this;
-    }
-
     public XUTrader(AtomicInteger orderIdNo) {
         this.orderIdNo = orderIdNo;
     }
 
-    public XUTrader() {
+    public XUTrader getThis() {
+        return this;
+    }
+
+    public static ApiController getStandAloneApicon() {
+        return new ApiController(new XUConnectionHandler() , new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
+    }
+
+//    public XUTrader() {
+//        this(this);
+//    }
+
+
+    public XUTrader(ApiController ap) {
 //        frontFut.symbol("XINA50");
 //        frontFut.exchange("SGX");
 //        frontFut.currency("USD");
 //        frontFut.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
 //        frontFut.secType(Types.SecType.FUT);
 
+        apcon = ap;
         JLabel currTimeLabel = new JLabel(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
         currTimeLabel.setFont(currTimeLabel.getFont().deriveFont(30F));
 
@@ -131,6 +143,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JButton refreshButton = new JButton("Refresh");
 
         refreshButton.addActionListener(l -> {
+            try {
+                getAPICon().reqXUDataArray(new XuPriceReceiver());
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
+
             ses.scheduleAtFixedRate(() -> {
                 String time = (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).getSecond() != 0)
                         ? (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()) : (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + ":00");
@@ -298,6 +316,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     if (e.getClickCount() == 2 && !e.isConsumed()) {
                         System.out.println(" double clicked buy " + l.getName());
                         double bidPrice = bidPriceList.get(l.getName());
+                        System.out.println(" bid price " + bidPrice + " check if order price makes sense " + checkIfOrderPriceMakeSense(bidPrice));
                         if (checkIfOrderPriceMakeSense(bidPrice) && marketOpen(LocalTime.now())) {
                             apcon.placeOrModifyOrder(frontFut, placeBidLimit(bidPrice), getThis());
                         } else {
@@ -375,6 +394,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private boolean checkIfOrderPriceMakeSense(double p) {
+
+        System.out.println(" current ask bid price " + currentAsk + " " + currentBid + " " + currentPrice + " ");
         if (p == 0.0) {
             return false;
         } else {
@@ -686,6 +707,45 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
 
+
+    // connection
+    @Override
+    public void connected() {
+        System.out.println("connected in XUconnectionhandler");
+        XUTrader.connectionStatus = true;
+        XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
+        XUTrader.apcon.setConnectionStatus(true);
+    }
+
+    @Override
+    public void disconnected() {
+        System.out.println("disconnected in XUConnectionHandler");
+        XUTrader.connectionStatus = false;
+        XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
+    }
+
+    @Override
+    public void accountList(ArrayList<String> list) {
+        System.out.println(" account list is " + list);
+    }
+
+    @Override
+    public void error(Exception e) {
+        System.out.println(" error in XUConnectionHandler");
+        e.printStackTrace();
+    }
+
+    @Override
+    public void message(int id, int errorCode, String errorMsg) {
+        System.out.println(" error ID " + id + " error code " + errorCode + " errormsg " + errorMsg);
+    }
+
+    @Override
+    public void show(String string) {
+        System.out.println(" show string " + string);
+    }
+
+
     static class XuPriceReceiver implements ITopMktDataHandler {
 
         @Override
@@ -768,7 +828,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         jd.setVisible(true);
     }
 
-    static void processTradeMap() {
+    private static void processTradeMap() {
 
         //average buy cost
         //System.out.println(" processing -------------------------------------------------");
@@ -814,7 +874,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JFrame jf = new JFrame();
         jf.setSize(new Dimension(1000, 1000));
 
-        XUTrader xutrader = new XUTrader();
+//        apcon = getAPICon();
+
+//        apcon = new ApiController(new XUConnectionHandler(),
+//                new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
+
+        XUTrader xutrader = new XUTrader(apcon);
         jf.add(xutrader);
         jf.setLayout(new FlowLayout());
         jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);

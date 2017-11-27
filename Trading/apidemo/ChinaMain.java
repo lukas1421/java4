@@ -123,6 +123,7 @@ public final class ChinaMain implements IConnectionHandler {
     public static HKData hkdata = new HKData();
     private static HKStock hkstock = new HKStock();
     private static HistChinaStocks histChina = new HistChinaStocks();
+    private static XUTrader xutrader = new XUTrader(M_CONTROLLER);
 
 
     private SinaStock sinastock1 = SinaStock.getInstance();
@@ -200,6 +201,7 @@ public final class ChinaMain implements IConnectionHandler {
         m_tabbedPanel.addTab(" HK Data", hkdata);
         m_tabbedPanel.addTab(" HK Stock", hkstock);
         m_tabbedPanel.addTab("Hist China", histChina);
+        m_tabbedPanel.addTab("Xu trader ", xutrader);
 
         // m_tabbedPanel.addTab("Backtesting", backtesting);
         //m_tabbedPanel.
