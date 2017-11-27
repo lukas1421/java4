@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaMain.controller;
 import static java.util.stream.Collectors.toList;
+import static utility.Utility.getBackFutContract;
 import static utility.Utility.getFrontFutContract;
 
 public class ApiController implements EWrapper {
@@ -908,11 +909,14 @@ public class ApiController implements EWrapper {
     }
 
 //xu data
-    public void reqXUDataArray(ITopMktDataHandler handler) throws InterruptedException {
+    public void reqXUDataArray(ITopMktDataHandler frontHandler, ITopMktDataHandler backHandler) throws InterruptedException {
         System.out.println("requesting XU data begins");
-        Contract ct = getFrontFutContract();
-        int reqId = m_reqId.get();
-        reqId = reqId + 9999999;
+        Contract frontCt = getFrontFutContract();
+        Contract backCt = getBackFutContract();
+        int reqIdFront = m_reqId.get();
+        int reqIdBack = m_reqId.incrementAndGet();
+        reqIdFront = reqIdFront + 9999999;
+        reqIdBack = reqIdBack + 9999999;
         boolean isSnapShot = false;
         //ct = getFrontFutContract();
 //        ct.symbol("XINA50");
@@ -921,8 +925,12 @@ public class ApiController implements EWrapper {
 //        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
 //        ct.secType(SecType.FUT);
         //m_symReqMap.put(reqId,"XINA50");
-        m_topMktDataMap.put(reqId, handler);
-        m_client.reqMktData(reqId, ct, "", isSnapShot, Collections.<TagValue>emptyList());
+        m_topMktDataMap.put(reqIdFront, frontHandler);
+        m_topMktDataMap.put(reqIdBack, backHandler);
+
+        m_client.reqMktData(reqIdFront, frontCt, "", isSnapShot, Collections.<TagValue>emptyList());
+        m_client.reqMktData(reqIdBack, backCt, "", isSnapShot, Collections.<TagValue>emptyList());
+
         System.out.println("requesting XU data ends");
     }
 

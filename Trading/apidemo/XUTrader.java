@@ -41,7 +41,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private final Contract frontFut = utility.Utility.getFrontFutContract();
     private final Contract backFut = utility.Utility.getBackFutContract();
 
-    List<Integer> orderList = new LinkedList<>();
+    //List<Integer> orderList = new LinkedList<>();
     //AtomicInteger orderInitial = new AtomicInteger(3000001);
     static volatile double currentBid;
     static volatile double currentAsk;
@@ -86,12 +86,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return new ApiController(new XUConnectionHandler() , new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
     }
 
-//    public XUTrader() {
-//        this(this);
-//    }
-
-
-    public XUTrader(ApiController ap) {
+    XUTrader(ApiController ap) {
 //        frontFut.symbol("XINA50");
 //        frontFut.exchange("SGX");
 //        frontFut.currency("USD");
@@ -383,7 +378,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     }
 
-    static void setNetPosition(int p) {
+    private static void setNetPosition(int p) {
         netPosition = p;
     }
 
@@ -524,7 +519,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return o;
     }
 
-    static void updateLog(String s) {
+    private static void updateLog(String s) {
         outputArea.append(s);
         outputArea.append("\n");
     }

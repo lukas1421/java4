@@ -3,17 +3,11 @@ package saving;
 import apidemo.XU;
 import auxiliary.SimpleBar;
 
+import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.time.LocalTime;
 import java.util.NavigableMap;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
 
 @Entity
 @Table(name = "XU")
@@ -90,7 +84,7 @@ public class XuSave implements Serializable {
     }
 
     public void updateFutVol(NavigableMap<LocalTime, ?> m) {
-        XU.futVol = (NavigableMap<LocalTime, Integer>) m;
+        XU.frontFutVol = (NavigableMap<LocalTime, Integer>) m;
     }
 
     public void updateIndexVol(NavigableMap<LocalTime, ?> m) {

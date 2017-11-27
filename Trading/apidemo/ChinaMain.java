@@ -372,7 +372,7 @@ public final class ChinaMain implements IConnectionHandler {
 
         startXU.addActionListener((ae) -> {
             try {
-                M_CONTROLLER.reqXUDataArray(xu);
+                M_CONTROLLER.reqXUDataArray(xu.getFrontfutHandler(),xu.getBackfutHandler());
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
             }
@@ -380,7 +380,10 @@ public final class ChinaMain implements IConnectionHandler {
 
         startHK.addActionListener(al -> M_CONTROLLER.reqHKLiveData());
 
-        stopXU.addActionListener((ae) -> M_CONTROLLER.cancelTopMktData(xu));
+        stopXU.addActionListener((ae) -> {
+            M_CONTROLLER.cancelTopMktData(xu.getFrontfutHandler());
+            M_CONTROLLER.cancelTopMktData(xu.getBackfutHandler());
+        });
 
         JButton stopAnalysis = new JButton("Stop Analysis");
 
@@ -556,7 +559,7 @@ public final class ChinaMain implements IConnectionHandler {
 
         CompletableFuture.runAsync(() -> {
             try {
-                M_CONTROLLER.reqXUDataArray(xu);
+                M_CONTROLLER.reqXUDataArray(xu.getFrontfutHandler(),xu.getBackfutHandler());
             } catch (InterruptedException x) {
                 x.printStackTrace();
             }
