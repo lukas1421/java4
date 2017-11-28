@@ -8,6 +8,7 @@ import controller.ApiController;
 import controller.ApiController.ITopMktDataHandler;
 import graph.GraphBarGen;
 import handler.HistoricalHandler;
+import handler.LiveHandler;
 import utility.Utility;
 
 import javax.swing.*;
@@ -23,6 +24,7 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 
 import static utility.Utility.getStr;
 
@@ -59,13 +61,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static Map<String, Double> offerPriceList = new HashMap<>();
     private ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
 
-    public static Map<LocalTime, IBTrade> tradesMapFront = new ConcurrentSkipListMap<>();
-    public static Map<LocalTime, IBTrade> tradesMapBack = new ConcurrentSkipListMap<>();
+    public static NavigableMap<LocalTime, IBTrade> tradesMapFront = new ConcurrentSkipListMap<>();
+    public static NavigableMap<LocalTime, IBTrade> tradesMapBack = new ConcurrentSkipListMap<>();
+    public static Map<String, NavigableMap<LocalTime, IBTrade>> tradesMap = new HashMap<>();
 
     private GraphBarGen xuGraph = new GraphBarGen();
 
-    static NavigableMap<LocalTime, SimpleBar> xuFrontData = new ConcurrentSkipListMap<>();
-    static NavigableMap<LocalTime, SimpleBar> xuBackData = new ConcurrentSkipListMap<>();
+    static volatile Map<String, NavigableMap<LocalTime, SimpleBar>> futData = new HashMap<>();
+    static volatile NavigableMap<LocalTime, SimpleBar> xuFrontData = new ConcurrentSkipListMap<>();
+    static volatile NavigableMap<LocalTime, SimpleBar> xuBackData = new ConcurrentSkipListMap<>();
 
     public static volatile int netPositionFront;
     public static volatile int netBoughtPositionFront;
@@ -74,6 +78,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static volatile int netPositionBack;
     public static volatile int netBoughtPositionBack;
     public static volatile int netSoldPositionBack;
+
+    public static volatile Map<String, Integer> currentPosMap = new HashMap<>();
 
 
     public static volatile boolean showTrades = false;
@@ -105,6 +111,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //        frontFut.currency("USD");
 //        frontFut.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
 //        frontFut.secType(Types.SecType.FUT);
+
+        futData.put("SGXA50", new ConcurrentSkipListMap<>());
+        futData.put("SGXA50BM", new ConcurrentSkipListMap<>());
 
         apcon = ap;
         JLabel currTimeLabel = new JLabel(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
@@ -256,6 +265,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         };
 
+        JRadioButton frontFutButton = new JRadioButton("Front");
+        frontFutButton.addActionListener(l->{
+
+        });
+        JRadioButton backFutButton = new JRadioButton("Back");
+        backFutButton.addActionListener(l->{
+
+        });
+
+        ButtonGroup frontBackGroup = new ButtonGroup();
+        frontBackGroup.add(frontFutButton);
+        frontBackGroup.add(backFutButton);
+
+
         // setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
@@ -280,6 +303,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel2.add(connectionLabel);
         //controlPanel2.add(connectionStatusLabel);
         controlPanel2.add(disconnectButton);
+
+        controlPanel2.add(frontFutButton);
+        controlPanel2.add(backFutButton);
+
 
         JLabel bid1 = new JLabel("1");
         bidLabelList.add(bid1);
@@ -383,11 +410,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //        add(jp, BorderLayout.EAST);
 //        add(graphPanel,BorderLayout.SOUTH);
         //add(controlPanel);
+
+
+
         add(controlPanel1);
         add(controlPanel2);
         add(deepPanel);
         add(outputPanel);
         add(graphPanel);
+
 
     }
 
@@ -692,7 +723,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
         //System.out.println (" proper handling here XXXX ");
+        String ticker = utility.Utility.ibContractToSymbol(contract);
+        currentPosMap.put(ticker, (int)position);
+        switch(ticker) {
+            case "SGXA50":
+                XUTrader.setNetPositionFront((int) position);
+        }
+
         SwingUtilities.invokeLater(() -> {
+
+
             if (contract.symbol().equals("XINA50")) {
 //                XUTrader.updateLog(" account " + account + "\n");
 //                XUTrader.updateLog(" contract " + contract.symbol()+ "\n");
@@ -751,6 +791,33 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void show(String string) {
         System.out.println(" show string " + string);
+    }
+
+
+
+
+    public static class GeneralReceiver implements LiveHandler {
+        @Override
+        public void handlePrice(TickType tt, String name, double price, LocalTime t) {
+            switch(tt) {
+                case BID:
+                case ASK:
+                case LAST:
+                    if (futData.get(name).containsKey(t)) {
+                        futData.get(name).get(t).add(price);
+                    } else {
+                        futData.get(name).put(t, new SimpleBar(price));
+                    }
+                    break;
+                    //futData.get(name).put(t, price);
+
+            }
+        }
+
+        @Override
+        public void handleVol(String name, double vol, LocalTime t) {
+
+        }
     }
 
 
@@ -922,6 +989,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         XUTrader.updateLog(" net pnl after comm " + (netTradePnl - netTotalCommissions));
 
         XUTrader.updateLog(" MTM+Trade " + (netTradePnl - netTotalCommissions + mtmPnl));
+    }
+
+    private static void processTradeMapGen(Predicate<? super Map.Entry<String, ?>> pred) {
+
+
     }
 
     public static void main(String[] args) {

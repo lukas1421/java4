@@ -5,6 +5,7 @@ package controller;
 import apidemo.ChinaMain;
 import apidemo.HKData;
 import apidemo.TradingConstants;
+import apidemo.XUTrader;
 import client.*;
 import client.Types.*;
 import controller.ApiConnection.ILogger;
@@ -145,7 +146,7 @@ public class ApiController implements EWrapper {
     public void deltaNeutralValidation(int reqId, DeltaNeutralContract underComp) {
     }
 
-//    @Override
+    //    @Override
 //    public void position(String account, Contract contract, double pos, double avgCost) {
 //        System.out.println(ChinaStockHelper.getStr("account contract pos avgcost", account, contract, pos, avgCost));
 //    }
@@ -278,7 +279,7 @@ public class ApiController implements EWrapper {
         m_outLogger = outLogger;
     }
 
-//	public void connect( String host, int port, int clientId) {
+    //	public void connect( String host, int port, int clientId) {
 //            System.out.println(" in connect " + host + " " + port + " " + clientId);
 //            m_client.eConnect(host, port, clientId);
 //            sendEOM();
@@ -352,7 +353,7 @@ public class ApiController implements EWrapper {
         return true;
     }
 
-//	public void disconnect() {
+    //	public void disconnect() {
 //            m_client.eDisconnect();
 //            m_connectionHandler.disconnected();
 //            sendEOM();
@@ -360,7 +361,7 @@ public class ApiController implements EWrapper {
     @Override
     public void managedAccounts(String accounts) {
         ArrayList<String> list = new ArrayList<>();
-        for (StringTokenizer st = new StringTokenizer(accounts, ","); st.hasMoreTokens();) {
+        for (StringTokenizer st = new StringTokenizer(accounts, ","); st.hasMoreTokens(); ) {
             list.add(st.nextToken());
         }
         m_connectionHandler.accountList(list);
@@ -908,7 +909,7 @@ public class ApiController implements EWrapper {
         return ct;
     }
 
-//xu data
+    //xu data
     public void reqXUDataArray(ITopMktDataHandler frontHandler, ITopMktDataHandler backHandler) throws InterruptedException {
         System.out.println("requesting XU data begins");
         Contract frontCt = getFrontFutContract();
@@ -928,11 +929,16 @@ public class ApiController implements EWrapper {
         m_topMktDataMap.put(reqIdFront, frontHandler);
         m_topMktDataMap.put(reqIdBack, backHandler);
 
+        ChinaMain.globalRequestMap.put(reqIdFront,new Request(frontCt, new XUTrader.GeneralReceiver()));
+        ChinaMain.globalRequestMap.put(reqIdBack, new Request(backCt, new XUTrader.GeneralReceiver()));
+
         m_client.reqMktData(reqIdFront, frontCt, "", isSnapShot, Collections.<TagValue>emptyList());
         m_client.reqMktData(reqIdBack, backCt, "", isSnapShot, Collections.<TagValue>emptyList());
 
         System.out.println("requesting XU data ends");
     }
+
+
 
     public void getSGXA50HistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc, int duration) {
         //Contract c = getFrontFutContract();
@@ -963,7 +969,7 @@ public class ApiController implements EWrapper {
         });
     }
 
-//    public void getHKIntradayHistoricalData(HistoricalHandler hh) {
+    //    public void getHKIntradayHistoricalData(HistoricalHandler hh) {
 //        reqHistoricalDataUSHK(this, uniqueID.get(), generateHKContract(stock), CUTOFFTIME,
 //                DAYSTOREQUEST, Types.DurationUnit.DAY,
 //                Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
@@ -998,10 +1004,8 @@ public class ApiController implements EWrapper {
     public void reHistDataArray(IHistoricalDataHandler handler) {
         Contract ct = new Contract();
         int reqId = m_reqId.get();
-        Iterator it = map1h.keySet().iterator();
 
-        while (it.hasNext()) {
-            Object nextVal = it.next();
+        for (Object nextVal : map1h.keySet()) {
             reqId++;
             m_historicalDataMap.put(reqId, handler);
             System.out.println("Symbol ID is " + nextVal);
@@ -1080,7 +1084,7 @@ public class ApiController implements EWrapper {
         sendEOM();
     }
 
-// key method. This method is called when market data changes.
+    // key method. This method is called when market data changes.
     @Override
     public void tickPrice(int reqId, int tickType, double price, int canAutoExecute) {
         ITopMktDataHandler handler;
@@ -1096,28 +1100,29 @@ public class ApiController implements EWrapper {
             //System.out.println(" in tick price "+ r.getContract().symbol()+ TickType.get(tickType) + price);
             try {
                 //if(TickType.get(tickType) == TickType.LAST) {
-                    lh.handlePrice(TickType.get(tickType),
-                            r.getContract().symbol(), price, LocalTime.now().truncatedTo(ChronoUnit.MINUTES));
-            } catch(Exception ex) {
-                System.out.println(" handling price has issues " );
+                lh.handlePrice(TickType.get(tickType),
+                        utility.Utility.ibContractToSymbol(r.getContract()), price, LocalTime.now().truncatedTo(ChronoUnit.MINUTES));
+            } catch (Exception ex) {
+                System.out.println(" handling price has issues ");
                 ex.printStackTrace();
             }
         }
-        handler = m_topMktDataMap.getOrDefault(reqId, null);
-        handler1 = m_topMktDataMap1.getOrDefault(reqId, null);
 
-        if (handler != null) {
-
-            handler.tickPrice(TickType.get(tickType), price, canAutoExecute);
-            //System.out.println(map1.get(Integer.parseInt(symb)).get(9.5));
-            //HashMap<Double,Double> val = new HashMap<Double, Double>();
-            //results2.put(m_symReqMap.get(reqId), reqId,val);
-        }
-        if (handler1 != null) {
-            symb = Integer.parseInt(m_symReqMap.get(reqId));
-            handler1.tickPrice(symb, TickType.get(tickType), price, canAutoExecute);
-            // System.out.println(" in IB handler reqId " + reqId + " symbol is " + symb + " price " + price );
-        }
+//        handler = m_topMktDataMap.getOrDefault(reqId, null);
+//        handler1 = m_topMktDataMap1.getOrDefault(reqId, null);
+//
+//        if (handler != null) {
+//
+//            handler.tickPrice(TickType.get(tickType), price, canAutoExecute);
+//            //System.out.println(map1.get(Integer.parseInt(symb)).get(9.5));
+//            //HashMap<Double,Double> val = new HashMap<Double, Double>();
+//            //results2.put(m_symReqMap.get(reqId), reqId,val);
+//        }
+//        if (handler1 != null) {
+//            symb = Integer.parseInt(m_symReqMap.get(reqId));
+//            handler1.tickPrice(symb, TickType.get(tickType), price, canAutoExecute);
+//            // System.out.println(" in IB handler reqId " + reqId + " symbol is " + symb + " price " + price );
+//        }
         recEOM();
     }
 
@@ -1376,6 +1381,7 @@ public class ApiController implements EWrapper {
     }
 
     // ---------------------------------------- Trading and Option Exercise ----------------------------------------
+
     /**
      * This interface is for receiving events for a specific order placed from
      * the API. Compare to ILiveOrderHandler.
@@ -1441,6 +1447,7 @@ public class ApiController implements EWrapper {
     }
 
     // ---------------------------------------- Live order handling ----------------------------------------
+
     /**
      * This interface is for downloading and receiving events for all live
      * orders. Compare to IOrderHandler.
@@ -1582,9 +1589,9 @@ public class ApiController implements EWrapper {
     }
 
     /**
-     * @param contract * @param endDateTime format is YYYYMMDD HH:MM:SS [TMZ]
+     * @param contract    * @param endDateTime format is YYYYMMDD HH:MM:SS [TMZ]
      * @param endDateTime
-     * @param duration is number of durationUnits
+     * @param duration    is number of durationUnits
      * @param handler
      */
     public void reqHistoricalData(Contract contract, String endDateTime, int duration, DurationUnit durationUnit, BarSize barSize, WhatToShow whatToShow, boolean rthOnly, IHistoricalDataHandler handler) {
@@ -1603,7 +1610,7 @@ public class ApiController implements EWrapper {
     }
 
     public void reqHistoricalDataUSHK(HistoricalHandler hh, int reqId, Contract contract, String endDateTime, int duration,
-            DurationUnit durationUnit, BarSize barSize, WhatToShow whatToShow, boolean rthOnly) {
+                                      DurationUnit durationUnit, BarSize barSize, WhatToShow whatToShow, boolean rthOnly) {
 
         ChinaMain.globalRequestMap.put(reqId, new Request(contract, hh));
 
@@ -1616,7 +1623,7 @@ public class ApiController implements EWrapper {
     }
 
     public void reqHistoricalDataSimple(HistoricalHandler hh, Contract contract, String endDateTime, int duration,
-            DurationUnit durationUnit, BarSize barSize, WhatToShow whatToShow, boolean rthOnly) {
+                                        DurationUnit durationUnit, BarSize barSize, WhatToShow whatToShow, boolean rthOnly) {
 
         System.out.println(" getting historical data simple ");
         System.out.println(" contract " + contract);
@@ -1651,7 +1658,7 @@ public class ApiController implements EWrapper {
 
     @Override
     public void historicalData(int reqId, String date, double open, double high, double low,
-            double close, int volume, int count, double wap, boolean hasGaps) {
+                               double close, int volume, int count, double wap, boolean hasGaps) {
 
         if (ChinaMain.globalRequestMap.containsKey(reqId)) {
             Request r = ChinaMain.globalRequestMap.get(reqId);
@@ -1668,7 +1675,7 @@ public class ApiController implements EWrapper {
                     } catch (Exception ex) {
                         ex.printStackTrace();
                     }
-                } else if(date.toUpperCase().startsWith("ERROR")) {
+                } else if (date.toUpperCase().startsWith("ERROR")) {
                     hh.actionUponFinish(symb);
                     throw new IllegalStateException(" error found ");
 
@@ -1952,6 +1959,7 @@ public class ApiController implements EWrapper {
     }
 
     // ---------------------------------------- other methods ----------------------------------------
+
     /**
      * Not supported in ApiController.
      */
@@ -1999,7 +2007,7 @@ public class ApiController implements EWrapper {
 
     @Override
     public void securityDefinitionOptionalParameter(int reqId, String exchange, int underlyingConId, String tradingClass,
-            String multiplier, Set<String> expirations, Set<Double> strikes) {
+                                                    String multiplier, Set<String> expirations, Set<Double> strikes) {
 //		ISecDefOptParamsReqHandler handler = m_secDefOptParamsReqMap.get( reqId);
 //
 //		if (handler != null) {

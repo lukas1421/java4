@@ -811,11 +811,11 @@ public final class XU extends JPanel {
                 case LAST:
                     ChinaStock.priceMap.put("SGXA50BM", price);
                     if (lt.isAfter(LocalTime.of(8, 55))) {
-                        if (lastFutPrice.containsKey(lt)) {
-                            lastFutPrice.get(lt).add(price);
-                        } else {
-                            lastFutPrice.put(lt, new SimpleBar(price));
-                        }
+//                        if (lastFutPrice.containsKey(lt)) {
+//                            lastFutPrice.get(lt).add(price);
+//                        } else {
+//                            lastFutPrice.put(lt, new SimpleBar(price));
+//                        }
 
                         if (priceMapBar.get("SGXA50BM").containsKey(lt)) {
                             priceMapBar.get("SGXA50BM").get(lt).add(price);

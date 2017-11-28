@@ -101,7 +101,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     private static TableRowSorter<BarModel_POS> sorter;
     static ScheduledExecutorService ex = Executors.newScheduledThreadPool(10);
 
-    public static volatile int xuCurrentPosition;
+    public static volatile int xuCurrentPositionFront;
+    public static volatile int xuCurrentPositionBack;
 
     private static volatile double xuOpenPrice;
     private static volatile double xuPreviousClose;
@@ -277,7 +278,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         JToggleButton onlyFutToggle = new JToggleButton("Fut Only");
         onlyFutToggle.addActionListener(l -> {
             if (onlyFutToggle.isSelected()) {
-                GEN_MTM_PRED = m -> m.getKey().equals("SGXA50");
+                GEN_MTM_PRED = m -> m.getKey().equals("SGXA50") || m.getKey().equals("SGXA50BM");
             } else {
                 GEN_MTM_PRED = m -> true;
             }
@@ -550,8 +551,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //                -> ((Trade) e.getValue()).getSize()));
 //        ChinaPosition.xuSoldPos = ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).collect(Collectors.summingInt(e
 //                -> ((Trade) e.getValue()).getSize()));
-//        xuOpenPostion = xuCurrentPosition - xuBotPos - xuSoldPos;
-//        System.out.println(" XU open bot sold current " + xuOpenPostion + " " + xuBotPos + " " + xuSoldPos + " " + xuCurrentPosition);
+//        xuOpenPostion = xuCurrentPositionFront - xuBotPos - xuSoldPos;
+//        System.out.println(" XU open bot sold current " + xuOpenPostion + " " + xuBotPos + " " + xuSoldPos + " " + xuCurrentPositionFront);
 //        openPositionMap.put("SGXA50", xuOpenPostion);
     }
 
@@ -563,7 +564,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         int xuSoldPos = ChinaPosition.tradesMap.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0)
                 .mapToInt(e -> ((Trade) e.getValue()).getSize()).sum();
 
-        int xuOpenPostion = xuCurrentPosition - xuBotPos - xuSoldPos;
+        int xuOpenPostion = xuCurrentPositionFront - xuBotPos - xuSoldPos;
 
         double defaultOpen = 0.0;
         //add default for open here
@@ -571,8 +572,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             defaultOpen = priceMapBar.get("SGXA50").firstEntry().getValue().getClose();
         }
 
-
-        System.out.println(" REFRESHING XU open bot sold current " + xuOpenPostion + " " + xuBotPos + " " + xuSoldPos + " " + xuCurrentPosition);
+        System.out.println(" REFRESHING XU open bot sold current " + xuOpenPostion + " " + xuBotPos + " " + xuSoldPos + " " + xuCurrentPositionFront);
         openPositionMap.put("SGXA50", xuOpenPostion);
         ChinaStock.closeMap.put("SGXA50", xuOpenPrice==0.0?defaultOpen:xuOpenPrice);
         costMap.put("SGXA50", closeMap.getOrDefault("SGXA50", defaultOpen));
