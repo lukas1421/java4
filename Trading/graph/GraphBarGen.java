@@ -214,7 +214,7 @@ public class GraphBarGen extends JComponent {
                 timeDiff = timeDiff - 18;
             }
             //System.out.println(" time in between " + timeDiff);
-            return (int) (WIDTH_BAR * timeDiff + 5);
+            return (int) (WIDTH_BAR * timeDiff + 1);
         }
         return 0;
     }

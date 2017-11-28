@@ -1,10 +1,7 @@
 package utility;
 
 import TradeType.Trade;
-import apidemo.ChinaData;
-import apidemo.ChinaStock;
-import apidemo.MorningTask;
-import apidemo.TradingConstants;
+import apidemo.*;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
@@ -734,6 +731,21 @@ public class Utility {
         }
         return ct.symbol();
     }
+
+    public static FutType ibContractToFutType(Contract ct) {
+        if (ct.symbol().equals("XINA50")) {
+            switch (ct.lastTradeDateOrContractMonth()) {
+                case TradingConstants.GLOBALA50FRONTEXPIRY:
+                    return FutType.FrontFut;
+                case TradingConstants.GLOBALA50BACKEXPIRY:
+                    return FutType.BackFut;
+            }
+        }
+        throw new IllegalArgumentException("not a fut");
+        //return ct.symbol();
+    }
+
+
 
     public static boolean tickerNotFuture(String s) {
         return !s.equals("SGXA50") && !s.equals("SGXA50BM");
