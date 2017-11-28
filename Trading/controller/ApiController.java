@@ -588,6 +588,7 @@ public class ApiController implements EWrapper {
     public void reqPositions(IPositionHandler handler) {
         //System.out.println(" requesting for position in reqPositions");
         //System.out.println ( " size position handler BEFORE" + m_positionHandlers.size());
+        //System.out.println(" requesting position " + );
         m_positionHandlers.add(handler);
         m_client.reqPositions();
         sendEOM();
@@ -975,12 +976,8 @@ public class ApiController implements EWrapper {
 //                Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
 //    }
     public void getSGXA50Historical2(int reqID, HistoricalHandler hh) {
-        Contract c = getFrontFutContract();
-//        c.symbol("XINA50");
-//        c.exchange("SGX");
-//        c.currency("USD");
-//        c.secType(Types.SecType.FUT);
-//        c.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
+        Contract frontFut = getFrontFutContract();
+        Contract backFut = getBackFutContract();
 
         String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
@@ -991,10 +988,13 @@ public class ApiController implements EWrapper {
         Types.BarSize barSize = Types.BarSize._1_min;
         WhatToShow whatToShow = WhatToShow.TRADES;
 
-        ChinaMain.globalRequestMap.put(reqID, new Request(c, hh));
+        ChinaMain.globalRequestMap.put(reqID, new Request(frontFut, hh));
+        ChinaMain.globalRequestMap.put(reqID+1, new Request(backFut, hh));
 
         CompletableFuture.runAsync(() -> {
-            m_client.reqHistoricalData(reqID, c, "", durationStr, barSize.toString(), whatToShow.toString(),
+            m_client.reqHistoricalData(reqID, frontFut, "", durationStr, barSize.toString(), whatToShow.toString(),
+                    0, 2, Collections.<TagValue>emptyList());
+            m_client.reqHistoricalData(reqID+1, backFut, "", durationStr, barSize.toString(), whatToShow.toString(),
                     0, 2, Collections.<TagValue>emptyList());
         });
 
@@ -1662,7 +1662,7 @@ public class ApiController implements EWrapper {
 
         if (ChinaMain.globalRequestMap.containsKey(reqId)) {
             Request r = ChinaMain.globalRequestMap.get(reqId);
-            String symb = r.getContract().symbol();
+            String symb = utility.Utility.ibContractToSymbol(r.getContract());
 
             if (r.getCustomFunctionNeeded()) {
                 //System.out.println(" date open volume" + date + " " + open + " " + volume);
@@ -1678,8 +1678,6 @@ public class ApiController implements EWrapper {
                 } else if (date.toUpperCase().startsWith("ERROR")) {
                     hh.actionUponFinish(symb);
                     throw new IllegalStateException(" error found ");
-
-
                 } else {
                     //try this in historicalDataEnd
                     hh.actionUponFinish(symb);

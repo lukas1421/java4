@@ -11,7 +11,6 @@ import client.Execution;
 import client.ExecutionFilter;
 import controller.ApiController;
 import graph.GraphPnl;
-import handler.FutPositionHandler;
 import handler.HistoricalHandler;
 import historical.HistChinaStocks;
 import utility.SharpeUtility;
@@ -48,6 +47,8 @@ import static apidemo.ChinaStock.*;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
+
+//import handler.FutPositionHandler;
 
 public class ChinaPosition extends JPanel implements HistoricalHandler {
 
@@ -539,11 +540,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     private void getOpenTradePositionForFuture() {
-        System.out.println(" get open trade position for future ");
+        System.out.println(" get open trade position for future " + LocalTime.now());
         if (ChinaPosition.tradesMap.containsKey("SGXA50")) {
             ChinaPosition.tradesMap.put("SGXA50", new ConcurrentSkipListMap<>());
         }
-        ChinaMain.controller().reqPositions(new FutPositionHandler());
+        //ChinaMain.controller().reqPositions(new FutPositionHandler());
         ChinaMain.controller().reqExecutions(new ExecutionFilter(), new FutPosTradesHandler());
         ChinaMain.controller().getSGXA50Historical2(40000, this);
 
@@ -1473,6 +1474,8 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReportEnd() {
+
+        System.out.println(" trade report ended for fut pos trader handler " );
 
 //        System.out.println(" printing trades map ");
 //
