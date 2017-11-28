@@ -911,7 +911,8 @@ public class ApiController implements EWrapper {
     }
 
     //xu data
-    public void reqXUDataArray(ITopMktDataHandler frontHandler, ITopMktDataHandler backHandler) throws InterruptedException {
+    public void reqXUDataArray() throws InterruptedException {
+        //ITopMktDataHandler frontHandler, ITopMktDataHandler backHandler
         System.out.println("requesting XU data begins");
         Contract frontCt = getFrontFutContract();
         Contract backCt = getBackFutContract();
@@ -927,8 +928,8 @@ public class ApiController implements EWrapper {
 //        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
 //        ct.secType(SecType.FUT);
         //m_symReqMap.put(reqId,"XINA50");
-        m_topMktDataMap.put(reqIdFront, frontHandler);
-        m_topMktDataMap.put(reqIdBack, backHandler);
+        //m_topMktDataMap.put(reqIdFront, frontHandler);
+        //m_topMktDataMap.put(reqIdBack, backHandler);
 
         ChinaMain.globalRequestMap.put(reqIdFront,new Request(frontCt, new XUTrader.GeneralReceiver()));
         ChinaMain.globalRequestMap.put(reqIdBack, new Request(backCt, new XUTrader.GeneralReceiver()));

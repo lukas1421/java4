@@ -372,7 +372,8 @@ public final class ChinaMain implements IConnectionHandler {
 
         startXU.addActionListener((ae) -> {
             try {
-                M_CONTROLLER.reqXUDataArray(xu.getFrontfutHandler(),xu.getBackfutHandler());
+                //xu.getFrontfutHandler(),xu.getBackfutHandler()
+                M_CONTROLLER.reqXUDataArray();
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
             }
@@ -559,7 +560,8 @@ public final class ChinaMain implements IConnectionHandler {
 
         CompletableFuture.runAsync(() -> {
             try {
-                M_CONTROLLER.reqXUDataArray(xu.getFrontfutHandler(),xu.getBackfutHandler());
+                //xu.getFrontfutHandler(),xu.getBackfutHandler()
+                M_CONTROLLER.reqXUDataArray();
             } catch (InterruptedException x) {
                 x.printStackTrace();
             }

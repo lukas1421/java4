@@ -27,7 +27,7 @@ public class GraphBarGen extends JComponent {
     int last = 0;
     double rtn = 0;
     NavigableMap<LocalTime, SimpleBar> tm;
-    String name;
+    volatile String name;
     String chineseName;
     private String bench;
     LocalTime maxAMT;
@@ -75,7 +75,11 @@ public class GraphBarGen extends JComponent {
     }
 
     public void fillInGraph(NavigableMap<LocalTime, SimpleBar> mp) {
-        this.setNavigableMap(mp);
+        if(XUTrader.gran==DisplayGranularity._1MDATA) {
+            this.setNavigableMap(mp);
+        } else if(XUTrader.gran  == DisplayGranularity._5MDATA) {
+            this.setNavigableMap(priceMap1mTo5M(mp));
+        }
     }
 
     public void refresh() {
@@ -104,6 +108,7 @@ public class GraphBarGen extends JComponent {
             int lowY = getY(tm.floorEntry(lt).getValue().getLow());
             int closeY = getY(tm.floorEntry(lt).getValue().getClose());
 
+            //noinspection Duplicates
             if (closeY < openY) {  //close>open
                 g.setColor(new Color(0, 140, 0));
                 g.fillRect(x, closeY, 3, openY - closeY);
@@ -120,8 +125,14 @@ public class GraphBarGen extends JComponent {
             if (lt.equals(tm.firstKey())) {
                 g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
             } else {
-                if (lt.getHour() < 16 && (lt.getMinute() == 0 || lt.getMinute() % 15 == 0)) {
-                    g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
+                if(XUTrader.gran==DisplayGranularity._1MDATA) {
+                    if (lt.getHour() < 16 && (lt.getMinute() == 0 || lt.getMinute() % 30 == 0)) {
+                        g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
+                    }
+                } else {
+                    if (lt.getHour() < 16 && (lt.getMinute() == 0 || lt.getMinute() == 0)) {
+                        g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
+                    }
                 }
             }
             x += WIDTH_BAR;
@@ -153,9 +164,9 @@ public class GraphBarGen extends JComponent {
         g2.drawString(Double.toString(getReturn()) + "%", getWidth() / 8, 15);
         g2.drawString("开: " + Double.toString(getOpen()), getWidth() * 2 / 8, 15);
         g2.drawString(Double.toString(getLast()), getWidth() * 3 / 8, 15);
-        g2.drawString("Pos: " + XUTrader.netPositionFront, getWidth() * 4 / 8, 15);
-        g2.drawString("B: " + XUTrader.netBoughtPositionFront, getWidth() * 5 / 8, 15);
-        g2.drawString("S: " + XUTrader.netSoldPositionFront, getWidth() * 6 / 8, 15);
+        g2.drawString("Pos: " + XUTrader.currentPosMap.getOrDefault(name,0), getWidth() * 4 / 8, 15);
+        g2.drawString("B: " + XUTrader.botMap.getOrDefault(name,0), getWidth() * 5 / 8, 15);
+        g2.drawString("S: " + XUTrader.soldMap.getOrDefault(name,0), getWidth() * 6 / 8, 15);
 
         g2.setColor(new Color(0, 255 * (100 - wtdP) / 100, 0));
         //g2.fillRect(0,0, getWidth(), getHeight());
@@ -163,36 +174,49 @@ public class GraphBarGen extends JComponent {
         g2.setColor(getForeground());
 
         if (XUTrader.showTrades) {
-            XUTrader.tradesMapFront.forEach((key, value) -> {
-                //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getHeight()-20);
-                if (value.getSize() > 0) {
-                    g.setColor(Color.blue);
-                    //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getYForLTBuy(e.getKey())+20);
-                    int xCord = getXForLT(key);
-                    //int yCord = getYForLTBuy(e.getKey());
-                    int yCord = getY(value.getPrice());
-                    g.drawPolygon(new int[]{xCord - 1, xCord, xCord + 1}, new int[]{yCord + 2, yCord, yCord + 2}, 3);
+            System.out.println(" name is " + name);
+            if(XUTrader.tradesMap.get(name).size()>0) {
+                XUTrader.tradesMap.get(name).forEach((key, value) -> {
+                    //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getHeight()-20);
+                    if (value.getSize() > 0) {
+                        g.setColor(Color.blue);
+                        //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getYForLTBuy(e.getKey())+20);
+                        int xCord = getXForLT(key);
+                        //int yCord = getYForLTBuy(e.getKey());
+                        int yCord = getY(value.getPrice());
+                        g.drawPolygon(new int[]{xCord - 2, xCord, xCord + 2}, new int[]{yCord + 4, yCord, yCord + 4}, 3);
 
-                } else {
-                    g.setColor(Color.black);
-                    //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getYForLTSell(e.getKey())-20);
-                    int xCord = getXForLT(key);
-                    //int yCord = getYForLTSell(e.getKey());
-                    int yCord = getY(value.getPrice());
-                    g.drawPolygon(new int[]{xCord - 1, xCord, xCord + 1}, new int[]{yCord - 3, yCord, yCord - 3}, 3);
-                }
-                System.out.println(key);
-            });
+                    } else {
+                        g.setColor(Color.black);
+                        //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getYForLTSell(e.getKey())-20);
+                        int xCord = getXForLT(key);
+                        //int yCord = getYForLTSell(e.getKey());
+                        int yCord = getY(value.getPrice());
+                        g.drawPolygon(new int[]{xCord - 2, xCord, xCord + 2}, new int[]{yCord - 4, yCord, yCord - 4}, 3);
+                    }
+                    System.out.println(key);
+                });
+            }
         }
     }
 
     private int getXForLT(LocalTime t) {
-        long timeDiff = ChronoUnit.MINUTES.between(LocalTime.of(9, 0), t);
-        if (t.isAfter(LocalTime.of(11, 30))) {
-            timeDiff = timeDiff - 90;
+        if(XUTrader.gran==DisplayGranularity._1MDATA) {
+            long timeDiff = ChronoUnit.MINUTES.between(LocalTime.of(9, 0), t);
+            if (t.isAfter(LocalTime.of(11, 30))) {
+                timeDiff = timeDiff - 90;
+            }
+            //System.out.println(" time in between " + timeDiff);
+            return (int) (WIDTH_BAR * timeDiff + 5);
+        } else if(XUTrader.gran == DisplayGranularity._5MDATA) {
+            long timeDiff = (ChronoUnit.MINUTES.between(LocalTime.of(9, 0), t))/5;
+            if (t.isAfter(LocalTime.of(11, 30))) {
+                timeDiff = timeDiff - 18;
+            }
+            //System.out.println(" time in between " + timeDiff);
+            return (int) (WIDTH_BAR * timeDiff + 5);
         }
-        //System.out.println(" time in between " + timeDiff);
-        return (int) (WIDTH_BAR * timeDiff + 5);
+        return 0;
     }
 
 //    public int getYForLTSell(LocalTime t) {
