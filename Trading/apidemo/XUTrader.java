@@ -585,7 +585,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             ex.printStackTrace();
         }
         apcon.client().reqIds(-1);
-        //orderIdNo = new AtomicInteger();
     }
 
     private static ApiController getAPICon() {
@@ -718,28 +717,23 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //System.out.println( tradeKey );
         //System.out.println( contract.toString() );
         //System.out.println(" exec " + execution.side() + " "+ execution.cumQty() + "　" + execution.time() + " " + execution.price()  + " "+ execution.execId());
-
-
         //String ticker = ibContractToSymbol(contract);
+
         FutType f = ibContractToFutType(contract);
         System.out.println(" exec " + execution.side() + "　" + execution.time() + " " + execution.cumQty()
                 + " " + execution.price() + " " + execution.orderRef() + " " + execution.orderId() + " " + execution.permId() + " "
                 + execution.shares());
-
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
-        //LocalTime lt =
         System.out.println(LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss")));
+
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
         if (ldt.getDayOfMonth() == LocalDateTime.now().getDayOfMonth()) {
-
-
             if (XUTrader.tradesMap.get(f).containsKey(ldt.toLocalTime())) {
                 XUTrader.tradesMap.get(f).get(ldt.toLocalTime()).merge(new IBTrade(execution.price(), sign * execution.cumQty()));
             } else {
                 XUTrader.tradesMap.get(f).put(ldt.toLocalTime(), new IBTrade(execution.price(), sign * execution.cumQty()));
             }
-
 //            if (XUTrader.tradesMapFront.containsKey(ldt.toLocalTime())) {
 //                XUTrader.tradesMapFront.get(ldt.toLocalTime()).merge(new IBTrade(execution.price(), sign * execution.cumQty()));
 //            } else {
@@ -778,6 +772,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId, int parentId,
                             double lastFillPrice, int clientId, String whyHeld) {
+
         XUTrader.updateLog(Utility.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
 
         if (status.equals(OrderStatus.Filled)) {
@@ -803,6 +798,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void orderStatus(int orderId, OrderStatus status, int filled, int remaining,
                             double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
+
         XUTrader.updateLog(Utility.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
 
         if (status.equals(OrderStatus.Filled)) {
@@ -821,10 +817,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public void position(String account, Contract contract, double position, double avgCost) {
         //System.out.println (" proper handling here XXXX ");
         String ticker = utility.Utility.ibContractToSymbol(contract);
-
         if(contract.symbol().equals("XINA50")) {
             FutType f = ibContractToFutType(contract);
-
             System.out.println(getStr(" in position xutrader ", ticker, position, avgCost));
             currentPosMap.put(f, (int) position);
         }

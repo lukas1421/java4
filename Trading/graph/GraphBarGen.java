@@ -142,8 +142,6 @@ public class GraphBarGen extends JComponent {
                 }
             }
             x += WIDTH_BAR;
-            //System.out.println(" time is " + lt + " x is " + x);
-
         }
 
         g2.setColor(Color.red);
@@ -166,7 +164,7 @@ public class GraphBarGen extends JComponent {
         }
 
         //add bench here
-        g2.drawString(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString(), 15, 15);
+        //g2.drawString(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString(), 15, 15);
         g2.drawString(Double.toString(getReturn()) + "%", getWidth() / 8, 15);
         g2.drawString("开: " + Double.toString(getOpen()), getWidth() * 2 / 8, 15);
         g2.drawString(Double.toString(getLast()), getWidth() * 3 / 8, 15);
@@ -180,7 +178,7 @@ public class GraphBarGen extends JComponent {
         g2.setColor(getForeground());
 
         if (XUTrader.showTrades) {
-            System.out.println(" name is " + fut.toString());
+            //System.out.println(" name is " + fut.toString());
             if(XUTrader.tradesMap.get(fut).size()>0) {
                 XUTrader.tradesMap.get(fut).forEach((key, value) -> {
                     //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getHeight()-20);

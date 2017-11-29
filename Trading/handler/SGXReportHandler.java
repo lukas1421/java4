@@ -2,6 +2,7 @@ package handler;
 
 import TradeType.FutureTrade;
 import TradeType.Trade;
+import apidemo.FutType;
 import client.CommissionReport;
 import client.Contract;
 import client.Execution;
@@ -50,12 +51,16 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReportEnd() {
-        int sgxLotsTraded = HistChinaStocks.chinaTradeMap.get("SGXA50").entrySet().stream().filter(e -> e.getKey().toLocalDate()
-                .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
-                .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
+        for(FutType f: FutType.values()) {
+            String ticker = f.getTicker();
 
-        HistChinaStocks.wtdChgInPosition.put("SGXA50", sgxLotsTraded);
-        System.out.println(" trade report end");
+            int sgxLotsTraded = HistChinaStocks.chinaTradeMap.get(ticker).entrySet().stream().filter(e -> e.getKey().toLocalDate()
+                    .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
+                    .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
+
+            HistChinaStocks.wtdChgInPosition.put(ticker, sgxLotsTraded);
+            System.out.println(" trade report end");
+        }
     }
 
     @Override
