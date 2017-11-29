@@ -34,8 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaMain.controller;
 import static java.util.stream.Collectors.toList;
-import static utility.Utility.getBackFutContract;
-import static utility.Utility.getFrontFutContract;
+import static utility.Utility.*;
 
 public class ApiController implements EWrapper {
 
@@ -928,8 +927,8 @@ public class ApiController implements EWrapper {
 //        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
 //        ct.secType(SecType.FUT);
         //m_symReqMap.put(reqId,"XINA50");
-        //m_topMktDataMap.put(reqIdFront, frontHandler);
-        //m_topMktDataMap.put(reqIdBack, backHandler);
+//        m_topMktDataMap.put(reqIdFront, frontHandler);
+//        m_topMktDataMap.put(reqIdBack, backHandler);
 
         ChinaMain.globalRequestMap.put(reqIdFront,new Request(frontCt, new XUTrader.GeneralReceiver()));
         ChinaMain.globalRequestMap.put(reqIdBack, new Request(backCt, new XUTrader.GeneralReceiver()));
@@ -1090,7 +1089,7 @@ public class ApiController implements EWrapper {
     public void tickPrice(int reqId, int tickType, double price, int canAutoExecute) {
         ITopMktDataHandler handler;
         ITopMktDataHandler1 handler1;
-        int symb;
+        //int symb;
         //TickType.get(tickType).equals(TickType.LAST) &&
         //System.out.println(" req id " + reqId + " price " + price);
         if (ChinaMain.globalRequestMap.containsKey(reqId)) {
@@ -1128,15 +1127,6 @@ public class ApiController implements EWrapper {
     }
 
     @Override
-    public void tickGeneric(int reqId, int tickType, double value) {
-        ITopMktDataHandler handler = m_topMktDataMap.get(reqId);
-        if (handler != null) {
-            handler.tickPrice(TickType.get(tickType), value, 0);
-        }
-        recEOM();
-    }
-
-    @Override
     public void tickSize(int reqId, int tickType, int size) {
         ITopMktDataHandler handler = m_topMktDataMap.get(reqId);
         ITopMktDataHandler1 handler1;
@@ -1145,7 +1135,7 @@ public class ApiController implements EWrapper {
         if (TickType.get(tickType).equals(TickType.VOLUME) && ChinaMain.globalRequestMap.containsKey(reqId)) {
             Request r = ChinaMain.globalRequestMap.get(reqId);
             LiveHandler lh = (LiveHandler) r.getHandler();
-            lh.handleVol(r.getContract().symbol(), size, LocalTime.now().truncatedTo(ChronoUnit.MINUTES));
+            lh.handleVol(ibContractToSymbol(r.getContract()), size, LocalTime.now().truncatedTo(ChronoUnit.MINUTES));
         }
 
         if (handler != null) {
@@ -1162,6 +1152,17 @@ public class ApiController implements EWrapper {
 
         recEOM();
     }
+
+    @Override
+    public void tickGeneric(int reqId, int tickType, double value) {
+        ITopMktDataHandler handler = m_topMktDataMap.get(reqId);
+        if (handler != null) {
+            handler.tickPrice(TickType.get(tickType), value, 0);
+        }
+        recEOM();
+    }
+
+
 
     @Override
     public void tickString(int reqId, int tickType, String value) {

@@ -1,5 +1,6 @@
 package graph;
 
+import apidemo.FutType;
 import apidemo.XUTrader;
 import auxiliary.SimpleBar;
 
@@ -27,6 +28,7 @@ public class GraphBarGen extends JComponent {
     int last = 0;
     double rtn = 0;
     NavigableMap<LocalTime, SimpleBar> tm;
+    private volatile FutType fut;
     volatile String name;
     String chineseName;
     private String bench;
@@ -59,6 +61,10 @@ public class GraphBarGen extends JComponent {
     @Override
     public void setName(String s) {
         this.name = s;
+    }
+
+    public void setFut(FutType f) {
+        this.fut = f;
     }
 
     @Override
@@ -164,9 +170,9 @@ public class GraphBarGen extends JComponent {
         g2.drawString(Double.toString(getReturn()) + "%", getWidth() / 8, 15);
         g2.drawString("开: " + Double.toString(getOpen()), getWidth() * 2 / 8, 15);
         g2.drawString(Double.toString(getLast()), getWidth() * 3 / 8, 15);
-        g2.drawString("Pos: " + XUTrader.currentPosMap.getOrDefault(name,0), getWidth() * 4 / 8, 15);
-        g2.drawString("B: " + XUTrader.botMap.getOrDefault(name,0), getWidth() * 5 / 8, 15);
-        g2.drawString("S: " + XUTrader.soldMap.getOrDefault(name,0), getWidth() * 6 / 8, 15);
+        g2.drawString("Pos: " + XUTrader.currentPosMap.getOrDefault(fut,0), getWidth() * 4 / 8, 15);
+        g2.drawString("B: " + XUTrader.botMap.getOrDefault(fut,0), getWidth() * 5 / 8, 15);
+        g2.drawString("S: " + XUTrader.soldMap.getOrDefault(fut,0), getWidth() * 6 / 8, 15);
 
         g2.setColor(new Color(0, 255 * (100 - wtdP) / 100, 0));
         //g2.fillRect(0,0, getWidth(), getHeight());
@@ -174,9 +180,9 @@ public class GraphBarGen extends JComponent {
         g2.setColor(getForeground());
 
         if (XUTrader.showTrades) {
-            System.out.println(" name is " + name);
-            if(XUTrader.tradesMap.get(name).size()>0) {
-                XUTrader.tradesMap.get(name).forEach((key, value) -> {
+            System.out.println(" name is " + fut.toString());
+            if(XUTrader.tradesMap.get(fut).size()>0) {
+                XUTrader.tradesMap.get(fut).forEach((key, value) -> {
                     //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getHeight()-20);
                     if (value.getSize() > 0) {
                         g.setColor(Color.blue);

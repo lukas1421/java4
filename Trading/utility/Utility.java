@@ -741,7 +741,7 @@ public class Utility {
                     return FutType.BackFut;
             }
         }
-        throw new IllegalArgumentException("not a fut");
+        throw new IllegalArgumentException("not a fut" + ct.symbol());
         //return ct.symbol();
     }
 

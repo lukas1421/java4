@@ -30,7 +30,7 @@ public enum FutType {
         }
         throw new IllegalArgumentException(" cannot find ticker ");
     }
-    String getTicker() {
+    public String getTicker() {
         return tickerName;
     }
 }

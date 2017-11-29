@@ -4,6 +4,7 @@ import TradeType.MarginTrade;
 import TradeType.NormalTrade;
 import TradeType.Trade;
 import apidemo.ChinaMain;
+import apidemo.FutType;
 import apidemo.TradingConstants;
 import auxiliary.SimpleBar;
 import client.Contract;
@@ -767,8 +768,12 @@ public class HistChinaStocks extends JPanel {
     }
 
     private static NavigableMap<LocalDateTime, Double> computeWtdMtmPnl(Predicate<? super Map.Entry<String, ?>> p) {
-        weekOpenPositionMap.put("SGXA50", currentPositionMap.getOrDefault("SGXA50", 0)
-                - wtdChgInPosition.getOrDefault("SGXA50", 0));
+        for(FutType f:FutType.values()) {
+            String ticker = f.getTicker();
+            weekOpenPositionMap.put(ticker, currentPositionMap.getOrDefault(ticker, 0)
+                    - wtdChgInPosition.getOrDefault(ticker, 0));
+        }
+
         //if (weekOpenPositionMap.entrySet().stream().filter(p).mapToInt(Map.Entry::getValue).sum() != 0) {
         weekMtmMap = weekOpenPositionMap.entrySet().stream().filter(p).map(e ->
                 computeMtm(e.getKey(), e.getValue(), chinaWtd.get(e.getKey()), lastWeekCloseMap.getOrDefault(e.getKey(), 0.0))).
@@ -1463,6 +1468,10 @@ public class HistChinaStocks extends JPanel {
                 case 11:
                     return chinaWtd.get(name).size();
                 case 12:
+                    if(!tickerNotFuture(name)) {
+                        System.out.println("name / trade map this week " + name + " " + chinaTradeMap.get(name));
+                    }
+
                     return chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
                             .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
                 case 13:
