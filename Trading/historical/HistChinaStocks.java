@@ -768,7 +768,7 @@ public class HistChinaStocks extends JPanel {
     }
 
     private static NavigableMap<LocalDateTime, Double> computeWtdMtmPnl(Predicate<? super Map.Entry<String, ?>> p) {
-        for(FutType f:FutType.values()) {
+        for (FutType f : FutType.values()) {
             String ticker = f.getTicker();
             weekOpenPositionMap.put(ticker, currentPositionMap.getOrDefault(ticker, 0)
                     - wtdChgInPosition.getOrDefault(ticker, 0));
@@ -1439,6 +1439,10 @@ public class HistChinaStocks extends JPanel {
                         weekOpenPositionMap.getOrDefault(name, 0) + thisWeekCostBasis));
 
                 totalTradingCostMap.put(name, fx * thisWeekTradingCost);
+
+                //System.out.println(" week cost basis " + thisWeekCostBasis + " ");
+                //System.out.println(" week")
+                //System.out.println(" total trading cost " + costBasisMap.getOrDefault(name, 0.0));
             }
 
 
@@ -1468,7 +1472,7 @@ public class HistChinaStocks extends JPanel {
                 case 11:
                     return chinaWtd.get(name).size();
                 case 12:
-                    if(!tickerNotFuture(name)) {
+                    if (!tickerNotFuture(name)) {
                         System.out.println("name / trade map this week " + name + " " + chinaTradeMap.get(name));
                     }
 

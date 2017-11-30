@@ -1870,15 +1870,16 @@ public final class ChinaStock extends JPanel {
     }
 
     static int getTrueRange3day(String name) {
+        if(priceMapBarY2.containsKey(name) && priceMapBarY2.get(name).size() > 0) {
+            double maxY2 = priceMapBarY2.get(name).entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(Double.MIN_VALUE);
+            double minY2 = priceMapBarY2.get(name).entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(Double.MAX_VALUE);
 
-        double maxY2 = priceMapBarY2.get(name).entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(Double.MIN_VALUE);
-        double minY2 = priceMapBarY2.get(name).entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(Double.MAX_VALUE);
+            if (Utility.noZeroArrayGen(name, maxMap, minMap, minMapY)) {
+                double max3d = maxGen(maxMap.get(name), maxMapY.get(name), maxY2);
+                double min3d = minGen(minMap.get(name), minMapY.get(name), minY2);
 
-        if (Utility.noZeroArrayGen(name, maxMap, minMap, minMapY)) {
-            double max3d = maxGen(maxMap.get(name), maxMapY.get(name), maxY2);
-            double min3d = minGen(minMap.get(name), minMapY.get(name), minY2);
-
-            return (int) max(0, min(100, round(100d * ((priceMap.getOrDefault(name, 0.0) - min3d) / (max3d - min3d)))));
+                return (int) max(0, min(100, round(100d * ((priceMap.getOrDefault(name, 0.0) - min3d) / (max3d - min3d)))));
+            }
         }
         return 0;
     }

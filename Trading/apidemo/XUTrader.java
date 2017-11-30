@@ -8,7 +8,6 @@ import controller.ApiController;
 import graph.DisplayGranularity;
 import graph.GraphBarGen;
 import handler.HistoricalHandler;
-import handler.LiveHandler;
 import utility.Utility;
 
 import javax.swing.*;
@@ -26,7 +25,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
-import static apidemo.ChinaData.priceMapBar;
 import static utility.Utility.*;
 
 //import controller.ApiController.ITopMktDataHandler;
@@ -60,9 +58,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //    static volatile double currentAskBack;
 //    static volatile double currentPriceBack;
 
-    static volatile EnumMap<FutType, Double> bidMap = new EnumMap<>(FutType.class);
-    static volatile EnumMap<FutType, Double> askMap = new EnumMap<>(FutType.class);
-    static volatile EnumMap<FutType, Double> futPriceMap = new EnumMap<>(FutType.class);
+    public static volatile EnumMap<FutType, Double> bidMap = new EnumMap<>(FutType.class);
+    public static volatile EnumMap<FutType, Double> askMap = new EnumMap<>(FutType.class);
+    public static volatile EnumMap<FutType, Double> futPriceMap = new EnumMap<>(FutType.class);
 
     @SuppressWarnings("unused")
     static volatile EnumMap<FutType, Double> previousCloseMap = new EnumMap<>(FutType.class);
@@ -81,7 +79,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private GraphBarGen xuGraph = new GraphBarGen();
 
-    static volatile EnumMap<FutType, NavigableMap<LocalTime, SimpleBar>> futData = new EnumMap<>(FutType.class);
+    public static volatile EnumMap<FutType, NavigableMap<LocalTime, SimpleBar>> futData = new EnumMap<>(FutType.class);
     //static volatile NavigableMap<LocalTime, SimpleBar> xuFrontData = new ConcurrentSkipListMap<>();
     //static volatile NavigableMap<LocalTime, SimpleBar> xuBackData = new ConcurrentSkipListMap<>();
 
@@ -319,6 +317,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             apcon.disconnect();
         });
 
+        JButton cancelAllOrdersButton = new JButton("Cancel Orders");
+        cancelAllOrdersButton.addActionListener(l->{
+            apcon.cancelAllOrders();
+        });
+
+
         JScrollPane chartScroll = new JScrollPane(xuGraph) {
             @Override
             public Dimension getPreferredSize() {
@@ -384,6 +388,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel2.add(connectionLabel);
         //controlPanel2.add(connectionStatusLabel);
         controlPanel2.add(disconnectButton);
+        controlPanel2.add(cancelAllOrdersButton);
 
         controlPanel2.add(frontFutButton);
         controlPanel2.add(backFutButton);
@@ -817,9 +822,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public void position(String account, Contract contract, double position, double avgCost) {
         //System.out.println (" proper handling here XXXX ");
         String ticker = utility.Utility.ibContractToSymbol(contract);
-        if(contract.symbol().equals("XINA50")) {
+        if(contract.symbol().equals("XINA50") && position!=0.0) {
             FutType f = ibContractToFutType(contract);
-            System.out.println(getStr(" in position xutrader ", ticker, position, avgCost));
+            //System.out.println(getStr(" in position xutrader ", ticker, position, avgCost));
             currentPosMap.put(f, (int) position);
         }
 //        switch (ticker) {
@@ -889,156 +894,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public void show(String string) {
         System.out.println(" show string " + string);
     }
-
-
-    public static class GeneralReceiver implements LiveHandler {
-        @Override
-        public void handlePrice(TickType tt, String name, double price, LocalTime t) {
-
-            FutType f = FutType.get(name);
-            //System.out.println(getStr(" fut type + name  price t " , f.toString(),name,price,t));
-
-            switch (tt) {
-                case BID:
-                    bidMap.put(f, price);
-                    break;
-                case ASK:
-                    askMap.put(f, price);
-                    break;
-                case LAST:
-                    //System.out.println(" name price t " + name + " " + price + " " + t.toString());
-
-                    futPriceMap.put(f, price);
-                    if (futData.get(f).containsKey(t)) {
-                        futData.get(f).get(t).add(price);
-                    } else {
-                        futData.get(f).put(t, new SimpleBar(price));
-                    }
-
-                    ChinaStock.priceMap.put(name, price);
-                    if (t.isAfter(LocalTime.of(8, 55))) {
-                        if (XU.lastFutPrice.containsKey(t)) {
-                            XU.lastFutPrice.get(t).add(price);
-                        } else {
-                            XU.lastFutPrice.put(t, new SimpleBar(price));
-                        }
-
-                        if (priceMapBar.get(name).containsKey(t)) {
-                            priceMapBar.get(name).get(t).add(price);
-                        } else {
-                            priceMapBar.get(name).put(t, new SimpleBar(price));
-                        }
-                    }
-                    break;
-                //futData.get(name).put(t, price);
-
-            }
-        }
-
-        @Override
-        public void handleVol(String name, double vol, LocalTime t) {
-            XU.frontFutVol.put(t, (int)vol);
-            ChinaStock.sizeMap.put(name, (long)vol);
-            ChinaData.sizeTotalMap.get(name).put(t, 1d*vol);
-        }
-    }
-
-
-//    static class FrontFutReceiver implements ITopMktDataHandler {
-//
-//        @SuppressWarnings("Duplicates")
-//        @Override
-//        public void tickPrice(TickType tickType, double price, int canAutoExecute) {
-//
-//            LocalTime lt = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
-//            switch (tickType) {
-//                case BID:
-//                    bidMap.put(FutType.FrontFut, price);
-//                    //currentBidFront = price;
-//                    //System.out.println(" current bid " + currentBidFront);
-//                    break;
-//                case ASK:
-//                    askMap.put(FutType.FrontFut,price);
-//                    //currentAskFront = price;
-//                    //System.out.println(" current ask " + currentAskFront);
-//                    break;
-//                case LAST:
-//                    //currentPriceFront = price;
-//                    futPriceMap.put(FutType.FrontFut, price);
-//                    //System.out.println(" current price " + currentPriceFront);
-//                    if (futData.get(FutType.FrontFut).containsKey(lt)) {
-//                        futData.get(FutType.FrontFut).get(lt).add(price);
-//                    } else {
-//                        futData.get(FutType.FrontFut).put(lt, new SimpleBar(price));
-//                    }
-//                    break;
-//            }
-//        }
-//
-//        @Override
-//        public void tickSize(TickType tickType, int size) {
-//        }
-//
-//        @Override
-//        public void tickString(TickType tickType, String value) {
-//        }
-//
-//        @Override
-//        public void tickSnapshotEnd() {
-//        }
-//
-//        @Override
-//        public void marketDataType(Types.MktDataType marketDataType) {
-//        }
-//    }
-//
-//    static class BackFutReceiver implements ITopMktDataHandler {
-//
-//        @SuppressWarnings("Duplicates")
-//        @Override
-//        public void tickPrice(TickType tickType, double price, int canAutoExecute) {
-//
-//            LocalTime lt = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
-//            switch (tickType) {
-//                case BID:
-//                    currentBidBack = price;
-//                    bidMap.put(FutType.BackFut, price);
-//                    //System.out.println(" current bid " + currentBidFront);
-//                    break;
-//                case ASK:
-//                    currentAskBack = price;
-//                    askMap.put(FutType.BackFut, price);
-//                    //System.out.println(" current ask " + currentAskFront);
-//                    break;
-//                case LAST:
-//                    currentPriceBack = price;
-//                    futPriceMap.put(FutType.BackFut, price);
-//                    //System.out.println(" current price " + currentPriceFront);
-//                    if (futData.get(FutType.BackFut).containsKey(lt)) {
-//                        futData.get(FutType.BackFut).get(lt).add(price);
-//                    } else {
-//                        futData.get(FutType.BackFut).put(lt, new SimpleBar(price));
-//                    }
-//                    break;
-//            }
-//        }
-//
-//        @Override
-//        public void tickSize(TickType tickType, int size) {
-//        }
-//
-//        @Override
-//        public void tickString(TickType tickType, String value) {
-//        }
-//
-//        @Override
-//        public void tickSnapshotEnd() {
-//        }
-//
-//        @Override
-//        public void marketDataType(Types.MktDataType marketDataType) {
-//        }
-//    }
 
 
     private void requestLevel2Data() {

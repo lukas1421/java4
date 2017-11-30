@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum FutType {
-    FrontFut("SGXA50"), BackFut("SGXA50BM");
+    PreviousFut("SGXA50PR"), FrontFut("SGXA50"), BackFut("SGXA50BM");
 
     String tickerName;
 

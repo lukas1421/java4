@@ -24,6 +24,7 @@ import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
 import static apidemo.ChinaPosition.fxMap;
+import static apidemo.ChinaPosition.getCurrentDelta;
 import static apidemo.ChinaStock.industryNameMap;
 import static apidemo.ChinaStock.sharpeMap;
 import static java.lang.Math.pow;
@@ -31,10 +32,9 @@ import static java.lang.Math.sqrt;
 
 public class ChinaKeyMonitor extends JPanel implements Runnable {
 
-    Set<JScrollPane> paneList = new HashSet<>();
     public static JPanel jp = new JPanel();
-    static ScheduledExecutorService ftes = Executors.newScheduledThreadPool(10);
-    static JLabel timeLabel = new JLabel(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
+    private static ScheduledExecutorService ftes = Executors.newScheduledThreadPool(10);
+    private static JLabel timeLabel = new JLabel(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
 
     static volatile boolean displayPos = true;
     static volatile boolean displaySharp = false;
@@ -303,6 +303,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
             }
         };
 
+        Set<JScrollPane> paneList = new HashSet<>();
         paneList.add(chartScroll);
         paneList.add(chartScroll2);
         paneList.add(chartScroll3);
@@ -454,8 +455,9 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                 positionComparingFunc = e -> ChinaData.wtdSharpe.getOrDefault(e.getKey(), 0.0);
 
                 //LinkedList<String> l = ;
-                processGraphMonitors(ChinaPosition.getNetPosition().entrySet().stream().sorted(reverseComparator(
-                        Comparator.comparingDouble(positionComparingFunc))).map(Map.Entry::getKey).limit(18)
+                processGraphMonitors(ChinaPosition.getNetPosition().entrySet().stream().sorted(
+                        Comparator.comparingDouble(positionComparingFunc).reversed()).map(Map.Entry::getKey).limit(18)
+                        .peek(e->System.out.println(" ticker " + e +" get current delta " + getCurrentDelta(e)))
                         .collect(Collectors.toCollection(LinkedList::new)));
 
             } else if (displaySharp) {

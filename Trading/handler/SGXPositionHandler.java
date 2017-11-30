@@ -30,6 +30,6 @@ public class SGXPositionHandler implements ApiController.IPositionHandler {
 
     @Override
     public void positionEnd() {
-        System.out.println(" position end ");
+        //System.out.println(" position end ");
     }
 }

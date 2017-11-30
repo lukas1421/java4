@@ -727,6 +727,8 @@ public class Utility {
                     return "SGXA50";
                 case TradingConstants.GLOBALA50BACKEXPIRY:
                     return "SGXA50BM";
+                case TradingConstants.GLOBALA50LASTEXPIRY:
+                    return "SGXA50PR";
             }
         }
         return ct.symbol();
@@ -735,13 +737,18 @@ public class Utility {
     public static FutType ibContractToFutType(Contract ct) {
         if (ct.symbol().equals("XINA50")) {
             switch (ct.lastTradeDateOrContractMonth()) {
+                case TradingConstants.GLOBALA50LASTEXPIRY:
+                    return FutType.PreviousFut;
                 case TradingConstants.GLOBALA50FRONTEXPIRY:
                     return FutType.FrontFut;
                 case TradingConstants.GLOBALA50BACKEXPIRY:
                     return FutType.BackFut;
+                default:
+                    System.out.println(" fut expiry is " + ct.lastTradeDateOrContractMonth());
+                    return FutType.BackFut;
             }
         }
-        throw new IllegalArgumentException("not a fut" + ct.symbol());
+        throw new IllegalArgumentException("not a fut " + ct.symbol());
         //return ct.symbol();
     }
 

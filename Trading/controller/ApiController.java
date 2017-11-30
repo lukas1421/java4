@@ -5,10 +5,10 @@ package controller;
 import apidemo.ChinaMain;
 import apidemo.HKData;
 import apidemo.TradingConstants;
-import apidemo.XUTrader;
 import client.*;
 import client.Types.*;
 import controller.ApiConnection.ILogger;
+import handler.GeneralReceiver;
 import handler.HistDataConsumer;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
@@ -930,8 +930,8 @@ public class ApiController implements EWrapper {
 //        m_topMktDataMap.put(reqIdFront, frontHandler);
 //        m_topMktDataMap.put(reqIdBack, backHandler);
 
-        ChinaMain.globalRequestMap.put(reqIdFront,new Request(frontCt, new XUTrader.GeneralReceiver()));
-        ChinaMain.globalRequestMap.put(reqIdBack, new Request(backCt, new XUTrader.GeneralReceiver()));
+        ChinaMain.globalRequestMap.put(reqIdFront,new Request(frontCt, new GeneralReceiver()));
+        ChinaMain.globalRequestMap.put(reqIdBack, new Request(backCt, new GeneralReceiver()));
 
         m_client.reqMktData(reqIdFront, frontCt, "", isSnapShot, Collections.<TagValue>emptyList());
         m_client.reqMktData(reqIdBack, backCt, "", isSnapShot, Collections.<TagValue>emptyList());
@@ -1208,6 +1208,8 @@ public class ApiController implements EWrapper {
 
     public void reqDeepMktData(Contract contract, int numRows, IDeepMktDataHandler handler) {
         //int reqId = m_reqId++;
+
+        m_deepMktDataMap.values().forEach(this::cancelDeepMktData);
 
         int reqId = m_reqId.getAndIncrement();
 

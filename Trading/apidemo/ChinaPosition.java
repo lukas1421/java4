@@ -946,11 +946,15 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     static Map<String, Integer> getNetPosition() {
         if (openPositionMap.size() > 0 || tradesMap.size() > 0) {
 
+            System.out.println(" getting net position ");
+
             Map<String, Integer> trades = tradesMap.entrySet().stream().filter(e -> e.getValue().size() > 0)
+                    //.peek(e-> System.out.println( " trade > 0 " + e.getKey() + e.getValue()))
                     .collect(Collectors.toMap(Entry::getKey, e -> (Integer) e.getValue().entrySet().stream()
                             .mapToInt(e1 -> ((Trade) e1.getValue()).getSize()).sum()));
 
-            return Stream.of(openPositionMap, trades).flatMap(e -> e.entrySet().stream())
+            return Stream.of(openPositionMap, trades).flatMap(e -> e.entrySet().stream()).filter(e->e.getValue()>0)
+                    //.peek(e->System.out.println(" openpos map, trades " +  e.getKey() + "  " + e.getValue()))
                     .collect(Collectors.groupingBy(Entry::getKey, Collectors.summingInt(Entry::getValue)));
         }
         return new HashMap<>();
@@ -1179,6 +1183,13 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     public static int getCurrentDelta(String name) {
+
+//        if(name.equals("SGXA50")) {
+//            //System.out.println(" SGX ")
+//            System.out.println(getStr("get current delta SGXA50 fx price net pos", fxMap.getOrDefault(name,1.0), priceMap.getOrDefault(name,0.0),
+//                    getNetPosition(name)));
+//        }
+
         return (int) Math.round(fxMap.getOrDefault(name, 1.0) * priceMap.getOrDefault(name, 0.0) * getNetPosition(name) / 1000d);
     }
 
