@@ -54,11 +54,9 @@ import static utility.Utility.*;
 public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     static String line;
-    @SuppressWarnings("unchecked")
-    volatile static Map<String, Integer> openPositionMap = new HashMap();
-    public volatile static Map<String, Integer> currentPositionMap = new HashMap();
-    @SuppressWarnings("unchecked")
-    private static Map<String, Double> costMap = new HashMap();
+    volatile static Map<String, Integer> openPositionMap = new HashMap<>();
+    public volatile static Map<String, Integer> currentPositionMap = new HashMap<>();
+    private static Map<String, Double> costMap = new HashMap<>();
     public volatile static Map<String, ConcurrentSkipListMap<LocalTime, ? super Trade>> tradesMap = new ConcurrentHashMap<>();
     private static Map<String, ConcurrentSkipListMap<LocalTime, Double>> tradePnlMap = new ConcurrentHashMap<>();
     public static volatile HashMap<String, Double> wtdMaxMap = new HashMap<>();
@@ -589,8 +587,20 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     @Override
     public void handleHist(String name, String date, double open, double high, double low, double close) {
         LocalDate currDate = LocalDate.now();
+
+        System.out.println(" ");
+        System.out.println(getStr(" in chinaposition handle hist date is ", date, close));
+
+
         if (!date.startsWith("finished")) {
-            Date dt = new Date(Long.parseLong(date) * 1000);
+            //System.out.println(getStr(" in chinaposition handle hist date is ", date, close));
+            Date dt = new Date();
+            try {
+                dt = new Date(Long.parseLong(date) * 1000);
+            } catch (Exception ex) {
+                System.out.println(" date format problem " + date);
+                //ex.printStackTrace();
+            }
             Calendar cal = Calendar.getInstance();
             cal.setTime(dt);
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
@@ -608,6 +618,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 }
             } else {
                 //!ld.equals(currDate)
+                System.out.println(" handle hist china position " + name +" " + LocalDateTime.of(ld,lt) + " " + close);
                 if (ld.isBefore(LocalDate.now()) && lt.isBefore(LocalTime.of(17,0))) {
                     ChinaStock.closeMap.put(name, close);
                     //xuPreviousClose = close;
@@ -946,7 +957,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     static Map<String, Integer> getNetPosition() {
         if (openPositionMap.size() > 0 || tradesMap.size() > 0) {
 
-            System.out.println(" getting net position ");
+            //System.out.println(" getting net position ");
 
             Map<String, Integer> trades = tradesMap.entrySet().stream().filter(e -> e.getValue().size() > 0)
                     //.peek(e-> System.out.println( " trade > 0 " + e.getKey() + e.getValue()))

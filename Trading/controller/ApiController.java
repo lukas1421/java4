@@ -992,6 +992,7 @@ public class ApiController implements EWrapper {
         ChinaMain.globalRequestMap.put(reqID+1, new Request(backFut, hh));
 
         CompletableFuture.runAsync(() -> {
+            //note formatdate is date formatting selection
             m_client.reqHistoricalData(reqID, frontFut, "", durationStr, barSize.toString(), whatToShow.toString(),
                     0, 2, Collections.<TagValue>emptyList());
             m_client.reqHistoricalData(reqID+1, backFut, "", durationStr, barSize.toString(), whatToShow.toString(),
@@ -1664,6 +1665,9 @@ public class ApiController implements EWrapper {
     public void historicalData(int reqId, String date, double open, double high, double low,
                                double close, int volume, int count, double wap, boolean hasGaps) {
 
+        System.out.println(getStr("historical data in apicontroller/reqid / date / close ", reqId, date, close));
+
+
         if (ChinaMain.globalRequestMap.containsKey(reqId)) {
             Request r = ChinaMain.globalRequestMap.get(reqId);
             String symb = utility.Utility.ibContractToSymbol(r.getContract());
@@ -1824,7 +1828,7 @@ public class ApiController implements EWrapper {
         System.out.println(" historical data ending for " + reqId);
         if (ChinaMain.globalRequestMap.containsKey(reqId)) {
             Request r = ChinaMain.globalRequestMap.get(reqId);
-            String symb = r.getContract().symbol();
+            String symb = ibContractToSymbol(r.getContract());
             if (r.getCustomFunctionNeeded()) {
                 System.out.println(" custom handling needed ");
             } else {

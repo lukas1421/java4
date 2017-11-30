@@ -408,8 +408,8 @@ public final class ChinaData extends JPanel {
 //        currDate = LocalDate.now();
 //        ytd = currDate.minusDays(1L);
 //        y2 = currDate.minusDays(2L);
-        getFromTDX(LocalDate.now(),LocalDate.now().minusDays(1L),LocalDate.now().minusDays(2L) );
-        //getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0));
+        //getFromTDX(LocalDate.now(),LocalDate.now().minusDays(1L),LocalDate.now().minusDays(2L) );
+        getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0));
         //futures
 
         //build A50

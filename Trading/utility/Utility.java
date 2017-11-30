@@ -430,13 +430,16 @@ public class Utility {
             String name = (e.substring(0, 2).toUpperCase() + "#" + e.substring(2) + ".txt");
             String line;
             double totalSize = 0.0;
+            //System.out.println("get files from tdx gen " + e + " " + name);
             //AtomicInteger counter = new AtomicInteger(0);
 
             if (!e.equals("sh204001") && (e.substring(0, 2).toUpperCase().equals("SH") || e.substring(0, 2).toUpperCase().equals("SZ"))) {
                 try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxPath + name)))) {
                     while ((line = reader1.readLine()) != null) {
                         List<String> al1 = Arrays.asList(line.split("\t"));
+
                         if (al1.get(0).equals(dateString)) {
+                            //System.out.println(e+ " al1 " + al1);
                             found = true;
                             String time = al1.get(1);
                             LocalTime lt = LocalTime.of(Integer.parseInt(time.substring(0, 2)), Integer.parseInt(time.substring(2)));
