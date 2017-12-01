@@ -1,6 +1,6 @@
 package apidemo;
 
-import TradeType.IBTrade;
+import TradeType.FutureTrade;
 import auxiliary.SimpleBar;
 import client.*;
 import controller.ApiConnection;
@@ -75,7 +75,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //public static NavigableMap<LocalTime, IBTrade> tradesMapFront = new ConcurrentSkipListMap<>();
     //public static NavigableMap<LocalTime, IBTrade> tradesMapBack = new ConcurrentSkipListMap<>();
-    public static EnumMap<FutType, NavigableMap<LocalTime, IBTrade>> tradesMap = new EnumMap<>(FutType.class);
+    public static EnumMap<FutType, NavigableMap<LocalTime, FutureTrade>> tradesMap = new EnumMap<>(FutType.class);
 
     private GraphBarGen xuGraph = new GraphBarGen();
 
@@ -735,9 +735,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (ldt.getDayOfMonth() == LocalDateTime.now().getDayOfMonth()) {
             if (XUTrader.tradesMap.get(f).containsKey(ldt.toLocalTime())) {
-                XUTrader.tradesMap.get(f).get(ldt.toLocalTime()).merge(new IBTrade(execution.price(), sign * execution.cumQty()));
+                XUTrader.tradesMap.get(f).get(ldt.toLocalTime()).merge(new FutureTrade(execution.price(), sign * execution.cumQty()));
             } else {
-                XUTrader.tradesMap.get(f).put(ldt.toLocalTime(), new IBTrade(execution.price(), sign * execution.cumQty()));
+                XUTrader.tradesMap.get(f).put(ldt.toLocalTime(), new FutureTrade(execution.price(), sign * execution.cumQty()));
             }
 //            if (XUTrader.tradesMapFront.containsKey(ldt.toLocalTime())) {
 //                XUTrader.tradesMapFront.get(ldt.toLocalTime()).merge(new IBTrade(execution.price(), sign * execution.cumQty()));
@@ -950,10 +950,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         soldMap.put(f, unitsSold);
 
         double avgBuy = Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() > 0)
-                .mapToDouble(e -> e.getValue().getCost()).sum() / unitsBought)) / 100d;
+                .mapToDouble(e -> e.getValue().getCostWithCommission("")).sum() / unitsBought)) / 100d;
 
         double avgSell = Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() < 0)
-                .mapToDouble(e -> e.getValue().getCost()).sum() / unitsSold)) / 100d;
+                .mapToDouble(e -> e.getValue().getCostWithCommission("")).sum() / unitsSold)) / 100d;
 
         double buyTradePnl = Math.round(100d * (futPriceMap.get(f) - avgBuy) * unitsBought) / 100d;
         double sellTradePnl = Math.round(100d * (futPriceMap.get(f) - avgSell) * unitsSold) / 100d;

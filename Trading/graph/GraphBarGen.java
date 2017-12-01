@@ -169,6 +169,7 @@ public class GraphBarGen extends JComponent {
         g2.drawString("开: " + Double.toString(getOpen()), getWidth() * 2 / 8, 15);
         g2.drawString(Double.toString(getLast()), getWidth() * 3 / 8, 15);
         g2.drawString("Pos: " + XUTrader.currentPosMap.getOrDefault(fut,0), getWidth() * 4 / 8, 15);
+        g2.drawString("Pnl: " + getTradePnl(), getWidth() * 9 / 16, 15);
         g2.drawString("B: " + XUTrader.botMap.getOrDefault(fut,0), getWidth() * 5 / 8, 15);
         g2.drawString("S: " + XUTrader.soldMap.getOrDefault(fut,0), getWidth() * 6 / 8, 15);
 
@@ -180,6 +181,7 @@ public class GraphBarGen extends JComponent {
         if (XUTrader.showTrades) {
             //System.out.println(" name is " + fut.toString());
             if(XUTrader.tradesMap.get(fut).size()>0) {
+                //System.out.println(" graph bar gen show trades " + XUTrader.tradesMap.get(fut));
                 XUTrader.tradesMap.get(fut).forEach((key, value) -> {
                     //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getHeight()-20);
                     if (value.getSize() > 0) {
@@ -223,6 +225,21 @@ public class GraphBarGen extends JComponent {
         return 0;
     }
 
+    private double getTradePnl() {
+
+        double currPrice = getLast();
+        //double fx = fxMap.getOrDefault(name,1.0);
+        if(XUTrader.tradesMap.containsKey(fut) && XUTrader.tradesMap.get(fut).size()>0) {
+            int netTradedPosition = XUTrader.tradesMap.get(fut).entrySet().stream().mapToInt(e->e.getValue().getSizeAll()).sum();
+            double cost = XUTrader.tradesMap.get(fut).entrySet().stream().mapToDouble(e-> e.getValue().getCostWithCommission("")).sum();
+            double mv = netTradedPosition*currPrice;
+            //System.out.println(getStr(" currprice, net traded pos cost mv", currPrice, netTradedPosition, cost, mv));
+            //System.out.println(getStr(" cost mv ", cost, mv));
+            return Math.round(100d*(mv+cost))/100d;
+        }
+        return 0.0;
+
+    }
 //    public int getYForLTSell(LocalTime t) {
 //        SimpleBar sb = (SimpleBar) XUTrader.xuData.floorEntry(t).getValue();
 //        if (sb.normalBar()) {

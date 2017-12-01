@@ -13,7 +13,6 @@ import utility.Utility;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
-import static utility.Utility.getStr;
 import static utility.Utility.ibContractToSymbol;
 
 public class SGXReportHandler implements ApiController.ITradeReportHandler {
@@ -77,8 +76,8 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
                     .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
 
-            System.out.println(" trade report end / name / trade map " + ticker + " " + HistChinaStocks.chinaTradeMap.get(ticker));
-            System.out.println(getStr(" trade report end / ticker / traded ", ticker, sgxLotsTraded));
+            //System.out.println(" trade report end / name / trade map " + ticker + " " + HistChinaStocks.chinaTradeMap.get(ticker));
+            //System.out.println(getStr(" trade report end / ticker / traded ", ticker, sgxLotsTraded));
 
             HistChinaStocks.wtdChgInPosition.put(ticker, sgxLotsTraded);
 

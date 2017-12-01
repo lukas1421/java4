@@ -601,23 +601,28 @@ public class HistChinaStocks extends JPanel {
     }
 
     private static double mtdMtm(String name) {
+        try {
+            if (chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size() > 0) {
 
-        if (chinaTradeMap.containsKey(name) && chinaTradeMap.get(name).size() > 0) {
+                int mtdOpenPos = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONTH_FIRST_DAY))
+                        .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
 
-            int mtdOpenPos = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONTH_FIRST_DAY))
-                    .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
+                //System.out.println(getStr(" name mtdopenpos monthFDay ", name, mtdOpenPos, MONTH_FIRST_DAY));
+                if (chinaYtd.containsKey(name) && chinaYtd.get(name).size() > 0) {
+                    double price = chinaYtd.get(name).lastEntry().getValue().getClose();
+                    double lastMonthClose = Optional.ofNullable(chinaYtd.get(name).floorEntry(MONTH_FIRST_DAY.minusDays(1L)))
+                            .map(Map.Entry::getValue).map(SimpleBar::getClose)
+                            .orElse(Optional.of(chinaYtd.get(name).ceilingEntry(MONTH_FIRST_DAY)).map(Map.Entry::getValue).map(SimpleBar::getOpen)
+                                    .orElse(0.0));
 
-            //System.out.println(getStr(" name mtdopenpos monthFDay ", name, mtdOpenPos, MONTH_FIRST_DAY));
-            if (chinaYtd.containsKey(name) && chinaYtd.get(name).size() > 0) {
-                double price = chinaYtd.get(name).lastEntry().getValue().getClose();
-                double lastMonthClose = Optional.ofNullable(chinaYtd.get(name).floorEntry(MONTH_FIRST_DAY.minusDays(1L)))
-                        .map(Map.Entry::getValue).map(SimpleBar::getClose)
-                        .orElse(Optional.of(chinaYtd.get(name).ceilingEntry(MONTH_FIRST_DAY)).map(Map.Entry::getValue).map(SimpleBar::getOpen)
-                                .orElse(0.0));
-
-                //System.out.println(getStr(" name openPos price lastMonth close ", mtdOpenPos, price, lastMonthClose));
-                return mtdOpenPos * (price - lastMonthClose);
+                    //System.out.println(getStr(" name openPos price lastMonth close ", mtdOpenPos, price, lastMonthClose));
+                    return mtdOpenPos * (price - lastMonthClose);
+                }
             }
+        } catch(Exception ex) {
+            System.out.println(" histchinastocks mtdmtm wrong " + name);
+            ex.printStackTrace();
+
         }
         return 0.0;
     }
@@ -1472,9 +1477,9 @@ public class HistChinaStocks extends JPanel {
                 case 11:
                     return chinaWtd.get(name).size();
                 case 12:
-                    if (!tickerNotFuture(name)) {
-                        System.out.println("name / trade map this week " + name + " " + chinaTradeMap.get(name));
-                    }
+//                    if (!tickerNotFuture(name)) {
+//                        System.out.println("name / trade map this week " + name + " " + chinaTradeMap.get(name));
+//                    }
 
                     return chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
                             .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
