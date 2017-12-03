@@ -1018,7 +1018,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     private static double getBuyTradePnl(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
-        double defaultPrice = Optional.ofNullable(priceMapBar.get(name).lastEntry()).map(Entry::getValue).map(SimpleBar::getClose).orElse(0.0);
+        double defaultPrice = Optional.ofNullable(priceMapBar.get(name).lastEntry())
+                .map(Entry::getValue).map(SimpleBar::getClose).orElse(0.0);
         double price = ChinaStock.priceMap.getOrDefault(name, 0.0) == 0.0 ?
                 defaultPrice : ChinaStock.priceMap.get(name);
 
@@ -1031,8 +1032,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //
 //        }
 
-        return (tradesMap.get(name).size() > 0 && Utility.noZeroArrayGen(name, ChinaStock.priceMap))
-                ? tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).mapToDouble(e -> (((Trade) e.getValue()).getSize())
+        return (tradesMap.get(name).size() > 0)
+                ? tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0)
+                .mapToDouble(e -> (((Trade) e.getValue()).getSize())
                 * (price - ((Trade) e.getValue()).getPrice()) - ((Trade) e.getValue()).getTradingCost(name)).sum() * fx : 0.0;
     }
 
@@ -1312,9 +1314,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 21:
                     return "net pos";
                 case 22:
-                    return "Total Tr Pnl";
+                    return "T Tr Pnl";
                 case 23:
-                    return "T Total Pnl";
+                    return "T   Total Pnl";
                 case 24:
                     return "P%";
                 case 25:
@@ -1375,7 +1377,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
                 defaultPrice = priceMapBar.get(name).lastEntry().getValue().getClose();
             }
-            double currPrice = ChinaStock.priceMap.getOrDefault(name, defaultPrice);
+            double currPrice = ChinaStock.priceMap.getOrDefault(name, 0.0) == 0.0 ? defaultPrice :
+                    ChinaStock.priceMap.get(name);
 
             double wkMaxHist = Double.MIN_VALUE;
             double wkMinHist = Double.MAX_VALUE;
@@ -1400,10 +1403,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 6:
                     return ChinaStock.openMap.getOrDefault(name, 0.0);
                 case 7:
-                    return r(ChinaStock.priceMap.getOrDefault(name, defaultPrice));
+                    return r(currPrice);
                 case 8:
                     return closeMap.getOrDefault(name, 0.0) == 0.0 ? 0
-                            : Math.round(1000d * (priceMap.getOrDefault(name, 0.0) / closeMap.getOrDefault(name, 0.0) - 1)) / 10d;
+                            : Math.round(1000d * (currPrice / closeMap.getOrDefault(name, 0.0) - 1)) / 10d;
                 case 9:
                     return r(fxMap.getOrDefault(name, 1.0) *
                             (openMap.getOrDefault(name, 0.0) - closeMap.getOrDefault(name, 0.0)) * openpos);
@@ -1489,7 +1492,8 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
 
         System.out.println(getStr("china position date name time ", ldt, ticker));
 
-        if (ldt.getDayOfMonth() == LocalDateTime.now().getDayOfMonth()) {
+        //equals last trading day
+        if (ldt.getDayOfMonth() == dateMap.get(2).getDayOfMonth()) {
 
             LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
 
@@ -1515,8 +1519,8 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
 
         System.out.println(" trade report ended for fut pos handler in china pos ");
 
-        for(FutType ft : FutType.values()) {
-            if(ChinaPosition.tradesMap.containsKey(ft.tickerName) &&
+        for (FutType ft : FutType.values()) {
+            if (ChinaPosition.tradesMap.containsKey(ft.tickerName) &&
                     ChinaPosition.tradesMap.get(ft.tickerName).size() > 0) {
                 System.out.println(getStr("printing trades map in trades report end", ft.tickerName,
                         ChinaPosition.tradesMap.get(ft.tickerName)));
