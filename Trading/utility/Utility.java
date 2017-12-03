@@ -6,7 +6,6 @@ import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
 import graph.GraphIndustry;
-import historical.HistChinaStocks;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 
@@ -531,7 +530,7 @@ public class Utility {
 
         Stream.of(mps).flatMap(e -> e.entrySet().stream()).forEach(e -> {
             if (e.getKey().getClass() == LocalTime.class) {
-                res.put(LocalDateTime.of(HistChinaStocks.recentTradingDate, (LocalTime) e.getKey()), e.getValue());
+                res.put(LocalDateTime.of(ChinaMain.currentTradingDate, (LocalTime) e.getKey()), e.getValue());
             } else if (e.getKey().getClass() == LocalDateTime.class) {
                 res.put((LocalDateTime) e.getKey(), e.getValue());
             }

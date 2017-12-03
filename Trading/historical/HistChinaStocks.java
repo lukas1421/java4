@@ -124,8 +124,6 @@ public class HistChinaStocks extends JPanel {
 
     private static final DateTimeFormatter DATE_PATTERN = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
-    public static volatile LocalDate recentTradingDate;
-
     private static volatile Predicate<? super Map.Entry<String, ?>> MTM_PRED = m -> true;
 
     private static ScheduledExecutorService computeExe = Executors.newScheduledThreadPool(10);
@@ -161,7 +159,8 @@ public class HistChinaStocks extends JPanel {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(
                 TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt")))) {
             line = reader.readLine();
-            recentTradingDate = max(LocalDate.parse(line, DateTimeFormatter.ofPattern("yyyy-MM-dd")), getMondayOfWeek(LocalDateTime.now()));
+            ChinaMain.currentTradingDate = max(LocalDate.parse(line, DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                    getMondayOfWeek(LocalDateTime.now()));
         } catch (IOException io) {
             io.printStackTrace();
         }
@@ -519,9 +518,9 @@ public class HistChinaStocks extends JPanel {
             for (String s : chinaWtd.keySet()) {
                 if (priceMapBar.containsKey(s) && priceMapBar.get(s).size() > 0) {
                     NavigableMap<LocalDateTime, SimpleBar> wtdNew = mergeMaps(chinaWtd.get(s),
-                            Utility.priceMapToLDT(priceMap1mTo5M(priceMapBar.get(s)), recentTradingDate));
+                            Utility.priceMapToLDT(priceMap1mTo5M(priceMapBar.get(s)), ChinaMain.currentTradingDate));
                     chinaWtd.put(s, wtdNew);
-                    NavigableMap<LocalDate, SimpleBar> ytdNew = mergeMapGen(chinaYtd.get(s), reduceMapToBar(priceMapBar.get(s), recentTradingDate));
+                    NavigableMap<LocalDate, SimpleBar> ytdNew = mergeMapGen(chinaYtd.get(s), reduceMapToBar(priceMapBar.get(s), ChinaMain.currentTradingDate));
                     chinaYtd.put(s, ytdNew);
                 }
             }
@@ -534,7 +533,7 @@ public class HistChinaStocks extends JPanel {
                     if (!s.equals("SGXA50")) {
                         if (tradesMap.containsKey(s) && tradesMap.get(s).size() > 0) {
                             NavigableMap<LocalDateTime, ? super Trade> res = mergeTradeMap(chinaTradeMap.get(s),
-                                    Utility.priceMapToLDT(tradesMap.get(s), recentTradingDate));
+                                    Utility.priceMapToLDT(tradesMap.get(s), ChinaMain.currentTradingDate));
                             chinaTradeMap.put(s, res);
                         }
                     }

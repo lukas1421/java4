@@ -2,6 +2,7 @@ package graph;
 
 import TradeType.Trade;
 import apidemo.ChinaData;
+import apidemo.ChinaMain;
 import apidemo.ChinaPosition;
 import apidemo.ChinaStock;
 import auxiliary.SimpleBar;
@@ -302,13 +303,13 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
 
         trades = priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
-                ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), HistChinaStocks.recentTradingDate);
+                ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate);
 
 
         if (HistChinaStocks.chinaTradeMap.containsKey(name) && HistChinaStocks.chinaTradeMap.get(name).size() > 0) {
             trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(name).headMap(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS),false)
                     , priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
-                    ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), HistChinaStocks.recentTradingDate));
+                    ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate));
             //System.out.println(" merged trade is " + trades);
         }
 
@@ -331,13 +332,13 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         //this.tmLDT = priceMapToLDT(priceMap1mTo5M(tmIn));
 
         if (dispGran == DisplayGranularity._1MDATA) {
-            this.tm = priceMapToLDT(tmIn, HistChinaStocks.recentTradingDate);
+            this.tm = priceMapToLDT(tmIn, ChinaMain.currentTradingDate);
         } else if (dispGran == DisplayGranularity._5MDATA) {
 
             if (HistChinaStocks.chinaWtd.containsKey(name) && HistChinaStocks.chinaWtd.get(name).size() > 0) {
                 this.tm = trimMapWithLocalTimePred(mergeMaps(HistChinaStocks.chinaWtd.get(name), Utility.priceMap1mTo5M(tmIn)),chinaTradingTimePred);
             } else {
-                this.tm = trimMapWithLocalTimePred(priceMapToLDT(priceMap1mTo5M(tmIn), HistChinaStocks.recentTradingDate), chinaTradingTimePred);
+                this.tm = trimMapWithLocalTimePred(priceMapToLDT(priceMap1mTo5M(tmIn), ChinaMain.currentTradingDate), chinaTradingTimePred);
             }
 
         }

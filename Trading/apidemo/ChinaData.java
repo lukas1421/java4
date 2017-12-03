@@ -34,6 +34,7 @@ import java.util.logging.Logger;
 
 import static apidemo.ChinaDataYesterday.convertTimeToInt;
 import static apidemo.ChinaMain.controller;
+import static apidemo.ChinaMain.currentTradingDate;
 import static apidemo.ChinaStock.*;
 import static historical.HistChinaStocks.chinaWtd;
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -128,11 +129,21 @@ public final class ChinaData extends JPanel {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 dateMap.put(lineNo, LocalDate.parse(al1.get(0)));
                 ftseOpenMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(1)));
+                currentTradingDate = LocalDate.parse(al1.get(0));
                 System.out.println(getStr(" date ", lineNo, dateMap.getOrDefault(lineNo,LocalDate.MIN)));
                 lineNo++;
             }
         } catch (IOException ex) {
             ex.printStackTrace();
+        }
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(
+                TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt")))) {
+            String line = reader.readLine();
+            ChinaMain.currentTradingDate = max(LocalDate.parse(line, DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                    getMondayOfWeek(LocalDateTime.now()));
+        } catch (IOException io) {
+            io.printStackTrace();
         }
 
         m_model = new BarModel();
@@ -371,10 +382,10 @@ public final class ChinaData extends JPanel {
     }
 
     static void outputRecentTradingDate() {
-        System.out.println(" most recent trading date " + HistChinaStocks.recentTradingDate.toString());
+        System.out.println(" most recent trading date " + ChinaMain.currentTradingDate.toString());
         File output = new File(TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt");
         //MorningTask.clearFile(usTestOutput);
-        Utility.simpleWriteToFile(HistChinaStocks.recentTradingDate.toString(), false, output);
+        Utility.simpleWriteToFile(ChinaMain.currentTradingDate.toString(), false, output);
     }
 
     private static void getTodayTDX(LocalDate dat) {
@@ -394,9 +405,6 @@ public final class ChinaData extends JPanel {
 //        LocalDate today;
 //        LocalDate ytd;
 //        LocalDate y2;
-
-
-//
 //        System.out.println(" get date Map  " + dateMap.toString());
 //        System.out.println(" get ftse open map " + ftseOpenMap.toString());
 
@@ -674,21 +682,17 @@ public final class ChinaData extends JPanel {
 
         String ticker = ibContractToSymbol(c);
 
-        LocalDate currDate = LocalDate.now().minusDays(1);
-        long daysToSubtract = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 3L : 1L;
-        long daysToSubtract1 = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 4L : 2L;
-        LocalDate ytd = currDate.minusDays(daysToSubtract);
-        LocalDate y2 = currDate.minusDays(daysToSubtract1);
+//        LocalDate currDate = LocalDate.now().minusDays(1);
+//        long daysToSubtract = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 3L : 1L;
+//        long daysToSubtract1 = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 4L : 2L;
+//        LocalDate ytd = currDate.minusDays(daysToSubtract);
+//        LocalDate y2 = currDate.minusDays(daysToSubtract1);
 
         System.out.println(" handle sgx 50 hist data ticker is " + ticker);
 
-        currDate = ChinaData.dateMap.get(2);
-        ytd = ChinaData.dateMap.get(1);
-        y2 = ChinaData.dateMap.get(0);
-
-//        currDate = LocalDate.now();
-//        ytd = currDate.minusDays(1L);
-//        y2 = currDate.minusDays(2L);
+        LocalDate currDate = ChinaData.dateMap.get(2);
+        LocalDate ytd = ChinaData.dateMap.get(1);
+        LocalDate y2 = ChinaData.dateMap.get(0);
 
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);
@@ -721,7 +725,8 @@ public final class ChinaData extends JPanel {
 
                 //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 //System.out.println(getStr(dt, open, high, low, close));
-                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get(ticker).lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
+                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get(ticker).lowerEntry(lt))
+                        .map(Entry::getValue).orElse(0.0);
                 ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(open, high, low, close));
                 ChinaData.sizeTotalMap.get(ticker).put(lt, volume * 1d + previousVol);
             }
@@ -731,7 +736,8 @@ public final class ChinaData extends JPanel {
                 //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 //System.out.println(getStr(dt, open, high, low, close));
                 ChinaData.priceMapBarYtd.get(ticker).put(lt, new SimpleBar(open, high, low, close));
-                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get(ticker).lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
+                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get(ticker).lowerEntry(lt))
+                        .map(Entry::getValue).orElse(0.0);
                 ChinaData.sizeTotalMapYtd.get(ticker).put(lt, volume * 1d + previousVol);
             }
 
@@ -740,7 +746,8 @@ public final class ChinaData extends JPanel {
                 //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 //System.out.println(getStr(dt, open, high, low, close));
                 ChinaData.priceMapBarY2.get(ticker).put(lt, new SimpleBar(open, high, low, close));
-                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapY2.get(ticker).lowerEntry(lt)).map(Entry::getValue).orElse(0.0);
+                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapY2.get(ticker).lowerEntry(lt))
+                        .map(Entry::getValue).orElse(0.0);
                 ChinaData.sizeTotalMapY2.get(ticker).put(lt, volume * 1d + previousVol);
             }
         } else {
@@ -752,7 +759,7 @@ public final class ChinaData extends JPanel {
         //System.out.println(" handling SGX today ");
 
         String ticker = utility.Utility.ibContractToSymbol(c);
-        LocalDate currDate = LocalDate.now();
+        LocalDate currDate = currentTradingDate;
 
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);

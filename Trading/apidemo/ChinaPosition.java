@@ -45,6 +45,7 @@ import java.util.stream.Stream;
 
 import static apidemo.ChinaData.dateMap;
 import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaMain.currentTradingDate;
 import static apidemo.ChinaStock.*;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
@@ -1504,7 +1505,7 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
         System.out.println(getStr("china position date name time ", ldt, ticker));
 
         //equals last trading day
-        if (ldt.getDayOfMonth() == dateMap.get(2).getDayOfMonth()) {
+        if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth()) {
 
             LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
 

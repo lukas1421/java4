@@ -515,7 +515,8 @@ public final class ChinaStockHelper {
     static boolean lastBarHighest(String name) {
         double last = priceMapBar.get(name).lastEntry().getValue().getClose();
         LocalTime lastKey = priceMapBar.get(name).lastKey();
-        double previousMax = priceMapBar.get(name).headMap(lastKey, false).entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
+        double previousMax = priceMapBar.get(name).headMap(lastKey, false).entrySet().stream()
+                .mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
         //return last>previousMax;
         return GETMAXTIME.apply(name, Utility.IS_OPEN_PRED).equals(lastKey);
     }
@@ -598,7 +599,8 @@ public final class ChinaStockHelper {
         buildA50Gen(openY2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2, new HashMap<>());
     }
 
-    static void buildA50Gen(double open, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp, Map<String, ? extends NavigableMap<LocalTime, Double>> volmp, Map<String, Double> closeMp) {
+    static void buildA50Gen(double open, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp,
+                            Map<String, ? extends NavigableMap<LocalTime, Double>> volmp, Map<String, Double> closeMp) {
 
         if (mp.containsKey("FTSEA50")) {
             mp.get("FTSEA50").entrySet().removeIf(e -> e.getKey().isBefore(LocalTime.of(9, 30)));
@@ -652,7 +654,6 @@ public final class ChinaStockHelper {
             if (ChinaStock.NORMAL_STOCK.test(ticker)) {
                 System.out.println("building " + ticker);
                 double open = priceMapBar.get(ticker).firstEntry().getValue().getOpen();
-
                 closeMap.put(ticker, open);
                 openMap.put(ticker, open);
                 priceMap.put(ticker, priceMapBar.get(ticker).lastEntry().getValue().getClose());

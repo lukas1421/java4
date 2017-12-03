@@ -24,6 +24,7 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +39,13 @@ import static utility.Utility.AM914T;
 //import java.time.temporal.TemporalUnit;
 
 public final class ChinaMain implements IConnectionHandler {
+
+    public static volatile LocalDate currentTradingDate ;
+            //= LocalDate.MIN;
+
+//    public static volatile LocalDate lastTdxDate;
+//    public static volatile LocalDate lastTdxDateMinus1;
+//    public static volatile LocalDate lastTdxDateMinus2;
 
     static {
         NewLookAndFeel.register();
