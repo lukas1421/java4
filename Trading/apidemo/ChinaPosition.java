@@ -406,8 +406,16 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     static synchronized void mtmPnlCompute(Predicate<? super Map.Entry<String, ?>> p, String nam) {
+        //double defaultPrice = 0.0;
 
-
+        if (priceMap.getOrDefault(nam,0.0)==0.0 && priceMapBar.containsKey(nam) && priceMapBar.get(nam).size() > 0) {
+            priceMap.put(nam,Optional.ofNullable(priceMapBar.get(nam).lastEntry())
+                    .map(Entry::getValue).map(SimpleBar::getClose).orElse(0.0));
+        }
+//
+//  if(priceMapBar.containsKey(nam)) {
+//            double defaultPrice =
+//        }
         //ytdPNLMap = openPositionMap.entrySet().stream().filter(p).collect(collector)
         CompletableFuture.runAsync(() -> {
             netYtdPnl = openPositionMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
@@ -415,7 +423,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
             boughtDelta = tradesMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
                     * priceMap.getOrDefault(e.getKey(), 0.0)
-                    * e.getValue().values().stream().map(e1 -> (Trade) e1).filter(e1 -> e1.getSize() > 0).mapToInt(Trade::getSize).sum()).sum();
+                    * e.getValue().values().stream().map(e1 -> (Trade) e1).filter(e1 -> e1.getSize() > 0)
+                    .mapToInt(Trade::getSize).sum()).sum();
 
             soldDelta = tradesMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
                     * priceMap.getOrDefault(e.getKey(), 0.0)
@@ -559,6 +568,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     private static void refreshFuture() {
+
+        System.out.println(" refresihng future ");
 
         for (FutType f : FutType.values()) {
             String ticker = f.getTicker();
@@ -1035,7 +1046,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return (tradesMap.get(name).size() > 0)
                 ? tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0)
                 .mapToDouble(e -> (((Trade) e.getValue()).getSize())
-                * (price - ((Trade) e.getValue()).getPrice()) - ((Trade) e.getValue()).getTradingCost(name)).sum() * fx : 0.0;
+                        * (price - ((Trade) e.getValue()).getPrice()) - ((Trade) e.getValue()).getTradingCost(name)).sum() * fx : 0.0;
     }
 
     //    static double getTradingCost(String name, Trade td) {
