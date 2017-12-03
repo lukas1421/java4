@@ -53,11 +53,6 @@ public class SinaStock implements Runnable {
 
     public final Predicate<LocalTime> FUT_OPEN = (lt) -> lt.isAfter(LocalTime.of(9, 0, 0));
 
-    private static final Predicate<LocalDateTime> DATA_COLLECTION_TIME =
-            lt -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) && !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
-                    && ((lt.toLocalTime().isAfter(LocalTime.of(9, 14)) && lt.toLocalTime().isBefore(LocalTime.of(11, 35)))
-                    || (lt.toLocalTime().isAfter(LocalTime.of(12, 58)) && lt.toLocalTime().isBefore(LocalTime.of(15, 5))));
-
     private SinaStock() {
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "FTSEA50Ticker.txt")))) {
             List<String> dataA50;
@@ -149,7 +144,7 @@ public class SinaStock implements Runnable {
                         //System.out.println(" most recent trading day " + mostRecentTradingDay);
                         //System.out.println(" last data available date " + datalist.get(30) + " " + datalist.get(31));
 
-                        if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker) && DATA_COLLECTION_TIME.test(ldt)) {
+                        if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker) && Utility.DATA_COLLECTION_TIME.test(ldt)) {
                             double last = Utility.pd(datalist, 3);
                             //priceMapPlain.get(ticker).put(lt,last);
                             sizeTotalMap.get(ticker).put(lt, Utility.pd(datalist, 9) / 1000000d);
@@ -169,7 +164,7 @@ public class SinaStock implements Runnable {
                         //updateBidAskMap(ticker, lt, datalist, BidAsk.BID, bidMap);
                         //updateBidAskMap(ticker, lt, datalist, BidAsk.ASK, askMap);
                     } else {
-                        if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker) && DATA_COLLECTION_TIME.test(ldt)) {
+                        if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker) && Utility.DATA_COLLECTION_TIME.test(ldt)) {
                             ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(Utility.pd(datalist, 2)));
                         }
 

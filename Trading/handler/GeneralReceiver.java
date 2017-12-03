@@ -4,15 +4,18 @@ import apidemo.*;
 import auxiliary.SimpleBar;
 import client.TickType;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import static apidemo.ChinaData.priceMapBar;
+import static utility.Utility.DATA_COLLECTION_TIME;
 
 public class GeneralReceiver implements LiveHandler {
     @Override
-    public void handlePrice(TickType tt, String name, double price, LocalTime t) {
+    public void handlePrice(TickType tt, String name, double price, LocalDateTime ldt) {
 
         FutType f = FutType.get(name);
+        LocalTime t = ldt.toLocalTime();
         //System.out.println(getStr(" fut type + name  price t " , f.toString(),name,price,t));
 
         switch (tt) {
@@ -40,10 +43,12 @@ public class GeneralReceiver implements LiveHandler {
                         XU.lastFutPrice.put(t, new SimpleBar(price));
                     }
 
-                    if (priceMapBar.get(name).containsKey(t)) {
-                        priceMapBar.get(name).get(t).add(price);
-                    } else {
-                        priceMapBar.get(name).put(t, new SimpleBar(price));
+                    if(DATA_COLLECTION_TIME.test(ldt)) {
+                        if (priceMapBar.get(name).containsKey(t)) {
+                            priceMapBar.get(name).get(t).add(price);
+                        } else {
+                            priceMapBar.get(name).put(t, new SimpleBar(price));
+                        }
                     }
                 }
                 break;

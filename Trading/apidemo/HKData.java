@@ -14,6 +14,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -129,7 +130,8 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
     }
 
     @Override
-    public void handlePrice(TickType tt, String name, double price, LocalTime t) {
+    public void handlePrice(TickType tt, String name, double price, LocalDateTime ldt) {
+        LocalTime t = ldt.toLocalTime();
         if(tt == TickType.LAST) {
             HKStock.hkCurrPrice.put(name, price);
 

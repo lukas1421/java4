@@ -982,7 +982,7 @@ public class ApiController implements EWrapper {
         String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
 
-        int duration = 2;
+        int duration = 3;
         DurationUnit durationUnit = DurationUnit.DAY;
         String durationStr = duration + " " + durationUnit.toString().charAt(0);
         Types.BarSize barSize = Types.BarSize._1_min;
@@ -1102,7 +1102,7 @@ public class ApiController implements EWrapper {
             try {
                 //if(TickType.get(tickType) == TickType.LAST) {
                 lh.handlePrice(TickType.get(tickType),
-                        utility.Utility.ibContractToSymbol(r.getContract()), price, LocalTime.now().truncatedTo(ChronoUnit.MINUTES));
+                        utility.Utility.ibContractToSymbol(r.getContract()), price, LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
             } catch (Exception ex) {
                 System.out.println(" handling price has issues ");
                 ex.printStackTrace();

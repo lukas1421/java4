@@ -64,7 +64,7 @@ public final class ChinaData extends JPanel {
     public static volatile Map<String, Double> priceMinuteSharpe = new HashMap<>();
     public static volatile Map<String, Double> wtdSharpe = new HashMap<>();
 
-    static volatile Map<Integer, LocalDate> dateMap = new HashMap<>();
+    public static volatile Map<Integer, LocalDate> dateMap = new HashMap<>();
     static volatile Map<LocalDate, Double> ftseOpenMap = new HashMap<>();
 
     public static List<LocalTime> tradeTime = new LinkedList<>();
@@ -118,6 +118,22 @@ public final class ChinaData extends JPanel {
             strategyTotalMap.get(v).put(LocalTime.MIN, new Strategy());
             priceMinuteSharpe.put(v, 0.0);
         });
+
+        //initialize date map
+        int lineNo = 0;
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
+            String line;
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                dateMap.put(lineNo, LocalDate.parse(al1.get(0)));
+                ftseOpenMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(1)));
+                System.out.println(getStr(" date ", lineNo, dateMap.getOrDefault(lineNo,LocalDate.MIN)));
+                lineNo++;
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
         m_model = new BarModel();
         JTable tab = new JTable(m_model) {
@@ -379,21 +395,7 @@ public final class ChinaData extends JPanel {
 //        LocalDate ytd;
 //        LocalDate y2;
 
-        int lineNo = 0;
 
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
-            String line;
-            while ((line = reader1.readLine()) != null) {
-                List<String> al1 = Arrays.asList(line.split("\t"));
-                dateMap.put(lineNo, LocalDate.parse(al1.get(0)));
-                ftseOpenMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(1)));
-                lineNo++;
-                System.out.println(" line is " + lineNo);
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
 //
 //        System.out.println(" get date Map  " + dateMap.toString());
 //        System.out.println(" get ftse open map " + ftseOpenMap.toString());
@@ -671,16 +673,18 @@ public final class ChinaData extends JPanel {
     private static void handleSGX50HistData(Contract c, String date, double open, double high, double low, double close, int volume) {
 
         String ticker = ibContractToSymbol(c);
-        System.out.println(" handle sgx 50 hist data ticker is " + ticker);
+
         LocalDate currDate = LocalDate.now().minusDays(1);
         long daysToSubtract = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 3L : 1L;
         long daysToSubtract1 = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 4L : 2L;
         LocalDate ytd = currDate.minusDays(daysToSubtract);
         LocalDate y2 = currDate.minusDays(daysToSubtract1);
 
-        //        LocalDate currDate = ChinaData.dateMap.get(2);
-//        LocalDate ytd = ChinaData.dateMap.get(1);
-//        LocalDate y2 = ChinaData.dateMap.get(0);
+        System.out.println(" handle sgx 50 hist data ticker is " + ticker);
+
+        currDate = ChinaData.dateMap.get(2);
+        ytd = ChinaData.dateMap.get(1);
+        y2 = ChinaData.dateMap.get(0);
 
 //        currDate = LocalDate.now();
 //        ytd = currDate.minusDays(1L);
