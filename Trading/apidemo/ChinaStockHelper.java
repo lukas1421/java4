@@ -419,9 +419,7 @@ public final class ChinaStockHelper {
 
     static void fixVolMap() {
         ChinaData.sizeTotalMap.forEach(Utility::fixVolNavigableMap);
-
         ChinaData.sizeTotalMapYtd.forEach(Utility::fixVolNavigableMap);
-
         ChinaData.sizeTotalMapY2.forEach(Utility::fixVolNavigableMap);
     }
 
@@ -658,8 +656,10 @@ public final class ChinaStockHelper {
                 closeMap.put(ticker, open);
                 openMap.put(ticker, open);
                 priceMap.put(ticker, priceMapBar.get(ticker).lastEntry().getValue().getClose());
-                double max = priceMapBar.get(ticker).entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
-                double min = priceMapBar.get(ticker).entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
+                double max = priceMapBar.get(ticker).entrySet().stream().max(Utility.BAR_HIGH)
+                        .map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
+                double min = priceMapBar.get(ticker).entrySet().stream().min(Utility.BAR_LOW)
+                        .map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
 
                 maxMap.put(ticker, max);
                 minMap.put(ticker, min);

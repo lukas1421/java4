@@ -27,6 +27,7 @@ public class GeneralReceiver implements LiveHandler {
                 break;
             case LAST:
                 //System.out.println(" name price t " + name + " " + price + " " + t.toString());
+                ChinaStock.priceMap.put(name, price);
 
                 XUTrader.futPriceMap.put(f, price);
                 if (XUTrader.futData.get(f).containsKey(t)) {
@@ -35,15 +36,15 @@ public class GeneralReceiver implements LiveHandler {
                     XUTrader.futData.get(f).put(t, new SimpleBar(price));
                 }
 
-                ChinaStock.priceMap.put(name, price);
-                if (t.isAfter(LocalTime.of(8, 55))) {
-                    if (XU.lastFutPrice.containsKey(t)) {
-                        XU.lastFutPrice.get(t).add(price);
-                    } else {
-                        XU.lastFutPrice.put(t, new SimpleBar(price));
-                    }
 
-                    if(DATA_COLLECTION_TIME.test(ldt)) {
+                if (t.isAfter(LocalTime.of(8, 55))) {
+                    if (DATA_COLLECTION_TIME.test(ldt)) {
+                        if (XU.lastFutPrice.containsKey(t)) {
+                            XU.lastFutPrice.get(t).add(price);
+                        } else {
+                            XU.lastFutPrice.put(t, new SimpleBar(price));
+                        }
+
                         if (priceMapBar.get(name).containsKey(t)) {
                             priceMapBar.get(name).get(t).add(price);
                         } else {
@@ -58,9 +59,14 @@ public class GeneralReceiver implements LiveHandler {
     }
 
     @Override
-    public void handleVol(String name, double vol, LocalTime t) {
-        XU.frontFutVol.put(t, (int)vol);
-        ChinaStock.sizeMap.put(name, (long)vol);
-        ChinaData.sizeTotalMap.get(name).put(t, 1d*vol);
+    public void handleVol(String name, double vol, LocalDateTime ldt) {
+
+        LocalTime t = ldt.toLocalTime();
+        ChinaStock.sizeMap.put(name, (long) vol);
+
+        if(DATA_COLLECTION_TIME.test(ldt)) {
+            XU.frontFutVol.put(t, (int) vol);
+            ChinaData.sizeTotalMap.get(name).put(t, 1d * vol);
+        }
     }
 }

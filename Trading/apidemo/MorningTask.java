@@ -434,7 +434,6 @@ public final class MorningTask implements HistoricalHandler {
             ex.printStackTrace();
         }
 
-
         final String dateString = t.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         System.out.println(" date is " + dateString);
 
