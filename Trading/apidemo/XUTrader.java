@@ -735,7 +735,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (ldt.getDayOfMonth() == LocalDateTime.now().getDayOfMonth()) {
             if (XUTrader.tradesMap.get(f).containsKey(ldt.toLocalTime())) {
-                XUTrader.tradesMap.get(f).get(ldt.toLocalTime()).merge(new FutureTrade(execution.price(), sign * execution.cumQty()));
+                XUTrader.tradesMap.get(f).get(ldt.toLocalTime())
+                        .merge(new FutureTrade(execution.price(), sign * execution.cumQty()));
             } else {
                 XUTrader.tradesMap.get(f).put(ldt.toLocalTime(), new FutureTrade(execution.price(), sign * execution.cumQty()));
             }
@@ -936,6 +937,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         jd.setVisible(true);
     }
 
+    static double getNetPnlForAllFuts() {
+        return Arrays.stream(FutType.values()).mapToDouble(XUTrader::getNetPnlFor1Fut).sum();
+    }
+
+    private static double getNetPnlFor1Fut(FutType f) {
+        if(tradesMap.containsKey(f) && tradesMap.get(f).size()>0) {
+            return tradesMap.get(f).entrySet().stream()
+                    .mapToDouble(e->e.getValue().getSizeAll()*futPriceMap.getOrDefault(f,0.0)
+                            +e.getValue().getCostWithCommission(f.getTicker())).sum();
+        }
+        return 0.0;
+    }
+
     private static void processTradeMapActive() {
 
         //average buy cost
@@ -943,8 +957,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //String ticker = ibContractToSymbol(activeFuture);
         FutType f = ibContractToFutType(activeFuture);
 
-        int unitsBought = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() > 0).mapToInt(e -> e.getValue().getSize()).sum();
-        int unitsSold = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() < 0).mapToInt(e -> e.getValue().getSize()).sum();
+        int unitsBought = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() > 0)
+                .mapToInt(e -> e.getValue().getSize()).sum();
+        int unitsSold = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() < 0)
+                .mapToInt(e -> e.getValue().getSize()).sum();
 
         botMap.put(f, unitsBought);
         soldMap.put(f, unitsSold);

@@ -6,7 +6,7 @@ import java.util.Map;
 public enum FutType {
     PreviousFut("SGXA50PR"), FrontFut("SGXA50"), BackFut("SGXA50BM");
 
-    String tickerName;
+    private String tickerName;
 
     FutType(String t) {
         tickerName = t;
