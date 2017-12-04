@@ -36,7 +36,6 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
                         + " " + execution.price() + " " + execution.orderRef() + " " + execution.orderId() + " " + execution.permId() + " "
                         + execution.shares());
                 System.out.println(" time string " + ldt.toString());
-                System.out.println(" time is " + ldt.toLocalTime());
                 System.out.println(" day is " + LocalDateTime.now().getDayOfMonth());
                 try {
                     if(HistChinaStocks.chinaTradeMap.containsKey(ticker)) {

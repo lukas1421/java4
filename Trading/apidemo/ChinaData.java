@@ -17,7 +17,6 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -65,16 +64,18 @@ public final class ChinaData extends JPanel {
     public static volatile Map<String, Double> priceMinuteSharpe = new HashMap<>();
     public static volatile Map<String, Double> wtdSharpe = new HashMap<>();
 
+    //very important. This date map is always the last 3 days of A share, not including T)
     public static volatile Map<Integer, LocalDate> dateMap = new HashMap<>();
+
     static volatile Map<LocalDate, Double> ftseOpenMap = new HashMap<>();
 
     public static List<LocalTime> tradeTime = new LinkedList<>();
     public static List<LocalTime> tradeTimePure = new LinkedList<>();
     static BarModel m_model;
 
-    LocalTime lastSaveTime = Utility.AM929T;
-    LocalTime lastLoadTime = Utility.AM929T;
-    public static LocalTime lastDataTime = Utility.AM929T;
+//    LocalTime lastSaveTime = Utility.AM929T;
+//    LocalTime lastLoadTime = Utility.AM929T;
+//    public static LocalTime lastDataTime = Utility.AM929T;
 
 //    static File source = new File(TradingConstants.GLOBALPATH + "CHINASS.ser");
 //    static File backup = new File(TradingConstants.GLOBALPATH + "CHINABackup.ser");
@@ -88,7 +89,7 @@ public final class ChinaData extends JPanel {
     private static File priceBarYtdSource = new File(TradingConstants.GLOBALPATH + "priceBarYtd.ser");
 
     private static File shcompSource = new File(TradingConstants.GLOBALPATH + "shcomp.txt");
-    public static JButton btnSave2;
+//    public static JButton btnSave2;
     static ExecutorService es = Executors.newCachedThreadPool();
     private static final Predicate<? super Entry<LocalTime, Double>> IS_OPEN = e -> e.getKey().isAfter(Utility.AM929T) && e.getValue() != 0.0;
 
@@ -127,6 +128,10 @@ public final class ChinaData extends JPanel {
             String line;
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
+                if(lineNo>2) {
+                    throw new IllegalArgumentException(" ERROR: date map has more than 3 lines ");
+                }
+
                 dateMap.put(lineNo, LocalDate.parse(al1.get(0)));
                 ftseOpenMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(1)));
                 currentTradingDate = LocalDate.parse(al1.get(0));
@@ -140,6 +145,7 @@ public final class ChinaData extends JPanel {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(
                 TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt")))) {
             String line = reader.readLine();
+            //at inception, current trading date = datemap.get(2), but will be different as soon as data starts coming in
             ChinaMain.currentTradingDate = max(LocalDate.parse(line, DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                     getMondayOfWeek(LocalDateTime.now()));
         } catch (IOException io) {
@@ -201,7 +207,7 @@ public final class ChinaData extends JPanel {
         JButton saveBidAsk = new JButton("Save BidAsk");
         JButton loadHibBidAsk = new JButton("Load BidAsk");
         JButton saveStratButton = new JButton("Save Strat");
-        JButton loadStratButton = new JButton("Load Strat");
+        //JButton loadStratButton = new JButton("Load Strat");
         JButton loadHibGenPriceButton = new JButton("Load hib");
         JButton loadHibernateY = new JButton("Load hib Y");
         JButton btnLoadBarYtd = new JButton("Load Bar YTD");
@@ -315,7 +321,7 @@ public final class ChinaData extends JPanel {
         saveHibYtdButton.addActionListener(al -> hibSaveGenYtd());
         saveHibY2Button.addActionListener(al -> hibSaveGenY2());
 
-        loadStratButton.addActionListener(al -> hibLoadStrat());
+//        loadStratButton.addActionListener(al -> hibLoadStrat());
         btnLoadBarYtd.addActionListener(al -> CompletableFuture.runAsync(() -> {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(priceBarYtdSource))) {
                 //noinspection unchecked
@@ -443,6 +449,7 @@ public final class ChinaData extends JPanel {
         });
     }
 
+    @SuppressWarnings("unused")
     static ConcurrentHashMap<String, TreeMap<LocalTime, Double>> convertMap(ConcurrentHashMap<String, TreeMap<LocalTime, Long>> mapFrom) {
         ConcurrentHashMap<String, TreeMap<LocalTime, Double>> mpTo = new ConcurrentHashMap<>();
 
@@ -475,16 +482,16 @@ public final class ChinaData extends JPanel {
         saveHibGen(bidMap, askMap, ChinaSaveBidAsk.getInstance());
     }
 
-    public void hibSaveStrat() {
-        saveHibGen(strategyTotalMap, new ConcurrentHashMap<>(), ChinaSaveStrat.getInstance());
-    }
+//    public void hibSaveStrat() {
+//        saveHibGen(strategyTotalMap, new ConcurrentHashMap<>(), ChinaSaveStrat.getInstance());
+//    }
 
 
-    private void hibLoadStrat() {
-        CompletableFuture.runAsync(() -> {
-            Hibtask.loadHibGen(ChinaSaveStrat.getInstance());
-        });
-    }
+//    private void hibLoadStrat() {
+//        CompletableFuture.runAsync(() -> {
+//            Hibtask.loadHibGen(ChinaSaveStrat.getInstance());
+//        });
+//    }
 
     private void loadHibGenBidAsk() {
         Hibtask.loadHibGen(ChinaSaveBidAsk.getInstance());
@@ -547,12 +554,12 @@ public final class ChinaData extends JPanel {
         }).thenAccept(v -> ChinaMain.updateSystemNotif(Utility.getStr(" Loading HIB-Y2 done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
     }
 
-    public void loadHibernateY2() {
-        CompletableFuture.runAsync(() -> Hibtask.loadHibGen(ChinaSaveY2.getInstance())).thenRun(() -> {
-            CompletableFuture.runAsync(() -> GraphIndustry.getIndustryPriceYtd(priceMapBarY2));
-            CompletableFuture.runAsync(() -> Utility.getIndustryVolYtd(sizeTotalMapY2));
-        });
-    }
+//    public void loadHibernateY2() {
+//        CompletableFuture.runAsync(() -> Hibtask.loadHibGen(ChinaSaveY2.getInstance())).thenRun(() -> {
+//            CompletableFuture.runAsync(() -> GraphIndustry.getIndustryPriceYtd(priceMapBarY2));
+//            CompletableFuture.runAsync(() -> Utility.getIndustryVolYtd(sizeTotalMapY2));
+//        });
+//    }
 
     static void saveChinaOHLC() {
         CompletableFuture.runAsync(() -> {
@@ -589,36 +596,36 @@ public final class ChinaData extends JPanel {
         );
     }
 
-    public static void writeShcomp() {
-        String ticker = "sh000001";
-        SimpleBar sb;
-        int time;
-        LocalDate today = LocalDate.now();
-        LocalDate lastDay;
-        lastDay = (today.getDayOfWeek() == DayOfWeek.MONDAY)
-                ? today.minusDays(3) : today.minusDays(1);
-
-        System.out.println(" today+lastday " + today + " " + lastDay);
-
-        if (ChinaStock.NORMAL_STOCK.test(ticker)) {
-            try (BufferedWriter out = new BufferedWriter(new FileWriter(shcompSource))) {
-                out.write("D" + "\t" + "T" + "\t" + "O" + "\t" + "H" + "\t" + "L" + "\t" + "C");
-                out.newLine();
-
-                for (LocalTime t : ChinaData.priceMapBar.get(ticker).keySet()) {
-                    sb = ChinaData.priceMapBar.get(ticker).get(t);
-                    time = convertTimeToInt(t);
-                    if (t.isAfter(LocalTime.of(9, 29, 59))) {
-                        out.write(lastDay.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "\t" + time + "\t" + sb.getOpen() + "\t" + sb.getHigh() + "\t" + sb.getLow() + "\t" + sb.getClose());
-                        out.newLine();
-                    }
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-        }
-        System.out.println(" done writing to shcomp ");
-    }
+//    public static void writeShcomp() {
+//        String ticker = "sh000001";
+//        SimpleBar sb;
+//        int time;
+//        LocalDate today = LocalDate.now();
+//        LocalDate lastDay = (today.getDayOfWeek() == DayOfWeek.MONDAY)
+//                ? today.minusDays(3) : today.minusDays(1);
+//
+//        System.out.println(" today+lastday " + today + " " + lastDay);
+//
+//        if (ChinaStock.NORMAL_STOCK.test(ticker)) {
+//            try (BufferedWriter out = new BufferedWriter(new FileWriter(shcompSource))) {
+//                out.write("D" + "\t" + "T" + "\t" + "O" + "\t" + "H" + "\t" + "L" + "\t" + "C");
+//                out.newLine();
+//
+//                for (LocalTime t : ChinaData.priceMapBar.get(ticker).keySet()) {
+//                    sb = ChinaData.priceMapBar.get(ticker).get(t);
+//                    time = convertTimeToInt(t);
+//                    if (t.isAfter(LocalTime.of(9, 29, 59))) {
+//                        out.write(lastDay.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+//                                + "\t" + time + "\t" + sb.getOpen() + "\t" + sb.getHigh() + "\t" + sb.getLow() + "\t" + sb.getClose());
+//                        out.newLine();
+//                    }
+//                }
+//            } catch (IOException ex) {
+//                ex.printStackTrace();
+//            }
+//        }
+//        System.out.println(" done writing to shcomp ");
+//    }
 
     private static void writeShcomp2() {
 
