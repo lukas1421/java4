@@ -4,16 +4,17 @@ import apidemo.ChinaPosition;
 import client.Contract;
 import controller.ApiController;
 
-import static utility.Utility.getStr;
-
 public class FutPositionHandler implements ApiController.IPositionHandler {
 
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
 
         String ticker = utility.Utility.ibContractToSymbol(contract);
-        System.out.println(getStr(" fut position handler ", ticker, position));
+        //System.out.println(getStr(" fut position handler ", ticker, position));
+
+        //if(contract.symbol().equalsIgnoreCase("XINA50")) {
         ChinaPosition.currentPositionMap.put(ticker, (int) position);
+        //}
 
 
 //        if(ticker.equals("SGXA50")) {

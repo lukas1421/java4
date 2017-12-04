@@ -148,7 +148,8 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
     }
 
     @Override
-    public void handleVol(String name, double vol, LocalTime t) {
+    public void handleVol(String name, double vol, LocalDateTime ldt) {
+        LocalTime t = ldt.toLocalTime();
         HKStock.hkVol.put(name,vol);
         if (hkVolMap.containsKey(name)) {
             hkVolMap.get(name).put(t, vol);

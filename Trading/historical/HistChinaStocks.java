@@ -4,6 +4,7 @@ import TradeType.MarginTrade;
 import TradeType.NormalTrade;
 import TradeType.Trade;
 import apidemo.ChinaMain;
+import apidemo.ChinaStock;
 import apidemo.FutType;
 import apidemo.TradingConstants;
 import auxiliary.SimpleBar;
@@ -159,8 +160,8 @@ public class HistChinaStocks extends JPanel {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(
                 TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt")))) {
             line = reader.readLine();
-            ChinaMain.currentTradingDate = max(LocalDate.parse(line, DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                    getMondayOfWeek(LocalDateTime.now()));
+//            ChinaMain.currentTradingDate = max(LocalDate.parse(line, DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+//                    getMondayOfWeek(LocalDateTime.now()));
         } catch (IOException io) {
             io.printStackTrace();
         }
@@ -1427,6 +1428,8 @@ public class HistChinaStocks extends JPanel {
 
             if (chinaWtd.containsKey(name) && chinaWtd.get(name).size() > 0) {
                 price = chinaWtd.get(name).lastEntry().getValue().getClose();
+            } else {
+                price = ChinaStock.priceMap.getOrDefault(name, 0.0);
             }
 
             double mtm = r(computeWtdMtmFor1Stock(name));

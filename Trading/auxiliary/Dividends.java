@@ -2,7 +2,6 @@ package auxiliary;
 
 import apidemo.ChinaData;
 import apidemo.TradingConstants;
-import utility.Utility;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -17,30 +16,33 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static apidemo.ChinaData.dateMap;
+
 public class Dividends {
 
-    String ticker;
-    String chineseName;
+//    String ticker;
+//    String chineseName;
     private LocalDate adjustDate;
     private double adjFactor;
 
-    public Dividends() {
-        adjustDate = LocalDate.MAX;
-        adjFactor = 0.0;
-    }
+//    public Dividends() {
+//        adjustDate = LocalDate.MAX;
+//        adjFactor = 0.0;
+//    }
 
-    public Dividends(LocalDate d, double f) {
+    private Dividends(LocalDate d, double f) {
         adjustDate = d;
         adjFactor = f;
     }
 
     public static void dealWithDividends() {
 
-        LocalDate today = LocalDate.now().minusDays(1L);
-        //LocalDate ytd = today.getDayOfWeek().equals(DayOfWeek.MONDAY)?today.minusDays(3L):today.minusDays(1L);
-        //LocalDate y2 = today.getDayOfWeek().equals(DayOfWeek.MONDAY)?today.minusDays(4L):today.minusDays(2L);
-        LocalDate ytd = Utility.getPreviousWorkday(today);
-        LocalDate y2 = Utility.getPreviousWorkday(ytd);
+        LocalDate today = dateMap.get(2);
+        LocalDate ytd;
+        LocalDate y2;
+
+        ytd = dateMap.get(1);
+        y2 = dateMap.get(0);
 
         System.out.println(" ytd is " + ytd);
         System.out.println(" y2 is " + y2);
@@ -52,40 +54,32 @@ public class Dividends {
                 System.out.println(" correcting for ticker " + ticker);
                 // if(div.getExDate().equals(today)) {
                 System.out.println(" correcting div YTD for " + ticker + " " + div.toString());
-                ChinaData.priceMapBarYtd.get(ticker).replaceAll((k, v) -> {
-                    SimpleBar sb = new SimpleBar(v);
-                    return sb;
-                });
+                ChinaData.priceMapBarYtd.get(ticker).replaceAll((k, v) -> new SimpleBar(v));
 
                 //dangerous reference equality induced by fillHoles by copying the reference of the higher entry
-                ChinaData.priceMapBarYtd.get(ticker).entrySet().stream().forEach(e -> {
-                    e.getValue().adjustByFactor(div.getAdjFactor());
-                });
+                ChinaData.priceMapBarYtd.get(ticker).forEach((key, value) -> value.adjustByFactor(div.getAdjFactor()));
                 //get rid of same reference
                 // if(div.getExDate().equals((ytd)) || div.getExDate().equals(today)) {
 
                 System.out.println(" correcting div Y2 for " + ticker + " " + div.toString());
 
-                ChinaData.priceMapBarY2.get(ticker).replaceAll((k, v) -> {
-                    SimpleBar sb = new SimpleBar(v);
-                    return sb;
-                });
+                ChinaData.priceMapBarY2.get(ticker).replaceAll((k, v) -> new SimpleBar(v));
 
-                ChinaData.priceMapBarY2.get(ticker).entrySet().stream().forEach(e -> {
+                ChinaData.priceMapBarY2.get(ticker).forEach((key, value) -> {
                     //System.out.println( " Y2 time " + e.getKey());
                     //System.out.println( " Y2  before " + e.getValue());
-                    e.getValue().adjustByFactor(div.getAdjFactor());
+                    value.adjustByFactor(div.getAdjFactor());
                     //System.out.println( " Y2  after " + e.getValue());
                 });
             }
         });
     }
 
-    LocalDate getExDate() {
-        return adjustDate;
-    }
+//    LocalDate getExDate() {
+//        return adjustDate;
+//    }
 
-    double getAdjFactor() {
+    private double getAdjFactor() {
         return adjFactor;
     }
 
@@ -94,7 +88,7 @@ public class Dividends {
         return " adjustment date " + adjustDate + " factor " + adjFactor;
     }
 
-    static Map<String, Dividends> getDiv() {
+    private static Map<String, Dividends> getDiv() {
         String line;
         Pattern p = Pattern.compile("(sh|sz)\\d{6}");
         List<String> l;

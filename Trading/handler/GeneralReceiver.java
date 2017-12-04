@@ -39,6 +39,9 @@ public class GeneralReceiver implements LiveHandler {
 
                 if (t.isAfter(LocalTime.of(8, 55))) {
                     if (DATA_COLLECTION_TIME.test(ldt)) {
+
+                        ChinaMain.currentTradingDate = ldt.toLocalDate();
+
                         if (XU.lastFutPrice.containsKey(t)) {
                             XU.lastFutPrice.get(t).add(price);
                         } else {
@@ -54,7 +57,6 @@ public class GeneralReceiver implements LiveHandler {
                 }
                 break;
             //futData.get(name).put(t, price);
-
         }
     }
 

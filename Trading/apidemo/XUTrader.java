@@ -945,7 +945,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if(tradesMap.containsKey(f) && tradesMap.get(f).size()>0) {
             return tradesMap.get(f).entrySet().stream()
                     .mapToDouble(e->e.getValue().getSizeAll()*futPriceMap.getOrDefault(f,0.0)
-                            +e.getValue().getCostWithCommission(f.getTicker())).sum();
+                            +e.getValue().getCostAll(f.getTicker())).sum();
         }
         return 0.0;
     }
@@ -957,10 +957,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //String ticker = ibContractToSymbol(activeFuture);
         FutType f = ibContractToFutType(activeFuture);
 
-        int unitsBought = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() > 0)
-                .mapToInt(e -> e.getValue().getSize()).sum();
-        int unitsSold = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() < 0)
-                .mapToInt(e -> e.getValue().getSize()).sum();
+        int unitsBought = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
+                .mapToInt(e -> e.getValue().getSizeAll()).sum();
+        int unitsSold = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
+                .mapToInt(e -> e.getValue().getSizeAll()).sum();
 
         botMap.put(f, unitsBought);
         soldMap.put(f, unitsSold);

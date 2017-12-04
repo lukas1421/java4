@@ -25,6 +25,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,7 +34,7 @@ import java.util.concurrent.*;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
-import static utility.Utility.AM914T;
+import static utility.Utility.DATA_COLLECTION_TIME;
 
 //import java.time.temporal.ChronoUnit;
 //import java.time.temporal.TemporalUnit;
@@ -265,7 +266,7 @@ public final class ChinaMain implements IConnectionHandler {
             ses.scheduleAtFixedRate(sinastock1, 0, 1, TimeUnit.SECONDS);
             xu.startIndex();
             ses.scheduleAtFixedRate(() -> {
-                if (LocalTime.now().isAfter(AM914T) && LocalTime.now().isBefore(LocalTime.of(15, 15))) {
+                if (DATA_COLLECTION_TIME.test(LocalDateTime.now())) {
                     XU.saveHibXU();
                     ChinaData.withHibernate();
                     ChinaData.saveChinaOHLC();

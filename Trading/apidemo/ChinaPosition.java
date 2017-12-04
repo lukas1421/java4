@@ -604,6 +604,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         //System.out.println(" ");
         //System.out.println(getStr(" in chinaposition handle hist date is ", date, close));
 
+        LocalDate ytd = currentTradingDate.equals(dateMap.get(2))?dateMap.get(1):dateMap.get(2);
 
         if (!date.startsWith("finished")) {
             //System.out.println(getStr(" in chinaposition handle hist date is ", date, close));
@@ -612,7 +613,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 dt = new Date(Long.parseLong(date) * 1000);
             } catch (Exception ex) {
                 System.out.println(" date format problem " + date);
-                //ex.printStackTrace();
             }
             Calendar cal = Calendar.getInstance();
             cal.setTime(dt);
@@ -627,21 +627,20 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     //xuOpenPrice = open;
                     //System.out.println(" today open is " + xuOpenPrice);
                     //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                    //System.out.println(Utility.getStrCheckNull("updateing open in chinapos", ld, lt, open, high, low, close));
+                    System.out.println(Utility.getStrCheckNull("updating open in chinapos", ld, lt, open));
                 }
             } else {
                 //!ld.equals(currDate)
                 //System.out.println(" handle hist china position " + name +" " + LocalDateTime.of(ld,lt) + " " + close);
                 //System.out.println(getStr(" outside regular area ", ld, lt, close, " desired date " + dateMap.get(1)));
-                if (ld.isEqual(dateMap.get(1)) && lt.isBefore(LocalTime.of(17, 0))) {
+                if (ld.isEqual(ytd) && lt.isBefore(LocalTime.of(17, 0))) {
                     ChinaStock.closeMap.put(name, close);
-                    //System.out.println(getStr(" updating close ", dateMap.get(1),name, closeMap.getOrDefault(name,0.0)));
+                    System.out.println(getStr(" updating close ", ytd ,name, closeMap.getOrDefault(name,0.0)));
                     //xuPreviousClose = close;
                 }
             }
 
         } else {
-            //System.out.println(" xu open and close " + xuOpenPrice+ " " + xuPreviousClose);
             System.out.println(getStr(date, open, high, low, close));
         }
     }
@@ -1532,10 +1531,10 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
         System.out.println(" trade report ended for fut pos handler in china pos ");
 
         for (FutType ft : FutType.values()) {
-            if (ChinaPosition.tradesMap.containsKey(ft.tickerName) &&
-                    ChinaPosition.tradesMap.get(ft.tickerName).size() > 0) {
-                System.out.println(getStr("printing trades map in trades report end", ft.tickerName,
-                        ChinaPosition.tradesMap.get(ft.tickerName)));
+            if (ChinaPosition.tradesMap.containsKey(ft.getTicker()) &&
+                    ChinaPosition.tradesMap.get(ft.getTicker()).size() > 0) {
+                System.out.println(getStr("printing trades map in trades report end", ft.getTicker(),
+                        ChinaPosition.tradesMap.get(ft.getTicker())));
             }
         }
 
