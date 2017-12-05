@@ -11,9 +11,11 @@ public class MarginTrade extends Trade {
     }
 
     @Override
-    public double getTradingCost(String name) {
+    public double getTransactionFee(String name) {
         double brokerage = Math.max(5, Math.round(price * abs(size) * 3 / 100) / 100d);
-        double guohu = (name.equals("sh510050")) ? 0 : ((name.startsWith("sz")) ? 0.0 : Math.round(price * abs(size) * 0.2 / 100d) / 100d);
+        double guohu = (name.equals("sh510050")) ? 0 : ((name.startsWith("sz")) ?
+                0.0 : Math.round(price * abs(size) * 0.2 / 100d) / 100d);
+
         double stamp = (name.equals("sh510050")) ? 0 : ((size < 0 ? 1 : 0) * Math.round((price * abs(size)) * 0.1) / 100d);
         //System.out.println( " name price size " + price + " " + size );
         //System.out.println(" name brokerage guohu stamp " + name + " " +  brokerage  + " " +  guohu   + " " + stamp);
@@ -21,7 +23,7 @@ public class MarginTrade extends Trade {
     }
 
     @Override
-    public double getCostWithCommission(String name) {
+    public double getCostBasisWithFees(String name) {
         double brokerage = Math.max(5, Math.round(price * abs(size) * 3 / 100) / 100d);
         double guohu = (name.equals("sh510050")) ? 0 : ((name.startsWith("sz")) ? 0.0 : Math.round(price * abs(size) * 0.2 / 100d) / 100d);
         double stamp = (name.equals("sh510050")) ? 0 : ((size < 0 ? 1 : 0) * Math.round((price * abs(size)) * 0.1) / 100d);
@@ -30,17 +32,17 @@ public class MarginTrade extends Trade {
     }
 
     @Override
-    public double getTradingCostCustomBrokerage(String name, double rate) {
-        return mergeList.stream().mapToDouble(t->((Trade)t).tradingCostHelper(name,rate)).sum();
+    public double getTransactionFeeCustomBrokerage(String name, double rate) {
+        return mergeList.stream().mapToDouble(t->((Trade)t).transactionFeeHelper(name,rate)).sum();
     }
 
     @Override
-    public double getCostWithCommissionCustomBrokerage(String name, double rate) {
+    public double getCostBasisWithFeesCustomBrokerage(String name, double rate) {
         return mergeList.stream().mapToDouble(t->((Trade)t).costBasisHelper(name,rate)).sum();
     }
 
     @Override
-    public double tradingCostHelper(String name, double rate) {
+    public double transactionFeeHelper(String name, double rate) {
         double brokerage = Math.max(5, Math.round(price * abs(size) * 3 / 100) / 100d);
         double guohu = (name.equals("sh510050")) ? 0 : ((name.startsWith("sz")) ? 0.0 : Math.round(price * abs(size) * 0.2 / 100d) / 100d);
         double stamp = (name.equals("sh510050")) ? 0 : ((size < 0 ? 1 : 0) * Math.round((price * abs(size)) * 0.1) / 100d);

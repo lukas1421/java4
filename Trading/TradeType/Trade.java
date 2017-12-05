@@ -40,7 +40,7 @@ public abstract class Trade {
     }
 
     public double getCostAll(String name) {
-        return mergeList.stream().mapToDouble(t->((Trade)t).getCostWithCommission(name)).sum();
+        return mergeList.stream().mapToDouble(t->((Trade)t).getCostBasisWithFees(name)).sum();
     }
 
 //    public boolean getMergeStatus() {
@@ -81,16 +81,22 @@ public abstract class Trade {
         return size * price;
     }
 
-    public abstract double getTradingCost(String name);
+    // guohu + stamp + brokerage
+    public abstract double getTransactionFee(String name);
 
-    public abstract double getCostWithCommission(String name);
+    //cost basis + fees
+    public abstract double getCostBasisWithFees(String name);
 
-    public abstract double getTradingCostCustomBrokerage(String name, double rate);
+    // fees (custom brokerage)
+    public abstract double getTransactionFeeCustomBrokerage(String name, double rate);
 
-    public abstract double getCostWithCommissionCustomBrokerage(String name, double rate);
+    //cost basis with fees (custom brokerage)
+    public abstract double getCostBasisWithFeesCustomBrokerage(String name, double rate);
 
-    public abstract double tradingCostHelper(String name, double rate);
+    //fees helper method
+    public abstract double transactionFeeHelper(String name, double rate);
 
+    //cost basis helper
     public abstract double costBasisHelper(String name, double rate);
 
     public double getMtmPnl(String name) {

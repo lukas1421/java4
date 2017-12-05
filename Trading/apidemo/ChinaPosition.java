@@ -357,7 +357,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     if (tradesMap.get(k).containsKey(t)) {
                         //System.out.println( "t "+t+" trade "+ChinaData.priceMapBar.get(k).get(t));
                         pos += ((Trade) tradesMap.get(k).get(t)).getSize();
-                        cb += ((Trade) tradesMap.get(k).get(t)).getCostWithCommission(k);
+                        cb += ((Trade) tradesMap.get(k).get(t)).getCostBasisWithFees(k);
                     }
                     mv = pos * ChinaData.priceMapBar.get(k).get(t).getClose();
                     tradePnlMap.get(k).put(t, cb - mv);
@@ -387,7 +387,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         if (trMap.firstKey().isBefore(prMap.firstKey())) {
             for (Map.Entry e : trMap.headMap(prMap.firstKey(), false).entrySet()) {
                 pos += ((Trade) e.getValue()).getSize();
-                cb += ((Trade) e.getValue()).getCostWithCommission(name);
+                cb += ((Trade) e.getValue()).getCostBasisWithFees(name);
             }
 //            System.out.println(" name is " + name);
 //            System.out.println(" pos before open " + pos);
@@ -397,7 +397,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         for (LocalTime t : prMap.navigableKeySet()) {
             if (trMap.subMap(t, true, t.plusMinutes(1), false).size() > 0) {
                 pos += getAdditionalInfo(t, trMap, d, Trade::getSize);
-                cb += getAdditionalInfo(t, trMap, d, x -> x.getCostWithCommission(name));
+                cb += getAdditionalInfo(t, trMap, d, x -> x.getCostBasisWithFees(name));
             }
             mv = pos * prMap.get(t).getClose();
             res.put(t, fx * (mv + cb));
@@ -1046,11 +1046,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return (tradesMap.get(name).size() > 0)
                 ? tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0)
                 .mapToDouble(e -> (((Trade) e.getValue()).getSize())
-                        * (price - ((Trade) e.getValue()).getPrice()) - ((Trade) e.getValue()).getTradingCost(name)).sum() * fx : 0.0;
+                        * (price - ((Trade) e.getValue()).getPrice()) - ((Trade) e.getValue()).getTransactionFee(name)).sum() * fx : 0.0;
     }
 
-    //    static double getTradingCost(String name, Trade td) {
-//        return td.getTradingCost(name);
+    //    static double getTransactionFee(String name, Trade td) {
+//        return td.getTransactionFee(name);
 ////        double brokerage = Math.max(5,Math.round(td.getPrice()*abs(td.getSize())*2/100)/100d);
 ////        double guohu = (name.equals("sh510050"))?0:((name.startsWith("sz"))?0.0:Math.round(td.getPrice()*abs(td.getSize())*0.2/100d)/100d);
 ////        //double stamp = (td.getSize()<0)?Math.round((td.getPrice()*abs(td.getSize()))*0.1)/100d:0.0;
@@ -1064,7 +1064,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 ? Math.round(tradesMap.get(name).entrySet().stream()
                 .filter(e -> ((Trade) e.getValue()).getSize() < 0)
                 .mapToDouble(e -> (((Trade) e.getValue()).getSize() * (ChinaStock.priceMap.getOrDefault(name, 0.0) - ((Trade) e.getValue()).getPrice())
-                        - ((Trade) e.getValue()).getTradingCost(name))).sum() * 100d * fx) / 100d : 0.0;
+                        - ((Trade) e.getValue()).getTransactionFee(name))).sum() * 100d * fx) / 100d : 0.0;
     }
 
     private static int getNetPosition(String name) {

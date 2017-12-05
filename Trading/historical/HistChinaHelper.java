@@ -14,17 +14,17 @@ class HistChinaHelper {
 
     static double getTradingCostCustom(String name, LocalDate ld, Trade t) {
         if (ld.isBefore(LocalDate.of(2016, Month.NOVEMBER, 3))) {
-            return t.getTradingCostCustomBrokerage(name, 3.1);
+            return t.getTransactionFeeCustomBrokerage(name, 3.1);
         } else {
-            return t.getTradingCostCustomBrokerage(name, 2.0);
+            return t.getTransactionFeeCustomBrokerage(name, 2.0);
         }
     }
 
     static double getCostWithCommissionsCustom(String name, LocalDate ld, Trade t) {
         if (ld.isBefore(LocalDate.of(2016, Month.NOVEMBER, 3))) {
-            return t.getCostWithCommissionCustomBrokerage(name, 3.1);
+            return t.getCostBasisWithFeesCustomBrokerage(name, 3.1);
         } else {
-            return t.getCostWithCommissionCustomBrokerage(name, 2.0);
+            return t.getCostBasisWithFeesCustomBrokerage(name, 2.0);
         }
     }
 

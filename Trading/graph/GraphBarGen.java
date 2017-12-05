@@ -231,7 +231,7 @@ public class GraphBarGen extends JComponent {
         //double fx = fxMap.getOrDefault(name,1.0);
         if(XUTrader.tradesMap.containsKey(fut) && XUTrader.tradesMap.get(fut).size()>0) {
             int netTradedPosition = XUTrader.tradesMap.get(fut).entrySet().stream().mapToInt(e->e.getValue().getSizeAll()).sum();
-            double cost = XUTrader.tradesMap.get(fut).entrySet().stream().mapToDouble(e-> e.getValue().getCostWithCommission("")).sum();
+            double cost = XUTrader.tradesMap.get(fut).entrySet().stream().mapToDouble(e-> e.getValue().getCostBasisWithFees("")).sum();
             double mv = netTradedPosition*currPrice;
             //System.out.println(getStr(" currprice, net traded pos cost mv", currPrice, netTradedPosition, cost, mv));
             //System.out.println(getStr(" cost mv ", cost, mv));

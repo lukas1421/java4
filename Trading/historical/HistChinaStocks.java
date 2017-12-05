@@ -634,7 +634,7 @@ public class HistChinaStocks extends JPanel {
             int traded = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONTH_FIRST_DAY.minusDays(1L)))
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
             double cost = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONTH_FIRST_DAY.minusDays(1L)))
-                    .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommission(name)).sum();
+                    .mapToDouble(e -> ((Trade) e.getValue()).getCostBasisWithFees(name)).sum();
             return price * traded + cost;
         }
         return 0.0;
@@ -1173,7 +1173,7 @@ public class HistChinaStocks extends JPanel {
 
     private static double computeCurrentTradePnl(String s, LocalDate cutoff) {
         double costBasis = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(cutoff))
-                .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommission(s)).sum();
+                .mapToDouble(e -> ((Trade) e.getValue()).getCostBasisWithFees(s)).sum();
         int netPosition = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(cutoff))
                 .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
         if (chinaWtd.containsKey(s) && chinaWtd.get(s).size() > 0) {
@@ -1204,7 +1204,7 @@ public class HistChinaStocks extends JPanel {
     private static void computeWtdCurrentTradePnlAll() {
         for (String s : chinaTradeMap.keySet()) {
             double costBasis = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
-                    .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommission(s)).sum();
+                    .mapToDouble(e -> ((Trade) e.getValue()).getCostBasisWithFees(s)).sum();
             int netPosition = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
             wtdTradePnlMap.put(s, fxMap.getOrDefault(s, 1.0) * (netPosition *
@@ -1219,7 +1219,7 @@ public class HistChinaStocks extends JPanel {
                     .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
             double mv = price * pos;
             double cost = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
-                    .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommission(name)).sum();
+                    .mapToDouble(e -> ((Trade) e.getValue()).getCostBasisWithFees(name)).sum();
             return fxMap.getOrDefault(name, 1.0) * (mv + cost);
         } else {
             return 0.0;
@@ -1438,10 +1438,10 @@ public class HistChinaStocks extends JPanel {
             if (!tickerNotFuture(name)) {
                 double thisWeekCostBasis = chinaTradeMap.get(name).entrySet().stream()
                         .filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
-                        .mapToDouble(e -> ((Trade) e.getValue()).getCostWithCommissionCustomBrokerage(name, 0.0)).sum();
+                        .mapToDouble(e -> ((Trade) e.getValue()).getCostBasisWithFeesCustomBrokerage(name, 0.0)).sum();
 
                 double thisWeekTradingCost = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
-                        .mapToDouble(e -> ((Trade) e.getValue()).getTradingCostCustomBrokerage(name, 0.0)).sum();
+                        .mapToDouble(e -> ((Trade) e.getValue()).getTransactionFeeCustomBrokerage(name, 0.0)).sum();
 
                 costBasisMap.put(name, fx * (-1 * lastWeekCloseMap.getOrDefault(name, 0.0) *
                         weekOpenPositionMap.getOrDefault(name, 0) + thisWeekCostBasis));

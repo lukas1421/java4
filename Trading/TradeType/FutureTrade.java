@@ -11,27 +11,27 @@ public class FutureTrade extends Trade {
     }
 
     @Override
-    public double getTradingCost(String name) {
+    public double getTransactionFee(String name) {
         return COST_PER_LOT * Math.abs(size);
     }
 
     @Override
-    public double getCostWithCommission(String name) {
+    public double getCostBasisWithFees(String name) {
         return (-1d * size * price) - COST_PER_LOT * Math.abs(size);
     }
 
     @Override
-    public double getTradingCostCustomBrokerage(String name, double rate) {
-        return mergeList.stream().mapToDouble(t->((Trade)t).tradingCostHelper(name,rate)).sum();
+    public double getTransactionFeeCustomBrokerage(String name, double rate) {
+        return mergeList.stream().mapToDouble(t->((Trade)t).transactionFeeHelper(name,rate)).sum();
     }
 
     @Override
-    public double getCostWithCommissionCustomBrokerage(String name, double rate) {
+    public double getCostBasisWithFeesCustomBrokerage(String name, double rate) {
         return mergeList.stream().mapToDouble(t->((Trade)t).costBasisHelper(name,rate)).sum();
     }
 
     @Override
-    public double tradingCostHelper(String name, double rate) {
+    public double transactionFeeHelper(String name, double rate) {
         return COST_PER_LOT * Math.abs(size);
     }
 

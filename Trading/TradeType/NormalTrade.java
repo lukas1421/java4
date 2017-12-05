@@ -11,7 +11,7 @@ public class NormalTrade extends Trade {
     }
 
     @Override
-    public double getTradingCost(String name) {
+    public double getTransactionFee(String name) {
         if(price!=0) {
             double brokerage = Math.max(5, Math.round(price * abs(size) * 2 / 100) / 100d);
             double guohu = (name.equals("sh510050")) ? 0 : ((name.startsWith("sz")) ? 0.0 : Math.round(price * abs(size) * 0.2 / 100d) / 100d);
@@ -23,7 +23,7 @@ public class NormalTrade extends Trade {
     }
 
     @Override
-    public double getCostWithCommission(String name) {
+    public double getCostBasisWithFees(String name) {
         if(price!=0) { //for dividends condition
             double brokerage = Math.max(5, Math.round(price * abs(size) * 2 / 100) / 100d);
             double guohu = (name.equals("sh510050")) ? 0 : ((name.startsWith("sz")) ? 0.0 : Math.round(price * abs(size) * 0.2 / 100d) / 100d);
@@ -36,12 +36,12 @@ public class NormalTrade extends Trade {
     }
 
     @Override
-    public double getTradingCostCustomBrokerage(String name, double rate) {
-        return mergeList.stream().mapToDouble(t->((Trade)t).tradingCostHelper(name,rate)).sum();
+    public double getTransactionFeeCustomBrokerage(String name, double rate) {
+        return mergeList.stream().mapToDouble(t->((Trade)t).transactionFeeHelper(name,rate)).sum();
     }
 
     @Override
-    public double getCostWithCommissionCustomBrokerage(String name, double rate) {
+    public double getCostBasisWithFeesCustomBrokerage(String name, double rate) {
         return mergeList.stream().mapToDouble(t->((Trade)t).costBasisHelper(name, rate)).sum();
     }
 
@@ -60,7 +60,7 @@ public class NormalTrade extends Trade {
     }
 
     @Override
-    public double tradingCostHelper(String name, double rate) {
+    public double transactionFeeHelper(String name, double rate) {
         if(price != 0.0) {
             double brokerage = Math.max(5, Math.round(price * abs(size) * rate / 100) / 100d);
             double guohu = (name.equals("sh510050")) ? 0 : ((name.startsWith("sz")) ? 0.0 : Math.round(price * abs(size) * 0.2 / 100d) / 100d);

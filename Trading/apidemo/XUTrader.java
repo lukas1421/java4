@@ -966,10 +966,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         soldMap.put(f, unitsSold);
 
         double avgBuy = Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() > 0)
-                .mapToDouble(e -> e.getValue().getCostWithCommission("")).sum() / unitsBought)) / 100d;
+                .mapToDouble(e -> e.getValue().getCostBasisWithFees("")).sum() / unitsBought)) / 100d;
 
         double avgSell = Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() < 0)
-                .mapToDouble(e -> e.getValue().getCostWithCommission("")).sum() / unitsSold)) / 100d;
+                .mapToDouble(e -> e.getValue().getCostBasisWithFees("")).sum() / unitsSold)) / 100d;
 
         double buyTradePnl = Math.round(100d * (futPriceMap.get(f) - avgBuy) * unitsBought) / 100d;
         double sellTradePnl = Math.round(100d * (futPriceMap.get(f) - avgSell) * unitsSold) / 100d;
