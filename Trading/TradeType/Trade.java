@@ -84,7 +84,7 @@ public abstract class Trade {
     // guohu + stamp + brokerage
     public abstract double getTransactionFee(String name);
 
-    //cost basis + fees
+    //cost basis (P*Q) + fees
     public abstract double getCostBasisWithFees(String name);
 
     // fees (custom brokerage)

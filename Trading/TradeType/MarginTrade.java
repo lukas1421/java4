@@ -44,7 +44,8 @@ public class MarginTrade extends Trade {
     @Override
     public double transactionFeeHelper(String name, double rate) {
         double brokerage = Math.max(5, Math.round(price * abs(size) * 3 / 100) / 100d);
-        double guohu = (name.equals("sh510050")) ? 0 : ((name.startsWith("sz")) ? 0.0 : Math.round(price * abs(size) * 0.2 / 100d) / 100d);
+        double guohu = (name.equals("sh510050")) ? 0 :
+                ((name.startsWith("sz")) ? 0.0 : Math.round(price * abs(size) * 0.2 / 100d) / 100d);
         double stamp = (name.equals("sh510050")) ? 0 : ((size < 0 ? 1 : 0) * Math.round((price * abs(size)) * 0.1) / 100d);
         //System.out.println( " name price size " + price + " " + size );
         //System.out.println(" name brokerage guohu stamp " + name + " " +  brokerage  + " " +  guohu   + " " + stamp);

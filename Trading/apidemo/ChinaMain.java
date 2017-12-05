@@ -23,7 +23,6 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -42,6 +41,8 @@ import static utility.Utility.DATA_COLLECTION_TIME;
 public final class ChinaMain implements IConnectionHandler {
 
     public static volatile LocalDate currentTradingDate ;
+    public static volatile LocalDate yestTradingDate ;
+    public static volatile LocalDate y2TradingDate ;
             //= LocalDate.MIN;
 
 //    public static volatile LocalDate lastTdxDate;
@@ -156,11 +157,11 @@ public final class ChinaMain implements IConnectionHandler {
 //    }
 
     //public static JComponent indexWatcher;
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) {
         start(new ChinaMain(new DefaultConnectionConfiguration()));
     }
 
-    public static void start(ChinaMain cm) throws IOException, InterruptedException {
+    public static void start(ChinaMain cm) {
         INSTANCE = cm;
         INSTANCE.run();
     }
@@ -170,7 +171,7 @@ public final class ChinaMain implements IConnectionHandler {
         m_connectionPanel = new ConnectionPanel(); // must be done after connection config is set
     }
 
-    private void run() throws IOException, InterruptedException {
+    private void run() {
         m_tabbedPanel.addTab("XU", xu);
         //m_tabbedPanel.addTab("Shcomp", shcomp);
         //m_tabbedPanel.addTab("ChinaFut", chinafut);

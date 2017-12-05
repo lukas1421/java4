@@ -157,14 +157,14 @@ public class HistChinaStocks extends JPanel {
             x.printStackTrace();
         }
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(
-                TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt")))) {
-            line = reader.readLine();
-//            ChinaMain.currentTradingDate = max(LocalDate.parse(line, DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-//                    getMondayOfWeek(LocalDateTime.now()));
-        } catch (IOException io) {
-            io.printStackTrace();
-        }
+//        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(
+//                TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt")))) {
+//            line = reader.readLine();
+////            ChinaMain.currentTradingDate = max(LocalDate.parse(line, DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+////                    getMondayOfWeek(LocalDateTime.now()));
+//        } catch (IOException io) {
+//            io.printStackTrace();
+//        }
 
 //        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(priceInput)))) {
 //            while ((line = reader.readLine()) != null) {
@@ -891,13 +891,13 @@ public class HistChinaStocks extends JPanel {
     private static void computeNetPnlByWeekday(NavigableMap<LocalDateTime, Double> mp) {
 
         netPnlByWeekday = mp.keySet().stream().map(LocalDateTime::toLocalDate).distinct().collect(Collectors.toMap(d -> d,
-                d -> computeNetPnlForGivenDate(mp, (LocalDate) d), (a, b) -> a, ConcurrentSkipListMap::new));
+                d -> computeNetPnlForGivenDate(mp, d), (a, b) -> a, ConcurrentSkipListMap::new));
 
         netPnlByWeekdayAM = mp.keySet().stream().map(LocalDateTime::toLocalDate).distinct().collect(Collectors.toMap(d -> d,
-                d -> computeAMNetPnlForGivenDate(mp, (LocalDate) d), (a, b) -> a, ConcurrentSkipListMap::new));
+                d -> computeAMNetPnlForGivenDate(mp, d), (a, b) -> a, ConcurrentSkipListMap::new));
 
         netPnlByWeekdayPM = mp.keySet().stream().map(LocalDateTime::toLocalDate).distinct().collect(Collectors.toMap(d -> d,
-                d -> computePMNetPnlForGivenDate(mp, (LocalDate) d), (a, b) -> a, ConcurrentSkipListMap::new));
+                d -> computePMNetPnlForGivenDate(mp, d), (a, b) -> a, ConcurrentSkipListMap::new));
 
 //        System.out.println(" net by week day " + netPnlByWeekday + " " + netPnlByWeekday.values().stream().mapToDouble(e-> e).sum());
 //        System.out.println(" am " + netPnlByWeekdayAM + " " + netPnlByWeekdayAM.values().stream().mapToDouble(e-> e).sum());
@@ -1423,7 +1423,7 @@ public class HistChinaStocks extends JPanel {
         @Override
         public Object getValueAt(int row, int col) {
             String name = stockList.get(row);
-            double price = 0.0;
+            double price;
             double fx = fxMap.getOrDefault(name, 1.0);
 
             if (chinaWtd.containsKey(name) && chinaWtd.get(name).size() > 0) {

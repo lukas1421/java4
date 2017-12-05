@@ -56,7 +56,6 @@ public class NormalTrade extends Trade {
         } else {
             return 0.0;
         }
-
     }
 
     @Override

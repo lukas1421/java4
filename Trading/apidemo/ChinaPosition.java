@@ -78,7 +78,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     private static volatile NavigableMap<LocalTime, Double> mtmDeltaMap;
     private static volatile NavigableMap<String, Double> benchExposureMap;
     private static volatile Map<String, Double> pureMtmMap;
-    public static Map<String, Double> fxMap = new HashMap<>();
+    static Map<String, Double> fxMap = new HashMap<>();
     private static volatile double mtmDeltaSharpe;
     private static volatile double minuteNetPnlSharpe;
 
@@ -557,6 +557,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
         ChinaMain.controller().reqPositions(new FutPositionHandler());
         ChinaMain.controller().reqExecutions(new ExecutionFilter(), new FutPosTradesHandler());
+
+        //this gets close and open
         ChinaMain.controller().getSGXA50Historical2(40000, this);
 
 //        ChinaPosition.xuBotPos = ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.summingInt(e
@@ -600,7 +602,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     @Override
     public void handleHist(String name, String date, double open, double high, double low, double close) {
         LocalDate currDate = LocalDate.now();
-
         //System.out.println(" ");
         //System.out.println(getStr(" in chinaposition handle hist date is ", date, close));
 
@@ -1014,14 +1015,14 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     private double getAvgBCost(String name) {
-        return (tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).count() > 0)
+        return (tradesMap.get(name).entrySet().stream().anyMatch(e -> ((Trade) e.getValue()).getSize() > 0))
                 ? tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.collectingAndThen(toList(),
                 l -> (Double) l.stream().mapToDouble(e -> ((Trade) e.getValue()).getPrice() * ((Trade) e.getValue()).getSize()).sum()
                         / (Double) l.stream().mapToDouble(e -> ((Trade) e.getValue()).getSize()).sum())) : 0.0;
     }
 
     private double getAvgSCost(String name) {
-        return (tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).count() > 0)
+        return (tradesMap.get(name).entrySet().stream().anyMatch(e -> ((Trade) e.getValue()).getSize() < 0))
                 ? tradesMap.get(name).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).collect(Collectors.collectingAndThen(toList(),
                 l -> (Double) l.stream().mapToDouble(e -> ((Trade) e.getValue()).getPrice() * ((Trade) e.getValue()).getSize()).sum()
                         / (Double) l.stream().mapToDouble(e -> ((Trade) e.getValue()).getSize()).sum())) : 0.0;
