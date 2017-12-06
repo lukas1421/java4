@@ -80,7 +80,7 @@ public class Utility {
     public static final Predicate<LocalDateTime> DATA_COLLECTION_TIME =
             lt -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) &&
                     !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
-                    && ((lt.toLocalTime().isAfter(LocalTime.of(9, 14)) && lt.toLocalTime().isBefore(LocalTime.of(11, 35)))
+                    && ((lt.toLocalTime().isAfter(LocalTime.of(8, 59)) && lt.toLocalTime().isBefore(LocalTime.of(11, 35)))
                     || (lt.toLocalTime().isAfter(LocalTime.of(12, 58)) && lt.toLocalTime().isBefore(LocalTime.of(15, 15))));
     public static BiPredicate<? super Map<String, ? extends Map<LocalTime, ?>>, String> NORMAL_MAP = (mp, name) -> mp.containsKey(name) && !mp.get(name).isEmpty() && mp.get(name).size() > 0;
     public static Predicate<LocalTime> chinaTradingTime = t -> (t.isAfter(LocalTime.of(9, 30)) && t.isBefore(LocalTime.of(11, 31))) ||
