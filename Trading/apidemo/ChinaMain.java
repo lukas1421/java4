@@ -384,7 +384,7 @@ public final class ChinaMain implements IConnectionHandler {
             try {
                 //xu.getFrontfutHandler(),xu.getBackfutHandler()
                 M_CONTROLLER.reqXUDataArray();
-            } catch (InterruptedException ex) {
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
         });
@@ -572,7 +572,7 @@ public final class ChinaMain implements IConnectionHandler {
             try {
                 //xu.getFrontfutHandler(),xu.getBackfutHandler()
                 M_CONTROLLER.reqXUDataArray();
-            } catch (InterruptedException x) {
+            } catch (Exception x) {
                 x.printStackTrace();
             }
         });

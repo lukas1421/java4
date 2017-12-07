@@ -1220,6 +1220,14 @@ public class HistChinaStocks extends JPanel {
             double mv = price * pos;
             double cost = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
                     .mapToDouble(e -> ((Trade) e.getValue()).getCostBasisWithFees(name)).sum();
+
+            if(name.equals("SGXA50")) {
+                System.out.println(getStr(" computeWtdTradePnlFor1Stock ticker price pos mv cost ",
+                        name, price, pos, mv, cost));
+                System.out.println(getStr(" trading map is " + chinaTradeMap.get(name)));
+
+            }
+
             return fxMap.getOrDefault(name, 1.0) * (mv + cost);
         } else {
             return 0.0;

@@ -11,6 +11,16 @@ import static apidemo.ChinaData.priceMapBar;
 import static utility.Utility.DATA_COLLECTION_TIME;
 
 public class GeneralReceiver implements LiveHandler {
+
+    private GeneralReceiver() {
+    }
+
+    private static GeneralReceiver gr = new GeneralReceiver();
+    public static GeneralReceiver getReceiver() {
+        return gr;
+    }
+
+
     @Override
     public void handlePrice(TickType tt, String name, double price, LocalDateTime ldt) {
 
@@ -22,9 +32,11 @@ public class GeneralReceiver implements LiveHandler {
             case BID:
                 XUTrader.bidMap.put(f, price);
                 break;
+
             case ASK:
                 XUTrader.askMap.put(f, price);
                 break;
+
             case LAST:
                 //System.out.println(" name price t " + name + " " + price + " " + t.toString());
                 ChinaStock.priceMap.put(name, price);
@@ -66,7 +78,7 @@ public class GeneralReceiver implements LiveHandler {
         LocalTime t = ldt.toLocalTime();
         ChinaStock.sizeMap.put(name, (long) vol);
 
-        if(DATA_COLLECTION_TIME.test(ldt)) {
+        if (DATA_COLLECTION_TIME.test(ldt)) {
             XU.frontFutVol.put(t, (int) vol);
             ChinaData.sizeTotalMap.get(name).put(t, 1d * vol);
         }

@@ -20,12 +20,15 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
-        System.out.println(" SGXReportHandler in trade report " + contract.symbol());
+
         String ticker = ibContractToSymbol(contract);
+
+        System.out.println(" ****************************** ");
+        System.out.println(" SGXReportHandler " + ticker);
 
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
 
-        System.out.println(LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss")));
+        //System.out.println(LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss")));
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
         LocalDateTime ldtRoundto5 = Utility.roundTo5Ldt(ldt);
@@ -33,19 +36,19 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
         if (contract.symbol().equals("XINA50")) {
             if (ldt.toLocalDate().isAfter(Utility.getMondayOfWeek(ldt).minusDays(1L))) {
                 System.out.println(" exec " + execution.side() + "　" + execution.time() + " " + execution.cumQty()
-                        + " " + execution.price() + " " + execution.orderRef() + " " + execution.orderId() + " " + execution.permId() + " "
-                        + execution.shares());
-                System.out.println(" time string " + ldt.toString());
-                System.out.println(" day is " + LocalDateTime.now().getDayOfMonth());
+                        + " " + execution.price() + " "  + execution.shares());
+                //System.out.println(" time string " + ldt.toString());
+                //System.out.println(" day is " + LocalDateTime.now().getDayOfMonth());
                 try {
                     if(HistChinaStocks.chinaTradeMap.containsKey(ticker)) {
                         if (HistChinaStocks.chinaTradeMap.get(ticker).containsKey(ldtRoundto5)) {
                             System.out.println(" lt is " + ldtRoundto5);
-                            ((Trade) HistChinaStocks.chinaTradeMap.get(ticker).get(ldtRoundto5)).merge(new FutureTrade(execution.price(),
+                            ((Trade) HistChinaStocks.chinaTradeMap.get(ticker).get(ldtRoundto5)).merge2(new FutureTrade(execution.price(),
                                     sign * execution.cumQty()));
                         } else {
                             System.out.println(" else lt " + ldtRoundto5);
-                            HistChinaStocks.chinaTradeMap.get(ticker).put(ldtRoundto5, new FutureTrade(execution.price(), sign * execution.cumQty()));
+                            HistChinaStocks.chinaTradeMap.get(ticker).put(ldtRoundto5, new FutureTrade(execution.price(),
+                                    sign * execution.cumQty()));
                         }
                     } else {
                         System.out.println(" sgx trade handler does not contain ticker for " + ticker);
@@ -86,7 +89,7 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void commissionReport(String tradeKey, CommissionReport commissionReport) {
-        System.out.println("commission report");
+        //System.out.println("commission report");
 
     }
 }

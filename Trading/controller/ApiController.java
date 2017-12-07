@@ -910,7 +910,7 @@ public class ApiController implements EWrapper {
     }
 
     //xu data
-    public void reqXUDataArray() throws InterruptedException {
+    public void reqXUDataArray() {
         //ITopMktDataHandler frontHandler, ITopMktDataHandler backHandler
         System.out.println("requesting XU data begins");
         Contract frontCt = getFrontFutContract();
@@ -930,8 +930,8 @@ public class ApiController implements EWrapper {
 //        m_topMktDataMap.put(reqIdFront, frontHandler);
 //        m_topMktDataMap.put(reqIdBack, backHandler);
 
-        ChinaMain.globalRequestMap.put(reqIdFront,new Request(frontCt, new GeneralReceiver()));
-        ChinaMain.globalRequestMap.put(reqIdBack, new Request(backCt, new GeneralReceiver()));
+        ChinaMain.globalRequestMap.put(reqIdFront,new Request(frontCt, GeneralReceiver.getReceiver()));
+        ChinaMain.globalRequestMap.put(reqIdBack, new Request(backCt, GeneralReceiver.getReceiver()));
 
         m_client.reqMktData(reqIdFront, frontCt, "", isSnapShot, Collections.<TagValue>emptyList());
         m_client.reqMktData(reqIdBack, backCt, "", isSnapShot, Collections.<TagValue>emptyList());

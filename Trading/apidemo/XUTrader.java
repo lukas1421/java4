@@ -132,8 +132,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             futData.put(f, new ConcurrentSkipListMap<>());
             tradesMap.put(f, new ConcurrentSkipListMap<>());
             futOpenMap.put(f, 0.0);
-
-
         }
 
 //        futData.put("SGXA50", new ConcurrentSkipListMap<>());
@@ -213,7 +211,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             try {
                 //new FrontFutReceiver(), new BackFutReceiver()
                 getAPICon().reqXUDataArray();
-            } catch (InterruptedException ex) {
+            } catch (Exception ex) {
                 ex.printStackTrace();
             }
             if (ses.isShutdown()) {
@@ -255,7 +253,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             XUTrader.clearLog();
             XUTrader.updateLog("**************************************************************");
             XUTrader.processTradeMapActive();
-        }, 0, 1, TimeUnit.SECONDS));
+        }, 0, 10, TimeUnit.SECONDS));
 
         JButton connect7496 = new JButton("Connect 7496");
 
@@ -913,7 +911,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         try {
             //new FrontFutReceiver(), new BackFutReceiver()
             getAPICon().reqXUDataArray();
-        } catch (InterruptedException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
@@ -965,11 +963,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         botMap.put(f, unitsBought);
         soldMap.put(f, unitsSold);
 
-        double avgBuy = Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() > 0)
-                .mapToDouble(e -> e.getValue().getCostBasisWithFees("")).sum() / unitsBought)) / 100d;
+        //pos
+        double avgBuy = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() > 0)
+                .mapToDouble(e -> e.getValue().getCostBasisWithFees("")).sum() / unitsBought)) / 100d);
 
-        double avgSell = Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() < 0)
-                .mapToDouble(e -> e.getValue().getCostBasisWithFees("")).sum() / unitsSold)) / 100d;
+        //pos
+        double avgSell = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() < 0)
+                .mapToDouble(e -> e.getValue().getCostBasisWithFees("")).sum() / unitsSold)) / 100d);
 
         double buyTradePnl = Math.round(100d * (futPriceMap.get(f) - avgBuy) * unitsBought) / 100d;
         double sellTradePnl = Math.round(100d * (futPriceMap.get(f) - avgSell) * unitsSold) / 100d;

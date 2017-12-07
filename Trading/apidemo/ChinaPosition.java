@@ -1518,7 +1518,8 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
 
             if (ChinaPosition.tradesMap.get(ticker).containsKey(lt)) {
                 System.out.println(" lt is " + lt);
-                ((Trade) ChinaPosition.tradesMap.get(ticker).get(lt)).merge2(new FutureTrade(execution.price(), sign * execution.cumQty()));
+                ((Trade) ChinaPosition.tradesMap.get(ticker).get(lt))
+                        .merge2(new FutureTrade(execution.price(), sign * execution.cumQty()));
             } else {
                 System.out.println(" else lt " + lt);
                 ChinaPosition.tradesMap.get(ticker).put(lt, new FutureTrade(execution.price(), sign * execution.cumQty()));
