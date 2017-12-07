@@ -78,10 +78,6 @@ public abstract class Trade {
 //        l.stream().forEach(t->((Trade)t).);
 //    }
 
-    private double getCostBasis() {
-        return size * price;
-    }
-
     // guohu + stamp + brokerage
     public abstract double getTransactionFee(String name);
 

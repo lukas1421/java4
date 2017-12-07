@@ -877,9 +877,9 @@ public class HistChinaStocks extends JPanel {
                 res.put(lt, fx * (costBasis + mv));
             }
         }
-        if (currPos == 0) {
-            return new ConcurrentSkipListMap<>();
-        }
+//        if (currPos == 0) {
+//            return new ConcurrentSkipListMap<>();
+//        }
 
         return res;
     }
