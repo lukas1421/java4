@@ -1,6 +1,7 @@
 package apidemo;
 
 import TradeType.FutureTrade;
+import TradeType.TradeBlock;
 import auxiliary.SimpleBar;
 import client.*;
 import controller.ApiConnection;
@@ -75,7 +76,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //public static NavigableMap<LocalTime, IBTrade> tradesMapFront = new ConcurrentSkipListMap<>();
     //public static NavigableMap<LocalTime, IBTrade> tradesMapBack = new ConcurrentSkipListMap<>();
-    public static EnumMap<FutType, NavigableMap<LocalTime, FutureTrade>> tradesMap = new EnumMap<>(FutType.class);
+    public static EnumMap<FutType, NavigableMap<LocalTime, TradeBlock>> tradesMap = new EnumMap<>(FutType.class);
 
     private GraphBarGen xuGraph = new GraphBarGen();
 
@@ -736,7 +737,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 XUTrader.tradesMap.get(f).get(ldt.toLocalTime())
                         .merge(new FutureTrade(execution.price(), sign * execution.cumQty()));
             } else {
-                XUTrader.tradesMap.get(f).put(ldt.toLocalTime(), new FutureTrade(execution.price(), sign * execution.cumQty()));
+                XUTrader.tradesMap.get(f).put(ldt.toLocalTime(),
+                        new TradeBlock(new FutureTrade(execution.price(), sign * execution.cumQty())));
             }
 //            if (XUTrader.tradesMapFront.containsKey(ldt.toLocalTime())) {
 //                XUTrader.tradesMapFront.get(ldt.toLocalTime()).merge(new IBTrade(execution.price(), sign * execution.cumQty()));
@@ -943,7 +945,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if(tradesMap.containsKey(f) && tradesMap.get(f).size()>0) {
             return tradesMap.get(f).entrySet().stream()
                     .mapToDouble(e->e.getValue().getSizeAll()*futPriceMap.getOrDefault(f,0.0)
-                            +e.getValue().getCostAll(f.getTicker())).sum();
+                            +e.getValue().getCostBasisAll(f.getTicker())).sum();
         }
         return 0.0;
     }
@@ -964,12 +966,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         soldMap.put(f, unitsSold);
 
         //pos
-        double avgBuy = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() > 0)
-                .mapToDouble(e -> e.getValue().getCostBasisWithFees("")).sum() / unitsBought)) / 100d);
+        double avgBuy = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
+                .mapToDouble(e -> e.getValue().getCostBasisAll("")).sum() / unitsBought)) / 100d);
 
         //pos
-        double avgSell = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSize() < 0)
-                .mapToDouble(e -> e.getValue().getCostBasisWithFees("")).sum() / unitsSold)) / 100d);
+        double avgSell = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
+                .mapToDouble(e -> e.getValue().getCostBasisAll("")).sum() / unitsSold)) / 100d);
 
         double buyTradePnl = Math.round(100d * (futPriceMap.get(f) - avgBuy) * unitsBought) / 100d;
         double sellTradePnl = Math.round(100d * (futPriceMap.get(f) - avgSell) * unitsSold) / 100d;

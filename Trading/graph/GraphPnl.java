@@ -1,6 +1,6 @@
 package graph;
 
-import TradeType.Trade;
+import TradeType.TradeBlock;
 import apidemo.ChinaPosition;
 import utility.Utility;
 
@@ -323,9 +323,10 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
 //                    mult = -1 * mult;
 //                }
                 if (ChinaPosition.tradesMap.containsKey(name)
-                        && ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() != 0).count() > 0) {
+                        && ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).entrySet().stream().anyMatch(e -> e.getValue().getSizeAll() != 0)) {
 
-                    double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).values().stream().map(e -> (Trade) e).mapToInt(Trade::getSize).filter(n -> n != 0).sum();
+                    double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).values().stream()
+                            .mapToInt(TradeBlock::getSizeAll).filter(n -> n != 0).sum();
                     g.drawString(Utility.getStr(pos), x - 20, close - (mult * 50));
                     g.drawLine(x, close - (mult * 40), x, close);
                     mult = -1 * mult;
@@ -347,9 +348,11 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
                 last = close;
                 x += WIDTH_PNL;
                 if (ChinaPosition.tradesMap.containsKey(name)
-                        && ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).count() > 0) {
+                        && ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false)
+                        .entrySet().stream().filter(e ->  e.getValue().getSizeAll() > 0).count() > 0) {
 
-                    double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).values().stream().map(e -> (Trade) e).mapToInt(Trade::getSize).filter(n -> n > 0).sum();
+                    double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).values().stream()
+                            .mapToInt(TradeBlock::getSizeAll).filter(n -> n > 0).sum();
                     g.drawString(Utility.getStr(pos), x - 20, close - (mult * 50));
                     g.drawLine(x, close - (mult * 40), x, close);
                     mult = -1 * mult;
@@ -372,9 +375,9 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
                 last = close;
                 x += WIDTH_PNL;
                 if (ChinaPosition.tradesMap.containsKey(name) && ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false)
-                        .entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).count() > 0) {
+                        .entrySet().stream().anyMatch(e -> e.getValue().getSizeAll() < 0)) {
                     double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false)
-                            .values().stream().map(e -> (Trade) e).mapToInt(Trade::getSize).filter(n -> n < 0).sum();
+                            .values().stream().mapToInt(TradeBlock::getSizeAll).filter(n -> n < 0).sum();
                     g.drawString(Utility.getStr(pos), x - 20, close - (mult * 50));
                     g.drawLine(x, close - (mult * 40), x, close);
                     mult = -1 * mult;

@@ -1,6 +1,7 @@
 package graph;
 
 import TradeType.Trade;
+import TradeType.TradeBlock;
 import apidemo.ChinaData;
 import apidemo.ChinaMain;
 import apidemo.ChinaPosition;
@@ -32,7 +33,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
     String name;
     String chineseName;
     NavigableMap<LocalDateTime, SimpleBar> tm;
-    private NavigableMap<LocalDateTime, ? super Trade> trades = new ConcurrentSkipListMap<>();
+    private NavigableMap<LocalDateTime, TradeBlock> trades = new ConcurrentSkipListMap<>();
 
     //private NavigableMap<LocalDateTime, SimpleBar> tmLDT;
     //NavigableMap<LocalDateTime, ? super Trade> tradesLdt = new ConcurrentSkipListMap<>();

@@ -3,10 +3,6 @@ package TradeType;
 import apidemo.ChinaStock;
 import utility.Utility;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
 import static java.lang.Math.abs;
 
 public abstract class Trade {
@@ -15,7 +11,7 @@ public abstract class Trade {
     protected int size;
     //Map<Integer, PriceSizePair>  tradeTracker = new HashMap<>();
     //AtomicInteger tradeCount = new AtomicInteger(0);
-    List<? super Trade> mergeList = Collections.synchronizedList(new LinkedList<>());
+    //List<? super Trade> mergeList = Collections.synchronizedList(new LinkedList<>());
 
 
 
@@ -25,23 +21,31 @@ public abstract class Trade {
     }
 
     public Trade(double p, int s) {
-        mergeList.add(this);
+        //mergeList.add(this);
         //tradeTracker.put(tradeCount.incrementAndGet(), new PriceSizePair(p,s));
         price = p;
         size = s;
+    }
+
+    public double getPrice() {
+        return price;
     }
 
     public int getSize() {
         return size;
     }
 
-    public int getSizeAll() {
-        return mergeList.stream().mapToInt(t->((Trade)t).getSize()).sum();
+    public double getDelta() {
+        return size*price;
     }
 
-    public double getCostAll(String name) {
-        return mergeList.stream().mapToDouble(t->((Trade)t).getCostBasisWithFees(name)).sum();
-    }
+//    //public int getSizeAll() {
+//        return mergeList.stream().mapToInt(t->((Trade)t).getSize()).sum();
+//    }
+
+//    public double getCostAll(String name) {
+//        return mergeList.stream().mapToDouble(t->((Trade)t).getCostBasisWithFees(name)).sum();
+//    }
 
 //    public boolean getMergeStatus() {
 //        return mergeStatus;
@@ -51,22 +55,19 @@ public abstract class Trade {
 //        return mergeList;
 //    }
 
-    public void merge2(Trade t) {
-        mergeList.add(t);
-    }
+//    public void merge2(Trade t) {
+//        mergeList.add(t);
+//    }
+//
+//    public void merge(Trade t) {
+//        //tradeTracker.put(tradeCount.incrementAndGet(),new PriceSizePair(t.getPrice(),t.getSize()));
+//        //mergeList.get(0)
+//        mergeList.add(t);
+//        int sizeNew = size + t.getSize();
+//        price = (getCost() + t.getCost()) / sizeNew;
+//        size = sizeNew;
+//    }
 
-    public void merge(Trade t) {
-        //tradeTracker.put(tradeCount.incrementAndGet(),new PriceSizePair(t.getPrice(),t.getSize()));
-        //mergeList.get(0)
-        mergeList.add(t);
-        int sizeNew = size + t.getSize();
-        price = (getCost() + t.getCost()) / sizeNew;
-        size = sizeNew;
-    }
-
-    public double getPrice() {
-        return price;
-    }
 
 //    public Trade deepCopy(Trade t) {
 //        //return this(t.price,t.size);
@@ -77,7 +78,7 @@ public abstract class Trade {
 //        l.stream().forEach(t->((Trade)t).);
 //    }
 
-    private double getCost() {
+    private double getCostBasis() {
         return size * price;
     }
 
@@ -93,11 +94,11 @@ public abstract class Trade {
     //cost basis with fees (custom brokerage)
     public abstract double getCostBasisWithFeesCustomBrokerage(String name, double rate);
 
-    //fees helper method
-    public abstract double transactionFeeHelper(String name, double rate);
-
-    //cost basis helper
-    public abstract double costBasisHelper(String name, double rate);
+//    //fees helper method
+//    public abstract double transactionFeeHelper(String name, double rate);
+//
+//    //cost basis helper
+//    public abstract double costBasisHelper(String name, double rate);
 
     public double getMtmPnl(String name) {
         if (ChinaStock.priceMap.containsKey(name)) {

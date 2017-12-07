@@ -1,6 +1,6 @@
 package utility;
 
-import TradeType.Trade;
+import TradeType.TradeBlock;
 import apidemo.*;
 import auxiliary.SimpleBar;
 import client.Contract;
@@ -558,7 +558,7 @@ public class Utility {
     }
 
     @SafeVarargs
-    public static NavigableMap<LocalDateTime, ? super Trade> mergeTradeMap(NavigableMap<LocalDateTime, ? super Trade>... mps) {
+    public static NavigableMap<LocalDateTime, TradeBlock> mergeTradeMap(NavigableMap<LocalDateTime, TradeBlock>... mps) {
         return Stream.of(mps).flatMap(e -> e.entrySet().stream())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));

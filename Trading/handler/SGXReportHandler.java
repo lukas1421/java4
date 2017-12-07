@@ -1,7 +1,7 @@
 package handler;
 
 import TradeType.FutureTrade;
-import TradeType.Trade;
+import TradeType.TradeBlock;
 import apidemo.FutType;
 import client.CommissionReport;
 import client.Contract;
@@ -36,19 +36,19 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
         if (contract.symbol().equals("XINA50")) {
             if (ldt.toLocalDate().isAfter(Utility.getMondayOfWeek(ldt).minusDays(1L))) {
                 System.out.println(" exec " + execution.side() + "　" + execution.time() + " " + execution.cumQty()
-                        + " " + execution.price() + " "  + execution.shares());
+                        + " " + execution.price() + " " + execution.shares());
                 //System.out.println(" time string " + ldt.toString());
                 //System.out.println(" day is " + LocalDateTime.now().getDayOfMonth());
                 try {
-                    if(HistChinaStocks.chinaTradeMap.containsKey(ticker)) {
+                    if (HistChinaStocks.chinaTradeMap.containsKey(ticker)) {
                         if (HistChinaStocks.chinaTradeMap.get(ticker).containsKey(ldtRoundto5)) {
                             System.out.println(" lt is " + ldtRoundto5);
-                            ((Trade) HistChinaStocks.chinaTradeMap.get(ticker).get(ldtRoundto5)).merge2(new FutureTrade(execution.price(),
+                            HistChinaStocks.chinaTradeMap.get(ticker).get(ldtRoundto5).merge(new FutureTrade(execution.price(),
                                     sign * execution.cumQty()));
                         } else {
                             System.out.println(" else lt " + ldtRoundto5);
-                            HistChinaStocks.chinaTradeMap.get(ticker).put(ldtRoundto5, new FutureTrade(execution.price(),
-                                    sign * execution.cumQty()));
+                            HistChinaStocks.chinaTradeMap.get(ticker).put(ldtRoundto5, new TradeBlock(new FutureTrade(execution.price(),
+                                    sign * execution.cumQty())));
                         }
                     } else {
                         System.out.println(" sgx trade handler does not contain ticker for " + ticker);
@@ -76,7 +76,7 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
 
             int sgxLotsTraded = HistChinaStocks.chinaTradeMap.get(ticker).entrySet().stream().filter(e -> e.getKey().toLocalDate()
                     .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
-                    .mapToInt(e -> ((Trade) e.getValue()).getSizeAll()).sum();
+                    .mapToInt(e -> e.getValue().getSizeAll()).sum();
 
             //System.out.println(" trade report end / name / trade map " + ticker + " " + HistChinaStocks.chinaTradeMap.get(ticker));
             //System.out.println(getStr(" trade report end / ticker / traded ", ticker, sgxLotsTraded));

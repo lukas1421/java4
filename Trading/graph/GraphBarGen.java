@@ -184,12 +184,12 @@ public class GraphBarGen extends JComponent {
                 //System.out.println(" graph bar gen show trades " + XUTrader.tradesMap.get(fut));
                 XUTrader.tradesMap.get(fut).forEach((key, value) -> {
                     //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getHeight()-20);
-                    if (value.getSize() > 0) {
+                    if (value.getSizeAll() > 0) {
                         g.setColor(Color.blue);
                         //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getYForLTBuy(e.getKey())+20);
                         int xCord = getXForLT(key);
                         //int yCord = getYForLTBuy(e.getKey());
-                        int yCord = getY(value.getPrice());
+                        int yCord = getY(value.getAveragePrice());
                         g.drawPolygon(new int[]{xCord - 2, xCord, xCord + 2}, new int[]{yCord + 4, yCord, yCord + 4}, 3);
 
                     } else {
@@ -197,7 +197,7 @@ public class GraphBarGen extends JComponent {
                         //g.drawString(Integer.toString(e.getValue().getSize()), getXForLT(e.getKey()), getYForLTSell(e.getKey())-20);
                         int xCord = getXForLT(key);
                         //int yCord = getYForLTSell(e.getKey());
-                        int yCord = getY(value.getPrice());
+                        int yCord = getY(value.getAveragePrice());
                         g.drawPolygon(new int[]{xCord - 2, xCord, xCord + 2}, new int[]{yCord - 4, yCord, yCord - 4}, 3);
                     }
                     System.out.println(key);
@@ -231,7 +231,7 @@ public class GraphBarGen extends JComponent {
         //double fx = fxMap.getOrDefault(name,1.0);
         if(XUTrader.tradesMap.containsKey(fut) && XUTrader.tradesMap.get(fut).size()>0) {
             int netTradedPosition = XUTrader.tradesMap.get(fut).entrySet().stream().mapToInt(e->e.getValue().getSizeAll()).sum();
-            double cost = XUTrader.tradesMap.get(fut).entrySet().stream().mapToDouble(e-> e.getValue().getCostBasisWithFees("")).sum();
+            double cost = XUTrader.tradesMap.get(fut).entrySet().stream().mapToDouble(e-> e.getValue().getCostBasisAll("")).sum();
             double mv = netTradedPosition*currPrice;
             //System.out.println(getStr(" currprice, net traded pos cost mv", currPrice, netTradedPosition, cost, mv));
             //System.out.println(getStr(" cost mv ", cost, mv));
