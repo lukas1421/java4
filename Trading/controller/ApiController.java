@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaMain.controller;
+import static apidemo.ChinaMain.globalRequestMap;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
 
@@ -804,7 +805,7 @@ public class ApiController implements EWrapper {
         //int reqId = m_reqId.getAndIncrement();
         //int reqId = m_reqId.get() + 1000;
 
-        int reqId = m_reqId.getAndIncrement();
+        int reqId = m_reqId.incrementAndGet();
         int counter = 1;
         boolean isSnapShot = true;
 
@@ -911,15 +912,17 @@ public class ApiController implements EWrapper {
 
     //xu data
     public void reqXUDataArray() {
-        //ITopMktDataHandler frontHandler, ITopMktDataHandler backHandler
         System.out.println("requesting XU data begins");
         Contract frontCt = getFrontFutContract();
         Contract backCt = getBackFutContract();
-        int reqIdFront = m_reqId.get();
+
+        int reqIdFront = m_reqId.incrementAndGet();
         int reqIdBack = m_reqId.incrementAndGet();
-        reqIdFront = reqIdFront + 9999999;
-        reqIdBack = reqIdBack + 9999999;
-        boolean isSnapShot = false;
+
+//        reqIdFront = reqIdFront + 9999999;
+//        reqIdBack = reqIdBack + 9999999;
+
+//        boolean isSnapShot = false;
         //ct = getFrontFutContract();
 //        ct.symbol("XINA50");
 //        ct.exchange("SGX");
@@ -930,15 +933,18 @@ public class ApiController implements EWrapper {
 //        m_topMktDataMap.put(reqIdFront, frontHandler);
 //        m_topMktDataMap.put(reqIdBack, backHandler);
 
-        ChinaMain.globalRequestMap.put(reqIdFront,new Request(frontCt, SGXFutureReceiver.getReceiver()));
-        ChinaMain.globalRequestMap.put(reqIdBack, new Request(backCt, SGXFutureReceiver.getReceiver()));
-
-        m_client.reqMktData(reqIdFront, frontCt, "", isSnapShot, Collections.<TagValue>emptyList());
-        m_client.reqMktData(reqIdBack, backCt, "", isSnapShot, Collections.<TagValue>emptyList());
+        if (!globalRequestMap.containsKey(reqIdFront) && !globalRequestMap.containsKey(reqIdBack)) {
+            ChinaMain.globalRequestMap.put(reqIdFront, new Request(frontCt, SGXFutureReceiver.getReceiver()));
+            ChinaMain.globalRequestMap.put(reqIdBack, new Request(backCt, SGXFutureReceiver.getReceiver()));
+            m_client.reqMktData(reqIdFront, frontCt, "", false, Collections.<TagValue>emptyList());
+            m_client.reqMktData(reqIdBack, backCt, "", false, Collections.<TagValue>emptyList());
+        } else {
+            System.out.println(" req used " + reqIdFront + " " + globalRequestMap.get(reqIdFront).getContract());
+            throw new IllegalArgumentException(" req ID used ");
+        }
 
         System.out.println("requesting XU data ends");
     }
-
 
 
     public void getSGXA50HistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc, int duration) {
@@ -988,14 +994,18 @@ public class ApiController implements EWrapper {
         Types.BarSize barSize = Types.BarSize._1_min;
         WhatToShow whatToShow = WhatToShow.TRADES;
 
+//        if(!globalRequestMap.containsKey(reqID) && !globalRequestMap.containsKey(reqID+1)) {
         ChinaMain.globalRequestMap.put(reqID, new Request(frontFut, hh));
-        ChinaMain.globalRequestMap.put(reqID+1, new Request(backFut, hh));
+        ChinaMain.globalRequestMap.put(reqID + 1, new Request(backFut, hh));
+//        } else {
+//            throw new IllegalArgumentException(" getSGXA50Historical2 reqID used ");
+//        }
 
         CompletableFuture.runAsync(() -> {
             //note formatdate is date formatting selection
             m_client.reqHistoricalData(reqID, frontFut, "", durationStr, barSize.toString(), whatToShow.toString(),
                     0, 2, Collections.<TagValue>emptyList());
-            m_client.reqHistoricalData(reqID+1, backFut, "", durationStr, barSize.toString(), whatToShow.toString(),
+            m_client.reqHistoricalData(reqID + 1, backFut, "", durationStr, barSize.toString(), whatToShow.toString(),
                     0, 2, Collections.<TagValue>emptyList());
         });
 
@@ -1004,7 +1014,7 @@ public class ApiController implements EWrapper {
 
     public void reHistDataArray(IHistoricalDataHandler handler) {
         Contract ct = new Contract();
-        int reqId = m_reqId.get();
+        int reqId = m_reqId.incrementAndGet();
 
         for (Object nextVal : map1h.keySet()) {
             reqId++;
@@ -1028,7 +1038,7 @@ public class ApiController implements EWrapper {
 
     public void reqTopMktData(Contract contract, String genericTickList, boolean snapshot, ITopMktDataHandler handler) {
         //int reqId = m_reqId++;
-        int reqId = m_reqId.getAndIncrement();
+        int reqId = m_reqId.incrementAndGet();
         //associate contract symobl with request ID
         m_symReqMap.put(reqId, contract.symbol()); //potential issue
         System.out.println("req id is " + reqId + "contract symbol is " + contract.symbol());
@@ -1088,9 +1098,8 @@ public class ApiController implements EWrapper {
     // key method. This method is called when market data changes.
     @Override
     public void tickPrice(int reqId, int tickType, double price, int canAutoExecute) {
-        ITopMktDataHandler handler;
-        ITopMktDataHandler1 handler1;
-        //int symb;
+        //ITopMktDataHandler handler;
+        //ITopMktDataHandler1 handler1;
         //TickType.get(tickType).equals(TickType.LAST) &&
         //System.out.println(" req id " + reqId + " price " + price);
         if (ChinaMain.globalRequestMap.containsKey(reqId)) {
@@ -1163,7 +1172,6 @@ public class ApiController implements EWrapper {
         }
         recEOM();
     }
-
 
 
     @Override

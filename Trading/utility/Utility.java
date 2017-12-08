@@ -751,9 +751,6 @@ public class Utility {
                     return FutType.FrontFut;
                 case TradingConstants.GLOBALA50BACKEXPIRY:
                     return FutType.BackFut;
-                default:
-                    System.out.println(" fut expiry is " + ct.lastTradeDateOrContractMonth());
-                    return FutType.BackFut;
             }
         }
         throw new IllegalArgumentException("not a fut " + ct.symbol());

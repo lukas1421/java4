@@ -30,6 +30,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
@@ -645,7 +646,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             Date dt = new Date();
             try {
                 dt = new Date(Long.parseLong(date) * 1000);
-            } catch (Exception ex) {
+            } catch (DateTimeParseException ex) {
                 System.out.println(" date format problem " + date);
             }
             Calendar cal = Calendar.getInstance();

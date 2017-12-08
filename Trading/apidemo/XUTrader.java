@@ -251,9 +251,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JButton processTradesButton = new JButton("Process");
 
         processTradesButton.addActionListener(l -> ses.scheduleAtFixedRate(() -> {
-            XUTrader.clearLog();
-            XUTrader.updateLog("**************************************************************");
+            SwingUtilities.invokeLater(() -> {
+                XUTrader.clearLog();
+                XUTrader.updateLog("**************************************************************");
+            });
+
             XUTrader.processTradeMapActive();
+
         }, 0, 10, TimeUnit.SECONDS));
 
         JButton connect7496 = new JButton("Connect 7496");
@@ -317,7 +321,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         });
 
         JButton cancelAllOrdersButton = new JButton("Cancel Orders");
-        cancelAllOrdersButton.addActionListener(l->{
+        cancelAllOrdersButton.addActionListener(l -> {
             apcon.cancelAllOrders();
         });
 
@@ -823,7 +827,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public void position(String account, Contract contract, double position, double avgCost) {
         //System.out.println (" proper handling here XXXX ");
         String ticker = utility.Utility.ibContractToSymbol(contract);
-        if(contract.symbol().equals("XINA50") && position!=0.0) {
+        if (contract.symbol().equals("XINA50") && position != 0.0) {
             FutType f = ibContractToFutType(contract);
             //System.out.println(getStr(" in position xutrader ", ticker, position, avgCost));
             currentPosMap.put(f, (int) position);
@@ -942,10 +946,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static double getNetPnlFor1Fut(FutType f) {
-        if(tradesMap.containsKey(f) && tradesMap.get(f).size()>0) {
+        if (tradesMap.containsKey(f) && tradesMap.get(f).size() > 0) {
             return tradesMap.get(f).entrySet().stream()
-                    .mapToDouble(e->e.getValue().getSizeAll()*futPriceMap.getOrDefault(f,0.0)
-                            +e.getValue().getCostBasisAll(f.getTicker())).sum();
+                    .mapToDouble(e -> e.getValue().getSizeAll() * futPriceMap.getOrDefault(f, 0.0)
+                            + e.getValue().getCostBasisAll(f.getTicker())).sum();
         }
         return 0.0;
     }
@@ -981,27 +985,23 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double mtmPnl = (currentPosMap.get(f) - unitsBought - unitsSold) * (futPriceMap.get(f) - futOpenMap.get(f));
         //double previousCloseOverride = 0;
 
-        XUTrader.updateLog(" P " + futPriceMap.get(f));
-        XUTrader.updateLog("Open " + futOpenMap.get(f));
-        XUTrader.updateLog(" Chg " + (Math.round(10000d * (futPriceMap.get(f) / futOpenMap.get(f) - 1)) / 100d) + " %");
-        XUTrader.updateLog("Open Pos " + (currentPosMap.get(f) - unitsBought - unitsSold));
-        XUTrader.updateLog("MTM " + mtmPnl);
-        XUTrader.updateLog(" units bot " + unitsBought);
-        XUTrader.updateLog(" avg buy " + avgBuy);
-        XUTrader.updateLog(" units sold " + unitsSold);
-        XUTrader.updateLog(" avg sell " + avgSell);
-        XUTrader.updateLog(" buy pnl " + buyTradePnl);
-        XUTrader.updateLog(" sell pnl " + sellTradePnl);
-        XUTrader.updateLog(" net pnl " + netTradePnl);
-        XUTrader.updateLog(" net commision " + netTotalCommissions);
-        XUTrader.updateLog(" net pnl after comm " + (netTradePnl - netTotalCommissions));
-        XUTrader.updateLog(" MTM+Trade " + (netTradePnl - netTotalCommissions + mtmPnl));
-    }
-
-    @SuppressWarnings("unused")
-    private static void processTradeMapGen(Predicate<? super Map.Entry<String, ?>> pred) {
-
-
+        SwingUtilities.invokeLater(()-> {
+            XUTrader.updateLog(" P " + futPriceMap.get(f));
+            XUTrader.updateLog("Open " + futOpenMap.get(f));
+            XUTrader.updateLog(" Chg " + (Math.round(10000d * (futPriceMap.get(f) / futOpenMap.get(f) - 1)) / 100d) + " %");
+            XUTrader.updateLog("Open Pos " + (currentPosMap.get(f) - unitsBought - unitsSold));
+            XUTrader.updateLog("MTM " + mtmPnl);
+            XUTrader.updateLog(" units bot " + unitsBought);
+            XUTrader.updateLog(" avg buy " + avgBuy);
+            XUTrader.updateLog(" units sold " + unitsSold);
+            XUTrader.updateLog(" avg sell " + avgSell);
+            XUTrader.updateLog(" buy pnl " + buyTradePnl);
+            XUTrader.updateLog(" sell pnl " + sellTradePnl);
+            XUTrader.updateLog(" net pnl " + netTradePnl);
+            XUTrader.updateLog(" net commision " + netTotalCommissions);
+            XUTrader.updateLog(" net pnl after comm " + (netTradePnl - netTotalCommissions));
+            XUTrader.updateLog(" MTM+Trade " + (netTradePnl - netTotalCommissions + mtmPnl));
+        });
     }
 
     public static void main(String[] args) {
