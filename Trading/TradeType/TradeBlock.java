@@ -7,7 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-//trade block contains variout trades
+//trade block contains various trades
 public final class TradeBlock {
 
     private List<? super Trade> mergeList = Collections.synchronizedList(new LinkedList<>());
@@ -31,10 +31,6 @@ public final class TradeBlock {
     public double getAveragePrice() {
         return getDeltaAll() / getSizeAll();
     }
-
-//    public double applyDoubleFunction(ToDoubleFunction<? super Trade> f, DoubleBinaryOperator op) {
-//        return mergeList.stream().mapToDouble(e-> f.applyAsDouble((Trade)e)).reduce(op).orElse(0.0);
-//    }
 
     public double getDeltaAll() {
         return mergeList.stream().mapToDouble(t -> ((Trade) t).getDelta()).sum();

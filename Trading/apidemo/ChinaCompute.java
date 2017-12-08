@@ -3,11 +3,11 @@ package apidemo;
 //this class does periodic computation of chinadata
 class ChinaCompute implements Runnable {
 
-    static ChinaCompute cc = new ChinaCompute();
+    private static ChinaCompute cc = new ChinaCompute();
 
-    static ChinaCompute getChinaCompute() {
-        return cc;
-    }
+    //static ChinaCompute getChinaCompute() {
+//        return cc;
+//    }
 
     private ChinaCompute() {
     }

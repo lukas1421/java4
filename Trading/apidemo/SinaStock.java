@@ -40,7 +40,7 @@ public class SinaStock implements Runnable {
     }
 
     private static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
-    Matcher matcher;
+    //Matcher matcher;
     String line;
     //public static volatile LocalDate mostRecentTradingDay = LocalDate.now();
 
@@ -50,7 +50,7 @@ public class SinaStock implements Runnable {
             -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) && !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
             && lt.toLocalTime().isAfter(LocalTime.of(9, 0, 30));
 
-    public final Predicate<LocalTime> FUT_OPEN = (lt) -> lt.isAfter(LocalTime.of(9, 0, 0));
+//    public final Predicate<LocalTime> FUT_OPEN = (lt) -> lt.isAfter(LocalTime.of(9, 0, 0));
 
     private SinaStock() {
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "FTSEA50Ticker.txt")))) {

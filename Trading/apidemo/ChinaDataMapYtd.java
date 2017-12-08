@@ -20,7 +20,7 @@ final class ChinaDataMapYtd extends JPanel {
 
     static BarModel_YTD m_model;
 
-    public ChinaDataMapYtd() {
+    ChinaDataMapYtd() {
 
         m_model = new BarModel_YTD();
 
@@ -44,9 +44,7 @@ final class ChinaDataMapYtd extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    SwingUtilities.invokeLater(() -> {
-                        m_model.fireTableDataChanged();
-                    });
+                    SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
                 }
             }
         });

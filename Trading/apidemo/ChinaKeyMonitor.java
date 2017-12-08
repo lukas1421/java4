@@ -36,31 +36,31 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
     private static ScheduledExecutorService ftes = Executors.newScheduledThreadPool(10);
     private static JLabel timeLabel = new JLabel(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
 
-    static volatile boolean displayPos = true;
-    static volatile boolean displaySharp = false;
-    static volatile boolean displayInterest = false;
-    static volatile boolean displayCorrel = false;
-    static volatile Map<String, Double> topSharpeMapYtd = new LinkedHashMap<>();
-    static volatile Map<String, Double> topSharpeMapQtd = new LinkedHashMap<>();
-    static volatile Map<String, Double> topSharpeMapMtd = new LinkedHashMap<>();
-    static EnumMap<YQM, Map<String, Double>> sharpMapMaster = new EnumMap<>(YQM.class);
+    private static volatile boolean displayPos = true;
+    private static volatile boolean displaySharp = false;
+    private static volatile boolean displayInterest = false;
+    private static volatile boolean displayCorrel = false;
+    private static volatile Map<String, Double> topSharpeMapYtd = new LinkedHashMap<>();
+    private static volatile Map<String, Double> topSharpeMapQtd = new LinkedHashMap<>();
+    private static volatile Map<String, Double> topSharpeMapMtd = new LinkedHashMap<>();
+    private static EnumMap<YQM, Map<String, Double>> sharpMapMaster = new EnumMap<>(YQM.class);
 
-    static volatile Map<String, Double> sumRetWtd = new HashMap<>();
-    static volatile Map<String, Double> sumRetSqWtd = new HashMap<>();
-    static volatile Map<String, Integer> nWtd = new HashMap<>();
+    private static volatile Map<String, Double> sumRetWtd = new HashMap<>();
+    private static volatile Map<String, Double> sumRetSqWtd = new HashMap<>();
+    private static volatile Map<String, Integer> nWtd = new HashMap<>();
 
-    static volatile WhatToDisplay displayType = WhatToDisplay.INDEX;
-    static volatile SharpePeriod sharpPeriod = SharpePeriod.TODAY;
-    static volatile String indexBench = "";
-    static volatile YQM yqm = YQM.YTD;
+    private static volatile WhatToDisplay displayType = WhatToDisplay.INDEX;
+    private static volatile SharpePeriod sharpPeriod = SharpePeriod.TODAY;
+    private static volatile String indexBench = "";
+    private static volatile YQM yqm = YQM.YTD;
 
     public static volatile DisplayGranularity dispGran = DisplayGranularity._1MDATA;
 
-    static volatile ToDoubleFunction<Entry<String, Integer>> positionComparingFunc =
+    private static volatile ToDoubleFunction<Entry<String, Integer>> positionComparingFunc =
             e -> fxMap.getOrDefault(e.getKey(), 1.0)
                     * e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0);
 
-    static volatile ToDoubleFunction<String> sharpeComparingFunc =
+    private static volatile ToDoubleFunction<String> sharpeComparingFunc =
             s -> ChinaStock.sharpeMap.getOrDefault(s, 0.0);
 
     private static final GraphMonitor GRAPH1 = GraphMonitorFactory.generate(1);
@@ -82,7 +82,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
     private static final GraphMonitor GRAPH17 = GraphMonitorFactory.generate(17);
     private static final GraphMonitor GRAPH18 = GraphMonitorFactory.generate(18);
 
-    public ChinaKeyMonitor() {
+    ChinaKeyMonitor() {
 
         readSharpeFromFile("sharpeOutputYtd.txt", topSharpeMapYtd);
         readSharpeFromFile("sharpeOutputQtd.txt", topSharpeMapQtd);
@@ -685,12 +685,12 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                             reverseComparator(Comparator.comparingDouble(positionComparingFunc)))
                             .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (a, b) -> a, LinkedHashMap::new));
 
-                    LinkedList<String> l = s.keySet().stream().collect(Collectors.toCollection(LinkedList::new));
+                    LinkedList<String> l = new LinkedList<>(s.keySet());
                     processGraphMonitors(l);
                 }
             } else if (displaySharp) {
                 System.out.println(" displaying sharpe in refresh ");
-                LinkedList<String> l = sharpMapMaster.get(yqm).keySet().stream().collect(Collectors.toCollection(LinkedList::new));
+                LinkedList<String> l = new LinkedList<>(sharpMapMaster.get(yqm).keySet());
 
 
                 processGraphMonitors(l);
@@ -837,11 +837,11 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         });
     }
 
-    static <T> Comparator<T> reverseComparator(Comparator<T> comp) {
+    private static <T> Comparator<T> reverseComparator(Comparator<T> comp) {
         return comp.reversed();
     }
 
-    static void processGraphMonitors(LinkedList<String> l) {
+    private static void processGraphMonitors(LinkedList<String> l) {
         Iterator<String> it = l.iterator();
         int i = 1;
         GraphMonitorFactory.clearAllGraphs();
@@ -856,16 +856,16 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 
     }
 
-    static Predicate<String> buildPred(String nam) {
+    private static Predicate<String> buildPred(String nam) {
         return s -> ChinaStock.industryNameMap.getOrDefault(s, "").equals(nam);
     }
 
-    static Predicate<String> buildPredStock() {
+    private static Predicate<String> buildPredStock() {
         //return s -> !ChinaStock.industryNameMap.getOrDefault(s, "").equals("") &&!ChinaStock.industryNameMap.getOrDefault(s, "").equals("")
         return (buildPred("指数").or(buildPred("板块"))).negate();
     }
 
-    static LinkedList<String> generateGraphList() {
+    private static LinkedList<String> generateGraphList() {
         //System.out.println(" generating graph list in static function ");
         //System.out.println(" what to display " + displayType);
         //System.out.println(" sharpe period ? " + sharpPeriod);
@@ -946,7 +946,6 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 
             double m = sumRetTotal / nTotal;
             double sd = Math.sqrt(((sumRetSqTotal / nTotal) - pow(m, 2)) * nTotal / (nTotal - 1));
-            double sr = (m / sd) * sqrt(240);
 
 //            if (nam.equals("sh000905")) {
 //                System.out.println(" sh000905 sum info ");
@@ -955,7 +954,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 //                System.out.println(" sumRetTotal sumRetSqTotal nTotal " + sumRetTotal + " " + sumRetSqTotal + " " + nTotal);
 //                System.out.println(" m sd sr" + m + " " + sd + " " + sr);
 //            }
-            return sr;
+            return (m / sd) * sqrt(240);
         }
         return 0.0;
     }
@@ -984,9 +983,9 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         //System.out.println(" writing 000905 ");
         File output = new File(TradingConstants.GLOBALPATH + "test000905.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, false))) {
-            ChinaData.priceMapBar.get("sh000905").entrySet().stream().forEach(e -> {
+            ChinaData.priceMapBar.get("sh000905").forEach((key, value) -> {
                 try {
-                    out.write(Utility.getStr(e.getKey(), e.getValue().toString()));
+                    out.write(Utility.getStr(key, value.toString()));
                     out.newLine();
                 } catch (IOException ex) {
                     System.out.println(" io exception in sampling");
@@ -1035,13 +1034,7 @@ enum WhatToDisplay {
     private WhatToDisplay(String nam) {
         this.chnName = nam;
     }
-
-    String getChnName() {
-        return this.chnName;
-    }
-
     private final String chnName;
-
 }
 
 enum SharpePeriod {

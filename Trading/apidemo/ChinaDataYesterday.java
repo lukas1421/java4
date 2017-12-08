@@ -37,17 +37,17 @@ public final class ChinaDataYesterday extends JPanel {
 
     String line;
     String listNames;
-    public static volatile Map<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapCopy = new ConcurrentHashMap<>();
+    private static volatile Map<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapCopy = new ConcurrentHashMap<>();
     static Map<String, Double> ma20Map = new HashMap<>();
-    static ConcurrentHashMap<Integer, Map<String, ?>> saveMap = new ConcurrentHashMap<Integer, Map<String, ?>>();
+    private static ConcurrentHashMap<Integer, Map<String, ?>> saveMap = new ConcurrentHashMap<Integer, Map<String, ?>>();
     private int modelRow;
     static BarModel_YTD m_model;
-    static File source = new File(TradingConstants.GLOBALPATH + "CHINASSYesterday.ser");
-    static File backup = new File(TradingConstants.GLOBALPATH + "CHINABackupYesterday.ser");
+    private static File source = new File(TradingConstants.GLOBALPATH + "CHINASSYesterday.ser");
+    private static File backup = new File(TradingConstants.GLOBALPATH + "CHINABackupYesterday.ser");
     static ExecutorService es = Executors.newCachedThreadPool();
-    public static volatile Map<String, Double> openMapY = new ConcurrentHashMap();
-    public static volatile Map<String, Double> closeMapY = new ConcurrentHashMap();
-    public static volatile Map<String, Double> closeMapY2 = new ConcurrentHashMap();
+    public static volatile Map<String, Double> openMapY = new ConcurrentHashMap<>();
+    public static volatile Map<String, Double> closeMapY = new ConcurrentHashMap<>();
+    private static volatile Map<String, Double> closeMapY2 = new ConcurrentHashMap<>();
     public static volatile Map<String, Double> amCloseY = new ConcurrentHashMap<>();
     public static volatile Map<String, Double> maxMapY = new ConcurrentHashMap<>();
     public static volatile Map<String, Double> minMapY = new ConcurrentHashMap<>();
@@ -57,14 +57,14 @@ public final class ChinaDataYesterday extends JPanel {
 
     public static volatile Map<String, Integer> maxTY = new ConcurrentHashMap<>();
     public static volatile Map<String, Integer> minTY = new ConcurrentHashMap<>();
-    public static volatile Map<String, Integer> amMaxTY = new ConcurrentHashMap<>();
-    public static volatile Map<String, Integer> amMinTY = new ConcurrentHashMap<>();
-    static volatile Map<String, Integer> pmMaxTY = new ConcurrentHashMap<>();
-    static volatile Map<String, Integer> pmMinTY = new ConcurrentHashMap<>();
+    private static volatile Map<String, Integer> amMaxTY = new ConcurrentHashMap<>();
+    private static volatile Map<String, Integer> amMinTY = new ConcurrentHashMap<>();
+    private static volatile Map<String, Integer> pmMaxTY = new ConcurrentHashMap<>();
+    private static volatile Map<String, Integer> pmMinTY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> amFirst1Y = new ConcurrentHashMap<>();
     static volatile Map<String, Double> amFirst10Y = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> pmMinY = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> pmMaxY = new ConcurrentHashMap<>();
+    private static volatile Map<String, Double> pmMinY = new ConcurrentHashMap<>();
+    private static volatile Map<String, Double> pmMaxY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> amMaxY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> amMinY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> percentileY = new ConcurrentHashMap<>();
@@ -105,8 +105,8 @@ public final class ChinaDataYesterday extends JPanel {
     private final int AMHOPMCHRCOL = 34;
     private final int MA20RATIOCOL = 36;
 
-    public static boolean filterOn;
-    static TableRowSorter<BarModel_YTD> sorter;
+    private static boolean filterOn;
+    private static TableRowSorter<BarModel_YTD> sorter;
 
     static volatile double rangeThresh;
     static volatile int maxTCeiling;

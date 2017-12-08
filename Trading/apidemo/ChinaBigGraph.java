@@ -14,12 +14,11 @@ import static apidemo.ChinaStock.industryNameMap;
 
 public final class ChinaBigGraph extends JPanel {
 
-    public static GraphBig gb = new GraphBig();
-    public static GraphBigYtd gYtd = new GraphBigYtd();
-    public static LocalTime lastSetTime = LocalTime.MIN;
-    static String currentStock = "sh000001";
-    public final int TOP_GRAPH_HEIGHT = 600;
-    public final int YTD_GRAPH_HEIGHT = 400;
+    private static GraphBig gb = new GraphBig();
+    private static GraphBigYtd gYtd = new GraphBigYtd();
+    private static String currentStock = "sh000001";
+    private final int TOP_GRAPH_HEIGHT = 600;
+    private final int YTD_GRAPH_HEIGHT = 400;
 
     ChinaBigGraph() {
 
@@ -84,7 +83,7 @@ public final class ChinaBigGraph extends JPanel {
             gYtd.fillInGraph(nam);
             gb.repaint();
             gYtd.repaint();
-            lastSetTime = LocalTime.now();
+            LocalTime lastSetTime = LocalTime.now();
             currentStock = nam;
         }
     }

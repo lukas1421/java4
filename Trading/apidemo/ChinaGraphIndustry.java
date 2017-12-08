@@ -17,9 +17,9 @@ import static java.util.stream.Collectors.toList;
 public final class ChinaGraphIndustry extends JPanel {
 
     private static GraphIndustry gi = new GraphIndustry();
-    private static List<JLabel> labelList = new LinkedList();
+    private static List<JLabel> labelList = new LinkedList<>();
     private static JPanel below;
-    static volatile boolean sectorFixed = false;
+//    static volatile boolean sectorFixed = false;
     private static final float INDUSTRY_LABEL_SIZE = 30F;
     private static final int BIG_GRAPH_HEIGHT = 600;
     private static volatile LINKEDTO linkStatus = LINKEDTO.NOTHING;

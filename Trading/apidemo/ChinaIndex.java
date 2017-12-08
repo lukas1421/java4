@@ -22,6 +22,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleBiFunction;
@@ -52,10 +53,10 @@ final class ChinaIndex extends JPanel {
     private int modelRow;
     private static volatile String selectedIndex;
     private static volatile GraphBigIndex gYtd = new GraphBigIndex();
-    private static volatile boolean LINKALL = false;
+    private static volatile AtomicBoolean LINKALL = new AtomicBoolean(false);
 
-    static Map<String, Double> amMin = new ConcurrentHashMap<>();
-    static Map<String, Double> amMax = new ConcurrentHashMap<>();
+//    static Map<String, Double> amMin = new ConcurrentHashMap<>();
+//    static Map<String, Double> amMax = new ConcurrentHashMap<>();
     private static Map<String, LocalTime> amMaxTMap = new ConcurrentHashMap<>();
     private static Map<String, LocalTime> pmMinTMap = new ConcurrentHashMap<>();
     private static Map<String, LocalTime> minTMap = new ConcurrentHashMap<>();
@@ -75,7 +76,7 @@ final class ChinaIndex extends JPanel {
     private static Map<String, Double> ccMap = new ConcurrentHashMap<>();
     private static Map<String, Double> clMap = new ConcurrentHashMap<>();
     private static Map<String, Double> loMap = new ConcurrentHashMap<>();
-    private static Map<String, Double> amhoMap = new ConcurrentHashMap<>();
+//    private static Map<String, Double> amhoMap = new ConcurrentHashMap<>();
 
     private static Map<String, Integer> trMap = new ConcurrentHashMap<>();
     private static Map<String, Double> amcoMap = new ConcurrentHashMap<>();
@@ -179,7 +180,7 @@ final class ChinaIndex extends JPanel {
         controlPanel.add(refreshTableButton);
 
         JToggleButton linkedAllButton = new JToggleButton("UnLink");
-        linkedAllButton.addActionListener(l -> LINKALL = !LINKALL);
+        linkedAllButton.addActionListener(l -> LINKALL.set(!LINKALL.get()));
         controlPanel.add(linkedAllButton);
 
         graphPanel = new JPanel();
