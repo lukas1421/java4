@@ -4,7 +4,7 @@ import utility.Utility;
 
 import static java.lang.Math.abs;
 
-public class MarginTrade extends Trade {
+public final class MarginTrade extends Trade {
 
     public MarginTrade(double p, int s) {
         super(p, s);

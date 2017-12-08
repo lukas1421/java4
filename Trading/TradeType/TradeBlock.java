@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 //trade block contains variout trades
-public class TradeBlock {
+public final class TradeBlock {
 
     private List<? super Trade> mergeList = Collections.synchronizedList(new LinkedList<>());
 
@@ -20,17 +20,16 @@ public class TradeBlock {
         mergeList.add(t);
     }
 
-
     public void merge(Trade t) {
         mergeList.add(t);
     }
 
     public int getSizeAll() {
-        return mergeList.stream().mapToInt(t->((Trade)t).getSize()).sum();
+        return mergeList.stream().mapToInt(t -> ((Trade) t).getSize()).sum();
     }
 
     public double getAveragePrice() {
-        return getDeltaAll()/getSizeAll();
+        return getDeltaAll() / getSizeAll();
     }
 
 //    public double applyDoubleFunction(ToDoubleFunction<? super Trade> f, DoubleBinaryOperator op) {
@@ -38,20 +37,20 @@ public class TradeBlock {
 //    }
 
     public double getDeltaAll() {
-        return mergeList.stream().mapToDouble(t->((Trade)t).getDelta()).sum();
+        return mergeList.stream().mapToDouble(t -> ((Trade) t).getDelta()).sum();
     }
 
 
     public double getTransactionAll(String name) {
-        return mergeList.stream().mapToDouble(t->((Trade)t).getTransactionFee(name)).sum();
+        return mergeList.stream().mapToDouble(t -> ((Trade) t).getTransactionFee(name)).sum();
     }
 
     public double getCostBasisAll(String name) {
-        return mergeList.stream().mapToDouble(t->((Trade)t).getCostBasisWithFees(name)).sum();
+        return mergeList.stream().mapToDouble(t -> ((Trade) t).getCostBasisWithFees(name)).sum();
     }
 
     public double getMtmPnlAll(String name) {
-        return mergeList.stream().mapToDouble(t->((Trade)t).getMtmPnl(name)).sum();
+        return mergeList.stream().mapToDouble(t -> ((Trade) t).getMtmPnl(name)).sum();
     }
 
     @Override
