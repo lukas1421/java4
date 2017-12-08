@@ -1,6 +1,5 @@
 package graph;
 
-import TradeType.Trade;
 import TradeType.TradeBlock;
 import apidemo.ChinaData;
 import apidemo.ChinaMain;
@@ -114,8 +113,8 @@ public class GraphMonitor extends JComponent implements GraphFillable {
             if (trades.subMap(lt, true, lt.plusMinutes(dispGran.getMinuteDiff()), false).size() > 0) {
                 for (Map.Entry e : trades.subMap(lt, true, lt.plusMinutes(dispGran.getMinuteDiff()),
                         false).entrySet()) {
-                    Trade t = (Trade) e.getValue();
-                    if (t.getSize() > 0) {
+                    TradeBlock t = (TradeBlock)e.getValue();
+                    if (t.getSizeAll() > 0) {
                         g.setColor(Color.blue);
                         Polygon p = new Polygon(new int[]{x - 10, x, x + 10}, new int[]{lowY + 10, lowY, lowY + 10}, 3);
                         g.drawPolygon(p);

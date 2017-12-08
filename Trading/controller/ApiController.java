@@ -8,10 +8,10 @@ import apidemo.TradingConstants;
 import client.*;
 import client.Types.*;
 import controller.ApiConnection.ILogger;
-import handler.GeneralReceiver;
 import handler.HistDataConsumer;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
+import handler.SGXFutureReceiver;
 import historical.Request;
 import utility.Utility;
 
@@ -930,8 +930,8 @@ public class ApiController implements EWrapper {
 //        m_topMktDataMap.put(reqIdFront, frontHandler);
 //        m_topMktDataMap.put(reqIdBack, backHandler);
 
-        ChinaMain.globalRequestMap.put(reqIdFront,new Request(frontCt, GeneralReceiver.getReceiver()));
-        ChinaMain.globalRequestMap.put(reqIdBack, new Request(backCt, GeneralReceiver.getReceiver()));
+        ChinaMain.globalRequestMap.put(reqIdFront,new Request(frontCt, SGXFutureReceiver.getReceiver()));
+        ChinaMain.globalRequestMap.put(reqIdBack, new Request(backCt, SGXFutureReceiver.getReceiver()));
 
         m_client.reqMktData(reqIdFront, frontCt, "", isSnapShot, Collections.<TagValue>emptyList());
         m_client.reqMktData(reqIdBack, backCt, "", isSnapShot, Collections.<TagValue>emptyList());

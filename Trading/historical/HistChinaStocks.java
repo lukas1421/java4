@@ -75,7 +75,6 @@ public class HistChinaStocks extends JPanel {
 
     public static Map<String, NavigableMap<LocalDateTime, TradeBlock>> chinaTradeMap = new HashMap<>();
 
-
     private static volatile Map<String, Integer> weekOpenPositionMap = new HashMap<>();
     public static volatile Map<String, Integer> wtdChgInPosition = new HashMap<>();
     public static volatile Map<String, Integer> currentPositionMap = new HashMap<>();
@@ -1228,12 +1227,11 @@ public class HistChinaStocks extends JPanel {
                     .mapToDouble(e -> e.getValue().getCostBasisAll(name)).sum();
 
 
-            if (name.equals("SGXA50")) {
-                System.out.println(getStr(" computeWtdTradePnlFor1Stock ticker price pos mv cost ",
-                        name, price, pos, mv, cost));
-                System.out.println(getStr(" trading map is " + chinaTradeMap.get(name)));
-
-            }
+//            if (name.equals("SGXA50")) {
+//                System.out.println(getStr(" computeWtdTradePnlFor1Stock ticker price pos mv cost ",
+//                        name, price, pos, mv, cost));
+//                System.out.println(getStr(" trading map is " + chinaTradeMap.get(name)));
+//            }
 
             return fxMap.getOrDefault(name, 1.0) * (mv + cost);
         } else {

@@ -33,4 +33,9 @@ public enum FutType {
     public String getTicker() {
         return tickerName;
     }
+
+    @Override
+    public String toString() {
+        return " fut type is " + getTicker();
+    }
 }

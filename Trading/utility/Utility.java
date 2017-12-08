@@ -763,6 +763,6 @@ public class Utility {
 
 
     public static boolean tickerNotFuture(String s) {
-        return !s.equals("SGXA50") && !s.equals("SGXA50BM");
+        return !s.startsWith("SGXA50");
     }
 }

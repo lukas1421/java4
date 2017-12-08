@@ -392,8 +392,10 @@ public final class ChinaMain implements IConnectionHandler {
         startHK.addActionListener(al -> M_CONTROLLER.reqHKLiveData());
 
         stopXU.addActionListener((ae) -> {
-            M_CONTROLLER.cancelTopMktData(xu.getFrontfutHandler());
-            M_CONTROLLER.cancelTopMktData(xu.getBackfutHandler());
+
+//            M_CONTROLLER.cancelTopMktData(SGXFutureReceiver.getReceiver());
+//            M_CONTROLLER.cancelTopMktData(xu.getFrontfutHandler());
+//            M_CONTROLLER.cancelTopMktData(xu.getBackfutHandler());
         });
 
         JButton stopAnalysis = new JButton("Stop Analysis");

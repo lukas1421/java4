@@ -75,9 +75,9 @@ public class XuSave implements Serializable {
     }
     //static void setBlobGen(Consumer<Blob> f, Blob b){f.accept(b);} 
 
-    public void updateFut(NavigableMap<LocalTime, ?> m) {
-        XU.lastFutPrice = (NavigableMap<LocalTime, SimpleBar>) m;
-    }
+//    public void updateFut(NavigableMap<LocalTime, ?> m) {
+//        XU.lastFutPrice = (NavigableMap<LocalTime, SimpleBar>) m;
+//    }
 
     public void updateIndex(NavigableMap<LocalTime, ?> m) {
         XU.indexPriceSina = (NavigableMap<LocalTime, SimpleBar>) m;

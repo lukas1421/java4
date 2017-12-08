@@ -10,24 +10,22 @@ import java.time.LocalTime;
 import static apidemo.ChinaData.priceMapBar;
 import static utility.Utility.DATA_COLLECTION_TIME;
 
-public class GeneralReceiver implements LiveHandler {
+public class SGXFutureReceiver implements LiveHandler {
 
-    private GeneralReceiver() {
+    private SGXFutureReceiver() {
     }
 
-    private static GeneralReceiver gr = new GeneralReceiver();
-    public static GeneralReceiver getReceiver() {
+    private static SGXFutureReceiver gr = new SGXFutureReceiver();
+    public static SGXFutureReceiver getReceiver() {
         return gr;
     }
 
 
     @Override
     public void handlePrice(TickType tt, String name, double price, LocalDateTime ldt) {
-
         FutType f = FutType.get(name);
         LocalTime t = ldt.toLocalTime();
         //System.out.println(getStr(" fut type + name  price t " , f.toString(),name,price,t));
-
         switch (tt) {
             case BID:
                 XUTrader.bidMap.put(f, price);
@@ -53,12 +51,6 @@ public class GeneralReceiver implements LiveHandler {
                     if (DATA_COLLECTION_TIME.test(ldt)) {
 
                         ChinaMain.currentTradingDate = ldt.toLocalDate();
-
-                        if (XU.lastFutPrice.containsKey(t)) {
-                            XU.lastFutPrice.get(t).add(price);
-                        } else {
-                            XU.lastFutPrice.put(t, new SimpleBar(price));
-                        }
 
                         if (priceMapBar.get(name).containsKey(t)) {
                             priceMapBar.get(name).get(t).add(price);

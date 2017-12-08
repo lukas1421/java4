@@ -1,8 +1,9 @@
 package auxiliary;
 
-import static utility.Utility.getStr;
 import java.io.Serializable;
 import java.util.function.BinaryOperator;
+
+import static utility.Utility.getStr;
 
 public class SimpleBar implements Serializable, Comparable<SimpleBar> {
 
@@ -41,7 +42,7 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         close = sb.getClose();
     }
 
-    public static final SimpleBar getZeroBar() {
+    public static SimpleBar getZeroBar() {
         return ZERO_BAR;
     }
 
