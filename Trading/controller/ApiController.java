@@ -919,26 +919,13 @@ public class ApiController implements EWrapper {
         int reqIdFront = m_reqId.incrementAndGet();
         int reqIdBack = m_reqId.incrementAndGet();
 
-//        reqIdFront = reqIdFront + 9999999;
-//        reqIdBack = reqIdBack + 9999999;
-
-//        boolean isSnapShot = false;
-        //ct = getFrontFutContract();
-//        ct.symbol("XINA50");
-//        ct.exchange("SGX");
-//        ct.currency("USD");
-//        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
-//        ct.secType(SecType.FUT);
-        //m_symReqMap.put(reqId,"XINA50");
-//        m_topMktDataMap.put(reqIdFront, frontHandler);
-//        m_topMktDataMap.put(reqIdBack, backHandler);
-
         if (!globalRequestMap.containsKey(reqIdFront) && !globalRequestMap.containsKey(reqIdBack)) {
             ChinaMain.globalRequestMap.put(reqIdFront, new Request(frontCt, SGXFutureReceiver.getReceiver()));
             ChinaMain.globalRequestMap.put(reqIdBack, new Request(backCt, SGXFutureReceiver.getReceiver()));
             m_client.reqMktData(reqIdFront, frontCt, "", false, Collections.<TagValue>emptyList());
             m_client.reqMktData(reqIdBack, backCt, "", false, Collections.<TagValue>emptyList());
         } else {
+            m_reqId.incrementAndGet();
             System.out.println(" req used " + reqIdFront + " " + globalRequestMap.get(reqIdFront).getContract());
             throw new IllegalArgumentException(" req ID used ");
         }

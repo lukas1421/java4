@@ -17,15 +17,11 @@ import static utility.Utility.ibContractToSymbol;
 
 public class SGXReportHandler implements ApiController.ITradeReportHandler {
 
-
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
-
         String ticker = ibContractToSymbol(contract);
-
         System.out.println(" ****************************** ");
         System.out.println(" SGXReportHandler " + ticker);
-
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
 
         //System.out.println(LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss")));
@@ -37,8 +33,7 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
             if (ldt.toLocalDate().isAfter(Utility.getMondayOfWeek(ldt).minusDays(1L))) {
                 System.out.println(" exec " + execution.side() + "　" + execution.time() + " " + execution.cumQty()
                         + " " + execution.price() + " " + execution.shares());
-                //System.out.println(" time string " + ldt.toString());
-                //System.out.println(" day is " + LocalDateTime.now().getDayOfMonth());
+
                 try {
                     if (HistChinaStocks.chinaTradeMap.containsKey(ticker)) {
                         if (HistChinaStocks.chinaTradeMap.get(ticker).containsKey(ldtRoundto5)) {
@@ -53,8 +48,6 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
                     } else {
                         System.out.println(" sgx trade handler does not contain ticker for " + ticker);
                     }
-
-
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     System.out.println(" ticker wrong in sgx report handler " + ticker + " wrong contract is " + contract.toString());
@@ -78,11 +71,7 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
                     .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
 
-            //System.out.println(" trade report end / name / trade map " + ticker + " " + HistChinaStocks.chinaTradeMap.get(ticker));
-            //System.out.println(getStr(" trade report end / ticker / traded ", ticker, sgxLotsTraded));
-
             HistChinaStocks.wtdChgInPosition.put(ticker, sgxLotsTraded);
-
             System.out.println(" trade report end");
         }
     }

@@ -228,8 +228,6 @@ public class HistChinaStocks extends JPanel {
 //                        }
 
                         CompletableFuture.runAsync(() -> {
-                            //CompletableFuture.runAsync(() -> {
-
                             SwingUtilities.invokeLater(() -> {
                                 graphYtd.fillInGraphChinaGen(selectedStock, chinaYtd);
                                 graphYtd.setTradesMap(netSharesTradedByDay.get(selectedStock));
@@ -237,7 +235,6 @@ public class HistChinaStocks extends JPanel {
                                 graphYtd.setWtdVolTraded(computeWtdVolTraded(selectedStock));
                                 graphYtd.setWtdVolPerc(computeWVolPerc(selectedStock));
                             });
-                            //});
 
                             //CompletableFuture.runAsync(() -> {
                             SwingUtilities.invokeLater(() -> {
@@ -245,7 +242,6 @@ public class HistChinaStocks extends JPanel {
                                 graphWtd.setTradesMap(netSharesTradedWtd.get(selectedStock));
                                 graphWtd.setTradePnl(computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)));
                                 graphWtd.setWtdMtmPnl(wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
-                                //});
                             });
 
                             CompletableFuture.runAsync(() -> {
@@ -265,9 +261,6 @@ public class HistChinaStocks extends JPanel {
                                     graphWtdPnl.setWeekdayMtm(netPnlByWeekday, netPnlByWeekdayAM, netPnlByWeekdayPM);
                                     graphWtdPnl.fillInGraph(selectedStock);
                                 });
-//                                } else {
-//                                    graphWtdPnl.clearGraph();
-//                                }
                             });
 
                             CompletableFuture.runAsync(() -> {
@@ -278,16 +271,12 @@ public class HistChinaStocks extends JPanel {
                                     graphWtdPnl.setAvgPerc(avgPercentile);
                                     graphWtdPnl.setDeltaWeightedAveragePerc(weightedAvgPercentile);
                                 });
-
                             });
-
                         }).thenRun(() -> SwingUtilities.invokeLater(() -> graphPanel.repaint()));
-
                     } else {
                         comp.setBackground((indexRow % 2 == 0) ? Color.lightGray : Color.white);
                     }
                     return comp;
-
                 } catch (Exception x) {
                     x.printStackTrace();
                 }
@@ -610,7 +599,7 @@ public class HistChinaStocks extends JPanel {
 
                 //System.out.println(getStr(" name mtdopenpos monthFDay ", name, mtdOpenPos, MONTH_FIRST_DAY));
                 if (chinaYtd.containsKey(name) && chinaYtd.get(name).size() > 0 &&
-                        chinaYtd.get(name).lastKey().isAfter(MONTH_FIRST_DAY.minusDays(1l))) {
+                        chinaYtd.get(name).lastKey().isAfter(MONTH_FIRST_DAY.minusDays(1L))) {
                     double price = chinaYtd.get(name).lastEntry().getValue().getClose();
                     double lastMonthClose = Optional.ofNullable(chinaYtd.get(name).floorEntry(MONTH_FIRST_DAY.minusDays(1L)))
                             .map(Map.Entry::getValue).map(SimpleBar::getClose)

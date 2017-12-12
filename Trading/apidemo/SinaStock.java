@@ -143,7 +143,9 @@ public class SinaStock implements Runnable {
                         //System.out.println(" most recent trading day " + mostRecentTradingDay);
                         //System.out.println(" last data available date " + datalist.get(30) + " " + datalist.get(31));
 
-                        if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker) && Utility.DATA_COLLECTION_TIME.test(ldt)) {
+                        if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker)
+                                && Utility.DATA_COLLECTION_TIME.test(ldt)) {
+
                             double last = Utility.pd(datalist, 3);
                             //priceMapPlain.get(ticker).put(lt,last);
                             sizeTotalMap.get(ticker).put(lt, Utility.pd(datalist, 9) / 1000000d);

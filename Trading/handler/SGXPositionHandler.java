@@ -12,8 +12,6 @@ public class SGXPositionHandler implements ApiController.IPositionHandler {
         public void position(String account, Contract contract, double position, double avgCost) {
 
             String ticker = utility.Utility.ibContractToSymbol(contract);
-
-
             SwingUtilities.invokeLater(() -> {
                 HistChinaStocks.currentPositionMap.put(ticker, (int) position);
 //                if (contract.symbol().equals("XINA50")) {

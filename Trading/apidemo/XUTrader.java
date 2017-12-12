@@ -314,11 +314,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         //JLabel connectionStatusLabel = new JLabel(Boolean.toString(connectionStatus));
 
-        JButton disconnectButton = new JButton("Disconnect");
-        disconnectButton.addActionListener(l -> {
-            System.out.println(" -------------------disconnect button clicked-----------------------------------");
-            apcon.disconnect();
-        });
+//        JButton disconnectButton = new JButton("Disconnect");
+//        disconnectButton.addActionListener(l -> {
+//            System.out.println(" -------------------disconnect button clicked-----------------------------------");
+//            apcon.disconnect();
+//        });
 
         JButton cancelAllOrdersButton = new JButton("Cancel Orders");
         cancelAllOrdersButton.addActionListener(l -> {
@@ -390,7 +390,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel2.add(showGraphButton);
         controlPanel2.add(connectionLabel);
         //controlPanel2.add(connectionStatusLabel);
-        controlPanel2.add(disconnectButton);
+//        controlPanel2.add(disconnectButton);
         controlPanel2.add(cancelAllOrdersButton);
 
         controlPanel2.add(frontFutButton);

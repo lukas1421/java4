@@ -9,7 +9,6 @@ import java.time.LocalTime;
 
 import static apidemo.ChinaData.priceMapBar;
 import static utility.Utility.DATA_COLLECTION_TIME;
-import static utility.Utility.getStr;
 
 public class SGXFutureReceiver implements LiveHandler {
 
@@ -26,7 +25,7 @@ public class SGXFutureReceiver implements LiveHandler {
     public void handlePrice(TickType tt, String name, double price, LocalDateTime ldt) {
         FutType f = FutType.get(name);
         LocalTime t = ldt.toLocalTime();
-        System.out.println(getStr(" fut type + name  price t type " , f.toString(),name,price,t, tt.field()));
+        //System.out.println(getStr(" fut type + name  price t type " , f.toString(),name,price,t, tt.field()));
 
         switch (tt) {
             case BID:

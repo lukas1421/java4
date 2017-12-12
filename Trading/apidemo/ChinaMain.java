@@ -40,10 +40,10 @@ import static utility.Utility.DATA_COLLECTION_TIME;
 
 public final class ChinaMain implements IConnectionHandler {
 
-    public static volatile LocalDate currentTradingDate ;
-    public static volatile LocalDate yestTradingDate ;
-    public static volatile LocalDate y2TradingDate ;
-            //= LocalDate.MIN;
+    public static volatile LocalDate currentTradingDate;
+    public static volatile LocalDate yestTradingDate;
+    public static volatile LocalDate y2TradingDate;
+    //= LocalDate.MIN;
 
 //    public static volatile LocalDate lastTdxDate;
 //    public static volatile LocalDate lastTdxDateMinus1;
@@ -556,28 +556,15 @@ public final class ChinaMain implements IConnectionHandler {
         // m_controller.connect( "127.0.0.1", 7496, 0);
         CompletableFuture.runAsync(() -> {
             try {
-                //System.out.println(" get default connection option "+ m_connectionConfiguration.getDefaultConnectOptions() != null ? "non null" : "null");
-                //noinspection ConstantConditions
-                controller().connect("127.0.0.1", 7496, 0, m_connectionConfiguration.getDefaultConnectOptions() != null ? "" : null);
-
+                M_CONTROLLER.connect("127.0.0.1", 7496, 0,
+                        m_connectionConfiguration.getDefaultConnectOptions() != null ? "" : null);
             } catch (Exception ex) {
                 System.out.println(" error in controller ");
                 ex.printStackTrace();
             }
         });
 
-//        CompletableFuture.runAsync(() -> {
-//            M_CONTROLLER.generateData();
-//        });
-
-        CompletableFuture.runAsync(() -> {
-            try {
-                //xu.getFrontfutHandler(),xu.getBackfutHandler()
-                M_CONTROLLER.reqXUDataArray();
-            } catch (Exception x) {
-                x.printStackTrace();
-            }
-        });
+        CompletableFuture.runAsync(M_CONTROLLER::reqXUDataArray);
     }
 
     public ChinaMain() {
