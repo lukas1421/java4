@@ -408,10 +408,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     static synchronized void mtmPnlCompute(Predicate<? super Map.Entry<String, ?>> p, String nam) {
-        //double defaultPrice = 0.0;
-
-//        System.out.println(getStr(" in mtm compute for ", nam));
-
 
         if (priceMap.getOrDefault(nam, 0.0) == 0.0 && priceMapBar.containsKey(nam) && priceMapBar.get(nam).size() > 0) {
             priceMap.put(nam, Optional.ofNullable(priceMapBar.get(nam).lastEntry())
@@ -606,7 +602,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     private static void refreshFuture() {
 
-        System.out.println(" refresihng future ");
+        System.out.println(" refreshing future ");
 
         for (FutType f : FutType.values()) {
             String ticker = f.getTicker();

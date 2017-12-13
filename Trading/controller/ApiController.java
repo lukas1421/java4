@@ -15,6 +15,8 @@ import handler.SGXFutureReceiver;
 import historical.Request;
 import utility.Utility;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -25,6 +27,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
@@ -230,7 +233,13 @@ public class ApiController implements EWrapper {
             public void connected() {
                 show("connected");
                 System.out.println(" connected from connected ");
-                ChinaMain.m_connectionPanel.setConnectionStatus("connected");
+
+                SwingUtilities.invokeLater(() -> {
+                    ChinaMain.m_connectionPanel.setConnectionStatus("connected");
+                    ChinaMain.connectionIndicator.setBackground(Color.green);
+                    ChinaMain.connectionIndicator.setText("通");
+                });
+
                 controller().reqCurrentTime((long time) -> {
                     show("Server date/time is " + Formats.fmtDate(time * 1000));
                 });
@@ -245,7 +254,12 @@ public class ApiController implements EWrapper {
             public void disconnected() {
                 show("disconnected");
                 System.out.println(" setting panel status disconnected ");
-                ChinaMain.m_connectionPanel.setConnectionStatus("disconnected");
+
+                SwingUtilities.invokeLater(() -> {
+                    ChinaMain.m_connectionPanel.setConnectionStatus("disconnected");
+                    ChinaMain.connectionIndicator.setBackground(Color.red);
+                    ChinaMain.connectionIndicator.setText("断");
+                });
             }
 
             @Override
@@ -922,8 +936,12 @@ public class ApiController implements EWrapper {
         if (!globalRequestMap.containsKey(reqIdFront) && !globalRequestMap.containsKey(reqIdBack)) {
             ChinaMain.globalRequestMap.put(reqIdFront, new Request(frontCt, SGXFutureReceiver.getReceiver()));
             ChinaMain.globalRequestMap.put(reqIdBack, new Request(backCt, SGXFutureReceiver.getReceiver()));
-            m_client.reqMktData(reqIdFront, frontCt, "", false, Collections.<TagValue>emptyList());
-            m_client.reqMktData(reqIdBack, backCt, "", false, Collections.<TagValue>emptyList());
+            if (m_client.isConnected()) {
+                m_client.reqMktData(reqIdFront, frontCt, "", false, Collections.<TagValue>emptyList());
+                m_client.reqMktData(reqIdBack, backCt, "", false, Collections.<TagValue>emptyList());
+            } else {
+                System.out.println(" reqXUDataAray but not connected ");
+            }
         } else {
             m_reqId.incrementAndGet();
             System.out.println(" req used " + reqIdFront + " " + globalRequestMap.get(reqIdFront).getContract());
@@ -1204,19 +1222,16 @@ public class ApiController implements EWrapper {
     }
 
     public void reqDeepMktData(Contract contract, int numRows, IDeepMktDataHandler handler) {
-        //int reqId = m_reqId++;
-
-        m_deepMktDataMap.values().forEach(this::cancelDeepMktData);
-
-        int reqId = m_reqId.getAndIncrement();
-
-        m_deepMktDataMap.put(reqId, handler);
-        ArrayList<TagValue> mktDepthOptions = new ArrayList<>();
-        m_client.reqMktDepth(reqId, contract, numRows, mktDepthOptions);
-        sendEOM();
+        CompletableFuture.runAsync(()-> m_deepMktDataMap.values().forEach(this::cancelDeepMktData)).thenRun(()-> {
+            int reqId = m_reqId.getAndIncrement();
+            m_deepMktDataMap.put(reqId, handler);
+            ArrayList<TagValue> mktDepthOptions = new ArrayList<>();
+            m_client.reqMktDepth(reqId, contract, numRows, mktDepthOptions);
+            sendEOM();
+        });
     }
 
-    public void cancelDeepMktData(IDeepMktDataHandler handler) {
+    private void cancelDeepMktData(IDeepMktDataHandler handler) {
         Integer reqId = getAndRemoveKey(m_deepMktDataMap, handler);
         if (reqId != null) {
             m_client.cancelMktDepth(reqId);

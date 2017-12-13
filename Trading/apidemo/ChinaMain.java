@@ -62,6 +62,7 @@ public final class ChinaMain implements IConnectionHandler {
     private final static ILogger M_INLOGGER = new DefaultLogger(); //new Logger( m_inLog);
     private final static ILogger M_OUTLOGGER = new DefaultLogger(); // new Logger( m_outLog);
     private final static ApiController M_CONTROLLER = new ApiController(new ChinaMainHandler(), M_INLOGGER, M_OUTLOGGER);
+
     private final ArrayList<String> m_acctList = new ArrayList<>();
     private final JFrame m_frame = new JFrame();
     private final JFrame m_frame3 = new JFrame();
@@ -88,6 +89,10 @@ public final class ChinaMain implements IConnectionHandler {
     private static volatile JLabel twsTime = new JLabel(Utility.timeNowToString());
     private static volatile JLabel systemTime = new JLabel(Utility.timeNowToString());
     private static volatile JLabel systemNotif = new JLabel("");
+    public static volatile JLabel connectionIndicator = new JLabel("CONN");
+
+
+
 
     //private final Data data = new Data();
     //private final HistData histdata = new HistData();
@@ -239,6 +244,12 @@ public final class ChinaMain implements IConnectionHandler {
         systemNotif.setForeground(Color.black);
         systemNotif.setFont(systemNotif.getFont().deriveFont(25F));
 
+        connectionIndicator.setOpaque(true);
+        connectionIndicator.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        connectionIndicator.setBackground(Color.red);
+        connectionIndicator.setFont(connectionIndicator.getFont().deriveFont(30F));
+
+
         JPanel threadManager = new JPanel() {
             @Override
             public Dimension getPreferredSize() {
@@ -380,14 +391,7 @@ public final class ChinaMain implements IConnectionHandler {
             pool.execute(stratcompute);
         });
 
-        startXU.addActionListener((ae) -> {
-            try {
-                //xu.getFrontfutHandler(),xu.getBackfutHandler()
-                M_CONTROLLER.reqXUDataArray();
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        });
+        startXU.addActionListener((ae) -> M_CONTROLLER.reqXUDataArray());
 
         startHK.addActionListener(al -> M_CONTROLLER.reqHKLiveData());
 
@@ -436,6 +440,8 @@ public final class ChinaMain implements IConnectionHandler {
         threadManager.add(Box.createHorizontalStrut(30));
         threadManager.add(twsTime);
         threadManager.add(systemNotif);
+        threadManager.add(Box.createHorizontalStrut(30));
+        threadManager.add(connectionIndicator);
 
         NewTabbedPanel bot = new NewTabbedPanel() {
             @Override
@@ -564,7 +570,7 @@ public final class ChinaMain implements IConnectionHandler {
             }
         });
 
-        CompletableFuture.runAsync(M_CONTROLLER::reqXUDataArray);
+        M_CONTROLLER.reqXUDataArray();
     }
 
     public ChinaMain() {
@@ -577,6 +583,7 @@ public final class ChinaMain implements IConnectionHandler {
         show("connected");
         System.out.println(" connected from connected ");
         ChinaMain.m_connectionPanel.setConnectionStatus("connected");
+        connectionIndicator.setBackground(Color.green);
         controller().reqCurrentTime((long time) -> show("Server date/time is " + Formats.fmtDate(time * 1000)));
         controller().reqBulletins(true, (int msgId, NewsType newsType, String message, String exchange) -> {
             String str = String.format("Received bulletin:  type=%s  exchange=%s", newsType, exchange);
@@ -590,6 +597,8 @@ public final class ChinaMain implements IConnectionHandler {
         show("disconnected");
         System.out.println(" setting panel status disconnected ");
         m_connectionPanel.m_status.setText("disconnected");
+        connectionIndicator.setBackground(Color.red);
+        connectionIndicator.setText("DisConn");
     }
 
     @Override

@@ -209,16 +209,20 @@ public class GraphBarGen extends JComponent {
     private int getXForLT(LocalTime t) {
         if(XUTrader.gran==DisplayGranularity._1MDATA) {
             long timeDiff = ChronoUnit.MINUTES.between(LocalTime.of(9, 0), t);
+
             if (t.isAfter(LocalTime.of(11, 30))) {
                 timeDiff = timeDiff - 90;
             }
+
             //System.out.println(" time in between " + timeDiff);
             return (int) (WIDTH_BAR * timeDiff + 5);
         } else if(XUTrader.gran == DisplayGranularity._5MDATA) {
             long timeDiff = (ChronoUnit.MINUTES.between(LocalTime.of(9, 0), t))/5;
+
             if (t.isAfter(LocalTime.of(11, 30))) {
                 timeDiff = timeDiff - 18;
             }
+
             //System.out.println(" time in between " + timeDiff);
             return (int) (WIDTH_BAR * timeDiff + 1);
         }

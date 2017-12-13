@@ -172,6 +172,7 @@ public final class ChinaDataYesterday extends JPanel {
                     }
                 } catch (Exception x) {
                     x.printStackTrace();
+                    //noinspection unchecked
                     sorter = (TableRowSorter<BarModel_YTD>) tab.getRowSorter();
                 }
             }
@@ -1037,7 +1038,9 @@ public final class ChinaDataYesterday extends JPanel {
                     return round(1000d * retOPCY.getOrDefault(name, 0.0)) / 10d;
                 //p  
                 case 14:
-                    return noZeroArrayGen(name, minMapY, closeMapY, maxMapY) ? min(100.0, round(100d * (closeMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0.0;
+                    return noZeroArrayGen(name, minMapY, closeMapY, maxMapY) ?
+                            min(100.0, round(100d * (closeMapY.get(name) - minMapY.get(name))
+                                    / (maxMapY.get(name) - minMapY.get(name)))) : 0.0;
                 // CH        
                 case 15:
                     return round(1000d * retCHY.getOrDefault(name, 0.0)) / 10d;
