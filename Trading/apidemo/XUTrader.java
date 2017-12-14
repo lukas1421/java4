@@ -323,9 +323,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //        });
 
         JButton cancelAllOrdersButton = new JButton("Cancel Orders");
-        cancelAllOrdersButton.addActionListener(l -> {
-            apcon.cancelAllOrders();
-        });
+        cancelAllOrdersButton.addActionListener(l -> apcon.cancelAllOrders());
 
 
         JScrollPane chartScroll = new JScrollPane(xuGraph) {
@@ -918,12 +916,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private void requestXUData() {
-        try {
-            //new FrontFutReceiver(), new BackFutReceiver()
-            getAPICon().reqXUDataArray();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        getAPICon().reqXUDataArray();
     }
 
     private static void createDialog(String msg) {
@@ -989,7 +982,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double mtmPnl = (currentPosMap.get(f) - unitsBought - unitsSold) * (futPriceMap.get(f) - futOpenMap.get(f));
         //double previousCloseOverride = 0;
 
-        SwingUtilities.invokeLater(()-> {
+        SwingUtilities.invokeLater(() -> {
             XUTrader.updateLog(" P " + futPriceMap.get(f));
             XUTrader.updateLog("Open " + futOpenMap.get(f));
             XUTrader.updateLog(" Chg " + (Math.round(10000d * (futPriceMap.get(f) / futOpenMap.get(f) - 1)) / 100d) + " %");

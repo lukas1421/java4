@@ -11,23 +11,18 @@ public class FutPositionHandler implements ApiController.IPositionHandler {
 
         String ticker = utility.Utility.ibContractToSymbol(contract);
         //System.out.println(getStr(" fut position handler ", ticker, position));
-
         //if(contract.symbol().equalsIgnoreCase("XINA50")) {
         ChinaPosition.currentPositionMap.put(ticker, (int) position);
-        //}
 
 
 //        if(ticker.equals("SGXA50")) {
 //            System.out.println(" XU front position is " + position);
-//
 //            //ChinaPosition.xuCurrentPositionFront = (int) position;
 //        }
-//
 //        if(ticker.equals("SGXA50BM")) {
 //            System.out.println(" XU back position is " + position);
 //            ChinaPosition.xuCurrentPositionBack = (int) position;
 //        }
-
 //        if (contract.symbol().equals("XINA50")) {
 //            System.out.println(" XU position is " + position);
 //            ChinaPosition.xuCurrentPositionFront = (int) position;

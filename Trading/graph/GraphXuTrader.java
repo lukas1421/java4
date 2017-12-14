@@ -29,7 +29,7 @@ public class GraphXuTrader extends JComponent {
     int last = 0;
     double rtn = 0;
     NavigableMap<LocalTime, SimpleBar> tm;
-    NavigableMap<LocalTime, TradeBlock> trademap;
+    private NavigableMap<LocalTime, TradeBlock> trademap;
     private volatile FutType fut;
     volatile String name;
     String chineseName;
@@ -61,7 +61,7 @@ public class GraphXuTrader extends JComponent {
     }
 
     private void setTradesMap(NavigableMap<LocalTime, TradeBlock> trade) {
-        System.out.println(" setting trades map in Graph Xu trader " + trade);
+        //System.out.println(" setting trades map in Graph Xu trader " + trade);
         trademap = trade;
     }
 

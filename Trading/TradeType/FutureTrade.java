@@ -20,8 +20,6 @@ public final class FutureTrade extends Trade {
         return (-1d * size * price) - COST_PER_LOT * Math.abs(size);
     }
 
-
-
     @Override
     public double getTransactionFeeCustomBrokerage(String name, double rate) {
         return getTransactionFee(name);
@@ -32,10 +30,8 @@ public final class FutureTrade extends Trade {
         return getCostBasisWithFees(name);
     }
 
-
     @Override
     public String toString() {
         return Utility.getStr(" future trade::price size ", price, size);
     }
-
 }
