@@ -18,7 +18,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static utility.Utility.*;
 
-public class GraphBarGen extends JComponent {
+public class GraphXuTrader extends JComponent {
 
     private static final int WIDTH_BAR = 5;
     int height;
@@ -40,13 +40,13 @@ public class GraphBarGen extends JComponent {
     private static final BasicStroke BS3 = new BasicStroke(3);
     private int wtdP;
 
-//    public GraphBarGen(NavigableMap<LocalTime, SimpleBar> tm) {
+//    public GraphXuTrader(NavigableMap<LocalTime, SimpleBar> tm) {
 //        this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue()
 //                .containsZero()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
 //                (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
 //    }
 
-    public GraphBarGen() {
+    public GraphXuTrader() {
         name = "";
         chineseName = "";
         maxAMT = LocalTime.of(9, 30);
@@ -60,7 +60,8 @@ public class GraphBarGen extends JComponent {
                         ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
     }
 
-    public void setTradesMap(NavigableMap<LocalTime, TradeBlock> trade) {
+    private void setTradesMap(NavigableMap<LocalTime, TradeBlock> trade) {
+        System.out.println(" setting trades map in Graph Xu trader " + trade);
         trademap = trade;
     }
 
@@ -97,17 +98,13 @@ public class GraphBarGen extends JComponent {
 
     public void fillTradesMap(NavigableMap<LocalTime,TradeBlock> m) {
         if (XUTrader.gran == DisplayGranularity._1MDATA) {
-            this.setTradesMap(m);
-            //this.setTradesMap(XUTrader.tradesMap.get(activeFuture));
+            this.setTradesMap(tradeBlockRoundGen(m, t->t.truncatedTo(ChronoUnit.MINUTES)));
         } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
             this.setTradesMap(tradeBlock1mTo5M(m));
         }
 
     }
 
-//    public void setTradesMap(NavigableMap<LocalTime, TradeBlock> trade) {
-//        trademap = trade;
-//    }
 
 
 
@@ -171,11 +168,15 @@ public class GraphBarGen extends JComponent {
                     if (tb.getSizeAll() > 0) {
                         g.setColor(Color.blue);
                         int yCord = getY(tb.getAveragePrice());
-                        g.drawPolygon(new int[]{x - 2, x, x + 2}, new int[]{yCord + 4, yCord, yCord + 4}, 3);
+                        Polygon p = new Polygon(new int[]{x - 3, x, x + 3}, new int[]{yCord + 4, yCord, yCord + 4}, 3);
+                        g.drawPolygon(p);
+                        g.fillPolygon(p);
                     } else {
                         g.setColor(Color.black);
                         int yCord = getY(tb.getAveragePrice());
-                        g.drawPolygon(new int[]{x - 2, x, x + 2}, new int[]{yCord - 4, yCord, yCord - 4}, 3);
+                        Polygon p = new Polygon(new int[]{x - 3, x, x + 3}, new int[]{yCord - 4, yCord, yCord - 4}, 3);
+                        g.drawPolygon(p);
+                        g.fillPolygon(p);
                     }
                 }
             }

@@ -603,7 +603,6 @@ public class Utility {
 //        Predicate<LocalTime> p =
 //                tradingTimePred(LocalTime.of(9, 30), LocalTime.of(11, 30),
 //                        LocalTime.of(13, 0), LocalTime.of(15, 0));
-
         mp.forEach((key, value) -> {
             LocalTime t = roundTo5(key);
             TradeBlock tb = new TradeBlock(value);
@@ -613,6 +612,26 @@ public class Utility {
                 res.get(t).merge(tb);
             }
         });
+        return res;
+    }
+
+    public static NavigableMap<LocalTime, TradeBlock> tradeBlockRoundGen(NavigableMap<LocalTime, TradeBlock> mp,
+                                                                         UnaryOperator<LocalTime> o) {
+        NavigableMap<LocalTime, TradeBlock> res = new ConcurrentSkipListMap<>();
+//        Predicate<LocalTime> p =
+//                tradingTimePred(LocalTime.of(9, 30), LocalTime.of(11, 30),
+//                        LocalTime.of(13, 0), LocalTime.of(15, 0));
+        mp.forEach((key, value) -> {
+            LocalTime t = o.apply(key);
+            TradeBlock tb = new TradeBlock(value);
+            if (!res.containsKey(t)) {
+                res.put(t, tb);
+            } else {
+                res.get(t).merge(tb);
+            }
+        });
+        System.out.println(" trade block pre merging: " + mp);
+        System.out.println(" trade block round gen res:: " + res);
         return res;
     }
 

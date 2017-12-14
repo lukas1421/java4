@@ -7,7 +7,7 @@ import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
 import graph.DisplayGranularity;
-import graph.GraphBarGen;
+import graph.GraphXuTrader;
 import handler.HistoricalHandler;
 import utility.Utility;
 
@@ -78,7 +78,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //public static NavigableMap<LocalTime, IBTrade> tradesMapBack = new ConcurrentSkipListMap<>();
     public static EnumMap<FutType, NavigableMap<LocalTime, TradeBlock>> tradesMap = new EnumMap<>(FutType.class);
 
-    private GraphBarGen xuGraph = new GraphBarGen();
+    private GraphXuTrader xuGraph = new GraphXuTrader();
 
     public static volatile EnumMap<FutType, NavigableMap<LocalTime, SimpleBar>> futData = new EnumMap<>(FutType.class);
     //static volatile NavigableMap<LocalTime, SimpleBar> xuFrontData = new ConcurrentSkipListMap<>();
@@ -225,6 +225,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 currTimeLabel.setText(time);
                 //xuGraph.fillInGraph(xuFrontData);
                 xuGraph.fillInGraph(futData.get(ibContractToFutType(activeFuture)));
+                xuGraph.fillTradesMap(tradesMap.get(ibContractToFutType(activeFuture)));
                 xuGraph.setName(ibContractToSymbol(activeFuture));
                 xuGraph.setFut(ibContractToFutType(activeFuture));
                 xuGraph.refresh();
@@ -759,7 +760,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @Override
     public void tradeReportEnd() {
-        System.out.println(" trade report end ");
+        System.out.println(" trade report end printing");
+        XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).entrySet().forEach(System.out::println);
+
     }
 
     @Override

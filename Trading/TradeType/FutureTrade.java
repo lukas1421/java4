@@ -4,7 +4,7 @@ import utility.Utility;
 
 public final class FutureTrade extends Trade {
 
-    private final double COST_PER_LOT = 1.505;
+    private static final double COST_PER_LOT = 1.505;
 
     public FutureTrade(double p, int s) {
         super(p, s);
@@ -24,12 +24,12 @@ public final class FutureTrade extends Trade {
 
     @Override
     public double getTransactionFeeCustomBrokerage(String name, double rate) {
-        return COST_PER_LOT * Math.abs(size);
+        return getTransactionFee(name);
     }
 
     @Override
     public double getCostBasisWithFeesCustomBrokerage(String name, double rate) {
-        return (-1d * size * price) - COST_PER_LOT * Math.abs(size);
+        return getCostBasisWithFees(name);
     }
 
 
