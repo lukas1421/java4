@@ -198,6 +198,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             currTimeLabel.setText(time);
             //xuGraph.fillInGraph(xuFrontData);
             xuGraph.fillInGraph(futData.get(ibContractToFutType(activeFuture)));
+            xuGraph.fillTradesMap(XUTrader.tradesMap.get(ibContractToFutType(activeFuture)));
             xuGraph.setName(ibContractToSymbol(activeFuture));
             xuGraph.setFut(ibContractToFutType(activeFuture));
 
@@ -739,13 +740,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (ldt.getDayOfMonth() == LocalDateTime.now().getDayOfMonth()) {
             if (XUTrader.tradesMap.get(f).containsKey(ldt.toLocalTime())) {
                 XUTrader.tradesMap.get(f).get(ldt.toLocalTime())
-                        .merge(new FutureTrade(execution.price(), sign * execution.cumQty()));
+                        .addTrade(new FutureTrade(execution.price(), sign * execution.cumQty()));
             } else {
                 XUTrader.tradesMap.get(f).put(ldt.toLocalTime(),
                         new TradeBlock(new FutureTrade(execution.price(), sign * execution.cumQty())));
             }
 //            if (XUTrader.tradesMapFront.containsKey(ldt.toLocalTime())) {
-//                XUTrader.tradesMapFront.get(ldt.toLocalTime()).merge(new IBTrade(execution.price(), sign * execution.cumQty()));
+//                XUTrader.tradesMapFront.get(ldt.toLocalTime()).addTrade(new IBTrade(execution.price(), sign * execution.cumQty()));
 //            } else {
 //                XUTrader.tradesMapFront.put(ldt.toLocalTime(), new IBTrade(execution.price(), sign * execution.cumQty()));
 //            }
@@ -1083,7 +1084,7 @@ class XUConnectionHandler implements ApiController.IConnectionHandler {
 //
 //        if (ldt.getDayOfMonth() == LocalDateTime.now().getDayOfMonth()) {
 //            if (XUTrader.tradesMapFront.containsKey(ldt.toLocalTime())) {
-//                XUTrader.tradesMapFront.get(ldt.toLocalTime()).merge(new IBTrade(execution.price(), sign * execution.cumQty()));
+//                XUTrader.tradesMapFront.get(ldt.toLocalTime()).addTrade(new IBTrade(execution.price(), sign * execution.cumQty()));
 //            } else {
 //                XUTrader.tradesMapFront.put(ldt.toLocalTime(), new IBTrade(execution.price(), sign * execution.cumQty()));
 //            }

@@ -20,8 +20,22 @@ public final class TradeBlock {
         mergeList.add(t);
     }
 
-    public void merge(Trade t) {
+    public TradeBlock(TradeBlock tb) {
+        this.mergeList = tb.getTradeList();
+    }
+
+    public void addTrade(Trade t) {
         mergeList.add(t);
+    }
+
+    public void merge(TradeBlock tb) {
+        if(tb.getNumberOfTrades()>0) {
+            tb.getTradeList().forEach(e -> mergeList.add((Trade) e));
+        }
+    }
+
+    private int getNumberOfTrades() {
+        return mergeList.size();
     }
 
     public int getSizeAll() {

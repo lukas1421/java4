@@ -598,6 +598,24 @@ public class Utility {
         return res;
     }
 
+    public static NavigableMap<LocalTime, TradeBlock> tradeBlock1mTo5M(NavigableMap<LocalTime, TradeBlock> mp) {
+        NavigableMap<LocalTime, TradeBlock> res = new ConcurrentSkipListMap<>();
+//        Predicate<LocalTime> p =
+//                tradingTimePred(LocalTime.of(9, 30), LocalTime.of(11, 30),
+//                        LocalTime.of(13, 0), LocalTime.of(15, 0));
+
+        mp.forEach((key, value) -> {
+            LocalTime t = roundTo5(key);
+            TradeBlock tb = new TradeBlock(value);
+            if (!res.containsKey(t)) {
+                res.put(t, tb);
+            } else {
+                res.get(t).merge(tb);
+            }
+        });
+        return res;
+    }
+
     public static <T> NavigableMap<LocalDateTime, T> priceMapToLDT(NavigableMap<LocalTime, T> mp, LocalDate ld) {
         NavigableMap<LocalDateTime, T> res = new ConcurrentSkipListMap<>();
         Predicate<LocalTime> p =
@@ -756,7 +774,6 @@ public class Utility {
         throw new IllegalArgumentException("not a fut " + ct.symbol());
         //return ct.symbol();
     }
-
 
 
     public static boolean tickerNotFuture(String s) {

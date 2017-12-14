@@ -38,7 +38,7 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
                     if (HistChinaStocks.chinaTradeMap.containsKey(ticker)) {
                         if (HistChinaStocks.chinaTradeMap.get(ticker).containsKey(ldtRoundto5)) {
                             System.out.println(" lt is " + ldtRoundto5);
-                            HistChinaStocks.chinaTradeMap.get(ticker).get(ldtRoundto5).merge(new FutureTrade(execution.price(),
+                            HistChinaStocks.chinaTradeMap.get(ticker).get(ldtRoundto5).addTrade(new FutureTrade(execution.price(),
                                     sign * execution.cumQty()));
                         } else {
                             System.out.println(" else lt " + ldtRoundto5);

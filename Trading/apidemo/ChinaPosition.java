@@ -857,8 +857,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             if (dataList.get(buySellCol).equals("买入")) {
                                 if (tradesMap.get(ticker).containsKey(lt)) {
                                     System.out.println("merging normal ... ");
-                                    //tradesMapFront.get(ticker).get(lt).merge(new Trade(p,size));
-                                    tradesMap.get(ticker).get(lt).merge(new NormalTrade(p, size));
+                                    //tradesMapFront.get(ticker).get(lt).addTrade(new Trade(p,size));
+                                    tradesMap.get(ticker).get(lt).addTrade(new NormalTrade(p, size));
                                 } else {
                                     tradesMap.get(ticker).put(lt, new TradeBlock(new NormalTrade(p, size)));
                                 }
@@ -866,8 +866,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             } else if (dataList.get(buySellCol).equals("卖出")) {
                                 //System.out.println( " name " + ticker + " " + tradesMapFront.get(ticker));
                                 if (tradesMap.get(ticker).containsKey(lt)) {
-                                    tradesMap.get(ticker).get(lt).merge(new NormalTrade(p, -1 * size));
-                                    //tradesMapFront.get(ticker).get(lt).merge(new Trade(p,-1*size));
+                                    tradesMap.get(ticker).get(lt).addTrade(new NormalTrade(p, -1 * size));
+                                    //tradesMapFront.get(ticker).get(lt).addTrade(new Trade(p,-1*size));
                                 } else {
                                     tradesMap.get(ticker).put(lt, new TradeBlock(new NormalTrade(p, -1 * size)));
                                 }
@@ -945,7 +945,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             if (dataList.get(beizhuCol).equals("融资开仓")) {
                                 if (tradesMap.get(ticker).containsKey(lt)) {
                                     System.out.println("merging margin... ");
-                                    tradesMap.get(ticker).get(lt).merge(new MarginTrade(p, size));
+                                    tradesMap.get(ticker).get(lt).addTrade(new MarginTrade(p, size));
                                 } else {
                                     tradesMap.get(ticker).put(lt, new TradeBlock(new MarginTrade(p, size)));
                                 }
@@ -953,7 +953,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             } else if (dataList.get(beizhuCol).equals("买入担保品")) {
                                 if (tradesMap.get(ticker).containsKey(lt)) {
                                     System.out.println("merging normal... ");
-                                    tradesMap.get(ticker).get(lt).merge(new MarginTrade(p, size));
+                                    tradesMap.get(ticker).get(lt).addTrade(new MarginTrade(p, size));
                                 } else {
                                     tradesMap.get(ticker).put(lt, new TradeBlock(new MarginTrade(p, size)));
                                 }
@@ -964,14 +964,14 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             if (dataList.get(beizhuCol).equals("卖券还款")) {
                                 if (tradesMap.get(ticker).containsKey(lt)) {
                                     System.out.println("merging margin... ");
-                                    tradesMap.get(ticker).get(lt).merge(new MarginTrade(p, -1 * size));
+                                    tradesMap.get(ticker).get(lt).addTrade(new MarginTrade(p, -1 * size));
                                 } else {
                                     tradesMap.get(ticker).put(lt, new TradeBlock(new MarginTrade(p, -1 * size)));
                                 }
                             } else if (dataList.get(beizhuCol).equals("卖出担保品")) {
                                 if (tradesMap.get(ticker).containsKey(lt)) {
                                     System.out.println("merging margin... ");
-                                    tradesMap.get(ticker).get(lt).merge(new MarginTrade(p, -1 * size));
+                                    tradesMap.get(ticker).get(lt).addTrade(new MarginTrade(p, -1 * size));
                                 } else {
                                     tradesMap.get(ticker).put(lt, new TradeBlock(new MarginTrade(p, -1 * size)));
                                 }
@@ -983,7 +983,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //                            //System.out.println( " name " + ticker + " " + tradesMapFront.get(ticker));
 //                            if(tradesMapFront.get(ticker).containsKey(lt)) {
 //                                tradesMapFront.get(ticker).put(lt, new NormalTrade(p,-1*size));
-//                                //tradesMapFront.get(ticker).get(lt).merge(new Trade(p,-1*size));
+//                                //tradesMapFront.get(ticker).get(lt).addTrade(new Trade(p,-1*size));
 //                            } else {
 //                                tradesMapFront.get(ticker).put(lt, new NormalTrade(p,-1*size));
 //                            }
@@ -1555,7 +1555,7 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
             if (ChinaPosition.tradesMap.get(ticker).containsKey(lt)) {
                 System.out.println(" lt is " + lt);
                 ChinaPosition.tradesMap.get(ticker).get(lt)
-                        .merge(new FutureTrade(execution.price(), sign * execution.cumQty()));
+                        .addTrade(new FutureTrade(execution.price(), sign * execution.cumQty()));
             } else {
                 System.out.println(" else lt " + lt);
                 ChinaPosition.tradesMap.get(ticker).put(lt,
