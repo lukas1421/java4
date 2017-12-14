@@ -581,7 +581,7 @@ public class Utility {
     public static NavigableMap<LocalTime, SimpleBar> priceMap1mTo5M(NavigableMap<LocalTime, SimpleBar> mp) {
         NavigableMap<LocalTime, SimpleBar> res = new ConcurrentSkipListMap<>();
         Predicate<LocalTime> p =
-                tradingTimePred(LocalTime.of(9, 30), LocalTime.of(11, 30),
+                tradingTimePred(LocalTime.of(8, 59), LocalTime.of(11, 30),
                         LocalTime.of(13, 0), LocalTime.of(15, 0));
 
         mp.forEach((key, value) -> {
@@ -630,8 +630,8 @@ public class Utility {
                 res.get(t).merge(tb);
             }
         });
-        System.out.println(" trade block pre merging: " + mp);
-        System.out.println(" trade block round gen res:: " + res);
+        //System.out.println(" trade block pre merging: " + mp);
+        //System.out.println(" trade block round gen res:: " + res);
         return res;
     }
 
@@ -651,8 +651,9 @@ public class Utility {
     }
 
     public static LocalTime roundTo5(LocalTime t) {
-        return min(max(LocalTime.of(9, 0), (t.getMinute() % 5 == 0) ? t : t.plusMinutes(5 - t.getMinute() % 5)),
-                LocalTime.of(15, 0));
+        LocalTime t1 = t.truncatedTo(ChronoUnit.MINUTES);
+        return min(max(LocalTime.of(9, 0), (t1.getMinute() % 5 == 0) ?
+                        t1 : t1.plusMinutes(5 - t1.getMinute() % 5)),LocalTime.of(15, 0));
     }
 
     public static LocalDateTime roundTo5Ldt(LocalDateTime t) {
