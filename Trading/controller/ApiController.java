@@ -940,7 +940,7 @@ public class ApiController implements EWrapper {
                 m_client.reqMktData(reqIdFront, frontCt, "", false, Collections.<TagValue>emptyList());
                 m_client.reqMktData(reqIdBack, backCt, "", false, Collections.<TagValue>emptyList());
             } else {
-                System.out.println(" reqXUDataAray but not connected ");
+                System.out.println(" reqXUDataArray but not connected ");
             }
         } else {
             m_reqId.incrementAndGet();

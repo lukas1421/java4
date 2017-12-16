@@ -223,9 +223,13 @@ public class HistChinaStocks extends JPanel {
                         selectedStock = stockList.get(modelRow);
                         comp.setBackground(Color.GREEN);
 
-//                        if (selectedStock.equals("SGXA50")) {
-//                            chinaTradeMap.entrySet().stream().filter(e -> e.getKey().equals("SGXA50")).forEach(System.out::println);
-//                        }
+                        if (selectedStock.equals("SGXA50")) {
+                            System.out.println(" printing A 50 prices ");
+                            //chinaTradeMap.entrySet().stream().filter(e -> e.getKey().equals("SGXA50")).forEach(System.out::println);
+                            System.out.println(" price is " + priceMapForHist.getOrDefault(selectedStock,0.0));
+                            System.out.println(" last wtd price " + chinaWtd.get("SGXA50").lastEntry());
+
+                        }
 
                         CompletableFuture.runAsync(() -> {
                             SwingUtilities.invokeLater(() -> {
@@ -657,6 +661,9 @@ public class HistChinaStocks extends JPanel {
                     } else {
                         chinaWtd.get(ticker).get(ltTo5).updateBar(open, high, low, close);
                     }
+                } else {
+                    priceMapForHist.put(ticker, close);
+                    System.out.println(getStr(" most recent price ", ticker, LocalDateTime.of(ld,lt),close));
                 }
             } else {
                 //System.out.println(" updating close of SGXA50 ");
@@ -664,7 +671,7 @@ public class HistChinaStocks extends JPanel {
                 //System.out.println(" sgxa50 close " + lastWeekCloseMap.getOrDefault("SGXA50", 0.0));
             }
         } else {
-            priceMapForHist.put(ticker, chinaWtd.get(ticker).lastEntry().getValue().getClose());
+            //priceMapForHist.put(ticker, chinaWtd.get(ticker).lastEntry().getValue().getClose());
             System.out.println(" last line for  " + ticker + " " + getStr(date, open, high, low, close));
 
             NavigableMap<LocalDateTime, Double> ret =
@@ -675,7 +682,6 @@ public class HistChinaStocks extends JPanel {
             //costBasisMap.put("SGXA50", HistChinaStocks.lastWeekCloseMap.get(close));
             //System.out.println(getStr(date, open, high, low, close));
         }
-
     }
 
     private static void getSGXPosition() {
