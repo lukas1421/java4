@@ -82,12 +82,12 @@ public final class XU extends JPanel {
 
     public static boolean graphCreated = false;
 
-    protected TreeMap<LocalTime, Integer> consummation = new TreeMap<>();
+    //protected TreeMap<LocalTime, Integer> consummation = new TreeMap<>();
 
     //public static ConcurrentSkipListMap<LocalTime,Double> indexPrice = new ConcurrentSkipListMap<>();
     public static NavigableMap<LocalTime, Double> indexSinaDiscount = new ConcurrentSkipListMap<>();
     static NavigableMap<LocalTime, Integer> pricePercentile = new ConcurrentSkipListMap<>();
-    static NavigableMap discPremSina = new ConcurrentSkipListMap<>();
+    static NavigableMap<LocalTime, Double> discPremSina = new ConcurrentSkipListMap<>();
     static NavigableMap<LocalTime, Double> discPremPercentile = new ConcurrentSkipListMap<>();
 
     static JPanel graphPanel = new JPanel();
@@ -175,6 +175,7 @@ public final class XU extends JPanel {
             //loadXU();
             CompletableFuture.runAsync(() -> {
                 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(SOURCE))) {
+                    //noinspection unchecked
                     xusave = (ConcurrentHashMap<Integer, NavigableMap<LocalTime, ?>>) ois.readObject();
                 } catch (IOException | ClassNotFoundException ex) {
                     ex.printStackTrace();
@@ -182,6 +183,7 @@ public final class XU extends JPanel {
             }, es).whenComplete((ok, ex) -> {
                 if (ex == null) {
                     //lastFutPrice = (ConcurrentSkipListMap<LocalTime, SimpleBar>) xusave.get(1);
+                    //noinspection unchecked
                     indexPriceSina = (ConcurrentSkipListMap<LocalTime, SimpleBar>) xusave.get(2);
                     frontFutVol = (ConcurrentSkipListMap<LocalTime, Integer>) xusave.get(3);
                     indexVol = (ConcurrentSkipListMap<LocalTime, Double>) xusave.get(4);
@@ -212,13 +214,15 @@ public final class XU extends JPanel {
 //                 graph1.setNavigableMap(lastFutPrice);
 //                 graph2.setNavigableMap(indexPriceSina);
 
-                graph1.fillInGraph("FTSEA50");
-                graph2.fillInGraph("SGXA50");
-                graph3.setSkipMap(priceMapBar.get("SGXA50"), indexPriceSina);
-                graph4.setSkipMap(discPremSina);
-                graph5.setSkipMap(discPremPercentile);
-                graph6.setSkipMap(pricePercentile);
-                this.repaint();
+                SwingUtilities.invokeLater(()-> {
+                    graph1.fillInGraph("FTSEA50");
+                    graph2.fillInGraph("SGXA50");
+                    graph3.setSkipMap(priceMapBar.get("SGXA50"), indexPriceSina);
+                    graph4.setSkipMap(discPremSina);
+                    graph5.setSkipMap(discPremPercentile);
+                    graph6.setSkipMap(pricePercentile);
+                    this.repaint();
+                });
             }
         });
 
@@ -240,9 +244,7 @@ public final class XU extends JPanel {
 
         JButton loadHib = new JButton("loadHib");
         loadHib.addActionListener(l -> {
-            CompletableFuture.runAsync(() -> {
-                XU.loadHibXU();
-            });
+            CompletableFuture.runAsync(XU::loadHibXU);
         });
 
         jp.add(saveHib);
@@ -363,7 +365,10 @@ public final class XU extends JPanel {
             graph4.setSkipMap(discPremSina);
             graph5.setSkipMap(discPremPercentile);
             graph6.setSkipMap(pricePercentile);
-            graphPanel.repaint();
+            SwingUtilities.invokeLater(()-> {
+                graphPanel.repaint();
+                m_model.fireTableDataChanged();
+            });
         }, 0, 1, TimeUnit.SECONDS);
     }
 

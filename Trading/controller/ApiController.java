@@ -35,8 +35,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static apidemo.ChinaMain.controller;
-import static apidemo.ChinaMain.globalRequestMap;
+import static apidemo.ChinaMain.*;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
 
@@ -238,6 +237,8 @@ public class ApiController implements EWrapper {
                     ChinaMain.m_connectionPanel.setConnectionStatus("connected");
                     ChinaMain.connectionIndicator.setBackground(Color.green);
                     ChinaMain.connectionIndicator.setText("通");
+                    ibConnLatch.countDown();
+                    System.out.println(" ib con latch counted down in Apicontroller connected "+ LocalTime.now());
                 });
 
                 controller().reqCurrentTime((long time) -> {
@@ -926,7 +927,7 @@ public class ApiController implements EWrapper {
 
     //xu data
     public void reqXUDataArray() {
-        System.out.println("requesting XU data begins");
+        System.out.println("requesting XU data begins" +LocalTime.now());
         Contract frontCt = getFrontFutContract();
         Contract backCt = getBackFutContract();
 

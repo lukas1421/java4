@@ -62,6 +62,7 @@ public final class ChinaMain implements IConnectionHandler {
     private final static ILogger M_INLOGGER = new DefaultLogger(); //new Logger( m_inLog);
     private final static ILogger M_OUTLOGGER = new DefaultLogger(); // new Logger( m_outLog);
     private final static ApiController M_CONTROLLER = new ApiController(new ChinaMainHandler(), M_INLOGGER, M_OUTLOGGER);
+    public static volatile CountDownLatch ibConnLatch =  new CountDownLatch(1);
 
     private final ArrayList<String> m_acctList = new ArrayList<>();
     private final JFrame m_frame = new JFrame();
@@ -104,7 +105,6 @@ public final class ChinaMain implements IConnectionHandler {
     //private ChinaFut chinafut = new ChinaFut();
 
     private final ChinaStock chinastock = new ChinaStock();
-
     //System.out.println("time after chinastock");
     private final ChinaIndex chinaindex = new ChinaIndex();
 
@@ -570,7 +570,16 @@ public final class ChinaMain implements IConnectionHandler {
             }
         });
 
-        M_CONTROLLER.reqXUDataArray();
+        CompletableFuture.runAsync(()-> {
+            try {
+                ibConnLatch.await();
+                System.out.println(" ib conn latch finished waiting " + LocalTime.now());
+                M_CONTROLLER.reqXUDataArray();
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
+        });
+
     }
 
     public ChinaMain() {
