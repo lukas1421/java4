@@ -46,7 +46,7 @@ public class ApiController implements EWrapper {
     private final ILogger m_inLogger;
     //private int m_reqId;	// used for all requests except orders; designed not to conflict with m_orderId
     private static volatile AtomicInteger m_reqId = new AtomicInteger(10000000);
-    private int m_orderId;
+    private AtomicInteger m_orderId = new AtomicInteger(0);
 
     private final IConnectionHandler m_connectionHandler;
     private ITradeReportHandler m_tradeReportHandler;
@@ -238,7 +238,8 @@ public class ApiController implements EWrapper {
                     ChinaMain.connectionIndicator.setBackground(Color.green);
                     ChinaMain.connectionIndicator.setText("通");
                     ibConnLatch.countDown();
-                    System.out.println(" ib con latch counted down in Apicontroller connected "+ LocalTime.now());
+                    System.out.println(" ib con latch counted down in Apicontroller connected "+ LocalTime.now()
+                    + " latch remains: " + ibConnLatch.getCount());
                 });
 
                 controller().reqCurrentTime((long time) -> {
@@ -385,9 +386,9 @@ public class ApiController implements EWrapper {
 
     @Override
     public void nextValidId(int orderId) {
-        m_orderId = orderId;
+        m_orderId.set(orderId);
         //m_reqId = m_orderId + 10000000; // let order id's not collide with other request id's
-        m_reqId.set(m_orderId + 10000000);
+        m_reqId.set(m_orderId.getAndIncrement() + 10000000);
         if (m_connectionHandler != null) {
             m_connectionHandler.connected();
         }
@@ -948,7 +949,6 @@ public class ApiController implements EWrapper {
             System.out.println(" req used " + reqIdFront + " " + globalRequestMap.get(reqIdFront).getContract());
             throw new IllegalArgumentException(" req ID used ");
         }
-
         System.out.println("requesting XU data ends");
     }
 
@@ -1434,7 +1434,7 @@ public class ApiController implements EWrapper {
     public void placeOrModifyOrder(Contract contract, final Order order, final IOrderHandler handler) {
         // when placing new order, assign new order id
         if (order.orderId() == 0) {
-            order.orderId(m_orderId++);
+            order.orderId(m_orderId.incrementAndGet());
         }
 
         if (handler != null) {

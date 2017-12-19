@@ -87,7 +87,7 @@ public final class XU extends JPanel {
     //public static ConcurrentSkipListMap<LocalTime,Double> indexPrice = new ConcurrentSkipListMap<>();
     public static NavigableMap<LocalTime, Double> indexSinaDiscount = new ConcurrentSkipListMap<>();
     static NavigableMap<LocalTime, Integer> pricePercentile = new ConcurrentSkipListMap<>();
-    static NavigableMap<LocalTime, Double> discPremSina = new ConcurrentSkipListMap<>();
+    public static volatile NavigableMap<LocalTime, Double> discPremSina = new ConcurrentSkipListMap<>();
     static NavigableMap<LocalTime, Double> discPremPercentile = new ConcurrentSkipListMap<>();
 
     static JPanel graphPanel = new JPanel();

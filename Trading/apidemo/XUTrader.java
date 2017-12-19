@@ -38,7 +38,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //new ApiController(new XUConnectionHandler(),
     //new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
-
     // ApiController apcon = new ApiController(new IConnectionHandler.DefaultConnectionHandler()
     // ,new ApiConnection.ILogger.DefaultLogger(),new ApiConnection.ILogger.DefaultLogger());
 

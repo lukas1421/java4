@@ -140,7 +140,6 @@ public final class ChinaMain implements IConnectionHandler {
     private static HistChinaStocks histChina = new HistChinaStocks();
     private static XUTrader xutrader = new XUTrader(M_CONTROLLER);
 
-
     private SinaStock sinastock1 = SinaStock.getInstance();
 
     private ExecutorService pool;
@@ -178,6 +177,8 @@ public final class ChinaMain implements IConnectionHandler {
 
     private void run() {
         m_tabbedPanel.addTab("XU", xu);
+        m_tabbedPanel.addTab("Xu trader ", xutrader);
+
         //m_tabbedPanel.addTab("Shcomp", shcomp);
         //m_tabbedPanel.addTab("ChinaFut", chinafut);
         //m_tabbedPanel.addTab("Live", livedata);
@@ -216,7 +217,6 @@ public final class ChinaMain implements IConnectionHandler {
         m_tabbedPanel.addTab(" HK Data", hkdata);
         m_tabbedPanel.addTab(" HK Stock", hkstock);
         m_tabbedPanel.addTab("Hist China", histChina);
-        m_tabbedPanel.addTab("Xu trader ", xutrader);
 
         // m_tabbedPanel.addTab("Backtesting", backtesting);
         //m_tabbedPanel.
@@ -248,7 +248,6 @@ public final class ChinaMain implements IConnectionHandler {
         connectionIndicator.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         connectionIndicator.setBackground(Color.red);
         connectionIndicator.setFont(connectionIndicator.getFont().deriveFont(30F));
-
 
         JPanel threadManager = new JPanel() {
             @Override
@@ -579,7 +578,6 @@ public final class ChinaMain implements IConnectionHandler {
                 ex.printStackTrace();
             }
         });
-
     }
 
     public ChinaMain() {

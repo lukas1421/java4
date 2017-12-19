@@ -1,6 +1,7 @@
 package graph;
 
 import TradeType.TradeBlock;
+import apidemo.ChinaData;
 import apidemo.FutType;
 import apidemo.XUTrader;
 import auxiliary.SimpleBar;
@@ -206,11 +207,14 @@ public class GraphXuTrader extends JComponent {
         //g2.drawString(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString(), 15, 15);
         g2.drawString(Double.toString(getReturn()) + "%", getWidth() / 8, 15);
         g2.drawString("开: " + Double.toString(getOpen()), getWidth() * 2 / 8, 15);
-        g2.drawString(Double.toString(getLast()), getWidth() * 3 / 8, 15);
-        g2.drawString("Pos: " + XUTrader.currentPosMap.getOrDefault(fut, 0), getWidth() * 4 / 8, 15);
-        g2.drawString("Pnl: " + getTradePnl(), getWidth() * 9 / 16, 15);
-        g2.drawString("B: " + XUTrader.botMap.getOrDefault(fut, 0), getWidth() * 5 / 8, 15);
-        g2.drawString("S: " + XUTrader.soldMap.getOrDefault(fut, 0), getWidth() * 6 / 8, 15);
+        g2.drawString("P: " + Double.toString(getLast()), getWidth() * 6 / 16, 15);
+        g2.drawString(" Index: " + Math.round(getIndex()) , getWidth() * 8 / 16, 15);
+        g2.drawString("PD: " + getPD() , getWidth() * 10 / 16, 15);
+        g2.drawString("Pos: " + XUTrader.currentPosMap.getOrDefault(fut, 0), getWidth() * 11 / 16, 15);
+        g2.drawString("Pnl: " + getTradePnl(), getWidth() * 12 / 16, 15);
+        g2.drawString("B: " + XUTrader.botMap.getOrDefault(fut, 0), getWidth() * 13 / 16, 15);
+        g2.drawString("S: " + XUTrader.soldMap.getOrDefault(fut, 0), getWidth() * 14 / 16, 15);
+
 
         g2.setColor(new Color(0, 255 * (100 - wtdP) / 100, 0));
         //g2.fillRect(0,0, getWidth(), getHeight());
@@ -338,5 +342,19 @@ public class GraphXuTrader extends JComponent {
 
     public double getLast() {
         return (tm.size() > 0) ? tm.lastEntry().getValue().getClose() : 0.0;
+    }
+
+    public double getIndex(){
+        if(ChinaData.priceMapBar.get("FTSEA50").size() >0) {
+            return ChinaData.priceMapBar.get("FTSEA50").lastEntry().getValue().getClose();
+        }
+        return 0.0;
+    }
+
+    private double getPD() {
+        if(getIndex()!=0.0) {
+            return r(getLast() / getIndex() - 1);
+        }
+        return 0.0;
     }
 }
