@@ -1,25 +1,16 @@
 package auxiliary;
 
-import utility.Utility;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-
-import static java.lang.Math.round;
+import javax.swing.*;
+import java.awt.*;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import static java.util.stream.Collectors.*;
-import static utility.Utility.getMax;
-import static utility.Utility.getMin;
-import static utility.Utility.getRtn;
 
-import javax.swing.JComponent;
+import static java.util.stream.Collectors.toMap;
+import static utility.Utility.*;
 
 public class GraphXU extends JComponent {
 
@@ -35,10 +26,10 @@ public class GraphXU extends JComponent {
     NavigableMap<LocalTime, Integer> tmVol;
     String name;
     String chineseName;
-    NavigableMap<LocalTime, Double> tm1 = new ConcurrentSkipListMap<>();
+    private NavigableMap<LocalTime, Double> tm1 = new ConcurrentSkipListMap<>();
     Map<LocalTime, Double> nm;
     private boolean detailed = false;
-    static final BasicStroke BS2 = new BasicStroke(2);
+    private static final BasicStroke BS2 = new BasicStroke(2);
 
     public GraphXU() {
     }
@@ -82,11 +73,8 @@ public class GraphXU extends JComponent {
             last = close;
 
             if (!detailed) {
-                if (lt.getMinute() == 0 && lt.getSecond() == 0) {
-                    g.drawString(Integer.toString(lt.getHour()), x, getHeight() - 25);
-                }
-                if (lt.getMinute() == 30 && lt.getSecond() == 0) {
-                    g.drawString(Integer.toString(lt.getHour()) + ":30", x, getHeight() - 25);
+                if(lt.getMinute() % 30 == 0 ) {
+                    g.drawString(Integer.toString(lt.getHour()) + ":"+lt.getMinute(), x, getHeight() - 25);
                 }
             }
             x += WIDTH_XU;
@@ -118,9 +106,6 @@ public class GraphXU extends JComponent {
         }
     }
 
-    /**
-     * Convert bar value to y coordinate.
-     */
     private int getY(double v) {
         double span = max - min;
         double pct = (v - min) / span;

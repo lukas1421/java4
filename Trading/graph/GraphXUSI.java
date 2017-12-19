@@ -130,15 +130,19 @@ public class GraphXUSI extends JComponent {
 
             if (detailed) {
                 g.setColor(Color.black);
-                if (lastDrawT.plusMinutes(5).isBefore(xu.lastKey())) {
-                    if (lt.isAfter(lastDrawT.plusMinutes(5))) {
-                        g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 25);
 
-                        if (lastDrawT.plusMinutes(5).isBefore(xu.lastKey())) {
-                            lastDrawT = lt;
-                        }
-                    }
+                if(lt.equals(xu.lastKey())) {
+                    g.drawString(""+lt.truncatedTo(ChronoUnit.MINUTES),x,getHeight()-25);
                 }
+
+//                if (lastDrawT.plusMinutes(5).isBefore(xu.lastKey())) {
+//                    if (lt.isAfter(lastDrawT.plusMinutes(5))) {
+//                        g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 25);
+//                        if (lastDrawT.plusMinutes(5).isBefore(xu.lastKey())) {
+//                            lastDrawT = lt;
+//                        }
+//                    }
+//                }
             }
             x += WIDTH_XU;
         }

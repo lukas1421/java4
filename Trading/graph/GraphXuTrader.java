@@ -353,7 +353,7 @@ public class GraphXuTrader extends JComponent {
 
     private double getPD() {
         if(getIndex()!=0.0) {
-            return r(getLast() / getIndex() - 1);
+            return r(100d*(getLast() / getIndex() - 1));
         }
         return 0.0;
     }
