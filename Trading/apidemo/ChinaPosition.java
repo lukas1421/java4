@@ -631,9 +631,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     @Override
     public void handleHist(String name, String date, double open, double high, double low, double close) {
-        LocalDate currDate = LocalDate.now();
-        //System.out.println(" ");
-        //System.out.println(getStr(" in chinaposition handle hist date is ", date, close));
 
         LocalDate ytd = currentTradingDate.equals(dateMap.get(2)) ? dateMap.get(1) : dateMap.get(2);
 
@@ -653,11 +650,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             if (((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
                     || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
                 if (lt.equals(LocalTime.of(9, 0))) {
-
                     openMap.put(name, open);
-                    //xuOpenPrice = open;
-                    //System.out.println(" today open is " + xuOpenPrice);
-                    //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                     System.out.println(Utility.getStrCheckNull("updating open in chinapos", ld, lt, open));
                 }
             } else {
@@ -666,7 +659,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 //System.out.println(getStr(" outside regular area ", ld, lt, close, " desired date " + dateMap.get(1)));
                 if (ld.isEqual(ytd) && lt.isBefore(LocalTime.of(17, 0))) {
                     ChinaStock.closeMap.put(name, close);
-                    System.out.println(getStr(" updating close ", ytd, name, closeMap.getOrDefault(name, 0.0)));
+                    System.out.println(getStr(" updating close ", ytd,lt, name, closeMap.getOrDefault(name, 0.0)));
                     //xuPreviousClose = close;
                 }
             }

@@ -66,7 +66,7 @@ public final class XU extends JPanel {
 //    GraphXU graph4 = new GraphXU();
 //    GraphXU graph5 = new GraphXU();
 //    GraphXU graph6 = new GraphXU();
-    GraphBar graph1 = new GraphBar();
+    private GraphBar graph1 = new GraphBar();
     GraphBar graph2 = new GraphBar();
     GraphXUSI graph3 = new GraphXUSI();
     GraphXU graph4 = new GraphXU();

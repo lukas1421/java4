@@ -337,15 +337,19 @@ final class ChinaIndex extends JPanel {
     private static void computeFTSEKiyodo() {
         if (SinaStock.rtn != 0.0) {
             ftseKiyodoMap = weightMapA50.entrySet().stream().collect(
-                    Collectors.groupingBy(e -> ChinaStock.shortIndustryMap.get(e.getKey()),
+                    Collectors.groupingBy(e -> ChinaStock.shortIndustryMap.getOrDefault(e.getKey(),"noExist"),
                             Collectors.summingDouble(e -> e.getValue() * ChinaStock.returnMap.getOrDefault(e.getKey(), 0.0) / SinaStock.rtn)));
         }
     }
 
     private static void computeFTSESumWeight() {
         ftseSectorSumWeightMap = weightMapA50.entrySet().stream()
-                .collect(Collectors.groupingBy(e -> ChinaStock.shortIndustryMap.get(e.getKey()),
-                        Collectors.summingDouble(Entry::getValue)));
+                .collect(Collectors.groupingBy(e -> {
+                    if(ChinaStock.shortIndustryMap.containsKey(e.getKey())) {
+                        return ChinaStock.shortIndustryMap.get(e.getKey());
+                    } else {
+                        throw new IllegalArgumentException(" no short industry for " + e.getKey());
+                    }},Collectors.summingDouble(Entry::getValue)));
     }
 
     private static void computeFTSESectorWeightedReturn() {

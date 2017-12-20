@@ -64,7 +64,7 @@ public final class ChinaStock extends JPanel {
     public static List<String> symbolNames = new ArrayList<>(1000);
     public static List<String> symbolNamesFull = new ArrayList<>(1000);
 
-    List<Double> weights = new ArrayList<>(600);
+    private List<Double> weights = new ArrayList<>(600);
     String line;
     public static volatile String listNames;
     public static volatile String listNameSH;
@@ -594,16 +594,12 @@ public final class ChinaStock extends JPanel {
                 ftes = Executors.newScheduledThreadPool(10);
                 //ftes.scheduleAtFixedRate(ChinaCompute.getChinaCompute(), 0, 5, TimeUnit.SECONDS);
 
-                ftes.scheduleAtFixedRate(() -> {
-                    //out.println("refreshing cstock model" + LocalTime.now());
-                    pureRefreshTable();
-                }, 5, 30, TimeUnit.SECONDS);
+                //out.println("refreshing cstock model" + LocalTime.now());
+                ftes.scheduleAtFixedRate(ChinaStock::pureRefreshTable, 5, 30, TimeUnit.SECONDS);
 
 
-                ftes.scheduleAtFixedRate(() -> {
-                    //System.out.println(" computeing graph industry ");
-                    GraphIndustry.compute();
-                }, 0, 1000, TimeUnit.MILLISECONDS);
+                //System.out.println(" computeing graph industry ");
+                ftes.scheduleAtFixedRate(GraphIndustry::compute, 0, 1000, TimeUnit.MILLISECONDS);
 
                 //above is tested
 
@@ -621,19 +617,13 @@ public final class ChinaStock extends JPanel {
 
                 //System.out.println(" ChinaIndex.computeAll ");
 
-                ftes.scheduleAtFixedRate(() -> {
-                    ChinaIndex.computeAll();
-                }, 0, 5, TimeUnit.SECONDS);
+                ftes.scheduleAtFixedRate(ChinaIndex::computeAll, 0, 5, TimeUnit.SECONDS);
 
 
                 //tested
-                ftes.scheduleAtFixedRate(() -> {
-                    ChinaIndex.updateIndexTable();
-                }, 0, 15, TimeUnit.SECONDS);
+                ftes.scheduleAtFixedRate(ChinaIndex::updateIndexTable, 0, 15, TimeUnit.SECONDS);
 
-                ftes.scheduleAtFixedRate(() -> {
-                    ChinaIndex.repaintGraph();
-                }, 0, 5, TimeUnit.SECONDS);
+                ftes.scheduleAtFixedRate(ChinaIndex::repaintGraph, 0, 5, TimeUnit.SECONDS);
 
                 ftes.scheduleAtFixedRate(() -> {
                     //ChinaBigGraph.refresh();

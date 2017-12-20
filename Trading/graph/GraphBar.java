@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static apidemo.ChinaData.*;
 import static apidemo.ChinaDataYesterday.*;
@@ -44,6 +45,7 @@ public final class GraphBar extends JComponent implements GraphFillable {
     LocalTime minAMT;
     volatile int size;
     private static final BasicStroke BS3 = new BasicStroke(3);
+    private static Predicate<? super Entry<LocalTime, ?>> graphBarDispPred = e->e.getKey().isAfter(LocalTime.of(9,19));
 
     private int wtdP;
 
@@ -62,6 +64,7 @@ public final class GraphBar extends JComponent implements GraphFillable {
 
     public void setNavigableMap(NavigableMap<LocalTime, SimpleBar> tm) {
         this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue().containsZero())
+                .filter(graphBarDispPred)
                 .collect(toMap(Entry::getKey, Entry::getValue, (u, v) -> u,
                         ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
     }

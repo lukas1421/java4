@@ -485,8 +485,6 @@ public final class ChinaData extends JPanel {
 //    public void hibSaveStrat() {
 //        saveHibGen(strategyTotalMap, new ConcurrentHashMap<>(), ChinaSaveStrat.getInstance());
 //    }
-
-
 //    private void hibLoadStrat() {
 //        CompletableFuture.runAsync(() -> {
 //            Hibtask.loadHibGen(ChinaSaveStrat.getInstance());

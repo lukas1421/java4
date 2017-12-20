@@ -110,6 +110,10 @@ public class GraphXUSI extends JComponent {
             g2.drawLine(x, last, x + WIDTH_XU, close);
             last = close;
 
+            if(lt.equals(xu.firstKey())) {
+                g.drawString(""+lt.truncatedTo(ChronoUnit.MINUTES), x, getHeight() - 25);
+            }
+
             if (!detailed) {
                 if (lt.getMinute() == 0 && lt.getSecond() == 0) {
                     g.drawString(lt.truncatedTo(ChronoUnit.HOURS).toString(), x, getHeight() - 25);
