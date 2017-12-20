@@ -73,21 +73,24 @@ public class XuSave implements Serializable {
     public void setIndexVolBlob(Blob b) {
         indexVolBlob = b;
     }
-    //static void setBlobGen(Consumer<Blob> f, Blob b){f.accept(b);} 
 
+    //static void setBlobGen(Consumer<Blob> f, Blob b){f.accept(b);}
 //    public void updateFut(NavigableMap<LocalTime, ?> m) {
 //        XU.lastFutPrice = (NavigableMap<LocalTime, SimpleBar>) m;
 //    }
 
     public void updateIndex(NavigableMap<LocalTime, ?> m) {
+        //noinspection unchecked
         XU.indexPriceSina = (NavigableMap<LocalTime, SimpleBar>) m;
     }
 
     public void updateFutVol(NavigableMap<LocalTime, ?> m) {
+        //noinspection unchecked
         XU.frontFutVol = (NavigableMap<LocalTime, Integer>) m;
     }
 
     public void updateIndexVol(NavigableMap<LocalTime, ?> m) {
+        //noinspection unchecked
         XU.indexVol = (NavigableMap<LocalTime, Double>) m;
     }
 

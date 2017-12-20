@@ -72,8 +72,8 @@ public final class MorningTask implements HistoricalHandler {
         String line;
         List<String> ind = Arrays.asList(indices.split(","));
         System.out.println(ind);
-        String currentLine = "";
-        String previousLine = "";
+        String currentLine;
+        String previousLine;
         for (String s : ind) {
             String name = s.substring(0, 2).toUpperCase() + "#" + s.substring(2) + ".txt";
             currentLine = "";
@@ -98,6 +98,7 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
+    @SuppressWarnings("unused")
     static void writeIndex(BufferedWriter out) {
         String line;
         try {
@@ -125,9 +126,9 @@ public final class MorningTask implements HistoricalHandler {
     private static void writeETF(BufferedWriter out) {
         String line;
         List<String> etfs = Arrays.asList("2823:HK", "2822:HK", "3147:HK", "3188:HK", "FXI:US", "CNXT:US", "ASHR:US", "ASHS:US");
-        Pattern p = Pattern.compile("(?<=\\\"price\\\":)(\\d+(.\\d+)?)");
-        Pattern p2 = Pattern.compile("(?<=\\\"netAssetValue\\\":)\\d+(.\\d+)?");
-        Pattern p3 = Pattern.compile("(?<=\\\"netAssetValueDate\\\":\\\")\\d{4}-\\d{2}-\\d{2}(?=\\\")");
+        Pattern p = Pattern.compile("(?<=\"price\":)(\\d+(.\\d+)?)");
+        Pattern p2 = Pattern.compile("(?<=\"netAssetValue\":)\\d+(.\\d+)?");
+        Pattern p3 = Pattern.compile("(?<=\"netAssetValueDate\":\")\\d{4}-\\d{2}-\\d{2}(?=\")");
 
         //Proxy proxy = new Proxy(Proxy.Type.HTTP,new InetSocketAddress("127.0.0.1",1080));
         for (String e : etfs) {
@@ -184,7 +185,7 @@ public final class MorningTask implements HistoricalHandler {
         urlString = "https://www.investing.com/indices/ftse-china-a50";
         String line;
         //Pattern p = Pattern.compile("(?<=div class=\\\"price\\\">)\\d+\\.\\d+(?=</div>)");
-        Pattern p = Pattern.compile("(?<=<td id=\\\"_last_28930\\\" class=\\\"pid-28930-last\\\">)\\d+,\\d+\\.\\d+");
+        Pattern p = Pattern.compile("(?<=<td id=\"_last_28930\" class=\"pid-28930-last\">)\\d+,\\d+\\.\\d+");
         //Pattern p = Pattern.compile("(?<=pid-28930-last\\\">)\\d+");
         //Pattern p2 = Pattern.compile("(?<=\\\"netAssetValue\\\":)\\d+.\\d+(?=,) ") ;
         try {
@@ -259,7 +260,7 @@ public final class MorningTask implements HistoricalHandler {
         String line;
         urlString = "https://finance.yahoo.com/quote/XIN0UN.FGI?ltr=1";
         Pattern p;
-        p = Pattern.compile("\\\"exchangeName\\\":\\\"FTSE Index\\\".*?\\\"regularMarketPrice\\\":\\{\\\"raw\\\":(\\d+(\\.\\d+)?)");
+        p = Pattern.compile("\"exchangeName\":\"FTSE Index\".*?\"regularMarketPrice\":\\{\"raw\":(\\d+(\\.\\d+)?)");
 
         //Proxy proxy = proxy;
         try {
@@ -287,7 +288,7 @@ public final class MorningTask implements HistoricalHandler {
     static void getBOCFX() {
         urlString = "http://www.boc.cn/sourcedb/whpj";
         String line1;
-        Pattern p = Pattern.compile("美元</td>(.*?)(?:</tr>)");
+        //Pattern p = Pattern.compile("美元</td>(.*?)(?:</tr>)");
         Pattern p1 = Pattern.compile("(?s)美元</td>.*");
         Pattern p2 = Pattern.compile("<td>(.*?)</td>");
         Pattern p3 = Pattern.compile("</tr>");
@@ -346,6 +347,7 @@ public final class MorningTask implements HistoricalHandler {
     }
 
 
+    @SuppressWarnings("unused")
     public static void handleHistoricalData(String date, double c) {
         System.out.println(" handling historical data ");
 
@@ -417,7 +419,6 @@ public final class MorningTask implements HistoricalHandler {
 
     @SuppressWarnings("SpellCheckingInspection")
     private static void processShcomp() {
-
         final String tdxPath = TradingConstants.tdxPath;
         File output = new File(TradingConstants.GLOBALPATH + "shcomp.txt");
         LocalDate t = LocalDate.now();
@@ -437,7 +438,6 @@ public final class MorningTask implements HistoricalHandler {
         final String dateString = t.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         System.out.println(" date is " + dateString);
 
-        boolean found = false;
         String name = "SH#000001.txt";
         String line;
         NavigableMap<LocalTime, SimpleBar> dataMap = new TreeMap<>();
@@ -451,7 +451,6 @@ public final class MorningTask implements HistoricalHandler {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 if (al1.get(0).equals(dateString)) {
-                    found = true;
                     String time = al1.get(1);
                     LocalTime lt = LocalTime.of(Integer.parseInt(time.substring(0, 2)), Integer.parseInt(time.substring(2)));
                     dataMap.put(lt.minusMinutes(1L), new SimpleBar(Double.parseDouble(al1.get(2)), Double.parseDouble(al1.get(3)),

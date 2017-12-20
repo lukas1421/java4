@@ -45,7 +45,7 @@ public final class XU extends JPanel {
     public static volatile NavigableMap<LocalTime, SimpleBar> indexPriceSina = new ConcurrentSkipListMap<>();
 
     public static volatile NavigableMap<LocalTime, Integer> frontFutVol = new ConcurrentSkipListMap<>();
-    public static volatile NavigableMap<LocalTime, Integer> backFutVol = new ConcurrentSkipListMap<>();
+    //public static volatile NavigableMap<LocalTime, Integer> backFutVol = new ConcurrentSkipListMap<>();
     public static volatile NavigableMap<LocalTime, Double> indexVol = new ConcurrentSkipListMap<>();
 
     //private FrontFutHandler frontfut = new FrontFutHandler();
@@ -55,7 +55,7 @@ public final class XU extends JPanel {
 //   static NavigableMap<LocalTime, Double> askPrice = new ConcurrentSkipListMap<>();
 //   static NavigableMap<LocalTime, Integer> bidVol = new ConcurrentSkipListMap<>();
 //   static NavigableMap<LocalTime, Integer> askVol = new ConcurrentSkipListMap<>();
-    static ArrayList<LocalTime> tradeTimeXU = new ArrayList<>();
+    private static ArrayList<LocalTime> tradeTimeXU = new ArrayList<>();
     static BarModel m_model;
     static ExecutorService es = Executors.newCachedThreadPool();
     private ScheduledExecutorService ftes;
@@ -67,35 +67,35 @@ public final class XU extends JPanel {
 //    GraphXU graph5 = new GraphXU();
 //    GraphXU graph6 = new GraphXU();
     private GraphBar graph1 = new GraphBar();
-    private GraphBar graph2 = new GraphBar(e->e.getKey().isAfter(LocalTime.of(8,59)));
+    private GraphBar graph2 = new GraphBar(e -> e.getKey().isAfter(LocalTime.of(8, 59)));
     private GraphXUSI graph3 = new GraphXUSI();
     private GraphXU graph4 = new GraphXU();
     private GraphXU graph5 = new GraphXU();
     private GraphXU graph6 = new GraphXU();
 
-    String V1 = "V1";
-    String V2 = "V2";
-    String prev = "";
+    //    String V1 = "V1";
+//    String V2 = "V2";
+//    String prev = "";
     //String current = V1;
-    static final File SOURCE = new File(TradingConstants.GLOBALPATH + "XU.ser");
-    static final File BACKUP = new File(TradingConstants.GLOBALPATH + "XUBACKUP.ser");
+    private static final File SOURCE = new File(TradingConstants.GLOBALPATH + "XU.ser");
+    private static final File BACKUP = new File(TradingConstants.GLOBALPATH + "XUBACKUP.ser");
 
-    public static boolean graphCreated = false;
+    //public static boolean graphCreated = false;
 
     //protected TreeMap<LocalTime, Integer> consummation = new TreeMap<>();
 
     //public static ConcurrentSkipListMap<LocalTime,Double> indexPrice = new ConcurrentSkipListMap<>();
-    public static NavigableMap<LocalTime, Double> indexSinaDiscount = new ConcurrentSkipListMap<>();
-    static NavigableMap<LocalTime, Integer> pricePercentile = new ConcurrentSkipListMap<>();
-    public static volatile NavigableMap<LocalTime, Double> discPremSina = new ConcurrentSkipListMap<>();
-    static NavigableMap<LocalTime, Double> discPremPercentile = new ConcurrentSkipListMap<>();
+    //public static NavigableMap<LocalTime, Double> indexSinaDiscount = new ConcurrentSkipListMap<>();
+    private static NavigableMap<LocalTime, Integer> pricePercentile = new ConcurrentSkipListMap<>();
+    private static volatile NavigableMap<LocalTime, Double> discPremSina = new ConcurrentSkipListMap<>();
+    private static NavigableMap<LocalTime, Double> discPremPercentile = new ConcurrentSkipListMap<>();
 
     static JPanel graphPanel = new JPanel();
-    static ConcurrentHashMap<Integer, NavigableMap<LocalTime, ?>> xusave = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<Integer, NavigableMap<LocalTime, ?>> xusave = new ConcurrentHashMap<>();
 
     XU() {
         LocalTime lt = LocalTime.of(8, 45);
-        while (lt.isBefore(LocalTime.of(16, 01))) {
+        while (lt.isBefore(LocalTime.of(16, 1))) {
             tradeTimeXU.add(lt);
             lt = lt.plusMinutes(1L);
         }
@@ -134,9 +134,7 @@ public final class XU extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    SwingUtilities.invokeLater(() -> {
-                        m_model.fireTableDataChanged();
-                    });
+                    SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
                 }
             }
         });
@@ -144,7 +142,7 @@ public final class XU extends JPanel {
         JPanel jp = new JPanel();
         JButton btnSave = new JButton("save");
         JButton btnLoad = new JButton("load");
-        JButton backFill = new JButton("backfill");
+        //JButton backFill = new JButton("backfill");
         JButton startIndex = new JButton("get Index");
         JButton endIndex = new JButton("End index");
         //jp.add(btnSave);
@@ -164,7 +162,7 @@ public final class XU extends JPanel {
                 //xusave.put(1, lastFutPrice);
                 xusave.put(2, indexPriceSina);
                 xusave.put(3, frontFutVol);
-                xusave.put(3, indexVol);
+                xusave.put(4, indexVol);
                 oos.writeObject(xusave);
             } catch (IOException e) {
                 e.printStackTrace();
@@ -185,7 +183,9 @@ public final class XU extends JPanel {
                     //lastFutPrice = (ConcurrentSkipListMap<LocalTime, SimpleBar>) xusave.get(1);
                     //noinspection unchecked
                     indexPriceSina = (ConcurrentSkipListMap<LocalTime, SimpleBar>) xusave.get(2);
+                    //noinspection unchecked
                     frontFutVol = (ConcurrentSkipListMap<LocalTime, Integer>) xusave.get(3);
+                    //noinspection unchecked
                     indexVol = (ConcurrentSkipListMap<LocalTime, Double>) xusave.get(4);
 
                     System.out.println("LOADING done");
@@ -198,9 +198,7 @@ public final class XU extends JPanel {
             });
         });
 
-        startIndex.addActionListener((ActionEvent al) -> {
-            startIndex();
-        });
+        startIndex.addActionListener((ActionEvent al) -> startIndex());
 
         endIndex.addActionListener(al -> {
             ftes.shutdownNow();
@@ -214,7 +212,7 @@ public final class XU extends JPanel {
 //                 graph1.setNavigableMap(lastFutPrice);
 //                 graph2.setNavigableMap(indexPriceSina);
 
-                SwingUtilities.invokeLater(()-> {
+                SwingUtilities.invokeLater(() -> {
                     graph1.fillInGraph("FTSEA50");
                     graph2.fillInGraph("SGXA50");
                     graph3.setSkipMap(priceMapBar.get("SGXA50"), indexPriceSina);
@@ -227,12 +225,10 @@ public final class XU extends JPanel {
         });
 
         JButton refreshGrid = new JButton("Refresh");
-        refreshGrid.addActionListener(al -> {
-            SwingUtilities.invokeLater(() -> {
-                m_model.fireTableDataChanged();
-                graphPanel.repaint();
-            });
-        });
+        refreshGrid.addActionListener(al -> SwingUtilities.invokeLater(() -> {
+            m_model.fireTableDataChanged();
+            graphPanel.repaint();
+        }));
 
         JButton saveHib = new JButton("saveHib");
 
@@ -243,9 +239,7 @@ public final class XU extends JPanel {
         });
 
         JButton loadHib = new JButton("loadHib");
-        loadHib.addActionListener(l -> {
-            CompletableFuture.runAsync(XU::loadHibXU);
-        });
+        loadHib.addActionListener(l -> CompletableFuture.runAsync(XU::loadHibXU));
 
         jp.add(saveHib);
         jp.add(loadHib);
@@ -365,7 +359,7 @@ public final class XU extends JPanel {
             graph4.setSkipMap(discPremSina);
             graph5.setSkipMap(discPremPercentile);
             graph6.setSkipMap(pricePercentile);
-            SwingUtilities.invokeLater(()-> {
+            SwingUtilities.invokeLater(() -> {
                 graphPanel.repaint();
                 m_model.fireTableDataChanged();
             });
@@ -391,7 +385,7 @@ public final class XU extends JPanel {
             //xusave.put(1, lastFutPrice);
             xusave.put(2, indexPriceSina);
             xusave.put(3, frontFutVol);
-            xusave.put(3, indexVol);
+            xusave.put(4, indexVol);
             oos.writeObject(xusave);
         } catch (IOException e) {
             e.printStackTrace();
@@ -400,14 +394,19 @@ public final class XU extends JPanel {
         System.out.println(" ending saving ");
     }
 
+    @SuppressWarnings("unused")
     static void loadXU() {
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(SOURCE))) {
+            //noinspection unchecked
             xusave = (ConcurrentHashMap<Integer, NavigableMap<LocalTime, ?>>) ois.readObject();
 
             CompletableFuture.runAsync(() -> {
                 //lastFutPrice = (ConcurrentSkipListMap<LocalTime, SimpleBar>) xusave.get(1);
+                //noinspection unchecked
                 indexPriceSina = (ConcurrentSkipListMap<LocalTime, SimpleBar>) xusave.get(2);
+                //noinspection unchecked
                 frontFutVol = (ConcurrentSkipListMap<LocalTime, Integer>) xusave.get(3);
+                //noinspection unchecked
                 indexVol = (ConcurrentSkipListMap<LocalTime, Double>) xusave.get(4);
                 System.out.println("LOADING done");
             }).thenRunAsync(() -> {
@@ -441,7 +440,7 @@ public final class XU extends JPanel {
         System.out.println(" saving finished of XU " + LocalTime.now());
     }
 
-    static void loadHibXU() {
+    private static void loadHibXU() {
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
         try (Session session = sessionF.openSession()) {
             try {
@@ -457,7 +456,7 @@ public final class XU extends JPanel {
         }
     }
 
-    static void getPricePercentile() {
+    private static void getPricePercentile() {
         double max = 0.0;
         double min = Double.MAX_VALUE;
         //Iterator it  = lastFutPrice.keySet().iterator();
@@ -478,23 +477,16 @@ public final class XU extends JPanel {
         }
     }
 
-    static void getDiscPremPercentile() {
+    private static void getDiscPremPercentile() {
         double max = 0.0;
         double min = Double.MAX_VALUE;
-        //Iterator it  = lastFutPrice.keySet().iterator();
-        Iterator it = priceMapBar.get("SGXA50").keySet().iterator();
-        LocalTime k;
-        double v;
         double current;
 
-        while (it.hasNext()) {
-            k = (LocalTime) it.next();
-            //v= lastFutPrice.get(k).getClose();
-            v = priceMapBar.get("SGXA50").get(k).getClose();
-
+        for (LocalTime k : priceMapBar.get("SGXA50").keySet()) {
+            double v = priceMapBar.get("SGXA50").get(k).getClose();
             if (priceMapBar.get("FTSEA50").containsKey(k)) {
-                current = Math.round(10000d * (v / Optional.ofNullable(priceMapBar.get("FTSEA50").get(k)).map(SimpleBar::getClose).orElse(v) - 1)) / 100d;
-
+                current = Math.round(10000d * (v / Optional.ofNullable(priceMapBar.get("FTSEA50")
+                        .get(k)).map(SimpleBar::getClose).orElse(v) - 1)) / 100d;
                 discPremSina.put(k, current);
                 max = max(current, max);
                 min = min(current, min);
@@ -503,6 +495,7 @@ public final class XU extends JPanel {
         }
     }
 
+    @SuppressWarnings("unused")
     public TreeMap<LocalTime, Double> getMaxMin(NavigableMap<LocalTime, Double> nm) {
         TreeMap<LocalTime, Double> maxminArray = new TreeMap<>();
         ArrayList<Double> arr = new ArrayList<>();
@@ -522,8 +515,6 @@ public final class XU extends JPanel {
 
             if (v > tempMax) {
                 tempMax = v;
-                previousMax = v;
-                jolt = v - previousMin;
 
                 if (flagMax) {
                     if (!maxminArray.isEmpty()) {
@@ -536,15 +527,10 @@ public final class XU extends JPanel {
                     maxminArray.put(lt, v);
                     arr.add(v);
                 }
-
-                percentile = (v - arr.get(arr.size() - 1)) / (arr.get(arr.size() - 2) - arr.get(arr.size() - 1));
                 flagMax = true;
-
             }
             if (v < tempMin) {
                 tempMin = v;
-                previousMin = v;
-                dd = previousMax - v;
 
                 if (flagMax) {
                     maxminArray.put(lt, v);
@@ -556,7 +542,6 @@ public final class XU extends JPanel {
                     arr.add(v);
                 }
                 flagMax = false;
-                percentile = (arr.get(arr.size() - 1) - v) / (arr.get(arr.size() - 1) - arr.get(arr.size() - 2));
             }
         }
         return maxminArray;
@@ -696,7 +681,6 @@ public final class XU extends JPanel {
                         }
                     }
                     return 0.0;
-
                 case 6:
                     return round(ChinaData.sizeTotalMap.get("FTSEA50").getOrDefault(lt, 0.0) / 10d) / 10d;
                 case 7:

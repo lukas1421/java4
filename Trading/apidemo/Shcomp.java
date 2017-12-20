@@ -35,7 +35,7 @@ final class Shcomp extends JPanel implements Runnable {
     ConcurrentHashMap<String, Double> weightMap = new ConcurrentHashMap<>();
     private ArrayList<LocalTime> tradeTime = new ArrayList<>();
 
-    ConcurrentSkipListMap<LocalTime, Double> shcompPrice = new ConcurrentSkipListMap<>();
+    private ConcurrentSkipListMap<LocalTime, Double> shcompPrice = new ConcurrentSkipListMap<>();
     ConcurrentSkipListMap<LocalTime, Double> probMap = new ConcurrentSkipListMap<>();
     ConcurrentSkipListMap<LocalTime, Double> dProb = new ConcurrentSkipListMap<>();
     ConcurrentSkipListMap<LocalTime, Double> maxProb = new ConcurrentSkipListMap<>();

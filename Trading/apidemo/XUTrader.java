@@ -937,6 +937,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         jd.setVisible(true);
     }
 
+    @SuppressWarnings("unused")
     static double getNetPnlForAllFuts() {
         return Arrays.stream(FutType.values()).mapToDouble(XUTrader::getNetPnlFor1Fut).sum();
     }
