@@ -96,7 +96,9 @@ public final class XU extends JPanel {
     XU() {
         LocalTime lt = LocalTime.of(8, 45);
         while (lt.isBefore(LocalTime.of(16, 1))) {
-            tradeTimeXU.add(lt);
+            if(!(lt.isAfter(LocalTime.of(11,30)) && lt.isBefore(LocalTime.of(13,0)))) {
+                tradeTimeXU.add(lt);
+            }
             lt = lt.plusMinutes(1L);
         }
 
