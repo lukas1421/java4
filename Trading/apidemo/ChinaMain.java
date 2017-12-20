@@ -558,7 +558,7 @@ public final class ChinaMain implements IConnectionHandler {
 
         // make initial connection to local host, port 7496, client id 0, 4001 is for with IBAPI
         // m_controller.connect( "127.0.0.1", PORT_IBAPI, 0);
-        // m_controller.connect( "127.0.0.1", 7496, 0);
+        // m_controller.connect( "1i27.0.0.1", 7496, 0);
         CompletableFuture.runAsync(() -> {
             try {
                 M_CONTROLLER.connect("127.0.0.1", 7496, 0,

@@ -2230,11 +2230,14 @@ public final class ChinaStock extends JPanel {
 
                 //下p落
                 case 16:
-                    //return()? (int)min(100,round(100d*(priceMap.get(name)-minMap.get(name))/(maxMap.get(name)-minMap.get(name)))):0;
-                    if (Utility.noZeroArrayGen(name, minMap, maxMap, priceMap) && NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET)) {
-                        return round((priceMap.get(name) - priceMapBar.get(name).floorEntry(Utility.AMCLOSET).getValue().getClose()) / (maxMap.get(name) - minMap.get(name)) * 100);
-                    }
-                    return 0L;
+                    return computePMPercentChg(name);
+
+//                    //return()? (int)min(100,round(100d*(priceMap.get(name)-minMap.get(name))/(maxMap.get(name)-minMap.get(name)))):0;
+//                    if (Utility.noZeroArrayGen(name, minMap, maxMap, priceMap) && NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET)) {
+//                        return round((priceMap.get(name) - priceMapBar.get(name).floorEntry(Utility.AMCLOSET).getValue().getClose())
+//                                / (maxMap.get(name) - minMap.get(name)) * 100);
+//                    }
+//                    return 0L;
 
                 //AMHO today
                 case 17:

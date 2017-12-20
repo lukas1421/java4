@@ -40,6 +40,7 @@ import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.lang.System.out;
 import static java.util.stream.Collectors.toCollection;
+import static utility.Utility.r;
 
 public final class ChinaStockHelper {
 
@@ -701,6 +702,19 @@ public final class ChinaStockHelper {
             });
         }
         return retMap;
+    }
+
+    static double computePMPercentChg(String name) {
+        if(priceMapBar.containsKey(name) && priceMapBar.get(name).size()>0) {
+            double max = Utility.reduceMapToDouble(priceMapBar.get(name),SimpleBar::getHigh,Double::max);
+            double min = Utility.reduceMapToDouble(priceMapBar.get(name),SimpleBar::getLow,Double::min);
+            double last = priceMapBar.get(name).lastEntry().getValue().getClose();
+            double amClose = priceMapBar.get(name).floorEntry(Utility.AMCLOSET).getValue().getClose();
+            if(max!=min && max !=0.0 && min!=0.0) {
+                return r((last-amClose)/(max-min));
+            }
+        }
+        return 0.0;
     }
 
 }
