@@ -5,19 +5,15 @@ import java.util.Map;
 
 public enum FutType {
     PreviousFut("SGXA50PR"), FrontFut("SGXA50"), BackFut("SGXA50BM");
-
     private String tickerName;
-
     FutType(String t) {
         tickerName = t;
     }
-
 //    FutType(Contract c) {
 //        tickerName = ibContractToSymbol(c);
 //    }
 
     private static final Map<String, FutType> lookup = new HashMap<String, FutType>();
-
     static {
         for(FutType t: FutType.values()) {
             lookup.put(t.getTicker(),t);

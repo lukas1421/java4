@@ -67,7 +67,6 @@ public final class MorningTask implements HistoricalHandler {
         es.schedule(() -> System.exit(0), 5, TimeUnit.SECONDS);
     }
 
-
     private static void writeIndexTDX(BufferedWriter out) {
         String line;
         List<String> ind = Arrays.asList(indices.split(","));
@@ -417,7 +416,7 @@ public final class MorningTask implements HistoricalHandler {
                 Types.BarSize._1_hour, Types.WhatToShow.MIDPOINT, false);
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
+    @SuppressWarnings({"SpellCheckingInspection", "ConstantConditions"})
     private static void processShcomp() {
         final String tdxPath = TradingConstants.tdxPath;
         File output = new File(TradingConstants.GLOBALPATH + "shcomp.txt");

@@ -16,44 +16,33 @@ import java.util.*;
 import java.util.List;
 
 public class HKStock extends JPanel {
-
     public static volatile Map<String, Double> hkCurrPrice = new HashMap<>();
-
     public static volatile Map<String, Double> hkVol = new HashMap<>();
 
-    static GraphBar graph1 = new GraphBar();
-    static GraphBar graph2 = new GraphBar();
-    static GraphBar graph3 = new GraphBar();
-    static GraphBar graph4 = new GraphBar();
-    static GraphBar graph5 = new GraphBar();
-    static GraphBar graph6 = new GraphBar();
+    private static GraphBar graph1 = new GraphBar();
+    private static GraphBar graph2 = new GraphBar();
+    private static GraphBar graph3 = new GraphBar();
+    private static GraphBar graph4 = new GraphBar();
+    private static GraphBar graph5 = new GraphBar();
+    private static GraphBar graph6 = new GraphBar();
 
     BarModel_HKStock m_model;
     static JPanel graphPanel;
-    int modelRow;
-    int indexRow;
+    private int modelRow;
+    private int indexRow;
     static JTable tab;
 
-    private static TableRowSorter<BarModel_HKStock> sorter;
-    private final File hkstockFile= new File(TradingConstants.GLOBALPATH+"hkMainList.txt");
-    private final File ahFile= new File(TradingConstants.GLOBALPATH+"AHList.txt");
     String line;
     private static List<String> symbolNamesHK = new LinkedList<>();
     private static Map<String, String> haMap  = new HashMap<>();
     public static Map<String, String> hkNameMap = new HashMap<>();
-
-    private static String hkstock1 = "700";
-    private static String hkstock2 = "2823";
-    private static String hkstock3 = "2822";
-    private static String hkstock4 = "3188";
-    private static String hkstock5 = "3147";
-    private static String hkstock6 = "1398";
 
 
     @SuppressWarnings("unchecked")
     HKStock() {
 
         System.out.println(" initializing hk stock ");
+        File hkstockFile = new File(TradingConstants.GLOBALPATH + "hkMainList.txt");
         try(BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(hkstockFile),"GBK"))){
             while((line=reader1.readLine())!=null) {
                 //System.out.println(" hk line is " + line);
@@ -67,6 +56,7 @@ public class HKStock extends JPanel {
             e.printStackTrace();
         }
 
+        File ahFile = new File(TradingConstants.GLOBALPATH + "AHList.txt");
         try(BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ahFile),"GBK"))) {
             while((line=reader1.readLine())!=null) {
                 List<String> l = Arrays.asList(line.split("\t"));
@@ -82,11 +72,17 @@ public class HKStock extends JPanel {
         graphPanel = new JPanel();
         graphPanel.setLayout(new GridLayout(6,1));
 
+        String hkstock1 = "700";
         graph1.fillInGraphHK(hkstock1);
+        String hkstock2 = "2823";
         graph2.fillInGraphHK(hkstock2);
+        String hkstock3 = "2822";
         graph3.fillInGraphHK(hkstock3);
+        String hkstock4 = "3188";
         graph4.fillInGraphHK(hkstock4);
+        String hkstock5 = "3147";
         graph5.fillInGraphHK(hkstock5);
+        String hkstock6 = "1398";
         graph6.fillInGraphHK(hkstock6);
 
         JScrollPane gp1 = genNewScrollPane(graph1);
@@ -164,7 +160,7 @@ public class HKStock extends JPanel {
         add(scroll, BorderLayout.WEST);
         add(graphPanel, BorderLayout.CENTER);
         tab.setAutoCreateRowSorter(true);
-        sorter = (TableRowSorter<BarModel_HKStock>)tab.getRowSorter();
+        TableRowSorter<BarModel_HKStock> sorter = (TableRowSorter<BarModel_HKStock>) tab.getRowSorter();
 
     }
 

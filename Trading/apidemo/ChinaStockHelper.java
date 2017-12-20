@@ -15,7 +15,6 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
@@ -49,10 +48,6 @@ public final class ChinaStockHelper {
     }
 
     static Set<JScrollPane> paneSet = new LinkedHashSet<>();
-    static LinkedList<String> maxLastRangeList = new LinkedList<>();
-    static LinkedList<String> maxLastBarRtnList = new LinkedList<>();
-    static LinkedList<String> maxDayRtnList = new LinkedList<>();
-    static LinkedList<String> maxVRList = new LinkedList<>();
 
     public static String range1 = "";
     public static String range2 = "";
@@ -88,18 +83,18 @@ public final class ChinaStockHelper {
                     //(v1, v2) -> computeReturn(v1) >= computeReturn(v2) ? -1 : 1;
             Comparator<? super String> compVR = Comparator.comparingDouble(ChinaSizeRatio::computeSizeRatioLast).reversed();
 
-            maxLastRangeList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compLastRange)).limit(3)
+            LinkedList<String> maxLastRangeList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compLastRange)).limit(3)
                     .map(e -> (Utility.getStr("", e.getKey(), nameMap.get(e.getKey()), HLRANGE.applyAsDouble(e.getValue())))).collect(toCollection(LinkedList::new));
 
-            maxLastBarRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compBarRtn)).limit(3)
+            LinkedList<String> maxLastBarRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compBarRtn)).limit(3)
                     .map(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), BARRTN.applyAsDouble(e.getValue())))).collect(toCollection(LinkedList::new));
 
-            maxDayRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compDayRtn)).limit(3)
+            LinkedList<String> maxDayRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compDayRtn)).limit(3)
                     .map(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), round(computeReturn(e.getValue()) * 1000d) / 10d, "%"))).collect(toCollection(LinkedList::new));
 
-            maxVRList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByKey(compVR)).limit(3)
+            LinkedList<String> maxVRList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByKey(compVR)).limit(3)
                     .map(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), round(10d * computeSizeRatioLast(e.getKey())) / 10d,
-                    getCurrentSize(e.getKey())))).collect(toCollection(LinkedList::new));
+                            getCurrentSize(e.getKey())))).collect(toCollection(LinkedList::new));
 
             String t;
             range1 = ((t = maxLastRangeList.poll()) != null) ? t : "";
@@ -236,7 +231,6 @@ public final class ChinaStockHelper {
         final String tdxPath = "J:\\TDX\\T0002\\export_1m\\";
 
         LocalDate today = LocalDate.now();
-        long daysToSubtract = (today.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 3L : 1L;
         System.out.println(" localdate is " + today);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
@@ -281,9 +275,7 @@ public final class ChinaStockHelper {
                         System.out.println(" for " + e + " filling done");
                         SimpleBar sb = new SimpleBar(priceMap.getOrDefault(e,0.0));
 
-                        ChinaData.tradeTimePure.forEach(ti -> {
-                            ChinaData.priceMapBar.get(e).put(ti, sb);
-                        });
+                        ChinaData.tradeTimePure.forEach(ti -> ChinaData.priceMapBar.get(e).put(ti, sb));
                         System.out.println("last key " + e + " " + ChinaData.priceMapBar.get(e).lastEntry());
                         System.out.println("noon last key " + e + " " + ChinaData.priceMapBar.get(e).ceilingEntry(LocalTime.of(11, 30)).toString());
                     }
@@ -299,8 +291,7 @@ public final class ChinaStockHelper {
     static void getFilesFromTDX_YTD() {
         final String tdxPath = "J:\\TDX\\T0002\\export_1m\\";
 
-        LocalDate today = LocalDate.now();
-        long daysToSubtract = (today.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 4L : 2L;
+        //LocalDate today = LocalDate.now();
         LocalDate t;
         t = LocalDate.of(2017, Month.MAY, 26);
         //boolean found = false;
@@ -424,6 +415,7 @@ public final class ChinaStockHelper {
         ChinaData.sizeTotalMapY2.forEach(Utility::fixVolNavigableMap);
     }
 
+    @SuppressWarnings("unused")
     public LocalTime getMaxPriceRangeTime(String name) {
 
         LocalTime maxTime = Utility.AMOPENT;
@@ -473,6 +465,7 @@ public final class ChinaStockHelper {
         return 0.0;
     }
 
+    @SuppressWarnings("unused")
     public static double getZScoreGen(String name, Map<String, TreeMap<LocalTime, Double>> mp) {
 
 //        if(!mp.isEmpty() && mp.containsKey(name) && mp.get(name).size()>5) {
@@ -490,12 +483,12 @@ public final class ChinaStockHelper {
         return (minMap.containsKey(name)) ? round(100 * log(maxMap.get(name) / minMap.get(name))) / 100d : 0.0;
     }
 
-    static JScrollPane createPane(JComponent g, int hite, String nam) {
+    static JScrollPane createPane(JComponent g, String nam) {
         JScrollPane j = new JScrollPane(g) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = hite;
+                d.height = 300;
                 return d;
             }
 
@@ -514,11 +507,10 @@ public final class ChinaStockHelper {
     }
 
     static boolean lastBarHighest(String name) {
-        double last = priceMapBar.get(name).lastEntry().getValue().getClose();
+        //double last = priceMapBar.get(name).lastEntry().getValue().getClose();
         LocalTime lastKey = priceMapBar.get(name).lastKey();
         double previousMax = priceMapBar.get(name).headMap(lastKey, false).entrySet().stream()
                 .mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
-        //return last>previousMax;
         return GETMAXTIME.apply(name, Utility.IS_OPEN_PRED).equals(lastKey);
     }
 
@@ -545,7 +537,7 @@ public final class ChinaStockHelper {
 
         priceMapBar.get("FTSEA50").entrySet().removeIf(e -> e.getKey().isBefore(LocalTime.of(9, 29)));
 
-        buildA50Gen(open, ChinaData.priceMapBar, ChinaData.sizeTotalMap, closeMap);
+        buildA50Gen(open, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
 
         ChinaData.tradeTimePure.forEach(t -> {
             System.out.println(" t " + t);
@@ -566,22 +558,25 @@ public final class ChinaStockHelper {
 
             System.out.println(" value " + priceMapBar.get("FTSEA50").get(t).toString());
 
-            double vol = weightMapA50.entrySet().stream().mapToDouble(a -> {
-                return (ChinaData.sizeTotalMap.containsKey(a.getKey()) && ChinaData.sizeTotalMap.get(a.getKey()).size() > 0)
-                        ? ChinaData.sizeTotalMap.get(a.getKey()).ceilingEntry(t).getValue() * a.getValue() / 100d : 0.0;
-            }).sum();
+            double vol = weightMapA50.entrySet().stream().mapToDouble(a -> (ChinaData.sizeTotalMap
+                    .containsKey(a.getKey()) && ChinaData.sizeTotalMap.get(a.getKey()).size() > 0)
+                    ? ChinaData.sizeTotalMap.get(a.getKey()).ceilingEntry(t).getValue() * a.getValue() / 100d : 0.0).sum();
             ChinaData.sizeTotalMap.get("FTSEA50").put(t, vol);
         });
 
         closeMap.put("FTSEA50", open);
         openMap.put("FTSEA50", open);
+
         //System.out.println( "last key a50" +priceMapBar.get("FTSEA50").lastKey());
         //System.out.println( " last entry a50 "+priceMapBar.get("FTSEA50").lastEntry().getValue());
+
         priceMap.put("FTSEA50", priceMapBar.get("FTSEA50").lastEntry().getValue().getClose());
         double max = priceMapBar.get("FTSEA50").entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
         double min = priceMapBar.get("FTSEA50").entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
-        LocalTime maxT = priceMapBar.get("FTSEA50").entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getKey).orElse(LocalTime.MAX);
-        LocalTime minT = priceMapBar.get("FTSEA50").entrySet().stream().min(Utility.BAR_LOW).map(Entry::getKey).orElse(LocalTime.MAX);
+//        LocalTime maxT = priceMapBar.get("FTSEA50").entrySet().stream().max(Utility.BAR_HIGH)
+//                .map(Entry::getKey).orElse(LocalTime.MAX);
+//        LocalTime minT = priceMapBar.get("FTSEA50").entrySet().stream().min(Utility.BAR_LOW)
+//                .map(Entry::getKey).orElse(LocalTime.MAX);
 
         //System.out.println("a50 max" + max + " " + maxT);
         //System.out.println("a50 min" + min + " " + minT);
@@ -596,12 +591,12 @@ public final class ChinaStockHelper {
         double openY2 = ChinaData.ftseOpenMap.get(ChinaData.dateMap.get(0));
         double openYtd = ChinaData.ftseOpenMap.get(ChinaData.dateMap.get(1));
 
-        buildA50Gen(openYtd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd, new HashMap<>());
-        buildA50Gen(openY2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2, new HashMap<>());
+        buildA50Gen(openYtd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
+        buildA50Gen(openY2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
     }
 
     static void buildA50Gen(double open, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp,
-                            Map<String, ? extends NavigableMap<LocalTime, Double>> volmp, Map<String, Double> closeMp) {
+                            Map<String, ? extends NavigableMap<LocalTime, Double>> volmp) {
 
         if (mp.containsKey("FTSEA50")) {
             mp.get("FTSEA50").entrySet().removeIf(e -> e.getKey().isBefore(LocalTime.of(9, 30)));

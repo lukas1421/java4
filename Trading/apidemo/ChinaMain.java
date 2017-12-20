@@ -41,8 +41,8 @@ import static utility.Utility.DATA_COLLECTION_TIME;
 public final class ChinaMain implements IConnectionHandler {
 
     public static volatile LocalDate currentTradingDate;
-    public static volatile LocalDate yestTradingDate;
-    public static volatile LocalDate y2TradingDate;
+    //public static volatile LocalDate yestTradingDate;
+    //public static volatile LocalDate y2TradingDate;
     //= LocalDate.MIN;
 
 //    public static volatile LocalDate lastTdxDate;

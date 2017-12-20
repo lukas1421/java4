@@ -344,8 +344,8 @@ public final class ChinaData extends JPanel {
             System.out.println(" ftse open map " + ftseOpenMap);
 
             ChinaStockHelper.buildA50FromSS(ftseOpenMap.get(dateMap.get(2)));
-            ChinaStockHelper.buildA50Gen(ftseOpenMap.get(dateMap.get(1)), ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd, new HashMap<>());
-            ChinaStockHelper.buildA50Gen(ftseOpenMap.get(dateMap.get(0)), ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2, new HashMap<>());
+            ChinaStockHelper.buildA50Gen(ftseOpenMap.get(dateMap.get(1)), ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
+            ChinaStockHelper.buildA50Gen(ftseOpenMap.get(dateMap.get(0)), ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
             //ChinaStockHelper.buildA50FromSS();
             //ChinaStockHelper.buildA50FromSSYtdY2();
         });

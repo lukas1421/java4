@@ -357,8 +357,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 for (LocalTime t : ChinaData.priceMapBar.get(k).navigableKeySet()) {
                     if (tradesMap.get(k).containsKey(t)) {
                         //System.out.println( "t "+t+" trade "+ChinaData.priceMapBar.get(k).get(t));
-                        pos += ((TradeBlock) tradesMap.get(k).get(t)).getSizeAll();
-                        cb += ((TradeBlock) tradesMap.get(k).get(t)).getCostBasisAll(k);
+                        pos += tradesMap.get(k).get(t).getSizeAll();
+                        cb += tradesMap.get(k).get(t).getCostBasisAll(k);
                     }
                     mv = pos * ChinaData.priceMapBar.get(k).get(t).getClose();
                     tradePnlMap.get(k).put(t, cb - mv);
@@ -606,19 +606,19 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         for (FutType f : FutType.values()) {
             String ticker = f.getTicker();
-            int xuBotPos = ChinaPosition.tradesMap.get(ticker).entrySet().stream().filter(e -> ((TradeBlock) e.getValue()).getSizeAll() > 0)
-                    .mapToInt(e -> ((TradeBlock) e.getValue()).getSizeAll()).sum();
+            int xuBotPos = ChinaPosition.tradesMap.get(ticker).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
+                    .mapToInt(e -> e.getValue().getSizeAll()).sum();
 
-            int xuSoldPos = ChinaPosition.tradesMap.get(ticker).entrySet().stream().filter(e -> ((TradeBlock) e.getValue()).getSizeAll() < 0)
-                    .mapToInt(e -> ((TradeBlock) e.getValue()).getSizeAll()).sum();
+            int xuSoldPos = ChinaPosition.tradesMap.get(ticker).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
+                    .mapToInt(e -> e.getValue().getSizeAll()).sum();
 
             int xuOpenPostion = currentPositionMap.getOrDefault(ticker, 0) - xuBotPos - xuSoldPos;
 
-            double defaultOpen = 0.0;
-            //add default for open here
-            if (priceMapBar.get(ticker).size() > 0) {
-                defaultOpen = priceMapBar.get(ticker).firstEntry().getValue().getClose();
-            }
+//            double defaultOpen = 0.0;
+//            //add default for open here
+//            if (priceMapBar.get(ticker).size() > 0) {
+//                defaultOpen = priceMapBar.get(ticker).firstEntry().getValue().getClose();
+//            }
             //System.out.println(" REFRESHING XU open bot sold current " + xuOpenPostion + " " + xuBotPos + " " + xuSoldPos + " " + xuCurrentPositionFront);
             openPositionMap.put(ticker, xuOpenPostion);
         }
@@ -995,13 +995,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     static Map<String, Integer> getNetPosition() {
         if (openPositionMap.size() > 0 || tradesMap.size() > 0) {
-
-            //System.out.println(" getting net position ");
-
             Map<String, Integer> trades = tradesMap.entrySet().stream().filter(e -> e.getValue().size() > 0)
                     //.peek(e-> System.out.println( " trade > 0 " + e.getKey() + e.getValue()))
                     .collect(Collectors.toMap(Entry::getKey, e -> (Integer) e.getValue().entrySet().stream()
-                            .mapToInt(e1 -> ((TradeBlock) e1.getValue()).getSizeAll()).sum()));
+                            .mapToInt(e1 -> e1.getValue().getSizeAll()).sum()));
 
             return Stream.of(openPositionMap, trades).flatMap(e -> e.entrySet().stream()).filter(e -> e.getValue() > 0)
                     //.peek(e->System.out.println(" openpos map, trades " +  e.getKey() + "  " + e.getValue()))
@@ -1015,28 +1012,28 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //    }
     private int getTotalTodayBought(String name) {
         return (tradesMap.get(name).size() > 0) ? tradesMap.get(name).entrySet().stream()
-                .filter(e -> ((TradeBlock) e.getValue()).getSizeAll() > 0)
-                .mapToInt(e -> ((TradeBlock) e.getValue()).getSizeAll()).sum() : 0;
+                .filter(e -> e.getValue().getSizeAll() > 0)
+                .mapToInt(e -> e.getValue().getSizeAll()).sum() : 0;
     }
 
     private int getTotalTodaySold(String name) {
         return (tradesMap.get(name).size() > 0) ? tradesMap.get(name).entrySet().stream()
-                .filter(e -> ((TradeBlock) e.getValue()).getSizeAll() < 0)
-                .mapToInt(e -> ((TradeBlock) e.getValue()).getSizeAll()).sum() : 0;
+                .filter(e -> e.getValue().getSizeAll() < 0)
+                .mapToInt(e -> e.getValue().getSizeAll()).sum() : 0;
     }
 
     private double getTotalDeltaBought(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
         return (tradesMap.get(name).size() > 0) ? tradesMap.get(name).entrySet().stream()
-                .filter(e -> ((TradeBlock) e.getValue()).getSizeAll() > 0)
-                .mapToDouble(e -> ((TradeBlock) e.getValue()).getDeltaAll()).sum() * fx : 0;
+                .filter(e -> e.getValue().getSizeAll() > 0)
+                .mapToDouble(e -> e.getValue().getDeltaAll()).sum() * fx : 0;
     }
 
     private double getTotalDeltaSold(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
         return (tradesMap.get(name).size() > 0) ? tradesMap.get(name).entrySet().stream()
-                .filter(e -> ((TradeBlock) e.getValue()).getSizeAll() < 0)
-                .mapToDouble(e -> ((TradeBlock) e.getValue()).getDeltaAll()).sum() * fx : 0;
+                .filter(e -> e.getValue().getSizeAll() < 0)
+                .mapToDouble(e -> e.getValue().getDeltaAll()).sum() * fx : 0;
     }
 
     private double getAvgBCost(String name) {

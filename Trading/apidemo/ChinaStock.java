@@ -127,19 +127,19 @@ public final class ChinaStock extends JPanel {
 
     private static volatile boolean filterOn = false;
     private static volatile boolean benchFilterOn = false;
-    static GraphBar graph1 = new GraphBar();
-    static GraphBar graph2 = new GraphBar();
-    static GraphBar graph3 = new GraphBar();
-    static GraphBar graph4 = new GraphBar();
+    private static GraphBar graph1 = new GraphBar();
+    private static GraphBar graph2 = new GraphBar();
+    private static GraphBar graph3 = new GraphBar();
+    private static GraphBar graph4 = new GraphBar();
     static GraphBar graph5 = new GraphBar();
     static GraphBar graph6 = new GraphBar();
 
     String stock1;
-    String stock2 = "sh000001";
-    String stock3 = "sh000016";
-    String stock4 = "sh000300";
-    String stock5 = "sz399006";
-    String stock6 = "sh000905";
+    private String stock2 = "sh000001";
+    private String stock3 = "sh000016";
+    private String stock4 = "sh000300";
+    private String stock5 = "sz399006";
+    private String stock6 = "sh000905";
 
     private static TableRowSorter<BarModel_STOCK> sorter;
 
@@ -550,12 +550,12 @@ public final class ChinaStock extends JPanel {
             }
         });
 
-        JScrollPane chartScroll1 = createPane(graph1, 300, "graph scrollpane 1");
-        JScrollPane chartScroll2 = createPane(graph2, 300, "graph scrollpane 2");
-        JScrollPane chartScroll3 = createPane(graph3, 300, "graph scrollpane 3");
-        JScrollPane chartScroll4 = createPane(graph4, 300, "graph scrollpane 4");
-        JScrollPane chartScroll5 = createPane(graph5, 300, "graph scrollpane 5");
-        JScrollPane chartScroll6 = createPane(graph6, 300, "graph scrollpane 6");
+        JScrollPane chartScroll1 = createPane(graph1, "graph scrollpane 1");
+        JScrollPane chartScroll2 = createPane(graph2, "graph scrollpane 2");
+        JScrollPane chartScroll3 = createPane(graph3, "graph scrollpane 3");
+        JScrollPane chartScroll4 = createPane(graph4, "graph scrollpane 4");
+        JScrollPane chartScroll5 = createPane(graph5, "graph scrollpane 5");
+        JScrollPane chartScroll6 = createPane(graph6, "graph scrollpane 6");
 
         paneSet.forEach(p -> {
             graphPanel.add(p);
@@ -1546,7 +1546,7 @@ public final class ChinaStock extends JPanel {
         }
     }
 
-    static double getPriceToAvg(String name) {
+    private static double getPriceToAvg(String name) {
         if (NORMAL_STOCK.test(name)) {
             LocalTime lastKey = priceMapBar.get(name).lastKey();
             double avg = priceMapBar.get(name).headMap(lastKey, false).entrySet().stream().mapToDouble(e -> e.getValue().getClose()).average().orElse(0.0);
@@ -1555,7 +1555,7 @@ public final class ChinaStock extends JPanel {
         return 0.0;
     }
 
-    static int getPricePercentileChgGen(String name, long offset) {
+    private static int getPricePercentileChgGen(String name, long offset) {
         if (NORMAL_STOCK.test(name)) {
             LocalTime lastKey = priceMapBar.get(name).lastKey();
             double lastValue = priceMapBar.get(name).lastEntry().getValue().getClose();
@@ -1567,7 +1567,7 @@ public final class ChinaStock extends JPanel {
         return 0;
     }
 
-    static int getPricePercentilePM(String name) {
+    private static int getPricePercentilePM(String name) {
         if (NORMAL_STOCK.test(name) && LAST_KEY_AFTER.test(name, Utility.PMOPENT)) {
             double lastValue = priceMapBar.get(name).lastEntry().getValue().getClose();
             double pmOpen = priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen();
@@ -1597,22 +1597,22 @@ public final class ChinaStock extends JPanel {
         return 0;
     }
 
-    static double getAMFirst10(String name) {
+    private static double getAMFirst10(String name) {
         return (NORMAL_STOCK.test(name) && Utility.NO_ZERO.test(openMap, name) && priceMapBar.get(name).containsKey(Utility.AMOPENT))
                 ? round(1000d * log(priceMapBar.get(name).floorEntry(Utility.AM940T).getValue().getClose() / openMap.get(name))) / 10d : 0.0;
     }
 
-    static double getPMFirst10(String name) {
+    private static double getPMFirst10(String name) {
         return (NORMAL_STOCK.test(name) && priceMapBar.get(name).containsKey(Utility.PM1310T))
                 ? round(1000d * log(priceMapBar.get(name).ceilingEntry(Utility.PM1310T).getValue().getClose()
                 / (priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen()))) / 10d : 0.0;
     }
 
-    static double getAMMin(String name) {
+    private static double getAMMin(String name) {
         return (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET)) ? GETMIN.applyAsDouble(name, Utility.AM_PRED) : 0.0;
     }
 
-    static double getAMMax(String name) {
+    private static double getAMMax(String name) {
         return (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET)) ? GETMAX.applyAsDouble(name, Utility.AM_PRED) : 0.0;
     }
 
