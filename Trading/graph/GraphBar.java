@@ -45,7 +45,7 @@ public final class GraphBar extends JComponent implements GraphFillable {
     LocalTime minAMT;
     volatile int size;
     private static final BasicStroke BS3 = new BasicStroke(3);
-    private static Predicate<? super Entry<LocalTime, ?>> graphBarDispPred = e->e.getKey().isAfter(LocalTime.of(9,19));
+    private Predicate<? super Entry<LocalTime, ?>> graphBarDispPred;
 
     private int wtdP;
 
@@ -54,12 +54,22 @@ public final class GraphBar extends JComponent implements GraphFillable {
 //                (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
 //    }
 
+    public GraphBar(Predicate<? super Entry<LocalTime, ?>> p) {
+        name = "";
+        chineseName = "";
+        maxAMT = LocalTime.of(9, 30);
+        minAMT = Utility.AMOPENT;
+        this.tm = new ConcurrentSkipListMap<>();
+        graphBarDispPred = p;
+    }
+
     public GraphBar() {
         name = "";
         chineseName = "";
         maxAMT = LocalTime.of(9, 30);
         minAMT = Utility.AMOPENT;
         this.tm = new ConcurrentSkipListMap<>();
+        graphBarDispPred = e->e.getKey().isAfter(LocalTime.of(9,19));
     }
 
     public void setNavigableMap(NavigableMap<LocalTime, SimpleBar> tm) {

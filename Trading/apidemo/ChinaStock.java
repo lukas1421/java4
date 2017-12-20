@@ -604,15 +604,11 @@ public final class ChinaStock extends JPanel {
                 //above is tested
 
 
-                ftes.scheduleAtFixedRate(() -> {
-                    //System.out.println(" refreshing chinagraphindistry ");
-                    ChinaGraphIndustry.refresh();
-                }, 0, 3000, TimeUnit.MILLISECONDS);
+                //System.out.println(" refreshing chinagraphindistry ");
+                ftes.scheduleAtFixedRate(ChinaGraphIndustry::refresh, 0, 3000, TimeUnit.MILLISECONDS);
 
-                ftes.scheduleAtFixedRate(() -> {
-                    //System.out.println(" ChinaSizeRatio.computeSizeRatio ");
-                    ChinaSizeRatio.computeSizeRatio();
-                }, 0, 1, TimeUnit.SECONDS);
+                //System.out.println(" ChinaSizeRatio.computeSizeRatio ");
+                ftes.scheduleAtFixedRate(ChinaSizeRatio::computeSizeRatio, 0, 1, TimeUnit.SECONDS);
 
 
                 //System.out.println(" ChinaIndex.computeAll ");

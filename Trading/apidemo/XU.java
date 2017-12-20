@@ -58,7 +58,7 @@ public final class XU extends JPanel {
     static ArrayList<LocalTime> tradeTimeXU = new ArrayList<>();
     static BarModel m_model;
     static ExecutorService es = Executors.newCachedThreadPool();
-    ScheduledExecutorService ftes;
+    private ScheduledExecutorService ftes;
 
     //    GraphXUSI graph1 = new GraphXUSI();
 //    GraphXU graph2 = new GraphXU();
@@ -67,11 +67,11 @@ public final class XU extends JPanel {
 //    GraphXU graph5 = new GraphXU();
 //    GraphXU graph6 = new GraphXU();
     private GraphBar graph1 = new GraphBar();
-    GraphBar graph2 = new GraphBar();
-    GraphXUSI graph3 = new GraphXUSI();
-    GraphXU graph4 = new GraphXU();
-    GraphXU graph5 = new GraphXU();
-    GraphXU graph6 = new GraphXU();
+    private GraphBar graph2 = new GraphBar(e->e.getKey().isAfter(LocalTime.of(8,59)));
+    private GraphXUSI graph3 = new GraphXUSI();
+    private GraphXU graph4 = new GraphXU();
+    private GraphXU graph5 = new GraphXU();
+    private GraphXU graph6 = new GraphXU();
 
     String V1 = "V1";
     String V2 = "V2";
