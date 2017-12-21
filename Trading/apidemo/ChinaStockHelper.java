@@ -124,30 +124,30 @@ public final class ChinaStockHelper {
         return 0.0;
     }
 
+    @SuppressWarnings("unused")
     static void deleteAllAfterT(LocalTime t) {
-        symbolNames.forEach(name -> {
-            NavigableMap<LocalTime, SimpleBar> tm = ChinaData.priceMapBar.get(name);
-            tm.keySet().forEach(k -> {
-                if (k.isAfter(t)) {
-                    tm.remove(k);
-                }
-            });
-        });
+        symbolNames.forEach(name -> ChinaData.priceMapBar.get(name).keySet().forEach(k -> {
+            if (k.isAfter(t)) {
+                ChinaData.priceMapBar.get(name).remove(k);
+            }
+        }));
     }
 
+    @SuppressWarnings("unused")
     static void checkZerosAndFix() {
         symbolNames.forEach(name -> {
-            NavigableMap<LocalTime, SimpleBar> tm = ChinaData.priceMapBar.get(name);
-            tm.descendingKeySet().forEach(t -> {
-                if (tm.get(t).containsZero()) {
-                    tm.put(t, tm.ceilingEntry(t.plusMinutes(1)).getValue());
+            ChinaData.priceMapBar.get(name).descendingKeySet().forEach(t -> {
+                if (ChinaData.priceMapBar.get(name).get(t).containsZero()) {
+                    ChinaData.priceMapBar.get(name)
+                            .put(t, ChinaData.priceMapBar.get(name).ceilingEntry(t.plusMinutes(1)).getValue());
                 }
             });
 
             tradeTime.forEach(t -> {
-                if (!tm.containsKey(t)) {
+                if (!ChinaData.priceMapBar.get(name).containsKey(t)) {
                     System.out.println(" missing value " + name + " " + t.toString());
-                    tm.put(t, tm.ceilingEntry(t.plusMinutes(1)).getValue());
+                    ChinaData.priceMapBar.get(name).put(t,
+                            ChinaData.priceMapBar.get(name).ceilingEntry(t.plusMinutes(1)).getValue());
                 }
             });
         });
@@ -227,6 +227,7 @@ public final class ChinaStockHelper {
         return 0.0;
     }
 
+    @SuppressWarnings("unused")
     public static void getFilesFromTDX() {
         final String tdxPath = "J:\\TDX\\T0002\\export_1m\\";
 
@@ -288,6 +289,7 @@ public final class ChinaStockHelper {
         });
     }
 
+    @SuppressWarnings("unused")
     static void getFilesFromTDX_YTD() {
         final String tdxPath = "J:\\TDX\\T0002\\export_1m\\";
 
@@ -509,8 +511,9 @@ public final class ChinaStockHelper {
     static boolean lastBarHighest(String name) {
         //double last = priceMapBar.get(name).lastEntry().getValue().getClose();
         LocalTime lastKey = priceMapBar.get(name).lastKey();
-        double previousMax = priceMapBar.get(name).headMap(lastKey, false).entrySet().stream()
-                .mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
+//        double previousMax = priceMapBar.get(name).headMap(lastKey, false).entrySet().stream()
+//                .mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
+
         return GETMAXTIME.apply(name, Utility.IS_OPEN_PRED).equals(lastKey);
     }
 
@@ -586,11 +589,10 @@ public final class ChinaStockHelper {
         sizeMap.put("FTSEA50", Math.round(ChinaData.sizeTotalMap.get("FTSEA50").lastEntry().getValue()));
     }
 
+    @SuppressWarnings("unused")
     public static void buildA50FromSSYtdY2() {
-
         double openY2 = ChinaData.ftseOpenMap.get(ChinaData.dateMap.get(0));
         double openYtd = ChinaData.ftseOpenMap.get(ChinaData.dateMap.get(1));
-
         buildA50Gen(openYtd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
         buildA50Gen(openY2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
     }

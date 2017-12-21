@@ -64,7 +64,6 @@ public final class ChinaStock extends JPanel {
     public static List<String> symbolNames = new ArrayList<>(1000);
     public static List<String> symbolNamesFull = new ArrayList<>(1000);
 
-    private List<Double> weights = new ArrayList<>(600);
     String line;
     public static volatile String listNames;
     public static volatile String listNameSH;
@@ -250,7 +249,7 @@ public final class ChinaStock extends JPanel {
             //System.out.println( " sh size " + listNameSH.si)
             //System.out.println( " listnames in Chinastock " + listNames);
             symbolNames = weightMap.keySet().stream().collect(toList());
-            weights = weightMap.values().stream().collect(toList());
+            List<Double> weights = weightMap.values().stream().collect(toList());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -621,10 +620,8 @@ public final class ChinaStock extends JPanel {
 
                 ftes.scheduleAtFixedRate(ChinaIndex::repaintGraph, 0, 5, TimeUnit.SECONDS);
 
-                ftes.scheduleAtFixedRate(() -> {
-                    //ChinaBigGraph.refresh();
-                    ChinaStock.refreshGraphs();
-                }, 0, 1, TimeUnit.SECONDS);
+                //ChinaBigGraph.refresh();
+                ftes.scheduleAtFixedRate(ChinaStock::refreshGraphs, 0, 1, TimeUnit.SECONDS);
 
                 ftes.scheduleAtFixedRate(() -> {
                     ChinaMain.updateSystemTime("Sys: " + Utility.timeNowToString());

@@ -8,7 +8,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.time.LocalTime;
 
 import static apidemo.ChinaStock.industryNameMap;
 
@@ -83,7 +82,6 @@ public final class ChinaBigGraph extends JPanel {
             gYtd.fillInGraph(nam);
             gb.repaint();
             gYtd.repaint();
-            LocalTime lastSetTime = LocalTime.now();
             currentStock = nam;
         }
     }

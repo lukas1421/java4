@@ -35,6 +35,7 @@ public class GraphXuTrader extends JComponent {
     volatile String name;
     String chineseName;
     private String bench;
+    double prevClose;
     LocalTime maxAMT;
     LocalTime minAMT;
     volatile int size;
@@ -88,6 +89,10 @@ public class GraphXuTrader extends JComponent {
         this.bench = s;
     }
 
+    public void setPrevClose(double p) {
+        prevClose = p;
+    }
+
     public void fillInGraph(NavigableMap<LocalTime, SimpleBar> mp) {
         if (XUTrader.gran == DisplayGranularity._1MDATA) {
             this.setNavigableMap(mp);
@@ -116,6 +121,7 @@ public class GraphXuTrader extends JComponent {
 
     @Override
     protected void paintComponent(Graphics g) {
+
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
@@ -311,8 +317,9 @@ public class GraphXuTrader extends JComponent {
 
     public double getReturn() {
         if (tm.size() > 0) {
-            double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
-            double finalP = tm.lastEntry().getValue().getClose();
+            double initialP = prevClose!=0.0? prevClose:
+                    tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+            double finalP =  tm.lastEntry().getValue().getClose();
             return (double) round((finalP / initialP - 1) * 10000d) / 100d;
         }
         return 0.0;

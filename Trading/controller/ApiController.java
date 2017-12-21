@@ -1014,7 +1014,6 @@ public class ApiController implements EWrapper {
             m_client.reqHistoricalData(reqID + 1, backFut, "", durationStr, barSize.toString(), whatToShow.toString(),
                     0, 2, Collections.<TagValue>emptyList());
         });
-
         System.out.println("getSGXA50HistoricalCustom END thread " + Thread.currentThread().getName());
     }
 

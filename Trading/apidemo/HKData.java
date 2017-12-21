@@ -28,23 +28,22 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
 
     public static volatile ConcurrentHashMap<String, Double> hkPreviousCloseMap = new ConcurrentHashMap<>();
 
-    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> hkVolMap
+    private static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> hkVolMap
             = new ConcurrentHashMap<>();
 
     public static volatile Semaphore historyDataSem = new Semaphore(50);
 
     public static volatile ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
 
-    static List<LocalTime> hkTradingTime = new LinkedList<>();
-    static List<String> hkNames = new LinkedList<>();
+    private static List<LocalTime> hkTradingTime = new LinkedList<>();
+    private static List<String> hkNames = new LinkedList<>();
     static BarModel_HKData m_model;
     JTable tab;
-    int modelRow;
-    int indexRow;
-    static TableRowSorter<BarModel_HKData> sorter;
-    File testOutput = new File(TradingConstants.GLOBALPATH + "hkTestData.txt");
+    private int modelRow;
+    private int indexRow;
+    private File testOutput = new File(TradingConstants.GLOBALPATH + "hkTestData.txt");
 
-    public HKData() {
+    HKData() {
 
         Utility.clearFile(testOutput);
 
@@ -125,7 +124,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
         add(scroll, BorderLayout.CENTER);
 
         tab.setAutoCreateRowSorter(true);
-        sorter = (TableRowSorter<BarModel_HKData>) tab.getRowSorter();
+        @SuppressWarnings("unchecked") TableRowSorter<BarModel_HKData> sorter = (TableRowSorter<BarModel_HKData>) tab.getRowSorter();
 
     }
 

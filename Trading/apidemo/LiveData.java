@@ -27,7 +27,7 @@ public final class LiveData extends JPanel implements ITopMktDataHandler1, IInte
     public static volatile ConcurrentHashMap<Integer, ConcurrentSkipListMap<LocalTime, Double>> map1 = new ConcurrentHashMap<Integer, ConcurrentSkipListMap<LocalTime, Double>>();
     public static volatile HashMap<Integer, String> nameMap = new HashMap<Integer, String>();
     public static volatile ConcurrentHashMap<Integer, Integer> sizeMap = new ConcurrentHashMap<>();
-    static ConcurrentHashMap<Integer, ConcurrentHashMap<?, ?>> saveMap = new ConcurrentHashMap<>();
+    private static ConcurrentHashMap<Integer, ConcurrentHashMap<?, ?>> saveMap = new ConcurrentHashMap<>();
     BarModel_Livedata m_model = new BarModel_Livedata();
 
     ArrayList<Bar> m_rows = new ArrayList<>();

@@ -13,7 +13,7 @@ public enum FutType {
 //        tickerName = ibContractToSymbol(c);
 //    }
 
-    private static final Map<String, FutType> lookup = new HashMap<String, FutType>();
+    private static final Map<String, FutType> lookup = new HashMap<>();
     static {
         for(FutType t: FutType.values()) {
             lookup.put(t.getTicker(),t);
