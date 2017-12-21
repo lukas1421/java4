@@ -204,8 +204,8 @@ final class ChinaIndex extends JPanel {
 
         tab.setAutoCreateRowSorter(true);
         //noinspection unchecked
+        @SuppressWarnings("unused")
         TableRowSorter<BarModel_INDEX> sorter = (TableRowSorter<BarModel_INDEX>) tab.getRowSorter();
-        //sorter.
     }
 
     static void computeAll() {
@@ -313,7 +313,8 @@ final class ChinaIndex extends JPanel {
         System.out.println("avg return ");
 
         System.out.println(SinaStock.weightMapA50.entrySet().stream()
-                .filter(e -> ChinaStock.shortIndustryMap.get(e.getKey()).equals(name)).collect(Collectors.averagingDouble(e -> returnMap.get(e.getKey()))));
+                .filter(e -> ChinaStock.shortIndustryMap.get(e.getKey()).equals(name))
+                .collect(Collectors.averagingDouble(e -> returnMap.get(e.getKey()))));
 
         System.out.println(" weighted return ");
         System.out.println((Double) SinaStock.weightMapA50.entrySet().stream()

@@ -1062,6 +1062,7 @@ public final class ChinaStock extends JPanel {
         });
 
         tab.setAutoCreateRowSorter(true);
+        //noinspection unchecked
         sorter = (TableRowSorter<BarModel_STOCK>) tab.getRowSorter();
     }
 
@@ -1129,8 +1130,9 @@ public final class ChinaStock extends JPanel {
             }
         } catch (Exception ex) {
             System.out.println(" RESTORING SORTER ");
+            //noinspection unchecked
             sorter = (TableRowSorter<BarModel_STOCK>) tab.getRowSorter();
-            System.out.println(" sector WRONG is " + Optional.ofNullable(sector).orElse(""));
+            System.out.println(" sector WRONG is " + Optional.of(sector).orElse(""));
             filterOn = false;
             ex.printStackTrace();
         }
@@ -1175,7 +1177,6 @@ public final class ChinaStock extends JPanel {
      * @param last
      */
     static void process(String name, LocalTime lastEntryTime, double last) {
-
         if (priceMapBar.containsKey(name)) {
             if (priceMapBar.get(name).containsKey(lastEntryTime)) {
                 priceMapBar.get(name).get(lastEntryTime).add(last);
@@ -1667,12 +1668,12 @@ public final class ChinaStock extends JPanel {
         return 0.0;
     }
 
-    static int getVRMaxT(String name) {
+    private static int getVRMaxT(String name) {
         return (Utility.normalMapGen(name, sizeRatioMap))
                 ? convertTimeToInt(sizeRatioMap.get(name).entrySet().parallelStream().max(Entry.comparingByValue()).map(Entry::getKey).orElse(Utility.TIMEMAX)) : 2359;
     }
 
-    static int getVRMinT(String name) {
+    private static int getVRMinT(String name) {
         return (Utility.normalMapGen(name, sizeRatioMap))
                 ? convertTimeToInt(sizeRatioMap.get(name).entrySet().parallelStream().min(Entry.comparingByValue()).map(Entry::getKey).orElse(Utility.TIMEMAX)) : 2359;
     }
@@ -1768,12 +1769,12 @@ public final class ChinaStock extends JPanel {
         }
     }
 
-    static double getAMReturn(String name) {
+    private static double getAMReturn(String name) {
         return (NORMAL_STOCK.test(name) && priceMapBar.get(name).firstKey().isBefore(Utility.AMCLOSET) && Utility.NO_ZERO.test(openMap, name))
                 ? log(priceMapBar.get(name).floorEntry(Utility.AMCLOSET).getValue().getClose() / openMap.get(name)) : 0.0;
     }
 
-    static double getPMReturn(String name) {
+    private static double getPMReturn(String name) {
         return (NORMAL_STOCK.test(name) && priceMapBar.get(name).lastKey().isAfter(Utility.PMOPENT))
                 ? log(priceMapBar.get(name).lastEntry().getValue().getClose() / priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen()) : 0.0;
     }
@@ -1798,7 +1799,7 @@ public final class ChinaStock extends JPanel {
                 .findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.PMCLOSET;
     }
 
-    static LocalTime getMA20FirstFallTime(String name) {
+    private static LocalTime getMA20FirstFallTime(String name) {
         final double ma = ma20Map.getOrDefault(name, 0d);
         return (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET) && LAST_KEY_AFTER.test(name, Utility.AMOPENT) && Utility.NO_ZERO.test(ma20Map, name))
                 ? priceMapBar.get(name).entrySet().parallelStream().filter(entry1 -> entry1.getValue().getLow() <= ma).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.PMCLOSET;
@@ -2256,15 +2257,18 @@ public final class ChinaStock extends JPanel {
 
                 //stratAM
                 case 24:
-                    return stratAMMap.getOrDefault(name, "");
+                    return "";
+                    //return stratAMMap.getOrDefault(name, "");
 
                 //stratPM
                 case 25:
-                    return stratPMMap.getOrDefault(name, "");
+                    return "";
+                    //return stratPMMap.getOrDefault(name, "");
 
                 //stratT
                 case 26:
-                    return stratTimeMap.getOrDefault(name, Utility.AMOPENT);
+                    return "";
+                    //return stratTimeMap.getOrDefault(name, Utility.AMOPENT);
 
                 // pmF10
                 case 27:
@@ -2274,22 +2278,27 @@ public final class ChinaStock extends JPanel {
 
                 //pmF10MinT
                 case 28:
-                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.PMOPENT))
-                            ? priceMapBar.get(name).subMap(Utility.PMOPENT, true, Utility.PM1310T, true).entrySet().stream().min(Utility.BAR_LOW).map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.PMCLOSET;
+                    return 0.0;
+//                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.PMOPENT))
+//                            ? priceMapBar.get(name).subMap(Utility.PMOPENT, true, Utility.PM1310T, true).entrySet().stream().min(Utility.BAR_LOW).map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.PMCLOSET;
 
                 //pmF10MaxT
                 case 29:
-                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.PMOPENT))
-                            ? priceMapBar.get(name).subMap(Utility.PMOPENT, true, Utility.PM1310T, true).entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.PMCLOSET;
+                    return 0.0;
+
+                    //                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.PMOPENT))
+//                            ? priceMapBar.get(name).subMap(Utility.PMOPENT, true, Utility.PM1310T, true).entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.PMCLOSET;
 
                 //pm10MxMnD
                 case 30:
-                    return getPMFirst10MaxMinTimeDiff(name);
+                    return 0.0;
+                    //return getPMFirst10MaxMinTimeDiff(name);
 
                 //pm max return    
                 case 31:
-                    return (NORMAL_STOCK.test(name) && LAST_KEY_AFTER.test(name, Utility.PMOPENT))
-                            ? round(1000d * (GETMAX.applyAsDouble(name, Utility.PM_PRED) / priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getClose() - 1)) / 10d : 0.0;
+                    return 0.0;
+//                    return (NORMAL_STOCK.test(name) && LAST_KEY_AFTER.test(name, Utility.PMOPENT))
+//                            ? round(1000d * (GETMAX.applyAsDouble(name, Utility.PM_PRED) / priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getClose() - 1)) / 10d : 0.0;
 
                 //pm drawdown
                 case 32:
@@ -2302,85 +2311,105 @@ public final class ChinaStock extends JPanel {
 
                 //O%Y
                 case 33:
-                    return (Utility.NO_ZERO.test(minMapY, name)) ? (int) min(100, round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+                    return 0.0;
+                    //return (Utility.NO_ZERO.test(minMapY, name)) ? (int) min(100, round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
 
                 //P%Y    
                 case 34:
-                    return getPercentileY(name);
+                    return 0.0;
+                    //return getPercentileY(name);
 
                 // CHY
                 case 35:
-                    return getCHY(name);
+                    return 0.0;
+                    //return getCHY(name);
 
                 //CLY 
                 case 36:
-                    return getCLY(name);
+                    return 0.0;
+                    //return getCLY(name);
 
                 //HOY 
                 case 37:
-                    return getHOY(name);
+                    return 0.0;
+                    //return getHOY(name);
 
                 //coY
                 case 38:
-                    return round(1000d * ofNullable(retCOY.get(name)).orElse(0.0)) / 10d;
+                    return 0.0;
+                    //return round(1000d * ofNullable(retCOY.get(name)).orElse(0.0)) / 10d;
 
                 //amcoY
                 case 39:
-                    return getAMCOY(name);
+                    return 0.0;
+                    //return getAMCOY(name);
 
                 //pmcoY
                 case 40:
-                    return getPMCOY(name);
+                    return 0.0;
+                    //return getPMCOY(name);
 
                 //上下折Y  
                 case 41:
-                    return (Utility.noZeroArrayGen(name, maxMapY, minMapY, priceMap, maxMap) && getRangeY(name) != 0.0)
-                            ? round(100d * ((getAMCOY(name) - getPMCOY(name)) / (getRangeY(name) * 100d))) / 100d : 0.0;
+                    return 0.0;
+//                    return (Utility.noZeroArrayGen(name, maxMapY, minMapY, priceMap, maxMap) && getRangeY(name) != 0.0)
+//                            ? round(100d * ((getAMCOY(name) - getPMCOY(name)) / (getRangeY(name) * 100d))) / 100d : 0.0;
 
                 //F1Y
                 case 42:
-                    return round(1000d * amFirst1Y.getOrDefault(name, 0.0)) / 10d;
+                    return 0.0;
+                    //return round(1000d * amFirst1Y.getOrDefault(name, 0.0)) / 10d;
                 //F10Y    
                 case 43:
-                    return round(1000d * amFirst10Y.getOrDefault(name, 0.0)) / 10d;
+                    return 0.0;
+                    //return round(1000d * amFirst10Y.getOrDefault(name, 0.0)) / 10d;
 
                 //minTY    
                 case 44:
-                    return minTY.getOrDefault(name, 0);
+                    return 0.0;
+                    //return minTY.getOrDefault(name, 0);
 
                 // maxTY    
                 case 45:
-                    return maxTY.getOrDefault(name, 0);
+                    return 0.0;
+                    //return maxTY.getOrDefault(name, 0);
 
                 //minY
                 case 46:
-                    return getMinY(name);
+                    return 0.0;
+                    //return getMinY(name);
 
                 //maxY
                 case 47:
-                    return getMaxY(name);
+                    return 0.0;
+                    //return getMaxY(name);
 
                 // rangeY
                 case 48:
-                    return getRangeY(name);
+                    return 0.0;
+                    //return getRangeY(name);
 
                 // sizeY    
                 case 49:
-                    return (Utility.NORMAL_MAP.test(sizeTotalMapYtd, name)) ? round(sizeTotalMapYtd.get(name).lastEntry().getValue()) : 0L;
+                    return 0.0;
+                    //return (Utility.NORMAL_MAP.test(sizeTotalMapYtd, name)) ? round(sizeTotalMapYtd.get(name).lastEntry().getValue()) : 0L;
 
                 //HOCHYRatio
                 case 50:
-                    return getHOCHYRatio(name);
+                    return 0.0;
+                    //return getHOCHYRatio(name);
 
                 //CH/RngY
                 case 51:
-                    return (Utility.noZeroArrayGen(name, maxMapY, minMapY, priceMap, maxMap))
-                            ? (int) round(100d * log(priceMap.get(name) / maxMap.get(name)) / log(maxMapY.get(name) / minMapY.get(name))) : 0;
-
+                    return 0.0;
+//                    return (Utility.noZeroArrayGen(name, maxMapY, minMapY, priceMap, maxMap))
+//                            ? (int) round(100d * log(priceMap.get(name) / maxMap.get(name)) / log(maxMapY.get(name) / minMapY.get(name))) : 0;
                 //ma20 
                 case 52:
-                    return Utility.noZeroArrayGen(name, ma20Map, priceMap) ? round(100d * 20 / (ma20Map.get(name) / priceMap.get(name) * 19 + 1)) / 100d : 0.0;
-                // dayMinT    
+                    return 0.0;
+                    //return Utility.noZeroArrayGen(name, ma20Map, priceMap) ? round(100d * 20 / (ma20Map.get(name) / priceMap.get(name) * 19 + 1)) / 100d : 0.0;
+
+                // dayMinT
                 case 53:
                     return (NORMAL_STOCK.test(name) && priceMapBar.get(name).lastKey().isAfter(Utility.AM929T)) ? GETMINTIMETOINT.applyAsInt(name, Utility.IS_OPEN_PRED) : 930;
 
@@ -2394,13 +2423,14 @@ public final class ChinaStock extends JPanel {
 
                 //amMinPY
                 case 56:
-                    if (NORMAL_STOCK.test(name) && (FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET) && LAST_KEY_AFTER.test(name, Utility.AMOPENT))) {
-                        double minY = minMapY.getOrDefault(name, 0.0);
-                        double maxY = maxMapY.getOrDefault(name, 0.0);
-                        double amMin = GETMIN.applyAsDouble(name, Utility.AM_PRED);
-                        return (int) round((amMin - minY) / (maxY - minY) * 100d);
-                    }
-                    return 0L;
+                    return 0.0;
+//                    if (NORMAL_STOCK.test(name) && (FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET) && LAST_KEY_AFTER.test(name, Utility.AMOPENT))) {
+//                        double minY = minMapY.getOrDefault(name, 0.0);
+//                        double maxY = maxMapY.getOrDefault(name, 0.0);
+//                        double amMin = GETMIN.applyAsDouble(name, Utility.AM_PRED);
+//                        return (int) round((amMin - minY) / (maxY - minY) * 100d);
+//                    }
+//                    return 0L;
 
                 //1m CP%
                 case 57:
@@ -2412,22 +2442,27 @@ public final class ChinaStock extends JPanel {
 
                 //vrP%    
                 case 59:
-                    return getVRPercentile(name);
+                    return 0.0;
+                    //return getVRPercentile(name);
 
                 //V_Zscore
                 case 60:
-                    return round(10d * getVolZScore(name)) / 10d;
+                    return 0.0;
+                    //return round(10d * getVolZScore(name)) / 10d;
 
                 //f10minT
                 case 61:
-                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) ? priceMapBar.get(name).subMap(Utility.AMOPENT, true, Utility.AM940T, true)
-                            .entrySet().stream().min(Utility.BAR_LOW).map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.AMOPENT;
+                    return 0.0;
+//                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) ? priceMapBar.get(name).subMap(Utility.AMOPENT, true, Utility.AM940T, true)
+//                            .entrySet().stream().min(Utility.BAR_LOW).map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.AMOPENT;
 
                 // cypam 
                 case 62:
-                    double ammin = getAMMin(name);
-                    double ammax = getAMMax(name);
-                    return (Utility.NO_ZERO.test(closeMapY, name) && ammin != 0.0 && ammax != 0.0) ? (int) round(100d * (closeMapY.get(name) - ammin) / (ammax - ammin)) : 0;
+                    return 0.0;
+
+//                    double ammin = getAMMin(name);
+//                    double ammax = getAMMax(name);
+//                    return (Utility.NO_ZERO.test(closeMapY, name) && ammin != 0.0 && ammax != 0.0) ? (int) round(100d * (closeMapY.get(name) - ammin) / (ammax - ammin)) : 0;
 
                 //O%
                 case 63:
@@ -2450,194 +2485,224 @@ public final class ChinaStock extends JPanel {
 
                 //dayPeaks
                 case 66:
-                    return dayPeakCount.getOrDefault(name, 0L);
+                    return 0.0;
+                    //return dayPeakCount.getOrDefault(name, 0L);
 
                 //amPeaks
                 case 67:
-                    return amPeakCount.getOrDefault(name, 0L);
+                    return 0.0;
+                    //return amPeakCount.getOrDefault(name, 0L);
 
                 //pmPeaks
                 case 68:
-                    return pmPeakCount.getOrDefault(name, 0L);
+                    return 0.0;
+                    //return pmPeakCount.getOrDefault(name, 0L);
 
                 //peakTimeDiff
                 case 69:
-                    return peakTimeAvgMap.getOrDefault(name, 0);
+                    return 0.0;
+                    //return peakTimeAvgMap.getOrDefault(name, 0);
 
                 //pmPeakTimeDiff
                 case 70:
-                    return pmPeakTimeAvgMap.getOrDefault(name, 0);
+                    return 0.0;
+                    //return pmPeakTimeAvgMap.getOrDefault(name, 0);
 
                 //peakRtnAvg
                 case 71:
-                    return peakReturnAvgMap.getOrDefault(name, 0.0);
+                    return 0.0;
+                    //return peakReturnAvgMap.getOrDefault(name, 0.0);
 
                 //pmPeakRtnAvg
                 case 72:
-                    return pmPeakReturnAvgMap.getOrDefault(name, 0.0);
+                    return 0.0;
+                    //return pmPeakReturnAvgMap.getOrDefault(name, 0.0);
 
                 //day滞
                 case 73:
-                    return dayStagnation.getOrDefault(name, 0L);
+                    return 0.0;
+                    //return dayStagnation.getOrDefault(name, 0L);
 
                 //pm滞留
                 case 74:
-                    return pmStagnation.getOrDefault(name, 0L);
+                    return 0.0;
+                    //return pmStagnation.getOrDefault(name, 0L);
 
                 //am1stBreakT
                 case 75:
-                    if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AM941T)) {
-                        double first10Max = priceMapBar.get(name).entrySet().parallelStream().filter(e -> e.getKey().isBefore(Utility.AM941T)).map(Entry::getValue).mapToDouble(SimpleBar::getHigh).max().orElse(0.0);
-                        LocalTime amFirstBreak = priceMapBar.get(name).entrySet().parallelStream()
-                                .filter(e -> e.getKey().isAfter(Utility.AM940T) && e.getKey().isBefore(Utility.AMCLOSET) && e.getValue()
-                                        .getHigh() > first10Max).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
-                        return amFirstBreak;
-                    }
-                    return Utility.AMCLOSET;
+                    return 0.0;
+//                    if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AM941T)) {
+//                        double first10Max = priceMapBar.get(name).entrySet().parallelStream().filter(e -> e.getKey().isBefore(Utility.AM941T)).map(Entry::getValue).mapToDouble(SimpleBar::getHigh).max().orElse(0.0);
+//                        LocalTime amFirstBreak = priceMapBar.get(name).entrySet().parallelStream()
+//                                .filter(e -> e.getKey().isAfter(Utility.AM940T) && e.getKey().isBefore(Utility.AMCLOSET) && e.getValue()
+//                                        .getHigh() > first10Max).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
+//                        return amFirstBreak;
+//                    }
+//                    return Utility.AMCLOSET;
 
                 //pmFirstBreakTime
                 case 76:
-                    if (NORMAL_STOCK.test(name) && LAST_KEY_AFTER.test(name, Utility.PM1310T) && FIRST_KEY_BEFORE.test(name, Utility.PMOPENT)) {
-                        double pmfirst10Max = priceMapBar.get(name).entrySet().parallelStream()
-                                .filter(e -> e.getKey().isAfter(Utility.PMOPENT) && e.getKey().isBefore(LocalTime.of(13, 11))).map(Entry::getValue).mapToDouble(SimpleBar::getHigh).max().orElse(0.0);
-                        LocalTime pmFirstBreak = priceMapBar.get(name).entrySet().parallelStream()
-                                .filter(e -> e.getKey().isAfter(LocalTime.of(13, 10)) && e.getValue().getHigh() > pmfirst10Max).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
-                        return pmFirstBreak;
-                    }
-                    return Utility.PMCLOSET;
+                    return 0.0;
+//                    if (NORMAL_STOCK.test(name) && LAST_KEY_AFTER.test(name, Utility.PM1310T) && FIRST_KEY_BEFORE.test(name, Utility.PMOPENT)) {
+//                        double pmfirst10Max = priceMapBar.get(name).entrySet().parallelStream()
+//                                .filter(e -> e.getKey().isAfter(Utility.PMOPENT) && e.getKey().isBefore(LocalTime.of(13, 11))).map(Entry::getValue).mapToDouble(SimpleBar::getHigh).max().orElse(0.0);
+//                        LocalTime pmFirstBreak = priceMapBar.get(name).entrySet().parallelStream()
+//                                .filter(e -> e.getKey().isAfter(LocalTime.of(13, 10)) && e.getValue().getHigh() > pmfirst10Max).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
+//                        return pmFirstBreak;
+//                    }
+//                    return Utility.PMCLOSET;
 
                 //pmBreakAmTime
                 case 77:
-                    if (NORMAL_STOCK.test(name) && LAST_KEY_AFTER.test(name, Utility.PM1309T) && FIRST_KEY_BEFORE.test(name, Utility.PMOPENT)) {
-                        double amMax = priceMapBar.get(name).entrySet().parallelStream().filter(Utility.AM_PRED).map(Entry::getValue).mapToDouble(SimpleBar::getHigh).max().getAsDouble();
-                        double pmfirst10Max = priceMapBar.get(name).subMap(Utility.PMOPENT, Utility.PM1310T).entrySet().stream().map(Entry::getValue).mapToDouble(SimpleBar::getHigh).max().orElse(0.0);
-                        LocalTime pmFirstBreak = priceMapBar.get(name).entrySet().parallelStream()
-                                .filter(e -> e.getKey().isAfter(Utility.PM1310T) && e.getValue().getHigh() > max(amMax, pmfirst10Max)).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
-                        return pmFirstBreak;
-                    }
-                    return Utility.PMCLOSET;
+                    return 0.0;
+//                    if (NORMAL_STOCK.test(name) && LAST_KEY_AFTER.test(name, Utility.PM1309T) && FIRST_KEY_BEFORE.test(name, Utility.PMOPENT)) {
+//                        double amMax = priceMapBar.get(name).entrySet().parallelStream().filter(Utility.AM_PRED).map(Entry::getValue).mapToDouble(SimpleBar::getHigh).max().getAsDouble();
+//                        double pmfirst10Max = priceMapBar.get(name).subMap(Utility.PMOPENT, Utility.PM1310T).entrySet().stream().map(Entry::getValue).mapToDouble(SimpleBar::getHigh).max().orElse(0.0);
+//                        LocalTime pmFirstBreak = priceMapBar.get(name).entrySet().parallelStream()
+//                                .filter(e -> e.getKey().isAfter(Utility.PM1310T) && e.getValue().getHigh() > max(amMax, pmfirst10Max)).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
+//                        return pmFirstBreak;
+//                    }
+//                    return Utility.PMCLOSET;
 
                 //ratioFirstBreak
                 case 78:
-                    if (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.PMOPENT)) {
-                        double retAM = getAMReturn(name);
-                        double pmOpen = priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen();
-
-                        if (retAM > 0.0) {
-                            return priceMapBar.get(name).entrySet().parallelStream().filter(e -> (e.getKey().isAfter(Utility.PMOPENT)
-                                    && (e.getValue().getClose() / pmOpen - 1) / retAM > ratioBreakFloor)).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
-                        }
-                    }
-                    return Utility.PMCLOSET;
+                    return 0.0;
+//                    if (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.PMOPENT)) {
+//                        double retAM = getAMReturn(name);
+//                        double pmOpen = priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen();
+//
+//                        if (retAM > 0.0) {
+//                            return priceMapBar.get(name).entrySet().parallelStream().filter(e -> (e.getKey().isAfter(Utility.PMOPENT)
+//                                    && (e.getValue().getClose() / pmOpen - 1) / retAM > ratioBreakFloor)).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
+//                        }
+//                    }
+//                    return Utility.PMCLOSET;
 
                 // rangeFirstBreak
                 case 79:
-                    if (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.PMOPENT)) {
-                        double retAM = getAMReturn(name);
-                        double amRange = getAMRange(name);
-                        double pmOpen = priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen();
-
-                        return priceMapBar.get(name).entrySet().parallelStream().filter(e -> (e.getKey().isAfter(Utility.PMOPENT)
-                                && log(e.getValue().getHigh() / pmOpen) / amRange > rangeBreakFloor)).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
-                    }
-                    return Utility.PMCLOSET;
+                    return 0.0;
+//                    if (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.PMOPENT)) {
+//                        double retAM = getAMReturn(name);
+//                        double amRange = getAMRange(name);
+//                        double pmOpen = priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen();
+//
+//                        return priceMapBar.get(name).entrySet().parallelStream().filter(e -> (e.getKey().isAfter(Utility.PMOPENT)
+//                                && log(e.getValue().getHigh() / pmOpen) / amRange > rangeBreakFloor)).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
+//                    }
+//                    return Utility.PMCLOSET;
 
                 //ratioBreakRtn    
                 case 80:
-                    if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET) && LAST_KEY_AFTER.test(name, Utility.PMOPENT)) {
-                        double retAM = getAMReturn(name);
-                        double pmOpen = priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen();
-                        LocalTime entryTime = priceMapBar.get(name).entrySet().parallelStream().filter(e -> (e.getKey().isAfter(Utility.PMOPENT)
-                                && log(e.getValue().getClose() / pmOpen) / retAM > ratioBreakFloor)).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
-
-                        if (retAM > 0.0 && entryTime.isBefore(Utility.PMCLOSET)) {
-                            return round(1000d * log(priceMapBar.get(name).lastEntry().getValue().getClose()
-                                    / priceMapBar.get(name).get(entryTime).getClose())) / 10d;
-                        }
-                    }
+//                    if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET) && LAST_KEY_AFTER.test(name, Utility.PMOPENT)) {
+//                        double retAM = getAMReturn(name);
+//                        double pmOpen = priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen();
+//                        LocalTime entryTime = priceMapBar.get(name).entrySet().parallelStream().filter(e -> (e.getKey().isAfter(Utility.PMOPENT)
+//                                && log(e.getValue().getClose() / pmOpen) / retAM > ratioBreakFloor)).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
+//
+//                        if (retAM > 0.0 && entryTime.isBefore(Utility.PMCLOSET)) {
+//                            return round(1000d * log(priceMapBar.get(name).lastEntry().getValue().getClose()
+//                                    / priceMapBar.get(name).get(entryTime).getClose())) / 10d;
+//                        }
+//                    }
                     return 0.0;
                 //rangeBreakRtn    
                 case 81:
-                    if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET) && LAST_KEY_AFTER.test(name, Utility.PMOPENT)) {
-                        double retAM = getAMReturn(name);
-                        double amRange = getAMRange(name);
-                        double pmOpen = priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen();
-                        LocalTime entryTime = priceMapBar.get(name).entrySet().parallelStream().filter(e -> (e.getKey().isAfter(Utility.PMOPENT)
-                                && log(e.getValue().getClose() / pmOpen) / amRange > rangeBreakFloor)).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
-                        if (entryTime.isBefore(Utility.PMCLOSET)) {
-                            return round(1000d * log(priceMapBar.get(name).lastEntry().getValue().getClose() / priceMapBar.get(name).get(entryTime).getHigh())) / 10d;
-                        }
-                    }
+//                    if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET) && LAST_KEY_AFTER.test(name, Utility.PMOPENT)) {
+//                        double retAM = getAMReturn(name);
+//                        double amRange = getAMRange(name);
+//                        double pmOpen = priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen();
+//                        LocalTime entryTime = priceMapBar.get(name).entrySet().parallelStream().filter(e -> (e.getKey().isAfter(Utility.PMOPENT)
+//                                && log(e.getValue().getClose() / pmOpen) / amRange > rangeBreakFloor)).findFirst().map(Entry::getKey).orElse(Utility.TIMEMAX);
+//                        if (entryTime.isBefore(Utility.PMCLOSET)) {
+//                            return round(1000d * log(priceMapBar.get(name).lastEntry().getValue().getClose() / priceMapBar.get(name).get(entryTime).getHigh())) / 10d;
+//                        }
+//                    }
 
                     return 0.0;
 
                 //runningP%
                 case 82:
-                    if (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) {
-                        double firstmax = priceMapBar.get(name).subMap(Utility.AMOPENT, Utility.AM940T).entrySet().stream().map(Entry::getValue).mapToDouble(SimpleBar::getHigh).max().orElse(0.0);
-                        double firstmin = priceMapBar.get(name).subMap(Utility.AMOPENT, Utility.AM940T).entrySet().stream().map(Entry::getValue).mapToDouble(SimpleBar::getLow).min().orElse(0.0);
-                        double firstlast = ofNullable(priceMapBar.get(name).floorEntry(Utility.AM940T)).map(Entry::getValue).map(SimpleBar::getClose).orElse(0.0);
-                        return (int) round(100d * (firstlast - firstmin) / (firstmax - firstmin));
-                    }
-                    return 0;
+                    return 0.0;
+//                    if (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) {
+//                        double firstmax = priceMapBar.get(name).subMap(Utility.AMOPENT, Utility.AM940T).entrySet().stream().map(Entry::getValue).mapToDouble(SimpleBar::getHigh).max().orElse(0.0);
+//                        double firstmin = priceMapBar.get(name).subMap(Utility.AMOPENT, Utility.AM940T).entrySet().stream().map(Entry::getValue).mapToDouble(SimpleBar::getLow).min().orElse(0.0);
+//                        double firstlast = ofNullable(priceMapBar.get(name).floorEntry(Utility.AM940T)).map(Entry::getValue).map(SimpleBar::getClose).orElse(0.0);
+//                        return (int) round(100d * (firstlast - firstmin) / (firstmax - firstmin));
+//                    }
+//                    return 0;
 
                 //f10_min
                 case 83:
-                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT))
-                            ? priceMapBar.get(name).subMap(Utility.AMOPENT, Utility.AM940T).entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0) : 0.0;
+                    return 0.0;
+//                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT))
+//                            ? priceMapBar.get(name).subMap(Utility.AMOPENT, Utility.AM940T).entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0) : 0.0;
                 //f10_max   
                 case 84:
-                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT))
-                            ? priceMapBar.get(name).subMap(Utility.AMOPENT, Utility.AM940T).entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
+                    return 0.0;
+
+//                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT))
+//                            ? priceMapBar.get(name).subMap(Utility.AMOPENT, Utility.AM940T).entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
 
                 //pmF10VrStd
                 case 85:
-                    return round(100d * ofNullable(ChinaSizeRatio.pmF10VRChgStandardizedMap.get(name)).orElse(0.0)) / 100d;
+                    return 0.0;
+//                    return round(100d * ofNullable(ChinaSizeRatio.pmF10VRChgStandardizedMap.get(name)).orElse(0.0)) / 100d;
 
                 //vrPMF10    
                 case 86:
-                    return (Utility.NORMAL_MAP.test(sizeRatioMap, name) && sizeRatioMap.get(name).firstKey().isBefore(Utility.PMOPENT))
-                            ? round(100d * sizeRatioMap.get(name).floorEntry(Utility.PM1310T).getValue() / sizeRatioMap.get(name).floorEntry(Utility.PMOPENT).getValue()) / 100d : 0.0;
+                    return 0.0;
+//                    return (Utility.NORMAL_MAP.test(sizeRatioMap, name) && sizeRatioMap.get(name).firstKey().isBefore(Utility.PMOPENT))
+//                            ? round(100d * sizeRatioMap.get(name).floorEntry(Utility.PM1310T).getValue() / sizeRatioMap.get(name).floorEntry(Utility.PMOPENT).getValue()) / 100d : 0.0;
 
                 //pm1stBreak    
                 case 87:
-                    return getPMFirstBreakTime(name);
+                    return 0.0;
+                    //return getPMFirstBreakTime(name);
 
                 // vrMnT    
                 case 88:
-                    return getVRMinT(name);
+                    return 0.0;
+                    //return getVRMinT(name);
 
                 //vrMxT
                 case 89:
-                    return getVRMaxT(name);
+                    return 0.0;
+                    //return getVRMaxT(name);
 
                 //vrDif
                 case 90:
-                    return round((double) getVRMaxT(name) / (double) getVRMinT(name) * 100d);
+                    return 0.0;
+                    //return round((double) getVRMaxT(name) / (double) getVRMinT(name) * 100d);
 
                 //925R 
                 case 91:
-                    return getVR(name, Utility.AM925T);
+                    return 0.0;
+                    //return getVR(name, Utility.AM925T);
 
                 //930R
                 case 92:
-                    return getVR(name, Utility.AMOPENT);
+                    return 0.0;
+                    //return getVR(name, Utility.AMOPENT);
 
                 //935R    
                 case 93:
-                    return getVR(name, Utility.AM935T);
+                    return 0.0;
+//                    return getVR(name, Utility.AM935T);
 
                 //940R
                 case 94:
-                    return getVR(name, Utility.AM940T);
+                    return 0.0;
+                    //return getVR(name, Utility.AM940T);
 
                 // vrStd
                 case 95:
-                    return round(100d * sizeRatioStandardizedMap.getOrDefault(name, 0.0)) / 100d;
+                    return 0.0;
+                    //return round(100d * sizeRatioStandardizedMap.getOrDefault(name, 0.0)) / 100d;
 
                 //prod
                 case 96:
-                    return round(100d * ofNullable(sizeRatioStandardizedMap.get(name)).orElse(0.0) * ofNullable(pmF10VRChgStandardizedMap.get(name)).orElse(0.0)) / 100d;
+                    return 0.0;
+                    //return round(100d * ofNullable(sizeRatioStandardizedMap.get(name)).orElse(0.0) * ofNullable(pmF10VRChgStandardizedMap.get(name)).orElse(0.0)) / 100d;
 
                 //pr   
                 case 97:
@@ -2645,67 +2710,83 @@ public final class ChinaStock extends JPanel {
 
                 //f10MxMnD
                 case 98:
-                    return getFirst10MaxMinTimeDiff(name);
+                    return 0.0;
+                    //return getFirst10MaxMinTimeDiff(name);
 
                 //p1
                 case 99:
-                    return percentileVRPMap.getOrDefault(name, 0);
+                    return 0.0;
+                    //return percentileVRPMap.getOrDefault(name, 0);
                 //p2
                 case 100:
-                    return percentileVRPAvgVRMap.getOrDefault(name, 0);
+                    return 0.0;
+                    //return percentileVRPAvgVRMap.getOrDefault(name, 0);
                 //p3
                 case 101:
-                    return percentileVRPAvgPRMap.getOrDefault(name, 0);
+                    return 0.0;
+                    //return percentileVRPAvgPRMap.getOrDefault(name, 0);
 
                 //maFallTime
                 case 102:
-                    return getMA20FirstFallTime(name);
+                    return 0.0;
+                    //return getMA20FirstFallTime(name);
 
                 //maBreakTime    
                 case 103:
-                    return getMA20FirstBreakTime(name);
+                    return 0.0;
+                    //return getMA20FirstBreakTime(name);
 
                 case 104:
                     return LocalTime.MIN; //getMaxPriceRangeTime(name);
                 case 105:
-                    return getMinuteRangeZScoreGen(name, 0L);
+                    return 0.0;
+                    //return getMinuteRangeZScoreGen(name, 0L);
                 case 106:
-                    return getMinuteRangeZScoreGen(name, 1L);
+                    return 0.0;
+                    //return getMinuteRangeZScoreGen(name, 1L);
                 case 107:
-                    return getVolZScore(name);
+                    return 0.0;
+                    //return getVolZScore(name);
                 case 108:
-                    return getBarSharp(name, e -> true);
+                    return 0.0;
+                    //return getBarSharp(name, e -> true);
                 case 109:
-                    return getBarSharp(name, e -> e.getValue().getBarReturn() > 0);
+                    return 0.0;
+                    //return getBarSharp(name, e -> e.getValue().getBarReturn() > 0);
                 case 110:
-                    return getBarSharp(name, e -> e.getValue().getBarReturn() < 0);
+                    return 0.0;
+                    //return getBarSharp(name, e -> e.getValue().getBarReturn() < 0);
 
                 //f10maxT
                 case 111:
-                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) ? priceMapBar.get(name).subMap(Utility.AMOPENT, true, Utility.AM940T, true)
-                            .entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.AMOPENT;
+                    return LocalTime.MIN;
+//                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) ? priceMapBar.get(name).subMap(Utility.AMOPENT, true, Utility.AM940T, true)
+//                            .entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.AMOPENT;
 
                 //1m/opc
                 case 112:
-                    return (getOPC(name) != 0.0 && getFirst1Ret(name) != 0.0) ? Math.abs(round(10d * getFirst1Ret(name) / getOPC(name)) / 10d) : 0.0;
+                    return 0.0;
+                    //return (getOPC(name) != 0.0 && getFirst1Ret(name) != 0.0) ? Math.abs(round(10d * getFirst1Ret(name) / getOPC(name)) / 10d) : 0.0;
 
                 //1m
                 case 113:
-                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT))
-                            ? round(1000d * (priceMapBar.get(name).get(Utility.AMOPENT).getClose() / priceMapBar.get(name).get(Utility.AMOPENT).getOpen() - 1)) / 10d : 0.0;
+                    return 0.0;
+//                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT))
+//                            ? round(1000d * (priceMapBar.get(name).get(Utility.AMOPENT).getClose() / priceMapBar.get(name).get(Utility.AMOPENT).getOpen() - 1)) / 10d : 0.0;
 
                 //amC%  
                 case 114:
-                    if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET)) {
-                        double max = GETMAX.applyAsDouble(name, Utility.AM_PRED);
-                        double min = GETMIN.applyAsDouble(name, Utility.AM_PRED);
-                        return (max - min > 0) ? (int) round((priceMapBar.get(name).floorEntry(Utility.AMCLOSET).getValue().getClose() - min) / (max - min) * 100) : 0;
-                    }
+//                    if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET)) {
+//                        double max = GETMAX.applyAsDouble(name, Utility.AM_PRED);
+//                        double min = GETMIN.applyAsDouble(name, Utility.AM_PRED);
+//                        return (max - min > 0) ? (int) round((priceMapBar.get(name).floorEntry(Utility.AMCLOSET).getValue().getClose() - min) / (max - min) * 100) : 0;
+//                    }
                     return 0;
 
                 // P%
                 case 115:
-                    return (Utility.noZeroArrayGen(name, minMap, maxMap, priceMap)) ? (int) min(100, round(100d * (priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))) : 0;
+                    return 0;
+                    //return (Utility.noZeroArrayGen(name, minMap, maxMap, priceMap)) ? (int) min(100, round(100d * (priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))) : 0;
 
                 //close
                 case 116:

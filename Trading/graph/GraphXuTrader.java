@@ -35,7 +35,7 @@ public class GraphXuTrader extends JComponent {
     volatile String name;
     String chineseName;
     private String bench;
-    double prevClose;
+    volatile double prevClose;
     LocalTime maxAMT;
     LocalTime minAMT;
     volatile int size;
@@ -132,7 +132,7 @@ public class GraphXuTrader extends JComponent {
         minRtn = getMinRtn();
         maxRtn = getMaxRtn();
         last = 0;
-        rtn = getReturn();
+        //rtn = getReturn();
 
         int x = 5;
         for (LocalTime lt : tm.keySet()) {
@@ -212,7 +212,8 @@ public class GraphXuTrader extends JComponent {
         //add bench here
         //g2.drawString(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString(), 15, 15);
         g2.drawString(Double.toString(getReturn()) + "%", getWidth() / 8, 15);
-        g2.drawString("开: " + Double.toString(getOpen()), getWidth() * 2 / 8, 15);
+        g2.drawString("收: " + Integer.toString((int) Math.round(prevClose)), getWidth() * 3 / 16, 15);
+        g2.drawString("开: " + Integer.toString((int)Math.round(getOpen())), getWidth() * 2 / 8, 15);
         g2.drawString("P: " + Double.toString(getLast()), getWidth() * 6 / 16, 15);
         g2.drawString(" Index: " + Math.round(getIndex()) , getWidth() * 8 / 16, 15);
         g2.drawString("PD: " + getPD() , getWidth() * 10 / 16, 15);
