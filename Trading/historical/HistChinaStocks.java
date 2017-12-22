@@ -14,7 +14,7 @@ import client.ExecutionFilter;
 import graph.GraphBarTemporal;
 import graph.GraphChinaPnl;
 import handler.SGXPositionHandler;
-import handler.SGXReportHandler;
+import handler.SGXTradesHandler;
 import utility.SharpeUtility;
 import utility.Utility;
 
@@ -694,7 +694,7 @@ public class HistChinaStocks extends JPanel {
         System.out.println(" getting sgx trades ");
         chinaTradeMap.put("SGXA50", new ConcurrentSkipListMap<>());
         chinaTradeMap.put("SGXA50BM", new ConcurrentSkipListMap<>());
-        ChinaMain.controller().reqExecutions(new ExecutionFilter(), new SGXReportHandler());
+        ChinaMain.controller().reqExecutions(new ExecutionFilter(), new SGXTradesHandler());
     }
 
 

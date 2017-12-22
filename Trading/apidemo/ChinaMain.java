@@ -33,7 +33,7 @@ import java.util.concurrent.*;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
-import static utility.Utility.DATA_COLLECTION_TIME;
+import static apidemo.TradingConstants.DATA_COLLECTION_TIME;
 
 //import java.time.temporal.ChronoUnit;
 //import java.time.temporal.TemporalUnit;

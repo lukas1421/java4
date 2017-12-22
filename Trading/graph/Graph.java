@@ -43,7 +43,8 @@ public class Graph extends JComponent implements GraphFillable {
 
     public Graph(NavigableMap<LocalTime, Double> tm) {
         //noinspection unchecked
-        this.tm = new ConcurrentSkipListMap(tm.entrySet().stream().filter(e -> e.getValue() != 0.0).collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
+        this.tm = new ConcurrentSkipListMap(tm.entrySet().stream().filter(e -> e.getValue() != 0.0)
+                .collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
     }
 
     public Graph() {
@@ -137,9 +138,11 @@ public class Graph extends JComponent implements GraphFillable {
         int x = 5;
         for (LocalTime lt : tm.keySet()) {
             close = getY(tm.floorEntry(lt).getValue());
-            if (last == 0) {
-                last = close;
-            }
+//            if (last == 0) {
+//                last = close;
+//            }
+            last = last==0?close:last;
+
             g.drawLine(x, last, x + 3, close);
             last = close;
             if (lt.equals(tm.firstKey())) {
@@ -214,14 +217,16 @@ public class Graph extends JComponent implements GraphFillable {
         double finalP;
 
         if (tm.size() > 2 && (Math.abs((finalP = tm.lastEntry().getValue()) -
-                (initialP = tm.entrySet().stream().filter(entry -> entry.getValue() != 0.0).findFirst().map(Entry::getValue).orElse(0.0))) > 0.0001)) {
+                (initialP = tm.entrySet().stream().filter(entry -> entry.getValue() != 0.0)
+                        .findFirst().map(Entry::getValue).orElse(0.0))) > 0.0001)) {
             return (double) 100 * Math.round(log(finalP / initialP) * 1000d) / 1000d;
         }
         return 0.0;
     }
 
     private double getRangeY() {
-        return (Utility.noZeroArrayGen(name, minMapY, maxMapY)) ? Math.round(100d * Math.log(maxMapY.get(name) / minMapY.get(name))) / 100d : 0.0;
+        return (Utility.noZeroArrayGen(name, minMapY, maxMapY)) ?
+                Math.round(100d * (maxMapY.get(name) / minMapY.get(name)-1)) / 100d : 0.0;
     }
 
     public static double getMinRtn(NavigableMap<LocalTime, Double> tm) {

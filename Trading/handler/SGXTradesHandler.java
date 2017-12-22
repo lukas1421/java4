@@ -15,16 +15,15 @@ import java.time.format.DateTimeFormatter;
 
 import static utility.Utility.ibContractToSymbol;
 
-public class SGXReportHandler implements ApiController.ITradeReportHandler {
+public class SGXTradesHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
         String ticker = ibContractToSymbol(contract);
         System.out.println(" ****************************** ");
-        System.out.println(" SGXReportHandler " + ticker);
+        System.out.println(" SGXTradesHandler " + ticker);
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
 
-        //System.out.println(LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss")));
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
         LocalDateTime ldtRoundto5 = Utility.roundTo5Ldt(ldt);
@@ -67,7 +66,8 @@ public class SGXReportHandler implements ApiController.ITradeReportHandler {
 
             String ticker = f.getTicker();
 
-            int sgxLotsTraded = HistChinaStocks.chinaTradeMap.get(ticker).entrySet().stream().filter(e -> e.getKey().toLocalDate()
+            int sgxLotsTraded = HistChinaStocks.chinaTradeMap.get(ticker).entrySet().stream()
+                    .filter(e -> e.getKey().toLocalDate()
                     .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
 

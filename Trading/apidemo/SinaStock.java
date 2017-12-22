@@ -24,9 +24,9 @@ import java.util.regex.Pattern;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.sizeTotalMap;
 import static apidemo.ChinaStock.*;
+import static apidemo.TradingConstants.DATA_COLLECTION_TIME;
 import static apidemo.XU.indexPriceSina;
 import static apidemo.XU.indexVol;
-import static utility.Utility.DATA_COLLECTION_TIME;
 
 public class SinaStock implements Runnable {
 

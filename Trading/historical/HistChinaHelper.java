@@ -9,7 +9,7 @@ import java.time.Month;
 class HistChinaHelper {
 
     private HistChinaHelper() {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException(" no init for hist china helper ");
     }
 
     static double getTradingCostCustom(String name, LocalDate ld, Trade t) {

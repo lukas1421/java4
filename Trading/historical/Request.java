@@ -9,7 +9,7 @@ public class Request {
     private Contract contract;
     private GeneralHandler handler;
     private HistDataConsumer<Contract,String, Double, Integer> dataConsumer;
-    private boolean customHandlingNeeded = false;
+    private boolean customHandlingNeeded;
 
     public Request(Contract ct, GeneralHandler h) {
         contract = ct;

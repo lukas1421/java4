@@ -77,11 +77,6 @@ public class Utility {
     public static final LocalTime TIMEMAX = LocalTime.MAX.truncatedTo(ChronoUnit.MINUTES);
     public static final BetweenTime<LocalTime> TIME_BETWEEN = (t1, b1, t2, b2) -> (t -> t.isAfter(b1 ? t1.minusMinutes(1) : t1) && t.isBefore(b2 ? t2.plusMinutes(1) : t2));
     public static final GenTimePred<LocalTime, Boolean> ENTRY_BTWN_GEN = (t1, b1, t2, b2) -> (e -> e.getKey().isAfter(b1 ? t1.minusMinutes(1) : t1) && e.getKey().isBefore(b2 ? t2.plusMinutes(1) : t2));
-    public static final Predicate<LocalDateTime> DATA_COLLECTION_TIME =
-            lt -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) &&
-                    !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
-                    && ((lt.toLocalTime().isAfter(LocalTime.of(8, 59)) && lt.toLocalTime().isBefore(LocalTime.of(11, 35)))
-                    || (lt.toLocalTime().isAfter(LocalTime.of(12, 58)) && lt.toLocalTime().isBefore(LocalTime.of(15, 5))));
     public static BiPredicate<? super Map<String, ? extends Map<LocalTime, ?>>, String> NORMAL_MAP = (mp, name) -> mp.containsKey(name) && !mp.get(name).isEmpty() && mp.get(name).size() > 0;
     public static Predicate<LocalTime> chinaTradingTime = t -> (t.isAfter(LocalTime.of(9, 30)) && t.isBefore(LocalTime.of(11, 31))) ||
             (t.isAfter(LocalTime.of(12, 59)) && t.isBefore(LocalTime.of(15, 1)));
@@ -360,7 +355,7 @@ public class Utility {
         CompletableFuture.supplyAsync(()
                         -> mp.entrySet().stream().filter(GraphIndustry.NO_GC)
                         .collect(groupingBy(e -> ChinaStock.industryNameMap.get(e.getKey()),
-                                mapping(Map.Entry::getValue, Collectors.reducing(Utility.mapBinOp(GraphIndustry.TRADING_HOURS)))))
+                                mapping(Map.Entry::getValue, Collectors.reducing(Utility.mapBinOp(TradingConstants.TRADING_HOURS)))))
 //                                , Collectors.collectingAndThen(toList(),
 //                                e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(GraphIndustry.TRADING_HOURS))
 //                                        .collect(groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, summingDouble(Map.Entry::getValue)))))))
@@ -450,19 +445,11 @@ public class Utility {
                             mp1.get(e).put(lt.minusMinutes(1L), new SimpleBar(Double.parseDouble(al1.get(2)), Double.parseDouble(al1.get(3)),
                                     Double.parseDouble(al1.get(4)), Double.parseDouble(al1.get(5))));
 
-//                            if(e.equals("sh600519")) {
-//                                System.out.println(" counter is " + counter.incrementAndGet());
-//                                System.out.println(" moutai date time vol size " + dateString + " " + lt + " "
-//                                        + (Double.parseDouble(al1.get(7)) / 1000000) +  " " + totalSize);
-//                            }
-
                             if (lt.equals(LocalTime.of(9, 31))) {
                                 totalSize = 0.0;
                             }
-
                             totalSize += (Double.parseDouble(al1.get(7)) / 1000000);
                             mp2.get(e).put(lt.minusMinutes(1L), totalSize);
-                            //  }
                         }
                     }
                     if (found) {
@@ -546,10 +533,6 @@ public class Utility {
                         ConcurrentSkipListMap::new));
 
     }
-
-//    public static <T extends Temporal> boolean testLocalTime(Predicate<LocalTime> p) {
-//
-//    }
 
     @SafeVarargs
     public static <T extends Temporal, S> NavigableMap<T, S> mergeMapGen(NavigableMap<T, S>... mps) {

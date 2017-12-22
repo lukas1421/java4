@@ -32,7 +32,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     int last = 0;
     double rtn = 0;
     //int percentile;
-    private NavigableMap<T, SimpleBar> mainMap = new ConcurrentSkipListMap<>();
+    private NavigableMap<T, SimpleBar> mainMap;
     private NavigableMap<T, Integer> histTradesMap = new ConcurrentSkipListMap<>();
     private int netCurrentPosition;
     private double currentTradePnl;
@@ -201,7 +201,6 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                     qRounded = (int) Math.round(q / 1000.0);
                 }
 
-                //lt.getClass() == LocalDateTime.class
                 if (lt.getClass() == LocalDateTime.class) {
                     g.setColor(Color.blue);
                     g.drawString(((LocalDateTime) lt).toLocalTime().toString(), x, getHeight() - 20);
@@ -212,11 +211,6 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                     g.drawPolygon(p);
                     g.fillPolygon(p);
                     g.drawString(Integer.toString(qRounded), x, lowY + 25);
-
-//                    if(name.equals("SGXA50")) {
-//                        System.out.println(" SGXA50 trades found  + hist trades map is " + histTradesMap);
-//                    }
-                    //g.drawString();
                 } else {
                     g.setColor(Color.black);
                     Polygon p1 = new Polygon(new int[]{x - 10, x, x + 10}, new int[]{highY - 10, highY, highY - 10}, 3);
@@ -224,8 +218,6 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                     g.fillPolygon(p1);
                     g.drawString(Integer.toString(qRounded), x, highY - 25);
                 }
-
-                //g.drawString(lt.toString(), x, getHeight()-40);
             }
 
 
@@ -238,14 +230,11 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                     g.drawString(lt.toString(), x, getHeight() - 40);
                     g.setColor(Color.red);
                     g.drawString("" + mainMap.lastEntry().getValue().getClose(), x, getHeight() - 10);
-
                     g.setColor(Color.black);
                 }
 
                 if (lt.getClass() == LocalDate.class) {
                     @SuppressWarnings({"ConstantConditions"}) LocalDate ltn = (LocalDate) lt;
-
-
 
                     try {
                         Method m = getLocalDateOf();
@@ -264,7 +253,11 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                             g.drawString(Integer.toString(ltn.getMonth().getValue()), x, getHeight() - 40);
 
                             @SuppressWarnings("unchecked")
-                            T monthBegin = (T) m.invoke(null, ltn.getYear()+(ltn.getMonth().equals(Month.JANUARY)?-1:0), ltn.getMonth().minus(1L), 1);
+                                    //ltn.getYear()+(ltn.getMonth().equals(Month.JANUARY)?-1:0)
+                            T monthBegin = (T) m.invoke(null, ltn.minusMonths(1L).getYear(),
+                                    ltn.minusMonths(1L).getMonth(), 1);
+
+
                             g.drawString("" + Math.round(1000d * (mainMap.lowerEntry(lt).getValue().getClose()
                                             / Optional.ofNullable(mainMap.lowerEntry(monthBegin)).map(Map.Entry::getValue).map(SimpleBar::getClose)
                                             .orElse(mainMap.firstEntry().getValue().getOpen()) - 1)) / 10d + "%"

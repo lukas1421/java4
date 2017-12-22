@@ -1,5 +1,13 @@
 package apidemo;
 
+import utility.Utility;
+
+import java.time.DayOfWeek;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Map;
+import java.util.function.Predicate;
+
 public final class TradingConstants {
 //    public static final String GLOBALA50FRONTEXPIRY = "20171129";
 //    public static final String GLOBALA50BACKEXPIRY = "20171228";
@@ -14,12 +22,20 @@ public final class TradingConstants {
     //public final static int PORT_IBAPI = 4001;
     //public final static int PORT_NORMAL = 7496;
     public static final int GLOBALWIDTH = 1900;
-    static volatile double CNHHKD = 1.18;
+
+    public static final Predicate<? super Map.Entry<LocalTime, ?>> TRADING_HOURS =
+            e -> ((e.getKey().isAfter(LocalTime.of(9, 29)) && e.getKey().isBefore(LocalTime.of(11, 31))) || Utility.PM_PRED.test(e));
+
+    public static final Predicate<LocalDateTime> DATA_COLLECTION_TIME =
+            lt -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) &&
+                    !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
+                    && ((lt.toLocalTime().isAfter(LocalTime.of(8, 59)) && lt.toLocalTime().isBefore(LocalTime.of(11, 35)))
+                    || (lt.toLocalTime().isAfter(LocalTime.of(12, 58)) && lt.toLocalTime().isBefore(LocalTime.of(15, 5))));
+
 
     private TradingConstants() {
         throw new UnsupportedOperationException(" all constants ");
     }
 
-
-
+    static volatile double CNHHKD = 1.18;
 }

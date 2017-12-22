@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import static apidemo.ChinaData.priceMapBar;
-import static utility.Utility.DATA_COLLECTION_TIME;
+import static apidemo.TradingConstants.DATA_COLLECTION_TIME;
 
 public class SGXFutureReceiver implements LiveHandler {
 
