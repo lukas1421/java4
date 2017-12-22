@@ -213,6 +213,7 @@ public final class ChinaStockHelper {
         });
     }
 
+    @SuppressWarnings("unused")
     static double getBarSharp(String name, Predicate<? super Entry<LocalTime, SimpleBar>> p) {
         NavigableMap<LocalTime, SimpleBar> tm = ChinaData.priceMapBar.get(name);
         if (tm != null && tm.size() > 2) {

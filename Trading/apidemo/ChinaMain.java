@@ -29,6 +29,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.*;
 
 import static apidemo.ChinaData.priceMapBar;
@@ -562,7 +563,8 @@ public final class ChinaMain implements IConnectionHandler {
         CompletableFuture.runAsync(() -> {
             try {
                 M_CONTROLLER.connect("127.0.0.1", 7496, 0,
-                        m_connectionConfiguration.getDefaultConnectOptions() != null ? "" : null);
+                        Optional.ofNullable(m_connectionConfiguration).map(IConnectionConfiguration::getDefaultConnectOptions)
+                                .orElse(""));
             } catch (Exception ex) {
                 System.out.println(" error in controller ");
                 ex.printStackTrace();

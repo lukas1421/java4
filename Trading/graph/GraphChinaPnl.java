@@ -18,14 +18,12 @@ import java.util.function.DoubleBinaryOperator;
 import static utility.Utility.roundDownToN;
 
 public class GraphChinaPnl<T extends Temporal> extends JComponent implements GraphFillable, MouseMotionListener {
-
-
     String name = "";
     String chineseName = "";
 
-    private volatile NavigableMap<T, Double> mtmMap = new ConcurrentSkipListMap<>();
-    private volatile NavigableMap<T, Double> tradeMap = new ConcurrentSkipListMap<>();
-    private volatile NavigableMap<T, Double> netMap = new ConcurrentSkipListMap<>();
+    private volatile NavigableMap<T, Double> mtmMap;
+    private volatile NavigableMap<T, Double> tradeMap;
+    private volatile NavigableMap<T, Double> netMap;
 
     private NavigableMap<LocalDate, Double> mtmByDay = new ConcurrentSkipListMap<>();
     private NavigableMap<LocalDate, Double> mtmByAm = new ConcurrentSkipListMap<>();
@@ -41,7 +39,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
     int height;
 
     private static final int WIDTH_PNL = 4;
-    static volatile int mouseXCord;
+    private static volatile int mouseXCord;
 
     public GraphChinaPnl() {
         mtmMap = new ConcurrentSkipListMap<>();

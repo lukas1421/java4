@@ -1,16 +1,13 @@
 package apidemo;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import org.apache.commons.math3.distribution.NormalDistribution;
+import utility.Utility;
+
+import javax.swing.*;
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import static java.lang.Math.exp;
-import static java.lang.Math.pow;
-import static java.lang.Math.sqrt;
 import java.net.URL;
 import java.net.URLConnection;
 import java.time.LocalDate;
@@ -28,41 +25,31 @@ import java.util.function.DoubleUnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.swing.BorderFactory;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
+
+import static java.lang.Math.*;
+
 //import org.apache.commons.math3.*;
-import org.apache.commons.math3.distribution.NormalDistribution;
-import utility.Utility;
 
 public class ChinaOption extends JPanel implements Runnable {
-
-    static String callString = "http://hq.sinajs.cn/list=OP_UP_5100501706";
-    static String putString = "http://hq.sinajs.cn/list=OP_DOWN_5100501706";
-
     static String urlString;
-
     static String urlStringSH;
 
-    static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
-    static final Pattern CALL_NAME_PATTERN = Pattern.compile("(?<=var\\shq_str_OP_UP_5100501706=)\"(.*?),\"");
-    static final Pattern CALL_PATTERN = Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"(.*?)\";");
+    private static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
+    private static final Pattern CALL_NAME_PATTERN = Pattern.compile("(?<=var\\shq_str_OP_UP_5100501706=)\"(.*?),\"");
+    private static final Pattern CALL_PATTERN = Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"(.*?)\";");
     //static final Pattern CALL_NAME = Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"");
 
-    static String primaryCall = "CON_OP_" + "10000801";
-    static HashMap<String, Double> callPriceMap = new HashMap<>();
-    static HashMap<String, Double> bidMap = new HashMap<>();
-    static HashMap<String, Double> askMap = new HashMap<>();
+    private static String primaryCall = "CON_OP_" + "10000801";
+    private static HashMap<String, Double> callPriceMap = new HashMap<>();
+    private static HashMap<String, Double> bidMap = new HashMap<>();
+    private static HashMap<String, Double> askMap = new HashMap<>();
     static HashMap<String, Option> callOptionsMap = new HashMap<>();
-    static List<JLabel> labelList = new ArrayList<>();
-    static JLabel timeLabel = new JLabel();
+    private static List<JLabel> labelList = new ArrayList<>();
+    private static JLabel timeLabel = new JLabel();
 
-    static Option firstO = new Option(2.5, LocalDate.of(2017, Month.JUNE, 28), 0.045);
+    private static Option firstO = new Option(2.5, LocalDate.of(2017, Month.JUNE, 28), 0.045);
 
-    public ChinaOption() {
+    private ChinaOption() {
 
         setLayout(new BorderLayout());
         JPanel controlPanel = new JPanel();
@@ -172,7 +159,9 @@ public class ChinaOption extends JPanel implements Runnable {
     @Override
     public void run() {
         try {
+            String callString = "http://hq.sinajs.cn/list=OP_UP_5100501706";
             URL urlCall = new URL(callString);
+            String putString = "http://hq.sinajs.cn/list=OP_DOWN_5100501706";
             URL urlPul = new URL(putString);
             URLConnection urlconnCall = urlCall.openConnection();
             URLConnection urlconnPut = urlPul.openConnection();
@@ -348,11 +337,11 @@ public class ChinaOption extends JPanel implements Runnable {
 
 class Option {
 
-    double strike;
-    LocalDate expiryDate;
+    private double strike;
+    private LocalDate expiryDate;
     String ticker;
     double optionPrice;
-    double rate;
+    private double rate;
 
     Option(double k, LocalDate t, double r) {
         strike = k;

@@ -909,12 +909,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double avgBuy = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
                 .mapToDouble(e -> e.getValue().getCostBasisAll("")).sum() / unitsBought)) / 100d);
+
         double avgSell = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
                 .mapToDouble(e -> e.getValue().getCostBasisAll("")).sum() / unitsSold)) / 100d);
+
         double buyTradePnl = Math.round(100d * (futPriceMap.get(f) - avgBuy) * unitsBought) / 100d;
+
         double sellTradePnl = Math.round(100d * (futPriceMap.get(f) - avgSell) * unitsSold) / 100d;
+
         double netTradePnl = buyTradePnl + sellTradePnl;
+
         double netTotalCommissions = (unitsBought - unitsSold) * 1.505d;
+
         double mtmPnl = (currentPosMap.get(f) - unitsBought - unitsSold) * (futPriceMap.get(f) - futPrevCloseMap.get(f));
 
         SwingUtilities.invokeLater(() -> {
@@ -959,7 +965,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 }
 
 class XUConnectionHandler implements ApiController.IConnectionHandler {
-
     @Override
     public void connected() {
         System.out.println("connected in XUconnectionhandler");

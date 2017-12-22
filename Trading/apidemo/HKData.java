@@ -8,7 +8,6 @@ import utility.Utility;
 
 import javax.swing.*;
 import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -28,6 +27,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
 
     public static volatile ConcurrentHashMap<String, Double> hkPreviousCloseMap = new ConcurrentHashMap<>();
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> hkVolMap
             = new ConcurrentHashMap<>();
 
@@ -39,8 +39,6 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
     private static List<String> hkNames = new LinkedList<>();
     static BarModel_HKData m_model;
     JTable tab;
-    private int modelRow;
-    private int indexRow;
     private File testOutput = new File(TradingConstants.GLOBALPATH + "hkTestData.txt");
 
     HKData() {
@@ -48,8 +46,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
         Utility.clearFile(testOutput);
 
         for (LocalTime t = LocalTime.of(9, 19); t.isBefore(LocalTime.of(16, 1)); t = t.plusMinutes(1)) {
-            if (t.isAfter(LocalTime.of(11, 59)) && t.isBefore(LocalTime.of(13, 0))) {
-            } else {
+            if (!(t.isAfter(LocalTime.of(11, 59)) && t.isBefore(LocalTime.of(13, 0)))) {
                 hkTradingTime.add(t);
             }
         }
@@ -74,8 +71,6 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
                 Component comp = super.prepareRenderer(renderer, row, col);
 
                 if (isCellSelected(row, col)) {
-                    modelRow = this.convertRowIndexToModel(row);
-                    indexRow = row;
                     comp.setBackground(Color.GREEN);
                 } else {
                     comp.setBackground((row % 2 == 0) ? Color.lightGray : Color.white);
@@ -88,9 +83,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    SwingUtilities.invokeLater(() -> {
-                        m_model.fireTableDataChanged();
-                    });
+                    SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
                 }
             }
         });
@@ -107,9 +100,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
         JButton refreshButton = new JButton("Refresh");
         JButton histButton = new JButton("Today Data");
 
-        refreshButton.addActionListener(al -> {
-            this.repaint();
-        });
+        refreshButton.addActionListener(al -> this.repaint());
 
         histButton.addActionListener(al -> {
             System.out.println(" requesting hk today data ");
@@ -124,7 +115,8 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
         add(scroll, BorderLayout.CENTER);
 
         tab.setAutoCreateRowSorter(true);
-        @SuppressWarnings("unchecked") TableRowSorter<BarModel_HKData> sorter = (TableRowSorter<BarModel_HKData>) tab.getRowSorter();
+
+        //@SuppressWarnings("unchecked") TableRowSorter<BarModel_HKData> sorter = (TableRowSorter<BarModel_HKData>) tab.getRowSorter();
 
     }
 
@@ -206,6 +198,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
 
         @Override
         public Class getColumnClass(int col) {
+            //noinspection Duplicates
             switch (col) {
                 case 0:
                     return String.class;

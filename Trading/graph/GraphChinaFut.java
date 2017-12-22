@@ -23,8 +23,6 @@ public class GraphChinaFut extends JComponent {
     private double maxFuture;
     private double minIndex;
     private double maxIndex;
-    private int close;
-    private int close1;
     private int last = 0;
     private int last1 = 0;
     private double rtn;
@@ -179,7 +177,7 @@ public class GraphChinaFut extends JComponent {
         LocalTime lastDrawT = LocalTime.of(9, 0);
 
         for (LocalTime lt : futureP.keySet()) {
-            close = getYXU(futureP.get(lt));
+            int close = getYXU(futureP.get(lt));
 
             if (last == 0) {
                 last = close;
@@ -202,7 +200,7 @@ public class GraphChinaFut extends JComponent {
                 }
             }
             if (indexP.containsKey(lt)) {
-                close1 = getYSI(indexP.get(lt));
+                int close1 = getYSI(indexP.get(lt));
                 if (last1 == 0) {
                     last1 = close1;
                 }

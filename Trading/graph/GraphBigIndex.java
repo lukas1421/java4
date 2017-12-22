@@ -35,21 +35,15 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
     private int heightVol;
     private double min;
     private double max;
-    private double maxRtn;
-    private double minRtn;
     private int closeY;
-    private int highY;
     private int lowY;
-    private int openY;
-    private int volumeY;
-    private int volumeLowerBound;
 
     NavigableMap<LocalTime, SimpleBar> tm;
-    NavigableMap<LocalTime, Double> tmVol;
-    NavigableMap<LocalTime, SimpleBar> tmYtd;
-    NavigableMap<LocalTime, Double> tmVolYtd;
-    NavigableMap<LocalTime, SimpleBar> tmY2;
-    NavigableMap<LocalTime, Double> tmVolY2;
+    private NavigableMap<LocalTime, Double> tmVol;
+    private NavigableMap<LocalTime, SimpleBar> tmYtd;
+    private NavigableMap<LocalTime, Double> tmVolYtd;
+    private NavigableMap<LocalTime, SimpleBar> tmY2;
+    private NavigableMap<LocalTime, Double> tmVolY2;
 
     private static final BasicStroke BS2 = new BasicStroke(2);
 
@@ -58,7 +52,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
     LocalTime maxAMT;
     LocalTime minAMT;
     volatile int size;
-//    final static Comparator<? super Entry<LocalTime,? extends SimpleBar>> BAR_HIGH = (e1,e2)->e1.getValue().getHigh()>=e2.getValue().getHigh()?1:-1;
+    //    final static Comparator<? super Entry<LocalTime,? extends SimpleBar>> BAR_HIGH = (e1,e2)->e1.getValue().getHigh()>=e2.getValue().getHigh()?1:-1;
 //    final static Comparator<? super Entry<LocalTime,? extends SimpleBar>> BAR_LOW = (e1,e2)->e1.getValue().getLow()>=e2.getValue().getLow()?1:-1;
 //    static final Entry<LocalTime, Double> dummyMap =  new AbstractMap.SimpleEntry<>(LocalTime.of(23,59), 0.0);
 //    static final Entry<LocalTime, SimpleBar> dummyBar =  new AbstractMap.SimpleEntry<>(LocalTime.of(23,59), new SimpleBar(0.0));
@@ -86,6 +80,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
     }
 
     private void setNavigableMapVol(NavigableMap<LocalTime, Double> tmvol) {
+        //noinspection Duplicates
         if (tmvol != null) {
             NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
             tmvol.keySet().forEach((t) -> {
@@ -98,7 +93,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
         }
     }
 
-    public void setNavigableMapYtd(NavigableMap<LocalTime, SimpleBar> tmIn) {
+    private void setNavigableMapYtd(NavigableMap<LocalTime, SimpleBar> tmIn) {
         if (tmIn != null) {
             this.tmYtd = tmIn.entrySet().stream().filter(e -> !e.getValue().containsZero()).
                     collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, ConcurrentSkipListMap::new));
@@ -107,7 +102,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
         }
     }
 
-    public void setNavigableMapVolYtd(NavigableMap<LocalTime, Double> tmvolytd) {
+    private void setNavigableMapVolYtd(NavigableMap<LocalTime, Double> tmvolytd) {
         if (tmvolytd != null) {
             NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
             tmvolytd.keySet().forEach((t) -> {
@@ -120,7 +115,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
         }
     }
 
-    public void setNavigableMapY2(NavigableMap<LocalTime, SimpleBar> tmIn) {
+    private void setNavigableMapY2(NavigableMap<LocalTime, SimpleBar> tmIn) {
         if (tmIn != null) {
             this.tmY2 = tmIn.entrySet().stream().filter(e -> !e.getValue().containsZero()).
                     collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, ConcurrentSkipListMap::new));
@@ -129,7 +124,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
         }
     }
 
-    public void setNavigableMapVolY2(NavigableMap<LocalTime, Double> tmvoly2) {
+    private void setNavigableMapVolY2(NavigableMap<LocalTime, Double> tmvoly2) {
         if (tmvoly2 != null) {
             NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
             tmvoly2.keySet().forEach((t) -> {
@@ -142,9 +137,9 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
         }
     }
 
-    public NavigableMap<LocalTime, SimpleBar> getNavigableMap() {
-        return this.tmYtd;
-    }
+//    public NavigableMap<LocalTime, SimpleBar> getNavigableMap() {
+//        return this.tmYtd;
+//    }
 
     @Override
     public void setName(String s) {
@@ -158,14 +153,6 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
 
     public void setChineseName(String s) {
         chineseName = s;
-    }
-
-    public void setSize1(int s) {
-        this.size = s;
-    }
-
-    public void setSize1(long s) {
-        this.size = (int) s;
     }
 
     public void setMaxAMT(LocalTime t) {
@@ -225,6 +212,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
         this.repaint();
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -237,11 +225,15 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
         getWidth();
         min = getMin();
         max = getMax();
-        minRtn = getMinRtn();
-        maxRtn = getMaxRtn();
+        double minRtn = getMinRtn();
+        double maxRtn = getMaxRtn();
 
         int x = 10;
 
+        int highY;
+        int openY;
+        int volumeY;
+        int volumeLowerBound;
         for (LocalTime lt : tmY2.keySet()) {
 
             openY = getY(tmY2.floorEntry(lt).getValue().getOpen());
@@ -530,7 +522,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
 
     private int getYVol(double v) {
 
-        double pct = (double) v / getMaxVol();
+        double pct = v / getMaxVol();
         double val = pct * heightVol;
         return height + heightVol - (int) val;
     }
@@ -571,11 +563,12 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
         return Utility.maxGen(maxYtd, maxToday, maxY2);
     }
 
-    int getPMchgY() {
+    private int getPMchgY() {
         return Utility.noZeroArrayGen(name, minMapY, amCloseY, closeMapY, maxMapY)
                 ? (int) min(100, round(100d * (closeMapY.get(name) - amCloseY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
+    @SuppressWarnings("unused")
     private double getMinVol() {
         return Math.min(tmVolYtd.entrySet().stream().filter(entry -> entry.getValue() != 0L).min(Map.Entry.comparingByValue()).map(Map.Entry::getValue).orElse(0.0),
                 tmVol.entrySet().stream().filter(entry -> entry.getValue() != 0L).min(Map.Entry.comparingByValue()).map(Map.Entry::getValue).orElse(0.0));
@@ -586,20 +579,21 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
                 tmVol.entrySet().stream().filter(entry -> entry.getValue() != 0L).max(GREATER).map(Map.Entry::getValue).orElse(0.0));
     }
 
-    double getRangeY() {
+    private double getRangeY() {
         return Utility.noZeroArrayGen(name, minMapY, maxMapY) ? round(100d * log(maxMapY.get(name) / minMapY.get(name))) / 100d : 0.0;
     }
 
     private double getReturn() {
-        double initialP = 0;
-        double finalP = 0;
-        if (tmYtd.size() > 0 && (Math.abs((finalP = tmYtd.lastEntry().getValue().getClose()) - (initialP = tmYtd.entrySet().stream().findFirst().get().getValue().getOpen())) > 0.0001)) {
+        double initialP;
+        double finalP;
+        if (tmYtd.size() > 0 && (Math.abs((finalP = tmYtd.lastEntry().getValue().getClose()) - (initialP = tmYtd.entrySet().stream().findFirst()
+                .map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0))) > 0.0001)) {
             return (double) 100 * Math.round(log(finalP / initialP) * 1000d) / 1000d;
         }
         return 0;
     }
 
-//        private double getRangeY() {
+    //        private double getRangeY() {
 //            if(Optional.ofNullable(minMapY.get(name)).orElse(0.0) !=0.0
 //                    && Optional.ofNullable(maxMapY.get(name)).orElse(0.0) !=0.0
 //                    ) {
@@ -629,60 +623,61 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
         return Optional.ofNullable(ChinaStock.sizeMap.get(name)).orElse(0L);
     }
 
+    @SuppressWarnings("unused")
     private long getSizeYtd() {
         return Utility.NORMAL_MAP.test(sizeTotalMapYtd, name) ? Math.round(sizeTotalMapYtd.get(name).lastEntry().getValue()) : 0L;
     }
 
-    int getCurrentMaxMinYP() {
+    private int getCurrentMaxMinYP() {
         return Utility.noZeroArrayGen(name, minMapY, priceMap) ? (int) min(100, round(100d * (priceMap.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
-    double getOpenYP() {
+    private double getOpenYP() {
         return Utility.noZeroArrayGen(name, minMapY, maxMapY, openMapY) ? (int) min(100, round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
-    int getCloseYP() {
+    private int getCloseYP() {
         return Utility.noZeroArrayGen(name, minMapY) ? (int) min(100, round(100d * (closeMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
-    double getCurrentPercentile() {
+    private double getCurrentPercentile() {
         return Utility.noZeroArrayGen(name, priceMap, maxMap, minMap) ? min(100.0, round(100d * ((priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name))))) : 0.0;
     }
 
-    //get some 
-    double getRetCHY() {
+    //get some
+    private double getRetCHY() {
         return Utility.noZeroArrayGen(name, closeMapY, maxMapY) ? min(100.0, round(1000d * log(closeMapY.get(name) / maxMapY.get(name)))) / 10d : 0.0;
     }
 
-    double getHO() {
+    private double getHO() {
         return round(1000d * retHOY.getOrDefault(name, 0.0)) / 10d;
     }
 
-    double getHOCHRangeRatio() {
+    private double getHOCHRangeRatio() {
         return (Utility.noZeroArrayGen(name, retHOY, retCHY, minMapY, maxMapY)) ? round(((ChinaDataYesterday.retHOY.get(name) - retCHY.get(name)) / ((maxMapY.get(name) / minMapY.get(name) - 1))) * 10d) / 10d : 0.0;
     }
 
-    double getRetCLY() {
+    private double getRetCLY() {
         return Utility.noZeroArrayGen(name, closeMapY, minMapY) ? min(100.0, round(1000d * Math.log(closeMapY.get(name) / minMapY.get(name)))) / 10d : 0.0;
     }
 
-    double getRetCC() {
+    private double getRetCC() {
         return round(1000d * retCCY.getOrDefault(name, 0.0)) / 10d;
     }
 
-    double getRetCO() {
+    private double getRetCO() {
         return round(1000d * retCOY.getOrDefault(name, 0.0)) / 10d;
     }
 
-    int getMinTY() {
+    private int getMinTY() {
         return minTY.getOrDefault(name, 0);
     }
 
-    int getMaxTY() {
+    private int getMaxTY() {
         return maxTY.getOrDefault(name, 0);
     }
 
-//        private double getRetOPC() {
+    //        private double getRetOPC() {
 //            if(Optional.ofNullable(ChinaStock.closeMap.get(name)).orElse(0.0)!=0.0 && Optional.ofNullable(ChinaStock.openMap.get(name)).orElse(0.0)!=0.0) {
 //                return Math.round(1000d*Math.log(ChinaStock.openMap.get(name)/ChinaStock.closeMap.get(name)))/10d;
 //            } else {
@@ -703,7 +698,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
                 ? round(1000d * (priceMapBar.get(name).floorEntry(Utility.AM940T).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
     }
 
-//        private int getCurrentMaxMinYP() {
+    //        private int getCurrentMaxMinYP() {
 //            if(Optional.ofNullable(minMapY.get(name)).orElse(0.0) !=0.0
 //                    && Optional.ofNullable(priceMap.get(name)).orElse(0.0)!=0.0) {
 //                return (int) Math.min(100,Math.round(100d*(priceMap.get(name)-minMapY.get(name))/(maxMapY.get(name)-minMapY.get(name))));
@@ -796,8 +791,9 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
 
         if (tmYtd.size() > 0) {
             if (tmYtd.firstKey().isBefore(LocalTime.of(12, 1)) && tmYtd.lastKey().isAfter(LocalTime.of(9, 30))) {
-                return tmYtd.entrySet().stream().filter(entry1 -> !entry1.getValue().containsZero() && entry1.getKey().isAfter(LocalTime.of(9, 29)) && entry1.getKey().isBefore(LocalTime.of(12, 1)))
-                        .min(BAR_LOW).get().getKey();
+                return tmYtd.entrySet().stream().filter(entry1 -> !entry1.getValue().containsZero() && entry1.getKey().isAfter(LocalTime.of(9, 29))
+                        && entry1.getKey().isBefore(LocalTime.of(12, 1)))
+                        .min(BAR_LOW).map(Entry::getKey).orElse(LocalTime.MIN);
             }
         }
         return LocalTime.of(9, 30);
@@ -807,8 +803,8 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
 
         if (!tmYtd.isEmpty() & tmYtd.size() > 2) {
             if (tmYtd.firstKey().isBefore(LocalTime.of(12, 1)) && tmYtd.lastKey().isAfter(LocalTime.of(9, 30))) {
-
-                return tmYtd.entrySet().stream().filter(entry -> !entry.getValue().containsZero()).filter(Utility.AM_PRED).max(Utility.BAR_HIGH).get().getKey();
+                return tmYtd.entrySet().stream().filter(entry -> !entry.getValue().containsZero())
+                        .filter(Utility.AM_PRED).max(Utility.BAR_HIGH).map(Map.Entry::getKey).orElse(LocalTime.of(9,30));
             }
 
         }

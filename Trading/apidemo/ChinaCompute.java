@@ -5,10 +5,6 @@ class ChinaCompute implements Runnable {
 
     private static ChinaCompute cc = new ChinaCompute();
 
-    //static ChinaCompute getChinaCompute() {
-//        return cc;
-//    }
-
     private ChinaCompute() {
     }
 

@@ -12,6 +12,6 @@ public interface IConnectionConfiguration {
 	public static class DefaultConnectionConfiguration implements IConnectionConfiguration {
 	    @Override public String getDefaultHost() { return ""; }
 	    @Override public String getDefaultPort() { return "7496"; }
-	    @Override public String getDefaultConnectOptions() { return null; }
+	    @Override public String getDefaultConnectOptions() { return ""; }
 	}
 }

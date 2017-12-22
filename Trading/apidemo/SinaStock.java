@@ -10,14 +10,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,27 +27,17 @@ import static apidemo.XU.indexPriceSina;
 import static apidemo.XU.indexVol;
 
 public class SinaStock implements Runnable {
-
-    //static File = new File()
-
     static Map<String, Double> weightMapA50 = new HashMap<>();
-
     static private final SinaStock sinastock = new SinaStock();
-
     static SinaStock getInstance() {
         return sinastock;
     }
-
     private static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
-    //Matcher matcher;
     String line;
     //public static volatile LocalDate mostRecentTradingDay = LocalDate.now();
 
     public static final double OPEN = getOpen();
     static volatile double rtn = 0.0;
-    private static final Predicate<LocalDateTime> FUT_OPEN_PRED = (lt)
-            -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) && !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
-            && lt.toLocalTime().isAfter(LocalTime.of(9, 0, 30));
 
 //    public final Predicate<LocalTime> FUT_OPEN = (lt) -> lt.isAfter(LocalTime.of(9, 0, 0));
 
@@ -199,12 +187,14 @@ public class SinaStock implements Runnable {
         return temp;
     }
 
+    @SuppressWarnings("unused")
     static LocalTime gt() {
         LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         return LocalTime.of(now.getHour(), now.getMinute(), (now.getSecond() / 5) * 5);
     }
 
-    static void updateBidAskMap(String ticker, LocalTime t, List l, BidAsk ba, Map<String, ? extends NavigableMap<LocalTime, VolBar>> mp) {
+    @SuppressWarnings("unused")
+    static void updateBidAskMap(String ticker, LocalTime t, List<String> l, BidAsk ba, Map<String, ? extends NavigableMap<LocalTime, VolBar>> mp) {
         int factor = ba.getValue() * 10;
         if (mp.get(ticker).containsKey(t)) {
             mp.get(ticker).get(t).fillAll(Utility.pd(l, 10 + factor), Utility.pd(l, 12 + factor), Utility.pd(l, 14 + factor), Utility.pd(l, 16 + factor), Utility.pd(l, 18 + factor));

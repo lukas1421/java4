@@ -33,11 +33,11 @@ public final class LiveData extends JPanel implements ITopMktDataHandler1, IInte
     ArrayList<Bar> m_rows = new ArrayList<>();
     private final static Calendar CAL = Calendar.getInstance();
     ArrayList<Integer> symbolNames = new ArrayList<>();
-    ArrayList<LocalTime> tradeTime = new ArrayList<>();
+    private ArrayList<LocalTime> tradeTime = new ArrayList<>();
     ExecutorService es = Executors.newCachedThreadPool();
 
-    static File source = new File(TradingConstants.GLOBALPATH + "HKSS.ser");
-    static File backup = new File(TradingConstants.GLOBALPATH + "HKSSBackup.ser");
+    private static File source = new File(TradingConstants.GLOBALPATH + "HKSS.ser");
+    private static File backup = new File(TradingConstants.GLOBALPATH + "HKSSBackup.ser");
 
     public ConcurrentHashMap<Integer, ConcurrentSkipListMap<LocalTime, Double>> getMap() {
         System.out.println(" passing map ");

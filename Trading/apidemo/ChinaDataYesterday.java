@@ -36,7 +36,6 @@ import static utility.Utility.*;
 public final class ChinaDataYesterday extends JPanel {
 
     String line;
-    String listNames;
     private static volatile Map<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapCopy = new ConcurrentHashMap<>();
     static Map<String, Double> ma20Map = new HashMap<>();
     private static ConcurrentHashMap<Integer, Map<String, ?>> saveMap = new ConcurrentHashMap<Integer, Map<String, ?>>();
@@ -52,8 +51,8 @@ public final class ChinaDataYesterday extends JPanel {
     public static volatile Map<String, Double> maxMapY = new ConcurrentHashMap<>();
     public static volatile Map<String, Double> minMapY = new ConcurrentHashMap<>();
 
-    public static volatile Map<String, Double> maxMapY2 = new ConcurrentHashMap<>();
-    public static volatile Map<String, Double> minMapY2 = new ConcurrentHashMap<>();
+    //public static volatile Map<String, Double> maxMapY2 = new ConcurrentHashMap<>();
+    //public static volatile Map<String, Double> minMapY2 = new ConcurrentHashMap<>();
 
     public static volatile Map<String, Integer> maxTY = new ConcurrentHashMap<>();
     public static volatile Map<String, Integer> minTY = new ConcurrentHashMap<>();
@@ -61,25 +60,25 @@ public final class ChinaDataYesterday extends JPanel {
     private static volatile Map<String, Integer> amMinTY = new ConcurrentHashMap<>();
     private static volatile Map<String, Integer> pmMaxTY = new ConcurrentHashMap<>();
     private static volatile Map<String, Integer> pmMinTY = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> amFirst1Y = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> amFirst10Y = new ConcurrentHashMap<>();
+    private static volatile Map<String, Double> amFirst1Y = new ConcurrentHashMap<>();
+    private static volatile Map<String, Double> amFirst10Y = new ConcurrentHashMap<>();
     private static volatile Map<String, Double> pmMinY = new ConcurrentHashMap<>();
     private static volatile Map<String, Double> pmMaxY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> amMaxY = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> amMinY = new ConcurrentHashMap<>();
+    private static volatile Map<String, Double> amMinY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> percentileY = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> openPY = new ConcurrentHashMap<>();
+    private static volatile Map<String, Double> openPY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> retAMCOY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> retPMCOY = new ConcurrentHashMap<>();
     public static volatile Map<String, Double> retCOY = new ConcurrentHashMap<>();
     public static volatile Map<String, Double> retCCY = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> retOPCY = new ConcurrentHashMap<>();
+    private static volatile Map<String, Double> retOPCY = new ConcurrentHashMap<>();
     public static volatile Map<String, Double> retCHY = new ConcurrentHashMap<>();
-    public static volatile Map<String, Double> retCLY = new ConcurrentHashMap<>();
+    static volatile Map<String, Double> retCLY = new ConcurrentHashMap<>();
     public static volatile Map<String, Double> retHOY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> retLOY = new ConcurrentHashMap<>();
     static volatile Map<String, Double> amHOY = new ConcurrentHashMap<>();
-    static volatile Map<String, Double> amClosePY = new ConcurrentHashMap<>();
+    private static volatile Map<String, Double> amClosePY = new ConcurrentHashMap<>();
     public static volatile Map<String, Long> sizeY = new ConcurrentHashMap<>();
     static volatile Map<String, Long> amFirst1YOP = new ConcurrentHashMap<>();
     static volatile Map<String, Long> amFirst1YCP = new ConcurrentHashMap<>();
@@ -87,7 +86,6 @@ public final class ChinaDataYesterday extends JPanel {
     static volatile Map<String, Long> amFirst10YCP = new ConcurrentHashMap<>();
     static volatile Map<String, Long> amFirst10MaxMinDiff = new ConcurrentHashMap<>();
 
-    private final int MAXTCOL = 7;
     private final int MINTCOL = 8;
     private final int AMCOCOL = 9;
     private final int PMCOCOL = 10;
@@ -99,7 +97,6 @@ public final class ChinaDataYesterday extends JPanel {
     private final int SIZECOL = 23;
     private final int FIRST1COL = 24;
     private final int FIRST10COL = 25;
-    private final int AMMINTCOL = 26;
     private final int AMMAXTCOL = 27;
     private final int PMMAXTCOL = 29;
     private final int AMHOPMCHRCOL = 34;
@@ -108,18 +105,18 @@ public final class ChinaDataYesterday extends JPanel {
     private static boolean filterOn;
     private static TableRowSorter<BarModel_YTD> sorter;
 
-    static volatile double rangeThresh;
-    static volatile int maxTCeiling;
-    static volatile int minTFloor;
-    static volatile int openPCeiling;
-    static volatile int pmChgCeiling;
-    static volatile int amCPFloor;
-    static volatile int percentileCeiling;
-    static volatile int amMinTCeiling;
-    static volatile int amMaxTFloor;
-    static volatile Double first10Floor;
-    static volatile int pmMaxTCeiling;
-    static volatile long sizeFloor;
+    private static volatile double rangeThresh;
+    private static volatile int maxTCeiling;
+    private static volatile int minTFloor;
+    private static volatile int openPCeiling;
+    private static volatile int pmChgCeiling;
+    private static volatile int amCPFloor;
+    private static volatile int percentileCeiling;
+    private static volatile int amMinTCeiling;
+    private static volatile int amMaxTFloor;
+    private static volatile Double first10Floor;
+    private static volatile int pmMaxTCeiling;
+    private static volatile long sizeFloor;
     //static final Entry<LocalTime, SimpleBar> dummyMap =  new AbstractMap.SimpleEntry<>(LocalTime.MAX, SimpleBar.getZeroBar());
     static final Predicate<? super Entry<LocalTime, SimpleBar>> AMFIRST10 = e -> e.getKey().isAfter(LocalTime.of(9, 29, 29)) && e.getKey().isBefore(LocalTime.of(9, 40, 1));
     static Predicate<String> NORMAL_STOCK_YEST = name -> priceMapCopy.containsKey(name) && !priceMapCopy.get(name).isEmpty() && priceMapCopy.get(name).size() > 2;
@@ -297,49 +294,46 @@ public final class ChinaDataYesterday extends JPanel {
             ChinaDataYesterday.setYtdIndustryFilter(ChinaStock.industryNameMap.get(selectedNameStock));
         });
 
-        btnSave.addActionListener(al -> {
-            CompletableFuture.runAsync(() -> {
-                try {
-                    Files.copy(source.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(source))) {
-                    saveMap.put(1, openMapY);
-                    saveMap.put(2, maxMapY);
-                    saveMap.put(3, minMapY);
-                    saveMap.put(4, closeMapY);
-                    saveMap.put(5, closeMapY2);
-                    saveMap.put(6, amCloseY);
-                    saveMap.put(7, maxTY);
-                    saveMap.put(8, minTY);
-                    saveMap.put(9, sizeY);
-                    saveMap.put(10, amMaxTY);
-                    saveMap.put(11, amMinTY);
-                    saveMap.put(12, pmMaxTY);
-                    saveMap.put(13, pmMinTY);
-                    saveMap.put(14, amFirst1Y);
-                    saveMap.put(15, amFirst10Y);
-                    saveMap.put(16, pmMinY);
-                    saveMap.put(17, pmMaxY);
-                    saveMap.put(18, amMinY);
-                    saveMap.put(19, amMaxY);
-                    //saveMap.put(20,ChinaData.sizeTotalMapYtd);
-                    saveMap.put(21, amFirst1YOP);
-                    saveMap.put(22, amFirst1YCP);
-                    saveMap.put(23, amFirst10YOP);
-                    saveMap.put(24, amFirst10YCP);
-                    saveMap.put(25, amFirst10MaxMinDiff);
-                    oos.writeObject(saveMap);
-                    System.out.println("saving chinaYtd successfully");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).thenAccept(v -> {
-                ChinaMain.updateSystemNotif(Utility.getStr("Saving Ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
-            });
-
-        });
+        btnSave.addActionListener(al -> CompletableFuture.runAsync(() -> {
+            try {
+                Files.copy(source.toPath(), backup.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(source))) {
+                saveMap.put(1, openMapY);
+                saveMap.put(2, maxMapY);
+                saveMap.put(3, minMapY);
+                saveMap.put(4, closeMapY);
+                saveMap.put(5, closeMapY2);
+                saveMap.put(6, amCloseY);
+                saveMap.put(7, maxTY);
+                saveMap.put(8, minTY);
+                saveMap.put(9, sizeY);
+                saveMap.put(10, amMaxTY);
+                saveMap.put(11, amMinTY);
+                saveMap.put(12, pmMaxTY);
+                saveMap.put(13, pmMinTY);
+                saveMap.put(14, amFirst1Y);
+                saveMap.put(15, amFirst10Y);
+                saveMap.put(16, pmMinY);
+                saveMap.put(17, pmMaxY);
+                saveMap.put(18, amMinY);
+                saveMap.put(19, amMaxY);
+                //saveMap.put(20,ChinaData.sizeTotalMapYtd);
+                saveMap.put(21, amFirst1YOP);
+                saveMap.put(22, amFirst1YCP);
+                saveMap.put(23, amFirst10YOP);
+                saveMap.put(24, amFirst10YCP);
+                saveMap.put(25, amFirst10MaxMinDiff);
+                oos.writeObject(saveMap);
+                System.out.println("saving chinaYtd successfully");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }).thenAccept(v -> {
+            ChinaMain.updateSystemNotif(Utility.getStr("Saving Ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+        }));
 
         JButton filterGenButton = new JButton("Filter Activity");
         filterGenButton.addActionListener(al -> {
@@ -616,7 +610,7 @@ public final class ChinaDataYesterday extends JPanel {
 
     }
 
-    static void getOHLCFromDatabase() {
+    private static void getOHLCFromDatabase() {
 
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
         try (Session session = sessionF.openSession()) {
@@ -638,6 +632,7 @@ public final class ChinaDataYesterday extends JPanel {
         }
     }
 
+    @SuppressWarnings("unchecked")
     static void loadYesterdayData() {
         CompletableFuture.runAsync(() -> {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(source))) {
@@ -795,9 +790,7 @@ public final class ChinaDataYesterday extends JPanel {
             });
         }, es).whenComplete((ok, ex) -> {
             System.out.println(" ytd computing done ");
-            SwingUtilities.invokeLater(() -> {
-                m_model.fireTableDataChanged();
-            });
+            SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
         });
     }
 
@@ -817,30 +810,37 @@ public final class ChinaDataYesterday extends JPanel {
         return round(1000d * retCOY.getOrDefault(name, 0.0)) / 10d;
     }
 
+    @SuppressWarnings("unused")
     static double getHOY(String name) {
         return round(1000d * retHOY.getOrDefault(name, 0.0)) / 10d;
     }
 
+    @SuppressWarnings("unused")
     static double getCHY(String name) {
         return round(1000d * retCHY.getOrDefault(name, 0.0)) / 10d;
     }
 
+    @SuppressWarnings("unused")
     static double getCLY(String name) {
         return round(1000d * retCLY.getOrDefault(name, 0.0)) / 10d;
     }
 
+    @SuppressWarnings("unused")
     static double getPercentileY(String name) {
         return round(100d * percentileY.getOrDefault(name, 0.0));
     }
 
+    @SuppressWarnings("unused")
     static double getMinY(String name) {
         return round(100d * minMapY.getOrDefault(name, 0.0)) / 100d;
     }
 
+    @SuppressWarnings("unused")
     static double getMaxY(String name) {
         return round(100d * maxMapY.getOrDefault(name, 0.0)) / 100d;
     }
 
+    @SuppressWarnings("unused")
     static double getRangeY(String name) {
         return (noZeroArrayGen(name, minMapY, maxMapY)) ? round(100d * Math.log(maxMapY.get(name) / minMapY.get(name))) / 100d : 0.0;
     }
@@ -856,17 +856,19 @@ public final class ChinaDataYesterday extends JPanel {
                 ? round((retAMCOY.getOrDefault(name, 0.0) - retPMCOY.getOrDefault(name, 0.0)) / (maxMapY.get(name) / minMapY.get(name) - 1) * 100d) / 100d : 0.0;
     }
 
-    void toggleFilterOn() {
-        if (filterOn == false) {
+    private void toggleFilterOn() {
+        if (!filterOn) {
             List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
             filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, rangeThresh, RANGECOL));
             filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, minTFloor, MINTCOL));
+            int MAXTCOL = 7;
             filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, maxTCeiling, MAXTCOL));
             filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, openPCeiling, OPENPCOL));
             filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, pmChgCeiling, PMCOCOL)); //want negative pm return   
             filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, amCPFloor, 22)); //don't want low amClosePercentileY because this means market more likely to fall on T+1
             filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, percentileCeiling, PERCENTILECOL));
             filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, first10Floor, FIRST10COL));
+            int AMMINTCOL = 26;
             filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, amMinTCeiling, AMMINTCOL));
             filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, amMaxTFloor, AMMAXTCOL));
             filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, pmMaxTCeiling, PMMAXTCOL));

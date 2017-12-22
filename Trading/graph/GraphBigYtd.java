@@ -2,47 +2,29 @@ package graph;
 
 //import static apidemo.ChinaDataYesterday.*;
 //import static apidemo.ChinaStock.*;
+
 import apidemo.ChinaStock;
 import auxiliary.SimpleBar;
-import graph.GraphFillable;
 import utility.Utility;
 
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaData.priceMapBarY2;
-import static apidemo.ChinaData.priceMapBarYtd;
-import static apidemo.ChinaData.sizeTotalMap;
-import static apidemo.ChinaData.sizeTotalMapY2;
-import static apidemo.ChinaData.sizeTotalMapYtd;
-import static utility.Utility.AM924T;
-import static utility.Utility.AM925T;
-import static utility.Utility.AM_PRED;
-import static utility.Utility.BAR_HIGH;
-import static utility.Utility.BAR_LOW;
-import static utility.Utility.NORMAL_MAP;
-import static utility.Utility.TIMEMAX;
-import static utility.Utility.getStr;
-import static utility.Utility.maxGen;
-import static utility.Utility.minGen;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import static java.lang.Math.log;
-import static java.lang.Math.round;
+import javax.swing.*;
+import java.awt.*;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import static java.time.temporal.ChronoUnit.MINUTES;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
-
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static apidemo.ChinaData.*;
+import static java.lang.Math.log;
+import static java.lang.Math.round;
+import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.stream.Collectors.toMap;
-import javax.swing.JComponent;
+import static utility.Utility.*;
 
 public class GraphBigYtd extends JComponent implements GraphFillable {
 
@@ -51,8 +33,6 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
     private int heightVol;
     private double min;
     private double max;
-    private double maxRtn;
-    private double minRtn;
     private int closeY;
     private int highY;
     private int lowY;
@@ -238,8 +218,8 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
 
         min = getMin();
         max = getMax();
-        minRtn = getMinRtn();
-        maxRtn = getMaxRtn();
+        double minRtn = getMinRtn();
+        double maxRtn = getMaxRtn();
 
         int x = 10;
 
