@@ -9,9 +9,6 @@ public enum FutType {
     FutType(String t) {
         tickerName = t;
     }
-//    FutType(Contract c) {
-//        tickerName = ibContractToSymbol(c);
-//    }
 
     private static final Map<String, FutType> lookup = new HashMap<>();
     static {
@@ -26,6 +23,10 @@ public enum FutType {
         }
         throw new IllegalArgumentException(" cannot find ticker ");
     }
+
+    /**
+     * @return tickername
+     */
     public String getTicker() {
         return tickerName;
     }

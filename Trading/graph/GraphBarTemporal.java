@@ -24,7 +24,6 @@ import static utility.Utility.r;
 
 public class GraphBarTemporal<T extends Temporal> extends JComponent implements GraphFillable {
 
-
     private static final int WIDTH_BAR = 4;
     int height;
     double min;
@@ -155,10 +154,9 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         cons.accept(name);
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Override
     protected void paintComponent(Graphics g) {
-
-        //System.out.println(" drawing graph mainMap is " + mainMap);
 
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;

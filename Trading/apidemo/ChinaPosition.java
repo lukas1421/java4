@@ -614,12 +614,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
             int xuOpenPostion = currentPositionMap.getOrDefault(ticker, 0) - xuBotPos - xuSoldPos;
 
-//            double defaultOpen = 0.0;
-//            //add default for open here
-//            if (priceMapBar.get(ticker).size() > 0) {
-//                defaultOpen = priceMapBar.get(ticker).firstEntry().getValue().getClose();
-//            }
-            //System.out.println(" REFRESHING XU open bot sold current " + xuOpenPostion + " " + xuBotPos + " " + xuSoldPos + " " + xuCurrentPositionFront);
             openPositionMap.put(ticker, xuOpenPostion);
         }
         //ChinaStock.closeMap.put("SGXA50", xuOpenPrice==0.0?defaultOpen:xuOpenPrice);
@@ -654,16 +648,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     System.out.println(Utility.getStrCheckNull("updating open in chinapos", ld, lt, open));
                 }
             } else {
-                //!ld.equals(currDate)
-                //System.out.println(" handle hist china position " + name +" " + LocalDateTime.of(ld,lt) + " " + close);
-                //System.out.println(getStr(" outside regular area ", ld, lt, close, " desired date " + dateMap.get(1)));
                 if (ld.isEqual(ytd) && lt.isBefore(LocalTime.of(17, 0))) {
                     ChinaStock.closeMap.put(name, close);
                     System.out.println(getStr(" updating close ", ytd,lt, name, closeMap.getOrDefault(name, 0.0)));
-                    //xuPreviousClose = close;
                 }
             }
-
         } else {
             System.out.println(getStr(date, open, high, low, close));
         }
