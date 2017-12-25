@@ -29,8 +29,7 @@ import java.util.function.DoubleUnaryOperator;
 import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaData.tradeTime;
+import static apidemo.ChinaData.*;
 import static apidemo.ChinaDataYesterday.*;
 import static apidemo.ChinaSizeRatio.computeSizeRatioLast;
 import static apidemo.ChinaStock.*;
@@ -713,6 +712,40 @@ public final class ChinaStockHelper {
             }
         }
         return 0.0;
+    }
+
+
+    static void fixYtdSuspendedStocks() {
+        priceMapBarYtd.keySet().forEach(k->{
+            if(priceMapBarYtd.get(k).size()==0) {
+                System.out.println(" fixYtdSuspendedStocks size 0 " + k);
+            } else {
+                //size not zero
+                if(priceMapBarYtd.get(k).lastEntry().getValue().containsZero()) {
+                    System.out.println(" fixYtd + last entry contains zero " + k + " " + nameMap.get(k) );
+                    if(priceMapBar.get(k).size()>0) {
+                        double fillValue = priceMapBar.get(k).firstEntry().getValue().getOpen();
+                        priceMapBarYtd.get(k).replaceAll((ytdK,ytdV)->new SimpleBar(fillValue));
+                        System.out.println(" fill value " + fillValue);
+                    }
+                }
+            }
+        });
+        priceMapBarY2.keySet().forEach(k->{
+            if(priceMapBarY2.get(k).size()==0) {
+                System.out.println(" fixYtdSuspendedStocks Y2 size 0 " + k);
+            } else {
+                if(priceMapBarY2.get(k).lastEntry().getValue().containsZero()) {
+                    System.out.println(" fixY2 + last entry contains zero " + k + " " + nameMap.get(k) );
+                    if(priceMapBar.get(k).size()>0) {
+                        double fillValue = priceMapBar.get(k).firstEntry().getValue().getOpen();
+                        priceMapBarY2.get(k).replaceAll((ytdK,ytdV)->new SimpleBar(fillValue));
+                        System.out.println(" fill value " + fillValue);
+                    }
+                }
+            }
+        });
+
     }
 
 }

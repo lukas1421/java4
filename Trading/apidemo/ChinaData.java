@@ -35,6 +35,7 @@ import static apidemo.ChinaDataYesterday.convertTimeToInt;
 import static apidemo.ChinaMain.controller;
 import static apidemo.ChinaMain.currentTradingDate;
 import static apidemo.ChinaStock.*;
+import static apidemo.ChinaStockHelper.fixYtdSuspendedStocks;
 import static historical.HistChinaStocks.chinaWtd;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Optional.ofNullable;
@@ -228,6 +229,7 @@ public final class ChinaData extends JPanel {
         JButton saveHibYtdButton = new JButton("Save Hib Ytd");
         JButton saveHibY2Button = new JButton("Save Hib Y2");
 
+        JButton fixYtdZeroButton = new JButton(" fix ytd 0");
 
         //buttonUpPanel.add(btnSave);            buttonUpPanel.add(Box.createHorizontalStrut(10));
         //buttonUpPanel.add(btnSaveBar);         buttonUpPanel.add(Box.createHorizontalStrut(10));
@@ -275,7 +277,7 @@ public final class ChinaData extends JPanel {
         buttonDownPanel.add(retrieveTodayButton);
         buttonDownPanel.add(outputPricesButton);
         buttonDownPanel.add(Box.createHorizontalStrut(10));
-
+        buttonDownPanel.add(fixYtdZeroButton);
 
         add(jp, BorderLayout.NORTH);
 
@@ -369,6 +371,8 @@ public final class ChinaData extends JPanel {
         retrieveTodayButton.addActionListener(l -> getTodayTDX(LocalDate.now()));
 
         outputPricesButton.addActionListener(l -> outputPrices());
+
+        fixYtdZeroButton.addActionListener(l-> fixYtdSuspendedStocks());
     }
 
     static void outputPrices() {
