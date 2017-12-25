@@ -34,18 +34,14 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
     private double min;
     private double max;
     private int closeY;
-    private int highY;
     private int lowY;
-    private int openY;
-    private int volumeY;
-    private int volumeLowerBound;
 
     NavigableMap<LocalTime, SimpleBar> tm;
-    NavigableMap<LocalTime, Double> tmVol;
-    NavigableMap<LocalTime, SimpleBar> tmYtd;
-    NavigableMap<LocalTime, Double> tmVolYtd;
-    NavigableMap<LocalTime, SimpleBar> tmY2;
-    NavigableMap<LocalTime, Double> tmVolY2;
+    private NavigableMap<LocalTime, Double> tmVol;
+    private NavigableMap<LocalTime, SimpleBar> tmYtd;
+    private NavigableMap<LocalTime, Double> tmVolYtd;
+    private NavigableMap<LocalTime, SimpleBar> tmY2;
+    private NavigableMap<LocalTime, Double> tmVolY2;
 
     String name;
     String chineseName;
@@ -223,6 +219,10 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
 
         int x = 10;
 
+        int openY;
+        int volumeY;
+        int highY;
+        int volumeLowerBound;
         for (LocalTime lt : tmY2.keySet()) {
 
             openY = getY(tmY2.floorEntry(lt).getValue().getOpen());

@@ -1,7 +1,6 @@
 package graph;
 
 import apidemo.ChinaData;
-import apidemo.ChinaDataYesterday;
 import apidemo.ChinaStock;
 import auxiliary.SimpleBar;
 import utility.Utility;
@@ -68,9 +67,9 @@ public class Graph extends JComponent implements GraphFillable {
         setNavigableMap(tm, d->d, d->d==0.0);
     }
 
-    public ConcurrentSkipListMap<LocalTime, Double> getNavigableMap() {
-        return this.tm;
-    }
+//    public ConcurrentSkipListMap<LocalTime, Double> getNavigableMap() {
+//        return this.tm;
+//    }
 
     @Override
     public void setName(String s) {
@@ -90,7 +89,7 @@ public class Graph extends JComponent implements GraphFillable {
         this.size = s;
     }
 
-    public void setSize1(long s) {
+    private void setSize1(long s) {
         this.size = (int) s;
     }
 
@@ -110,6 +109,7 @@ public class Graph extends JComponent implements GraphFillable {
             setChineseName(ChinaStock.nameMap.get(name));
             setSize1(sizeMap.getOrDefault(name, 0L));
             if (Utility.NORMAL_MAP.test(priceMapBar, name)) {
+                assert name != null;
                 this.setNavigableMap(ChinaData.priceMapBar.get(name), SimpleBar::getClose, SimpleBar::containsZero);
             }
         }
@@ -126,7 +126,7 @@ public class Graph extends JComponent implements GraphFillable {
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
 
-        height = (int) (getHeight() - 70);
+        height = getHeight() - 70;
         getWidth();
         min = Utility.getMin(tm);
         max = Utility.getMax(tm);
@@ -314,10 +314,10 @@ public class Graph extends JComponent implements GraphFillable {
         return LocalTime.of(9, 30);
     }
 
-    public Double getSizeSizeY() {
-        return (Utility.noZeroArrayGen(name, ChinaStock.sizeMap, ChinaDataYesterday.sizeY))
-                ? Math.round(10d * ChinaStock.sizeMap.get(name) / ChinaDataYesterday.sizeY.get(name)) / 10d : 0.0;
-    }
+//    public Double getSizeSizeY() {
+//        return (Utility.noZeroArrayGen(name, ChinaStock.sizeMap, ChinaDataYesterday.sizeY))
+//                ? Math.round(10d * ChinaStock.sizeMap.get(name) / ChinaDataYesterday.sizeY.get(name)) / 10d : 0.0;
+//    }
 
     private Double getSizeSizeYT() {
         return (Utility.normalMapGen(name, sizeTotalMapYtd, sizeTotalMapYtd))

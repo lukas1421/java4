@@ -609,8 +609,6 @@ public class HistChinaStocks extends JPanel {
                             .map(Map.Entry::getValue).map(SimpleBar::getClose)
                             .orElse(Optional.of(chinaYtd.get(name).ceilingEntry(MONTH_FIRST_DAY)).map(Map.Entry::getValue).map(SimpleBar::getOpen)
                                     .orElse(0.0));
-
-                    //System.out.println(getStr(" name openPos price lastMonth close ", mtdOpenPos, price, lastMonthClose));
                     return mtdOpenPos * (price - lastMonthClose);
                 }
             }

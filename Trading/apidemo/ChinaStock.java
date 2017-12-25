@@ -65,14 +65,14 @@ public final class ChinaStock extends JPanel {
     public static List<String> symbolNamesFull = new ArrayList<>(1000);
 
     String line;
-    public static volatile String listNames;
-    public static volatile String listNameSH;
-    public static volatile String listNameSZ;
+    private static volatile String listNames;
+    static volatile String listNameSH;
+    static volatile String listNameSZ;
     private static BarModel_STOCK m_model;
     static JTable tab;
     static JPanel graphPanel;
-    static int modelRow;
-    static volatile int indexRow;
+    private static int modelRow;
+    private static volatile int indexRow;
 
     public static volatile Map<String, Double> returnMap = new ConcurrentHashMap<>();
     public static volatile Map<String, Double> openMap = new ConcurrentHashMap<>();

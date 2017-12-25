@@ -2,35 +2,29 @@ package graph;
 
 import apidemo.ChinaData;
 import apidemo.ChinaStock;
-import graph.GraphFillable;
-import graph.IND;
 
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import javax.swing.*;
+import java.awt.*;
 import java.time.LocalTime;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
-import static java.util.Optional.ofNullable;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.swing.JComponent;
+
+import static java.util.Optional.ofNullable;
 
 public class GraphBidAsk extends JComponent implements GraphFillable {
 
-    static final int WIDTH_BA = 6;
+    private static final int WIDTH_BA = 6;
     String name;
     int height;
     double min;
     double max;
     double maxRtn;
     private double minRtn;
-    private int close;
-    private int last = 0;
     private double rtn;
     NavigableMap<LocalTime, Double> tm;
     String chineseName;
@@ -84,11 +78,12 @@ public class GraphBidAsk extends JComponent implements GraphFillable {
         height = (int) (getHeight() - 70);
         min = getMin();
         max = getMax();
-        last = 0;
+        int last = 0;
         g.setColor(Color.black);
 
         int x = 5;
         g.setColor(Color.red);
+        int close;
         for (LocalTime lt : tmBid.keySet()) {
             close = getY(tmBid.floorEntry(lt).getValue());
             if (last == 0) {
