@@ -23,10 +23,11 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 import static utility.Utility.*;
+
+//import java.util.concurrent.atomic.AtomicInteger;
 
 public final class XUTrader extends JPanel implements HistoricalHandler, ApiController.IDeepMktDataHandler,
         ApiController.ITradeReportHandler, ApiController.IOrderHandler, ApiController.ILiveOrderHandler
@@ -59,7 +60,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static volatile EnumMap<FutType, Double> askMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Double> futPriceMap = new EnumMap<>(FutType.class);
     private static EnumMap<FutType, Double> futOpenMap = new EnumMap<>(FutType.class);
-    private static EnumMap<FutType, Double> futPrevCloseMap = new EnumMap<>(FutType.class);
+    public static EnumMap<FutType, Double> futPrevCloseMap = new EnumMap<>(FutType.class);
 
     private static JTextArea outputArea = new JTextArea(20, 1);
     private static List<JLabel> bidLabelList = new ArrayList<>();
@@ -88,7 +89,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static volatile boolean showTrades = false;
     static volatile boolean connectionStatus = false;
     static volatile JLabel connectionLabel = new JLabel();
-    private static volatile AtomicInteger connectionID = new AtomicInteger(100);
+
+    //private static volatile AtomicInteger connectionID = new AtomicInteger(100);
 
     public XUTrader getThis() {
         return this;
@@ -194,7 +196,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
                 apcon.reqPositions(getThis());
 
-                SwingUtilities.invokeLater(()-> {
+                SwingUtilities.invokeLater(() -> {
                     currTimeLabel.setText(time);
                     xuGraph.fillInGraph(futData.get(ibContractToFutType(activeFuture)));
                     xuGraph.fillTradesMap(tradesMap.get(ibContractToFutType(activeFuture)));
@@ -231,27 +233,27 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             XUTrader.processTradeMapActive();
         }, 0, 10, TimeUnit.SECONDS));
 
-        JButton connect7496 = new JButton("Connect 7496");
+        //JButton connect7496 = new JButton("Connect 7496");
 
-        connect7496.addActionListener(l -> {
-            System.out.println(" trying to connect 7496");
-            try {
-                apcon.connect("127.0.0.1", 7496, connectionID.incrementAndGet(), "");
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        });
-
-        JButton connect4001 = new JButton("Connect 4001");
-
-        connect4001.addActionListener(l -> {
-            System.out.println(" trying to connect 4001");
-            try {
-                apcon.connect("127.0.0.1", 4001, connectionID.incrementAndGet(), "");
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        });
+//        connect7496.addActionListener(l -> {
+//            System.out.println(" trying to connect 7496");
+//            try {
+//                apcon.connect("127.0.0.1", 7496, connectionID.incrementAndGet(), "");
+//            } catch (Exception ex) {
+//                ex.printStackTrace();
+//            }
+//        });
+//
+//        JButton connect4001 = new JButton("Connect 4001");
+//
+//        connect4001.addActionListener(l -> {
+//            System.out.println(" trying to connect 4001");
+//            try {
+//                apcon.connect("127.0.0.1", 4001, connectionID.incrementAndGet(), "");
+//            } catch (Exception ex) {
+//                ex.printStackTrace();
+//            }
+//        });
 
         JButton getData = new JButton("Data");
         getData.addActionListener(l -> {
@@ -342,8 +344,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel2.add(stopComputeButton);
         controlPanel2.add(execButton);
         controlPanel2.add(processTradesButton);
-        controlPanel2.add(connect7496);
-        controlPanel2.add(connect4001);
+        //controlPanel2.add(connect7496);
+        //controlPanel2.add(connect4001);
         controlPanel2.add(getData);
         controlPanel2.add(graphButton);
         controlPanel2.add(showGraphButton);

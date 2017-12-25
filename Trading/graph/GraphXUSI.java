@@ -1,6 +1,7 @@
 package graph;
 
 import apidemo.SinaStock;
+import apidemo.XUTrader;
 import auxiliary.SimpleBar;
 
 import javax.swing.*;
@@ -14,8 +15,9 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
 
+import static apidemo.ChinaData.ftseCloseMap;
 import static java.util.stream.Collectors.toMap;
-import static utility.Utility.getStr;
+import static utility.Utility.*;
 
 public class GraphXUSI extends JComponent {
 
@@ -36,6 +38,8 @@ public class GraphXUSI extends JComponent {
     //private boolean drawable = true;
     private double openXU = 0.0;
     private double openSI = 0.0;
+    private double prevCloseSI = 0.0;
+    private double prevCloseXU = 0.0;
     public static final LocalTime AM900 = LocalTime.of(9, 0);
     private NavigableMap<LocalTime, Double> sina = new ConcurrentSkipListMap<>();
 
@@ -55,8 +59,11 @@ public class GraphXUSI extends JComponent {
                     .collect(Collectors.toMap(Map.Entry::getKey, a -> a.getValue().getClose(), (a, b) -> a, ConcurrentSkipListMap::new));
             sina = siIn.entrySet().stream()
                     .collect(Collectors.toMap(Map.Entry::getKey, a -> a.getValue().getClose(), (a, b) -> a, ConcurrentSkipListMap::new));
+
             openXU = Optional.ofNullable(xuIn.ceilingEntry(AM900)).map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+            prevCloseXU = XUTrader.futPrevCloseMap.get(ibContractToFutType(getFrontFutContract())) ;
             openSI = SinaStock.OPEN;
+            prevCloseSI = ftseCloseMap.lastEntry().getValue();
         }
         repaint();
     }
@@ -75,6 +82,7 @@ public class GraphXUSI extends JComponent {
             openXU = Optional.ofNullable(xu.ceilingEntry(AM900)).orElse(xu.firstEntry()).getValue().getOpen();
 
             openSI = SinaStock.OPEN;
+            prevCloseSI = ftseCloseMap.lastEntry().getValue();
 
             detailed = true;
         }
@@ -161,11 +169,14 @@ public class GraphXUSI extends JComponent {
 
             try {
                 g.drawString(getStr("FUT:", xu.lastEntry().getValue()), getWidth() / 2 - 120, 20);
-                g.drawString("XU%  " + (Math.round(10000d * (xu.lastEntry().getValue() / openXU - 1)) / 100d) + "    ", getWidth() / 2 + 300, 20);
+                //g.drawString("XU%  " + (Math.round(10000d * (xu.lastEntry().getValue() / openXU - 1)) / 100d) + "    ", getWidth() / 2 + 300, 20);
+                g.drawString("XU%  " + (Math.round(10000d * (xu.lastEntry().getValue() / (prevCloseXU!=0.0?prevCloseXU:openXU) - 1)) / 100d) + "    ", getWidth() / 2 + 300, 20);
                 g.drawString("P/D: " + (Math.round(10000d * (xu.lastEntry().getValue() / (sina.lastEntry().getValue()) - 1)) / 100d), getWidth() / 2 + 190, 20);
+
                 g.setColor(Color.RED);
+
                 g.drawString("Index: " + Double.toString(Math.round(sina.lastEntry().getValue())), getWidth() / 2 + 30, 20);
-                g.drawString("Index%  " + (Math.round(10000d * (sina.lastEntry().getValue() / openSI - 1)) / 100d) + "   ", getWidth() / 2 + 420, 20);
+                g.drawString("Index%  " + (Math.round(10000d * (sina.lastEntry().getValue() / (prevCloseSI!=0.0?prevCloseSI:openSI) - 1)) / 100d) + "   ", getWidth() / 2 + 420, 20);
                 g.setColor(Color.black);
             } catch (Exception ex) {
                 ex.printStackTrace();

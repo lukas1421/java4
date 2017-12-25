@@ -81,9 +81,9 @@ public final class ChinaStock extends JPanel {
     public static volatile Map<String, Double> maxMap = new ConcurrentHashMap<>();
     public static volatile Map<String, Double> minMap = new ConcurrentHashMap<>();
     public static volatile Map<String, Long> sizeMap = new ConcurrentHashMap<>();
-    public static volatile Map<String, String> stratAMMap = new ConcurrentHashMap<>();
-    public static volatile Map<String, String> stratPMMap = new ConcurrentHashMap<>();
-    public static volatile Map<String, LocalTime> stratTimeMap = new ConcurrentHashMap<>();
+    private static volatile Map<String, String> stratAMMap = new ConcurrentHashMap<>();
+    private static volatile Map<String, String> stratPMMap = new ConcurrentHashMap<>();
+    private static volatile Map<String, LocalTime> stratTimeMap = new ConcurrentHashMap<>();
     public static volatile Map<String, Integer> percentileVRPMap = new ConcurrentHashMap<>();
     public static volatile Map<String, Integer> percentileVRPAvgVRMap = new ConcurrentHashMap<>();
     public static volatile Map<String, Integer> percentileVRPAvgPRMap = new ConcurrentHashMap<>();
@@ -93,21 +93,21 @@ public final class ChinaStock extends JPanel {
     public static volatile Map<String, Double> pmVRPRatioMap = new ConcurrentHashMap<>();
     public static volatile Map<String, Integer> pmVRPPercentileChgMap = new ConcurrentHashMap<>();
     public static volatile Map<String, Double> pmReturnMap = new ConcurrentHashMap<>();
-    public static volatile Map<String, Long> amPeakCount = new ConcurrentHashMap<>();
-    public static volatile Map<String, Long> pmPeakCount = new ConcurrentHashMap<>();
-    public static volatile Map<String, Long> dayPeakCount = new ConcurrentHashMap<>();
-    public static volatile Map<String, Integer> peakTimeAvgMap = new ConcurrentHashMap<>();
-    public static volatile Map<String, Integer> pmPeakTimeAvgMap = new ConcurrentHashMap<>();
-    public static volatile Map<String, Double> peakReturnAvgMap = new ConcurrentHashMap<>();
-    public static volatile Map<String, Double> pmPeakReturnAvgMap = new ConcurrentHashMap<>();
-    public static volatile Map<String, Long> dayStagnation = new ConcurrentHashMap<>();
-    public static volatile Map<String, Long> pmStagnation = new ConcurrentHashMap<>();
-    public static volatile Map<String, LocalTime> lastPMPopupTime = new ConcurrentHashMap<>();
-    public static volatile Map<String, Boolean> firstRatioBreak = new ConcurrentHashMap<>();
-    public static volatile Map<String, Boolean> firstRangeBreak = new ConcurrentHashMap<>();
-    public static volatile Map<String, Boolean> ma20RBroken = new ConcurrentHashMap<>();
-    public static volatile Map<String, Boolean> volBroken = new ConcurrentHashMap<>();
-    public static volatile Map<String, LocalTime> volBrokenTime = new ConcurrentHashMap<>();
+    private static volatile Map<String, Long> amPeakCount = new ConcurrentHashMap<>();
+    private static volatile Map<String, Long> pmPeakCount = new ConcurrentHashMap<>();
+    private static volatile Map<String, Long> dayPeakCount = new ConcurrentHashMap<>();
+    private static volatile Map<String, Integer> peakTimeAvgMap = new ConcurrentHashMap<>();
+    private static volatile Map<String, Integer> pmPeakTimeAvgMap = new ConcurrentHashMap<>();
+    private static volatile Map<String, Double> peakReturnAvgMap = new ConcurrentHashMap<>();
+    private static volatile Map<String, Double> pmPeakReturnAvgMap = new ConcurrentHashMap<>();
+    private static volatile Map<String, Long> dayStagnation = new ConcurrentHashMap<>();
+    private static volatile Map<String, Long> pmStagnation = new ConcurrentHashMap<>();
+    private static volatile Map<String, LocalTime> lastPMPopupTime = new ConcurrentHashMap<>();
+    private static volatile Map<String, Boolean> firstRatioBreak = new ConcurrentHashMap<>();
+    private static volatile Map<String, Boolean> firstRangeBreak = new ConcurrentHashMap<>();
+    private static volatile Map<String, Boolean> ma20RBroken = new ConcurrentHashMap<>();
+    private static volatile Map<String, Boolean> volBroken = new ConcurrentHashMap<>();
+    private static volatile Map<String, LocalTime> volBrokenTime = new ConcurrentHashMap<>();
     static volatile Map<String, LocalTime> dialogLastTime = new HashMap<>();
     private static volatile Map<String, Boolean> interestedName = new HashMap<>();
     static volatile Set<JDialog> dialogTracker = new HashSet<>();
@@ -115,14 +115,14 @@ public final class ChinaStock extends JPanel {
     //static final Comparator<? super Entry<LocalTime,Double>> Entry.comparingByValue() = (e1,e2)->e1.getValue()>=e2.getValue()?1:-1;
     public static final Predicate<String> NORMAL_STOCK = name -> priceMapBar.containsKey(name) &&
             !priceMapBar.get(name).isEmpty() && priceMapBar.get(name).size() > 0;
-    public static final BiPredicate<String, LocalTime> FIRST_KEY_BEFORE = (name, lt) -> priceMapBar.get(name).firstKey().isBefore(lt);
-    public static final BiPredicate<String, LocalTime> LAST_KEY_AFTER = (name, lt) -> priceMapBar.get(name).lastKey().isAfter(lt);
-    public static final BiPredicate<String, LocalTime> CONTAINS_TIME = (name, lt) -> priceMapBar.get(name).containsKey(lt);
+    private static final BiPredicate<String, LocalTime> FIRST_KEY_BEFORE = (name, lt) -> priceMapBar.get(name).firstKey().isBefore(lt);
+    private static final BiPredicate<String, LocalTime> LAST_KEY_AFTER = (name, lt) -> priceMapBar.get(name).lastKey().isAfter(lt);
+    private static final BiPredicate<String, LocalTime> CONTAINS_TIME = (name, lt) -> priceMapBar.get(name).containsKey(lt);
 
     public static final BiFunction1<? super Entry<LocalTime, ?>, LocalTime> ENTRY_BETWEEN = (e, lt1, lt2) -> (e.getKey().isAfter(lt1) && e.getKey().isBefore(lt2));
     public static final BiFunction2<LocalTime> ENTRY_BETWEEN2 = (lt1, lt2) -> (e -> e.getKey().isAfter(lt1) && e.getKey().isBefore(lt2));
 
-    static Map<String, Boolean> maxFlag = new ConcurrentHashMap<>();
+    private static Map<String, Boolean> maxFlag = new ConcurrentHashMap<>();
 
     private static volatile boolean filterOn = false;
     private static volatile boolean benchFilterOn = false;

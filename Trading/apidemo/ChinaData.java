@@ -67,7 +67,8 @@ public final class ChinaData extends JPanel {
     //very important. This date map is always the last 3 days of A share, not including T)
     public static volatile Map<Integer, LocalDate> dateMap = new HashMap<>();
 
-    static volatile Map<LocalDate, Double> ftseOpenMap = new HashMap<>();
+    static volatile NavigableMap<LocalDate, Double> ftseOpenMap = new TreeMap<>();
+    public static volatile NavigableMap<LocalDate, Double> ftseCloseMap = new TreeMap<>();
 
     public static List<LocalTime> tradeTime = new LinkedList<>();
     public static List<LocalTime> tradeTimePure = new LinkedList<>();
@@ -134,6 +135,7 @@ public final class ChinaData extends JPanel {
 
                 dateMap.put(lineNo, LocalDate.parse(al1.get(0)));
                 ftseOpenMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(1)));
+                ftseCloseMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(2)));
                 currentTradingDate = LocalDate.parse(al1.get(0));
                 System.out.println(getStr(" date ", lineNo, dateMap.getOrDefault(lineNo,LocalDate.MIN)));
                 lineNo++;

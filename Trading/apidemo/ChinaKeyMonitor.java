@@ -811,7 +811,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                 LinkedHashMap<String, Integer> s = resMap.entrySet().stream().sorted(
                         reverseComparator(Comparator.comparingDouble(positionComparingFunc)))
                         .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (a, b) -> a, LinkedHashMap::new));
-                LinkedList<String> l = s.keySet().stream().collect(Collectors.toCollection(LinkedList::new));
+                LinkedList<String> l = new LinkedList<>(s.keySet());
                 //processGraphMonitors(generateGraphList());
                 processGraphMonitors(l);
             }
@@ -827,14 +827,12 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         } else if (displayInterest) {
             processGraphMonitors(generateGraphList());
         } else if (displayCorrel) {
-            System.out.println(" print correl stocks ");
+            System.out.println(" print correl stocks " + displayType.toString());
             LinkedList<String> l = getTopStocksIndexCorrel(indexBench);
             processGraphMonitors(l);
         }
 
-        SwingUtilities.invokeLater(() -> {
-            jp.repaint();
-        });
+        SwingUtilities.invokeLater(() -> jp.repaint());
     }
 
     private static <T> Comparator<T> reverseComparator(Comparator<T> comp) {
@@ -1031,7 +1029,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 enum WhatToDisplay {
     INDEX("指数"), SECTOR("版块"), STOCK("股票");
 
-    private WhatToDisplay(String nam) {
+    WhatToDisplay(String nam) {
         this.chnName = nam;
     }
     private final String chnName;

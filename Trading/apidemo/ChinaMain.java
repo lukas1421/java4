@@ -638,7 +638,7 @@ public final class ChinaMain implements IConnectionHandler {
         show(id + " " + errorCode + " " + errorMsg);
     }
 
-    public final class ConnectionPanel extends JPanel {
+    public final class ConnectionPanel extends javax.swing.JPanel {
 
         @SuppressWarnings("ConstantConditions")
         private final JTextField m_host = new JTextField(m_connectionConfiguration.getDefaultHost(), 10);

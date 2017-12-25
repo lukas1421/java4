@@ -31,7 +31,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
     private static final int WIDTH_MON = 2;
     String name;
     String chineseName;
-    NavigableMap<LocalDateTime, SimpleBar> tm;
+    private volatile NavigableMap<LocalDateTime, SimpleBar> tm;
     private NavigableMap<LocalDateTime, TradeBlock> trades = new ConcurrentSkipListMap<>();
 
     //private NavigableMap<LocalDateTime, SimpleBar> tmLDT;
@@ -113,7 +113,7 @@ public class GraphMonitor extends JComponent implements GraphFillable {
             if (trades.subMap(lt, true, lt.plusMinutes(dispGran.getMinuteDiff()), false).size() > 0) {
                 for (Map.Entry e : trades.subMap(lt, true, lt.plusMinutes(dispGran.getMinuteDiff()),
                         false).entrySet()) {
-                    TradeBlock t = (TradeBlock)e.getValue();
+                    TradeBlock t = (TradeBlock) e.getValue();
                     if (t.getSizeAll() > 0) {
                         g.setColor(Color.blue);
                         Polygon p = new Polygon(new int[]{x - 10, x, x + 10}, new int[]{lowY + 10, lowY, lowY + 10}, 3);
@@ -142,8 +142,8 @@ public class GraphMonitor extends JComponent implements GraphFillable {
             } else if (dispGran == DisplayGranularity._5MDATA) {
                 if (lt.equals(tm.firstKey())) {
                     g.drawString(lt.toLocalDate().format(DateTimeFormatter.ofPattern("MM-dd")), x, getHeight() - 5);
-                } else if(lt.equals(tm.lastKey())) {
-                    g.drawString(lt.format(DateTimeFormatter.ofPattern("HH:mm")), x+20, getHeight() - 5);
+                } else if (lt.equals(tm.lastKey())) {
+                    g.drawString(lt.format(DateTimeFormatter.ofPattern("HH:mm")), x + 20, getHeight() - 5);
                 } else {
                     if (lt.getDayOfMonth() != tm.lowerKey(lt).getDayOfMonth()) {
                         g.drawString(lt.toLocalDate().format(DateTimeFormatter.ofPattern("MM-dd")), x, getHeight() - 5);
@@ -307,9 +307,9 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
 
         if (HistChinaStocks.chinaTradeMap.containsKey(name) && HistChinaStocks.chinaTradeMap.get(name).size() > 0) {
-            trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(name).headMap(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS),false)
+            trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(name).headMap(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS), false)
                     , priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
-                    ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate));
+                            ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate));
             //System.out.println(" merged trade is " + trades);
         }
 
@@ -328,20 +328,21 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
     void setNavigableMap(NavigableMap<LocalTime, SimpleBar> tmIn) {
 
-        //this.tm =
-        //this.tmLDT = priceMapToLDT(priceMap1mTo5M(tmIn));
+        NavigableMap<LocalDateTime, SimpleBar> res = new ConcurrentSkipListMap<>();
 
         if (dispGran == DisplayGranularity._1MDATA) {
-            this.tm = priceMapToLDT(tmIn, ChinaMain.currentTradingDate);
+            res = priceMapToLDT(tmIn, ChinaMain.currentTradingDate);
         } else if (dispGran == DisplayGranularity._5MDATA) {
 
             if (HistChinaStocks.chinaWtd.containsKey(name) && HistChinaStocks.chinaWtd.get(name).size() > 0) {
-                this.tm = trimMapWithLocalTimePred(mergeMaps(HistChinaStocks.chinaWtd.get(name), Utility.priceMap1mTo5M(tmIn)),chinaTradingTimePred);
+                res = trimMapWithLocalTimePred(mergeMaps(HistChinaStocks.chinaWtd.get(name), Utility.priceMap1mTo5M(tmIn)), chinaTradingTimePred);
             } else {
-                this.tm = trimMapWithLocalTimePred(priceMapToLDT(priceMap1mTo5M(tmIn), ChinaMain.currentTradingDate), chinaTradingTimePred);
+                res = trimMapWithLocalTimePred(priceMapToLDT(priceMap1mTo5M(tmIn), ChinaMain.currentTradingDate), chinaTradingTimePred);
             }
 
         }
+        NavigableMap<LocalDateTime, SimpleBar> finalRes = res;
+        SwingUtilities.invokeLater(() -> this.tm = finalRes);
     }
 
     double getMaxRtn() {
