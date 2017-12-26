@@ -102,18 +102,16 @@ public class HKStock extends JPanel {
         JPanel controlPanel = new JPanel();
 
         JButton refreshButton = new JButton("Refresh");
-        refreshButton.addActionListener(al->{
-            SwingUtilities.invokeLater(()->{
-                graphPanel.repaint();
-                tab.repaint();
-                graph1.refresh(s-> graph1.fillInGraphHK(s));
-                graph2.refresh(s-> graph2.fillInGraphHK(s));
-                graph3.refresh(s-> graph3.fillInGraphHK(s));
-                graph4.refresh(s-> graph4.fillInGraphHK(s));
-                graph5.refresh(s-> graph5.fillInGraphHK(s));
-                graph6.refresh(s-> graph6.fillInGraphHK(s));
-            });
-        });
+        refreshButton.addActionListener(al-> SwingUtilities.invokeLater(()->{
+            graphPanel.repaint();
+            tab.repaint();
+            graph1.refresh(graph1::fillInGraphHK);
+            graph2.refresh(graph2::fillInGraphHK);
+            graph3.refresh(graph3::fillInGraphHK);
+            graph4.refresh(graph4::fillInGraphHK);
+            graph5.refresh(graph5::fillInGraphHK);
+            graph6.refresh(graph6::fillInGraphHK);
+        }));
 
         controlPanel.add(refreshButton);
 

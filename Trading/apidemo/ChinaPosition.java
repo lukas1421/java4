@@ -200,8 +200,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         JButton getWtdMaxMinButton = new JButton("getWtdMaxMin");
 
         refreshButton.addActionListener((ActionEvent l) -> CompletableFuture.runAsync(() -> {
-            getCurrentPositionNormal();
-            getCurrentPositionMargin();
+            updatePosition();
+            //getCurrentPositionNormal();
+            //getCurrentPositionMargin();
             refreshFuture();
             mtmPnlCompute(GEN_MTM_PRED, "all");
         }).thenRun(() -> SwingUtilities.invokeLater(() -> {
@@ -216,8 +217,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         getCurrentButton.addActionListener(l -> {
             symbolNames.forEach((String name) -> tradesMap.put(name, new ConcurrentSkipListMap<>()));
-            getCurrentPositionNormal();
-            getCurrentPositionMargin();
+            updatePosition();
+            //getCurrentPositionNormal();
+            //getCurrentPositionMargin();
         });
 
         getWtdMaxMinButton.addActionListener(l -> getWtdMaxMin());
@@ -688,7 +690,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
     }*/
 
-    static void getOpenPositionsNormal() {
+    private static void getOpenPositionsNormal() {
         int todaySoldCol = 0;
         int todayBoughtCol = 0;
         int chineseNameCol = 0;
@@ -701,8 +703,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
             while ((line = reader1.readLine()) != null) {
                 dataList = Arrays.asList(line.split("\\s+"));
-                System.out.println(Arrays.asList(line.split("\\s+")));
-                //System.out.println( " datalist size" + dataList.size());
+                //System.out.println(Arrays.asList(line.split("\\s+")));
 
                 System.out.println(" datalist " + dataList);
                 if (dataList.size() > 0 && dataList.get(0).equals("证券名称")) {
@@ -716,24 +717,13 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     //System.out.println(" today sold col " + todaySoldCol);
                 }
 
-                //System.out.println(" datalist size " + dataList.size());
-                //System.out.println(" stock code col " + stockCodeCol);
-                //System.out.println(" stock code " + dataList.get(stockCodeCol));
-                //System.out.println(" chinese name " + dataList.get(chineseNameCol));
-                //System.out.println(dataList.size() > stockCodeCol);
-                //System.out.println(nameMap.getOrDefault(addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol)));
-
                 if (dataList.size() > 1 && (nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol))
                         || dataList.get(chineseNameCol).startsWith("XD"))) {
-                    //System.out.println( " name " + addSHSZ(dataList.get(stockCodeCol)));
                     String nam = Utility.addSHSZ(dataList.get(stockCodeCol));
-                    //System.out.println(" nam " + nam);
-                    //System.out.println(" current pos col " + currentPosCol + " pos " + dataList.get(currentPosCol));
 
                     openPositionMap.put(nam, Integer.parseInt(dataList.get(currentPosCol)) + Integer.parseInt(dataList.get(todaySoldCol))
                             - Integer.parseInt(dataList.get(todayBoughtCol)));
                     costMap.put(nam, Double.parseDouble(dataList.get(costCol)));
-                    //ytdPNLMap.put(nam, (closeMap.getOrDefault(nam,0.0)-costMap.getOrDefault(nam,0.0))*Integer.parseInt(dataList.get(1)));
                 }
             }
         } catch (IOException ex1) {
@@ -785,7 +775,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
     }
 
-    static void getCurrentPositionNormal() {
+    private static void getCurrentPositionNormal() {
         //int chineseNameCol = 0;
         //int openPosCol = 0;
         //int orderTimeCol = 0;
@@ -875,7 +865,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     //get margin position
-    static void getCurrentPositionMargin() {
+    private static void getCurrentPositionMargin() {
 
         int fillTimeCol = 0;
         int statusCol = 0;
