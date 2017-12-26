@@ -982,6 +982,15 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
     }
 
+    public static void updatePosition() {
+        symbolNames.forEach((String name) -> tradesMap.put(name, new ConcurrentSkipListMap<>()));
+        getOpenPositionsNormal();
+        //getOpenPositionsFromMargin();
+        getCurrentPositionNormal();
+        getCurrentPositionMargin();
+
+    }
+
     static Map<String, Integer> getNetPosition() {
         if (openPositionMap.size() > 0 || tradesMap.size() > 0) {
             Map<String, Integer> trades = tradesMap.entrySet().stream().filter(e -> e.getValue().size() > 0)

@@ -674,9 +674,13 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         refreshButton.addActionListener(al -> {
             if (displayPos) {
                 System.out.println(" displaying pos in refresh");
-                ChinaPosition.getOpenPositionsNormal();
-                ChinaPosition.getCurrentPositionNormal();
-                ChinaPosition.getCurrentPositionMargin();
+
+                ChinaPosition.updatePosition();
+
+//                ChinaPosition.getOpenPositionsNormal();
+//                ChinaPosition.getCurrentPositionNormal();
+//                ChinaPosition.getCurrentPositionMargin();
+
                 if (ChinaPosition.openPositionMap.size() > 0) {
 
                     Map<String, Integer> resMap = ChinaPosition.getNetPosition();

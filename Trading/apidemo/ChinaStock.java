@@ -333,32 +333,14 @@ public final class ChinaStock extends JPanel {
                             CompletableFuture.runAsync(() -> {
                                 selectedNameStock = symbolNamesFull.get(modelRow);
                                 selectedBench = benchSimpleMap.getOrDefault(selectedNameStock, "");
-
-                                //System.out.println( " selected stock/bench is " + selectedNameStock + " " + selectedBench);
                                 graph1.fillInGraph(selectedNameStock);
-                                //graph6.fillInGraph(selectedNameStock);
-
-//                                priceMapBarYtd.get(selectedNameStock).entrySet().stream()
-//                                        .filter(e->e.getKey().isAfter(LocalTime.of(14,45))).forEach(System.out::println);
-//                                priceMapBarY2.get(selectedNameStock).entrySet().stream()
-//                                        .filter(e->e.getKey().isAfter(LocalTime.of(14,45))).forEach(System.out::println);
-//                                
-                                //sizeTotalMap.get(selectedNameStock).entrySet().stream().filter(e->e.getKey().isBefore(LocalTime.of(9,30))).forEach(System.out::println);
                                 ChinaBigGraph.setGraph(selectedNameStock);
-//                            GraphIndustry.selectedNameIndus=(industryNameMap.get(selectedNameStock).equals("板块"))
-//                                    ?longShortIndusMap.getOrDefault(selectedNameStock,"")
-//                                        :shortIndustryMap.getOrDefault(selectedNameStock,"");
-//                            ChinaGraphIndustry.pureRefreshTable();
-//                            
+
                                 if (industryNameMap.get(selectedNameStock).equals("板块")) {
-                                    //System.out.println("selected name stock bankuai" + selectedNameStock);
                                     GraphIndustry.selectedNameIndus = longShortIndusMap.getOrDefault(selectedNameStock, "");
                                     ChinaIndex.setSector(selectedNameStock);
                                 } else {
-                                    //System.out.println("selected name stock non" + selectedNameStock);
-                                    //System.out.println("industry" + industryNameMap.getOrDefault(selectedNameStock,""));
                                     GraphIndustry.selectedNameIndus = shortIndustryMap.getOrDefault(selectedNameStock, "");
-
                                     ChinaIndex.setSector(industryNameMap.getOrDefault(selectedNameStock, ""));
                                 }
                                 graphPanel.repaint();
