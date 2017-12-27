@@ -34,8 +34,7 @@ import static java.lang.Double.max;
 import static java.lang.Double.min;
 import static java.lang.Math.round;
 import static saving.Hibtask.unblob;
-import static utility.Utility.blobify;
-import static utility.Utility.getStr;
+import static utility.Utility.*;
 
 // com.ib.controller.TickType;
 
@@ -110,13 +109,15 @@ public final class XU extends JPanel {
                 if (isCellSelected(Index_row, Index_col)) {
                     comp.setBackground(Color.CYAN);
 
-                    if (priceMapBar.get("SGXA50").size() > 0 && indexPriceSina.size() > 0) {
+                    String ticker = ibContractToSymbol(XUTrader.activeFuture);
+
+                    if (priceMapBar.get(ticker).size() > 0 && indexPriceSina.size() > 0) {
 //                        graph1.setNavigableMap(lastFutPrice);
 //                        graph2.setNavigableMap(indexPriceSina);
                         graph1.fillInGraph("FTSEA50");
-                        graph2.fillInGraph("SGXA50");
+                        graph2.fillInGraph(ticker);
                         //graph3.setSkipMap(lastFutPrice,indexPriceSina);
-                        graph3.setSkipMap(priceMapBar.get("SGXA50"), priceMapBar.get("FTSEA50"));
+                        graph3.setSkipMap(priceMapBar.get(ticker), priceMapBar.get("FTSEA50"));
                         graph4.setSkipMap(discPremSina);
                         graph5.setSkipMap(discPremPercentile);
                         graph6.setSkipMap(pricePercentile);
@@ -147,6 +148,8 @@ public final class XU extends JPanel {
         //JButton backFill = new JButton("backfill");
         JButton startIndex = new JButton("get Index");
         JButton endIndex = new JButton("End index");
+        //JLabel currentExpiryLabel = new JLabel("");
+        //currentExpiryLabel.revalidate();
         //jp.add(btnSave);
         //jp.add(btnLoad);
         //jp.add(backFill);
@@ -210,14 +213,15 @@ public final class XU extends JPanel {
         JButton graphButton = new JButton("Graph");
 
         graphButton.addActionListener(al -> {
-            if (priceMapBar.get("SGXA50").size() > 0 && indexPriceSina.size() > 0) {
+            String ticker = ibContractToSymbol(XUTrader.activeFuture);
+            if (priceMapBar.get(ticker).size() > 0 && indexPriceSina.size() > 0) {
 //                 graph1.setNavigableMap(lastFutPrice);
 //                 graph2.setNavigableMap(indexPriceSina);
 
                 SwingUtilities.invokeLater(() -> {
                     graph1.fillInGraph("FTSEA50");
-                    graph2.fillInGraph("SGXA50");
-                    graph3.setSkipMap(priceMapBar.get("SGXA50"), indexPriceSina);
+                    graph2.fillInGraph(ticker);
+                    graph3.setSkipMap(priceMapBar.get(ticker), indexPriceSina);
                     graph4.setSkipMap(discPremSina);
                     graph5.setSkipMap(discPremPercentile);
                     graph6.setSkipMap(pricePercentile);
@@ -345,6 +349,11 @@ public final class XU extends JPanel {
 //        return backfut;
 //    }
 
+
+//    public void setLabelExpiry() {
+//        currentExpiryLabel.
+//    }
+
     public void startIndex() {
         ftes = Executors.newScheduledThreadPool(10);
 
@@ -354,10 +363,11 @@ public final class XU extends JPanel {
         }, 0, 1, TimeUnit.SECONDS);
 
         ftes.scheduleAtFixedRate(() -> {
+            String ticker = ibContractToSymbol(XUTrader.activeFuture);
             graph1.fillInGraph("FTSEA50");
-            graph2.fillInGraph("SGXA50");
+            graph2.fillInGraph(ticker);
             //graph3.setSkipMap(lastFutPrice,indexPriceSina);
-            graph3.setSkipMap(priceMapBar.get("SGXA50"), priceMapBar.get("FTSEA50"));
+            graph3.setSkipMap(priceMapBar.get(ticker), priceMapBar.get("FTSEA50"));
             graph4.setSkipMap(discPremSina);
             graph5.setSkipMap(discPremPercentile);
             graph6.setSkipMap(pricePercentile);
@@ -461,17 +471,18 @@ public final class XU extends JPanel {
     private static void getPricePercentile() {
         double max = 0.0;
         double min = Double.MAX_VALUE;
+        String ticker = ibContractToSymbol(XUTrader.activeFuture);
         //Iterator it  = lastFutPrice.keySet().iterator();
-        Iterator it = priceMapBar.get("SGXA50").keySet().iterator();
+        Iterator it = priceMapBar.get(ticker).keySet().iterator();
         LocalTime k;
 
         while (it.hasNext()) {
             k = (LocalTime) it.next();
 
             if (k.isAfter(AM900)) {
-                double h = priceMapBar.get("SGXA50").get(k).getHigh();
-                double l = priceMapBar.get("SGXA50").get(k).getLow();
-                double v = priceMapBar.get("SGXA50").get(k).getClose();
+                double h = priceMapBar.get(ticker).get(k).getHigh();
+                double l = priceMapBar.get(ticker).get(k).getLow();
+                double v = priceMapBar.get(ticker).get(k).getClose();
                 max = Math.max(max, h);
                 min = Math.min(min, l);
                 pricePercentile.put(k, (int) Math.round(100d * (v - min) / (max - min)));
@@ -483,9 +494,10 @@ public final class XU extends JPanel {
         double max = 0.0;
         double min = Double.MAX_VALUE;
         double current;
+        String ticker = ibContractToSymbol(XUTrader.activeFuture);
 
-        for (LocalTime k : priceMapBar.get("SGXA50").keySet()) {
-            double v = priceMapBar.get("SGXA50").get(k).getClose();
+        for (LocalTime k : priceMapBar.get(ticker).keySet()) {
+            double v = priceMapBar.get(ticker).get(k).getClose();
             if (priceMapBar.get("FTSEA50").containsKey(k)) {
                 current = Math.round(10000d * (v / Optional.ofNullable(priceMapBar.get("FTSEA50")
                         .get(k)).map(SimpleBar::getClose).orElse(v) - 1)) / 100d;
@@ -650,13 +662,14 @@ public final class XU extends JPanel {
         @Override
         public Object getValueAt(int rowIn, int col) {
             LocalTime lt = tradeTimeXU.get(rowIn);
+            String ticker = ibContractToSymbol(XUTrader.activeFuture);
             switch (col) {
                 case 0:
                     return lt;
 
                 case 1:
                     //return round(Optional.ofNullable(lastFutPrice.get(lt)).map(SimpleBar::getClose).orElse(0.0));
-                    return round(Optional.ofNullable(priceMapBar.get("SGXA50").get(lt)).map(SimpleBar::getClose).orElse(0.0));
+                    return round(Optional.ofNullable(priceMapBar.get(ticker).get(lt)).map(SimpleBar::getClose).orElse(0.0));
 
                 case 2:
                     //return round(Optional.ofNullable(indexPriceSina.get(lt)).map(SimpleBar::getClose).orElse(0.0));
@@ -665,21 +678,21 @@ public final class XU extends JPanel {
                 case 3:
                     //return (lastFutPrice.containsKey(lt) && indexPriceSina.containsKey(lt))?
                     //     round(1000d*((lastFutPrice.get(lt).getClose()/indexPriceSina.get(lt).getClose())-1))/10d:0.0;
-                    return (priceMapBar.get("SGXA50").containsKey(lt) && priceMapBar.get("FTSEA50").containsKey(lt))
-                            ? round(1000d * ((priceMapBar.get("SGXA50").get(lt).getClose() / priceMapBar.get("FTSEA50").get(lt).getClose()) - 1)) / 10d : 0.0;
+                    return (priceMapBar.get(ticker).containsKey(lt) && priceMapBar.get("FTSEA50").containsKey(lt))
+                            ? round(1000d * ((priceMapBar.get(ticker).get(lt).getClose() / priceMapBar.get("FTSEA50").get(lt).getClose()) - 1)) / 10d : 0.0;
 
                 case 4:
                     //return frontFutVol.getOrDefault(lt,0);
-                    return ChinaData.sizeTotalMap.get("SGXA50").getOrDefault(lt, 0.0);
+                    return ChinaData.sizeTotalMap.get(ticker).getOrDefault(lt, 0.0);
 
                 case 5:
-                    if (ChinaData.sizeTotalMap.get("SGXA50").size() < 2) {
-                        return ChinaData.sizeTotalMap.get("SGXA50").get(lt);
+                    if (ChinaData.sizeTotalMap.get(ticker).size() < 2) {
+                        return ChinaData.sizeTotalMap.get(ticker).get(lt);
                     } else {
-                        if (ChinaData.sizeTotalMap.get("SGXA50").containsKey(lt)) {
-                            return ChinaData.sizeTotalMap.get("SGXA50").get(lt)
-                                    - Optional.ofNullable(ChinaData.sizeTotalMap.get("SGXA50").lowerEntry(lt)).map(Entry::getValue)
-                                    .orElse(ChinaData.sizeTotalMap.get("SGXA50").get(lt));
+                        if (ChinaData.sizeTotalMap.get(ticker).containsKey(lt)) {
+                            return ChinaData.sizeTotalMap.get(ticker).get(lt)
+                                    - Optional.ofNullable(ChinaData.sizeTotalMap.get(ticker).lowerEntry(lt)).map(Entry::getValue)
+                                    .orElse(ChinaData.sizeTotalMap.get(ticker).get(lt));
                         }
                     }
                     return 0.0;

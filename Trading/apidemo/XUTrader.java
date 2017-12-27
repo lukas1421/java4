@@ -45,7 +45,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @SuppressWarnings("unused")
     private static Predicate<? super Map.Entry<FutType, ?>> graphPred = e -> true;
-    private static volatile Contract activeFuture = frontFut;
+    public static volatile Contract activeFuture = frontFut;
     public static volatile DisplayGranularity gran = DisplayGranularity._1MDATA;
     //List<Integer> orderList = new LinkedList<>();
     //AtomicInteger orderInitial = new AtomicInteger(3000001);
@@ -70,7 +70,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
 
     public static EnumMap<FutType, NavigableMap<LocalTime, TradeBlock>> tradesMap = new EnumMap<>(FutType.class);
-    private GraphXuTrader xuGraph = new GraphXuTrader();
+    private GraphXuTrader xuGraph = new GraphXuTrader(){
+        @Override
+        public Dimension getPreferredSize() {
+            Dimension d = super.getPreferredSize();
+            d.height = 300;
+            d.width = 2500;
+            return d;
+        }
+    };
     public static volatile EnumMap<FutType, NavigableMap<LocalTime, SimpleBar>> futData = new EnumMap<>(FutType.class);
     //static volatile NavigableMap<LocalTime, SimpleBar> xuFrontData = new ConcurrentSkipListMap<>();
     //static volatile NavigableMap<LocalTime, SimpleBar> xuBackData = new ConcurrentSkipListMap<>();
@@ -291,12 +299,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         cancelAllOrdersButton.addActionListener(l -> apcon.cancelAllOrders());
 
 
-        JScrollPane chartScroll = new JScrollPane(xuGraph) {
+        xuGraph.setAutoscrolls(false);
+        JScrollPane chartScroll = new JScrollPane(xuGraph,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
                 d.height = 300;
-                d.width = 1700;
+                d.width = 1900;
                 return d;
             }
         };
@@ -450,8 +459,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         JScrollPane outputPanel = new JScrollPane(outputArea);
 
-        JPanel graphPanel = new JPanel();
-        graphPanel.add(chartScroll);
+        //JPanel graphPanel = new JPanel();
+        //graphPanel.add(chartScroll);
 
         controlPanel1.setLayout(new FlowLayout());
 //        add(controlPanel,BorderLayout.NORTH);
@@ -464,7 +473,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         add(controlPanel2);
         add(deepPanel);
         add(outputPanel);
-        add(graphPanel);
+        add(chartScroll);
     }
 
     private void loadXU() {
@@ -630,9 +639,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             //System.out.println(" handle hist in xu trader ld lt  " + LocalDateTime.of(ld, lt));
             //System.out.println(getStr("name date open high low close ", name, date, open, high, low, close));
 
-            if (!ld.equals(currDate) && lt.isBefore(LocalTime.of(17, 0))) {
-                System.out.println(getStr(" fut close map ", FutType.get(name), lt, close));
-                futPrevCloseMap.put(FutType.get(name), close);
+            if (!ld.equals(currDate) && lt.isBefore(LocalTime.of(17, 1))) {
+
+                System.out.println(getStr(" fut close map (open close) ", FutType.get(name), lt, open, close));
+
+                futPrevCloseMap.put(FutType.get(name), open);
             }
 
             if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
@@ -921,7 +932,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double netTradePnl = buyTradePnl + sellTradePnl;
 
-        double netTotalCommissions = (unitsBought - unitsSold) * 1.505d;
+        double netTotalCommissions = Math.round(100d*((unitsBought - unitsSold) * 1.505d))/100d;
 
         double mtmPnl = (currentPosMap.get(f) - unitsBought - unitsSold) * (futPriceMap.get(f) - futPrevCloseMap.get(f));
 
@@ -939,9 +950,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             XUTrader.updateLog(" buy pnl " + buyTradePnl);
             XUTrader.updateLog(" sell pnl " + sellTradePnl);
             XUTrader.updateLog(" net pnl " + netTradePnl);
-            XUTrader.updateLog(" net commision " + netTotalCommissions);
-            XUTrader.updateLog(" net pnl after comm " + (netTradePnl - netTotalCommissions));
-            XUTrader.updateLog(" MTM+Trade " + (netTradePnl - netTotalCommissions + mtmPnl));
+            XUTrader.updateLog(" net commission " + netTotalCommissions);
+            //XUTrader.updateLog(" net pnl after comm " + (netTradePnl - netTotalCommissions));
+            XUTrader.updateLog(" MTM+Trade " + (netTradePnl + mtmPnl));
         });
     }
 

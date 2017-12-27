@@ -25,22 +25,19 @@ public class SGXFutureReceiver implements LiveHandler {
     public void handlePrice(TickType tt, String name, double price, LocalDateTime ldt) {
         FutType f = FutType.get(name);
         LocalTime t = ldt.toLocalTime();
-        //System.out.println(getStr(" fut type + name  price t type " , f.toString(),name,price,t, tt.field()));
 
         switch (tt) {
             case BID:
                 XUTrader.bidMap.put(f, price);
                 break;
+
             case ASK:
                 XUTrader.askMap.put(f, price);
                 break;
 
             case LAST:
-                //System.out.println(" name price t " + name + " " + price + " " + t.toString());
                 ChinaStock.priceMap.put(name, price);
-
                 XUTrader.futPriceMap.put(f, price);
-
 
                 if (t.isAfter(LocalTime.of(8, 55))) {
                     if (DATA_COLLECTION_TIME.test(ldt)) {
@@ -59,7 +56,6 @@ public class SGXFutureReceiver implements LiveHandler {
                     }
                 }
                 break;
-            //futData.get(name).put(t, price);
         }
     }
 
