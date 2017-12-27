@@ -27,6 +27,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.TradingConstants.ftseIndex;
@@ -58,6 +59,9 @@ public final class XU extends JPanel {
     static BarModel m_model;
     static ExecutorService es = Executors.newCachedThreadPool();
     private ScheduledExecutorService ftes;
+
+    public static volatile AtomicInteger graphBarWidth = new AtomicInteger(3);
+    public static volatile AtomicInteger dpBarWidth = new AtomicInteger(2);
 
     //    GraphXUSI graph1 = new GraphXUSI();
 //    GraphXU graph2 = new GraphXU();
@@ -95,7 +99,7 @@ public final class XU extends JPanel {
     XU() {
         LocalTime lt = LocalTime.of(8, 45);
         while (lt.isBefore(LocalTime.of(23, 59))) {
-            if(!(lt.isAfter(LocalTime.of(11,30)) && lt.isBefore(LocalTime.of(13,0)))) {
+            if (!(lt.isAfter(LocalTime.of(11, 30)) && lt.isBefore(LocalTime.of(13, 0)))) {
                 tradeTimeXU.add(lt);
             }
             lt = lt.plusMinutes(1L);
@@ -148,11 +152,54 @@ public final class XU extends JPanel {
         //JButton backFill = new JButton("backfill");
         JButton startIndex = new JButton("get Index");
         JButton endIndex = new JButton("End index");
+        JButton fillButton = new JButton(" Fill ");
+
+        JLabel barWidthLabel = new JLabel(" Bar Width ");
+        barWidthLabel.setOpaque(true);
+        barWidthLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        barWidthLabel.setFont(barWidthLabel.getFont().deriveFont(15F));
+
+        JButton barWidthUp = new JButton(" UP ");
+        barWidthUp.addActionListener(l -> {
+            graphBarWidth.incrementAndGet();
+        });
+
+        JButton barWidthDown = new JButton(" Down ");
+        barWidthDown.addActionListener(l -> graphBarWidth.set(Math.max(1, graphBarWidth.decrementAndGet())));
+
+        JLabel dpWidthLabel = new JLabel(" DP Width ");
+        dpWidthLabel.setOpaque(true);
+        dpWidthLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        dpWidthLabel.setFont(dpWidthLabel.getFont().deriveFont(15F));
+
+
+
+        JButton dpWidthUp = new JButton(" UP ");
+
+        dpWidthUp.addActionListener(l -> dpBarWidth.incrementAndGet());
+        JButton dpWidthDown = new JButton(" Down ");
+
+        dpWidthDown.addActionListener(l -> dpBarWidth.set(Math.max(1, dpBarWidth.decrementAndGet())));
+
+
         //JLabel currentExpiryLabel = new JLabel("");
         //currentExpiryLabel.revalidate();
         //jp.add(btnSave);
         //jp.add(btnLoad);
         //jp.add(backFill);
+
+        fillButton.addActionListener(l -> {
+            if (priceMapBar.get(ibContractToSymbol(XUTrader.activeFuture)).size() > 0 &&
+                    priceMapBar.get(ftseIndex).size() > 0) {
+                priceMapBar.get(ibContractToSymbol(XUTrader.activeFuture)).keySet().forEach(k -> {
+                    if (!priceMapBar.get(ftseIndex).containsKey(k)) {
+                        SimpleBar sb = new SimpleBar(Optional.ofNullable(priceMapBar.get(ftseIndex).floorEntry(k)).map(Entry::getValue).orElse(
+                                priceMapBar.get(ftseIndex).firstEntry().getValue()));
+                        priceMapBar.get(ftseIndex).put(k, sb);
+                    }
+                });
+            }
+        });
 
         btnSave.addActionListener(al -> {
             //saveXU();
@@ -253,6 +300,14 @@ public final class XU extends JPanel {
         jp.add(refreshGrid);
         jp.add(startIndex);
         jp.add(endIndex);
+        jp.add(fillButton);
+        jp.add(barWidthLabel);
+        jp.add(barWidthUp);
+        jp.add(barWidthDown);
+        jp.add(Box.createHorizontalStrut(30));
+        jp.add(dpWidthLabel);
+        jp.add(dpWidthUp);
+        jp.add(dpWidthDown);
 
         graphPanel.setLayout(new GridLayout(6, 1));
 

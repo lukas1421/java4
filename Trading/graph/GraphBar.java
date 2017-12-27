@@ -3,6 +3,7 @@ package graph;
 import apidemo.ChinaPosition;
 import apidemo.HKData;
 import apidemo.HKStock;
+import apidemo.XU;
 import auxiliary.SimpleBar;
 import utility.Utility;
 
@@ -28,7 +29,7 @@ import static utility.Utility.reduceMapToDouble;
 
 public final class GraphBar extends JComponent implements GraphFillable {
 
-    private static final int WIDTH_BAR = 3;
+    //private static final int WIDTH_BAR = 3;
     int height;
     double min;
     double max;
@@ -201,7 +202,7 @@ public final class GraphBar extends JComponent implements GraphFillable {
                     g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
                 }
             }
-            x += WIDTH_BAR;
+            x += XU.graphBarWidth.get();
         }
 
         g2.setColor(Color.red);

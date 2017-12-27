@@ -647,7 +647,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
 
             if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
-                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(18, 1))))) {
+                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(23, 59))))) {
 
                 if (lt.equals(LocalTime.of(9, 0))) {
                     futOpenMap.put(FutType.get(name), open);

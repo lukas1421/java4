@@ -1,6 +1,7 @@
 package graph;
 
 import apidemo.SinaStock;
+import apidemo.XU;
 import apidemo.XUTrader;
 import auxiliary.SimpleBar;
 
@@ -21,7 +22,7 @@ import static utility.Utility.*;
 
 public class GraphXUSI extends JComponent {
 
-    private static final int WIDTH_XU = 4;
+    //private static final int WIDTH_XU = 3;
     int height;
     private double minXU;
     private double maxXU;
@@ -115,7 +116,7 @@ public class GraphXUSI extends JComponent {
             g.setColor(Color.black);
 
             g.setFont(orig.deriveFont(orig.getSize() * 1.3F));
-            g2.drawLine(x, last, x + WIDTH_XU, close);
+            g2.drawLine(x, last, x + XU.graphBarWidth.get(), close);
             last = close;
 
             if(lt.equals(xu.firstKey())) {
@@ -135,7 +136,7 @@ public class GraphXUSI extends JComponent {
                 int close1 = getYSI(sina.get(lt));
                 last1 = (last1 == 0) ? close1 : last1;
                 g.setColor(Color.red);
-                g.drawLine(x, last1, x + WIDTH_XU, close1);
+                g.drawLine(x, last1, x + XU.graphBarWidth.get(), close1);
 
                 last1 = close1;
             }
@@ -156,7 +157,7 @@ public class GraphXUSI extends JComponent {
 //                    }
 //                }
             }
-            x += WIDTH_XU;
+            x += XU.graphBarWidth.get();
         }
 
         if (xu.size() > 0 & sina.size() > 0) {

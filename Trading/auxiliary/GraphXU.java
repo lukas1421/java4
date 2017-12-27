@@ -1,5 +1,7 @@
 package auxiliary;
 
+import apidemo.XU;
+
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalTime;
@@ -14,7 +16,7 @@ import static utility.Utility.*;
 
 public class GraphXU extends JComponent {
 
-    private static final int WIDTH_XU = 3;
+    //private static volatile int WIDTH_XU = 2;
     private int height;
     private double min;
     private double max;
@@ -74,7 +76,7 @@ public class GraphXU extends JComponent {
                     g.drawString(Integer.toString(lt.getHour()) + ":"+lt.getMinute(), x, getHeight() - 25);
                 }
             }
-            x += WIDTH_XU;
+            x += XU.dpBarWidth.get();
 
             if (detailed) {
                 g.setColor(Color.black);
