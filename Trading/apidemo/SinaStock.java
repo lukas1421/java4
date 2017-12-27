@@ -23,6 +23,7 @@ import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.sizeTotalMap;
 import static apidemo.ChinaStock.*;
 import static apidemo.TradingConstants.DATA_COLLECTION_TIME;
+import static apidemo.TradingConstants.ftseIndex;
 import static apidemo.XU.indexPriceSina;
 import static apidemo.XU.indexVol;
 
@@ -84,19 +85,19 @@ public class SinaStock implements Runnable {
                     indexPriceSina.put(ldt.toLocalTime(), new SimpleBar(currPrice));
                 }
 
-                if (priceMapBar.containsKey("FTSEA50")) {
-                    if (priceMapBar.get("FTSEA50").containsKey(ldt.toLocalTime())) {
-                        priceMapBar.get("FTSEA50").get(ldt.toLocalTime()).add(currPrice);
+                if (priceMapBar.containsKey(ftseIndex)) {
+                    if (priceMapBar.get(ftseIndex).containsKey(ldt.toLocalTime())) {
+                        priceMapBar.get(ftseIndex).get(ldt.toLocalTime()).add(currPrice);
                     } else {
-                        priceMapBar.get("FTSEA50").put(ldt.toLocalTime(), new SimpleBar(currPrice));
+                        priceMapBar.get(ftseIndex).put(ldt.toLocalTime(), new SimpleBar(currPrice));
                     }
                 } else {
-                    priceMapBar.put("FTSEA50", (ConcurrentSkipListMap) indexPriceSina);
+                    priceMapBar.put(ftseIndex, (ConcurrentSkipListMap) indexPriceSina);
                 }
                 indexVol.put(ldt.toLocalTime(), sinaVol);
-                openMap.put("FTSEA50", OPEN);
-                sizeMap.put("FTSEA50", Math.round(sinaVol));
-                sizeTotalMap.get("FTSEA50").put(ldt.toLocalTime(), sinaVol);
+                openMap.put(ftseIndex, OPEN);
+                sizeMap.put(ftseIndex, Math.round(sinaVol));
+                sizeTotalMap.get(ftseIndex).put(ldt.toLocalTime(), sinaVol);
                 //sizeTotalMap.put("FTSEA50", (ConcurrentSkipListMap)indexVol);
             }
         } catch (IOException ex) {

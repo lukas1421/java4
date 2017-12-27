@@ -36,11 +36,11 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
                 try {
                     if (HistChinaStocks.chinaTradeMap.containsKey(ticker)) {
                         if (HistChinaStocks.chinaTradeMap.get(ticker).containsKey(ldtRoundto5)) {
-                            System.out.println(" lt is " + ldtRoundto5);
+                            System.out.println(" Existing Trade: " + ldtRoundto5);
                             HistChinaStocks.chinaTradeMap.get(ticker).get(ldtRoundto5).addTrade(new FutureTrade(execution.price(),
                                     sign * execution.cumQty()));
                         } else {
-                            System.out.println(" else lt " + ldtRoundto5);
+                            System.out.println(" new tradeBlock " + ldtRoundto5);
                             HistChinaStocks.chinaTradeMap.get(ticker).put(ldtRoundto5, new TradeBlock(new FutureTrade(execution.price(),
                                     sign * execution.cumQty())));
                         }

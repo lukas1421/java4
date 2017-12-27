@@ -42,7 +42,7 @@ final class Shcomp extends JPanel implements Runnable {
     ConcurrentSkipListMap<LocalTime, Double> minProb = new ConcurrentSkipListMap<>();
     ConcurrentSkipListMap<LocalTime, Double> undeterminedProb = new ConcurrentSkipListMap<>();
 
-    GraphXU graph1 = new GraphXU();
+    private GraphXU graph1 = new GraphXU();
 
     public static boolean graphCreated = false;
 

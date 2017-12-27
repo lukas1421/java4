@@ -14,13 +14,10 @@ import static utility.Utility.*;
 
 public class GraphXU extends JComponent {
 
-    private static final int WIDTH_XU = 4;
+    private static final int WIDTH_XU = 3;
     private int height;
     private double min;
     private double max;
-    private int close;
-    private int last = 0;
-    private double rtn = 0.0;
     NavigableMap<LocalTime, Double> tm = new ConcurrentSkipListMap<>();
     NavigableMap<LocalTime, Double> sinaIndexTm;
     NavigableMap<LocalTime, Integer> tmVol;
@@ -59,13 +56,13 @@ public class GraphXU extends JComponent {
         g2.setStroke(BS2);
         min = getMin(tm1);
         max = getMax(tm1);
-        last = 0;
-        rtn = getRtn(tm1);
+        int last = 0;
+        double rtn = getRtn(tm1);
 
         int x = 50;
 
         for (LocalTime lt : tm1.keySet()) {
-            close = getY(tm1.get(lt));
+            int close = getY(tm1.get(lt));
             last = (last == 0) ? close : last;
 
             g.setColor(Color.black);

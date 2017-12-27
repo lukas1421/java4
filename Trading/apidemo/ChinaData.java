@@ -360,8 +360,8 @@ public final class ChinaData extends JPanel {
         }));
 
         getSGXA50TodayButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
-            controller().getSGXA50HistoricalCustom(50000, getFrontFutContract(), ChinaData::handleSGXDataToday, 1);
-            controller().getSGXA50HistoricalCustom(50001, getBackFutContract(), ChinaData::handleSGXDataToday, 1);
+            controller().getSGXA50HistoricalCustom(50000, getFrontFutContract(), ChinaData::handleSGXDataToday, 2);
+            controller().getSGXA50HistoricalCustom(50001, getBackFutContract(), ChinaData::handleSGXDataToday, 2);
         }));
 
         tdxButton.addActionListener(l -> getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0)));
@@ -764,23 +764,23 @@ public final class ChinaData extends JPanel {
     }
 
     private static void handleSGXDataToday(Contract c, String date, double open, double high, double low, double close, int volume) {
-        //System.out.println(" handling SGX today ");
-
         String ticker = utility.Utility.ibContractToSymbol(c);
+
+        System.out.println(" ChinaData : jhandling SGX today " + ticker );
+
+
         //LocalDate currDate = currentTradingDate;
 
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);
             Calendar cal = Calendar.getInstance();
             cal.setTime(dt);
-            //System.out.println(dt);
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
-            //System.out.println(" ld " + ld);
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
             if (ld.equals(currentTradingDate) && ((lt.isAfter(LocalTime.of(8, 59))
-                    && lt.isBefore(LocalTime.of(11, 31))) || (lt.isAfter(LocalTime.of(12, 59))
-                    && lt.isBefore(LocalTime.of(15, 1))))) {
+                    && lt.isBefore(LocalTime.of(11, 31))) || lt.isAfter(LocalTime.of(12, 59)))) {
+                //&& lt.isBefore(LocalTime.of(15, 1)
                 //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 System.out.println(getStr(dt, open, high, low, close));
                 double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get(ticker).lowerEntry(lt))
