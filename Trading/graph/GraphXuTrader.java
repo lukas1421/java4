@@ -5,6 +5,7 @@ import apidemo.ChinaData;
 import apidemo.FutType;
 import apidemo.XUTrader;
 import auxiliary.SimpleBar;
+import utility.SharpeUtility;
 
 import javax.swing.*;
 import java.awt.*;
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import static apidemo.TradingConstants.ftseIndex;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
@@ -35,12 +37,11 @@ public class GraphXuTrader extends JComponent {
     volatile String name;
     String chineseName;
     private String bench;
-    volatile double prevClose;
+    private volatile double prevClose;
     LocalTime maxAMT;
     LocalTime minAMT;
     volatile int size;
     private static final BasicStroke BS3 = new BasicStroke(3);
-    private int wtdP;
 
 //    public GraphXuTrader(NavigableMap<LocalTime, SimpleBar> tm) {
 //        this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue()
@@ -48,7 +49,7 @@ public class GraphXuTrader extends JComponent {
 //                (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
 //    }
 
-    public GraphXuTrader() {
+    protected GraphXuTrader() {
         name = "";
         chineseName = "";
         maxAMT = LocalTime.of(9, 30);
@@ -111,9 +112,6 @@ public class GraphXuTrader extends JComponent {
 
     }
 
-
-
-
     public void refresh() {
         this.setNavigableMap(tm);
         repaint();
@@ -159,11 +157,11 @@ public class GraphXuTrader extends JComponent {
                 g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
             } else {
                 if (XUTrader.gran == DisplayGranularity._1MDATA) {
-                    if (lt.getHour() < 16 && (lt.getMinute() == 0 || lt.getMinute() % 30 == 0)) {
+                    if ( (lt.getMinute() == 0 || lt.getMinute() % 30 == 0)) {
                         g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
                     }
                 } else {
-                    if (lt.getHour() < 16 && (lt.getMinute() == 0 || lt.getMinute() == 0)) {
+                    if ((lt.getMinute() == 0 || lt.getMinute() == 0)) {
                         g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
                     }
                 }
@@ -175,13 +173,13 @@ public class GraphXuTrader extends JComponent {
                     if (tb.getSizeAll() > 0) {
                         g.setColor(Color.blue);
                         int yCord = getY(tb.getAveragePrice());
-                        Polygon p = new Polygon(new int[]{x - 3, x, x + 3}, new int[]{yCord + 4, yCord, yCord + 4}, 3);
+                        Polygon p = new Polygon(new int[]{x - 4, x, x + 4}, new int[]{yCord + 5, yCord, yCord + 5}, 3);
                         g.drawPolygon(p);
                         g.fillPolygon(p);
                     } else {
                         g.setColor(Color.black);
                         int yCord = getY(tb.getAveragePrice());
-                        Polygon p = new Polygon(new int[]{x - 3, x, x + 3}, new int[]{yCord - 4, yCord, yCord - 4}, 3);
+                        Polygon p = new Polygon(new int[]{x - 4, x, x + 4}, new int[]{yCord - 5, yCord, yCord - 5}, 3);
                         g.drawPolygon(p);
                         g.fillPolygon(p);
                     }
@@ -197,6 +195,7 @@ public class GraphXuTrader extends JComponent {
         g2.drawString(Double.toString(minRtn) + "%", getWidth() - 40, getHeight() - 33);
         g2.drawString(Double.toString(maxRtn) + "%", getWidth() - 40, 15);
         //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2);
+        int wtdP = SharpeUtility.getPercentile(tm);
         g2.drawString("周" + Integer.toString(wtdP), getWidth() - 40, getHeight() / 2);
 
         if (!ofNullable(name).orElse("").equals("")) {
@@ -247,23 +246,23 @@ public class GraphXuTrader extends JComponent {
 //        }
     }
 
-    private int getXForLT(LocalTime t) {
-        if (XUTrader.gran == DisplayGranularity._1MDATA) {
-            long timeDiff = ChronoUnit.MINUTES.between(LocalTime.of(9, 0), t);
-            if (t.isAfter(LocalTime.of(11, 30))) {
-                timeDiff = timeDiff - 90;
-            }
-            return (int) (WIDTH_BAR * timeDiff + 5);
-        } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
-            long timeDiff = (ChronoUnit.MINUTES.between(LocalTime.of(9, 0), t)) / 5;
-
-            if (t.isAfter(LocalTime.of(11, 30))) {
-                timeDiff = timeDiff - 18;
-            }
-            return (int) (WIDTH_BAR * timeDiff + 1);
-        }
-        return 0;
-    }
+//    private int getXForLT(LocalTime t) {
+//        if (XUTrader.gran == DisplayGranularity._1MDATA) {
+//            long timeDiff = ChronoUnit.MINUTES.between(LocalTime.of(9, 0), t);
+//            if (t.isAfter(LocalTime.of(11, 30))) {
+//                timeDiff = timeDiff - 90;
+//            }
+//            return (int) (WIDTH_BAR * timeDiff + 5);
+//        } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
+//            long timeDiff = (ChronoUnit.MINUTES.between(LocalTime.of(9, 0), t)) / 5;
+//
+//            if (t.isAfter(LocalTime.of(11, 30))) {
+//                timeDiff = timeDiff - 18;
+//            }
+//            return (int) (WIDTH_BAR * timeDiff + 1);
+//        }
+//        return 0;
+//    }
 
     private double getTradePnl() {
 
@@ -353,8 +352,8 @@ public class GraphXuTrader extends JComponent {
     }
 
     public double getIndex(){
-        if(ChinaData.priceMapBar.get("FTSEA50").size() >0) {
-            return ChinaData.priceMapBar.get("FTSEA50").lastEntry().getValue().getClose();
+        if(ChinaData.priceMapBar.get(ftseIndex).size() >0) {
+            return ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose();
         }
         return 0.0;
     }

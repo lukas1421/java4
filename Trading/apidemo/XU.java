@@ -29,6 +29,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.*;
 
 import static apidemo.ChinaData.priceMapBar;
+import static apidemo.TradingConstants.ftseIndex;
 import static graph.GraphXUSI.AM900;
 import static java.lang.Double.max;
 import static java.lang.Double.min;
@@ -42,7 +43,6 @@ public final class XU extends JPanel {
 
     //public static volatile NavigableMap<LocalTime, SimpleBar> lastFutPrice = new ConcurrentSkipListMap<>();
     public static volatile NavigableMap<LocalTime, SimpleBar> indexPriceSina = new ConcurrentSkipListMap<>();
-
     public static volatile NavigableMap<LocalTime, Integer> frontFutVol = new ConcurrentSkipListMap<>();
     //public static volatile NavigableMap<LocalTime, Integer> backFutVol = new ConcurrentSkipListMap<>();
     public static volatile NavigableMap<LocalTime, Double> indexVol = new ConcurrentSkipListMap<>();
@@ -114,10 +114,10 @@ public final class XU extends JPanel {
                     if (priceMapBar.get(ticker).size() > 0 && indexPriceSina.size() > 0) {
 //                        graph1.setNavigableMap(lastFutPrice);
 //                        graph2.setNavigableMap(indexPriceSina);
-                        graph1.fillInGraph("FTSEA50");
+                        graph1.fillInGraph(ftseIndex);
                         graph2.fillInGraph(ticker);
                         //graph3.setSkipMap(lastFutPrice,indexPriceSina);
-                        graph3.setSkipMap(priceMapBar.get(ticker), priceMapBar.get("FTSEA50"));
+                        graph3.setSkipMap(priceMapBar.get(ticker), priceMapBar.get(ftseIndex));
                         graph4.setSkipMap(discPremSina);
                         graph5.setSkipMap(discPremPercentile);
                         graph6.setSkipMap(pricePercentile);
@@ -219,7 +219,7 @@ public final class XU extends JPanel {
 //                 graph2.setNavigableMap(indexPriceSina);
 
                 SwingUtilities.invokeLater(() -> {
-                    graph1.fillInGraph("FTSEA50");
+                    graph1.fillInGraph(ftseIndex);
                     graph2.fillInGraph(ticker);
                     graph3.setSkipMap(priceMapBar.get(ticker), indexPriceSina);
                     graph4.setSkipMap(discPremSina);
@@ -364,10 +364,10 @@ public final class XU extends JPanel {
 
         ftes.scheduleAtFixedRate(() -> {
             String ticker = ibContractToSymbol(XUTrader.activeFuture);
-            graph1.fillInGraph("FTSEA50");
+            graph1.fillInGraph(ftseIndex);
             graph2.fillInGraph(ticker);
             //graph3.setSkipMap(lastFutPrice,indexPriceSina);
-            graph3.setSkipMap(priceMapBar.get(ticker), priceMapBar.get("FTSEA50"));
+            graph3.setSkipMap(priceMapBar.get(ticker), priceMapBar.get(ftseIndex));
             graph4.setSkipMap(discPremSina);
             graph5.setSkipMap(discPremPercentile);
             graph6.setSkipMap(pricePercentile);
@@ -498,8 +498,8 @@ public final class XU extends JPanel {
 
         for (LocalTime k : priceMapBar.get(ticker).keySet()) {
             double v = priceMapBar.get(ticker).get(k).getClose();
-            if (priceMapBar.get("FTSEA50").containsKey(k)) {
-                current = Math.round(10000d * (v / Optional.ofNullable(priceMapBar.get("FTSEA50")
+            if (priceMapBar.get(ftseIndex).containsKey(k)) {
+                current = Math.round(10000d * (v / Optional.ofNullable(priceMapBar.get(ftseIndex)
                         .get(k)).map(SimpleBar::getClose).orElse(v) - 1)) / 100d;
                 discPremSina.put(k, current);
                 max = max(current, max);
@@ -673,13 +673,13 @@ public final class XU extends JPanel {
 
                 case 2:
                     //return round(Optional.ofNullable(indexPriceSina.get(lt)).map(SimpleBar::getClose).orElse(0.0));
-                    return round(Optional.ofNullable(priceMapBar.get("FTSEA50").get(lt)).map(SimpleBar::getClose).orElse(0.0));
+                    return round(Optional.ofNullable(priceMapBar.get(ftseIndex).get(lt)).map(SimpleBar::getClose).orElse(0.0));
 
                 case 3:
                     //return (lastFutPrice.containsKey(lt) && indexPriceSina.containsKey(lt))?
                     //     round(1000d*((lastFutPrice.get(lt).getClose()/indexPriceSina.get(lt).getClose())-1))/10d:0.0;
-                    return (priceMapBar.get(ticker).containsKey(lt) && priceMapBar.get("FTSEA50").containsKey(lt))
-                            ? round(1000d * ((priceMapBar.get(ticker).get(lt).getClose() / priceMapBar.get("FTSEA50").get(lt).getClose()) - 1)) / 10d : 0.0;
+                    return (priceMapBar.get(ticker).containsKey(lt) && priceMapBar.get(ftseIndex).containsKey(lt))
+                            ? round(1000d * ((priceMapBar.get(ticker).get(lt).getClose() / priceMapBar.get(ftseIndex).get(lt).getClose()) - 1)) / 10d : 0.0;
 
                 case 4:
                     //return frontFutVol.getOrDefault(lt,0);
@@ -697,7 +697,7 @@ public final class XU extends JPanel {
                     }
                     return 0.0;
                 case 6:
-                    return round(ChinaData.sizeTotalMap.get("FTSEA50").getOrDefault(lt, 0.0) / 10d) / 10d;
+                    return round(ChinaData.sizeTotalMap.get(ftseIndex).getOrDefault(lt, 0.0) / 10d) / 10d;
                 case 7:
                     return pricePercentile.getOrDefault(lt, 0);
                 default:
