@@ -101,7 +101,7 @@ public class GraphXU extends JComponent {
             g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.3F));
             g.drawString(this.getName() + "       " + Double.toString(tm1.lastEntry().getValue()), getWidth() / 2 - 60, 20);
             g.setFont(g.getFont().deriveFont(30F));
-            g.drawString(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString(), getWidth() - 200, 30);
+            g.drawString(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() +(LocalTime.now().getSecond()!=0?"":":00"), getWidth() - 200, 30);
         }
     }
 

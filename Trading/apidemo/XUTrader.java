@@ -23,6 +23,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
 import static utility.Utility.*;
@@ -79,6 +80,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return d;
         }
     };
+
+    public static AtomicInteger graphWidth = new AtomicInteger(3);
+
     public static volatile EnumMap<FutType, NavigableMap<LocalTime, SimpleBar>> futData = new EnumMap<>(FutType.class);
     //static volatile NavigableMap<LocalTime, SimpleBar> xuFrontData = new ConcurrentSkipListMap<>();
     //static volatile NavigableMap<LocalTime, SimpleBar> xuBackData = new ConcurrentSkipListMap<>();
@@ -337,6 +341,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         dispGranGroup.add(_1mButton);
         dispGranGroup.add(_5mButton);
 
+
+        JLabel widthLabel = new JLabel("Width");
+        widthLabel.setOpaque(true);
+        widthLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        widthLabel.setFont(widthLabel.getFont().deriveFont(15F));
+
+        JButton graphWidthUp = new JButton(" UP ");
+        graphWidthUp.addActionListener(l -> graphWidth.incrementAndGet());
+
+        JButton graphWidthDown = new JButton(" Down ");
+        graphWidthDown.addActionListener(l -> graphWidth.set(Math.max(1, graphWidth.decrementAndGet())));
+
+
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         JPanel controlPanel1 = new JPanel();
@@ -365,6 +382,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel2.add(backFutButton);
         controlPanel2.add(_1mButton);
         controlPanel2.add(_5mButton);
+        controlPanel2.add(widthLabel);
+        controlPanel2.add(graphWidthUp);
+        controlPanel2.add(graphWidthDown);
 
         JLabel bid1 = new JLabel("1");
         bidLabelList.add(bid1);

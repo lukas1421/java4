@@ -23,7 +23,7 @@ import static utility.Utility.*;
 
 public class GraphXuTrader extends JComponent {
 
-    private static final int WIDTH_BAR = 5;
+    //private static final int WIDTH_BAR = 5;
     int height;
     double min;
     double max;
@@ -185,7 +185,7 @@ public class GraphXuTrader extends JComponent {
                     }
                 }
             }
-            x += WIDTH_BAR;
+            x += XUTrader.graphWidth.get();
         }
 
         g2.setColor(Color.red);
