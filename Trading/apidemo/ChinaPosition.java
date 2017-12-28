@@ -1503,21 +1503,12 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
 
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
-        //System.out.println(" trade time " + ldt);
-
         System.out.println(getStr("china position date name time ", ldt, ticker));
 
         //equals last trading day
         if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth()) {
 
             LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
-
-//            System.out.println(" exec " + execution.side() + "　" + execution.time() + " " + execution.cumQty()
-//                    + " " + execution.price() + " " + execution.orderRef() + " " + execution.orderId() + " " + execution.permId() + " "
-//                    + execution.shares());
-//            System.out.println(" time string " + ldt.toString());
-//            System.out.println(" time is " + ldt.toLocalTime());
-//            System.out.println(" day is " + LocalDateTime.now().getDayOfMonth());
 
             if (ChinaPosition.tradesMap.get(ticker).containsKey(lt)) {
                 System.out.println(" lt is " + lt);
@@ -1543,20 +1534,6 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
                         ChinaPosition.tradesMap.get(ft.getTicker())));
             }
         }
-
-//        System.out.println(" printing trades map ");
-//
-//        ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().forEach(System.out::println);
-//
-//        ChinaPosition.xuBotPos = ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.summingInt(e
-//                -> ((Trade) e.getValue()).getSize()));
-//
-//        ChinaPosition.xuSoldPos = ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() < 0).collect(Collectors.summingInt(e
-//                -> ((Trade) e.getValue()).getSize()));
-//
-//        System.out.println(" xu bot pos  " + ChinaPosition.xuBotPos + " xu sold pos " + ChinaPosition.xuSoldPos);
-//
-//        System.out.println(" trade report ended ");
     }
 
     @Override

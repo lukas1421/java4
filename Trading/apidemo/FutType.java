@@ -3,6 +3,7 @@ package apidemo;
 import java.util.HashMap;
 import java.util.Map;
 
+@SuppressWarnings("SpellCheckingInspection")
 public enum FutType {
     PreviousFut("SGXA50PR"), FrontFut("SGXA50"), BackFut("SGXA50BM");
     private String tickerName;

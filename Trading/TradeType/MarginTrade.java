@@ -4,6 +4,7 @@ import utility.Utility;
 
 import static java.lang.Math.abs;
 
+@SuppressWarnings("SpellCheckingInspection")
 public final class MarginTrade extends Trade {
 
     public MarginTrade(double p, int s) {

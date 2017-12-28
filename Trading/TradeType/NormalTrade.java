@@ -4,6 +4,7 @@ import utility.Utility;
 
 import static java.lang.Math.abs;
 
+@SuppressWarnings("SpellCheckingInspection")
 public final class NormalTrade extends Trade {
 
     public NormalTrade(double p, int s) {

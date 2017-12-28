@@ -40,8 +40,6 @@ public class SinaStock implements Runnable {
     public static final double OPEN = getOpen();
     static volatile double rtn = 0.0;
 
-//    public final Predicate<LocalTime> FUT_OPEN = (lt) -> lt.isAfter(LocalTime.of(9, 0, 0));
-
     private SinaStock() {
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "FTSEA50Ticker.txt")))) {
             List<String> dataA50;
@@ -179,7 +177,6 @@ public class SinaStock implements Runnable {
                 List<String> s = Arrays.asList(l.split("\t"));
                 if (s.get(0).equals("FTSE A50")) {
                     temp = Double.parseDouble(s.get(1));
-                    //System.out.println(" open is " + temp);
                 }
             }
         } catch (IOException ex) {

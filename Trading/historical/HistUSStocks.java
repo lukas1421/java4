@@ -13,7 +13,6 @@ import utility.Utility;
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.io.*;
 import java.time.LocalDate;
@@ -33,11 +32,13 @@ import java.util.logging.Logger;
 
 import static utility.Utility.getMondayOfWeek;
 
+//import javax.swing.table.TableRowSorter;
+
 public class HistUSStocks extends JPanel  {
 
-    static final String USCHINASTOCKFILE = "USChinaStocks.txt";
+    //static final String USCHINASTOCKFILE = "USChinaStocks.txt";
     private static final String USALLFILE = "USAll.txt";
-    static final String USFAMOUSFILE = "USFamous.txt";
+    //static final String USFAMOUSFILE = "USFamous.txt";
     private static final String USCurrent= USALLFILE;
 
     private static volatile Semaphore sm = new Semaphore(50);
@@ -243,7 +244,7 @@ public class HistUSStocks extends JPanel  {
         add(graphPanel,BorderLayout.SOUTH);
 
         tab.setAutoCreateRowSorter(true);
-        TableRowSorter<BarModel_US> sorter = (TableRowSorter<BarModel_US>) tab.getRowSorter();
+        //TableRowSorter<BarModel_US> sorter = (TableRowSorter<BarModel_US>) tab.getRowSorter();
     }
 
     private static void refreshYtd() {
@@ -336,6 +337,7 @@ public class HistUSStocks extends JPanel  {
         }
     }
 
+    @SuppressWarnings("unused")
     public static void computeAll() {
         System.out.println(" computing starts ");
         USALLYtd.keySet().forEach(k -> {
@@ -344,7 +346,7 @@ public class HistUSStocks extends JPanel  {
             double mean = SharpeUtility.getMean(ret);
             double sd = SharpeUtility.getSD(ret);
             double sr = SharpeUtility.getSharpe(ret, 252);
-            double perc = SharpeUtility.getPercentile(USALLYtd.get(k));
+            //double perc = SharpeUtility.getPercentile(USALLYtd.get(k));
             System.out.println(Utility.getStrTabbed(" stock mean sd sr ", k, mean, sd, sr));
         });
     }

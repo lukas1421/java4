@@ -31,7 +31,10 @@ public final class TradingConstants {
             lt -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) &&
                     !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
                     && ((lt.toLocalTime().isAfter(LocalTime.of(8, 59)) && lt.toLocalTime().isBefore(LocalTime.of(11, 35)))
-                    || (lt.toLocalTime().isAfter(LocalTime.of(12, 58)) && lt.toLocalTime().isBefore(LocalTime.of(15, 5))));
+                    || (lt.toLocalTime().isAfter(LocalTime.of(12, 58))));
+
+    //&& lt.toLocalTime().isBefore(LocalTime.of(15, 5))
+
 
     private static final Predicate<LocalDateTime> FUT_OPEN_PRED = (lt)
             -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) && !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)

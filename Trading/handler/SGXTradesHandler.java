@@ -20,13 +20,13 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
         String ticker = ibContractToSymbol(contract);
-        System.out.println(" ****************************** ");
+        System.out.println(" ******************************************* ");
         System.out.println(" SGXTradesHandler " + ticker);
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
 
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
-        LocalDateTime ldtRoundto5 = Utility.roundTo5Ldt(ldt);
+        LocalDateTime ldtRoundTo5 = Utility.roundTo5Ldt(ldt);
 
         if (contract.symbol().equals("XINA50")) {
             if (ldt.toLocalDate().isAfter(Utility.getMondayOfWeek(ldt).minusDays(1L))) {
@@ -35,13 +35,13 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
 
                 try {
                     if (HistChinaStocks.chinaTradeMap.containsKey(ticker)) {
-                        if (HistChinaStocks.chinaTradeMap.get(ticker).containsKey(ldtRoundto5)) {
-                            System.out.println(" Existing Trade: " + ldtRoundto5);
-                            HistChinaStocks.chinaTradeMap.get(ticker).get(ldtRoundto5).addTrade(new FutureTrade(execution.price(),
+                        if (HistChinaStocks.chinaTradeMap.get(ticker).containsKey(ldtRoundTo5)) {
+                            System.out.println(" Existing Trade: " + ldtRoundTo5);
+                            HistChinaStocks.chinaTradeMap.get(ticker).get(ldtRoundTo5).addTrade(new FutureTrade(execution.price(),
                                     sign * execution.cumQty()));
                         } else {
-                            System.out.println(" new tradeBlock " + ldtRoundto5);
-                            HistChinaStocks.chinaTradeMap.get(ticker).put(ldtRoundto5, new TradeBlock(new FutureTrade(execution.price(),
+                            System.out.println(" new tradeBlock " + ldtRoundTo5);
+                            HistChinaStocks.chinaTradeMap.get(ticker).put(ldtRoundTo5, new TradeBlock(new FutureTrade(execution.price(),
                                     sign * execution.cumQty())));
                         }
                     } else {
@@ -59,7 +59,7 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReportEnd() {
-        System.out.println(" trade report end begins ");
+        System.out.println("SGXTradeshandler :: trade report end ");
 
         for (FutType f : FutType.values()) {
             System.out.println(" type is " + f + " ticker is " + f.getTicker());
@@ -72,13 +72,9 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
 
             HistChinaStocks.wtdChgInPosition.put(ticker, sgxLotsTraded);
-            System.out.println(" trade report end");
         }
     }
 
     @Override
-    public void commissionReport(String tradeKey, CommissionReport commissionReport) {
-        //System.out.println("commission report");
-
-    }
+    public void commissionReport(String tradeKey, CommissionReport commissionReport) {}
 }

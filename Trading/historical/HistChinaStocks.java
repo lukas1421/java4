@@ -44,6 +44,7 @@ import static apidemo.ChinaData.wtdSharpe;
 import static apidemo.ChinaPosition.tradesMap;
 import static utility.Utility.*;
 
+@SuppressWarnings("SpellCheckingInspection")
 public class HistChinaStocks extends JPanel {
 
     private static JPanel graphPanel;
@@ -157,28 +158,6 @@ public class HistChinaStocks extends JPanel {
             x.printStackTrace();
         }
 
-//        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(
-//                TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt")))) {
-//            line = reader.readLine();
-////            ChinaMain.currentTradingDate = max(LocalDate.parse(line, DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-////                    getMondayOfWeek(LocalDateTime.now()));
-//        } catch (IOException io) {
-//            io.printStackTrace();
-//        }
-
-//        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(priceInput)))) {
-//            while ((line = reader.readLine()) != null) {
-//                List<String> l = Arrays.asList(line.split(","));
-//                if (l.size() >= 2) {
-//                    priceMapForHist.put(l.get(0), Double.parseDouble(l.get(1)));
-//                } else {
-//                    System.out.println(" line is wrong " + line);
-//                }
-//            }
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-
         File chinaInput = new File(GLOBALPATH + "ChinaAll.txt");
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(chinaInput), "GBK"))) {
             while ((line = reader.readLine()) != null) {
@@ -254,9 +233,7 @@ public class HistChinaStocks extends JPanel {
                                 weekMtmMap = computeWtdMtmPnl(e -> e.getKey().equals(selectedStock));
                                 weekTradePnlMap = computeWtdTradePnl(e -> e.getKey().equals(selectedStock));
                                 weekNetMap = computeNet(e -> e.getKey().equals(selectedStock));
-//                                    System.out.println(" seleced stock is " + selectedStock + "  trade : "
-//                                            + wtdTradePnlMap.getOrDefault(selectedStock, 0.0) + "  mtm: "
-//                                            + wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
+
 
                                 SwingUtilities.invokeLater(() -> {
                                     graphWtdPnl.setMtm(weekMtmMap);

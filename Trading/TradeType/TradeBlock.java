@@ -21,7 +21,6 @@ public final class TradeBlock {
     }
 
     public TradeBlock(TradeBlock tb) {
-
         tb.getTradeList().forEach(e->mergeList.add((Trade)e));
     }
 
@@ -30,11 +29,7 @@ public final class TradeBlock {
     }
 
     public void merge(TradeBlock tb) {
-        //System.out.println(" merge tb// tb: " + tb);
-        //System.out.println(" merge tb// mergelist " + mergeList);
         tb.getTradeList().forEach(e -> mergeList.add((Trade) e));
-
-        //System.out.println(" after merging mergelist " + mergeList);
     }
 
     private int getNumberOfTrades() {
@@ -68,7 +63,7 @@ public final class TradeBlock {
 
     @Override
     public String toString() {
-        return Utility.getStr(" trade block size", mergeList.size(),
+        return Utility.getStr(" trade block size: ", mergeList.size(),
                 mergeList.stream().map(Object::toString).collect(Collectors.joining(",")));
     }
 }

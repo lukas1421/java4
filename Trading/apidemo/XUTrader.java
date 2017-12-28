@@ -374,7 +374,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel2.add(level2Button);
         controlPanel2.add(refreshButton);
         controlPanel2.add(computeButton);
-
         controlPanel2.add(execButton);
         controlPanel2.add(processTradesButton);
         //controlPanel2.add(connect7496);
@@ -384,7 +383,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel2.add(showGraphButton);
         controlPanel2.add(connectionLabel);
         controlPanel2.add(cancelAllOrdersButton);
-
         controlPanel2.add(frontFutButton);
         controlPanel2.add(backFutButton);
         controlPanel2.add(_1mButton);
@@ -409,7 +407,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JLabel bid5 = new JLabel("5");
         bidLabelList.add(bid5);
         bid5.setName("bid5");
-
         JLabel ask1 = new JLabel("1");
         askLabelList.add(ask1);
         ask1.setName("ask1");

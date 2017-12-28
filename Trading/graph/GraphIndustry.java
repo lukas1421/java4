@@ -181,9 +181,7 @@ public class GraphIndustry extends JComponent {
                             CompletableFuture.supplyAsync(()
                                     -> m.entrySet().stream().max(comparingByValue(comparingDouble(GraphIndustry::getMapLastReturn)))
                                     .map(Entry::getKey).orElse(""))
-                                    .thenAccept(qr -> {
-                                        quickestRiser = qr;
-                                    });
+                                    .thenAccept(qr -> quickestRiser = qr);
 
                             CompletableFuture.supplyAsync(()
                                     -> m.entrySet().stream().sorted(LAST_ENTRY_COMPARATOR.reversed())

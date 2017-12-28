@@ -707,50 +707,41 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                 processGraphMonitors(l);
             }
 
-            SwingUtilities.invokeLater(() -> {
-                jp.repaint();
-            });
+            SwingUtilities.invokeLater(() -> jp.repaint());
         });
 
         JButton minSharpeButton = new JButton("MinSharpe");
         minSharpeButton.addActionListener(al -> ChinaStockHelper.computeMinuteSharpeAll());
 
-        paneList.forEach((JScrollPane p) -> {
-            JScrollPane sp = (JScrollPane) p;
-            sp.addMouseListener(new MouseAdapter() {
-                @Override
-                public void mouseEntered(MouseEvent e) {
-
-                    //if(SwingUtilities.)
-                    JViewport jv;
-                    if (p.getComponent(0) instanceof JViewport) {
-                        jv = (JViewport) p.getComponent(0);
-                        if (jv.getComponent(0) instanceof GraphMonitor) {
-                            GraphMonitor g = (GraphMonitor) jv.getComponent(0);
-                            //System.out.println(" name is " + g.getName());
-                            //System.out.println(" clicked " + LocalTime.now());
-                            //ChinaStock.pureRefreshTable();
-                            //System.out.println(g.getName());
-                            String selectedNameGraph = g.getName();
-                            //System.out.println(" name is " + selectedNameGraph);
-                            if (!industryNameMap.getOrDefault(selectedNameGraph, "").equals("板块")) {
-                                //ChinaBigGraph.setGraph(industryNameMap.get(selectedNameGraph));
-                                ChinaBigGraph.setGraph(selectedNameGraph);
-                                ChinaStock.setIndustryFilter(industryNameMap.getOrDefault(selectedNameGraph, ""));
-                                CompletableFuture.runAsync(() -> {
-                                    ChinaPosition.mtmPnlCompute(e1 -> e1.getKey().equals(selectedNameGraph), selectedNameGraph);
-                                });
-                            } else {
-                                ChinaBigGraph.setGraph(selectedNameGraph);
-                                ChinaStock.setIndustryFilter(selectedNameGraph);
-                            }
+        paneList.forEach((JScrollPane p) -> p.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                JViewport jv;
+                if (p.getComponent(0) instanceof JViewport) {
+                    jv = (JViewport) p.getComponent(0);
+                    if (jv.getComponent(0) instanceof GraphMonitor) {
+                        GraphMonitor g = (GraphMonitor) jv.getComponent(0);
+                        //System.out.println(" name is " + g.getName());
+                        //System.out.println(" clicked " + LocalTime.now());
+                        //ChinaStock.pureRefreshTable();
+                        //System.out.println(g.getName());
+                        String selectedNameGraph = g.getName();
+                        //System.out.println(" name is " + selectedNameGraph);
+                        if (!industryNameMap.getOrDefault(selectedNameGraph, "").equals("板块")) {
+                            //ChinaBigGraph.setGraph(industryNameMap.get(selectedNameGraph));
+                            ChinaBigGraph.setGraph(selectedNameGraph);
+                            ChinaStock.setIndustryFilter(industryNameMap.getOrDefault(selectedNameGraph, ""));
+                            CompletableFuture.runAsync(() -> ChinaPosition.mtmPnlCompute(e1 -> e1.getKey().equals(selectedNameGraph), selectedNameGraph));
+                        } else {
+                            ChinaBigGraph.setGraph(selectedNameGraph);
+                            ChinaStock.setIndustryFilter(selectedNameGraph);
                         }
                     }
-
-
                 }
-            });
-        });
+
+
+            }
+        }));
 
         northPanel.add(timeLabel);
         northPanel.add(computeButton);
@@ -851,9 +842,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
             GraphMonitorFactory.getGraphMonitor(i).fillInGraph(ticker);
             i++;
         }
-        SwingUtilities.invokeLater(() -> {
-            jp.repaint();
-        });
+        SwingUtilities.invokeLater(() -> jp.repaint());
 
     }
 
@@ -980,6 +969,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                 .map(Entry::getKey).collect(Collectors.toCollection(LinkedList::new));
     }
 
+    @SuppressWarnings("unused")
     static void outputSampleStock() {
         //System.out.println(" writing 000905 ");
         File output = new File(TradingConstants.GLOBALPATH + "test000905.txt");
@@ -1033,9 +1023,7 @@ enum WhatToDisplay {
     INDEX("指数"), SECTOR("版块"), STOCK("股票");
 
     WhatToDisplay(String nam) {
-        this.chnName = nam;
     }
-    private final String chnName;
 }
 
 enum SharpePeriod {

@@ -31,8 +31,8 @@ import static java.lang.Math.*;
 //import org.apache.commons.math3.*;
 
 public class ChinaOption extends JPanel implements Runnable {
-    static String urlString;
-    static String urlStringSH;
+//    static String urlString;
+//    static String urlStringSH;
 
     private static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
     private static final Pattern CALL_NAME_PATTERN = Pattern.compile("(?<=var\\shq_str_OP_UP_5100501706=)\"(.*?),\"");
@@ -43,7 +43,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static HashMap<String, Double> callPriceMap = new HashMap<>();
     private static HashMap<String, Double> bidMap = new HashMap<>();
     private static HashMap<String, Double> askMap = new HashMap<>();
-    static HashMap<String, Option> callOptionsMap = new HashMap<>();
+    //static HashMap<String, Option> callOptionsMap = new HashMap<>();
     private static List<JLabel> labelList = new ArrayList<>();
     private static JLabel timeLabel = new JLabel();
 
@@ -66,7 +66,6 @@ public class ChinaOption extends JPanel implements Runnable {
         add(controlPanel, BorderLayout.NORTH);
         add(dataPanel, BorderLayout.SOUTH);
 
-        //setLayout(new GridLayout(10, 3));
         JLabel j11 = new JLabel(primaryCall);
         labelList.add(j11);
         JLabel j12 = new JLabel(" option price ");
@@ -251,20 +250,20 @@ public class ChinaOption extends JPanel implements Runnable {
         return call;
     }
 
-    static double getDelta(double s, double k, double v, double t, double r) {
+    private static double getDelta(double s, double k, double v, double t, double r) {
         System.out.println(Utility.getStr(" delta params ", s, k, v, t, r));
         double d1 = (Math.log(s / k) + (r + 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
         double nd1 = (new NormalDistribution()).cumulativeProbability(d1);
         return Math.round(1000d * nd1) / 1000d;
     }
 
-    static double getGamma(double s, double k, double v, double t, double r) {
+    private static double getGamma(double s, double k, double v, double t, double r) {
         double d1 = (Math.log(s / k) + (r + 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
         double gamma = 0.4 * exp(-0.5 * pow(d1, 2)) / (s * v * sqrt(t));
         return Math.round(1000d * gamma) / 1000d;
     }
 
-    static DoubleUnaryOperator fillInBS(double s, Option opt) {
+    private static DoubleUnaryOperator fillInBS(double s, Option opt) {
         System.out.println(" filling in bs ");
         System.out.println(" strike " + opt.getStrike());
         System.out.println(" t " + opt.getTimeToExpiry());
@@ -272,7 +271,7 @@ public class ChinaOption extends JPanel implements Runnable {
         return (double v) -> bs(s, opt.getStrike(), v, opt.getTimeToExpiry(), opt.getRate());
     }
 
-    static double simpleSolver(double target, DoubleUnaryOperator o, double lowerGuess, double higherGuess) {
+    private static double simpleSolver(double target, DoubleUnaryOperator o, double lowerGuess, double higherGuess) {
         double guess = 0.0;
         double res;
         double midGuess = (lowerGuess + higherGuess) / 2;
@@ -291,7 +290,7 @@ public class ChinaOption extends JPanel implements Runnable {
 //    static double simpleSolver2(double target, double stock, Option op) {
 //        return simpleSolver(target, fillInBS(stock, op.getStrike(), op.getTimeToExpiry(),op.getRate()), 0, 1);
 //    }
-    static double get510050Price() {
+    private static double get510050Price() {
         try {
             URL allCalls = new URL("http://hq.sinajs.cn/list=sh510050");
             String line;

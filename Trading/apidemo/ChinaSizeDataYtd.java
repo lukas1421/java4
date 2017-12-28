@@ -56,6 +56,7 @@ class ChinaSizeDataYtd extends JPanel {
 
         @Override
         public String getColumnName(int col) {
+            //noinspection Duplicates
             switch (col) {
                 case 0:
                     return "T";
@@ -68,6 +69,7 @@ class ChinaSizeDataYtd extends JPanel {
 
         @Override
         public Class getColumnClass(int col) {
+            //noinspection Duplicates
             switch (col) {
                 case 0:
                     return String.class;

@@ -424,13 +424,10 @@ public class Utility {
         System.out.println(" date is " + dateString);
 
         for (String e : symbolNames) {
-            //System.out.println(" date stock " + dateString + " " + e);
             boolean found = false;
             String name = (e.substring(0, 2).toUpperCase() + "#" + e.substring(2) + ".txt");
             String line;
             double totalSize = 0.0;
-            //System.out.println("get files from tdx gen " + e + " " + name);
-            //AtomicInteger counter = new AtomicInteger(0);
 
             if (!e.equals("sh204001") && (e.substring(0, 2).toUpperCase().equals("SH") || e.substring(0, 2).toUpperCase().equals("SZ"))) {
                 try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxPath + name)))) {
