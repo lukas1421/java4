@@ -20,15 +20,8 @@ import static apidemo.ChinaData.dateMap;
 
 public class Dividends {
 
-//    String ticker;
-//    String chineseName;
     private LocalDate adjustDate;
     private double adjFactor;
-
-//    public Dividends() {
-//        adjustDate = LocalDate.MAX;
-//        adjFactor = 0.0;
-//    }
 
     private Dividends(LocalDate d, double f) {
         adjustDate = d;
@@ -36,48 +29,27 @@ public class Dividends {
     }
 
     public static void dealWithDividends() {
-
         LocalDate today = dateMap.get(2);
         LocalDate ytd;
         LocalDate y2;
-
         ytd = dateMap.get(1);
         y2 = dateMap.get(0);
-
         System.out.println(" ytd is " + ytd);
         System.out.println(" y2 is " + y2);
 
         Map<String, Dividends> divTable = getDiv();
-
         divTable.forEach((ticker, div) -> {
             if (ChinaData.priceMapBarYtd.containsKey(ticker) && ChinaData.priceMapBarY2.containsKey(ticker)) {
                 System.out.println(" correcting for ticker " + ticker);
-                // if(div.getExDate().equals(today)) {
                 System.out.println(" correcting div YTD for " + ticker + " " + div.toString());
                 ChinaData.priceMapBarYtd.get(ticker).replaceAll((k, v) -> new SimpleBar(v));
-
-                //dangerous reference equality induced by fillHoles by copying the reference of the higher entry
                 ChinaData.priceMapBarYtd.get(ticker).forEach((key, value) -> value.adjustByFactor(div.getAdjFactor()));
-                //get rid of same reference
-                // if(div.getExDate().equals((ytd)) || div.getExDate().equals(today)) {
-
                 System.out.println(" correcting div Y2 for " + ticker + " " + div.toString());
-
                 ChinaData.priceMapBarY2.get(ticker).replaceAll((k, v) -> new SimpleBar(v));
-
-                ChinaData.priceMapBarY2.get(ticker).forEach((key, value) -> {
-                    //System.out.println( " Y2 time " + e.getKey());
-                    //System.out.println( " Y2  before " + e.getValue());
-                    value.adjustByFactor(div.getAdjFactor());
-                    //System.out.println( " Y2  after " + e.getValue());
-                });
+                ChinaData.priceMapBarY2.get(ticker).forEach((key, value) -> value.adjustByFactor(div.getAdjFactor()));
             }
         });
     }
-
-//    LocalDate getExDate() {
-//        return adjustDate;
-//    }
 
     private double getAdjFactor() {
         return adjFactor;

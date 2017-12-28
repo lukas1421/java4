@@ -9,12 +9,12 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
 
     static final long serialVersionUID = -34735107L;
 
-    double open;
-    double high;
-    double low;
-    double close;
+    private double open;
+    private double high;
+    private double low;
+    private double close;
 
-    private static SimpleBar ZERO_BAR = new SimpleBar(0.0);
+    //private static SimpleBar ZERO_BAR = new SimpleBar(0.0);
 
     public SimpleBar() {
         open = 0.0;
@@ -42,9 +42,9 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         close = sb.getClose();
     }
 
-    public static SimpleBar getZeroBar() {
-        return ZERO_BAR;
-    }
+//    public static SimpleBar getZeroBar() {
+//        return ZERO_BAR;
+//    }
 
     public SimpleBar(double v) {
         open = v;
@@ -115,6 +115,7 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         updateBar(sb.getOpen(),sb.getHigh(),sb.getLow(),sb.getClose());
     }
 
+    @SuppressWarnings("unused")
     public void updateBar(double o, double h, double l, double c) {
         if(h > high) {
             high = h;

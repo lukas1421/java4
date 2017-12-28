@@ -35,7 +35,6 @@ public class Trait implements Comparator {
 
     private int maxDrawdown;
     private int maxDrawdown2;
-    private LocalTime processUntil;
 
     private volatile long activity;
     private volatile long maxRep;
@@ -72,10 +71,6 @@ public class Trait implements Comparator {
 
     public int currSize() {
         return this.currSize;
-    }
-
-    public double currVol() {
-        return this.currVol;
     }
 
     public double lastPrice() {
@@ -178,10 +173,6 @@ public class Trait implements Comparator {
 
     public void currSize(int i) {
         this.currSize = i;
-    }
-
-    public void currVol(double v) {
-        this.currVol = v;
     }
 
     public void lastPrice(double lastPrice) {

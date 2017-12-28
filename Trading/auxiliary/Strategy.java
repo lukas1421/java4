@@ -1,8 +1,9 @@
 package auxiliary;
 
-import static utility.Utility.getStr;
 import java.io.Serializable;
 import java.time.LocalTime;
+
+import static utility.Utility.getStr;
 
 public class Strategy implements Serializable {
 
@@ -25,7 +26,7 @@ public class Strategy implements Serializable {
         lastPrice = 0.0;
     }
 
-    public Strategy(Strategy s) {
+    Strategy(Strategy s) {
         this.entranceTime = s.entranceTime;
         this.entrancePrice = s.entrancePrice;
         this.strattype = s.strattype;
@@ -34,10 +35,6 @@ public class Strategy implements Serializable {
 
     public LocalTime getEntranceTime() {
         return this.entranceTime;
-    }
-
-    public double getEntrancePrice() {
-        return this.entrancePrice;
     }
 
     public double getReturn() {
@@ -49,7 +46,7 @@ public class Strategy implements Serializable {
     }
 
     public enum StratType {
-        AMRETURN, AMRANGE, MA, VOL, OVERSOLD, OVERSOLD2, BIGDROP, PRICEBURST, GEN, SIZEEXPLODE, VRMAX, MAX, TMR;
+        AMRETURN, AMRANGE, MA, VOL, OVERSOLD, OVERSOLD2, BIGDROP, PRICEBURST, GEN, SIZEEXPLODE, VRMAX, MAX, TMR
     }
 
     @Override

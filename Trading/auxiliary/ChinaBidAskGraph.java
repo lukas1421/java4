@@ -2,22 +2,19 @@ package auxiliary;
 
 import graph.GraphBidAsk;
 import graph.IND;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JToggleButton;
+
+import javax.swing.*;
+import java.awt.*;
 
 public class ChinaBidAskGraph extends JPanel {
 
-    static GraphBidAsk graph = new GraphBidAsk();
-    static JToggleButton level1 = new JToggleButton("level1", true);
-    static JToggleButton level2 = new JToggleButton("level2", true);
-    static JToggleButton level3 = new JToggleButton("level3", true);
-    static JToggleButton level4 = new JToggleButton("level4", true);
-    static JToggleButton level5 = new JToggleButton("level5", true);
-    static String currentStock = "sh000001";
+    private static GraphBidAsk graph = new GraphBidAsk();
+    private static JToggleButton level1 = new JToggleButton("level1", true);
+    private static JToggleButton level2 = new JToggleButton("level2", true);
+    private static JToggleButton level3 = new JToggleButton("level3", true);
+    private static JToggleButton level4 = new JToggleButton("level4", true);
+    private static JToggleButton level5 = new JToggleButton("level5", true);
+    private static String currentStock = "sh000001";
 
     ChinaBidAskGraph() {
 

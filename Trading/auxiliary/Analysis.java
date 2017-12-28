@@ -1356,7 +1356,6 @@ public class Analysis extends JPanel {
                     return hm.get(symbolNames.get(rowIn)).minAMT();
                 case 8:
                     return hm.get(symbolNames.get(rowIn)).maxDrawDown();
-                //case 9: return hm.get(symbolNames.get(rowIn)).maxDrawDown2();
                 case 9:
                     return Math.round((Optional.ofNullable(sizeMapCopy.get(symbolNames.get(rowIn))).orElse(0))
                             * (Optional.ofNullable(hm.get(symbolNames.get(rowIn)).minDay()).orElse(0.0)) / 1000000);

@@ -1,27 +1,23 @@
 package auxiliary;
 
-import static apidemo.ChinaData.tradeTime;
-import static apidemo.ChinaStock.nameMap;
-import static apidemo.ChinaStock.symbolNames;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import java.awt.*;
 import java.time.LocalTime;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
+
+import static apidemo.ChinaData.tradeTime;
+import static apidemo.ChinaStock.nameMap;
+import static apidemo.ChinaStock.symbolNames;
 
 public class ChinaBidAskData extends JPanel {
 
     public static volatile ConcurrentHashMap<String, TreeMap<LocalTime, Long>> bidAskDiffMap = new ConcurrentHashMap<>();
     public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, TreeMap<LocalTime, Long>>> saveMap = new ConcurrentHashMap<>();
-    BarModel m_model;
+    private BarModel m_model;
 
     ExecutorService es = Executors.newCachedThreadPool();
 
@@ -65,6 +61,7 @@ public class ChinaBidAskData extends JPanel {
 
         @Override
         public String getColumnName(int col) {
+            //noinspection Duplicates
             switch (col) {
                 case 0:
                     return "T";
@@ -77,6 +74,7 @@ public class ChinaBidAskData extends JPanel {
 
         @Override
         public Class getColumnClass(int col) {
+            //noinspection Duplicates
             switch (col) {
                 case 0:
                     return String.class;

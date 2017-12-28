@@ -2,9 +2,9 @@ package apidemo;
 
 //import static auxiliary.Analysis.symbolNames;
 
-import auxiliary.GraphXU;
 import auxiliary.SimpleBar;
 import graph.GraphBar;
+import graph.GraphXU;
 import graph.GraphXUSI;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;

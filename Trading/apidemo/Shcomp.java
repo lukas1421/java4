@@ -4,7 +4,7 @@ package apidemo;
 //import static apidemo.XU.indexPrice;
 //import static apidemo.XU.indexPriceSina;
 
-import auxiliary.GraphXU;
+import graph.GraphXU;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;

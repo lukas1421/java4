@@ -14,7 +14,6 @@ public class FutPositionHandler implements ApiController.IPositionHandler {
 
     @Override
     public void positionEnd() {
-        //System.out.println(" position request ended in Futpositionhandler");
     }
 
 }

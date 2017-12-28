@@ -4,44 +4,40 @@ import apidemo.ChinaMain;
 import client.Contract;
 import client.TickType;
 import client.Types.MktDataType;
-import static controller.Formats.fmt;
-import static controller.Formats.fmtPct;
-import static controller.Formats.*;
-
-import java.awt.Color;
-import java.util.ArrayList;
-
-import javax.swing.JLabel;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellRenderer;
-
 import controller.ApiController.TopMktDataAdapter;
 import controller.Formats;
+
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
+import java.util.ArrayList;
+
+import static controller.Formats.*;
 
 public class TopModel extends AbstractTableModel {
 
     private final ArrayList<TopRow> m_rows = new ArrayList<>();
 
+    @SuppressWarnings("unused")
     void addRow(Contract contract) {
-
         System.out.println("add row started");
         TopRow row = new TopRow(this, contract.description());
         m_rows.add(row);
-        ChinaMain.INSTANCE.controller().reqTopMktData(contract, "", false, row);
+        ChinaMain.controller().reqTopMktData(contract, "", false, row);
         fireTableRowsInserted(m_rows.size() - 1, m_rows.size() - 1);
         System.out.println("add row ended");
-
     }
 
+    @SuppressWarnings("unused")
     void addRow(TopRow row) {
         m_rows.add(row);
         fireTableRowsInserted(m_rows.size() - 1, m_rows.size() - 1);
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     public void desubscribe() {
-        m_rows.forEach((row) -> {
-            ChinaMain.INSTANCE.controller().cancelTopMktData(row);
-        });
+        m_rows.forEach((row) -> ChinaMain.controller().cancelTopMktData(row));
     }
 
     @Override
@@ -113,8 +109,9 @@ public class TopModel extends AbstractTableModel {
         ((JLabel) rend).setForeground(c);
     }
 
+    @SuppressWarnings("unused")
     public void cancel(int i) {
-        ChinaMain.INSTANCE.controller().cancelTopMktData(m_rows.get(i));
+        ChinaMain.controller().cancelTopMktData(m_rows.get(i));
     }
 
     static class TopRow extends TopMktDataAdapter {
@@ -136,7 +133,7 @@ public class TopModel extends AbstractTableModel {
             m_description = description;
         }
 
-        public String change() {
+        String change() {
             return m_close == 0 ? null : fmtPct((m_last - m_close) / m_close);
         }
 

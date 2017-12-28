@@ -1,13 +1,12 @@
 package auxiliary;
 
-import java.util.Set;
-
 import javax.swing.table.AbstractTableModel;
+import java.util.Set;
 
 public class OptParamsModel extends AbstractTableModel {
 
-	String[] m_expirations;
-	Double[] m_strikes;
+	private String[] m_expirations;
+	private Double[] m_strikes;
 	
 	public OptParamsModel(Set<String> expirations, Set<Double> strikes) {
 		expirations.toArray(m_expirations = new String[expirations.size()]);

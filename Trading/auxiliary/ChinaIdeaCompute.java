@@ -4,7 +4,6 @@ import java.time.LocalTime;
 
 public class ChinaIdeaCompute implements Runnable {
 
-//this class does periodic computation of chinadata
     @Override
     public void run() {
         try {

@@ -1,7 +1,7 @@
 package apidemo;
 
-import auxiliary.GraphXU;
 import graph.GraphChinaFut;
+import graph.GraphXU;
 
 import javax.swing.*;
 import java.awt.*;

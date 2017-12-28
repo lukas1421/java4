@@ -23,10 +23,10 @@ public class ChinaPeakAnalysis extends JPanel {
 
     public static ConcurrentHashMap<Integer, ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Long>>> saveMap = new ConcurrentHashMap<>();
 
-    BarModel m_model;
+    private BarModel m_model;
 
-    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> dayPeakMap = new ConcurrentHashMap<>();
-    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> pmPeakMap = new ConcurrentHashMap<>();
+    private static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> dayPeakMap = new ConcurrentHashMap<>();
+    private static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> pmPeakMap = new ConcurrentHashMap<>();
 
     ChinaPeakAnalysis() {
 

@@ -5,7 +5,6 @@ import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.URI;
 import java.util.Enumeration;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
@@ -25,8 +24,7 @@ public class TestProxy {
             System.setProperty("java.net.useSystemProxies", "true");
             List<Proxy> l = ProxySelector.getDefault().select(new URI("http://www.bloomberg.com/"));
 
-            for (Iterator<Proxy> iter = l.iterator(); iter.hasNext();) {
-                Proxy proxy = iter.next();
+            for (Proxy proxy : l) {
                 System.out.println("proxy hostname : " + proxy.type());
                 System.out.println(" proxy to string " + proxy.toString());
                 //proxy.

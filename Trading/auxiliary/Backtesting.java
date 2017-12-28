@@ -25,16 +25,14 @@ import static java.util.stream.Collectors.toList;
 
 public class Backtesting extends JPanel {
 
-    static volatile BarModel m_model;
     private static ConcurrentHashMap<Integer, ConcurrentSkipListMap<LocalTime, Double>> mapCopy;
     private static ConcurrentHashMap<Integer, Strategy> hm = new ConcurrentHashMap<Integer, Strategy>();
-    static ArrayList<Integer> symbolNames = new ArrayList<Integer>();
-    private TableRowSorter<BarModel> sorter;
+    private static ArrayList<Integer> symbolNames = new ArrayList<Integer>();
 
     private int rowSelected;
     private int modelRow;
 
-    public static boolean graphCreated = false;
+    private static boolean graphCreated = false;
     private Graph graph1 = new Graph();
 
     Backtesting() {
@@ -51,9 +49,7 @@ public class Backtesting extends JPanel {
                     .distinct()
                     .collect(toList());
 
-            numbers.forEach((value) -> {
-                symbolNames.add(value);
-            });
+            symbolNames.addAll(numbers);
             numbers.forEach((value) -> {
                 hm.put(value, new Strategy());
             });
@@ -64,7 +60,7 @@ public class Backtesting extends JPanel {
             e.printStackTrace();
         }
 
-        m_model = new BarModel();
+        BarModel m_model = new BarModel();
 
         JTable tab = new JTable(m_model) {
 
@@ -114,7 +110,7 @@ public class Backtesting extends JPanel {
         scroll.setName("scroll");
 
         tab.setAutoCreateRowSorter(true);
-        sorter = (TableRowSorter<BarModel>) tab.getRowSorter();
+        TableRowSorter<BarModel> sorter = (TableRowSorter<BarModel>) tab.getRowSorter();
         //sorter.setRowFilter(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL,0,10));
 
         JPanel jp = new JPanel();
@@ -183,14 +179,13 @@ public class Backtesting extends JPanel {
     //end
 
     Backtesting(ConcurrentHashMap<Integer, ConcurrentSkipListMap<LocalTime, Double>> map) {
-        this.mapCopy = map;
+        mapCopy = map;
     }
 
     public void testingStrategy() {
         int symb;
-        Iterator it = mapCopy.keySet().iterator();
-        while (it.hasNext()) {
-            symb = (int) it.next();
+        for (Object o : mapCopy.keySet()) {
+            symb = (int) o;
             hm.put(symb, new Strategy(computeAll(mapCopy.get(symb))));
         }
     }
@@ -226,7 +221,7 @@ public class Backtesting extends JPanel {
         }
     }
 
-    public static Strategy computeAll(ConcurrentSkipListMap<LocalTime, Double> tm) {
+    private static Strategy computeAll(ConcurrentSkipListMap<LocalTime, Double> tm) {
         if (tm.size() > 1) {
             Iterator it = tm.keySet().iterator();
             double max = Double.MIN_VALUE;

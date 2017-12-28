@@ -1,4 +1,4 @@
-package auxiliary;
+package graph;
 
 import apidemo.XU;
 

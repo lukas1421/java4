@@ -29,7 +29,7 @@ public class HtmlButton extends JLabel {
         m_al = v;
     }
 
-    public HtmlButton(String text) {
+    protected HtmlButton(String text) {
         this(text, null);
     }
 
@@ -39,7 +39,7 @@ public class HtmlButton extends JLabel {
         super.setText(text);
     }
 
-    public HtmlButton(String text, ActionListener v) {
+    HtmlButton(String text, ActionListener v) {
         super(text);
         m_text = text;
         m_al = v;
