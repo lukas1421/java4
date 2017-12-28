@@ -16,6 +16,7 @@ public class SGXFutureReceiver implements LiveHandler {
     }
 
     private static SGXFutureReceiver gr = new SGXFutureReceiver();
+
     public static SGXFutureReceiver getReceiver() {
         return gr;
     }

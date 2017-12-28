@@ -42,9 +42,6 @@ public class GraphBig extends JComponent implements GraphFillable {
     NavigableMap<LocalTime, SimpleBar> tm;
     private NavigableMap<LocalTime, Double> tmVol;
 
-    private NavigableMap<LocalTime, SimpleBar> tmYtd;
-    private NavigableMap<LocalTime, Double> tmVolYtd;
-
     String name;
     String chineseName;
     private LocalTime maxAMT;
@@ -96,12 +93,13 @@ public class GraphBig extends JComponent implements GraphFillable {
     }
 
     public void setNavigableMapYtd(NavigableMap<LocalTime, SimpleBar> tm) {
-        tmYtd = (tm != null) ? new ConcurrentSkipListMap<>(tm.entrySet().stream().filter(Utility.CONTAINS_NO_ZERO)
+        NavigableMap<LocalTime, SimpleBar> tmYtd = (tm != null) ? new ConcurrentSkipListMap<>(tm.entrySet().stream().filter(Utility.CONTAINS_NO_ZERO)
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue)))
                 : new ConcurrentSkipListMap<>();
     }
 
     void setNavigableMapVolYtd(NavigableMap<LocalTime, Double> tmvol) {
+        NavigableMap<LocalTime, Double> tmVolYtd;
         if (tmvol != null) {
             NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
             tmvol.keySet().forEach((LocalTime t) -> {

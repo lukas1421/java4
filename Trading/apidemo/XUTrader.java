@@ -71,12 +71,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
 
     public static EnumMap<FutType, NavigableMap<LocalTime, TradeBlock>> tradesMap = new EnumMap<>(FutType.class);
-    private GraphXuTrader xuGraph = new GraphXuTrader(){
+
+    private GraphXuTrader xuGraph = new GraphXuTrader() {
         @Override
         public Dimension getPreferredSize() {
             Dimension d = super.getPreferredSize();
             d.height = 300;
-            d.width = 2500;
+            d.width = 1900;
             return d;
         }
     };
@@ -304,7 +305,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
         xuGraph.setAutoscrolls(false);
-        JScrollPane chartScroll = new JScrollPane(xuGraph,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS) {
+        JScrollPane chartScroll = new JScrollPane(xuGraph, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -348,10 +349,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         widthLabel.setFont(widthLabel.getFont().deriveFont(15F));
 
         JButton graphWidthUp = new JButton(" UP ");
-        graphWidthUp.addActionListener(l -> graphWidth.incrementAndGet());
+        graphWidthUp.addActionListener(l -> {
+            graphWidth.incrementAndGet();
+            SwingUtilities.invokeLater(xuGraph::refresh);
+        });
 
         JButton graphWidthDown = new JButton(" Down ");
-        graphWidthDown.addActionListener(l -> graphWidth.set(Math.max(1, graphWidth.decrementAndGet())));
+        graphWidthDown.addActionListener(l -> {
+            graphWidth.set(Math.max(1, graphWidth.decrementAndGet()));
+            SwingUtilities.invokeLater(xuGraph::refresh);
+        });
 
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -952,7 +959,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double netTradePnl = buyTradePnl + sellTradePnl;
 
-        double netTotalCommissions = Math.round(100d*((unitsBought - unitsSold) * 1.505d))/100d;
+        double netTotalCommissions = Math.round(100d * ((unitsBought - unitsSold) * 1.505d)) / 100d;
 
         double mtmPnl = (currentPosMap.get(f) - unitsBought - unitsSold) * (futPriceMap.get(f) - futPrevCloseMap.get(f));
 

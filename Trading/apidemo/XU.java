@@ -162,10 +162,14 @@ public final class XU extends JPanel {
         JButton barWidthUp = new JButton(" UP ");
         barWidthUp.addActionListener(l -> {
             graphBarWidth.incrementAndGet();
+            SwingUtilities.invokeLater(graphPanel::repaint);
         });
 
         JButton barWidthDown = new JButton(" Down ");
-        barWidthDown.addActionListener(l -> graphBarWidth.set(Math.max(1, graphBarWidth.decrementAndGet())));
+        barWidthDown.addActionListener(l -> {
+            graphBarWidth.set(Math.max(1, graphBarWidth.decrementAndGet()));
+            SwingUtilities.invokeLater(graphPanel::repaint);
+        });
 
         JLabel dpWidthLabel = new JLabel(" DP Width ");
         dpWidthLabel.setOpaque(true);
@@ -173,13 +177,19 @@ public final class XU extends JPanel {
         dpWidthLabel.setFont(dpWidthLabel.getFont().deriveFont(15F));
 
 
-
         JButton dpWidthUp = new JButton(" UP ");
 
-        dpWidthUp.addActionListener(l -> dpBarWidth.incrementAndGet());
+        dpWidthUp.addActionListener(l -> {
+            dpBarWidth.incrementAndGet();
+            SwingUtilities.invokeLater(graphPanel::repaint);
+        });
+
         JButton dpWidthDown = new JButton(" Down ");
 
-        dpWidthDown.addActionListener(l -> dpBarWidth.set(Math.max(1, dpBarWidth.decrementAndGet())));
+        dpWidthDown.addActionListener(l -> {
+            dpBarWidth.set(Math.max(1, dpBarWidth.decrementAndGet()));
+            SwingUtilities.invokeLater(graphPanel::repaint);
+        });
 
 
         //JLabel currentExpiryLabel = new JLabel("");

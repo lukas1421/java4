@@ -64,7 +64,6 @@ public class GraphXuTrader extends JComponent {
     }
 
     private void setTradesMap(NavigableMap<LocalTime, TradeBlock> trade) {
-        //System.out.println(" setting trades map in Graph Xu trader " + trade);
         trademap = trade;
     }
 
@@ -97,7 +96,6 @@ public class GraphXuTrader extends JComponent {
     public void fillInGraph(NavigableMap<LocalTime, SimpleBar> mp) {
         if (XUTrader.gran == DisplayGranularity._1MDATA) {
             this.setNavigableMap(mp);
-            //this.setTradesMap(XUTrader.tradesMap.get(activeFuture));
         } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
             this.setNavigableMap(priceMap1mTo5M(mp));
         }
@@ -192,8 +190,8 @@ public class GraphXuTrader extends JComponent {
         g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.5F));
         g2.setStroke(BS3);
 
-        g2.drawString(Double.toString(minRtn) + "%", getWidth() - 40, getHeight() - 33);
-        g2.drawString(Double.toString(maxRtn) + "%", getWidth() - 40, 15);
+        g2.drawString(min + "  " + Double.toString(minRtn) + "%", getWidth() - 140, getHeight() - 33);
+        g2.drawString(max  + "   " + Double.toString(maxRtn) + "%", getWidth() - 140, 15);
         //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2);
         int wtdP = SharpeUtility.getPercentile(tm);
         g2.drawString("周" + Integer.toString(wtdP), getWidth() - 40, getHeight() / 2);

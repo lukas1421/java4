@@ -978,7 +978,7 @@ public class ApiController implements EWrapper {
 
         CompletableFuture.runAsync(() -> {
             m_client.reqHistoricalData(reqId, c, "", durationStr,
-                    barSize.toString(), whatToShow.toString(), rthOnly ? 1 : 0, 2, Collections.<TagValue>emptyList());
+                    barSize.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList());
         });
     }
 

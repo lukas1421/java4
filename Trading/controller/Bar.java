@@ -52,7 +52,7 @@ public class Bar {
             m_count = count;
     }
 
-    public String formattedTime() {
+    private String formattedTime() {
             return Formats.fmtDate( m_time * 1000);
     }
 

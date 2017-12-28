@@ -58,6 +58,7 @@ public class GraphXU extends JComponent {
         g2.setStroke(BS2);
         min = getMin(tm1);
         max = getMax(tm1);
+        double avg = Math.round(100d*(min+max)/2)/100d;
         int last = 0;
         double rtn = getRtn(tm1);
 
@@ -78,6 +79,7 @@ public class GraphXU extends JComponent {
             }
             x += XU.dpBarWidth.get();
 
+            //noinspection Duplicates
             if (detailed) {
                 g.setColor(Color.black);
                 if (lastDrawT.plusMinutes(5).isBefore(tm1.lastKey())) {
@@ -99,7 +101,8 @@ public class GraphXU extends JComponent {
             g.drawString(Double.toString(Math.round(100d * (max + min)) / 200d), 0, (getHeight() - 35) / 2);
             g.drawString(Double.toString(tm1.lastEntry().getValue()), getWidth() - 160, getHeight() - 10);
             g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.3F));
-            g.drawString(this.getName() + "       " + Double.toString(tm1.lastEntry().getValue()), getWidth() / 2 - 60, 20);
+            g.drawString(this.getName() + "       " + Double.toString(tm1.lastEntry().getValue()) + "    (AVG: " + avg +" )"
+                    , getWidth() / 2 - 60, 20);
             g.setFont(g.getFont().deriveFont(30F));
             g.drawString(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() +(LocalTime.now().getSecond()!=0?"":":00"), getWidth() - 200, 30);
         }

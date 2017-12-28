@@ -266,8 +266,8 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
 
         //System.out.println("printing component min delta " + minDelta);
         //System.out.println("printing component max delta " + maxDelta);
-        LocalTime netmint = getNetPnlMinTime();
-        LocalTime netmaxt = getNetPnlMaxTime();
+        LocalTime netMinT = getNetPnlMinTime();
+        LocalTime netMaxT = getNetPnlMaxTime();
 
         double rtn = getReturn();
         int x = 5;
@@ -415,9 +415,9 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
                 }
             }
 
-            if (lt.equals(netmint)) {
+            if (lt.equals(netMinT)) {
                 g.drawString(getStr("低", lt, r(netMap.getOrDefault(lt, 0.0))), x - 10, last + 8);
-            } else if (lt.equals(netmaxt)) {
+            } else if (lt.equals(netMaxT)) {
                 g.drawString(getStr("高", lt, r(netMap.getOrDefault(lt, 0.0))), x - 10, last - 30);
             }
         }

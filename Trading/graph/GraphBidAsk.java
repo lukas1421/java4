@@ -33,9 +33,9 @@ public class GraphBidAsk extends JComponent implements GraphFillable {
     private LocalTime minAMT;
     private volatile int size;
 
-    static NavigableMap<LocalTime, Double> tmBid;
-    static NavigableMap<LocalTime, Double> tmAsk;
-    static Predicate<? super Entry<LocalTime, Double>> containsNoZero = e -> e.getValue() != 0.0;
+    private static NavigableMap<LocalTime, Double> tmBid;
+    private static NavigableMap<LocalTime, Double> tmAsk;
+    private static Predicate<? super Entry<LocalTime, Double>> containsNoZero = e -> e.getValue() != 0.0;
 
     public static volatile IND ind1 = IND.on;
     public static volatile IND ind2 = IND.on;

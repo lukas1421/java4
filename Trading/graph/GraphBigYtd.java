@@ -45,13 +45,13 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
 
     String name;
     String chineseName;
-    String bench;
+    private String bench;
     LocalTime maxAMT;
     LocalTime minAMT;
     volatile int size;
 
-    static final Predicate<? super Entry<LocalTime, SimpleBar>> CONTAINS_NO_ZERO = e -> !e.getValue().containsZero();
-    static final BasicStroke BS3 = new BasicStroke(3);
+    private static final Predicate<? super Entry<LocalTime, SimpleBar>> CONTAINS_NO_ZERO = e -> !e.getValue().containsZero();
+    private static final BasicStroke BS3 = new BasicStroke(3);
 
     public GraphBigYtd() {
         name = "";
@@ -88,12 +88,12 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
         }
     }
 
-    public void setNavigableMapYtd(NavigableMap<LocalTime, SimpleBar> tm) {
+    private void setNavigableMapYtd(NavigableMap<LocalTime, SimpleBar> tm) {
         this.tmYtd = (tm != null) ? tm.entrySet().stream()
                 .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
     }
 
-    public void setNavigableMapVolYtd(NavigableMap<LocalTime, Double> tmvolytd) {
+    private void setNavigableMapVolYtd(NavigableMap<LocalTime, Double> tmvolytd) {
         if (tmvolytd != null) {
             NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
             tmvolytd.keySet().forEach((t) -> {
@@ -106,11 +106,11 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
         }
     }
 
-    public void setNavigableMapY2(NavigableMap<LocalTime, SimpleBar> tmIn) {
+    private void setNavigableMapY2(NavigableMap<LocalTime, SimpleBar> tmIn) {
         this.tmY2 = (tmIn != null) ? tmIn.entrySet().stream().collect(Collectors.toMap(Entry::getKey, Entry::getValue, (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
     }
 
-    public void setNavigableMapVolY2(NavigableMap<LocalTime, Double> tmvoly2) {
+    private void setNavigableMapVolY2(NavigableMap<LocalTime, Double> tmvoly2) {
         if (tmvoly2 != null) {
             NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
             tmvoly2.keySet().forEach((t) -> {
@@ -123,9 +123,9 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
         }
     }
 
-    NavigableMap<LocalTime, SimpleBar> getNavigableMap() {
-        return this.tmYtd;
-    }
+//    NavigableMap<LocalTime, SimpleBar> getNavigableMap() {
+//        return this.tmYtd;
+//    }
 
     @Override
     public void setName(String s) {
@@ -446,7 +446,7 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
         return height - (int) val + 20;
     }
 
-    int getYVol(double v) {
+    private int getYVol(double v) {
         double pct = (double) v / getMaxVol();
         double val = pct * heightVol;
         return height + heightVol - (int) val;
@@ -495,7 +495,8 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
 
     private double getReturn() {
         if (tmYtd.size() > 0) {
-            double initialP = tmYtd.entrySet().stream().findFirst().get().getValue().getOpen();
+            double initialP = tmYtd.firstEntry().getValue().getOpen();
+            //.entrySet().stream().findFirst().getValue().getOpen();
             double finalP = tmYtd.lastEntry().getValue().getClose();
             return (double) 100 * Math.round(log(finalP / initialP) * 1000d) / 1000d;
         }

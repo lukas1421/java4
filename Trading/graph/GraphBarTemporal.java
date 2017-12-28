@@ -48,7 +48,6 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     private static final BasicStroke BS3 = new BasicStroke(3);
 
     //int wtdP;
-
 //    public GraphBarTemporal(NavigableMap<T, SimpleBar> tm1) {
 //        this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero())
 //                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
@@ -114,11 +113,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     public void fillInGraphHKGen(String name, Map<String, NavigableMap<T, SimpleBar>> mp) {
         this.name = name;
         setName(name);
-        //setChineseName(HKStock.hkNameMap.getOrDefault(name,""));
-
         if (mp.containsKey(name) && mp.get(name).size() > 0) {
-            //System.out.println(" in graph bar temporal setting " + name);
-            //System.out.println(mp.get(name));
             this.setNavigableMap(mp.get(name));
         } else {
             this.setNavigableMap(new ConcurrentSkipListMap<>());

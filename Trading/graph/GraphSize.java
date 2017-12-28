@@ -2,15 +2,9 @@ package graph;
 
 import apidemo.ChinaSizeRatio;
 import apidemo.ChinaStock;
-import graph.GraphFillable;
 
-import static utility.Utility.TIMEMAX;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import static java.lang.Math.log;
+import javax.swing.*;
+import java.awt.*;
 import java.time.LocalTime;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -19,7 +13,9 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import javax.swing.JComponent;
+
+import static java.lang.Math.log;
+import static utility.Utility.TIMEMAX;
 
 public class GraphSize extends JComponent implements GraphFillable {
 
@@ -41,12 +37,12 @@ public class GraphSize extends JComponent implements GraphFillable {
     private LocalTime minAMT;
     private volatile int size;
 
-    static final LocalTime AMCLOSET = LocalTime.of(11, 30);
+    private static final LocalTime AMCLOSET = LocalTime.of(11, 30);
     static final LocalTime AMOPENT = LocalTime.of(9, 30);
-    static final LocalTime PMOPENT = LocalTime.of(13, 0);
+    private static final LocalTime PMOPENT = LocalTime.of(13, 0);
     static final LocalTime PMCLOSET = LocalTime.of(15, 0);
-    static final Predicate<? super Entry<LocalTime, ? extends Number>> AMPRED = e -> e.getKey().isBefore(AMCLOSET);
-    static final Predicate<? super Entry<LocalTime, ? extends Number>> PMPRED = e -> e.getKey().isAfter(PMOPENT);
+    private static final Predicate<? super Entry<LocalTime, ? extends Number>> AMPRED = e -> e.getKey().isBefore(AMCLOSET);
+    private static final Predicate<? super Entry<LocalTime, ? extends Number>> PMPRED = e -> e.getKey().isAfter(PMOPENT);
 
     public GraphSize(NavigableMap<LocalTime, Double> tm) {
         this.tm = tm.entrySet().stream().filter(e -> e.getValue() != 0).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, ConcurrentSkipListMap::new));

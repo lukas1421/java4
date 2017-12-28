@@ -23,14 +23,11 @@ public class GraphChinaFut extends JComponent {
     private double maxFuture;
     private double minIndex;
     private double maxIndex;
-    private int last = 0;
-    private int last1 = 0;
     private double rtn;
     private ConcurrentSkipListMap<LocalTime, Double> futureP = new ConcurrentSkipListMap<>();
     TreeMap<LocalTime, Integer> tmVol;
     String name;
     String chineseName;
-    private long activity;
     private boolean detailed = false;
     private double openFuture = 0;
     private double openIndex = 0;
@@ -53,7 +50,7 @@ public class GraphChinaFut extends JComponent {
     public GraphChinaFut() {
         name = "";
         chineseName = "";
-        activity = 0;
+        long activity = 0;
         //maxAMT = LocalTime.of(9, 30);
         // minAMT = LocalTime.of(9,30);
         //m_rows = rows;
@@ -167,8 +164,8 @@ public class GraphChinaFut extends JComponent {
         maxFuture = getMax(futureP);
         maxIndex = getMax(indexP);
 
-        last = 0;
-        last1 = 0;
+        int last = 0;
+        int last1 = 0;
         orig = g.getFont();
         //rtn = getReturn();
 
