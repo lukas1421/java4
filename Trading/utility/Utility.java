@@ -665,8 +665,8 @@ public class Utility {
 //        return in.reversed();
 //    }
 
-    public static void simpleWriteToFile(String s, boolean b, File f) {
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(f, b))) {
+    public static void simpleWriteToFile(String s, boolean append, File f) {
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(f, append))) {
             out.append(s);
             out.newLine();
         } catch (IOException x) {
@@ -726,12 +726,22 @@ public class Utility {
         return (xcord / n) * n;
     }
 
+    public static Contract getExpiredFutContract() {
+        Contract ct = new Contract();
+        ct.symbol("XINA50");
+        ct.exchange("SGX");
+        ct.currency("USD");
+        ct.lastTradeDateOrContractMonth(TradingConstants.A50_LAST_EXPIRY);
+        ct.secType(Types.SecType.FUT);
+        return ct;
+    }
+
     public static Contract getFrontFutContract() {
         Contract ct = new Contract();
         ct.symbol("XINA50");
         ct.exchange("SGX");
         ct.currency("USD");
-        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
+        ct.lastTradeDateOrContractMonth(TradingConstants.A50_FRONT_EXPIRY);
         ct.secType(Types.SecType.FUT);
         return ct;
     }
@@ -741,19 +751,20 @@ public class Utility {
         ct.symbol("XINA50");
         ct.exchange("SGX");
         ct.currency("USD");
-        ct.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50BACKEXPIRY);
+        ct.lastTradeDateOrContractMonth(TradingConstants.A50_BACK_EXPIRY);
         ct.secType(Types.SecType.FUT);
         return ct;
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     public static String ibContractToSymbol(Contract ct) {
         if (ct.symbol().equals("XINA50")) {
             switch (ct.lastTradeDateOrContractMonth()) {
-                case TradingConstants.GLOBALA50FRONTEXPIRY:
+                case TradingConstants.A50_FRONT_EXPIRY:
                     return "SGXA50";
-                case TradingConstants.GLOBALA50BACKEXPIRY:
+                case TradingConstants.A50_BACK_EXPIRY:
                     return "SGXA50BM";
-                case TradingConstants.GLOBALA50LASTEXPIRY:
+                case TradingConstants.A50_LAST_EXPIRY:
                     return "SGXA50PR";
             }
         }
@@ -763,11 +774,11 @@ public class Utility {
     public static FutType ibContractToFutType(Contract ct) {
         if (ct.symbol().equals("XINA50")) {
             switch (ct.lastTradeDateOrContractMonth()) {
-                case TradingConstants.GLOBALA50LASTEXPIRY:
+                case TradingConstants.A50_LAST_EXPIRY:
                     return FutType.PreviousFut;
-                case TradingConstants.GLOBALA50FRONTEXPIRY:
+                case TradingConstants.A50_FRONT_EXPIRY:
                     return FutType.FrontFut;
-                case TradingConstants.GLOBALA50BACKEXPIRY:
+                case TradingConstants.A50_BACK_EXPIRY:
                     return FutType.BackFut;
             }
         }

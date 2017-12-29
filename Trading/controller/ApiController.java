@@ -960,7 +960,7 @@ public class ApiController implements EWrapper {
 //        c.exchange("SGX");
 //        c.currency("USD");
 //        c.secType(Types.SecType.FUT);
-//        c.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
+//        c.lastTradeDateOrContractMonth(TradingConstants.A50_FRONT_EXPIRY);
 //        c.right(Types.Right.None);
 //        c.secIdType(Types.SecIdType.None);
 
@@ -976,10 +976,8 @@ public class ApiController implements EWrapper {
 
         ChinaMain.globalRequestMap.put(reqId, new Request(c, dc));
 
-        CompletableFuture.runAsync(() -> {
-            m_client.reqHistoricalData(reqId, c, "", durationStr,
-                    barSize.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList());
-        });
+        CompletableFuture.runAsync(() -> m_client.reqHistoricalData(reqId, c, "", durationStr,
+                barSize.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
     }
 
     //    public void getHKIntradayHistoricalData(HistoricalHandler hh) {

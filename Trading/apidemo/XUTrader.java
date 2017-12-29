@@ -117,7 +117,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //        frontFut.symbol("XINA50");
 //        frontFut.exchange("SGX");
 //        frontFut.currency("USD");
-//        frontFut.lastTradeDateOrContractMonth(TradingConstants.GLOBALA50FRONTEXPIRY);
+//        frontFut.lastTradeDateOrContractMonth(TradingConstants.A50_FRONT_EXPIRY);
 //        frontFut.secType(Types.SecType.FUT);
 
         for (FutType f : FutType.values()) {

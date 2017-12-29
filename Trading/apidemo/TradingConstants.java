@@ -9,12 +9,12 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 public final class TradingConstants {
-//    public static final String GLOBALA50FRONTEXPIRY = "20171129";
-//    public static final String GLOBALA50BACKEXPIRY = "20171228";
+//    public static final String A50_FRONT_EXPIRY = "20171129";
+//    public static final String A50_BACK_EXPIRY = "20171228";
 
-    public static final String GLOBALA50LASTEXPIRY = "20171129";
-    public static final String GLOBALA50FRONTEXPIRY = "20171228";
-    public static final String GLOBALA50BACKEXPIRY = "20180130";
+    public static final String A50_LAST_EXPIRY = "20171228";
+    public static final String A50_FRONT_EXPIRY = "20180130";
+    public static final String A50_BACK_EXPIRY = "20180227";
     public static final String ftseIndex = "FTSEA50";
 
     public static final String GLOBALPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";

@@ -3,6 +3,7 @@ package handler;
 import TradeType.FutureTrade;
 import TradeType.TradeBlock;
 import apidemo.FutType;
+import apidemo.TradingConstants;
 import client.CommissionReport;
 import client.Contract;
 import client.Execution;
@@ -10,7 +11,9 @@ import controller.ApiController;
 import historical.HistChinaStocks;
 import utility.Utility;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
 import static utility.Utility.ibContractToSymbol;
@@ -66,9 +69,14 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
 
             String ticker = f.getTicker();
 
+            if (ticker.equalsIgnoreCase("SGXA50PR")) {
+                HistChinaStocks.chinaTradeMap.get(ticker).put(LocalDateTime.of(LocalDate.parse(TradingConstants.A50_LAST_EXPIRY,DateTimeFormatter.ofPattern("yyyyMMdd")),
+                        LocalTime.of(15,0)), new TradeBlock(new FutureTrade(HistChinaStocks.futExpiryLevel, -1 * HistChinaStocks.futExpiryUnits)));
+            }
+
             int sgxLotsTraded = HistChinaStocks.chinaTradeMap.get(ticker).entrySet().stream()
                     .filter(e -> e.getKey().toLocalDate()
-                    .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
+                            .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
 
             HistChinaStocks.wtdChgInPosition.put(ticker, sgxLotsTraded);
@@ -76,5 +84,6 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
     }
 
     @Override
-    public void commissionReport(String tradeKey, CommissionReport commissionReport) {}
+    public void commissionReport(String tradeKey, CommissionReport commissionReport) {
+    }
 }

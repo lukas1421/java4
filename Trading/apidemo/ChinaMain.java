@@ -27,7 +27,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.*;
@@ -56,7 +55,7 @@ public final class ChinaMain implements IConnectionHandler {
 
     private final IConnectionConfiguration m_connectionConfiguration;
 
-    public static volatile Map<Integer, Request> globalRequestMap = new HashMap<>();
+    public static volatile Map<Integer, Request> globalRequestMap = new ConcurrentHashMap<>();
     public static ChinaMain INSTANCE;
     private final JTextArea m_inLog = new JTextArea();
     private final JTextArea m_outLog = new JTextArea();
