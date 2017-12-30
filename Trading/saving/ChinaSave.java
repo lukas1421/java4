@@ -23,15 +23,15 @@ public class ChinaSave implements Serializable, ChinaSaveInterface2Blob {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    String stockName;
+    private String stockName;
 
     @Column(name = "DATA")
     @Lob
-    Blob dayPriceMapBlob;
+    private Blob dayPriceMapBlob;
 
     @Column(name = "VOL")
     @Lob
-    Blob volMapBlob;
+    private Blob volMapBlob;
 
     public ChinaSave() {
     }

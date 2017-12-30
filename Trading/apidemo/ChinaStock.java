@@ -208,7 +208,7 @@ public final class ChinaStock extends JPanel {
 
     static ScheduledExecutorService ftes = Executors.newScheduledThreadPool(10);
 
-    static final ToDoubleFunction<String> DEFAULTOPEN = (String name) -> Optional.ofNullable(priceMapBar.get(name).ceilingEntry(Utility.AMOPENT))
+    private static final ToDoubleFunction<String> DEFAULTOPEN = (String name) -> Optional.ofNullable(priceMapBar.get(name).ceilingEntry(Utility.AMOPENT))
             .map(Entry::getValue).map(SimpleBar::getOpen).orElse(openMap.getOrDefault(name, 0.0));
 
     static final ToDoubleBiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>> GETMAX = (name, p) -> priceMapBar
@@ -217,7 +217,7 @@ public final class ChinaStock extends JPanel {
     static final ToDoubleBiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>> GETMIN = (name, p) -> priceMapBar.
             get(name).entrySet().stream().filter(p).min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
 
-    static final ToDoubleBiFunction<String, LocalTime> GETCLOSE = (name, lt) ->
+    private static final ToDoubleBiFunction<String, LocalTime> GETCLOSE = (name, lt) ->
             Optional.ofNullable(priceMapBar.get(name)).map(e -> e.get(lt)).map(SimpleBar::getClose).orElse(0.0);
 
     static BiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>, LocalTime> GETMAXTIME = (name, p) -> priceMapBar.

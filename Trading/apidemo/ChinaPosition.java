@@ -1505,7 +1505,7 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
 
         System.out.println(getStr("china position date name time ", ldt, ticker));
 
-        //equals last trading day
+        //equals current trading day
         if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth()) {
 
             LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
@@ -1538,7 +1538,6 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void commissionReport(String tradeKey, CommissionReport commissionReport) {
-        //System.out.println(" commission report being produced ");
     }
 }
 

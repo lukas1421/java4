@@ -1,5 +1,6 @@
 package graph;
 
+@SuppressWarnings("SpellCheckingInspection")
 public enum DisplayGranularity {
     DAYDATA(0), _1MDATA(1), _5MDATA(5);
 

@@ -19,7 +19,6 @@ import java.time.format.DateTimeFormatter;
 import static utility.Utility.ibContractToSymbol;
 
 public class SGXTradesHandler implements ApiController.ITradeReportHandler {
-
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
         String ticker = ibContractToSymbol(contract);
@@ -60,6 +59,7 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
         }
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     @Override
     public void tradeReportEnd() {
         System.out.println("SGXTradeshandler :: trade report end ");
