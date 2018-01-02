@@ -27,9 +27,9 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
     private final static int WIDTH_PNL = 5;
 
     static NavigableMap<LocalTime, Double> tm;
-    private static NavigableMap<LocalTime, Double> mtmMap;
-    private static NavigableMap<LocalTime, Double> tradeMap;
-    private static NavigableMap<LocalTime, Double> netMap;
+    private static NavigableMap<LocalTime, Double> mtmMap = new ConcurrentSkipListMap<>();
+    private static NavigableMap<LocalTime, Double> tradeMap = new ConcurrentSkipListMap<>();
+    private static NavigableMap<LocalTime, Double> netMap = new ConcurrentSkipListMap<>();
     private static NavigableMap<LocalTime, Double> buyMap;
     private static NavigableMap<LocalTime, Double> sellMap;
     private static NavigableMap<LocalTime, Double> netDeltaMap;
@@ -172,6 +172,8 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
     }
 
     public void setNavigableMap(NavigableMap<LocalTime, Double> mtmmap, NavigableMap<LocalTime, Double> trademap, NavigableMap<LocalTime, Double> netmap) {
+
+        //System.out.println(getStr(" setNavigable GPNL:: final net map ", netmap.lastEntry()));
 
         mtmMap = (mtmmap != null) ? mtmmap.entrySet().stream().filter(TRADING_PRED)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, ConcurrentSkipListMap::new))
@@ -465,10 +467,14 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
         g2.setColor(Color.BLUE);
 
         //add percent
-        g2.drawString("大: " + Long.toString(round(benchMap.getOrDefault("大", 0.0) / 1000d)) + " k   " + Double.toString(round(100d * benchMap.getOrDefault("大", 0.0) / currentDelta)) + " % ",
+        g2.drawString("大: " + Long.toString(round(benchMap.getOrDefault("大", 0.0) / 1000d)) + " k   "
+                        + Double.toString(round(100d * benchMap.getOrDefault("大", 0.0) / currentDelta)) + " % ",
                 getWidth() / 7 * 5, getHeight() / 7 + 10);
-        g2.drawString("主板: " + Long.toString(round(benchMap.getOrDefault("主板", 0.0) / 1000d)) + " k    " + Double.toString(round(100d * benchMap.getOrDefault("主板", 0.0) / currentDelta)) + " % ",
+
+        g2.drawString("主板: " + Long.toString(round(benchMap.getOrDefault("主板", 0.0) / 1000d)) + " k    "
+                        + Double.toString(round(100d * benchMap.getOrDefault("主板", 0.0) / currentDelta)) + " % ",
                 getWidth() / 7 * 5, getHeight() / 7 + 30);
+
         g2.drawString("沪深: " + Long.toString(round(benchMap.getOrDefault("沪深", 0.0) / 1000d)) + " k     " + Double.toString(round(100d * benchMap.getOrDefault("沪深", 0.0) / currentDelta)) + " % ",
                 getWidth() / 7 * 5, getHeight() / 7 + 50);
         g2.drawString("创: " + Long.toString(round(benchMap.getOrDefault("创", 0.0) / 1000d)) + " k     " + Double.toString(round(100d * benchMap.getOrDefault("创", 0.0) / currentDelta)) + " % ",

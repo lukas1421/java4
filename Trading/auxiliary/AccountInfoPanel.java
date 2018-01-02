@@ -1,26 +1,5 @@
 package auxiliary;
 
-import static controller.Formats.fmt0;
-
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-
-import javax.swing.DefaultListModel;
-import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.border.TitledBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellRenderer;
-
 import apidemo.ChinaMain;
 import client.Types.SecType;
 import controller.ApiController.IAccountHandler;
@@ -28,6 +7,18 @@ import controller.MarketValueTag;
 import controller.Position;
 import util.NewTabbedPanel;
 import util.NewTabbedPanel.INewTab;
+
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+
+import static controller.Formats.fmt0;
 
 public class AccountInfoPanel extends JPanel implements INewTab, IAccountHandler {
 
@@ -75,9 +66,7 @@ public class AccountInfoPanel extends JPanel implements INewTab, IAccountHandler
      * Called when the tab is first visited.
      */
     public void activated() {
-        ChinaMain.INSTANCE.accountList().forEach((account) -> {
-            m_acctList.addElement(account);
-        });
+        ChinaMain.INSTANCE.accountList().forEach(m_acctList::addElement);
 
         if (ChinaMain.INSTANCE.accountList().size() == 1) {
             m_accounts.setSelectedIndex(0);

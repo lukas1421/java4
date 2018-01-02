@@ -53,7 +53,7 @@ public final class XU extends JPanel {
 
     //   static NavigableMap<LocalTime, Double> bidPrice = new ConcurrentSkipListMap<>();
 //   static NavigableMap<LocalTime, Double> askPrice = new ConcurrentSkipListMap<>();
-//   static NavigableMap<LocalTime, Integer> bidVol = new ConcurrentSkipListMap<>();
+//   static NavigableMap<LocalTime, Integer> bidVol = new ConcurrentSkipLchinistMap<>();
 //   static NavigableMap<LocalTime, Integer> askVol = new ConcurrentSkipListMap<>();
     private static ArrayList<LocalTime> tradeTimeXU = new ArrayList<>();
     static BarModel m_model;

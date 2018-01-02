@@ -958,7 +958,7 @@ public class HistChinaStocks extends JPanel {
                         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxDayPath + tickerFull)))) {
                             while ((line = reader1.readLine()) != null) {
                                 List<String> al1 = Arrays.asList(line.split("\t"));
-                                if (al1.get(0).startsWith("2017") || al1.get(0).startsWith("2016/1")) {
+                                if (al1.get(0).startsWith("2018") || al1.get(0).startsWith("2017") || al1.get(0).startsWith("2016/1")) {
                                     LocalDate d = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
                                     if (chinaYtd.containsKey(s)) {
                                         chinaYtd.get(s).put(d, new SimpleBar(Double.parseDouble(al1.get(1)), Double.parseDouble(al1.get(2))
