@@ -698,8 +698,7 @@ public final class ChinaData extends JPanel {
 //        long daysToSubtract1 = (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) ? 4L : 2L;
 //        LocalDate ytd = currDate.minusDays(daysToSubtract);
 //        LocalDate y2 = currDate.minusDays(daysToSubtract1);
-
-        System.out.println(" handle sgx 50 hist data ticker is " + ticker);
+        //System.out.println(" handle sgx 50 hist data ticker is " + ticker);
 
         LocalDate currDate = ChinaData.dateMap.get(2);
         LocalDate ytd = ChinaData.dateMap.get(1);

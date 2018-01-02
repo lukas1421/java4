@@ -229,18 +229,34 @@ public class HistChinaStocks extends JPanel {
                             SwingUtilities.invokeLater(() -> {
                                 graphYtd.fillInGraphChinaGen(selectedStock, chinaYtd);
                                 graphYtd.setTradesMap(netSharesTradedByDay.get(selectedStock));
-                                graphYtd.setTradePnl(computeCurrentTradePnl(selectedStock, LAST_YEAR_END));
-                                graphYtd.setWtdVolTraded(computeWtdVolTraded(selectedStock));
-                                graphYtd.setWtdVolPerc(computeWVolPerc(selectedStock));
+//                                graphYtd.setTradePnl(computeCurrentTradePnl(selectedStock, LAST_YEAR_END));
+//                                graphYtd.setWtdVolTraded(computeWtdVolTraded(selectedStock));
+//                                graphYtd.setWtdVolPerc(computeWVolPerc(selectedStock));
                             });
+
+                            CompletableFuture.supplyAsync(()->computeCurrentTradePnl(selectedStock, LAST_YEAR_END))
+                                    .thenAcceptAsync(a->SwingUtilities.invokeLater(()->graphYtd.setTradePnl(a)));
+
+                            CompletableFuture.supplyAsync(()->computeWtdVolTraded(selectedStock))
+                                    .thenAcceptAsync(a->SwingUtilities.invokeLater(()->graphYtd.setWtdVolTraded(a)));
+
+                            CompletableFuture.supplyAsync(()->computeWVolPerc(selectedStock))
+                                    .thenAcceptAsync(a->SwingUtilities.invokeLater(()->graphYtd.setWtdVolPerc(a)));
 
                             //CompletableFuture.runAsync(() -> {
                             SwingUtilities.invokeLater(() -> {
                                 graphWtd.fillInGraphChinaGen(selectedStock, chinaWtd);
                                 graphWtd.setTradesMap(netSharesTradedWtd.get(selectedStock));
-                                graphWtd.setTradePnl(computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)));
-                                graphWtd.setWtdMtmPnl(wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
+                                //graphWtd.setTradePnl(computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)));
+                                //graphWtd.setWtdMtmPnl(wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
                             });
+
+                            CompletableFuture.supplyAsync(()->computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)))
+                                    .thenAcceptAsync(a->SwingUtilities.invokeLater(()->graphWtd.setTradePnl(a)));
+
+                            CompletableFuture.supplyAsync(()->wtdMtmPnlMap.getOrDefault(selectedStock, 0.0))
+                                    .thenAcceptAsync(a->SwingUtilities.invokeLater(()->graphWtd.setWtdMtmPnl(a)));
+
 
                             CompletableFuture.runAsync(() -> {
                                 //if (chinaTradeMap.containsKey(selectedStock) && chinaTradeMap.get(selectedStock).size() > 0) {
@@ -258,12 +274,10 @@ public class HistChinaStocks extends JPanel {
                                 CompletableFuture.supplyAsync(() -> weekMtmMap = computeWtdMtmPnl(e -> e.getKey().equals(selectedStock)))
                                         .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphWtdPnl.setMtm(a)))
                                         .thenRunAsync(graphWtdPnl::repaint);
-                                ;
 
                                 CompletableFuture.supplyAsync(() -> weekTradePnlMap = computeWtdTradePnl(e -> e.getKey().equals(selectedStock)))
                                         .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphWtdPnl.setTrade(a)))
                                         .thenRunAsync(graphWtdPnl::repaint);
-                                ;
 
                                 CompletableFuture.supplyAsync(() -> weekNetMap = computeNet(e -> e.getKey().equals(selectedStock)))
                                         .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphWtdPnl.setNet(a)))
@@ -773,12 +787,9 @@ public class HistChinaStocks extends JPanel {
     private static void refreshAll() {
         //System.out.println(" mtm_ pred " + MTM_PRED);
 
-
         CompletableFuture.runAsync(() -> graphWtdPnl.fillInGraph(""));
 
-
         CompletableFuture.supplyAsync(() -> computeAvgPercentile(MTM_PRED)).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphWtdPnl.setAvgPerc(a)));
-
 
         CompletableFuture.supplyAsync(() -> computeDeltaWeightedPercentile(MTM_PRED)).thenAcceptAsync(a ->
                 SwingUtilities.invokeLater(() -> graphWtdPnl.setDeltaWeightedAveragePerc(a)));
