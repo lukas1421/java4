@@ -27,6 +27,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import static apidemo.ChinaStock.*;
+import static apidemo.TradingConstants.ftseIndex;
 import static java.lang.Double.min;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
@@ -244,10 +245,9 @@ public final class ChinaDataYesterday extends JPanel {
                     priceMapCopy = (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>>) ChinaData.priceMapBar;
                     getOHLCFromDatabase();
                     //ChinaStockHelper.buildA50FromSS();
-                    ChinaStockHelper.buildGenForYtd("SGXA50", "FTSEA50");
+                    ChinaStockHelper.buildGenForYtd("SGXA50", ftseIndex);
 
                     symbolNamesFull.forEach(name -> {
-                        String t = name;
                         openMapY.put(name, ChinaStock.openMap.getOrDefault(name, 0.0));
                         closeMapY.put(name, ChinaStock.priceMap.getOrDefault(name, 0.0));
                         closeMapY2.put(name, ChinaStock.closeMap.getOrDefault(name, 0.0));
@@ -257,15 +257,11 @@ public final class ChinaDataYesterday extends JPanel {
                     });
                 }).thenRun(() -> {
                     ChinaMain.updateSystemNotif(Utility.getStr("Fetching done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
-                    SwingUtilities.invokeLater(() -> {
-                        this.repaint();
-                    });
+                    SwingUtilities.invokeLater(this::repaint);
                 }).thenRun(() -> {
                     compute();
                     ChinaMain.updateSystemNotif(Utility.getStr("Computing ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
-                    SwingUtilities.invokeLater(() -> {
-                        this.repaint();
-                    });
+                    SwingUtilities.invokeLater(this::repaint);
                 });
             }
             //ChinaMain.updateSystemNotif(ChinaStockHelper.getStr(" LOAD HIB T DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));

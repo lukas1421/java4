@@ -320,7 +320,7 @@ public final class MorningTask implements HistoricalHandler {
 
                 if (l.size() > 0) {
                     Utility.clearFile(bocOutput);
-                    Utility.simpleWriteToFile("BOCFX" + "\t" + Double.parseDouble(l.get(4)) / 100d + "\t" + l.get(5) + "\t" + l.get(6), true,bocOutput);
+                    Utility.simpleWriteToFile("BOCFX" + "\t" + Double.parseDouble(l.get(4)) / 100d + "\t" + l.get(5) + "\t" + l.get(6), true, bocOutput);
                     //simpleWrite("BOCFX" + "\t" + Double.parseDouble(l.get(4)) / 100d + "\t" + l.get(5) + "\t" + l.get(6), true);
                 }
 
@@ -338,7 +338,7 @@ public final class MorningTask implements HistoricalHandler {
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(bocOutput), "GBK"))) {
             while ((line = reader1.readLine()) != null) {
                 System.out.println(" outputting BOCFX " + line);
-                Utility.simpleWrite(line,true);
+                Utility.simpleWrite(line, true);
             }
         } catch (IOException io) {
             io.printStackTrace();
@@ -362,7 +362,7 @@ public final class MorningTask implements HistoricalHandler {
             System.out.println(" zone ids " + ZoneId.getAvailableZoneIds());
             ZoneId chinaZone = ZoneId.systemDefault();
             System.out.println(" china zone " + chinaZone);
-            LocalDateTime ldt = LocalDateTime.ofInstant(cal.toInstant(),chinaZone);
+            LocalDateTime ldt = LocalDateTime.ofInstant(cal.toInstant(), chinaZone);
             System.out.println(" ldt is " + ldt);
             System.out.println(" time in ny " + ldt.atZone(ZoneId.of("EST")));
             //ZonedDateTime zdt =
@@ -516,7 +516,7 @@ public final class MorningTask implements HistoricalHandler {
 
             ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
             ZoneId nyZone = ZoneId.of("America/New_York");
-            LocalDateTime ldt = LocalDateTime.ofInstant(dt.toInstant(),chinaZone);
+            LocalDateTime ldt = LocalDateTime.ofInstant(dt.toInstant(), chinaZone);
             ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
             //System.out.println(" zdt " + zdt);
 
@@ -528,7 +528,7 @@ public final class MorningTask implements HistoricalHandler {
                             + "\t" + zdt.getHour(), false);
                     break;
 
-                    // hk time 17:00 (16:59)
+                // hk time 17:00 (16:59)
                 case 16:
                     System.out.println(" Date " + ldt.toString() + " HK close " + close);
                     Utility.simpleWrite("HK CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
@@ -544,15 +544,16 @@ public final class MorningTask implements HistoricalHandler {
                             + "\t" + zdt.getHour(), true);
 
                     //for(FutType f :FutType.values()) {
-                        //Utility.simpleWriteToFile(f.getTicker() + "\t" + close, false, fxOutput);
-                        Utility.simpleWriteToFile("SGXA50PR" + "\t" + close, false, fxOutput);
-                        Utility.simpleWriteToFile("SGXA50" + "\t" + close, true, fxOutput);
-                        Utility.simpleWriteToFile("SGXA50BM" + "\t" + close, true, fxOutput);
+                    //Utility.simpleWriteToFile(f.getTicker() + "\t" + close, false, fxOutput);
+                    Utility.simpleWriteToFile("SGXA50PR" + "\t" + close, false, fxOutput);
+                    Utility.simpleWriteToFile("SGXA50" + "\t" + close, true, fxOutput);
+                    Utility.simpleWriteToFile("SGXA50BM" + "\t" + close, true, fxOutput);
                     //}
                     break;
             }
         }
     }
+
     @Override
     public void actionUponFinish(String name) {
         System.out.println(" data is finished ");

@@ -62,10 +62,7 @@ public class SharpeUtility {
         if (mp.size() > 0) {
             double last = mp.lastEntry().getValue().getClose();
             double max = Utility.reduceMapToDouble(mp, SimpleBar::getHigh, Math::max);
-            //mp.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().getAsDouble();
             double min = Utility.reduceMapToDouble(mp, SimpleBar::getLow, Math::min);
-            //mp.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().getAsDouble();
-            //System.out.println(" last max min " + last + " " + max + " " + min);
             return (int) Math.round(100d * (last - min) / (max - min));
         }
         return 0;
@@ -95,7 +92,7 @@ public class SharpeUtility {
      * @param getFirstReturn function to get the first return
      * @return the return map Map<String, Double>
      */
-    public static <T> NavigableMap<LocalTime, Double> genReturnMap(
+    private static <T> NavigableMap<LocalTime, Double> genReturnMap(
             NavigableMap<LocalTime, T> mp, DoubleBinaryOperator getDiff, ToDoubleFunction<T> getClose,
             ToDoubleFunction<T> getFirstReturn, LocalTime cutoff) {
 
@@ -114,21 +111,19 @@ public class SharpeUtility {
     }
 
     public static double computeMinuteSharpeFromMtmDeltaMp(NavigableMap<LocalTime, Double> mtmDeltaMp) {
-        //System.out.println(" computeYtd minute sharpe from mtm mp ");
-        NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
+        NavigableMap<LocalTime, Double> retMap;
         retMap = genReturnMap(mtmDeltaMp, (u, v) -> u / v - 1, d -> d, d -> 0.0, LocalTime.of(15, 1));
 
         double minuteMean = Utility.computeMean(retMap);
         double minuteSD = Utility.computeSD(retMap);
         if (minuteSD != 0.0) {
-            //System.out.println(" mean is " + (minuteMean * 240) + " minute sd " + (minuteSD * Math.sqrt(240)));
             return (minuteMean * 240) / (minuteSD * Math.sqrt(240));
         }
         return 0.0;
     }
 
     public static double computeMinuteNetPnlSharpe(NavigableMap<LocalTime, Double> netPnlMp) {
-        NavigableMap<LocalTime, Double> diffMap = new TreeMap<>();
+        NavigableMap<LocalTime, Double> diffMap;
         diffMap = genReturnMap(netPnlMp, (u, v) -> u - v, d -> d, d -> 0.0, LocalTime.of(15, 1));
         double minuteMean = Utility.computeMean(diffMap);
         double minuteSD = Utility.computeSD(diffMap);
@@ -139,8 +134,9 @@ public class SharpeUtility {
         return 0.0;
     }
 
+    @SuppressWarnings("Duplicates")
     public static double computeMinuteSharpe(NavigableMap<LocalTime, SimpleBar> mp) {
-        NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
+        NavigableMap<LocalTime, Double> retMap;
         if (mp.size() > 0) {
             retMap = genReturnMap(mp, (u, v) -> u / v - 1, SimpleBar::getClose, SimpleBar::getBarReturn,
                     LocalTime.of(16, 1));
@@ -154,8 +150,9 @@ public class SharpeUtility {
         return 0.0;
     }
 
+    @SuppressWarnings("Duplicates")
     public static double computeMinuteSharpeHK(NavigableMap<LocalTime, SimpleBar> mp, String name) {
-        NavigableMap<LocalTime, Double> retMap = new TreeMap<>();
+        NavigableMap<LocalTime, Double> retMap;
         if (mp.size() > 0) {
             retMap = genReturnMap(mp, (u, v) -> u / v - 1, SimpleBar::getClose, SimpleBar::getBarReturn,
                     LocalTime.of(16, 1));

@@ -34,11 +34,13 @@ import static apidemo.ChinaDataYesterday.*;
 import static apidemo.ChinaSizeRatio.computeSizeRatioLast;
 import static apidemo.ChinaStock.*;
 import static apidemo.SinaStock.weightMapA50;
+import static apidemo.TradingConstants.ftseIndex;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.lang.System.out;
 import static java.util.stream.Collectors.toCollection;
 import static utility.Utility.r;
+import static utility.Utility.reduceMapToDouble;
 
 public final class ChinaStockHelper {
 
@@ -538,7 +540,7 @@ public final class ChinaStockHelper {
 
     static void buildA50FromSS(double open) {
 
-        priceMapBar.get("FTSEA50").entrySet().removeIf(e -> e.getKey().isBefore(LocalTime.of(9, 29)));
+        priceMapBar.get(ftseIndex).entrySet().removeIf(e -> e.getKey().isBefore(LocalTime.of(9, 29)));
 
         buildA50Gen(open, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
 
@@ -549,44 +551,47 @@ public final class ChinaStockHelper {
                     / closeMap.getOrDefault(e.getKey(), priceMapBar.get(e.getKey()).firstEntry().getValue().getOpen()) - 1) * e.getValue() / 100).sum();
 
             if (t.isBefore(LocalTime.of(9, 30))) {
-                priceMapBar.get("FTSEA50").put(t, new SimpleBar(open));
+                priceMapBar.get(ftseIndex).put(t, new SimpleBar(open));
             } else if (t.equals(LocalTime.of(9, 30))) {
-                priceMapBar.get("FTSEA50").put(t, new SimpleBar(open));
-                priceMapBar.get("FTSEA50").get(t).updateClose(open * (1 + rtn));
-                openMap.put("FTSEA50", open);
-                closeMap.put("FTSEA50", open);
+                priceMapBar.get(ftseIndex).put(t, new SimpleBar(open));
+                priceMapBar.get(ftseIndex).get(t).updateClose(open * (1 + rtn));
+                openMap.put(ftseIndex, open);
+                closeMap.put(ftseIndex, open);
             } else {
-                priceMapBar.get("FTSEA50").put(t, new SimpleBar(open * (1 + rtn)));
+                priceMapBar.get(ftseIndex).put(t, new SimpleBar(open * (1 + rtn)));
             }
 
-            System.out.println(" value " + priceMapBar.get("FTSEA50").get(t).toString());
+            System.out.println(" value " + priceMapBar.get(ftseIndex).get(t).toString());
 
             double vol = weightMapA50.entrySet().stream().mapToDouble(a -> (ChinaData.sizeTotalMap
                     .containsKey(a.getKey()) && ChinaData.sizeTotalMap.get(a.getKey()).size() > 0)
                     ? ChinaData.sizeTotalMap.get(a.getKey()).ceilingEntry(t).getValue() * a.getValue() / 100d : 0.0).sum();
-            ChinaData.sizeTotalMap.get("FTSEA50").put(t, vol);
+            ChinaData.sizeTotalMap.get(ftseIndex).put(t, vol);
         });
 
-        closeMap.put("FTSEA50", open);
-        openMap.put("FTSEA50", open);
+        closeMap.put(ftseIndex, open);
+        openMap.put(ftseIndex, open);
 
-        //System.out.println( "last key a50" +priceMapBar.get("FTSEA50").lastKey());
-        //System.out.println( " last entry a50 "+priceMapBar.get("FTSEA50").lastEntry().getValue());
+        //System.out.println( "last key a50" +priceMapBar.get(ftseIndex).lastKey());
+        //System.out.println( " last entry a50 "+priceMapBar.get(ftseIndex).lastEntry().getValue());
 
-        priceMap.put("FTSEA50", priceMapBar.get("FTSEA50").lastEntry().getValue().getClose());
-        double max = priceMapBar.get("FTSEA50").entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
-        double min = priceMapBar.get("FTSEA50").entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
-//        LocalTime maxT = priceMapBar.get("FTSEA50").entrySet().stream().max(Utility.BAR_HIGH)
+        priceMap.put(ftseIndex, priceMapBar.get(ftseIndex).lastEntry().getValue().getClose());
+        double max = reduceMapToDouble(priceMapBar.get(ftseIndex), SimpleBar::getHigh, Math::max);
+                //.entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
+        double min = reduceMapToDouble(priceMapBar.get(ftseIndex),SimpleBar::getLow,Math::min);
+                //.entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
+
+
+        //        LocalTime maxT = priceMapBar.get(ftseIndex).entrySet().stream().max(Utility.BAR_HIGH)
 //                .map(Entry::getKey).orElse(LocalTime.MAX);
-//        LocalTime minT = priceMapBar.get("FTSEA50").entrySet().stream().min(Utility.BAR_LOW)
+//        LocalTime minT = priceMapBar.get(ftseIndex).entrySet().stream().min(Utility.BAR_LOW)
 //                .map(Entry::getKey).orElse(LocalTime.MAX);
-
         //System.out.println("a50 max" + max + " " + maxT);
         //System.out.println("a50 min" + min + " " + minT);
 
-        maxMap.put("FTSEA50", max);
-        minMap.put("FTSEA50", min);
-        sizeMap.put("FTSEA50", Math.round(ChinaData.sizeTotalMap.get("FTSEA50").lastEntry().getValue()));
+        maxMap.put(ftseIndex, max);
+        minMap.put(ftseIndex, min);
+        sizeMap.put(ftseIndex, Math.round(ChinaData.sizeTotalMap.get(ftseIndex).lastEntry().getValue()));
     }
 
     @SuppressWarnings("unused")
@@ -600,8 +605,8 @@ public final class ChinaStockHelper {
     static void buildA50Gen(double open, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp,
                             Map<String, ? extends NavigableMap<LocalTime, Double>> volmp) {
 
-        if (mp.containsKey("FTSEA50")) {
-            mp.get("FTSEA50").entrySet().removeIf(e -> e.getKey().isBefore(LocalTime.of(9, 30)));
+        if (mp.containsKey(ftseIndex)) {
+            mp.get(ftseIndex).entrySet().removeIf(e -> e.getKey().isBefore(LocalTime.of(9, 30)));
         }
 
         ChinaData.tradeTimePure.forEach(t -> {
@@ -620,17 +625,17 @@ public final class ChinaStockHelper {
 
             //System.out.println(" RETURN " + t.toString() + " " + rtn);
             if (t.isBefore(LocalTime.of(9, 30))) {
-                mp.get("FTSEA50").put(t, new SimpleBar(open));
+                mp.get(ftseIndex).put(t, new SimpleBar(open));
             } else if (t.equals(LocalTime.of(9, 30))) {
-                mp.get("FTSEA50").put(t, new SimpleBar(open));
-                mp.get("FTSEA50").get(t).updateClose(open * (1 + rtn));
-                //openMap.put("FTSEA50", open);
-                //closeMap.put("FTSEA50",open);
+                mp.get(ftseIndex).put(t, new SimpleBar(open));
+                mp.get(ftseIndex).get(t).updateClose(open * (1 + rtn));
+                //openMap.put(ftseIndex, open);
+                //closeMap.put(ftseIndex,open);
             } else {
-                mp.get("FTSEA50").put(t, new SimpleBar(open * (1 + rtn)));
+                mp.get(ftseIndex).put(t, new SimpleBar(open * (1 + rtn)));
             }
 
-            //System.out.println( "FTSE A50 value " + t.toString() + " " + mp.get("FTSEA50").get(t).toString());
+            //System.out.println( "FTSE A50 value " + t.toString() + " " + mp.get(ftseIndex).get(t).toString());
             //if(volmp.containsKey(a.getKey()) && volmp.get(a.getKey()).size()>0)
             double vol = weightMapA50.entrySet().stream().mapToDouble(a -> {
                 if (volmp.containsKey(a.getKey()) && volmp.get(a.getKey()).size() > 0 && volmp.get(a.getKey()).lastKey().isAfter(t.minusMinutes(1L))) {
@@ -643,7 +648,7 @@ public final class ChinaStockHelper {
                 }
             }).sum();
 
-            volmp.get("FTSEA50").put(t, vol);
+            volmp.get(ftseIndex).put(t, vol);
         });
     }
 

@@ -412,7 +412,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     static synchronized void mtmPnlCompute(Predicate<? super Map.Entry<String, ?>> p, String nam) {
-        System.out.println(" COMPUTE *************************************************** ");
+        //System.out.println(" COMPUTE *************************************************** ");
         gpnl.setName(nam);
         gpnl.setChineseName(nameMap.get(nam));
 
@@ -463,12 +463,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
 
             CompletableFuture.supplyAsync(() ->
-                    mtmDeltaMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p).map(Entry::getKey).collect(Collectors.toSet()).stream().
-                            distinct().map(e -> getDelta(e, 0)).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>()))
-                    .thenAcceptAsync(a -> {
-                        CompletableFuture.supplyAsync(() -> mtmDeltaSharpe = SharpeUtility.computeMinuteSharpeFromMtmDeltaMp(a))
-                                .thenAcceptAsync(b -> SwingUtilities.invokeLater(() -> gpnl.setMtmDeltaSharpe(b)));
-                    });
+                    mtmDeltaMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p).map(Entry::getKey).collect(Collectors.toSet())
+                            .stream().distinct().map(e -> getDelta(e, 0)).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>()))
+                    .thenAcceptAsync(a -> CompletableFuture.supplyAsync(
+                            () -> mtmDeltaSharpe = SharpeUtility.computeMinuteSharpeFromMtmDeltaMp(a))
+                            .thenAcceptAsync(b -> SwingUtilities.invokeLater(() -> gpnl.setMtmDeltaSharpe(b))));
 
 
             CompletableFuture.allOf(
@@ -504,10 +503,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             tradePNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
                                     .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> true))
                                     .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())))
-                    .thenRunAsync(() -> {
-                        todayNetPnl = Optional.ofNullable(tradePNLMap.lastEntry()).map(Entry::getValue).orElse(0.0) + netYtdPnl
-                                + Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0);
-                    }).thenRunAsync(() ->
+                    .thenRunAsync(() -> todayNetPnl = Optional.ofNullable(tradePNLMap.lastEntry()).map(Entry::getValue).orElse(0.0) + netYtdPnl
+                            + Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0)).thenRunAsync(() ->
                     CompletableFuture.supplyAsync(() ->
                             Utility.mapCombinerGen(Double::sum, mtmPNLMap, tradePNLMap))
                             .thenAcceptAsync(a -> {
@@ -1123,7 +1120,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     private static double getPnLChange5m(String name) {
         double fx = fxMap.getOrDefault(name, 1.0);
         if (ChinaStock.NORMAL_STOCK.test(name)) {
-            LocalTime lastKey = ChinaData.priceMapBar.get(name).lastKey().isAfter(LocalTime.of(15, 0)) ? LocalTime.of(15, 0) : ChinaData.priceMapBar.get(name).lastKey();
+            LocalTime lastKey = ChinaData.priceMapBar.get(name).lastKey().isAfter(LocalTime.of(15, 0))
+                    ? LocalTime.of(15, 0) : ChinaData.priceMapBar.get(name).lastKey();
             double p = ChinaData.priceMapBar.get(name).lastEntry().getValue().getClose();
             double previousP = ChinaData.priceMapBar.get(name).ceilingEntry(lastKey.minusMinutes(5)).getValue().getClose();
             int openPos = openPositionMap.getOrDefault(name, 0);
@@ -1211,10 +1209,12 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         double minT = 0.0;
         if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
             curr = priceMapBar.get(name).lastEntry().getValue().getClose();
-            maxT = priceMapBar.get(name).entrySet().stream().max(BAR_HIGH).map(Entry::getValue)
-                    .map(SimpleBar::getHigh).orElse(0.0);
-            minT = priceMapBar.get(name).entrySet().stream().min(BAR_LOW).map(Entry::getValue)
-                    .map(SimpleBar::getHigh).orElse(0.0);
+//            maxT = priceMapBar.get(name).entrySet().stream().max(BAR_HIGH).map(Entry::getValue)
+//                    .map(SimpleBar::getHigh).orElse(0.0);
+            maxT = reduceMapToDouble(priceMapBar.get(name),SimpleBar::getHigh, Math::max);
+//            minT = priceMapBar.get(name).entrySet().stream().min(BAR_LOW).map(Entry::getValue)
+//                    .map(SimpleBar::getHigh).orElse(0.0);
+            minT= reduceMapToDouble(priceMapBar.get(name), SimpleBar::getLow,Math::min);
         }
 
         double max = Math.max(maxT, wtdMaxMap.getOrDefault(name, 0.0));
