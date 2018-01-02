@@ -423,56 +423,68 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         CompletableFuture.runAsync(() -> {
 
-            CompletableFuture.runAsync(() -> {
+            CompletableFuture.supplyAsync(() ->
                 boughtDelta = tradesMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
                         * priceMap.getOrDefault(e.getKey(), 0.0)
                         * e.getValue().values().stream().filter(e1 -> e1.getSizeAll() > 0)
-                        .mapToInt(TradeBlock::getSizeAll).sum()).sum();
-            }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setBoughtDelta(boughtDelta)));
+                        .mapToInt(TradeBlock::getSizeAll).sum()).sum()
+            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setBoughtDelta(a)));
 
-            CompletableFuture.runAsync(() -> {
+            CompletableFuture.supplyAsync(() ->
                 soldDelta = tradesMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
                         * priceMap.getOrDefault(e.getKey(), 0.0)
                         * e.getValue().values().stream().filter(e1 -> e1.getSizeAll() < 0)
-                        .mapToInt(TradeBlock::getSizeAll).sum()).sum();
-            }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setSoldDelta(soldDelta)));
+                        .mapToInt(TradeBlock::getSizeAll).sum()).sum())
+                    .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setSoldDelta(a)));
+
+            //CompletableFuture.
 
 
 //            System.out.println(getStr("name  bot sold delta ",nam, boughtDelta, soldDelta));
-            CompletableFuture.runAsync(() -> {
+            CompletableFuture.supplyAsync(() ->
                 openDelta = openPositionMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
-                        * e.getValue() * openMap.getOrDefault(e.getKey(), 0.0)).sum();
-            }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setOpenDelta(openDelta)));
+                        * e.getValue() * openMap.getOrDefault(e.getKey(), 0.0)).sum()
+            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setOpenDelta(a)));
 
-            CompletableFuture.runAsync(() -> {
-                netDelta = openPositionMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
-                        * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum()
-                        + tradesMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
-                        * priceMap.getOrDefault(e.getKey(), 0.0)
-                        * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum();
-            }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setCurrentDelta(netDelta)));
+            CompletableFuture.supplyAsync(() ->
+                    netDelta = openPositionMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
+                            * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum()
+                            + tradesMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
+                            * priceMap.getOrDefault(e.getKey(), 0.0)
+                            * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum()
+            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setCurrentDelta(a)));
 //            System.out.println(getStr("name  open net delta ",nam, openDelta, netDelta));
 
 
-            CompletableFuture.runAsync(() -> {
-                netDeltaMap = Stream.of(openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p)
-                                .map(Entry::getKey).collect(Collectors.toSet()),
-                        tradesMap.entrySet().stream().filter(e -> e.getValue().size() > 0).filter(p)
-                                .map(Entry::getKey).collect(Collectors.toSet()))
-                        .flatMap(Collection::stream).distinct().map(e -> getDelta(e, 1))
-                        .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
-            }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setNetDeltaMap(netDeltaMap)));
+            CompletableFuture.supplyAsync(() ->
+                    netDeltaMap = Stream.of(openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p)
+                                    .map(Entry::getKey).collect(Collectors.toSet()),
+                            tradesMap.entrySet().stream().filter(e -> e.getValue().size() > 0).filter(p)
+                                    .map(Entry::getKey).collect(Collectors.toSet()))
+                            .flatMap(Collection::stream).distinct().map(e -> getDelta(e, 1))
+                            .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())
+            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setNetDeltaMap(a)));
 
 //            System.out.println(getStr("name  net delta map  ",nam, netDeltaMap));
 //                    .collect(Collectors.collectingAndThen(toList(),
 //                            l -> l.stream().flatMap(e1 -> e1.entrySet().stream()).collect(Collectors.groupingBy(Entry::getKey,
 //                                    ConcurrentSkipListMap::new, Collectors.summingDouble(Entry::getValue)))));
 
-            CompletableFuture.runAsync(() -> {
-                mtmDeltaMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p).map(Entry::getKey).collect(Collectors.toSet()).stream().
-                        distinct().map(e -> getDelta(e, 0)).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
+            CompletableFuture.supplyAsync(() ->
+                    mtmDeltaMap= openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p).map(Entry::getKey).collect(Collectors.toSet()).stream().
+                            distinct().map(e -> getDelta(e, 0)).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>()))
+                    .thenAcceptAsync(a -> {
+                        CompletableFuture.supplyAsync(() -> mtmDeltaSharpe = SharpeUtility.computeMinuteSharpeFromMtmDeltaMp(a))
+                                .thenAcceptAsync(b -> SwingUtilities.invokeLater(() -> gpnl.setMtmDeltaSharpe(b)));
+                    });
 
-            });
+
+//            CompletableFuture.supplyAsync(() ->
+//                openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p).map(Entry::getKey).collect(Collectors.toSet()).stream().
+//                        distinct().map(e -> getDelta(e, 0)).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>()))
+//                    .thenAccept(a->mtmDeltaMap=a);
+
+
 //            System.out.println(getStr("name  mtm map  ",nam, mtmDeltaMap));
 //                    .collect(Collectors.collectingAndThen(toList(),
 //                    l -> l.stream().flatMap(e1 -> e1.entrySet().stream()).collect(Collectors.groupingBy(Entry::getKey,
@@ -481,98 +493,78 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //            System.out.println(getStr("name  mtm pnl map  ",nam, mtmPNLMap));
             //if (tradesMapFront.entrySet().stream().filter(p).mapToInt(e -> e.getValue().size()).sum() > 0) {
 
-            CompletableFuture.runAsync(() -> {
-                CompletableFuture.runAsync(() -> {
-                    boughtPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
-                            .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 > 0))
-                            .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
-                }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setBuyPnl(Optional.ofNullable(boughtPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0))));
+            CompletableFuture.allOf(
+                    CompletableFuture.runAsync(() -> {
+                        boughtPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
+                                .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 > 0))
+                                .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
+                    }).thenRunAsync(() -> SwingUtilities.invokeLater(() -> gpnl.setBuyPnl(Optional.ofNullable(boughtPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0)))),
 
-//            System.out.println(getStr(" nam bot pnl map  ", nam, boughtPNLMap));
-                CompletableFuture.runAsync(() -> {
-                    soldPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
-                            .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 < 0))
-                            .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
-                }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setSellPnl(Optional.ofNullable(soldPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0))));
-            }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setBuySellPnlMap(boughtPNLMap, soldPNLMap)));
-
-
-            CompletableFuture.runAsync(() -> {
-
-                CompletableFuture.runAsync(() -> {
-                    netYtdPnl = openPositionMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
-                            * e.getValue() * (closeMap.getOrDefault(e.getKey(), 0.0) - costMap.getOrDefault(e.getKey(), 0.0))).sum();
-                }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setNetPnlYtd(netYtdPnl)));
-
-                CompletableFuture.runAsync(() -> {
-                    mtmPNLMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() > 0).filter(p)
-                            .map(e -> getMtmPNL(ChinaData.priceMapBar.get(e.getKey()), closeMap.getOrDefault(e.getKey(), 0.0), e.getValue(),
-                                    fxMap.getOrDefault(e.getKey(), 1.0))).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
-                    System.out.println(" mtm pnl map COMPUTE " + mtmPNLMap.lastEntry());
-
-                }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setMtmPnl(Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0))));
+                    CompletableFuture.runAsync(() -> {
+                        soldPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
+                                .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 < 0))
+                                .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
+                    }).thenRunAsync(() -> SwingUtilities.invokeLater(() -> gpnl.setSellPnl(Optional.ofNullable(soldPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0))))
+            ).thenRunAsync(() -> SwingUtilities.invokeLater(() -> gpnl.setBuySellPnlMap(boughtPNLMap, soldPNLMap)));
 
 
-//            System.out.println(getStr(" nam sold pnl map  ",nam,  soldPNLMap));
-                CompletableFuture.runAsync(() -> {
-                    tradePNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
-                            .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> true))
-                            .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
+            CompletableFuture.allOf(
+                    CompletableFuture.runAsync(() -> {
+                        netYtdPnl = openPositionMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
+                                * e.getValue() * (closeMap.getOrDefault(e.getKey(), 0.0) - costMap.getOrDefault(e.getKey(), 0.0))).sum();
+                    }).thenRunAsync(() -> SwingUtilities.invokeLater(() -> gpnl.setNetPnlYtd(netYtdPnl))),
 
-                    System.out.println(" trade pnl map COMPUTE SIZE " + tradePNLMap.size());
+                    CompletableFuture.runAsync(() -> {
+                        mtmPNLMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() > 0).filter(p)
+                                .map(e -> getMtmPNL(ChinaData.priceMapBar.get(e.getKey()), closeMap.getOrDefault(e.getKey(), 0.0), e.getValue(),
+                                        fxMap.getOrDefault(e.getKey(), 1.0))).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
 
-                });
-//            System.out.println(getStr(" nam trade pnl map ", nam, tradePNLMap));
-            }).thenRun(() -> {
+                    }).thenRunAsync(() -> SwingUtilities.invokeLater(() -> gpnl.setMtmPnl(Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0)))),
+
+                    CompletableFuture.runAsync(() -> {
+                        tradePNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
+                                .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> true))
+                                .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>());
+                    })).thenRunAsync(() -> {
+
+                //System.out.println(getStr(" mtm pnl result ", mtmPNLMap.lastEntry()));
                 todayNetPnl = Optional.ofNullable(tradePNLMap.lastEntry()).map(Entry::getValue).orElse(0.0) + netYtdPnl
                         + Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0);
-                //System.out.println(getStr(" today net pnl ", nam, todayNetPnl));
-            }).thenRunAsync(() -> {
-                netPNLMap = Utility.mapCombinerGen(Double::sum, mtmPNLMap, tradePNLMap);
-//
-//                System.out.println(" net pnl map " + netPNLMap.size());
-//                System.out.println(" mtm pnl map length " + mtmPNLMap.size());
-//                System.out.println(" trade pnl map length " + tradePNLMap.size());
-//
-//                System.out.println(getStr(" mtm pnl ", mtmPNLMap.lastEntry()));
-//                //System.out.println(getStr(" trade pnl  ", tradePNLMap.lastEntry()));
-//                System.out.println(getStr(" net pnl  ", netPNLMap.lastEntry()));
-            });
-                    //.thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setNavigableMap(mtmPNLMap, tradePNLMap, netPNLMap)));
+
+            }).thenRunAsync(() -> CompletableFuture.supplyAsync(() ->
+                    Utility.mapCombinerGen(Double::sum, mtmPNLMap, tradePNLMap))
+                    .thenAcceptAsync(a -> {
+                        SwingUtilities.invokeLater(() -> gpnl.setNavigableMap(mtmPNLMap, tradePNLMap, a));
+                        CompletableFuture.runAsync(() -> minuteNetPnlSharpe = SharpeUtility.computeMinuteNetPnlSharpe(a))
+                                .thenRunAsync(() -> SwingUtilities.invokeLater(() -> gpnl.setMinuteNetPnlSharpe(minuteNetPnlSharpe)));
+                    }));
 
 
             //System.out.println(getStr(" net pnl map ", nam, netPNLMap));
-            CompletableFuture.runAsync(() -> {
-                mtmDeltaSharpe = SharpeUtility.computeMinuteSharpeFromMtmDeltaMp(mtmDeltaMap);
-            }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setMtmDeltaSharpe(mtmDeltaSharpe)));
 
-            CompletableFuture.runAsync(() -> {
-                minuteNetPnlSharpe = SharpeUtility.computeMinuteNetPnlSharpe(netPNLMap);
-            }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setMinuteNetPnlSharpe(minuteNetPnlSharpe)));
 
-            //System.out.println(getStr(" mtm delta sharp // minute net pnl sharpe ", mtmDeltaSharpe, minuteNetPnlSharpe));
+            //CompletableFuture.completedFuture()
 
-            CompletableFuture.runAsync(() -> {
-                benchExposureMap = ChinaStock.benchSimpleMap.entrySet().stream().filter(e -> !e.getKey().equals("sh204001")).filter(p)
-                        .collect(Collectors.groupingBy(s -> ChinaStock.benchSimpleMap.get(s.getKey()), ConcurrentSkipListMap::new,
-                                Collectors.summingDouble(s -> fxMap.getOrDefault(s.getKey(), 1.0)
-                                        * getNetPosition(s.getKey()) * priceMap.getOrDefault(s.getKey(), 0.0))));
-            }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setBenchMap(benchExposureMap)));
+            CompletableFuture.supplyAsync(() ->
+                    ChinaStock.benchSimpleMap.entrySet().stream().filter(e -> !e.getKey().equals("sh204001")).filter(p)
+                            .collect(Collectors.groupingBy(s -> ChinaStock.benchSimpleMap.getOrDefault(s.getKey(), ""), ConcurrentSkipListMap::new,
+                                    Collectors.summingDouble(s -> fxMap.getOrDefault(s.getKey(), 1.0)
+                                            * getNetPosition(s.getKey()) * priceMap.getOrDefault(s.getKey(), 0.0)))))
+                    .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setBenchMap(a)));
 
             //System.out.println(getStr(" bench exposure map ",nam,  benchExposureMap));
-            CompletableFuture.runAsync(() -> {
-                pureMtmMap = ChinaPosition.openPositionMap.entrySet().stream().filter(p).filter(e -> e.getValue() > 0)
-                        .collect(Collectors.groupingBy(e -> ChinaStock.benchSimpleMap.getOrDefault(e.getKey(), ""), HashMap::new,
-                                Collectors.summingDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
-                                        * (ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0) -
-                                        ChinaStock.closeMap.getOrDefault(e.getKey(), 0.0)) * (e.getValue()))));
-            }).thenRun(() -> SwingUtilities.invokeLater(() -> gpnl.setMtmBenchMap(pureMtmMap)));
-            //System.out.println(getStr(" pure mtm map  ", nam, pureMtmMap));
+            CompletableFuture.supplyAsync(() ->
+                    ChinaPosition.openPositionMap.entrySet().stream().filter(p).filter(e -> e.getValue() > 0)
+                            .collect(Collectors.groupingBy(e -> ChinaStock.benchSimpleMap.getOrDefault(e.getKey(), ""), HashMap::new,
+                                    Collectors.summingDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
+                                            * (ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0) -
+                                            ChinaStock.closeMap.getOrDefault(e.getKey(), 0.0)) * (e.getValue()))))
+            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setMtmBenchMap(a)));
 
         }).thenRun(() -> SwingUtilities.invokeLater(() -> {
-            netPNLMap = Utility.mapCombinerGen(Double::sum, mtmPNLMap, tradePNLMap);
-            gpnl.setNavigableMap(mtmPNLMap, tradePNLMap, netPNLMap);
-
+            gpnl.repaint();
+            //netPNLMap = Utility.mapCombinerGen(Double::sum, mtmPNLMap, tradePNLMap);
+            //gpnl.setNavigableMap(mtmPNLMap, tradePNLMap, netPNLMap);
             //gpnl.setNetDeltaMap(netDeltaMap);
             //gpnl.setBuySellPnlMap(boughtPNLMap, soldPNLMap);
             //gpnl.setMtmPnl(Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0));
@@ -589,13 +581,13 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             //gpnl.setNavigableMap(mtmPNLMap, tradePNLMap, netPNLMap);
             //gpnl.setMinuteNetPnlSharpe(minuteNetPnlSharpe);
             //gpnl.setMtmDeltaSharpe(mtmDeltaSharpe);
-        })).thenRun(gpnl::repaint);
+        }));
 
         //System.out.println(" kiyodo after " + topKiyodo);
         CompletableFuture.runAsync(() -> gpnl.setBigKiyodoMap(topPnlKiyodoList()))
-                .thenRun(() -> SwingUtilities.invokeLater(gpnl::repaint));
+                .thenRunAsync(() -> SwingUtilities.invokeLater(gpnl::repaint));
 
-        CompletableFuture.runAsync(() -> gpnl.setPnl1mChgMap(getPnl5mChg())).thenRun(() -> SwingUtilities.invokeLater(gpnl::repaint));
+        CompletableFuture.runAsync(() -> gpnl.setPnl1mChgMap(getPnl5mChg())).thenRunAsync(() -> SwingUtilities.invokeLater(gpnl::repaint));
 
     }
 
