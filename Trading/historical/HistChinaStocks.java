@@ -753,18 +753,40 @@ public class HistChinaStocks extends JPanel {
 
     private static void refreshAll() {
         //System.out.println(" mtm_ pred " + MTM_PRED);
-        CompletableFuture.runAsync(() -> {
-            graphWtdPnl.fillInGraph("");
-            graphWtdPnl.setTrade(computeWtdTradePnl(MTM_PRED));
-            graphWtdPnl.setNet(computeNet(MTM_PRED));
-            graphWtdPnl.setAvgPerc(computeAvgPercentile(MTM_PRED));
-            graphWtdPnl.setDeltaWeightedAveragePerc(computeDeltaWeightedPercentile(MTM_PRED));
-        }).thenRun(() -> SwingUtilities.invokeLater(() -> {
-            graphWtdPnl.setMtm(computeWtdMtmPnl(MTM_PRED));
-            graphWtdPnl.setWeekdayMtm(netPnlByWeekday, netPnlByWeekdayAM, netPnlByWeekdayPM);
-            model.fireTableDataChanged();
-            graphWtdPnl.repaint();
-        }));
+
+
+        CompletableFuture.runAsync(() -> graphWtdPnl.fillInGraph(""));
+
+        CompletableFuture.supplyAsync(() -> computeWtdTradePnl(MTM_PRED)).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphWtdPnl.setTrade(a)))
+                .thenRunAsync(()->SwingUtilities.invokeLater(graphWtdPnl::repaint));;
+
+        CompletableFuture.supplyAsync(() -> computeNet(MTM_PRED)).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphWtdPnl.setNet(a)))
+                .thenRunAsync(()->SwingUtilities.invokeLater(()->graphWtdPnl.setWeekdayMtm(netPnlByWeekday, netPnlByWeekdayAM, netPnlByWeekdayPM)))
+                .thenRunAsync(()->SwingUtilities.invokeLater(graphWtdPnl::repaint));
+
+        CompletableFuture.supplyAsync(() -> computeAvgPercentile(MTM_PRED)).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphWtdPnl.setAvgPerc(a)))
+                .thenRunAsync(()->SwingUtilities.invokeLater(graphWtdPnl::repaint));;
+
+        CompletableFuture.supplyAsync(() -> computeDeltaWeightedPercentile(MTM_PRED)).thenAcceptAsync(a ->
+                SwingUtilities.invokeLater(() -> graphWtdPnl.setDeltaWeightedAveragePerc(a))).thenRunAsync(()->SwingUtilities.invokeLater(graphWtdPnl::repaint));;
+
+        CompletableFuture.supplyAsync(() -> computeWtdMtmPnl(MTM_PRED)).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphWtdPnl.setMtm(a)))
+                .thenRunAsync(()->SwingUtilities.invokeLater(graphWtdPnl::repaint));
+
+
+        SwingUtilities.invokeLater(()->model.fireTableDataChanged());
+        SwingUtilities.invokeLater(graphWtdPnl::repaint);
+
+//        CompletableFuture.runAsync(() -> {
+//            //graphWtdPnl.setNet(computeNet(MTM_PRED));
+//            //graphWtdPnl.setAvgPerc(computeAvgPercentile(MTM_PRED));
+//            //graphWtdPnl.setDeltaWeightedAveragePerc(computeDeltaWeightedPercentile(MTM_PRED));
+//        }).thenRunAsync(() -> SwingUtilities.invokeLater(() -> {
+//            //graphWtdPnl.setMtm(computeWtdMtmPnl(MTM_PRED));
+//            //graphWtdPnl.setWeekdayMtm(netPnlByWeekday, netPnlByWeekdayAM, netPnlByWeekdayPM);
+////            model.fireTableDataChanged();
+////            graphWtdPnl.repaint();
+//        }));
     }
 
     private static void computePosition() {
