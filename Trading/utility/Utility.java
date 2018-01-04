@@ -78,19 +78,18 @@ public class Utility {
     public static final BetweenTime<LocalTime> TIME_BETWEEN = (t1, b1, t2, b2) -> (t -> t.isAfter(b1 ? t1.minusMinutes(1) : t1) && t.isBefore(b2 ? t2.plusMinutes(1) : t2));
     public static final GenTimePred<LocalTime, Boolean> ENTRY_BTWN_GEN = (t1, b1, t2, b2) -> (e -> e.getKey().isAfter(b1 ? t1.minusMinutes(1) : t1) && e.getKey().isBefore(b2 ? t2.plusMinutes(1) : t2));
     public static BiPredicate<? super Map<String, ? extends Map<LocalTime, ?>>, String> NORMAL_MAP = (mp, name) -> mp.containsKey(name) && !mp.get(name).isEmpty() && mp.get(name).size() > 0;
-    public static Predicate<LocalTime> chinaTradingTime = t -> (t.isAfter(LocalTime.of(9, 30)) && t.isBefore(LocalTime.of(11, 31))) ||
-            (t.isAfter(LocalTime.of(12, 59)) && t.isBefore(LocalTime.of(15, 1)));
+    public static Predicate<LocalTime> chinaTradingTimeHist = t -> (t.isAfter(LocalTime.of(9, 30)) && t.isBefore(LocalTime.of(11, 31))) ||
+            (t.isAfter(LocalTime.of(13, 0)) && t.isBefore(LocalTime.of(15, 1)));
 
 
-    private static Predicate<LocalTime> tradingTimePred(LocalTime t1, LocalTime t2,
-                                                        LocalTime t3, LocalTime t4) {
+    private static Predicate<LocalTime> tradingTimePred(LocalTime t1, LocalTime t2, LocalTime t3, LocalTime t4) {
         return t -> (t.isAfter(t1.minusMinutes(1)) && t.isBefore(t2.plusMinutes(1))) ||
                 (t.isAfter(t3.minusMinutes(1)) && t.isBefore(t4.plusMinutes(1)));
     }
 
     public static Predicate<LocalTime> chinaTradingTimePred =
             tradingTimePred(LocalTime.of(9, 30), LocalTime.of(11, 30),
-                    LocalTime.of(13, 0), LocalTime.of(15, 0));
+                    LocalTime.of(12, 59), LocalTime.of(15, 0));
 
     private Utility() {
         throw new UnsupportedOperationException(" cannot instantiate utility class ");
@@ -633,7 +632,7 @@ public class Utility {
     public static LocalTime roundTo5(LocalTime t) {
         LocalTime t1 = t.truncatedTo(ChronoUnit.MINUTES);
         return min(max(LocalTime.of(9, 0), (t1.getMinute() % 5 == 0) ?
-                        t1 : t1.plusMinutes(5 - t1.getMinute() % 5)),LocalTime.of(15, 0));
+                t1 : t1.plusMinutes(5 - t1.getMinute() % 5)), LocalTime.of(15, 0));
     }
 
     public static LocalDateTime roundTo5Ldt(LocalDateTime t) {

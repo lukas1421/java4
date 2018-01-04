@@ -692,7 +692,7 @@ public class HistChinaStocks extends JPanel {
 
             if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
                 if ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
-                        || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1)))) {
+                        || (lt.isAfter(LocalTime.of(13, 0)) && lt.isBefore(LocalTime.of(15, 1)))) {
 
                     LocalDateTime ldt = LocalDateTime.of(ld, lt);
                     LocalDateTime ltTo5 = Utility.roundTo5Ldt(ldt);
@@ -853,7 +853,7 @@ public class HistChinaStocks extends JPanel {
         double fx = fxMap.getOrDefault(ticker, 1.0);
 
         prices.forEach((k, v) -> {
-            if (chinaTradingTime.test(k.toLocalTime())) {
+            if (chinaTradingTimeHist.test(k.toLocalTime())) {
                 res.put(k, fx * openPos * (v.getClose() - lastWeekClose));
             }
         });
@@ -930,7 +930,7 @@ public class HistChinaStocks extends JPanel {
             }
             mv = currPos * prices.get(lt).getClose();
 
-            if (chinaTradingTime.test(lt.toLocalTime())) {
+            if (chinaTradingTimeHist.test(lt.toLocalTime())) {
                 res.put(lt, fx * (costBasis + mv));
             }
         }
@@ -1067,7 +1067,8 @@ public class HistChinaStocks extends JPanel {
                 try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxMinutePath + tickerFull)))) {
                     while ((line = reader1.readLine()) != null) {
                         List<String> al1 = Arrays.asList(line.split("\t"));
-                        if ((al1.get(0).startsWith("2017/") || al1.get(0).startsWith("2018/")) && LocalDate.parse(al1.get(0), DATE_PATTERN).isAfter(MONDAY_OF_WEEK.minusDays(1))) {
+                        if ((al1.get(0).startsWith("2017/") || al1.get(0).startsWith("2018/")) &&
+                                LocalDate.parse(al1.get(0), DATE_PATTERN).isAfter(MONDAY_OF_WEEK.minusDays(1))) {
                             //found = true;
                             LocalDate d = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
                             LocalTime lt = Utility.roundTo5(HistChinaHelper.stringToLocalTime(al1.get(1)));
@@ -1088,6 +1089,8 @@ public class HistChinaStocks extends JPanel {
                             }
                         }
                     }
+
+
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
