@@ -50,7 +50,8 @@ public class HistChinaStocks extends JPanel {
     private static JPanel graphPanel;
     private static BarModel_China model;
 
-    private static final LocalDate LAST_YEAR_END = LocalDate.of(2016, 12, 31);
+    private static final LocalDate LAST_YEAR_END = LocalDate.of(2017, 12, 31);
+    private static final LocalDate YEAR_FIRST_DAY = LocalDate.of(2018, 1, 1);
     public static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now());
     private static final LocalDate MONTH_FIRST_DAY = Utility.getFirstDayofMonth(LocalDateTime.now());
 
@@ -86,6 +87,7 @@ public class HistChinaStocks extends JPanel {
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private static Map<String, Double> priceMapForHist = new HashMap<>();
 
+    private static volatile Map<String, Double> lastYearCloseMap = new HashMap<>();
     private static volatile Map<String, Double> lastWeekCloseMap = new HashMap<>();
     private static Map<String, Double> totalTradingCostMap = new HashMap<>();
     private static Map<String, Double> costBasisMap = new HashMap<>();
@@ -195,6 +197,7 @@ public class HistChinaStocks extends JPanel {
                     totalTradingCostMap.put(al1.get(0), 0.0);
                     costBasisMap.put(al1.get(0), 0.0);
                     wtdTradePnlMap.put(al1.get(0), 0.0);
+                    lastYearCloseMap.put(al1.get(0), 0.0);
                     lastWeekCloseMap.put(al1.get(0), 0.0);
                     wtdMtmPnlMap.put(ticker, 0.0);
                     wtdChgInPosition.put(ticker, 0);
@@ -229,33 +232,37 @@ public class HistChinaStocks extends JPanel {
                             SwingUtilities.invokeLater(() -> {
                                 graphYtd.fillInGraphChinaGen(selectedStock, chinaYtd);
                                 graphYtd.setTradesMap(netSharesTradedByDay.get(selectedStock));
+                                graphYtd.setLastPeriodClose(lastYearCloseMap.getOrDefault(selectedStock,0.0));
+                                //graphYtd.setYMTDReturn();
 //                                graphYtd.setTradePnl(computeCurrentTradePnl(selectedStock, LAST_YEAR_END));
 //                                graphYtd.setWtdVolTraded(computeWtdVolTraded(selectedStock));
 //                                graphYtd.setWtdVolPerc(computeWVolPerc(selectedStock));
                             });
 
-                            CompletableFuture.supplyAsync(()->computeCurrentTradePnl(selectedStock, LAST_YEAR_END))
-                                    .thenAcceptAsync(a->SwingUtilities.invokeLater(()->graphYtd.setTradePnl(a)));
+                            CompletableFuture.supplyAsync(() -> computeCurrentTradePnl(selectedStock, LAST_YEAR_END))
+                                    .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphYtd.setTradePnl(a)));
 
-                            CompletableFuture.supplyAsync(()->computeWtdVolTraded(selectedStock))
-                                    .thenAcceptAsync(a->SwingUtilities.invokeLater(()->graphYtd.setWtdVolTraded(a)));
+                            CompletableFuture.supplyAsync(() -> computeWtdVolTraded(selectedStock))
+                                    .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphYtd.setWtdVolTraded(a)));
 
-                            CompletableFuture.supplyAsync(()->computeWVolPerc(selectedStock))
-                                    .thenAcceptAsync(a->SwingUtilities.invokeLater(()->graphYtd.setWtdVolPerc(a)));
+                            CompletableFuture.supplyAsync(() -> computeWVolPerc(selectedStock))
+                                    .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphYtd.setWtdVolPerc(a)));
 
                             //CompletableFuture.runAsync(() -> {
                             SwingUtilities.invokeLater(() -> {
                                 graphWtd.fillInGraphChinaGen(selectedStock, chinaWtd);
                                 graphWtd.setTradesMap(netSharesTradedWtd.get(selectedStock));
+                                graphWtd.setLastPeriodClose(lastWeekCloseMap.getOrDefault(selectedStock,0.0));
+                                //graphYtd.setYMTDReturn(0.0);
                                 //graphWtd.setTradePnl(computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)));
                                 //graphWtd.setWtdMtmPnl(wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
                             });
 
-                            CompletableFuture.supplyAsync(()->computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)))
-                                    .thenAcceptAsync(a->SwingUtilities.invokeLater(()->graphWtd.setTradePnl(a)));
+                            CompletableFuture.supplyAsync(() -> computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)))
+                                    .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphWtd.setTradePnl(a)));
 
-                            CompletableFuture.supplyAsync(()->wtdMtmPnlMap.getOrDefault(selectedStock, 0.0))
-                                    .thenAcceptAsync(a->SwingUtilities.invokeLater(()->graphWtd.setWtdMtmPnl(a)));
+                            CompletableFuture.supplyAsync(() -> wtdMtmPnlMap.getOrDefault(selectedStock, 0.0))
+                                    .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphWtd.setWtdMtmPnl(a)));
 
 
                             CompletableFuture.runAsync(() -> {
@@ -1009,6 +1016,7 @@ public class HistChinaStocks extends JPanel {
                             while ((line = reader1.readLine()) != null) {
                                 List<String> al1 = Arrays.asList(line.split("\t"));
                                 if (al1.get(0).startsWith("2018") || al1.get(0).startsWith("2017") || al1.get(0).startsWith("2016/1")) {
+
                                     LocalDate d = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/MM/dd"));
                                     if (chinaYtd.containsKey(s)) {
                                         chinaYtd.get(s).put(d, new SimpleBar(Double.parseDouble(al1.get(1)), Double.parseDouble(al1.get(2))
@@ -1017,6 +1025,11 @@ public class HistChinaStocks extends JPanel {
                                     } else {
                                         throw new IllegalStateException(" cannot find stock " + s);
                                     }
+
+//                                    if(d.isBefore(YEAR_FIRST_DAY)) {
+//                                        lastYearCloseMap.put(s, Double.parseDouble(al1.get(4)));
+//                                    }
+
                                 }
                             }
                         } catch (IOException e) {
@@ -1025,10 +1038,20 @@ public class HistChinaStocks extends JPanel {
                     }
                 }).thenRunAsync(() -> {
                     CompletableFuture.runAsync(() -> {
-                        if (chinaYtd.get(s).size() > 0 && chinaYtd.get(s).firstKey().isBefore(MONDAY_OF_WEEK)) {
-                            lastWeekCloseMap.put(s, chinaYtd.get(s).lowerEntry(MONDAY_OF_WEEK).getValue().getClose());
+                        if (chinaYtd.get(s).size() > 0) {
+                            lastWeekCloseMap.put(s, chinaYtd.get(s).firstKey().isBefore(MONDAY_OF_WEEK)?
+                                    chinaYtd.get(s).lowerEntry(MONDAY_OF_WEEK).getValue().getClose():
+                                    chinaYtd.get(s).higherEntry(MONDAY_OF_WEEK).getValue().getOpen());
                         } else {
                             lastWeekCloseMap.put(s, 0.0);
+                        }
+
+                        if (chinaYtd.get(s).size() > 0) {
+                            lastYearCloseMap.put(s, chinaYtd.get(s).firstKey().isBefore(YEAR_FIRST_DAY)?
+                                    chinaYtd.get(s).lowerEntry(YEAR_FIRST_DAY).getValue().getClose():
+                                    chinaYtd.get(s).higherEntry(YEAR_FIRST_DAY).getValue().getOpen());
+                        } else {
+                            lastYearCloseMap.put(s, 0.0);
                         }
                     });
 
@@ -1501,6 +1524,12 @@ public class HistChinaStocks extends JPanel {
                     return "mtd sharpe";
                 case 40:
                     return "Expired pos";
+                case 41:
+                    return "Wtd Chg";
+                case 42:
+                    return " Last year close ";
+                case 43:
+                    return " Ytd Chg";
                 default:
                     return "";
             }
@@ -1645,6 +1674,15 @@ public class HistChinaStocks extends JPanel {
                     return r(getMtdSharpe(name));
                 case 40:
                     return name.equalsIgnoreCase("SGXA50PR") ? futExpiryUnits : 0;
+                case 41:
+                    return lastWeekCloseMap.getOrDefault(name, 0.0) == 0.0 ? 0.0 :
+                            Math.round(1000d * (price / lastWeekCloseMap.getOrDefault(name, 0.0) - 1)) / 10d;
+                case 42:
+                    return lastYearCloseMap.getOrDefault(name, 0.0);
+                case 43:
+                    return lastYearCloseMap.getOrDefault(name, 0.0) == 0.0 ? 0.0 :
+                            Math.round(1000d * (price / lastYearCloseMap.getOrDefault(name, 0.0) - 1)) / 10d;
+
                 default:
                     return null;
 

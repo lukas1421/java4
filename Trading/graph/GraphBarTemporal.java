@@ -46,6 +46,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     T minAMT;
     volatile int size;
     private static final BasicStroke BS3 = new BasicStroke(3);
+    private double lastPeriodClose;
 
     //int wtdP;
 //    public GraphBarTemporal(NavigableMap<T, SimpleBar> tm1) {
@@ -84,6 +85,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         currentMtmPnl = Math.round(p * 100d) / 100d;
     }
 
+    public void setLastPeriodClose(double lp) {lastPeriodClose = lp;}
 
     public void setNavigableMap(NavigableMap<T, SimpleBar> tm1) {
         this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero())
@@ -298,6 +300,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         g2.drawString("" + getLast(), getWidth() * 3 / 8, 15);
         //if(this.getClass()==LocalDate.class)
         g2.drawString("Mtd Sharpe: " + r(mtdSharpe.getOrDefault(name,0.0)), getWidth() * 4 / 8, 15);
+        g2.drawString("ToDate Ret: " + (lastPeriodClose==0.0?"":Double.toString(Math.round(1000d*(getLast()/lastPeriodClose-1))/10d)), getWidth() * 5 / 8, 15);
+
 
         g2.drawString("pos: " + Integer.toString(netCurrentPosition), getWidth() * 7 / 8, getHeight() / 6);
         g2.drawString("Trade pnl " + Double.toString(r(currentTradePnl)), getWidth() * 7 / 8, getHeight() * 2 / 6);
