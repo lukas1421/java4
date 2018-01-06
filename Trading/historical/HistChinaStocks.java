@@ -118,6 +118,7 @@ public class HistChinaStocks extends JPanel {
     private static volatile boolean filterOn = false;
     private static final int CHG_POS_COL = 14;
     private static final int CURR_POS_COL = 15;
+    private static final int T_COST_COL = 16;
 
     public static double futExpiryLevel = 0.0;
     public static int futExpiryUnits = 0;
@@ -392,6 +393,7 @@ public class HistChinaStocks extends JPanel {
         JToggleButton futOnlyButton = new JToggleButton("fut only");
         JButton outputWtdButton = new JButton(" output wtd ");
         JButton activeOnlyButton = new JButton("Active Only");
+        JButton allTradedButton = new JButton("All Traded");
         JToggleButton autoComputeButton = new JToggleButton("Auto On");
         JButton fillExpiredButton = new JButton("Fill Expired");
 
@@ -428,6 +430,18 @@ public class HistChinaStocks extends JPanel {
                 List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
                 filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, CHG_POS_COL));
                 filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, CURR_POS_COL));
+                sorter.setRowFilter(RowFilter.orFilter(filters));
+                filterOn = true;
+            }
+        });
+
+        allTradedButton.addActionListener(l -> {
+            if (filterOn) {
+                sorter.setRowFilter(null);
+                filterOn = false;
+            } else {
+                List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
+                filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, T_COST_COL));
                 sorter.setRowFilter(RowFilter.orFilter(filters));
                 filterOn = true;
             }
@@ -600,6 +614,7 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(futOnlyButton);
         controlPanel.add(outputWtdButton);
         controlPanel.add(activeOnlyButton);
+        controlPanel.add(allTradedButton);
         controlPanel.add(autoComputeButton);
         controlPanel.add(fillExpiredButton);
 
