@@ -645,6 +645,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
+            if(lt.isBefore(LocalTime.of(9,0))) {
+                ChinaStock.closeMap.put(name,close);
+            }
+
             if (((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
                     || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
                 if (lt.equals(LocalTime.of(9, 0))) {
@@ -652,10 +656,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     //System.out.println(Utility.getStrCheckNull("updating open in chinapos", ld, lt, open));
                 }
             } else {
-                if (ld.isEqual(ytd) && lt.isBefore(LocalTime.of(17, 1))) {
-                    ChinaStock.closeMap.put(name, open);
-                    //System.out.println(getStr(" updating close ", ytd, lt, name, closeMap.getOrDefault(name, 0.0)));
-                }
+//                if (ld.isEqual(ytd) && lt.isBefore(LocalTime.of(17, 1))) {
+//                    ChinaStock.closeMap.put(name, open);
+//                    //System.out.println(getStr(" updating close ", ytd, lt, name, closeMap.getOrDefault(name, 0.0)));
+//                }
             }
         } else {
             System.out.println(getStr(date, open, high, low, close));

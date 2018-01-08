@@ -63,12 +63,6 @@ public final class XU extends JPanel {
     public static volatile AtomicInteger graphBarWidth = new AtomicInteger(3);
     public static volatile AtomicInteger dpBarWidth = new AtomicInteger(2);
 
-    //    GraphXUSI graph1 = new GraphXUSI();
-//    GraphXU graph2 = new GraphXU();
-//    GraphXUSI graph3 = new GraphXUSI();
-//    GraphXU graph4 = new GraphXU();
-//    GraphXU graph5 = new GraphXU();
-//    GraphXU graph6 = new GraphXU();
     private GraphBar graph1 = new GraphBar();
     private GraphBar graph2 = new GraphBar(e -> e.getKey().isAfter(LocalTime.of(8, 59)));
     private GraphXUSI graph3 = new GraphXUSI();
@@ -76,16 +70,9 @@ public final class XU extends JPanel {
     private GraphXU graph5 = new GraphXU();
     private GraphXU graph6 = new GraphXU();
 
-    //    String V1 = "V1";
-//    String V2 = "V2";
-//    String prev = "";
-    //String current = V1;
     private static final File SOURCE = new File(TradingConstants.GLOBALPATH + "XU.ser");
     private static final File BACKUP = new File(TradingConstants.GLOBALPATH + "XUBACKUP.ser");
 
-    //public static boolean graphCreated = false;
-
-    //protected TreeMap<LocalTime, Integer> consummation = new TreeMap<>();
 
     //public static ConcurrentSkipListMap<LocalTime,Double> indexPrice = new ConcurrentSkipListMap<>();
     //public static NavigableMap<LocalTime, Double> indexSinaDiscount = new ConcurrentSkipListMap<>();
@@ -212,7 +199,6 @@ public final class XU extends JPanel {
         });
 
         btnSave.addActionListener(al -> {
-            //saveXU();
             try {
                 Files.copy(SOURCE.toPath(), BACKUP.toPath(), StandardCopyOption.REPLACE_EXISTING);
                 System.out.println("last modified for XU is " + new Date(SOURCE.lastModified()));

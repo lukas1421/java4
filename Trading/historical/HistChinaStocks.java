@@ -233,7 +233,7 @@ public class HistChinaStocks extends JPanel {
                             SwingUtilities.invokeLater(() -> {
                                 graphYtd.fillInGraphChinaGen(selectedStock, chinaYtd);
                                 graphYtd.setTradesMap(netSharesTradedByDay.get(selectedStock));
-                                graphYtd.setLastPeriodClose(lastYearCloseMap.getOrDefault(selectedStock,0.0));
+                                graphYtd.setLastPeriodClose(lastYearCloseMap.getOrDefault(selectedStock, 0.0));
                                 //graphYtd.setYMTDReturn();
 //                                graphYtd.setTradePnl(computeCurrentTradePnl(selectedStock, LAST_YEAR_END));
 //                                graphYtd.setWtdVolTraded(computeWtdVolTraded(selectedStock));
@@ -253,7 +253,7 @@ public class HistChinaStocks extends JPanel {
                             SwingUtilities.invokeLater(() -> {
                                 graphWtd.fillInGraphChinaGen(selectedStock, chinaWtd);
                                 graphWtd.setTradesMap(netSharesTradedWtd.get(selectedStock));
-                                graphWtd.setLastPeriodClose(lastWeekCloseMap.getOrDefault(selectedStock,0.0));
+                                graphWtd.setLastPeriodClose(lastWeekCloseMap.getOrDefault(selectedStock, 0.0));
                                 //graphYtd.setYMTDReturn(0.0);
                                 //graphWtd.setTradePnl(computeCurrentTradePnl(selectedStock, MONDAY_OF_WEEK.minusDays(1)));
                                 //graphWtd.setWtdMtmPnl(wtdMtmPnlMap.getOrDefault(selectedStock, 0.0));
@@ -534,7 +534,7 @@ public class HistChinaStocks extends JPanel {
         });
 
         loadTradesButton.addActionListener(al -> {
-            CompletableFuture.runAsync(HistChinaStocks::loadTradeList).thenRun(() -> {
+            CompletableFuture.runAsync(HistChinaStocks::loadTradeList).thenRunAsync(() -> {
                 System.out.println(" loading trade list finished ");
                 computePosition();
             });
@@ -542,7 +542,7 @@ public class HistChinaStocks extends JPanel {
             CompletableFuture.runAsync(() -> {
                 getSGXPosition();
                 getSGXTrades();
-            }).thenRun(() -> SwingUtilities.invokeLater(this::repaint));
+            }).thenRunAsync(() -> SwingUtilities.invokeLater(this::repaint));
         });
 
         computeButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
@@ -557,7 +557,7 @@ public class HistChinaStocks extends JPanel {
             CompletableFuture.runAsync(HistChinaStocks::computeWtdMtmPnlAll);
 
             CompletableFuture.runAsync(() -> computeWtdMtmPnl(e -> true));
-        }).thenRun(() -> SwingUtilities.invokeLater(() -> {
+        }).thenRunAsync(() -> SwingUtilities.invokeLater(() -> {
             model.fireTableDataChanged();
             graphPanel.repaint();
             this.repaint();
@@ -569,15 +569,17 @@ public class HistChinaStocks extends JPanel {
         });
 
         getTodayDataButton.addActionListener(al -> {
-            for (String s : chinaWtd.keySet()) {
-                if (priceMapBar.containsKey(s) && priceMapBar.get(s).size() > 0) {
-                    NavigableMap<LocalDateTime, SimpleBar> wtdNew = mergeMaps(chinaWtd.get(s),
-                            Utility.priceMapToLDT(priceMap1mTo5M(priceMapBar.get(s)), ChinaMain.currentTradingDate));
-                    chinaWtd.put(s, wtdNew);
-                    NavigableMap<LocalDate, SimpleBar> ytdNew = mergeMapGen(chinaYtd.get(s), reduceMapToBar(priceMapBar.get(s), ChinaMain.currentTradingDate));
-                    chinaYtd.put(s, ytdNew);
+            CompletableFuture.runAsync(() -> {
+                for (String s : chinaWtd.keySet()) {
+                    if (priceMapBar.containsKey(s) && priceMapBar.get(s).size() > 0) {
+                        NavigableMap<LocalDateTime, SimpleBar> wtdNew = mergeMaps(chinaWtd.get(s),
+                                Utility.priceMapToLDT(priceMap1mTo5M(priceMapBar.get(s)), ChinaMain.currentTradingDate));
+                        chinaWtd.put(s, wtdNew);
+                        NavigableMap<LocalDate, SimpleBar> ytdNew = mergeMapGen(chinaYtd.get(s), reduceMapToBar(priceMapBar.get(s), ChinaMain.currentTradingDate));
+                        chinaYtd.put(s, ytdNew);
+                    }
                 }
-            }
+            });
             SwingUtilities.invokeLater(() -> model.fireTableDataChanged());
         });
 
@@ -1054,16 +1056,16 @@ public class HistChinaStocks extends JPanel {
                 }).thenRunAsync(() -> {
                     CompletableFuture.runAsync(() -> {
                         if (chinaYtd.get(s).size() > 0) {
-                            lastWeekCloseMap.put(s, chinaYtd.get(s).firstKey().isBefore(MONDAY_OF_WEEK)?
-                                    chinaYtd.get(s).lowerEntry(MONDAY_OF_WEEK).getValue().getClose():
+                            lastWeekCloseMap.put(s, chinaYtd.get(s).firstKey().isBefore(MONDAY_OF_WEEK) ?
+                                    chinaYtd.get(s).lowerEntry(MONDAY_OF_WEEK).getValue().getClose() :
                                     chinaYtd.get(s).higherEntry(MONDAY_OF_WEEK).getValue().getOpen());
                         } else {
                             lastWeekCloseMap.put(s, 0.0);
                         }
 
                         if (chinaYtd.get(s).size() > 0) {
-                            lastYearCloseMap.put(s, chinaYtd.get(s).firstKey().isBefore(YEAR_FIRST_DAY)?
-                                    chinaYtd.get(s).lowerEntry(YEAR_FIRST_DAY).getValue().getClose():
+                            lastYearCloseMap.put(s, chinaYtd.get(s).firstKey().isBefore(YEAR_FIRST_DAY) ?
+                                    chinaYtd.get(s).lowerEntry(YEAR_FIRST_DAY).getValue().getClose() :
                                     chinaYtd.get(s).higherEntry(YEAR_FIRST_DAY).getValue().getOpen());
                         } else {
                             lastYearCloseMap.put(s, 0.0);
