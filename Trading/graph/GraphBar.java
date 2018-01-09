@@ -225,11 +225,12 @@ public final class GraphBar extends JComponent implements GraphFillable {
         }
 
         //add bench here
-        g2.drawString(Double.toString(getLast()), getWidth() * 3 / 8, 15);
+        g2.drawString(Double.toString(getLast()) + " (" + (Math.round(100d*closeMap.getOrDefault(name,0.0)))/100d +")"
+                , getWidth() * 3 / 8, 15);
 
-        g2.drawString("P%:" + Double.toString(getCurrentPercentile()), getWidth() * 4 / 8, 15);
-        g2.drawString("涨:" + Double.toString(getRtn()) + "%", getWidth() * 5 / 8, 15);
-        g2.drawString("高 " + (getAMMaxT()), getWidth() * 6 / 8, 15);
+        g2.drawString("P%:" + Integer.toString(getCurrentPercentile()), getWidth() * 9 / 16, 15);
+        g2.drawString("涨:" + Double.toString(getRtn()) + "%", getWidth() * 21 / 32, 15);
+        g2.drawString("高 " + (getAMMaxT()), getWidth() * 12 / 16, 15);
         //g2.drawString("低 " + (getAMMinT()), getWidth() * 7 * 8, 15);
         g2.drawString("夏 " + sharpe, getWidth() * 7 / 8, 15);
 
@@ -381,9 +382,9 @@ public final class GraphBar extends JComponent implements GraphFillable {
         return (Utility.noZeroArrayGen(name, minMapY)) ? (int) min(100, round(100d * (closeMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
-    private double getCurrentPercentile() {
+    private int getCurrentPercentile() {
         return (Utility.noZeroArrayGen(name, priceMap, maxMap, minMap)) ?
-                min(100.0, round(100d * ((priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name))))) : 0.0;
+                (int)Math.round(min(100, round(100d * ((priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))))) : 0;
     }
 
     private double getRetCHY() {

@@ -734,7 +734,7 @@ public final class XU extends JPanel {
 
                 case 4:
                     //return frontFutVol.getOrDefault(lt,0);
-                    return ChinaData.sizeTotalMap.get(ticker).getOrDefault(lt, 0.0);
+                    return (int)Math.round(ChinaData.sizeTotalMap.get(ticker).getOrDefault(lt, 0.0));
 
                 case 5:
                     if (ChinaData.sizeTotalMap.get(ticker).size() < 2) {

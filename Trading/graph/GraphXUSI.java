@@ -1,8 +1,6 @@
 package graph;
 
-import apidemo.SinaStock;
-import apidemo.XU;
-import apidemo.XUTrader;
+import apidemo.*;
 import auxiliary.SimpleBar;
 
 import javax.swing.*;
@@ -65,6 +63,7 @@ public class GraphXUSI extends JComponent {
             prevCloseXU = XUTrader.futPrevCloseMap.get(ibContractToFutType(getFrontFutContract())) ;
             openSI = SinaStock.OPEN;
             prevCloseSI = ftseCloseMap.lastEntry().getValue();
+            ChinaStock.closeMap.put(TradingConstants.ftseIndex, prevCloseSI);
         }
         repaint();
     }
