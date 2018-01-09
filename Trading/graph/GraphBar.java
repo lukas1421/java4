@@ -9,6 +9,9 @@ import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map.Entry;
@@ -24,10 +27,9 @@ import static java.lang.Double.min;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-import static utility.Utility.reduceDouble;
-import static utility.Utility.reduceMapToDouble;
+import static utility.Utility.*;
 
-public final class GraphBar extends JComponent implements GraphFillable {
+public final class GraphBar extends JComponent implements GraphFillable, MouseMotionListener, MouseListener {
 
     //private static final int WIDTH_BAR = 3;
     int height;
@@ -49,6 +51,8 @@ public final class GraphBar extends JComponent implements GraphFillable {
     private Predicate<? super Entry<LocalTime, ?>> graphBarDispPred;
 
     private int wtdP;
+    private volatile int mouseXCord = Integer.MAX_VALUE;
+    private volatile int mouseYCord = Integer.MAX_VALUE;
 
 //    public GraphBar(NavigableMap<LocalTime, SimpleBar> tm) {
 //        this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue().containsZero()).collect(Collectors.toMap(Entry::getKey, Entry::getValue,
@@ -62,6 +66,8 @@ public final class GraphBar extends JComponent implements GraphFillable {
         minAMT = Utility.AMOPENT;
         this.tm = new ConcurrentSkipListMap<>();
         graphBarDispPred = p;
+        addMouseMotionListener(this);
+        addMouseListener(this);
     }
 
     public GraphBar() {
@@ -71,6 +77,8 @@ public final class GraphBar extends JComponent implements GraphFillable {
         minAMT = Utility.AMOPENT;
         this.tm = new ConcurrentSkipListMap<>();
         graphBarDispPred = e->e.getKey().isAfter(LocalTime.of(9,19));
+        addMouseMotionListener(this);
+        addMouseListener(this);
     }
 
     public void setNavigableMap(NavigableMap<LocalTime, SimpleBar> tm) {
@@ -202,6 +210,15 @@ public final class GraphBar extends JComponent implements GraphFillable {
                     g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
                 }
             }
+            if (roundDownToN(mouseXCord,XU.graphBarWidth.get()) == x-5) {
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize()*2F));
+                g.drawString(lt.toString() + " " + Math.round(tm.floorEntry(lt).getValue().getClose()), x, lowY+(mouseYCord<closeY?-20:+20));
+                g.drawOval(x + 2, lowY, 5, 5);
+                g.fillOval(x + 2, lowY, 5, 5);
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize()*0.5F));
+
+            }
+
             x += XU.graphBarWidth.get();
         }
 
@@ -446,5 +463,49 @@ public final class GraphBar extends JComponent implements GraphFillable {
     private int getPMchgY() {
         return (Utility.noZeroArrayGen(name, minMapY, amCloseY, closeMapY, maxMapY))
                 ? (int) min(100, round(100d * (closeMapY.get(name) - amCloseY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+    }
+
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        System.out.println(" drag detected " + e.getX() + " " + e.getY());
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        mouseXCord = e.getX();
+        mouseYCord = e.getY();
+        System.out.println(" graph bar x mouse x is " + mouseXCord);
+        this.repaint();
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        System.out.println(" mouse exit from graph bar ");
+        mouseYCord = Integer.MAX_VALUE;
+        mouseXCord = Integer.MAX_VALUE;
+        this.repaint();
+
     }
 }

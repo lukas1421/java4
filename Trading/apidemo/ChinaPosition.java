@@ -97,7 +97,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     //static volatile LinkedList<String> chg5m = new LinkedList<>();
     //static volatile LinkedList<String> topKiyodo = new LinkedList<>();
 
-    private static GraphPnl gpnl = new GraphPnl();
+    private static GraphPnl gPnl = new GraphPnl();
 
     private final int OPEN_POS_COL = 2;
     private final int NET_POS_COL = 21;
@@ -209,7 +209,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             mtmPnlCompute(GEN_MTM_PRED, "all");
         }).thenRun(() -> SwingUtilities.invokeLater(() -> {
             m_model.fireTableDataChanged();
-            gpnl.repaint();
+            gPnl.repaint();
         })));
 
         getOpenButton.addActionListener(l -> {
@@ -299,9 +299,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         JRadioButton _5secButton = new JRadioButton("5s");
         JRadioButton _10secButton = new JRadioButton("10s");
 
-        _1secButton.addActionListener(l-> updateFreq = UpdateFrequency.oneSec);
-        _5secButton.addActionListener(l-> updateFreq = UpdateFrequency.fiveSec);
-        _10secButton.addActionListener(l-> updateFreq = UpdateFrequency.tenSec);
+        _1secButton.addActionListener(l -> updateFreq = UpdateFrequency.oneSec);
+        _5secButton.addActionListener(l -> updateFreq = UpdateFrequency.fiveSec);
+        _10secButton.addActionListener(l -> updateFreq = UpdateFrequency.tenSec);
 
 
         ButtonGroup freqGroup = new ButtonGroup();
@@ -325,7 +325,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         controlPanel.add(_10secButton);
 
         //JPanel graphPanel = new JPanel();
-        JScrollPane graphPane = new JScrollPane(gpnl) {
+        JScrollPane graphPane = new JScrollPane(gPnl) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -433,8 +433,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     static synchronized void mtmPnlCompute(Predicate<? super Map.Entry<String, ?>> p, String nam) {
         //System.out.println(" COMPUTE *************************************************** ");
-        gpnl.setName(nam);
-        gpnl.setChineseName(nameMap.get(nam));
+        gPnl.setName(nam);
+        gPnl.setChineseName(nameMap.get(nam));
 
         if (priceMap.getOrDefault(nam, 0.0) == 0.0 && priceMapBar.containsKey(nam) && priceMapBar.get(nam).size() > 0) {
             priceMap.put(nam, Optional.ofNullable(priceMapBar.get(nam).lastEntry())
@@ -448,20 +448,20 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             * priceMap.getOrDefault(e.getKey(), 0.0)
                             * e.getValue().values().stream().filter(e1 -> e1.getSizeAll() > 0)
                             .mapToInt(TradeBlock::getSizeAll).sum()).sum()
-            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setBoughtDelta(a)));
+            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setBoughtDelta(a)));
 
             CompletableFuture.supplyAsync(() ->
                     soldDelta = tradesMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
                             * priceMap.getOrDefault(e.getKey(), 0.0)
                             * e.getValue().values().stream().filter(e1 -> e1.getSizeAll() < 0)
                             .mapToInt(TradeBlock::getSizeAll).sum()).sum())
-                    .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setSoldDelta(a)));
+                    .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setSoldDelta(a)));
 
 
             CompletableFuture.supplyAsync(() ->
                     openDelta = openPositionMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
                             * e.getValue() * openMap.getOrDefault(e.getKey(), 0.0)).sum()
-            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setOpenDelta(a)));
+            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setOpenDelta(a)));
 
             CompletableFuture.supplyAsync(() ->
                     netDelta = openPositionMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
@@ -469,7 +469,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             + tradesMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
                             * priceMap.getOrDefault(e.getKey(), 0.0)
                             * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum()
-            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setCurrentDelta(a)));
+            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setCurrentDelta(a)));
 
 
             CompletableFuture.supplyAsync(() ->
@@ -479,7 +479,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                                     .map(Entry::getKey).collect(Collectors.toSet()))
                             .flatMap(Collection::stream).distinct().map(e -> getDelta(e, 1))
                             .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())
-            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setNetDeltaMap(a)));
+            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setNetDeltaMap(a)));
 
 
             CompletableFuture.supplyAsync(() ->
@@ -487,7 +487,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             .stream().distinct().map(e -> getDelta(e, 0)).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>()))
                     .thenAcceptAsync(a -> CompletableFuture.supplyAsync(
                             () -> mtmDeltaSharpe = SharpeUtility.computeMinuteSharpeFromMtmDeltaMp(a))
-                            .thenAcceptAsync(b -> SwingUtilities.invokeLater(() -> gpnl.setMtmDeltaSharpe(b))));
+                            .thenAcceptAsync(b -> SwingUtilities.invokeLater(() -> gPnl.setMtmDeltaSharpe(b))));
 
 
             CompletableFuture.allOf(
@@ -496,28 +496,28 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                                     .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 > 0))
                                     .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>()))
                             .thenAcceptAsync(a -> SwingUtilities.invokeLater(() ->
-                                    gpnl.setBuyPnl(Optional.ofNullable(a.lastEntry()).map(Entry::getValue).orElse(0.0)))),
+                                    gPnl.setBuyPnl(Optional.ofNullable(a.lastEntry()).map(Entry::getValue).orElse(0.0)))),
 
                     CompletableFuture.supplyAsync(() ->
                             soldPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
                                     .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 < 0))
                                     .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())
                     ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() ->
-                            gpnl.setSellPnl(Optional.ofNullable(a.lastEntry()).map(Entry::getValue).orElse(0.0))))
-            ).thenRunAsync(() -> SwingUtilities.invokeLater(() -> gpnl.setBuySellPnlMap(boughtPNLMap, soldPNLMap)));
+                            gPnl.setSellPnl(Optional.ofNullable(a.lastEntry()).map(Entry::getValue).orElse(0.0))))
+            ).thenRunAsync(() -> SwingUtilities.invokeLater(() -> gPnl.setBuySellPnlMap(boughtPNLMap, soldPNLMap)));
 
 
             CompletableFuture.allOf(
                     CompletableFuture.supplyAsync(() ->
                             netYtdPnl = openPositionMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
                                     * e.getValue() * (closeMap.getOrDefault(e.getKey(), 0.0) - costMap.getOrDefault(e.getKey(), 0.0))).sum()
-                    ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setNetPnlYtd(a))),
+                    ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setNetPnlYtd(a))),
 
                     CompletableFuture.supplyAsync(() ->
                             mtmPNLMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() > 0).filter(p)
                                     .map(e -> getMtmPNL(ChinaData.priceMapBar.get(e.getKey()), closeMap.getOrDefault(e.getKey(), 0.0), e.getValue(),
                                             fxMap.getOrDefault(e.getKey(), 1.0))).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())
-                    ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setMtmPnl(Optional.ofNullable(a.lastEntry()).map(Entry::getValue).orElse(0.0)))),
+                    ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setMtmPnl(Optional.ofNullable(a.lastEntry()).map(Entry::getValue).orElse(0.0)))),
 
                     CompletableFuture.supplyAsync(() ->
                             tradePNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
@@ -528,9 +528,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     CompletableFuture.supplyAsync(() ->
                             Utility.mapCombinerGen(Double::sum, mtmPNLMap, tradePNLMap))
                             .thenAcceptAsync(a -> {
-                                SwingUtilities.invokeLater(() -> gpnl.setNavigableMap(mtmPNLMap, tradePNLMap, a));
+                                SwingUtilities.invokeLater(() -> gPnl.setNavigableMap(mtmPNLMap, tradePNLMap, a));
                                 CompletableFuture.supplyAsync(() -> minuteNetPnlSharpe = SharpeUtility.computeMinuteNetPnlSharpe(a))
-                                        .thenAcceptAsync(b -> SwingUtilities.invokeLater(() -> gpnl.setMinuteNetPnlSharpe(b)));
+                                        .thenAcceptAsync(b -> SwingUtilities.invokeLater(() -> gPnl.setMinuteNetPnlSharpe(b)));
                             }));
 
             CompletableFuture.supplyAsync(() ->
@@ -538,7 +538,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             .collect(Collectors.groupingBy(s -> ChinaStock.benchSimpleMap.getOrDefault(s.getKey(), ""), ConcurrentSkipListMap::new,
                                     Collectors.summingDouble(s -> fxMap.getOrDefault(s.getKey(), 1.0)
                                             * getNetPosition(s.getKey()) * priceMap.getOrDefault(s.getKey(), 0.0)))))
-                    .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setBenchMap(a)));
+                    .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setBenchMap(a)));
 
             //System.out.println(getStr(" bench exposure map ",nam,  benchExposureMap));
             CompletableFuture.supplyAsync(() ->
@@ -547,35 +547,35 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                                     Collectors.summingDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
                                             * (ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0) -
                                             ChinaStock.closeMap.getOrDefault(e.getKey(), 0.0)) * (e.getValue()))))
-            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gpnl.setMtmBenchMap(a)));
+            ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setMtmBenchMap(a)));
 
         }).thenRun(() -> SwingUtilities.invokeLater(() -> {
-            gpnl.repaint();
+            gPnl.repaint();
             //netPNLMap = Utility.mapCombinerGen(Double::sum, mtmPNLMap, tradePNLMap);
-            //gpnl.setNavigableMap(mtmPNLMap, tradePNLMap, netPNLMap);
-            //gpnl.setNetDeltaMap(netDeltaMap);
-            //gpnl.setBuySellPnlMap(boughtPNLMap, soldPNLMap);
-            //gpnl.setMtmPnl(Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0));
-            //gpnl.setNetPnlYtd(netYtdPnl);
-            //gpnl.setTodayPnl(todayNetPnl);
-            //gpnl.setBuyPnl(Optional.ofNullable(boughtPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0));
-            //gpnl.setSellPnl(Optional.ofNullable(soldPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0));
-            //gpnl.setBoughtDelta(boughtDelta);
-            //gpnl.setOpenDelta(openDelta);
-            //gpnl.setCurrentDelta(netDelta);
-            //gpnl.setSoldDelta(soldDelta);
-            //gpnl.setBenchMap(benchExposureMap);
-            //gpnl.setMtmBenchMap(pureMtmMap);
-            //gpnl.setNavigableMap(mtmPNLMap, tradePNLMap, netPNLMap);
-            //gpnl.setMinuteNetPnlSharpe(minuteNetPnlSharpe);
-            //gpnl.setMtmDeltaSharpe(mtmDeltaSharpe);
+            //gPnl.setNavigableMap(mtmPNLMap, tradePNLMap, netPNLMap);
+            //gPnl.setNetDeltaMap(netDeltaMap);
+            //gPnl.setBuySellPnlMap(boughtPNLMap, soldPNLMap);
+            //gPnl.setMtmPnl(Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0));
+            //gPnl.setNetPnlYtd(netYtdPnl);
+            //gPnl.setTodayPnl(todayNetPnl);
+            //gPnl.setBuyPnl(Optional.ofNullable(boughtPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0));
+            //gPnl.setSellPnl(Optional.ofNullable(soldPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0));
+            //gPnl.setBoughtDelta(boughtDelta);
+            //gPnl.setOpenDelta(openDelta);
+            //gPnl.setCurrentDelta(netDelta);
+            //gPnl.setSoldDelta(soldDelta);
+            //gPnl.setBenchMap(benchExposureMap);
+            //gPnl.setMtmBenchMap(pureMtmMap);
+            //gPnl.setNavigableMap(mtmPNLMap, tradePNLMap, netPNLMap);
+            //gPnl.setMinuteNetPnlSharpe(minuteNetPnlSharpe);
+            //gPnl.setMtmDeltaSharpe(mtmDeltaSharpe);
         }));
 
         //System.out.println(" kiyodo after " + topKiyodo);
-        CompletableFuture.runAsync(() -> gpnl.setBigKiyodoMap(topPnlKiyodoList()))
-                .thenRunAsync(() -> SwingUtilities.invokeLater(gpnl::repaint));
+        CompletableFuture.runAsync(() -> gPnl.setBigKiyodoMap(topPnlKiyodoList()))
+                .thenRunAsync(() -> SwingUtilities.invokeLater(gPnl::repaint));
 
-        CompletableFuture.runAsync(() -> gpnl.setPnl1mChgMap(getPnl5mChg())).thenRunAsync(() -> SwingUtilities.invokeLater(gpnl::repaint));
+        CompletableFuture.runAsync(() -> gPnl.setPnl1mChgMap(getPnl5mChg())).thenRunAsync(() -> SwingUtilities.invokeLater(gPnl::repaint));
 
     }
 
@@ -1520,7 +1520,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     enum UpdateFrequency {
-        oneSec(1),fiveSec(5),tenSec(10);
+        oneSec(1), fiveSec(5), tenSec(10);
+
         UpdateFrequency(int sec) {
             updateSec = sec;
         }
@@ -1533,8 +1534,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
 }
-
-
 
 
 class FutPosTradesHandler implements ApiController.ITradeReportHandler {
