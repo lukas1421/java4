@@ -113,6 +113,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     //static volatile Predicate<? super Map.Entry<String, ?>> NO_FUT_PRED = m -> !m.getKey().equals("SGXA50");
     private static volatile Predicate<? super Map.Entry<String, ?>> GEN_MTM_PRED = m -> true;
+    private static volatile UpdateFrequency updateFreq = UpdateFrequency.oneSec;
+
 
     @Override
     public void scrollRectToVisible(Rectangle aRect) {
@@ -250,7 +252,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         autoUpdateButton.addActionListener(l -> {
             if (autoUpdateButton.isSelected()) {
                 ex = Executors.newScheduledThreadPool(20);
-                ex.scheduleAtFixedRate(ChinaPosition::refreshAll, 0, 1, TimeUnit.SECONDS);
+                ex.scheduleAtFixedRate(ChinaPosition::refreshAll, 0, updateFreq.getFreq(), TimeUnit.SECONDS);
             } else {
                 ex.shutdown();
                 //System.out.println(" refreshing pnl stopped " + LocalTime.now());
@@ -292,6 +294,21 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             }
         });
 
+        JLabel updateFreqLabel = new JLabel("Update Freq");
+        JRadioButton _1secButton = new JRadioButton("1s");
+        JRadioButton _5secButton = new JRadioButton("5s");
+        JRadioButton _10secButton = new JRadioButton("10s");
+
+        _1secButton.addActionListener(l-> updateFreq = UpdateFrequency.oneSec);
+        _5secButton.addActionListener(l-> updateFreq = UpdateFrequency.fiveSec);
+        _10secButton.addActionListener(l-> updateFreq = UpdateFrequency.tenSec);
+
+
+        ButtonGroup freqGroup = new ButtonGroup();
+        freqGroup.add(_1secButton);
+        freqGroup.add(_5secButton);
+        freqGroup.add(_10secButton);
+
         controlPanel.add(refreshButton);
         controlPanel.add(filterButton);
         controlPanel.add(getOpenButton);
@@ -302,6 +319,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         controlPanel.add(autoUpdateButton);
         controlPanel.add(includeFutToggle);
         controlPanel.add(onlyFutToggle);
+        controlPanel.add(updateFreqLabel);
+        controlPanel.add(_1secButton);
+        controlPanel.add(_5secButton);
+        controlPanel.add(_10secButton);
 
         //JPanel graphPanel = new JPanel();
         JScrollPane graphPane = new JScrollPane(gpnl) {
@@ -347,7 +368,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     private static void refreshAll() {
 
         mtmPnlCompute(GEN_MTM_PRED, "all");
-
         SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
     }
 
@@ -472,16 +492,16 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
             CompletableFuture.allOf(
                     CompletableFuture.supplyAsync(() ->
-                        boughtPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
-                                .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 > 0))
-                                .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>()))
+                            boughtPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
+                                    .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 > 0))
+                                    .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>()))
                             .thenAcceptAsync(a -> SwingUtilities.invokeLater(() ->
                                     gpnl.setBuyPnl(Optional.ofNullable(a.lastEntry()).map(Entry::getValue).orElse(0.0)))),
 
                     CompletableFuture.supplyAsync(() ->
-                        soldPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
-                                .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 < 0))
-                                .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())
+                            soldPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
+                                    .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 < 0))
+                                    .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())
                     ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() ->
                             gpnl.setSellPnl(Optional.ofNullable(a.lastEntry()).map(Entry::getValue).orElse(0.0))))
             ).thenRunAsync(() -> SwingUtilities.invokeLater(() -> gpnl.setBuySellPnlMap(boughtPNLMap, soldPNLMap)));
@@ -645,8 +665,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
-            if(lt.isBefore(LocalTime.of(9,0))) {
-                ChinaStock.closeMap.put(name,close);
+            if (lt.isBefore(LocalTime.of(9, 0))) {
+                ChinaStock.closeMap.put(name, close);
             }
 
             if (((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
@@ -1215,10 +1235,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             curr = priceMapBar.get(name).lastEntry().getValue().getClose();
 //            maxT = priceMapBar.get(name).entrySet().stream().max(BAR_HIGH).map(Entry::getValue)
 //                    .map(SimpleBar::getHigh).orElse(0.0);
-            maxT = reduceMapToDouble(priceMapBar.get(name),SimpleBar::getHigh, Math::max);
+            maxT = reduceMapToDouble(priceMapBar.get(name), SimpleBar::getHigh, Math::max);
 //            minT = priceMapBar.get(name).entrySet().stream().min(BAR_LOW).map(Entry::getValue)
 //                    .map(SimpleBar::getHigh).orElse(0.0);
-            minT= reduceMapToDouble(priceMapBar.get(name), SimpleBar::getLow,Math::min);
+            minT = reduceMapToDouble(priceMapBar.get(name), SimpleBar::getLow, Math::min);
         }
 
         double max = Math.max(maxT, wtdMaxMap.getOrDefault(name, 0.0));
@@ -1498,7 +1518,24 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             }
         }
     }
+
+    enum UpdateFrequency {
+        oneSec(1),fiveSec(5),tenSec(10);
+        UpdateFrequency(int sec) {
+            updateSec = sec;
+        }
+
+        int getFreq() {
+            return updateSec;
+        }
+
+        int updateSec;
+    }
+
 }
+
+
+
 
 class FutPosTradesHandler implements ApiController.ITradeReportHandler {
 
