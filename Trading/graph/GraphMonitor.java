@@ -11,6 +11,9 @@ import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -26,7 +29,7 @@ import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.*;
 
-public class GraphMonitor extends JComponent implements GraphFillable {
+public class GraphMonitor extends JComponent implements GraphFillable, MouseListener, MouseMotionListener {
 
     private static final int WIDTH_MON = 2;
     String name;
@@ -56,10 +59,16 @@ public class GraphMonitor extends JComponent implements GraphFillable {
     private int current3DayP;
     private int wtdP;
 
+    private volatile int mouseXCord = Integer.MAX_VALUE;
+    private volatile int mouseYCord =  Integer.MAX_VALUE;
+
+
     GraphMonitor() {
         name = "";
         chineseName = "";
         this.tm = new ConcurrentSkipListMap<>();
+        addMouseListener(this);
+        addMouseMotionListener(this);
         //this.tmLDT = new ConcurrentSkipListMap<>();
     }
 
@@ -150,6 +159,15 @@ public class GraphMonitor extends JComponent implements GraphFillable {
 
                     }
                 }
+            }
+
+            if (roundDownToN(mouseXCord,WIDTH_MON) == x-5) {
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize()*2F));
+                g.drawString(lt.toString() + " " + Math.round(100d*tm.floorEntry(lt).getValue().getClose())/100d, x, lowY+(mouseYCord<closeY?-20:+20));
+                g.drawOval(x + 2, lowY, 5, 5);
+                g.fillOval(x + 2, lowY, 5, 5);
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize()*0.5F));
+
             }
             x += WIDTH_MON;
         }
@@ -413,4 +431,45 @@ public class GraphMonitor extends JComponent implements GraphFillable {
         }
     }
 
+    @Override
+    public void mouseClicked(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        //System.out.println(" mouse exit from graph bar ");
+        mouseXCord = Integer.MAX_VALUE;
+        mouseYCord = Integer.MAX_VALUE;
+        this.repaint();
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        mouseXCord = e.getX();
+        mouseYCord = e.getY();
+        //System.out.println(" graph bar x mouse x is " + mouseXCord);
+        this.repaint();
+
+    }
 }
