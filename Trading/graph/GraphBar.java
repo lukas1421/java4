@@ -212,7 +212,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
             }
             if (roundDownToN(mouseXCord,XU.graphBarWidth.get()) == x-5) {
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize()*2F));
-                g.drawString(lt.toString() + " " + Math.round(tm.floorEntry(lt).getValue().getClose()), x, lowY+(mouseYCord<closeY?-20:+20));
+                g.drawString(lt.toString() + " " + Math.round(100d*tm.floorEntry(lt).getValue().getClose())/100d, x, lowY+(mouseYCord<closeY?-20:+20));
                 g.drawOval(x + 2, lowY, 5, 5);
                 g.fillOval(x + 2, lowY, 5, 5);
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize()*0.5F));
@@ -468,7 +468,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        System.out.println(" drag detected " + e.getX() + " " + e.getY());
+        //System.out.println(" drag detected " + e.getX() + " " + e.getY());
 
     }
 
@@ -476,7 +476,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
     public void mouseMoved(MouseEvent e) {
         mouseXCord = e.getX();
         mouseYCord = e.getY();
-        System.out.println(" graph bar x mouse x is " + mouseXCord);
+        //System.out.println(" graph bar x mouse x is " + mouseXCord);
         this.repaint();
     }
 
@@ -502,7 +502,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
 
     @Override
     public void mouseExited(MouseEvent e) {
-        System.out.println(" mouse exit from graph bar ");
+        //System.out.println(" mouse exit from graph bar ");
         mouseYCord = Integer.MAX_VALUE;
         mouseXCord = Integer.MAX_VALUE;
         this.repaint();
