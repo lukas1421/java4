@@ -96,7 +96,8 @@ public class HistChinaStocks extends JPanel {
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private static Map<String, Double> wtdTradePnlMap = new HashMap<>();
     private static Map<String, Double> wtdMtmPnlMap = new HashMap<>();
-    private static BinaryOperator<NavigableMap<LocalDateTime, Double>> mapSummingDouble = (a, b) -> Stream.of(a, b).flatMap(e -> e.entrySet().stream())
+    private static BinaryOperator<NavigableMap<LocalDateTime, Double>> mapSummingDouble =
+            (a, b) -> Stream.of(a, b).flatMap(e -> e.entrySet().stream())
             .collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, Collectors.summingDouble(
                     Map.Entry::getValue)));
 
@@ -234,6 +235,8 @@ public class HistChinaStocks extends JPanel {
                                 graphYtd.fillInGraphChinaGen(selectedStock, chinaYtd);
                                 graphYtd.setTradesMap(netSharesTradedByDay.get(selectedStock));
                                 graphYtd.setLastPeriodClose(lastYearCloseMap.getOrDefault(selectedStock, 0.0));
+                                System.out.println(" last year close map " + selectedStock + " " +
+                                        lastYearCloseMap.getOrDefault(selectedStock, 0.0));
                                 //graphYtd.setYMTDReturn();
 //                                graphYtd.setTradePnl(computeCurrentTradePnl(selectedStock, LAST_YEAR_END));
 //                                graphYtd.setWtdVolTraded(computeWtdVolTraded(selectedStock));

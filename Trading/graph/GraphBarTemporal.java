@@ -85,7 +85,10 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         currentMtmPnl = Math.round(p * 100d) / 100d;
     }
 
-    public void setLastPeriodClose(double lp) {lastPeriodClose = lp;}
+    public void setLastPeriodClose(double lp) {
+        //System.out.println(" setting last period close ")
+        lastPeriodClose = lp;
+    }
 
     public void setNavigableMap(NavigableMap<T, SimpleBar> tm1) {
         this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero())

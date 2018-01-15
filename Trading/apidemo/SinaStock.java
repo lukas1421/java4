@@ -73,9 +73,10 @@ public class SinaStock implements Runnable {
             if (DATA_COLLECTION_TIME.test(LocalDateTime.now())) {
                 rtn = weightMapA50.entrySet().stream().mapToDouble(a -> returnMap.getOrDefault(a.getKey(), 0.0) * a.getValue()).sum();
                 double currPrice = OPEN * (1 + (Math.round(rtn) / 10000d));
-
                 double sinaVol = weightMapA50.entrySet().stream()
                         .mapToDouble(a -> sizeMap.getOrDefault(a.getKey(), 0L).doubleValue() * a.getValue() / 100d).sum();
+
+                //System.out.println(getStr(" time open rtn ",LocalTime.now(), OPEN , rtn));
 
                 if (indexPriceSina.containsKey(ldt.toLocalTime())) {
                     indexPriceSina.get(ldt.toLocalTime()).add(currPrice);
@@ -92,6 +93,8 @@ public class SinaStock implements Runnable {
                 } else {
                     priceMapBar.put(ftseIndex, (ConcurrentSkipListMap) indexPriceSina);
                 }
+                //System.out.println(" price just added " + priceMapBar.get(ftseIndex).get(ldt.toLocalTime()));
+
                 indexVol.put(ldt.toLocalTime(), sinaVol);
                 openMap.put(ftseIndex, OPEN);
                 sizeMap.put(ftseIndex, Math.round(sinaVol));
