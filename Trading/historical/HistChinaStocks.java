@@ -4,10 +4,7 @@ import TradeType.MarginTrade;
 import TradeType.NormalTrade;
 import TradeType.Trade;
 import TradeType.TradeBlock;
-import apidemo.ChinaMain;
-import apidemo.ChinaStock;
-import apidemo.FutType;
-import apidemo.TradingConstants;
+import apidemo.*;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.ExecutionFilter;
@@ -120,6 +117,7 @@ public class HistChinaStocks extends JPanel {
     private static final int CHG_POS_COL = 14;
     private static final int CURR_POS_COL = 15;
     private static final int T_COST_COL = 16;
+    private static final int A50_WEIGHT_COL = 44;
 
     public static double futExpiryLevel = 0.0;
     public static int futExpiryUnits = 0;
@@ -399,6 +397,25 @@ public class HistChinaStocks extends JPanel {
         JButton allTradedButton = new JButton("All Traded");
         JToggleButton autoComputeButton = new JToggleButton("Auto On");
         JButton fillExpiredButton = new JButton("Fill Expired");
+        JButton a50onlyButton = new JButton(" A50 Only ");
+
+        a50onlyButton.addActionListener(l->{
+            if (filterOn) {
+                sorter.setRowFilter(null);
+                filterOn = false;
+            } else {
+                List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
+                filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, 0.0, A50_WEIGHT_COL));
+                List<RowSorter.SortKey> keys = new ArrayList<>();
+                RowSorter.SortKey sortkey = new RowSorter.SortKey(A50_WEIGHT_COL,SortOrder.DESCENDING);
+                keys.add(sortkey);
+                sorter.setSortKeys(keys);
+                sorter.sort();
+                sorter.setRowFilter(RowFilter.orFilter(filters));
+                filterOn = true;
+            }
+
+        });
 
         fillExpiredButton.addActionListener(l -> {
             if (chinaWtd.get("SGXA50PR").size() > 0) {
@@ -622,6 +639,7 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(allTradedButton);
         controlPanel.add(autoComputeButton);
         controlPanel.add(fillExpiredButton);
+        controlPanel.add(a50onlyButton);
 
         this.setLayout(new BorderLayout());
         this.add(controlPanel, BorderLayout.NORTH);
@@ -1078,7 +1096,7 @@ public class HistChinaStocks extends JPanel {
                     CompletableFuture.runAsync(() -> {
                         if (chinaYtd.containsKey(s) && chinaYtd.get(s).size() > 1) {
                             NavigableMap<LocalDate, Double> ret = SharpeUtility.getReturnSeries(chinaYtd.get(s),
-                                    LocalDate.of(2016, Month.DECEMBER, 31));
+                                    LAST_YEAR_END);
                             double mean = SharpeUtility.getMean(ret);
                             double sdDay = SharpeUtility.getSD(ret);
                             double sr = SharpeUtility.getSharpe(ret, 252);
@@ -1550,6 +1568,8 @@ public class HistChinaStocks extends JPanel {
                     return " Last year close ";
                 case 43:
                     return " Ytd Chg";
+                case 44:
+                    return "A50 weight";
                 default:
                     return "";
             }
@@ -1702,6 +1722,8 @@ public class HistChinaStocks extends JPanel {
                 case 43:
                     return lastYearCloseMap.getOrDefault(name, 0.0) == 0.0 ? 0.0 :
                             Math.round(1000d * (price / lastYearCloseMap.getOrDefault(name, 0.0) - 1)) / 10d;
+                case 44:
+                    return SinaStock.weightMapA50.getOrDefault(name,0.0);
 
                 default:
                     return null;

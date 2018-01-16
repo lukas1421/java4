@@ -142,69 +142,70 @@ public final class ChinaStock extends JPanel {
 
     private static TableRowSorter<BarModel_STOCK> sorter;
 
-    static volatile double rangeThresh;
-    static volatile double sizeThresh;
-    static volatile double rtnThresh;
-    static volatile int amMaxTFloor;
-    static volatile int amMinTCeiling;
-    static volatile int openPCeiling;
-    static volatile int amClosePCeiling;
-    static volatile double first10Thresh;
-    static volatile int minTYThresh;
-    static volatile int maxTYFloor;
-    static volatile int percentileYCeiling;
-    static volatile int pmMaxTYCeiling;
-    static volatile int dayMinTFloor;
-    static volatile double vrFloor;
-    static volatile double vrPM10Floor;
-    static volatile int vrpFloor;
-    static volatile int vrMinTCeiling;
-    static volatile double ratioBreakFloor;
-    static volatile double rangeBreakFloor;
+    private static volatile double rangeThresh;
+    private static volatile double sizeThresh;
+    private static volatile double rtnThresh;
+    private static volatile int amMaxTFloor;
+    private static volatile int amMinTCeiling;
+    private static volatile int openPCeiling;
+    private static volatile int amClosePCeiling;
+    private static volatile double first10Thresh;
+    private static volatile int minTYThresh;
+    private static volatile int maxTYFloor;
+    private static volatile int percentileYCeiling;
+    private static volatile int pmMaxTYCeiling;
+    private static volatile int dayMinTFloor;
+    private static volatile double vrFloor;
+    private static volatile double vrPM10Floor;
+    private static volatile int vrpFloor;
+    private static volatile int vrMinTCeiling;
+    private static volatile double ratioBreakFloor;
+    private static volatile double rangeBreakFloor;
     static volatile String selectedNameStock = "";
-    static volatile String selectedIndustry = "";
-    static volatile String selectedBench = "";
+    private static volatile String selectedIndustry = "";
+    private static volatile String selectedBench = "";
 
-    static final int INDUSTRYCOL = 2;
-    static final int BENCHCOL = 3;
-    static final int RANGECOL = 4;
-    static final int OPCCOL = 5;
-    static final int FIRST1COL = 7;
-    static final int FIRST1OPCRATIOCOL = 8;
-    static final int FIRST1CPCOL = 9;
-    static final int FIRST1OPCOL = 10;
-    static final int FIRST10COL = 11;
-    static final int FIRST10MAXMINDIFFCOL = 14;
-    static final int AMCOCOL = 17;
-    static final int PMCOCOL = 18;
-    static final int COCOL = 19;
-    static final int SIZECOL = 20;
-    static final int VRCOL = 21;
-    static final int VRPCOL = 22;
-    static final int PMFIRST10COL = 27;
-    static final int VRPM10COL = 34;
-    static final int VRMINTCOL = 36;
-    static final int VRMAXTCOL = 37;
-    static final int VR925COL = 39;
-    static final int VR930COL = 40;
-    static final int VR935COL = 41;
-    static final int VR940COL = 42;
-    static final int MA20COL = 50;
-    static final int DAYMINTCOL = 53;
-    static final int AMMINTCOL = 57;
-    static final int AMMAXTCOL = 58;
-    static final int PMMAXTYCOL = 60;
-    static final int OPENPCOL = 63;
-    static final int AMCLOSEPCOL = 64;
-    static final int OPENPYCOL = 85;
-    static final int PERCENTILEYCOL = 86;
-    static final int COYCOL = 90;
-    static final int AMCOYCOL = 91;
-    static final int PMCOYCOL = 92;
-    static final int FIRST1YCOL = 94;
-    static final int FIRST10YCOL = 95;
-    static final int MINTYCOL = 96;
-    static final int MAXTYCOL = 97;
+    private static final int INDUSTRYCOL = 2;
+    private static final int BENCHCOL = 3;
+    private static final int RANGECOL = 4;
+    private static final int OPCCOL = 5;
+    private static final int FIRST1COL = 7;
+    private static final int FIRST1OPCRATIOCOL = 8;
+    private static final int FIRST1CPCOL = 9;
+    private static final int FIRST1OPCOL = 10;
+    private static final int FIRST10COL = 11;
+    private static final int FIRST10MAXMINDIFFCOL = 14;
+    private static final int AMCOCOL = 17;
+    private static final int PMCOCOL = 18;
+    private static final int COCOL = 19;
+    private static final int SIZECOL = 20;
+    private static final int VRCOL = 21;
+    private static final int VRPCOL = 22;
+    private static final int PMFIRST10COL = 27;
+    private  static final int VRPM10COL = 34;
+    private static final int VRMINTCOL = 36;
+    private static final int VRMAXTCOL = 37;
+    private static final int VR925COL = 39;
+    private static final int VR930COL = 40;
+    private static final int VR935COL = 41;
+    private static final int VR940COL = 42;
+    private static final int MA20COL = 50;
+    private static final int DAYMINTCOL = 53;
+    private static final int AMMINTCOL = 57;
+    private static final int AMMAXTCOL = 58;
+    private static final int PMMAXTYCOL = 60;
+    private static final int OPENPCOL = 63;
+    private static final int AMCLOSEPCOL = 64;
+    private static final int OPENPYCOL = 85;
+    private static final int PERCENTILEYCOL = 86;
+    private static final int COYCOL = 90;
+    private static final int AMCOYCOL = 91;
+    private static final int PMCOYCOL = 92;
+    private static final int FIRST1YCOL = 94;
+    private static final int FIRST10YCOL = 95;
+    private static final int MINTYCOL = 96;
+    private static final int MAXTYCOL = 97;
+    private static final int A50_WEIGHT_COL = 119;
 
     static ScheduledExecutorService ftes = Executors.newScheduledThreadPool(10);
 
@@ -266,7 +267,7 @@ public final class ChinaStock extends JPanel {
                 shortLongIndusMap.put(al1.get(3), al1.get(2));
                 longShortIndusMap.put(al1.get(2), al1.get(3));
             }
-            symbolNamesFull = nameMap.keySet().stream().collect(Collectors.toList());
+            symbolNamesFull = new ArrayList<>(nameMap.keySet());
 
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -381,6 +382,7 @@ public final class ChinaStock extends JPanel {
                     x.printStackTrace();
                     //noinspection unchecked
                     sorter = (TableRowSorter<BarModel_STOCK>) tab.getRowSorter();
+                    //sorter.sort();
                 }
             }
         });
@@ -737,12 +739,34 @@ public final class ChinaStock extends JPanel {
         JToggleButton vrPToggle = new JToggleButton("VRP%");
         JToggleButton vrMinTToggle = new JToggleButton("VRMinT<");
         JToggleButton pmReturnToggle = new JToggleButton("pm+");
+        JButton a50OnlyButton = new JButton("A50 Only");
+
+
         JToggleButton peakToggle = new JToggleButton("PeakNo>1");
         JToggleButton ratioBreakToggle = new JToggleButton("ratioBreakT");
         JToggleButton rangeBreakToggle = new JToggleButton("rngBreakT");
 
+        a50OnlyButton.addActionListener(l->{
+            if (filterOn) {
+                sorter.setRowFilter(null);
+                filterOn = false;
+            } else {
+                List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
+                filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, 0.0, A50_WEIGHT_COL));
+
+                List<RowSorter.SortKey> keys = new ArrayList<>();
+                RowSorter.SortKey sortkey = new RowSorter.SortKey(A50_WEIGHT_COL,SortOrder.DESCENDING);
+                keys.add(sortkey);
+                sorter.setSortKeys(keys);
+                sorter.setRowFilter(RowFilter.orFilter(filters));
+                sorter.sort();
+
+                filterOn = true;
+            }
+        });
+
         customFilter.addActionListener((ActionEvent al) -> {
-            if (filterOn == false) {
+            if (!filterOn) {
                 List<RowFilter<Object, Object>> filters = new ArrayList<>();
                 if (sizeToggle.isSelected()) {
                     filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, sizeThresh, SIZECOL));
@@ -956,6 +980,7 @@ public final class ChinaStock extends JPanel {
         jpMiddleBottom.add(vrPToggle);
         jpMiddleBottom.add(vrMinTToggle);
         jpMiddleBottom.add(pmReturnToggle);
+        jpMiddleBottom.add(a50OnlyButton);
 
         //jpMiddleBottom.add(peakToggle);  
         //jpMiddleBottom.add(ratioBreakToggle); jpMiddleBottom.add(rangeBreakToggle);
@@ -1622,17 +1647,17 @@ public final class ChinaStock extends JPanel {
                 / (ofNullable(sizeTotalMapYtd.get(name).floorEntry(lt)).filter(e -> e.getValue() != 0.0).map(Entry::getValue).orElse(Double.MAX_VALUE))) / 10d : 0.0;
     }
 
-    static double getFirst1Ret(String name) {
+    private static double getFirst1Ret(String name) {
         return (NORMAL_STOCK.test(name) && Utility.NO_ZERO.test(openMap, name) && CONTAINS_TIME.test(name, Utility.AMOPENT))
                 ? round(1000d * (GETCLOSE.applyAsDouble(name, Utility.AMOPENT) / openMap.get(name) - 1)) / 10d : 0.0;
     }
 
-    static double getFirst10Ret(String name) {
+    private static double getFirst10Ret(String name) {
         return (NORMAL_STOCK.test(name) && Utility.NO_ZERO.test(openMap, name) && CONTAINS_TIME.test(name, Utility.AMOPENT))
                 ? round(1000d * (GETCLOSE.applyAsDouble(name, Utility.AM940T) / DEFAULTOPEN.applyAsDouble(name) - 1)) / 10d : 0.0;
     }
 
-    static long getFirst10MaxMinTimeDiff(String name) {
+    private static long getFirst10MaxMinTimeDiff(String name) {
         if (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) {
             LocalTime first10MaxT = GETMAXTIME.apply(name, Utility.ENTRY_BTWN_GEN.getPred(Utility.AMOPENT, true, Utility.AM940T, true));
             LocalTime first10MinT = GETMINTIME.apply(name, Utility.ENTRY_BTWN_GEN.getPred(Utility.AMOPENT, true, Utility.AM940T, true));
@@ -1836,7 +1861,7 @@ public final class ChinaStock extends JPanel {
     }
 
     static int getTrueRange3day(String name) {
-        if(priceMapBarY2.containsKey(name) && priceMapBarY2.get(name).size() > 0) {
+        if (priceMapBarY2.containsKey(name) && priceMapBarY2.get(name).size() > 0) {
             double maxY2 = priceMapBarY2.get(name).entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(Double.MIN_VALUE);
             double minY2 = priceMapBarY2.get(name).entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(Double.MAX_VALUE);
 
@@ -2114,6 +2139,9 @@ public final class ChinaStock extends JPanel {
                     return "open ";
                 case 118:
                     return "current";
+
+                case 119:
+                    return "A50 Weight";
                 default:
                     return null;
             }
@@ -2240,17 +2268,17 @@ public final class ChinaStock extends JPanel {
                 //stratAM
                 case 24:
                     return "";
-                    //return stratAMMap.getOrDefault(name, "");
+                //return stratAMMap.getOrDefault(name, "");
 
                 //stratPM
                 case 25:
                     return "";
-                    //return stratPMMap.getOrDefault(name, "");
+                //return stratPMMap.getOrDefault(name, "");
 
                 //stratT
                 case 26:
                     return "";
-                    //return stratTimeMap.getOrDefault(name, Utility.AMOPENT);
+                //return stratTimeMap.getOrDefault(name, Utility.AMOPENT);
 
                 // pmF10
                 case 27:
@@ -2268,13 +2296,13 @@ public final class ChinaStock extends JPanel {
                 case 29:
                     return 0.0;
 
-                    //                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.PMOPENT))
+                //                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.PMOPENT))
 //                            ? priceMapBar.get(name).subMap(Utility.PMOPENT, true, Utility.PM1310T, true).entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.PMCLOSET;
 
                 //pm10MxMnD
                 case 30:
                     return 0.0;
-                    //return getPMFirst10MaxMinTimeDiff(name);
+                //return getPMFirst10MaxMinTimeDiff(name);
 
                 //pm max return    
                 case 31:
@@ -2294,42 +2322,42 @@ public final class ChinaStock extends JPanel {
                 //O%Y
                 case 33:
                     return 0.0;
-                    //return (Utility.NO_ZERO.test(minMapY, name)) ? (int) min(100, round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+                //return (Utility.NO_ZERO.test(minMapY, name)) ? (int) min(100, round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
 
                 //P%Y    
                 case 34:
                     return 0.0;
-                    //return getPercentileY(name);
+                //return getPercentileY(name);
 
                 // CHY
                 case 35:
                     return 0.0;
-                    //return getCHY(name);
+                //return getCHY(name);
 
                 //CLY 
                 case 36:
                     return 0.0;
-                    //return getCLY(name);
+                //return getCLY(name);
 
                 //HOY 
                 case 37:
                     return 0.0;
-                    //return getHOY(name);
+                //return getHOY(name);
 
                 //coY
                 case 38:
                     return 0.0;
-                    //return round(1000d * ofNullable(retCOY.get(name)).orElse(0.0)) / 10d;
+                //return round(1000d * ofNullable(retCOY.get(name)).orElse(0.0)) / 10d;
 
                 //amcoY
                 case 39:
                     return 0.0;
-                    //return getAMCOY(name);
+                //return getAMCOY(name);
 
                 //pmcoY
                 case 40:
                     return 0.0;
-                    //return getPMCOY(name);
+                //return getPMCOY(name);
 
                 //上下折Y  
                 case 41:
@@ -2340,46 +2368,46 @@ public final class ChinaStock extends JPanel {
                 //F1Y
                 case 42:
                     return 0.0;
-                    //return round(1000d * amFirst1Y.getOrDefault(name, 0.0)) / 10d;
+                //return round(1000d * amFirst1Y.getOrDefault(name, 0.0)) / 10d;
                 //F10Y    
                 case 43:
                     return 0.0;
-                    //return round(1000d * amFirst10Y.getOrDefault(name, 0.0)) / 10d;
+                //return round(1000d * amFirst10Y.getOrDefault(name, 0.0)) / 10d;
 
                 //minTY    
                 case 44:
                     return 0.0;
-                    //return minTY.getOrDefault(name, 0);
+                //return minTY.getOrDefault(name, 0);
 
                 // maxTY    
                 case 45:
                     return 0.0;
-                    //return maxTY.getOrDefault(name, 0);
+                //return maxTY.getOrDefault(name, 0);
 
                 //minY
                 case 46:
                     return 0.0;
-                    //return getMinY(name);
+                //return getMinY(name);
 
                 //maxY
                 case 47:
                     return 0.0;
-                    //return getMaxY(name);
+                //return getMaxY(name);
 
                 // rangeY
                 case 48:
                     return 0.0;
-                    //return getRangeY(name);
+                //return getRangeY(name);
 
                 // sizeY    
                 case 49:
                     return 0.0;
-                    //return (Utility.NORMAL_MAP.test(sizeTotalMapYtd, name)) ? round(sizeTotalMapYtd.get(name).lastEntry().getValue()) : 0L;
+                //return (Utility.NORMAL_MAP.test(sizeTotalMapYtd, name)) ? round(sizeTotalMapYtd.get(name).lastEntry().getValue()) : 0L;
 
                 //HOCHYRatio
                 case 50:
                     return 0.0;
-                    //return getHOCHYRatio(name);
+                //return getHOCHYRatio(name);
 
                 //CH/RngY
                 case 51:
@@ -2389,7 +2417,7 @@ public final class ChinaStock extends JPanel {
                 //ma20 
                 case 52:
                     return 0.0;
-                    //return Utility.noZeroArrayGen(name, ma20Map, priceMap) ? round(100d * 20 / (ma20Map.get(name) / priceMap.get(name) * 19 + 1)) / 100d : 0.0;
+                //return Utility.noZeroArrayGen(name, ma20Map, priceMap) ? round(100d * 20 / (ma20Map.get(name) / priceMap.get(name) * 19 + 1)) / 100d : 0.0;
 
                 // dayMinT
                 case 53:
@@ -2425,12 +2453,12 @@ public final class ChinaStock extends JPanel {
                 //vrP%    
                 case 59:
                     return 0.0;
-                    //return getVRPercentile(name);
+                //return getVRPercentile(name);
 
                 //V_Zscore
                 case 60:
                     return 0.0;
-                    //return round(10d * getVolZScore(name)) / 10d;
+                //return round(10d * getVolZScore(name)) / 10d;
 
                 //f10minT
                 case 61:
@@ -2468,47 +2496,47 @@ public final class ChinaStock extends JPanel {
                 //dayPeaks
                 case 66:
                     return 0.0;
-                    //return dayPeakCount.getOrDefault(name, 0L);
+                //return dayPeakCount.getOrDefault(name, 0L);
 
                 //amPeaks
                 case 67:
                     return 0.0;
-                    //return amPeakCount.getOrDefault(name, 0L);
+                //return amPeakCount.getOrDefault(name, 0L);
 
                 //pmPeaks
                 case 68:
                     return 0.0;
-                    //return pmPeakCount.getOrDefault(name, 0L);
+                //return pmPeakCount.getOrDefault(name, 0L);
 
                 //peakTimeDiff
                 case 69:
                     return 0.0;
-                    //return peakTimeAvgMap.getOrDefault(name, 0);
+                //return peakTimeAvgMap.getOrDefault(name, 0);
 
                 //pmPeakTimeDiff
                 case 70:
                     return 0.0;
-                    //return pmPeakTimeAvgMap.getOrDefault(name, 0);
+                //return pmPeakTimeAvgMap.getOrDefault(name, 0);
 
                 //peakRtnAvg
                 case 71:
                     return 0.0;
-                    //return peakReturnAvgMap.getOrDefault(name, 0.0);
+                //return peakReturnAvgMap.getOrDefault(name, 0.0);
 
                 //pmPeakRtnAvg
                 case 72:
                     return 0.0;
-                    //return pmPeakReturnAvgMap.getOrDefault(name, 0.0);
+                //return pmPeakReturnAvgMap.getOrDefault(name, 0.0);
 
                 //day滞
                 case 73:
                     return 0.0;
-                    //return dayStagnation.getOrDefault(name, 0L);
+                //return dayStagnation.getOrDefault(name, 0L);
 
                 //pm滞留
                 case 74:
                     return 0.0;
-                    //return pmStagnation.getOrDefault(name, 0L);
+                //return pmStagnation.getOrDefault(name, 0L);
 
                 //am1stBreakT
                 case 75:
@@ -2639,32 +2667,32 @@ public final class ChinaStock extends JPanel {
                 //pm1stBreak    
                 case 87:
                     return 0.0;
-                    //return getPMFirstBreakTime(name);
+                //return getPMFirstBreakTime(name);
 
                 // vrMnT    
                 case 88:
                     return 0.0;
-                    //return getVRMinT(name);
+                //return getVRMinT(name);
 
                 //vrMxT
                 case 89:
                     return 0.0;
-                    //return getVRMaxT(name);
+                //return getVRMaxT(name);
 
                 //vrDif
                 case 90:
                     return 0.0;
-                    //return round((double) getVRMaxT(name) / (double) getVRMinT(name) * 100d);
+                //return round((double) getVRMaxT(name) / (double) getVRMinT(name) * 100d);
 
                 //925R 
                 case 91:
                     return 0.0;
-                    //return getVR(name, Utility.AM925T);
+                //return getVR(name, Utility.AM925T);
 
                 //930R
                 case 92:
                     return 0.0;
-                    //return getVR(name, Utility.AMOPENT);
+                //return getVR(name, Utility.AMOPENT);
 
                 //935R    
                 case 93:
@@ -2674,17 +2702,17 @@ public final class ChinaStock extends JPanel {
                 //940R
                 case 94:
                     return 0.0;
-                    //return getVR(name, Utility.AM940T);
+                //return getVR(name, Utility.AM940T);
 
                 // vrStd
                 case 95:
                     return 0.0;
-                    //return round(100d * sizeRatioStandardizedMap.getOrDefault(name, 0.0)) / 100d;
+                //return round(100d * sizeRatioStandardizedMap.getOrDefault(name, 0.0)) / 100d;
 
                 //prod
                 case 96:
                     return 0.0;
-                    //return round(100d * ofNullable(sizeRatioStandardizedMap.get(name)).orElse(0.0) * ofNullable(pmF10VRChgStandardizedMap.get(name)).orElse(0.0)) / 100d;
+                //return round(100d * ofNullable(sizeRatioStandardizedMap.get(name)).orElse(0.0) * ofNullable(pmF10VRChgStandardizedMap.get(name)).orElse(0.0)) / 100d;
 
                 //pr   
                 case 97:
@@ -2693,51 +2721,51 @@ public final class ChinaStock extends JPanel {
                 //f10MxMnD
                 case 98:
                     return 0.0;
-                    //return getFirst10MaxMinTimeDiff(name);
+                //return getFirst10MaxMinTimeDiff(name);
 
                 //p1
                 case 99:
                     return 0.0;
-                    //return percentileVRPMap.getOrDefault(name, 0);
+                //return percentileVRPMap.getOrDefault(name, 0);
                 //p2
                 case 100:
                     return 0.0;
-                    //return percentileVRPAvgVRMap.getOrDefault(name, 0);
+                //return percentileVRPAvgVRMap.getOrDefault(name, 0);
                 //p3
                 case 101:
                     return 0.0;
-                    //return percentileVRPAvgPRMap.getOrDefault(name, 0);
+                //return percentileVRPAvgPRMap.getOrDefault(name, 0);
 
                 //maFallTime
                 case 102:
                     return 0.0;
-                    //return getMA20FirstFallTime(name);
+                //return getMA20FirstFallTime(name);
 
                 //maBreakTime    
                 case 103:
                     return 0.0;
-                    //return getMA20FirstBreakTime(name);
+                //return getMA20FirstBreakTime(name);
 
                 case 104:
                     return LocalTime.MIN; //getMaxPriceRangeTime(name);
                 case 105:
                     return 0.0;
-                    //return getMinuteRangeZScoreGen(name, 0L);
+                //return getMinuteRangeZScoreGen(name, 0L);
                 case 106:
                     return 0.0;
-                    //return getMinuteRangeZScoreGen(name, 1L);
+                //return getMinuteRangeZScoreGen(name, 1L);
                 case 107:
                     return 0.0;
-                    //return getVolZScore(name);
+                //return getVolZScore(name);
                 case 108:
                     return 0.0;
-                    //return getBarSharp(name, e -> true);
+                //return getBarSharp(name, e -> true);
                 case 109:
                     return 0.0;
-                    //return getBarSharp(name, e -> e.getValue().getBarReturn() > 0);
+                //return getBarSharp(name, e -> e.getValue().getBarReturn() > 0);
                 case 110:
                     return 0.0;
-                    //return getBarSharp(name, e -> e.getValue().getBarReturn() < 0);
+                //return getBarSharp(name, e -> e.getValue().getBarReturn() < 0);
 
                 //f10maxT
                 case 111:
@@ -2748,7 +2776,7 @@ public final class ChinaStock extends JPanel {
                 //1m/opc
                 case 112:
                     return 0.0;
-                    //return (getOPC(name) != 0.0 && getFirst1Ret(name) != 0.0) ? Math.abs(round(10d * getFirst1Ret(name) / getOPC(name)) / 10d) : 0.0;
+                //return (getOPC(name) != 0.0 && getFirst1Ret(name) != 0.0) ? Math.abs(round(10d * getFirst1Ret(name) / getOPC(name)) / 10d) : 0.0;
 
                 //1m
                 case 113:
@@ -2768,7 +2796,7 @@ public final class ChinaStock extends JPanel {
                 // P%
                 case 115:
                     return 0;
-                    //return (Utility.noZeroArrayGen(name, minMap, maxMap, priceMap)) ? (int) min(100, round(100d * (priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))) : 0;
+                //return (Utility.noZeroArrayGen(name, minMap, maxMap, priceMap)) ? (int) min(100, round(100d * (priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))) : 0;
 
                 //close
                 case 116:
@@ -2780,6 +2808,10 @@ public final class ChinaStock extends JPanel {
                 //current p
                 case 118:
                     return priceMap.getOrDefault(name, 0.0);
+
+                case 119:
+                    return SinaStock.weightMapA50.getOrDefault(name, 0.0);
+
                 default:
                     return null;
             }
@@ -3018,15 +3050,15 @@ public final class ChinaStock extends JPanel {
                     return Double.class;
                 case 114:
                     return Integer.class;
-
                 case 115:
                     return Integer.class;
-
                 case 116:
                     return Double.class;
                 case 117:
                     return Double.class;
                 case 118:
+                    return Double.class;
+                case 119:
                     return Double.class;
 
                 default:

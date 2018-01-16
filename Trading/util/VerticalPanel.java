@@ -2,15 +2,8 @@
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 package util;
 
-import java.awt.BorderLayout;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-
-import javax.swing.BoxLayout;
-import javax.swing.JComponent;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.*;
+import java.awt.*;
 
 public class VerticalPanel extends JPanel {
 
@@ -29,21 +22,21 @@ public class VerticalPanel extends JPanel {
             return super.getPreferredSize();
         }
 
-        public int wid() {
+        int wid() {
             return getComponent(0).getPreferredSize().width;
         }
 
-        public int wid2() {
+        int wid2() {
             return getComponentCount() > 1 ? getComponent(1).getPreferredSize().width : 0;
         }
 
-        public void wid(int i) {
+        void wid(int i) {
             Dimension d = getComponent(0).getPreferredSize();
             d.width = i;
             getComponent(0).setPreferredSize(d);
         }
 
-        public void wid2(int i) {
+        void wid2(int i) {
             if (getComponentCount() < 2) {
                 return;
             }
@@ -93,7 +86,7 @@ public class VerticalPanel extends JPanel {
         recalculateChildSizes();
     }
 
-    public void recalculateChildSizes() {
+    private void recalculateChildSizes() {
         int max = 0;
         for (int i = 0; i < getComponentCount(); i++) {
             FlowPanel comp = (FlowPanel) getComponent(i);
