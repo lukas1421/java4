@@ -127,7 +127,8 @@ public final class ChinaDataYesterday extends JPanel {
 
     ChinaDataYesterday() {
 
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "ma20.txt")))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader
+                (new FileInputStream(TradingConstants.GLOBALPATH + "ma20.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 ma20Map.put(al1.get(0), Double.parseDouble(al1.get(1)));

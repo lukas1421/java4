@@ -56,6 +56,8 @@ public class HistChinaStocks extends JPanel {
 
     public static Map<String, String> nameMap = new HashMap<>();
 
+    public static Map<String, Double> ma60Map = new HashMap<>();
+
     private static volatile GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
     private static volatile GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
     private static volatile GraphChinaPnl<LocalDateTime> graphWtdPnl = new GraphChinaPnl<>();
@@ -118,6 +120,7 @@ public class HistChinaStocks extends JPanel {
     private static final int CURR_POS_COL = 15;
     private static final int T_COST_COL = 16;
     private static final int A50_WEIGHT_COL = 44;
+    private static final int MA60_COL = 45;
 
     public static double futExpiryLevel = 0.0;
     public static int futExpiryUnits = 0;
@@ -141,6 +144,16 @@ public class HistChinaStocks extends JPanel {
 
     public HistChinaStocks() {
         String line;
+
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader
+                (new FileInputStream(TradingConstants.GLOBALPATH + "ma60.txt")))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                ma60Map.put(al1.get(0), Double.parseDouble(al1.get(1)));
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "sharesOut.txt")))) {
@@ -233,8 +246,7 @@ public class HistChinaStocks extends JPanel {
                                 graphYtd.fillInGraphChinaGen(selectedStock, chinaYtd);
                                 graphYtd.setTradesMap(netSharesTradedByDay.get(selectedStock));
                                 graphYtd.setLastPeriodClose(lastYearCloseMap.getOrDefault(selectedStock, 0.0));
-                                System.out.println(" last year close map " + selectedStock + " " +
-                                        lastYearCloseMap.getOrDefault(selectedStock, 0.0));
+                                //System.out.println(" last year close map " + selectedStock + " " + lastYearCloseMap.getOrDefault(selectedStock, 0.0));
                                 //graphYtd.setYMTDReturn();
 //                                graphYtd.setTradePnl(computeCurrentTradePnl(selectedStock, LAST_YEAR_END));
 //                                graphYtd.setWtdVolTraded(computeWtdVolTraded(selectedStock));
@@ -398,6 +410,25 @@ public class HistChinaStocks extends JPanel {
         JToggleButton autoComputeButton = new JToggleButton("Auto On");
         JButton fillExpiredButton = new JButton("Fill Expired");
         JButton a50onlyButton = new JButton(" A50 Only ");
+        JButton aboveMA60Button = new JButton(" >MA60 ");
+
+        aboveMA60Button.addActionListener(l->{
+            if (filterOn) {
+                sorter.setRowFilter(null);
+                filterOn = false;
+            } else {
+                List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
+                filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, 1.0, MA60_COL));
+                filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, 0.0, A50_WEIGHT_COL));
+                List<RowSorter.SortKey> keys = new ArrayList<>();
+                RowSorter.SortKey sortkey = new RowSorter.SortKey(A50_WEIGHT_COL,SortOrder.DESCENDING);
+                keys.add(sortkey);
+                sorter.setSortKeys(keys);
+                sorter.sort();
+                sorter.setRowFilter(RowFilter.andFilter(filters));
+                filterOn = true;
+            }
+        });
 
         a50onlyButton.addActionListener(l->{
             if (filterOn) {
@@ -640,6 +671,7 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(autoComputeButton);
         controlPanel.add(fillExpiredButton);
         controlPanel.add(a50onlyButton);
+        controlPanel.add(aboveMA60Button);
 
         this.setLayout(new BorderLayout());
         this.add(controlPanel, BorderLayout.NORTH);
@@ -1474,7 +1506,7 @@ public class HistChinaStocks extends JPanel {
 
         @Override
         public int getColumnCount() {
-            return 45;
+            return 50;
         }
 
         @Override
@@ -1570,6 +1602,8 @@ public class HistChinaStocks extends JPanel {
                     return " Ytd Chg";
                 case 44:
                     return "A50 weight";
+                case 45:
+                    return "60 DMA";
                 default:
                     return "";
             }
@@ -1724,6 +1758,9 @@ public class HistChinaStocks extends JPanel {
                             Math.round(1000d * (price / lastYearCloseMap.getOrDefault(name, 0.0) - 1)) / 10d;
                 case 44:
                     return SinaStock.weightMapA50.getOrDefault(name,0.0);
+
+                case 45:
+                    return Math.round(price/ma60Map.getOrDefault(name,0.0)*100d)/100d;
 
                 default:
                     return null;
