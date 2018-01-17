@@ -666,7 +666,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             if (!ld.equals(currDate) && lt.isBefore(LocalTime.of(17, 1))) {
 
-                System.out.println(getStr(" fut close map (open close) ", FutType.get(name), lt, open, close));
+                //System.out.println(getStr(" fut close map (open close) ", FutType.get(name), lt, open, close));
 
                 futPrevCloseMap.put(FutType.get(name), open);
             }

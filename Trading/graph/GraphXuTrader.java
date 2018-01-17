@@ -9,6 +9,9 @@ import utility.SharpeUtility;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -21,7 +24,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
 import static utility.Utility.*;
 
-public class GraphXuTrader extends JComponent {
+public class GraphXuTrader extends JComponent implements MouseMotionListener, MouseListener {
 
     //private static final int WIDTH_BAR = 5;
     int height;
@@ -43,11 +46,8 @@ public class GraphXuTrader extends JComponent {
     volatile int size;
     private static final BasicStroke BS3 = new BasicStroke(3);
 
-//    public GraphXuTrader(NavigableMap<LocalTime, SimpleBar> tm) {
-//        this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue()
-//                .containsZero()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-//                (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
-//    }
+    private int mouseXCord;
+    private int mouseYCord;
 
     protected GraphXuTrader() {
         name = "";
@@ -55,6 +55,8 @@ public class GraphXuTrader extends JComponent {
         maxAMT = LocalTime.of(9, 30);
         minAMT = AMOPENT;
         this.tm = new ConcurrentSkipListMap<>();
+        addMouseListener(this);
+        addMouseMotionListener(this);
     }
 
     public void setNavigableMap(NavigableMap<LocalTime, SimpleBar> tm) {
@@ -128,7 +130,6 @@ public class GraphXuTrader extends JComponent {
         minRtn = getMinRtn();
         maxRtn = getMaxRtn();
         last = 0;
-        //rtn = getReturn();
 
         int x = 5;
         for (LocalTime lt : tm.keySet()) {
@@ -182,6 +183,13 @@ public class GraphXuTrader extends JComponent {
                         g.fillPolygon(p);
                     }
                 }
+            }
+            if (roundDownToN(mouseXCord,XUTrader.graphWidth.get()) == x-5) {
+                //lowY+(mouseYCord<closeY?-20:+20
+                g.drawString(lt.toString() + " " + Math.round(tm.floorEntry(lt).getValue().getClose()), x,
+                        lowY + (mouseYCord<closeY?-50:+50));
+                g.drawOval(x -3, lowY, 5, 5);
+                g.fillOval(x - 3 , lowY , 5, 5);
             }
             x += XUTrader.graphWidth.get();
         }
@@ -361,5 +369,45 @@ public class GraphXuTrader extends JComponent {
             return r(100d*(getLast() / getIndex() - 1));
         }
         return 0.0;
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mousePressed(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent mouseEvent) {
+        mouseXCord = Integer.MAX_VALUE;
+        mouseYCord = Integer.MAX_VALUE;
+        this.repaint();
+
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent mouseEvent) {
+        mouseXCord = mouseEvent.getX();
+        mouseYCord = mouseEvent.getY();
+        this.repaint();
     }
 }
