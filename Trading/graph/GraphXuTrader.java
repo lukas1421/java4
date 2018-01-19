@@ -124,7 +124,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
 
-        height = getHeight() - 70;
+        height = getHeight() - 100;
         min = getMin();
         max = getMax();
         minRtn = getMinRtn();

@@ -298,6 +298,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         JRadioButton _1secButton = new JRadioButton("1s");
         JRadioButton _5secButton = new JRadioButton("5s");
         JRadioButton _10secButton = new JRadioButton("10s");
+        _1secButton.setSelected(true);
 
         _1secButton.addActionListener(l -> updateFreq = UpdateFrequency.oneSec);
         _5secButton.addActionListener(l -> updateFreq = UpdateFrequency.fiveSec);
