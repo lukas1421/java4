@@ -1098,8 +1098,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return (tradesMap.get(name).size() > 0 && Utility.noZeroArrayGen(name, ChinaStock.priceMap))
                 ? Math.round(tradesMap.get(name).entrySet().stream()
                 .filter(e -> e.getValue().getSizeAll() < 0)
-                .mapToDouble(e -> e.getValue().getSizeAll() * (ChinaStock.priceMap.getOrDefault(name, 0.0)
-                        - e.getValue().getCostBasisAll(name))).sum() * 100d * fx) / 100d : 0.0;
+                .mapToDouble(e -> e.getValue().getSizeAll() * ChinaStock.priceMap.getOrDefault(name, 0.0)
+                        + e.getValue().getCostBasisAll(name)).sum() * 100d * fx) / 100d : 0.0;
     }
 
     private static int getNetPosition(String name) {
