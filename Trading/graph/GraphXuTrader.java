@@ -136,11 +136,11 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             if(v>0.0) {
                 g.setColor(Color.blue);
                 g.drawLine(0,y,getWidth(),y);
-                g.drawString("Buy: " + Double.toString(v) + " at " + k, Math.round(getWidth() / 2), y + 10);
+                g.drawString("Buy: " + Double.toString(v) + " at " + k, Math.round(getWidth()*7/8), y + 10);
             } else {
                 g.setColor(Color.red);
                 g.drawLine(0,y,getWidth(),y);
-                g.drawString("Sell: " + Double.toString(v)  + " at " + k, Math.round(getWidth() / 2), y + 10);
+                g.drawString("Sell: " + Double.toString(v)  + " at " + k, Math.round(getWidth()*7/8), y + 10);
             }
         });
 
