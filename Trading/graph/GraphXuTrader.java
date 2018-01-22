@@ -131,6 +131,18 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         maxRtn = getMaxRtn();
         last = 0;
 
+        XUTrader.activeFutLiveOrder.forEach((k,v)->{
+            int y = getY(k);
+            g.drawLine(0,y,getWidth(),y);
+            if(v>0.0) {
+                g.setColor(Color.blue);
+                g.drawString("Buy: " + Double.toString(v) + " at " + k, Math.round(getWidth() / 2), y + 10);
+            } else {
+                g.setColor(Color.red);
+                g.drawString("Sell: " + Double.toString(v)  + " at " + k, Math.round(getWidth() / 2), y + 10);
+            }
+        });
+
         int x = 5;
         for (LocalTime lt : tm.keySet()) {
             int openY = getY(tm.floorEntry(lt).getValue().getOpen());

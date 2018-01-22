@@ -100,9 +100,9 @@ public class OrderState {
         this(null, null, null, null, 0.0, 0.0, 0.0, null, null);
     }
 
-    OrderState(String status, String initMargin, String maintMargin,
-            String equityWithLoan, double commission, double minCommission,
-            double maxCommission, String commissionCurrency, String warningText) {
+    private OrderState(String status, String initMargin, String maintMargin,
+                       String equityWithLoan, double commission, double minCommission,
+                       double maxCommission, String commissionCurrency, String warningText) {
 
         m_status = status;
         m_initMargin = initMargin;

@@ -2,19 +2,10 @@
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 package client;
 
-import java.util.ArrayList;
-
-import client.Types.Action;
-import client.Types.AlgoStrategy;
-import client.Types.HedgeType;
-import client.Types.Method;
-import client.Types.OcaType;
-import client.Types.ReferencePriceType;
-import client.Types.Rule80A;
-import client.Types.TimeInForce;
-import client.Types.TriggerMethod;
-import client.Types.VolatilityType;
+import client.Types.*;
 import utility.Utility;
+
+import java.util.ArrayList;
 
 public class Order {
 
@@ -1379,7 +1370,7 @@ public class Order {
     }
 
     public String toString() {
-        return Utility.getStr(m_action, m_orderType, m_totalQuantity);
+        return Utility.getStr(m_action, m_orderType, m_totalQuantity, " at ", m_lmtPrice);
 
     }
 
