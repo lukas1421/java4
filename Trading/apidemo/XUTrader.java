@@ -72,6 +72,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static Map<String, Double> bidPriceList = new HashMap<>();
     private static Map<String, Double> offerPriceList = new HashMap<>();
     private ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
+    private ScheduledExecutorService ses2 = Executors.newScheduledThreadPool(10);
 
     public static EnumMap<FutType, NavigableMap<LocalTime, TradeBlock>> tradesMap = new EnumMap<>(FutType.class);
 
@@ -212,6 +213,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         : (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + ":00");
 
                 apcon.reqPositions(getThis());
+                activeFutLiveOrder = new HashMap<>();
+                apcon.reqLiveOrders(getThis());
 
                 SwingUtilities.invokeLater(() -> {
                     currTimeLabel.setText(time);
@@ -226,9 +229,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }, 0, 1, TimeUnit.SECONDS);
         });
 
-        JButton stopComputeButton = new JButton("Stop Compute");
+        JButton stopComputeButton = new JButton("Stop Processing");
         stopComputeButton.addActionListener(l -> {
-            ses.shutdown();
+            ses2.shutdown();
             System.out.println(" executor status is " + ses.isShutdown());
         });
 
@@ -242,7 +245,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         JButton processTradesButton = new JButton("Process");
 
-        processTradesButton.addActionListener(l -> ses.scheduleAtFixedRate(() -> {
+        processTradesButton.addActionListener(l -> ses2.scheduleAtFixedRate(() -> {
             SwingUtilities.invokeLater(() -> {
                 XUTrader.clearLog();
                 XUTrader.updateLog("**************************************************************");
@@ -305,7 +308,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //        });
 
         JButton cancelAllOrdersButton = new JButton("Cancel Orders");
-        cancelAllOrdersButton.addActionListener(l -> apcon.cancelAllOrders());
+        cancelAllOrdersButton.addActionListener(l -> {
+            apcon.cancelAllOrders();
+            activeFutLiveOrder = new HashMap<>();
+            //apcon.reqLiveOrders(getThis());
+            SwingUtilities.invokeLater(xuGraph::repaint);
+        });
 
         JButton reqLiveOrdersButton = new JButton(" Live Orders ");
         reqLiveOrdersButton.addActionListener(l -> {
