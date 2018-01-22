@@ -205,7 +205,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             ses.scheduleAtFixedRate(() -> {
                 String time = (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).getSecond() != 0)
-                        ? (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()) : (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + ":00");
+                        ? (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString())
+                        : (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + ":00");
 
                 apcon.reqPositions(getThis());
 
@@ -303,6 +304,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JButton cancelAllOrdersButton = new JButton("Cancel Orders");
         cancelAllOrdersButton.addActionListener(l -> apcon.cancelAllOrders());
 
+        JButton reqLiveOrdersButton = new JButton(" Live Orders ");
+        reqLiveOrdersButton.addActionListener(l-> apcon.reqLiveOrders(getThis()) );
 
         xuGraph.setAutoscrolls(false);
         JScrollPane chartScroll = new JScrollPane(xuGraph, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS) {
@@ -383,6 +386,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel2.add(showGraphButton);
         controlPanel2.add(connectionLabel);
         controlPanel2.add(cancelAllOrdersButton);
+        controlPanel2.add(reqLiveOrdersButton);
+
         controlPanel2.add(frontFutButton);
         controlPanel2.add(backFutButton);
         controlPanel2.add(_1mButton);
@@ -434,11 +439,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     if (e.getClickCount() == 2 && !e.isConsumed()) {
                         System.out.println(" double clicked buy " + l.getName());
                         double bidPrice = bidPriceList.get(l.getName());
-                        System.out.println(" bid price " + bidPrice + " check if order price makes sense " + checkIfOrderPriceMakeSense(bidPrice));
+                        System.out.println(" bid price " + bidPrice + " check if order price makes sense "
+                                + checkIfOrderPriceMakeSense(bidPrice));
                         if (checkIfOrderPriceMakeSense(bidPrice) && marketOpen(LocalTime.now())) {
                             apcon.placeOrModifyOrder(activeFuture, placeBidLimit(bidPrice), getThis());
                         } else {
-                            throw new IllegalArgumentException("fuck that price out of bound");
+                            throw new IllegalArgumentException("price out of bound");
                         }
                     }
                 }
@@ -461,7 +467,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         if (checkIfOrderPriceMakeSense(offerPrice) && marketOpen(LocalTime.now())) {
                             apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(offerPrice), getThis());
                         } else {
-                            throw new IllegalArgumentException("fuck that price out of bound");
+                            throw new IllegalArgumentException("price out of bound");
                         }
                     }
                 }
@@ -634,6 +640,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void updateLog(String s) {
         outputArea.append(s);
         outputArea.append("\n");
+        SwingUtilities.invokeLater(()->outputArea.repaint());
     }
 
     private static void clearLog() {
@@ -772,10 +779,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId, int parentId,
                             double lastFillPrice, int clientId, String whyHeld) {
 
-        XUTrader.updateLog(Utility.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
+        XUTrader.updateLog(Utility.getStr(" status filled remaining avgFillPrice ",
+                status, filled, remaining, avgFillPrice));
 
         if (status.equals(OrderStatus.Filled)) {
-            XUTrader.createDialog(Utility.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
+            XUTrader.createDialog(Utility.getStr(" status filled remaining avgFillPrice ",
+                    status, filled, remaining, avgFillPrice));
         }
     }
 
@@ -787,21 +796,26 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //live order handler
     @Override
     public void openOrder(Contract contract, Order order, OrderState orderState) {
-        XUTrader.updateLog(getStr(contract.toString(), order.toString(), orderState.toString()));
+        System.out.println(" in open order ");
+        System.out.println(getStr(ibContractToSymbol(contract),order.toString(),orderState.toString()));
+        XUTrader.updateLog(getStr(ibContractToSymbol(contract), order.toString(), orderState.toString()));
     }
 
     @Override
     public void openOrderEnd() {
+        System.out.println(" open order ends ");
     }
 
     @Override
     public void orderStatus(int orderId, OrderStatus status, int filled, int remaining,
                             double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
 
-        XUTrader.updateLog(Utility.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
+        XUTrader.updateLog(Utility.getStr(" status filled remaining avgFillPrice ",
+                status, filled, remaining, avgFillPrice));
 
         if (status.equals(OrderStatus.Filled)) {
-            XUTrader.createDialog(Utility.getStr(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
+            XUTrader.createDialog(Utility.getStr(" status filled remaining avgFillPrice ",
+                    status, filled, remaining, avgFillPrice));
         }
     }
 

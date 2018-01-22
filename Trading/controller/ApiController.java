@@ -361,7 +361,7 @@ public class ApiController implements EWrapper {
         return m_connected;
     }
 
-    protected boolean checkConnection() {
+    private boolean checkConnection() {
         if (!isConnected()) {
             error(EClientErrors.NO_VALID_ID, EClientErrors.NOT_CONNECTED.code(), EClientErrors.NOT_CONNECTED.msg());
             return false;
@@ -1472,7 +1472,8 @@ public class ApiController implements EWrapper {
 
         void openOrderEnd();
 
-        void orderStatus(int orderId, OrderStatus status, int filled, int remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld);
+        void orderStatus(int orderId, OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
+                         int parentId, double lastFillPrice, int clientId, String whyHeld);
 
         void handle(int orderId, int errorCode, String errorMsg);  // add permId?
     }
@@ -1519,9 +1520,7 @@ public class ApiController implements EWrapper {
 
     @Override
     public void openOrderEnd() {
-        m_liveOrderHandlers.forEach((handler) -> {
-            handler.openOrderEnd();
-        });
+        m_liveOrderHandlers.forEach(ILiveOrderHandler::openOrderEnd);
         recEOM();
     }
 
