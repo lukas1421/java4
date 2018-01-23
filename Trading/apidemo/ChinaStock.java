@@ -2176,7 +2176,8 @@ public final class ChinaStock extends JPanel {
 
                 //rtn  
                 case 6:
-                    return Utility.noZeroArrayGen(name, priceMap, openMap) && NORMAL_STOCK.test(name) ? round(1000d * (priceMap.get(name) / DEFAULTOPEN.applyAsDouble(name) - 1)) / 10d : 0.0;
+                    return Utility.noZeroArrayGen(name, priceMap, openMap, closeMap) && NORMAL_STOCK.test(name) ? round(1000d * (priceMap.get(name) /
+                            closeMap.getOrDefault(name,openMap.getOrDefault(name,0.0))- 1)) / 10d : 0.0;
 
                 //AM
                 case 7:

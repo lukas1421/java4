@@ -787,7 +787,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //ApiController.IOrderHandler
     @Override
     public void orderState(OrderState orderState) {
-        XUTrader.updateLog(orderState.toString());
+        System.out.println(" order state is " + orderState);
+        //XUTrader.updateLog(orderState.toString());
     }
 
     @Override

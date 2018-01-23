@@ -163,7 +163,8 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
 
             if (roundDownToN(mouseXCord, WIDTH_MON) == x - 5) {
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
-                g.drawString(lt.toString() + " " + Math.round(100d * tm.floorEntry(lt).getValue().getClose()) / 100d, (mouseXCord <= (getWidth() / 2)) ? x : x - (getWidth() / 2),
+                g.drawString(lt.toLocalTime().toString() + " " + Math.round(100d * tm.floorEntry(lt).getValue().getClose()) / 100d,
+                        (mouseXCord <= (getWidth() / 2)) ? x : x - (getWidth() / 3),
                         lowY + (mouseYCord < closeY ? -20 : +20));
                 g.drawOval(x + 2, lowY, 5, 5);
                 g.fillOval(x + 2, lowY, 5, 5);
