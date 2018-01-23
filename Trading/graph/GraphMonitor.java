@@ -60,7 +60,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
     private int wtdP;
 
     private volatile int mouseXCord = Integer.MAX_VALUE;
-    private volatile int mouseYCord =  Integer.MAX_VALUE;
+    private volatile int mouseYCord = Integer.MAX_VALUE;
 
 
     GraphMonitor() {
@@ -161,13 +161,13 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
                 }
             }
 
-            if (roundDownToN(mouseXCord,WIDTH_MON) == x-5) {
-                g2.setFont(g.getFont().deriveFont(g.getFont().getSize()*2F));
-                g.drawString(lt.toString() + " " + Math.round(100d*tm.floorEntry(lt).getValue().getClose())/100d, (mouseXCord <= (getWidth()/2))?x:x-(getWidth()/2),
-                        lowY+(mouseYCord<closeY?-20:+20));
+            if (roundDownToN(mouseXCord, WIDTH_MON) == x - 5) {
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+                g.drawString(lt.toString() + " " + Math.round(100d * tm.floorEntry(lt).getValue().getClose()) / 100d, (mouseXCord <= (getWidth() / 2)) ? x : x - (getWidth() / 2),
+                        lowY + (mouseYCord < closeY ? -20 : +20));
                 g.drawOval(x + 2, lowY, 5, 5);
                 g.fillOval(x + 2, lowY, 5, 5);
-                g2.setFont(g.getFont().deriveFont(g.getFont().getSize()*0.5F));
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
 
             }
             x += WIDTH_MON;
@@ -324,11 +324,14 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         trades = priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
                 ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate);
 
+        //System.out.println(getStr("graph monitor name trade ", name, trades));
 
         if (HistChinaStocks.chinaTradeMap.containsKey(name) && HistChinaStocks.chinaTradeMap.get(name).size() > 0) {
-            trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(name).headMap(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS), false)
-                    , priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
-                            ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate));
+            //LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
+            trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(name).headMap(
+                    LocalDateTime.of(ChinaMain.currentTradingDate,LocalTime.MIN),false),
+                    priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
+                    ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate));
             //System.out.println(" merged trade is " + trades);
         }
 
@@ -352,13 +355,11 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         if (dispGran == DisplayGranularity._1MDATA) {
             res = priceMapToLDT(tmIn, ChinaMain.currentTradingDate);
         } else if (dispGran == DisplayGranularity._5MDATA) {
-
             if (HistChinaStocks.chinaWtd.containsKey(name) && HistChinaStocks.chinaWtd.get(name).size() > 0) {
                 res = trimMapWithLocalTimePred(mergeMaps(HistChinaStocks.chinaWtd.get(name), Utility.priceMap1mTo5M(tmIn)), chinaTradingTimePred);
             } else {
                 res = trimMapWithLocalTimePred(priceMapToLDT(priceMap1mTo5M(tmIn), ChinaMain.currentTradingDate), chinaTradingTimePred);
             }
-
         }
         NavigableMap<LocalDateTime, SimpleBar> finalRes = res;
         SwingUtilities.invokeLater(() -> this.tm = finalRes);
@@ -405,9 +406,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
                     .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
             double minY = ChinaData.priceMapBarYtd.get(name).entrySet().stream()
                     .min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
-
             ytdCloseP = (int) Math.round(100d * (closeY1 - minY) / (maxY - minY));
-
             current2DayP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, minY))
                     / (Utility.reduceDouble(Math::max, maxT, maxY) - Utility.reduceDouble(Math::min, minT, minY)));
 

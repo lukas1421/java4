@@ -321,225 +321,225 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             apcon.reqLiveOrders(getThis());
         });
 
-            xuGraph.setAutoscrolls(false);
-            JScrollPane chartScroll = new JScrollPane(xuGraph, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS) {
+        xuGraph.setAutoscrolls(false);
+        JScrollPane chartScroll = new JScrollPane(xuGraph, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 300;
+                d.width = 1900;
+                return d;
+            }
+        };
+
+        JRadioButton frontFutButton = new JRadioButton("Front");
+        frontFutButton.addActionListener(l -> {
+            graphPred = e -> e.getKey().equals(FutType.FrontFut);
+            activeFuture = frontFut;
+        });
+        frontFutButton.setSelected(true);
+        JRadioButton backFutButton = new JRadioButton("Back");
+        backFutButton.addActionListener(l -> {
+            graphPred = e -> e.getKey().equals(FutType.BackFut);
+            activeFuture = backFut;
+        });
+
+        JRadioButton _1mButton = new JRadioButton("1m");
+        _1mButton.addActionListener(l -> gran = DisplayGranularity._1MDATA);
+        _1mButton.setSelected(true);
+
+        JRadioButton _5mButton = new JRadioButton("5m");
+        _5mButton.addActionListener(l -> gran = DisplayGranularity._5MDATA);
+
+        ButtonGroup frontBackGroup = new ButtonGroup();
+        frontBackGroup.add(frontFutButton);
+        frontBackGroup.add(backFutButton);
+
+        ButtonGroup dispGranGroup = new ButtonGroup();
+        dispGranGroup.add(_1mButton);
+        dispGranGroup.add(_5mButton);
+
+
+        JLabel widthLabel = new JLabel("Width");
+        widthLabel.setOpaque(true);
+        widthLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        widthLabel.setFont(widthLabel.getFont().deriveFont(15F));
+
+        JButton graphWidthUp = new JButton(" UP ");
+        graphWidthUp.addActionListener(l -> {
+            graphWidth.incrementAndGet();
+            SwingUtilities.invokeLater(xuGraph::refresh);
+        });
+
+        JButton graphWidthDown = new JButton(" Down ");
+        graphWidthDown.addActionListener(l -> {
+            graphWidth.set(Math.max(1, graphWidth.decrementAndGet()));
+            SwingUtilities.invokeLater(xuGraph::refresh);
+        });
+
+
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+
+        JPanel controlPanel1 = new JPanel();
+        JPanel controlPanel2 = new JPanel();
+        controlPanel1.add(currTimeLabel);
+        controlPanel1.add(bidLimitButton);
+        controlPanel1.add(offerLimitButton);
+        controlPanel1.add(buyOfferButton);
+        controlPanel1.add(sellBidButton);
+        controlPanel2.add(getPositionButton);
+        controlPanel2.add(level2Button);
+        controlPanel2.add(refreshButton);
+        controlPanel2.add(computeButton);
+        controlPanel2.add(execButton);
+        controlPanel2.add(processTradesButton);
+        //controlPanel2.add(connect7496);
+        //controlPanel2.add(connect4001);
+        controlPanel2.add(getData);
+        controlPanel2.add(graphButton);
+        controlPanel2.add(showGraphButton);
+        controlPanel2.add(connectionLabel);
+        controlPanel2.add(cancelAllOrdersButton);
+        controlPanel2.add(reqLiveOrdersButton);
+
+        controlPanel2.add(frontFutButton);
+        controlPanel2.add(backFutButton);
+        controlPanel2.add(_1mButton);
+        controlPanel2.add(_5mButton);
+        controlPanel2.add(widthLabel);
+        controlPanel2.add(graphWidthUp);
+        controlPanel2.add(graphWidthDown);
+        controlPanel2.add(stopComputeButton);
+
+        JLabel bid1 = new JLabel("1");
+        bidLabelList.add(bid1);
+        bid1.setName("bid1");
+        JLabel bid2 = new JLabel("2");
+        bidLabelList.add(bid2);
+        bid2.setName("bid2");
+        JLabel bid3 = new JLabel("3");
+        bidLabelList.add(bid3);
+        bid3.setName("bid3");
+        JLabel bid4 = new JLabel("4");
+        bidLabelList.add(bid4);
+        bid4.setName("bid4");
+        JLabel bid5 = new JLabel("5");
+        bidLabelList.add(bid5);
+        bid5.setName("bid5");
+        JLabel ask1 = new JLabel("1");
+        askLabelList.add(ask1);
+        ask1.setName("ask1");
+        JLabel ask2 = new JLabel("2");
+        askLabelList.add(ask2);
+        ask2.setName("ask2");
+        JLabel ask3 = new JLabel("3");
+        askLabelList.add(ask3);
+        ask3.setName("ask3");
+        JLabel ask4 = new JLabel("4");
+        askLabelList.add(ask4);
+        ask4.setName("ask4");
+        JLabel ask5 = new JLabel("5");
+        askLabelList.add(ask5);
+        ask5.setName("ask5");
+
+        bidLabelList.forEach(l -> {
+            l.setOpaque(true);
+            l.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            l.setFont(l.getFont().deriveFont(30F));
+            l.setHorizontalAlignment(SwingConstants.CENTER);
+            l.addMouseListener(new MouseAdapter() {
                 @Override
-                public Dimension getPreferredSize() {
-                    Dimension d = super.getPreferredSize();
-                    d.height = 300;
-                    d.width = 1900;
-                    return d;
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getClickCount() == 2 && !e.isConsumed()) {
+                        System.out.println(" double clicked buy " + l.getName());
+                        double bidPrice = bidPriceList.get(l.getName());
+                        System.out.println(" bid price " + bidPrice + " check if order price makes sense "
+                                + checkIfOrderPriceMakeSense(bidPrice));
+                        if (checkIfOrderPriceMakeSense(bidPrice) && marketOpen(LocalTime.now())) {
+                            apcon.placeOrModifyOrder(activeFuture, placeBidLimit(bidPrice), getThis());
+                        } else {
+                            throw new IllegalArgumentException("price out of bound");
+                        }
+                    }
                 }
-            };
-
-            JRadioButton frontFutButton = new JRadioButton("Front");
-            frontFutButton.addActionListener(l -> {
-                graphPred = e -> e.getKey().equals(FutType.FrontFut);
-                activeFuture = frontFut;
             });
-            frontFutButton.setSelected(true);
-            JRadioButton backFutButton = new JRadioButton("Back");
-            backFutButton.addActionListener(l -> {
-                graphPred = e -> e.getKey().equals(FutType.BackFut);
-                activeFuture = backFut;
-            });
+        });
 
-            JRadioButton _1mButton = new JRadioButton("1m");
-            _1mButton.addActionListener(l -> gran = DisplayGranularity._1MDATA);
-            _1mButton.setSelected(true);
+        askLabelList.forEach(l -> {
+            l.setOpaque(true);
+            l.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            l.setFont(l.getFont().deriveFont(30F));
+            l.setHorizontalAlignment(SwingConstants.CENTER);
 
-            JRadioButton _5mButton = new JRadioButton("5m");
-            _5mButton.addActionListener(l -> gran = DisplayGranularity._5MDATA);
+            l.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getClickCount() == 2 && !e.isConsumed()) {
+                        double offerPrice = offerPriceList.get(l.getName());
+                        System.out.println(" offer  price list " + offerPriceList.toString());
 
-            ButtonGroup frontBackGroup = new ButtonGroup();
-            frontBackGroup.add(frontFutButton);
-            frontBackGroup.add(backFutButton);
-
-            ButtonGroup dispGranGroup = new ButtonGroup();
-            dispGranGroup.add(_1mButton);
-            dispGranGroup.add(_5mButton);
-
-
-            JLabel widthLabel = new JLabel("Width");
-            widthLabel.setOpaque(true);
-            widthLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-            widthLabel.setFont(widthLabel.getFont().deriveFont(15F));
-
-            JButton graphWidthUp = new JButton(" UP ");
-            graphWidthUp.addActionListener(l -> {
-                graphWidth.incrementAndGet();
-                SwingUtilities.invokeLater(xuGraph::refresh);
-            });
-
-            JButton graphWidthDown = new JButton(" Down ");
-            graphWidthDown.addActionListener(l -> {
-                graphWidth.set(Math.max(1, graphWidth.decrementAndGet()));
-                SwingUtilities.invokeLater(xuGraph::refresh);
-            });
-
-
-            setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
-            JPanel controlPanel1 = new JPanel();
-            JPanel controlPanel2 = new JPanel();
-            controlPanel1.add(currTimeLabel);
-            controlPanel1.add(bidLimitButton);
-            controlPanel1.add(offerLimitButton);
-            controlPanel1.add(buyOfferButton);
-            controlPanel1.add(sellBidButton);
-            controlPanel2.add(getPositionButton);
-            controlPanel2.add(level2Button);
-            controlPanel2.add(refreshButton);
-            controlPanel2.add(computeButton);
-            controlPanel2.add(execButton);
-            controlPanel2.add(processTradesButton);
-            //controlPanel2.add(connect7496);
-            //controlPanel2.add(connect4001);
-            controlPanel2.add(getData);
-            controlPanel2.add(graphButton);
-            controlPanel2.add(showGraphButton);
-            controlPanel2.add(connectionLabel);
-            controlPanel2.add(cancelAllOrdersButton);
-            controlPanel2.add(reqLiveOrdersButton);
-
-            controlPanel2.add(frontFutButton);
-            controlPanel2.add(backFutButton);
-            controlPanel2.add(_1mButton);
-            controlPanel2.add(_5mButton);
-            controlPanel2.add(widthLabel);
-            controlPanel2.add(graphWidthUp);
-            controlPanel2.add(graphWidthDown);
-            controlPanel2.add(stopComputeButton);
-
-            JLabel bid1 = new JLabel("1");
-            bidLabelList.add(bid1);
-            bid1.setName("bid1");
-            JLabel bid2 = new JLabel("2");
-            bidLabelList.add(bid2);
-            bid2.setName("bid2");
-            JLabel bid3 = new JLabel("3");
-            bidLabelList.add(bid3);
-            bid3.setName("bid3");
-            JLabel bid4 = new JLabel("4");
-            bidLabelList.add(bid4);
-            bid4.setName("bid4");
-            JLabel bid5 = new JLabel("5");
-            bidLabelList.add(bid5);
-            bid5.setName("bid5");
-            JLabel ask1 = new JLabel("1");
-            askLabelList.add(ask1);
-            ask1.setName("ask1");
-            JLabel ask2 = new JLabel("2");
-            askLabelList.add(ask2);
-            ask2.setName("ask2");
-            JLabel ask3 = new JLabel("3");
-            askLabelList.add(ask3);
-            ask3.setName("ask3");
-            JLabel ask4 = new JLabel("4");
-            askLabelList.add(ask4);
-            ask4.setName("ask4");
-            JLabel ask5 = new JLabel("5");
-            askLabelList.add(ask5);
-            ask5.setName("ask5");
-
-            bidLabelList.forEach(l -> {
-                l.setOpaque(true);
-                l.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-                l.setFont(l.getFont().deriveFont(30F));
-                l.setHorizontalAlignment(SwingConstants.CENTER);
-                l.addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-                        if (e.getClickCount() == 2 && !e.isConsumed()) {
-                            System.out.println(" double clicked buy " + l.getName());
-                            double bidPrice = bidPriceList.get(l.getName());
-                            System.out.println(" bid price " + bidPrice + " check if order price makes sense "
-                                    + checkIfOrderPriceMakeSense(bidPrice));
-                            if (checkIfOrderPriceMakeSense(bidPrice) && marketOpen(LocalTime.now())) {
-                                apcon.placeOrModifyOrder(activeFuture, placeBidLimit(bidPrice), getThis());
-                            } else {
-                                throw new IllegalArgumentException("price out of bound");
-                            }
+                        if (checkIfOrderPriceMakeSense(offerPrice) && marketOpen(LocalTime.now())) {
+                            apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(offerPrice), getThis());
+                        } else {
+                            throw new IllegalArgumentException("price out of bound");
                         }
                     }
-                });
+                }
             });
+        });
 
-            askLabelList.forEach(l -> {
-                l.setOpaque(true);
-                l.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-                l.setFont(l.getFont().deriveFont(30F));
-                l.setHorizontalAlignment(SwingConstants.CENTER);
+        JPanel deepPanel = new JPanel();
+        //deepPanel.setPreferredSize(new Dimension(100,100));
+        deepPanel.setLayout(new GridLayout(5, 2));
+        deepPanel.add(bid1);
+        deepPanel.add(ask1);
+        deepPanel.add(bid2);
+        deepPanel.add(ask2);
+        deepPanel.add(bid3);
+        deepPanel.add(ask3);
+        deepPanel.add(bid4);
+        deepPanel.add(ask4);
+        deepPanel.add(bid5);
+        deepPanel.add(ask5);
 
-                l.addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-                        if (e.getClickCount() == 2 && !e.isConsumed()) {
-                            double offerPrice = offerPriceList.get(l.getName());
-                            System.out.println(" offer  price list " + offerPriceList.toString());
+        JScrollPane outputPanel = new JScrollPane(outputArea);
 
-                            if (checkIfOrderPriceMakeSense(offerPrice) && marketOpen(LocalTime.now())) {
-                                apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(offerPrice), getThis());
-                            } else {
-                                throw new IllegalArgumentException("price out of bound");
-                            }
-                        }
-                    }
-                });
-            });
+        //JPanel graphPanel = new JPanel();
+        //graphPanel.add(chartScroll);
 
-            JPanel deepPanel = new JPanel();
-            //deepPanel.setPreferredSize(new Dimension(100,100));
-            deepPanel.setLayout(new GridLayout(5, 2));
-            deepPanel.add(bid1);
-            deepPanel.add(ask1);
-            deepPanel.add(bid2);
-            deepPanel.add(ask2);
-            deepPanel.add(bid3);
-            deepPanel.add(ask3);
-            deepPanel.add(bid4);
-            deepPanel.add(ask4);
-            deepPanel.add(bid5);
-            deepPanel.add(ask5);
-
-            JScrollPane outputPanel = new JScrollPane(outputArea);
-
-            //JPanel graphPanel = new JPanel();
-            //graphPanel.add(chartScroll);
-
-            controlPanel1.setLayout(new FlowLayout());
+        controlPanel1.setLayout(new FlowLayout());
 //        add(controlPanel,BorderLayout.NORTH);
 //        add(deepPanel, BorderLayout.CENTER);
 //        add(jp, BorderLayout.EAST);
 //        add(graphPanel,BorderLayout.SOUTH);
-            //add(controlPanel);
+        //add(controlPanel);
 
-            add(controlPanel1);
-            add(controlPanel2);
-            add(deepPanel);
-            add(outputPanel);
-            add(chartScroll);
-        }
+        add(controlPanel1);
+        add(controlPanel2);
+        add(deepPanel);
+        add(outputPanel);
+        add(chartScroll);
+    }
 
-        private void loadXU () {
-            //apcon.reqHistoricalData(frontFut, TOOL_TIP_TEXT_KEY, ERROR, Types.DurationUnit.SECOND, Types.BarSize._1_secs, Types.WhatToShow.TRADES, true, handler);
-            System.out.println(" getting XU data ");
-            apcon.getSGXA50Historical2(30000, this);
-        }
+    private void loadXU() {
+        //apcon.reqHistoricalData(frontFut, TOOL_TIP_TEXT_KEY, ERROR, Types.DurationUnit.SECOND, Types.BarSize._1_secs, Types.WhatToShow.TRADES, true, handler);
+        System.out.println(" getting XU data ");
+        apcon.getSGXA50Historical2(30000, this);
+    }
 
-        private boolean checkIfOrderPriceMakeSense ( double p){
-            FutType f = ibContractToFutType(activeFuture);
-            System.out.println(" current ask bid price " + askMap.get(f) + " " + bidMap.get(f) + " " + futPriceMap.get(f) + " ");
-            return !(p == 0.0) && !(bidMap.getOrDefault(f, 0.0) == 0.0)
-                    && !(askMap.getOrDefault(f, 0.0) == 0.0) && !(futPriceMap.getOrDefault(f, 0.0) == 0.0)
-                    && (Math.abs(p / futPriceMap.getOrDefault(f, 0.0) - 1) < 0.02);
-        }
+    private boolean checkIfOrderPriceMakeSense(double p) {
+        FutType f = ibContractToFutType(activeFuture);
+        System.out.println(" current ask bid price " + askMap.get(f) + " " + bidMap.get(f) + " " + futPriceMap.get(f) + " ");
+        return !(p == 0.0) && !(bidMap.getOrDefault(f, 0.0) == 0.0)
+                && !(askMap.getOrDefault(f, 0.0) == 0.0) && !(futPriceMap.getOrDefault(f, 0.0) == 0.0)
+                && (Math.abs(p / futPriceMap.getOrDefault(f, 0.0) - 1) < 0.02);
+    }
 
-        private boolean marketOpen (LocalTime t){
-            return t.isAfter(LocalTime.of(8, 59));
-        }
+    private boolean marketOpen(LocalTime t) {
+        return t.isAfter(LocalTime.of(8, 59));
+    }
 
-        //    @Override
+    //    @Override
 //    public void handleHist(String name, LocalDate ld, double open, double high, double low, double close) {
 //        LocalDate currDate = LocalDate.now();
 //        if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
@@ -588,78 +588,78 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //        }
 //    }
 
-        private void connectToTWS () {
-            System.out.println(" trying to connect");
-            try {
-                apcon.connect("127.0.0.1", 7496, 101, "");
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-            apcon.client().reqIds(-1);
+    private void connectToTWS() {
+        System.out.println(" trying to connect");
+        try {
+            apcon.connect("127.0.0.1", 7496, 101, "");
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
+        apcon.client().reqIds(-1);
+    }
 
-        private static ApiController getAPICon () {
-            return apcon;
-        }
+    private static ApiController getAPICon() {
+        return apcon;
+    }
 
-        private Order buyAtOffer ( double p){
-            System.out.println(" buy at offer " + p);
-            Order o = new Order();
-            o.action(Types.Action.BUY);
-            o.lmtPrice(p);
-            o.orderType(OrderType.LMT);
-            o.totalQuantity(1);
-            o.outsideRth(true);
-            return o;
-        }
+    private Order buyAtOffer(double p) {
+        System.out.println(" buy at offer " + p);
+        Order o = new Order();
+        o.action(Types.Action.BUY);
+        o.lmtPrice(p);
+        o.orderType(OrderType.LMT);
+        o.totalQuantity(1);
+        o.outsideRth(true);
+        return o;
+    }
 
-        private Order sellAtBid ( double p){
-            System.out.println(" sell at bid " + p);
+    private Order sellAtBid(double p) {
+        System.out.println(" sell at bid " + p);
 
-            Order o = new Order();
-            o.action(Types.Action.SELL);
-            //o.auxPrice(0.0);
-            o.lmtPrice(p);
-            o.orderType(OrderType.LMT);
-            o.totalQuantity(1);
-            o.outsideRth(true);
-            //o.orderId(orderIdNo.incrementAndGet());
-            return o;
-        }
+        Order o = new Order();
+        o.action(Types.Action.SELL);
+        //o.auxPrice(0.0);
+        o.lmtPrice(p);
+        o.orderType(OrderType.LMT);
+        o.totalQuantity(1);
+        o.outsideRth(true);
+        //o.orderId(orderIdNo.incrementAndGet());
+        return o;
+    }
 
-        private Order placeBidLimit ( double p){
-            System.out.println(" place bid limit " + p);
-            Order o = new Order();
-            o.action(Types.Action.BUY);
-            o.lmtPrice(p);
-            o.orderType(OrderType.LMT);
-            o.totalQuantity(1);
-            o.outsideRth(true);
-            o.tif(Types.TimeInForce.GTC);
-            return o;
-        }
+    private Order placeBidLimit(double p) {
+        System.out.println(" place bid limit " + p);
+        Order o = new Order();
+        o.action(Types.Action.BUY);
+        o.lmtPrice(p);
+        o.orderType(OrderType.LMT);
+        o.totalQuantity(1);
+        o.outsideRth(true);
+        o.tif(Types.TimeInForce.GTC);
+        return o;
+    }
 
-        private Order placeOfferLimit ( double p){
-            System.out.println(" place offer limit " + p);
-            Order o = new Order();
-            o.action(Types.Action.SELL);
-            o.lmtPrice(p);
-            o.orderType(OrderType.LMT);
-            o.totalQuantity(1);
-            o.tif(Types.TimeInForce.GTC);
-            o.outsideRth(true);
-            return o;
-        }
+    private Order placeOfferLimit(double p) {
+        System.out.println(" place offer limit " + p);
+        Order o = new Order();
+        o.action(Types.Action.SELL);
+        o.lmtPrice(p);
+        o.orderType(OrderType.LMT);
+        o.totalQuantity(1);
+        o.tif(Types.TimeInForce.GTC);
+        o.outsideRth(true);
+        return o;
+    }
 
-        private static void updateLog (String s){
-            outputArea.append(s);
-            outputArea.append("\n");
-            SwingUtilities.invokeLater(() -> outputArea.repaint());
-        }
+    private static void updateLog(String s) {
+        outputArea.append(s);
+        outputArea.append("\n");
+        SwingUtilities.invokeLater(() -> outputArea.repaint());
+    }
 
-        private static void clearLog () {
-            outputArea.setText("");
-        }
+    private static void clearLog() {
+        outputArea.setText("");
+    }
 
 //    int getCurrentPosition() {
 //        return 0;
@@ -669,209 +669,207 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //        repaint();
 //    }
 
-        @Override
-        public void handleHist (String name, String date,double open, double high, double low, double close){
+    @Override
+    public void handleHist(String name, String date, double open, double high, double low, double close) {
 
-            LocalDate currDate = LocalDate.now();
+        LocalDate currDate = LocalDate.now();
 
 
-            if (!date.startsWith("finished")) {
+        if (!date.startsWith("finished")) {
 
-                Date dt = new Date(Long.parseLong(date) * 1000);
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(dt);
-                LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
-                LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
-                //System.out.println(" handle hist in xu trader ld lt  " + LocalDateTime.of(ld, lt));
-                //System.out.println(getStr("name date open high low close ", name, date, open, high, low, close));
+            Date dt = new Date(Long.parseLong(date) * 1000);
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(dt);
+            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+            LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+            //System.out.println(" handle hist in xu trader ld lt  " + LocalDateTime.of(ld, lt));
+            //System.out.println(getStr("name date open high low close ", name, date, open, high, low, close));
 
-                if (!ld.equals(currDate) && lt.isBefore(LocalTime.of(17, 1))) {
+            if (!ld.equals(currDate) && lt.isBefore(LocalTime.of(17, 1))) {
 
-                    //System.out.println(getStr(" fut close map (open close) ", FutType.get(name), lt, open, close));
+                //System.out.println(getStr(" fut close map (open close) ", FutType.get(name), lt, open, close));
 
-                    futPrevCloseMap.put(FutType.get(name), open);
-                }
-
-                if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
-                        || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(23, 59))))) {
-
-                    if (lt.equals(LocalTime.of(9, 0))) {
-                        futOpenMap.put(FutType.get(name), open);
-                        System.out.println(" today open is for " + name + " " + open);
-                    }
-
-                    //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                    //System.out.println(Utility.getStrCheckNull(dt, open, high, low, close));
-                    futData.get(FutType.get(name)).put(lt, new SimpleBar(open, high, low, close));
-                    //xuFrontData.put(lt, new SimpleBar(open, high, low, close));
-
-                }
-            } else {
-                System.out.println(getStr(date, open, high, low, close));
+                futPrevCloseMap.put(FutType.get(name), open);
             }
-        }
 
-        @Override
-        public void actionUponFinish (String name){
-            System.out.println(" printing fut data " + name + " " + futData.get(FutType.get(name)).lastEntry());
-        }
+            if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
+                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(23, 59))))) {
 
-        @Override
-        public void updateMktDepth ( int position, String marketMaker, Types.DeepType operation, Types.DeepSide side,
-        double price, int size){
-            SwingUtilities.invokeLater(() -> {
-                if (side.equals(Types.DeepSide.BUY)) {
-                    XUTrader.bidLabelList.get(position).setText(Utility.getStrCheckNull(price, "            ", size));
-                    XUTrader.bidPriceList.put("bid" + Integer.toString(position + 1), price);
-                } else {
-                    XUTrader.askLabelList.get(position).setText(Utility.getStrCheckNull(price, "            ", size));
-                    XUTrader.offerPriceList.put("ask" + Integer.toString(position + 1), price);
+                if (lt.equals(LocalTime.of(9, 0))) {
+                    futOpenMap.put(FutType.get(name), open);
+                    System.out.println(" today open is for " + name + " " + open);
                 }
-            });
+
+                //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                //System.out.println(Utility.getStrCheckNull(dt, open, high, low, close));
+                futData.get(FutType.get(name)).put(lt, new SimpleBar(open, high, low, close));
+                //xuFrontData.put(lt, new SimpleBar(open, high, low, close));
+
+            }
+        } else {
+            System.out.println(getStr(date, open, high, low, close));
         }
+    }
+
+    @Override
+    public void actionUponFinish(String name) {
+        System.out.println(" printing fut data " + name + " " + futData.get(FutType.get(name)).lastEntry());
+    }
+
+    @Override
+    public void updateMktDepth(int position, String marketMaker, Types.DeepType operation, Types.DeepSide side,
+                               double price, int size) {
+        SwingUtilities.invokeLater(() -> {
+            if (side.equals(Types.DeepSide.BUY)) {
+                XUTrader.bidLabelList.get(position).setText(Utility.getStrCheckNull(price, "            ", size));
+                XUTrader.bidPriceList.put("bid" + Integer.toString(position + 1), price);
+            } else {
+                XUTrader.askLabelList.get(position).setText(Utility.getStrCheckNull(price, "            ", size));
+                XUTrader.offerPriceList.put("ask" + Integer.toString(position + 1), price);
+            }
+        });
+    }
 
 
-        @Override
-        public void tradeReport (String tradeKey, Contract contract, Execution execution){
-            //System.out.println( tradeKey );
-            //System.out.println( contract.toString() );
-            //System.out.println(" exec " + execution.side() + " "+ execution.cumQty() + "　" + execution.time() + " " + execution.price()  + " "+ execution.execId());
-            //String ticker = ibContractToSymbol(contract);
+    @Override
+    public void tradeReport(String tradeKey, Contract contract, Execution execution) {
+        //System.out.println( tradeKey );
+        //System.out.println( contract.toString() );
+        //System.out.println(" exec " + execution.side() + " "+ execution.cumQty() + "　" + execution.time() + " " + execution.price()  + " "+ execution.execId());
+        //String ticker = ibContractToSymbol(contract);
 
-            FutType f = ibContractToFutType(contract);
-            System.out.println(" exec " + execution.side() + "　" + execution.time() + " " + execution.cumQty()
-                    + " " + execution.price() + " " + execution.orderRef() + " " + execution.orderId() + " " + execution.permId() + " "
-                    + execution.shares());
-            int sign = (execution.side().equals("BOT")) ? 1 : -1;
+        FutType f = ibContractToFutType(contract);
+        System.out.println(" exec " + execution.side() + "　" + execution.time() + " " + execution.cumQty()
+                + " " + execution.price() + " " + execution.orderRef() + " " + execution.orderId() + " " + execution.permId() + " "
+                + execution.shares());
+        int sign = (execution.side().equals("BOT")) ? 1 : -1;
 
-            LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
+        LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
-            if (ldt.getDayOfMonth() == LocalDateTime.now().getDayOfMonth()) {
-                if (XUTrader.tradesMap.get(f).containsKey(ldt.toLocalTime())) {
-                    XUTrader.tradesMap.get(f).get(ldt.toLocalTime())
-                            .addTrade(new FutureTrade(execution.price(), sign * execution.cumQty()));
-                } else {
-                    XUTrader.tradesMap.get(f).put(ldt.toLocalTime(),
-                            new TradeBlock(new FutureTrade(execution.price(), sign * execution.cumQty())));
-                }
+        if (ldt.getDayOfMonth() == LocalDateTime.now().getDayOfMonth()) {
+            if (XUTrader.tradesMap.get(f).containsKey(ldt.toLocalTime())) {
+                XUTrader.tradesMap.get(f).get(ldt.toLocalTime())
+                        .addTrade(new FutureTrade(execution.price(), sign * execution.cumQty()));
+            } else {
+                XUTrader.tradesMap.get(f).put(ldt.toLocalTime(),
+                        new TradeBlock(new FutureTrade(execution.price(), sign * execution.cumQty())));
+            }
 //            if (XUTrader.tradesMapFront.containsKey(ldt.toLocalTime())) {
 //                XUTrader.tradesMapFront.get(ldt.toLocalTime()).addTrade(new IBTrade(execution.price(), sign * execution.cumQty()));
 //            } else {
 //                XUTrader.tradesMapFront.put(ldt.toLocalTime(), new IBTrade(execution.price(), sign * execution.cumQty()));
 //            }
 
-                //System.out.println(" printing all trades");
-                //XUTrader.tradesMapFront.entrySet().stream().forEach(System.out::println);
-                //XUTrader.processTradeMapActive();
-            }
+            //System.out.println(" printing all trades");
+            //XUTrader.tradesMapFront.entrySet().stream().forEach(System.out::println);
+            //XUTrader.processTradeMapActive();
         }
+    }
 
-        @Override
-        public void tradeReportEnd () {
-            System.out.println(" trade report end printing");
-            XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).entrySet().forEach(System.out::println);
+    @Override
+    public void tradeReportEnd() {
+        System.out.println(" trade report end printing");
+        XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).entrySet().forEach(System.out::println);
 
-        }
+    }
 
-        @Override
-        public void commissionReport (String tradeKey, CommissionReport commissionReport){
+    @Override
+    public void commissionReport(String tradeKey, CommissionReport commissionReport) {
 //        System.out.println(" commion report "  + commissionReport.m_commission);
 //        System.out.println(" realized pnl  "  + commissionReport.m_realizedPNL);
 //        System.out.println(" yield  "  + commissionReport.m_yield);
 //        System.out.println("  redemption date "  + commissionReport.m_yieldRedemptionDate);
 //        XUTrader.netTotalCommissions += Math.round(100d*commissionReport.m_commission)/100d;
-            //System.out.println(" net total com so far " + XUTrader.netTotalCommissions);
-        }
+        //System.out.println(" net total com so far " + XUTrader.netTotalCommissions);
+    }
 
 
-        //ApiController.IOrderHandler
-        @Override
-        public void orderState (OrderState orderState){
-            XUTrader.updateLog(orderState.toString());
-        }
+    //ApiController.IOrderHandler
+    @Override
+    public void orderState(OrderState orderState) {
+        XUTrader.updateLog(orderState.toString());
+    }
 
-        @Override
-        public void orderStatus (OrderStatus status,int filled, int remaining, double avgFillPrice, long permId,
-        int parentId,
-        double lastFillPrice, int clientId, String whyHeld){
+    @Override
+    public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
+                            int parentId, double lastFillPrice, int clientId, String whyHeld) {
 
-            XUTrader.updateLog(Utility.getStr(" status filled remaining avgFillPrice ",
+        XUTrader.updateLog(Utility.getStr(" status filled remaining avgFillPrice ",
+                status, filled, remaining, avgFillPrice));
+
+        if (status.equals(OrderStatus.Filled)) {
+            XUTrader.createDialog(Utility.getStr(" status filled remaining avgFillPrice ",
                     status, filled, remaining, avgFillPrice));
-
-            if (status.equals(OrderStatus.Filled)) {
-                XUTrader.createDialog(Utility.getStr(" status filled remaining avgFillPrice ",
-                        status, filled, remaining, avgFillPrice));
-            }
         }
+    }
 
-        @Override
-        public void handle ( int errorCode, String errorMsg){
-            XUTrader.updateLog(" handle error code " + errorCode + " message " + errorMsg);
-        }
+    @Override
+    public void handle(int errorCode, String errorMsg) {
+        XUTrader.updateLog(" handle error code " + errorCode + " message " + errorMsg);
+    }
 
-        //live order handler
-        @Override
-        public void openOrder (Contract contract, Order order, OrderState orderState){
-            System.out.println(" in open order ");
-            if(ibContractToSymbol(contract).equals(ibContractToSymbol(activeFuture))) {
-                System.out.println(" contract equals to active future ");
-                double sign = order.action().equals(Types.Action.BUY)?1:-1;
-                if(!activeFutLiveOrder.containsKey(order.lmtPrice())) {
-                    activeFutLiveOrder.put(order.lmtPrice(),sign*order.totalQuantity());
-                } else {
-                    activeFutLiveOrder.put(order.lmtPrice(),
-                            activeFutLiveOrder.get(order.lmtPrice()) + sign*order.totalQuantity());
-                }
+    //live order handler
+    @Override
+    public void openOrder(Contract contract, Order order, OrderState orderState) {
+        System.out.println(" in open order ");
+        if (ibContractToSymbol(contract).equals(ibContractToSymbol(activeFuture))) {
+            System.out.println(" contract equals to active future ");
+            double sign = order.action().equals(Types.Action.BUY) ? 1 : -1;
+            if (!activeFutLiveOrder.containsKey(order.lmtPrice())) {
+                activeFutLiveOrder.put(order.lmtPrice(), sign * order.totalQuantity());
             } else {
-                System.out.println(" contract not equal to activefuture ");
+                activeFutLiveOrder.put(order.lmtPrice(),
+                        activeFutLiveOrder.get(order.lmtPrice()) + sign * order.totalQuantity());
             }
-
-            System.out.println(getStr(ibContractToSymbol(contract), order.toString(), orderState.toString()));
-            XUTrader.updateLog(getStr(ibContractToSymbol(contract), order.toString(), orderState.toString()));
+        } else {
+            System.out.println(" contract not equal to activefuture ");
         }
 
-        @Override
-        public void openOrderEnd () {
-            System.out.println(" open order ends ");
-            System.out.println(" active fut order map " + activeFutLiveOrder);
-        }
+        //System.out.println(getStr(ibContractToSymbol(contract), order.toString(), orderState.toString()));
+        //XUTrader.updateLog(getStr(ibContractToSymbol(contract), order.toString(), orderState.toString()));
+    }
 
-        @Override
-        public void orderStatus ( int orderId, OrderStatus status,int filled, int remaining,
-        double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld){
+    @Override
+    public void openOrderEnd() {
+        //System.out.println(" open order ends ");
+        //System.out.println(" active fut order map " + activeFutLiveOrder);
+    }
 
-            System.out.println(" in order status ");
+    @Override
+    public void orderStatus(int orderId, OrderStatus status, int filled, int remaining,
+                            double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
 
-            XUTrader.updateLog(Utility.getStr(" status filled remaining avgFillPrice ",
+        System.out.println(" in order status ");
+
+        XUTrader.updateLog(Utility.getStr(" status filled remaining avgFillPrice ",
+                status, filled, remaining, avgFillPrice));
+
+        if (status.equals(OrderStatus.Filled)) {
+            XUTrader.createDialog(Utility.getStr(" status filled remaining avgFillPrice ",
                     status, filled, remaining, avgFillPrice));
+        }
+    }
 
-            if (status.equals(OrderStatus.Filled)) {
-                XUTrader.createDialog(Utility.getStr(" status filled remaining avgFillPrice ",
-                        status, filled, remaining, avgFillPrice));
-            }
+    @Override
+    public void handle(int orderId, int errorCode, String errorMsg) {
+        System.out.println(" Xutrader handle ");
+        XUTrader.updateLog(" handle error code " + errorCode + " message " + errorMsg);
+    }
+
+    // position
+    @Override
+    public void position(String account, Contract contract, double position, double avgCost) {
+        //System.out.println (" proper handling here XXXX ");
+        String ticker = utility.Utility.ibContractToSymbol(contract);
+        if (contract.symbol().equals("XINA50") && position != 0.0) {
+            FutType f = ibContractToFutType(contract);
+            //System.out.println(getStr(" in position xutrader ", ticker, position, avgCost));
+            currentPosMap.put(f, (int) position);
         }
 
-        @Override
-        public void handle ( int orderId, int errorCode, String errorMsg){
-            System.out.println(" Xutrader handle ");
-            XUTrader.updateLog(" handle error code " + errorCode + " message " + errorMsg);
-        }
+        SwingUtilities.invokeLater(() -> {
 
-        // position
-
-        @Override
-        public void position (String account, Contract contract,double position, double avgCost){
-            //System.out.println (" proper handling here XXXX ");
-            String ticker = utility.Utility.ibContractToSymbol(contract);
-            if (contract.symbol().equals("XINA50") && position != 0.0) {
-                FutType f = ibContractToFutType(contract);
-                //System.out.println(getStr(" in position xutrader ", ticker, position, avgCost));
-                currentPosMap.put(f, (int) position);
-            }
-
-            SwingUtilities.invokeLater(() -> {
-
-                if (ticker.equals("SGXA50")) {
+            if (ticker.equals("SGXA50")) {
 //                XUTrader.updateLog(" account " + account + "\n");
 //                XUTrader.updateLog(" contract " + contract.symbol()+ "\n");
 //                XUTrader.updateLog(" Exchange " + contract.primaryExch()+ "\n");
@@ -879,213 +877,213 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //                XUTrader.updateLog(" Last trade date " + contract.lastTradeDateOrContractMonth()+ "\n");
 //                XUTrader.updateLog(" currency " + contract.currency()+ "\n");
 //                XUTrader.updateLog(" pos " + position + "\n");
-                    //XUTrader.setNetPositionFront((int) position);
+                //XUTrader.setNetPositionFront((int) position);
 //                XUTrader.updateLog(" cost "+ avgCost+ "\n");
 //                XUTrader.updateLog("__________________________________________");
-                    XUTrader.outputArea.repaint();
-                }
-            });
-        }
-
-        @Override
-        public void positionEnd () {
-            //System.out.println( " position request ends XXXXX ");
-        }
-
-
-        // connection
-        @Override
-        public void connected () {
-            System.out.println("connected in XUconnectionhandler");
-            XUTrader.connectionStatus = true;
-            XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
-            XUTrader.apcon.setConnectionStatus(true);
-        }
-
-        @Override
-        public void disconnected () {
-            System.out.println("disconnected in XUConnectionHandler");
-            XUTrader.connectionStatus = false;
-            XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
-        }
-
-        @Override
-        public void accountList (ArrayList < String > list) {
-            System.out.println(" account list is " + list);
-        }
-
-        @Override
-        public void error (Exception e){
-            System.out.println(" error in XUConnectionHandler");
-            e.printStackTrace();
-        }
-
-        @Override
-        public void message ( int id, int errorCode, String errorMsg){
-            System.out.println(" error ID " + id + " error code " + errorCode + " errormsg " + errorMsg);
-        }
-
-        @Override
-        public void show (String string){
-            System.out.println(" show string " + string);
-        }
-
-
-        private void requestLevel2Data () {
-            //apcon.reqDeepMktData(frontFut, 10, new XULevel2Handler());
-            apcon.reqDeepMktData(activeFuture, 10, this);
-        }
-
-        private void requestExecHistory () {
-            System.out.println(" requesting exec history ");
-            tradesMap.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
-            apcon.reqExecutions(new ExecutionFilter(), this);
-        }
-
-        private void requestXUData () {
-            getAPICon().reqXUDataArray();
-        }
-
-        private static void createDialog (String msg){
-            JDialog jd = new JDialog();
-            jd.setFocusableWindowState(false);
-            jd.setSize(new Dimension(700, 200));
-
-            JLabel j1 = new JLabel(msg);
-            j1.setPreferredSize(new Dimension(300, 60));
-
-            j1.setFont(j1.getFont().deriveFont(25F));
-            j1.setForeground(Color.red);
-            j1.setHorizontalAlignment(SwingConstants.CENTER);
-            jd.getContentPane().add(j1, BorderLayout.NORTH);
-
-            jd.getContentPane().add(new JLabel(msg), BorderLayout.CENTER);
-            jd.setAlwaysOnTop(false);
-            jd.getContentPane().setLayout(new BorderLayout());
-            jd.setVisible(true);
-        }
-
-        @SuppressWarnings("unused")
-        static double getNetPnlForAllFuts () {
-            return Arrays.stream(FutType.values()).mapToDouble(XUTrader::getNetPnlFor1Fut).sum();
-        }
-
-        private static double getNetPnlFor1Fut (FutType f){
-            if (tradesMap.containsKey(f) && tradesMap.get(f).size() > 0) {
-                return tradesMap.get(f).entrySet().stream()
-                        .mapToDouble(e -> e.getValue().getSizeAll() * futPriceMap.getOrDefault(f, 0.0)
-                                + e.getValue().getCostBasisAll(f.getTicker())).sum();
+                XUTrader.outputArea.repaint();
             }
-            return 0.0;
-        }
-
-        private static void processTradeMapActive () {
-
-            FutType f = ibContractToFutType(activeFuture);
-
-            int unitsBought = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
-                    .mapToInt(e -> e.getValue().getSizeAll()).sum();
-
-            int unitsSold = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
-                    .mapToInt(e -> e.getValue().getSizeAll()).sum();
-
-            botMap.put(f, unitsBought);
-            soldMap.put(f, unitsSold);
-
-            double avgBuy = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
-                    .mapToDouble(e -> e.getValue().getCostBasisAll("")).sum() / unitsBought)) / 100d);
-
-            double avgSell = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
-                    .mapToDouble(e -> e.getValue().getCostBasisAll("")).sum() / unitsSold)) / 100d);
-
-            double buyTradePnl = Math.round(100d * (futPriceMap.get(f) - avgBuy) * unitsBought) / 100d;
-
-            double sellTradePnl = Math.round(100d * (futPriceMap.get(f) - avgSell) * unitsSold) / 100d;
-
-            double netTradePnl = buyTradePnl + sellTradePnl;
-
-            double netTotalCommissions = Math.round(100d * ((unitsBought - unitsSold) * 1.505d)) / 100d;
-
-            double mtmPnl = (currentPosMap.get(f) - unitsBought - unitsSold) * (futPriceMap.get(f) - futPrevCloseMap.get(f));
-
-            SwingUtilities.invokeLater(() -> {
-                XUTrader.updateLog(" P " + futPriceMap.get(f));
-                XUTrader.updateLog(" Close " + futPrevCloseMap.get(f));
-                XUTrader.updateLog(" Open " + futOpenMap.get(f));
-                XUTrader.updateLog(" Chg " + (Math.round(10000d * (futPriceMap.get(f) / futPrevCloseMap.get(f) - 1)) / 100d) + " %");
-                XUTrader.updateLog(" Open Pos " + (currentPosMap.get(f) - unitsBought - unitsSold));
-                XUTrader.updateLog(" MTM " + mtmPnl);
-                XUTrader.updateLog(" units bot " + unitsBought);
-                XUTrader.updateLog(" avg buy " + avgBuy);
-                XUTrader.updateLog(" units sold " + unitsSold);
-                XUTrader.updateLog(" avg sell " + avgSell);
-                XUTrader.updateLog(" buy pnl " + buyTradePnl);
-                XUTrader.updateLog(" sell pnl " + sellTradePnl);
-                XUTrader.updateLog(" net pnl " + netTradePnl);
-                XUTrader.updateLog(" net commission " + netTotalCommissions);
-                //XUTrader.updateLog(" net pnl after comm " + (netTradePnl - netTotalCommissions));
-                XUTrader.updateLog(" MTM+Trade " + (netTradePnl + mtmPnl));
-            });
-        }
-
-        public static void main (String[]args){
-            JFrame jf = new JFrame();
-            jf.setSize(new Dimension(1000, 1000));
-
-            ApiController ap = new ApiController(new XUConnectionHandler(),
-                    new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
-
-            XUTrader xutrader = new XUTrader(ap);
-            jf.add(xutrader);
-            jf.setLayout(new FlowLayout());
-            jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
-            jf.setVisible(true);
-
-            CompletableFuture.runAsync(xutrader::connectToTWS).thenRun(() -> {
-                CompletableFuture.runAsync(() -> XUTrader.getAPICon().client().reqCurrentTime());
-                CompletableFuture.runAsync(xutrader::requestXUData);
-            });
-        }
+        });
     }
 
-    class XUConnectionHandler implements ApiController.IConnectionHandler {
-        @Override
-        public void connected() {
-            System.out.println("connected in XUconnectionhandler");
-            XUTrader.connectionStatus = true;
-            XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
-            XUTrader.apcon.setConnectionStatus(true);
-        }
-
-        @Override
-        public void disconnected() {
-            System.out.println("disconnected in XUConnectionHandler");
-            XUTrader.connectionStatus = false;
-            XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
-        }
-
-        @Override
-        public void accountList(ArrayList<String> list) {
-            System.out.println(" account list is " + list);
-        }
-
-        @Override
-        public void error(Exception e) {
-            System.out.println(" error in XUConnectionHandler");
-            e.printStackTrace();
-        }
-
-        @Override
-        public void message(int id, int errorCode, String errorMsg) {
-            System.out.println(" error ID " + id + " error code " + errorCode + " errormsg " + errorMsg);
-        }
-
-        @Override
-        public void show(String string) {
-            System.out.println(" show string " + string);
-        }
+    @Override
+    public void positionEnd() {
+        //System.out.println( " position request ends XXXXX ");
     }
+
+
+    // connection
+    @Override
+    public void connected() {
+        System.out.println("connected in XUconnectionhandler");
+        XUTrader.connectionStatus = true;
+        XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
+        XUTrader.apcon.setConnectionStatus(true);
+    }
+
+    @Override
+    public void disconnected() {
+        System.out.println("disconnected in XUConnectionHandler");
+        XUTrader.connectionStatus = false;
+        XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
+    }
+
+    @Override
+    public void accountList(ArrayList<String> list) {
+        System.out.println(" account list is " + list);
+    }
+
+    @Override
+    public void error(Exception e) {
+        System.out.println(" error in XUConnectionHandler");
+        e.printStackTrace();
+    }
+
+    @Override
+    public void message(int id, int errorCode, String errorMsg) {
+        System.out.println(" error ID " + id + " error code " + errorCode + " errormsg " + errorMsg);
+    }
+
+    @Override
+    public void show(String string) {
+        System.out.println(" show string " + string);
+    }
+
+
+    private void requestLevel2Data() {
+        //apcon.reqDeepMktData(frontFut, 10, new XULevel2Handler());
+        apcon.reqDeepMktData(activeFuture, 10, this);
+    }
+
+    private void requestExecHistory() {
+        System.out.println(" requesting exec history ");
+        tradesMap.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
+        apcon.reqExecutions(new ExecutionFilter(), this);
+    }
+
+    private void requestXUData() {
+        getAPICon().reqXUDataArray();
+    }
+
+    private static void createDialog(String msg) {
+        JDialog jd = new JDialog();
+        jd.setFocusableWindowState(false);
+        jd.setSize(new Dimension(700, 200));
+
+        JLabel j1 = new JLabel(msg);
+        j1.setPreferredSize(new Dimension(300, 60));
+
+        j1.setFont(j1.getFont().deriveFont(25F));
+        j1.setForeground(Color.red);
+        j1.setHorizontalAlignment(SwingConstants.CENTER);
+        jd.getContentPane().add(j1, BorderLayout.NORTH);
+
+        jd.getContentPane().add(new JLabel(msg), BorderLayout.CENTER);
+        jd.setAlwaysOnTop(false);
+        jd.getContentPane().setLayout(new BorderLayout());
+        jd.setVisible(true);
+    }
+
+    @SuppressWarnings("unused")
+    static double getNetPnlForAllFuts() {
+        return Arrays.stream(FutType.values()).mapToDouble(XUTrader::getNetPnlFor1Fut).sum();
+    }
+
+    private static double getNetPnlFor1Fut(FutType f) {
+        if (tradesMap.containsKey(f) && tradesMap.get(f).size() > 0) {
+            return tradesMap.get(f).entrySet().stream()
+                    .mapToDouble(e -> e.getValue().getSizeAll() * futPriceMap.getOrDefault(f, 0.0)
+                            + e.getValue().getCostBasisAll(f.getTicker())).sum();
+        }
+        return 0.0;
+    }
+
+    private static void processTradeMapActive() {
+
+        FutType f = ibContractToFutType(activeFuture);
+
+        int unitsBought = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
+                .mapToInt(e -> e.getValue().getSizeAll()).sum();
+
+        int unitsSold = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
+                .mapToInt(e -> e.getValue().getSizeAll()).sum();
+
+        botMap.put(f, unitsBought);
+        soldMap.put(f, unitsSold);
+
+        double avgBuy = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
+                .mapToDouble(e -> e.getValue().getCostBasisAll("")).sum() / unitsBought)) / 100d);
+
+        double avgSell = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
+                .mapToDouble(e -> e.getValue().getCostBasisAll("")).sum() / unitsSold)) / 100d);
+
+        double buyTradePnl = Math.round(100d * (futPriceMap.get(f) - avgBuy) * unitsBought) / 100d;
+
+        double sellTradePnl = Math.round(100d * (futPriceMap.get(f) - avgSell) * unitsSold) / 100d;
+
+        double netTradePnl = buyTradePnl + sellTradePnl;
+
+        double netTotalCommissions = Math.round(100d * ((unitsBought - unitsSold) * 1.505d)) / 100d;
+
+        double mtmPnl = (currentPosMap.get(f) - unitsBought - unitsSold) * (futPriceMap.get(f) - futPrevCloseMap.get(f));
+
+        SwingUtilities.invokeLater(() -> {
+            XUTrader.updateLog(" P " + futPriceMap.get(f));
+            XUTrader.updateLog(" Close " + futPrevCloseMap.get(f));
+            XUTrader.updateLog(" Open " + futOpenMap.get(f));
+            XUTrader.updateLog(" Chg " + (Math.round(10000d * (futPriceMap.get(f) / futPrevCloseMap.get(f) - 1)) / 100d) + " %");
+            XUTrader.updateLog(" Open Pos " + (currentPosMap.get(f) - unitsBought - unitsSold));
+            XUTrader.updateLog(" MTM " + mtmPnl);
+            XUTrader.updateLog(" units bot " + unitsBought);
+            XUTrader.updateLog(" avg buy " + avgBuy);
+            XUTrader.updateLog(" units sold " + unitsSold);
+            XUTrader.updateLog(" avg sell " + avgSell);
+            XUTrader.updateLog(" buy pnl " + buyTradePnl);
+            XUTrader.updateLog(" sell pnl " + sellTradePnl);
+            XUTrader.updateLog(" net pnl " + netTradePnl);
+            XUTrader.updateLog(" net commission " + netTotalCommissions);
+            //XUTrader.updateLog(" net pnl after comm " + (netTradePnl - netTotalCommissions));
+            XUTrader.updateLog(" MTM+Trade " + (netTradePnl + mtmPnl));
+        });
+    }
+
+    public static void main(String[] args) {
+        JFrame jf = new JFrame();
+        jf.setSize(new Dimension(1000, 1000));
+
+        ApiController ap = new ApiController(new XUConnectionHandler(),
+                new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
+
+        XUTrader xutrader = new XUTrader(ap);
+        jf.add(xutrader);
+        jf.setLayout(new FlowLayout());
+        jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+
+        jf.setVisible(true);
+
+        CompletableFuture.runAsync(xutrader::connectToTWS).thenRun(() -> {
+            CompletableFuture.runAsync(() -> XUTrader.getAPICon().client().reqCurrentTime());
+            CompletableFuture.runAsync(xutrader::requestXUData);
+        });
+    }
+}
+
+class XUConnectionHandler implements ApiController.IConnectionHandler {
+    @Override
+    public void connected() {
+        System.out.println("connected in XUconnectionhandler");
+        XUTrader.connectionStatus = true;
+        XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
+        XUTrader.apcon.setConnectionStatus(true);
+    }
+
+    @Override
+    public void disconnected() {
+        System.out.println("disconnected in XUConnectionHandler");
+        XUTrader.connectionStatus = false;
+        XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
+    }
+
+    @Override
+    public void accountList(ArrayList<String> list) {
+        System.out.println(" account list is " + list);
+    }
+
+    @Override
+    public void error(Exception e) {
+        System.out.println(" error in XUConnectionHandler");
+        e.printStackTrace();
+    }
+
+    @Override
+    public void message(int id, int errorCode, String errorMsg) {
+        System.out.println(" error ID " + id + " error code " + errorCode + " errormsg " + errorMsg);
+    }
+
+    @Override
+    public void show(String string) {
+        System.out.println(" show string " + string);
+    }
+}
 
 //class XUTradeDefaultHandler implements ApiController.ITradeReportHandler {
 //    @Override
