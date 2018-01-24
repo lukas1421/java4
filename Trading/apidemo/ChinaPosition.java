@@ -1011,7 +1011,12 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     .collect(Collectors.toMap(Entry::getKey, e -> (Integer) e.getValue().entrySet().stream()
                             .mapToInt(e1 -> e1.getValue().getSizeAll()).sum()));
 
-            return Stream.of(openPositionMap, trades).flatMap(e -> e.entrySet().stream()).filter(e -> e.getValue() > 0)
+//            System.out.println(" get net position trades " + trades);
+//            System.out.println(" get net position merge " + Stream.of(openPositionMap, trades)
+//                    .flatMap(e -> e.entrySet().stream()).filter(e -> e.getValue() != 0)
+//                    .collect(Collectors.groupingBy(Entry::getKey, Collectors.summingInt(Entry::getValue))));
+
+            return Stream.of(openPositionMap, trades).flatMap(e -> e.entrySet().stream()).filter(e -> e.getValue() !=0)
                     //.peek(e->System.out.println(" openpos map, trades " +  e.getKey() + "  " + e.getValue()))
                     .collect(Collectors.groupingBy(Entry::getKey, Collectors.summingInt(Entry::getValue)));
         }
