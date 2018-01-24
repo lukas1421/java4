@@ -80,18 +80,23 @@ public final class ChinaStockHelper {
                     //(v1, v2) -> v1.lastEntry().getValue().getHLRange() >= v2.lastEntry().getValue().getHLRange() ? -1 : 1;
             Comparator<? super NavigableMap<LocalTime, SimpleBar>> compBarRtn = Comparator.comparingDouble(v->v.lastEntry().getValue().getBarReturn());
                     //(v1, v2) -> v1.lastEntry().getValue().getBarReturn() >= v2.lastEntry().getValue().getBarReturn() ? -1 : 1;
-            Comparator<? super NavigableMap<LocalTime, SimpleBar>> compDayRtn = Comparator.comparingDouble(ChinaStockHelper::computeReturn);
+            Comparator<? super NavigableMap<LocalTime, SimpleBar>> compDayRtn =
+                    Comparator.comparingDouble(ChinaStockHelper::computeReturn);
                     //(v1, v2) -> computeReturn(v1) >= computeReturn(v2) ? -1 : 1;
             Comparator<? super String> compVR = Comparator.comparingDouble(ChinaSizeRatio::computeSizeRatioLast).reversed();
 
             LinkedList<String> maxLastRangeList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compLastRange)).limit(3)
                     .map(e -> (Utility.getStr("", e.getKey(), nameMap.get(e.getKey()), HLRANGE.applyAsDouble(e.getValue())))).collect(toCollection(LinkedList::new));
 
-            LinkedList<String> maxLastBarRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compBarRtn)).limit(3)
+            LinkedList<String> maxLastBarRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar)
+                    .sorted(Entry.comparingByValue(compBarRtn)).limit(3)
                     .map(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), BARRTN.applyAsDouble(e.getValue())))).collect(toCollection(LinkedList::new));
 
-            LinkedList<String> maxDayRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compDayRtn)).limit(3)
-                    .map(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), round(computeReturn(e.getValue()) * 1000d) / 10d, "%"))).collect(toCollection(LinkedList::new));
+            LinkedList<String> maxDayRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar)
+                    .sorted(reverseThis(Entry.comparingByValue(compDayRtn))).limit(3)
+                    .map(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()),
+                            round(computeReturn(e.getValue()) * 1000d) / 10d, "%")))
+                    .collect(toCollection(LinkedList::new));
 
             LinkedList<String> maxVRList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByKey(compVR)).limit(3)
                     .map(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), round(10d * computeSizeRatioLast(e.getKey())) / 10d,
@@ -114,6 +119,10 @@ public final class ChinaStockHelper {
             System.out.println(" something wrong in sector " + sector);
             ex.printStackTrace();
         }
+    }
+
+    public static <T> Comparator<T> reverseThis(Comparator<T> c) {
+        return c.reversed();
     }
 
     private static double computeReturn(NavigableMap<LocalTime, SimpleBar> tm) {

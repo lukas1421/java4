@@ -68,9 +68,6 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
     String name = "";
     String chineseName = "";
     long activity;
-    private LocalTime maxAMT;
-    private LocalTime minAMT;
-    private volatile int size;
 
     private static final LocalTime AMCLOSET = LocalTime.of(11, 30);
     static final LocalTime AMOPENT = LocalTime.of(9, 30);
@@ -88,8 +85,6 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
     public GraphPnl() {
         name = "";
         chineseName = "";
-        maxAMT = LocalTime.of(9, 30);
-        minAMT = LocalTime.of(9, 30);
         tm = new ConcurrentSkipListMap<>();
         mtmMap = new ConcurrentSkipListMap<>();
         tradeMap = new ConcurrentSkipListMap<>();
@@ -199,8 +194,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
         sellMap = (sellm != null && sellm.size() > 0 && sellm.lastEntry().getValue() != 0.0) ? sellm : new ConcurrentSkipListMap<>();
     }
 
-    public void setPnl1mChgMap(LinkedList<String> m) {
-        LinkedList<String> pnl1mList = m;
+    public void setPnlChgMap(LinkedList<String> m) {
         String t;
         winner1 = (t = m.poll()) != null ? t : "";
         winner2 = (t = m.poll()) != null ? t : "";
@@ -238,16 +232,9 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
         mtmDeltaSharpe = Math.round(100d * d) / 100d;
     }
 
-    public void setMaxAMT(LocalTime t) {
-        this.maxAMT = (t != null) ? t : TIMEMAX;
-    }
+    public void setMaxAMT(LocalTime t) {}
 
-    public void setMinAMT(LocalTime t) {
-        this.minAMT = (t != null) ? t : TIMEMAX;
-    }
-
-//    public void fillInGraph(String nam) {
-//    }
+    public void setMinAMT(LocalTime t) {}
 
     public void refresh() {
         SwingUtilities.invokeLater(this::repaint);
@@ -259,7 +246,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
 
-        height = (int) (getHeight() - 100);
+        height = getHeight() - 100;
         min = getMin();
         max = getMax();
 

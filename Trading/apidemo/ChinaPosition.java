@@ -576,7 +576,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         CompletableFuture.runAsync(() -> gPnl.setBigKiyodoMap(topPnlKiyodoList()))
                 .thenRunAsync(() -> SwingUtilities.invokeLater(gPnl::repaint));
 
-        CompletableFuture.runAsync(() -> gPnl.setPnl1mChgMap(getPnl5mChg())).thenRunAsync(() -> SwingUtilities.invokeLater(gPnl::repaint));
+        CompletableFuture.runAsync(() -> gPnl.setPnlChgMap(getPnl5mChg()))
+                .thenRunAsync(() -> SwingUtilities.invokeLater(gPnl::repaint));
 
     }
 
@@ -1016,6 +1017,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //                    .flatMap(e -> e.entrySet().stream()).filter(e -> e.getValue() != 0)
 //                    .collect(Collectors.groupingBy(Entry::getKey, Collectors.summingInt(Entry::getValue))));
 
+            // take account of the selling trades. (cannot be > 0)
             return Stream.of(openPositionMap, trades).flatMap(e -> e.entrySet().stream()).filter(e -> e.getValue() !=0)
                     //.peek(e->System.out.println(" openpos map, trades " +  e.getKey() + "  " + e.getValue()))
                     .collect(Collectors.groupingBy(Entry::getKey, Collectors.summingInt(Entry::getValue)));
@@ -1152,8 +1154,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         if (ChinaStock.NORMAL_STOCK.test(name)) {
             LocalTime lastKey = ChinaData.priceMapBar.get(name).lastKey().isAfter(LocalTime.of(15, 0))
                     ? LocalTime.of(15, 0) : ChinaData.priceMapBar.get(name).lastKey();
-            double p = ChinaData.priceMapBar.get(name).lastEntry().getValue().getClose();
-            double previousP = ChinaData.priceMapBar.get(name).ceilingEntry(lastKey.minusMinutes(5)).getValue().getClose();
+            double p = ChinaData.priceMapBar.get(name).ceilingEntry(lastKey).getValue().getClose();
+            double previousP = ChinaData.priceMapBar.get(name).ceilingEntry(lastKey.minusMinutes(6)).getValue().getClose();
             int openPos = openPositionMap.getOrDefault(name, 0);
             //int tradedPos = 0;
             //int posThisMinute;
@@ -1172,6 +1174,12 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                         .filter(e -> e.getKey().isAfter(lastKey.minusMinutes(6L)))
                         .mapToDouble(e -> e.getValue().getMtmPnlAll(name)).sum();
             }
+
+//            if(name.equalsIgnoreCase("SGXA50")) {
+//                System.out.println(getStr(" china position A50 openPos/tradeposB4/p/prevP/tradeAfter/fx",
+//                        openPos,tradedPosBefore,p,previousP, tradeChgPnlAfter,fx));
+//            }
+
             return Math.round(((openPos + tradedPosBefore) * (p - previousP) + tradeChgPnlAfter) * fx) / 1d;
         }
         return 0.0;

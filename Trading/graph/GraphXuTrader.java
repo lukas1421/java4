@@ -124,7 +124,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
 
-        height = getHeight() - 100;
+        height = getHeight() - 50;
         min = getMin();
         max = getMax();
         minRtn = getMinRtn();
@@ -166,15 +166,15 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
             g.setColor(Color.black);
             if (lt.equals(tm.firstKey())) {
-                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
+                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 20);
             } else {
                 if (XUTrader.gran == DisplayGranularity._1MDATA) {
                     if ( (lt.getMinute() == 0 || lt.getMinute() % 30 == 0)) {
-                        g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
+                        g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 20);
                     }
                 } else {
                     if ((lt.getMinute() == 0 || lt.getMinute() == 0)) {
-                        g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
+                        g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 20);
                     }
                 }
             }
@@ -211,7 +211,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.5F));
         g2.setStroke(BS3);
 
-        g2.drawString(min + "  " + Double.toString(minRtn) + "%", getWidth() - 140, getHeight() - 33);
+        g2.drawString(min + "  " + Double.toString(minRtn) + "%", getWidth() - 140, getHeight() - 20);
         g2.drawString(max  + "   " + Double.toString(maxRtn) + "%", getWidth() - 140, 15);
         //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2);
         int wtdP = SharpeUtility.getPercentile(tm);
@@ -289,7 +289,8 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         //double fx = fxMap.getOrDefault(name,1.0);
         if (XUTrader.tradesMap.containsKey(fut) && XUTrader.tradesMap.get(fut).size() > 0) {
             int netTradedPosition = XUTrader.tradesMap.get(fut).entrySet().stream().mapToInt(e -> e.getValue().getSizeAll()).sum();
-            double cost = XUTrader.tradesMap.get(fut).entrySet().stream().mapToDouble(e -> e.getValue().getCostBasisAll("")).sum();
+            double cost = XUTrader.tradesMap.get(fut).entrySet().stream().mapToDouble(e -> e.getValue().getCostBasisAll(""))
+                    .sum();
             double mv = netTradedPosition * currPrice;
             //System.out.println(getStr(" currprice, net traded pos cost mv", currPrice, netTradedPosition, cost, mv));
             //System.out.println(getStr(" cost mv ", cost, mv));
@@ -327,11 +328,13 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     }
 
     public double getMin() {
-        return (tm.size() > 0) ? tm.entrySet().stream().min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0) : 0.0;
+        return (tm.size() > 0) ? tm.entrySet().stream().min(BAR_LOW).map(Map.Entry::getValue)
+                .map(SimpleBar::getLow).orElse(0.0) : 0.0;
     }
 
     public double getMax() {
-        return (tm.size() > 0) ? tm.entrySet().stream().max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0) : 0.0;
+        return (tm.size() > 0) ? tm.entrySet().stream().max(BAR_HIGH).map(Map.Entry::getValue)
+                .map(SimpleBar::getHigh).orElse(0.0) : 0.0;
     }
 
     public double getReturn() {
