@@ -211,6 +211,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
         big1 = (t = m.poll()) != null ? t : "";
         big2 = (t = m.poll()) != null ? t : "";
         big3 = (t = m.poll()) != null ? t : "";
+
     }
 
 

@@ -39,7 +39,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
     int height;
 
     private static final int WIDTH_PNL = 4;
-    private static volatile int mouseXCord;
+    private volatile int mouseXCord;
 
     public GraphChinaPnl() {
         mtmMap = new ConcurrentSkipListMap<>();

@@ -169,9 +169,22 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
                 g.drawOval(x + 2, lowY, 5, 5);
                 g.fillOval(x + 2, lowY, 5, 5);
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
-
             }
+
             x += WIDTH_MON;
+        }
+
+        if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0) {
+
+            int lowY = getY(tm.lastEntry().getValue().getLow());
+            int closeY = getY(tm.lastEntry().getValue().getClose());
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+            g.drawString(tm.lastKey().toLocalTime().toString() + " " +
+                            Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
+                    x, lowY + (mouseYCord < closeY ? -20 : +20));
+            g.drawOval(x + 2, lowY, 5, 5);
+            g.fillOval(x + 2, lowY, 5, 5);
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
         }
 
         g2.setColor(Color.red);
@@ -330,9 +343,9 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         if (HistChinaStocks.chinaTradeMap.containsKey(name) && HistChinaStocks.chinaTradeMap.get(name).size() > 0) {
             //LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
             trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(name).headMap(
-                    LocalDateTime.of(ChinaMain.currentTradingDate,LocalTime.MIN),false),
+                    LocalDateTime.of(ChinaMain.currentTradingDate, LocalTime.MIN), false),
                     priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
-                    ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate));
+                            ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate));
             //System.out.println(" merged trade is " + trades);
         }
 

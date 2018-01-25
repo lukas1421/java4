@@ -183,7 +183,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         refreshButton.addActionListener(l -> {
             String time = (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).getSecond() != 0)
-                    ? (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()) : (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + ":00");
+                    ? (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()) :
+                    (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + ":00");
+
             currTimeLabel.setText(time);
             //xuGraph.fillInGraph(xuFrontData);
             xuGraph.fillInGraph(futData.get(ibContractToFutType(activeFuture)));
@@ -203,6 +205,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
+
             if (ses.isShutdown()) {
                 ses = Executors.newScheduledThreadPool(10);
             }

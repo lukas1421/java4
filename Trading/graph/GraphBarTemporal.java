@@ -6,6 +6,9 @@ import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.time.LocalDate;
@@ -21,8 +24,10 @@ import java.util.stream.Collectors;
 
 import static historical.HistChinaStocks.mtdSharpe;
 import static utility.Utility.r;
+import static utility.Utility.roundDownToN;
 
-public class GraphBarTemporal<T extends Temporal> extends JComponent implements GraphFillable {
+public class GraphBarTemporal<T extends Temporal> extends JComponent implements GraphFillable, MouseMotionListener,
+        MouseListener {
 
     private static final int WIDTH_BAR = 4;
     int height;
@@ -48,6 +53,9 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     private static final BasicStroke BS3 = new BasicStroke(3);
     private double lastPeriodClose;
 
+    private volatile int mouseXCord;
+    private volatile int mouseYCord;
+
     //int wtdP;
 //    public GraphBarTemporal(NavigableMap<T, SimpleBar> tm1) {
 //        this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero())
@@ -61,6 +69,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         //maxAMT = LocalTime.of(9, 30);
         //minAMT = Utility.AMOPENT;
         this.mainMap = new ConcurrentSkipListMap<>();
+        addMouseListener(this);
+        addMouseMotionListener(this);
     }
 
     public void setTradesMap(NavigableMap<T, Integer> tm) {
@@ -251,17 +261,17 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                             g.drawString(Integer.toString(ltn.getMonth().getValue()), x, getHeight() - 40);
 
                             @SuppressWarnings("unchecked")
-                                    //ltn.getYear()+(ltn.getMonth().equals(Month.JANUARY)?-1:0)
-                            T monthBegin = (T) m.invoke(null, ltn.minusMonths(1L).getYear(),
+                            //ltn.getYear()+(ltn.getMonth().equals(Month.JANUARY)?-1:0)
+                                    T monthBegin = (T) m.invoke(null, ltn.minusMonths(1L).getYear(),
                                     ltn.minusMonths(1L).getMonth(), 1);
 
 
                             g.drawString("" + Math.round(1000d * (mainMap.lowerEntry(lt).getValue().getClose()
                                             / Optional.ofNullable(mainMap.lowerEntry(monthBegin)).map(Map.Entry::getValue).map(SimpleBar::getClose)
                                             .orElse(mainMap.firstEntry().getValue().getOpen()) - 1)) / 10d + "%"
-                                    , x-40, getHeight() - 20);
+                                    , x - 40, getHeight() - 20);
 
-                            g.drawString("" + mainMap.lowerEntry(lt).getValue().getClose(), x, getHeight()-7);
+                            g.drawString("" + mainMap.lowerEntry(lt).getValue().getClose(), x, getHeight() - 7);
 
                         }
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
@@ -273,11 +283,33 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                         g.drawString(Integer.toString(ldt.getDayOfMonth()), x, getHeight() - 40);
                         g.drawString("" + mainMap.lowerEntry(lt).getValue().getClose(), x, getHeight() - 10);
                     }
-
                 }
             }
 
+            if (roundDownToN(mouseXCord, WIDTH_BAR) == x - 5) {
+                //noinspection Duplicates
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+                g.drawString(lt.toString() + " " + Math.round(100d * mainMap.floorEntry(lt).getValue().getClose()) / 100d,
+                         x, lowY + (mouseYCord < closeY ? -20 : +20));
+                g.drawOval(x + 2, lowY, 5, 5);
+                g.fillOval(x + 2, lowY, 5, 5);
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
+            }
+
+
             x += WIDTH_BAR;
+        }
+
+        if(mouseXCord > x && mouseXCord < getWidth() && mainMap.size()>0) {
+            int lowY = getY(mainMap.lastEntry().getValue().getLow());
+            int closeY = getY(mainMap.lastEntry().getValue().getClose());
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+            g.drawString(mainMap.lastKey().toString() + " " +
+                            Math.round(100d * mainMap.lastEntry().getValue().getClose()) / 100d,
+                    x, lowY + (mouseYCord < closeY ? -20 : +20));
+            g.drawOval(x + 2, lowY, 5, 5);
+            g.fillOval(x + 2, lowY, 5, 5);
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
         }
 
 
@@ -302,8 +334,8 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         g2.drawString(Integer.toString(getPercentile()) + "% ", getWidth() * 2 / 8, 15);
         g2.drawString("" + getLast(), getWidth() * 3 / 8, 15);
         //if(this.getClass()==LocalDate.class)
-        g2.drawString("Mtd Sharpe: " + r(mtdSharpe.getOrDefault(name,0.0)), getWidth() * 4 / 8, 15);
-        g2.drawString("ToDate Ret: " + (lastPeriodClose==0.0?"":Double.toString(Math.round(1000d*(getLast()/lastPeriodClose-1))/10d)), getWidth() * 5 / 8, 15);
+        g2.drawString("Mtd Sharpe: " + r(mtdSharpe.getOrDefault(name, 0.0)), getWidth() * 4 / 8, 15);
+        g2.drawString("ToDate Ret: " + (lastPeriodClose == 0.0 ? "" : Double.toString(Math.round(1000d * (getLast() / lastPeriodClose - 1)) / 10d)), getWidth() * 5 / 8, 15);
 
 
         g2.drawString("pos: " + Integer.toString(netCurrentPosition), getWidth() * 7 / 8, getHeight() / 6);
@@ -393,4 +425,43 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     }
 
 
+    @Override
+    public void mouseClicked(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mousePressed(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent mouseEvent) {
+        mouseXCord = Integer.MAX_VALUE;
+        mouseYCord = Integer.MAX_VALUE;
+        this.repaint();
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent mouseEvent) {
+        mouseXCord = mouseEvent.getX();
+        mouseYCord = mouseEvent.getY();
+        this.repaint();
+
+    }
 }
