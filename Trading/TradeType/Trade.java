@@ -61,4 +61,3 @@ public abstract class Trade {
         return Utility.getStr("price ", price, "vol ", size);
     }
 }
-
