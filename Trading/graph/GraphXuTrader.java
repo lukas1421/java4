@@ -207,6 +207,18 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             x += XUTrader.graphWidth.get();
         }
 
+        if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0) {
+            int lowY = getY(tm.lastEntry().getValue().getLow());
+            int closeY = getY(tm.lastEntry().getValue().getClose());
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+            g.drawString(tm.lastKey().toString() + " " + Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
+                    x, lowY + (mouseYCord < closeY ? -20 : +20));
+            g.drawOval(x + 2, lowY, 5, 5);
+            g.fillOval(x + 2, lowY, 5, 5);
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
+        }
+
+
         g2.setColor(Color.red);
         g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.5F));
         g2.setStroke(BS3);

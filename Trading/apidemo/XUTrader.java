@@ -38,7 +38,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //new ApiController(new XUConnectionHandler(),
     //new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
-    // ApiController apcon = new ApiController(new IConnectionHandler.DefaultConnectionHandler()
+    //ApiController apcon = new ApiController(new IConnectionHandler.DefaultConnectionHandler()
     // ,new ApiConnection.ILogger.DefaultLogger(),new ApiConnection.ILogger.DefaultLogger());
 
     private final static Contract frontFut = utility.Utility.getFrontFutContract();
@@ -676,10 +676,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public void handleHist(String name, String date, double open, double high, double low, double close) {
 
         LocalDate currDate = LocalDate.now();
-
-
         if (!date.startsWith("finished")) {
-
             Date dt = new Date(Long.parseLong(date) * 1000);
             Calendar cal = Calendar.getInstance();
             cal.setTime(dt);
@@ -790,7 +787,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //ApiController.IOrderHandler
     @Override
     public void orderState(OrderState orderState) {
-        System.out.println(" order state is " + orderState);
+        //System.out.println(" order state is " + orderState);
         //XUTrader.updateLog(orderState.toString());
     }
 
@@ -815,9 +812,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //live order handler
     @Override
     public void openOrder(Contract contract, Order order, OrderState orderState) {
-        System.out.println(" in open order ");
         if (ibContractToSymbol(contract).equals(ibContractToSymbol(activeFuture))) {
-            System.out.println(" contract equals to active future ");
             double sign = order.action().equals(Types.Action.BUY) ? 1 : -1;
             if (!activeFutLiveOrder.containsKey(order.lmtPrice())) {
                 activeFutLiveOrder.put(order.lmtPrice(), sign * order.totalQuantity());

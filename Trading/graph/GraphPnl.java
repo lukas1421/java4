@@ -7,6 +7,7 @@ import utility.Utility;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
@@ -22,7 +23,7 @@ import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static utility.Utility.*;
 
-public final class GraphPnl extends JComponent implements MouseMotionListener {
+public final class GraphPnl extends JComponent implements MouseMotionListener, MouseListener {
 
     private final static int WIDTH_PNL = 5;
 
@@ -44,7 +45,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
     private volatile String big1;
     private volatile String big2;
     private volatile String big3;
-    private volatile int mouseXCord;
+    private volatile int mouseXCord = Integer.MAX_VALUE;
 
 
     private static double openDelta;
@@ -93,7 +94,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
         benchMap = new ConcurrentSkipListMap<>();
         benchMtmMap = new HashMap<>();
         addMouseMotionListener(this);
-
+        addMouseListener(this);
     }
 
     @Override
@@ -168,8 +169,6 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
 
     public void setNavigableMap(NavigableMap<LocalTime, Double> mtmmap, NavigableMap<LocalTime, Double> trademap, NavigableMap<LocalTime, Double> netmap) {
 
-        //System.out.println(getStr(" setNavigable GPNL:: final net map ", netmap.lastEntry()));
-
         mtmMap = (mtmmap != null) ? mtmmap.entrySet().stream().filter(TRADING_PRED)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, ConcurrentSkipListMap::new))
                 : new ConcurrentSkipListMap<>();
@@ -233,9 +232,11 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
         mtmDeltaSharpe = Math.round(100d * d) / 100d;
     }
 
-    public void setMaxAMT(LocalTime t) {}
+    public void setMaxAMT(LocalTime t) {
+    }
 
-    public void setMinAMT(LocalTime t) {}
+    public void setMinAMT(LocalTime t) {
+    }
 
     public void refresh() {
         SwingUtilities.invokeLater(this::repaint);
@@ -274,10 +275,9 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
             last = (last == 0) ? close : last;
             g.drawLine(x, last, x + WIDTH_PNL, close);
             last = close;
-
-
             x += WIDTH_PNL;
         }
+
 
         x = 5;
         last = 0;
@@ -394,7 +394,6 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
                 g.fillOval(x + 2, close, 5, 5);
             }
 
-
             x += WIDTH_PNL;
 
             if (lt.equals(netMap.firstKey())) {
@@ -411,6 +410,17 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
                 g.drawString(getStr("高", lt, r(netMap.getOrDefault(lt, 0.0))), x - 10, last - 30);
             }
         }
+
+        if (mouseXCord > x && mouseXCord < getWidth() && netMap.size() > 0) {
+            int closeY = getY(netMap.lastEntry().getValue());
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+            g.drawString(netMap.lastKey().toString() + " " +
+                    Math.round(100d * netMap.lastEntry().getValue()) / 100d, x, closeY + 30);
+            g.drawOval(x + 2, closeY, 5, 5);
+            g.fillOval(x + 2, closeY, 5, 5);
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
+        }
+
 
         g.drawString("NET: " + Math.round(100d * Optional.ofNullable(netMap.lastEntry())
                 .map(Entry::getValue).orElse(0.0)) / 100d, x + WIDTH_PNL, last - 10);
@@ -701,4 +711,30 @@ public final class GraphPnl extends JComponent implements MouseMotionListener {
     }
 
 
+    @Override
+    public void mouseClicked(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mousePressed(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent mouseEvent) {
+        mouseXCord = Integer.MAX_VALUE;
+        this.repaint();
+
+    }
 }
