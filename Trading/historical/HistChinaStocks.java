@@ -922,10 +922,10 @@ public class HistChinaStocks extends JPanel {
                         .mapToInt(e -> e.getValue().getSizeAll()).sum();
 
                 int botPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
-                        .filter(e -> e.getValue().getSizeAll() > 0).mapToInt(e -> e.getValue().getSizeAll()).sum();
+                        .mapToInt(e -> e.getValue().getSizeBot()).sum();
 
                 int soldPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
-                        .filter(e -> e.getValue().getSizeAll() < 0).mapToInt(e -> e.getValue().getSizeAll()).sum();
+                        .mapToInt(e -> e.getValue().getSizeSold()).sum();
 
                 int currentPos = chinaTradeMap.get(s).entrySet().stream().mapToInt(e -> e.getValue().getSizeAll()).sum();
                 weekOpenPositionMap.put(s, openPos);

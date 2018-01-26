@@ -95,7 +95,8 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
             System.out.println(" sgx trades handler " + HistChinaStocks.chinaTradeMap.get(ticker));
 
             System.out.println(" sgx trades map size "
-                    + HistChinaStocks.chinaTradeMap.get(ticker).entrySet().stream().mapToInt(e->Math.abs(e.getValue().getSizeAll())).sum());
+                    + HistChinaStocks.chinaTradeMap.get(ticker).entrySet().stream()
+                    .mapToInt(e -> Math.abs(e.getValue().getSizeAll())).sum());
 
 
         }
