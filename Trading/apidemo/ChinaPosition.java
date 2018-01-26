@@ -1030,14 +1030,12 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //    }
     private int getTotalTodayBought(String name) {
         return (tradesMap.get(name).size() > 0) ? tradesMap.get(name).entrySet().stream()
-                .filter(e -> e.getValue().getSizeAll() > 0)
-                .mapToInt(e -> e.getValue().getSizeAll()).sum() : 0;
+                .mapToInt(e -> e.getValue().getSizeBot()).sum() : 0;
     }
 
     private int getTotalTodaySold(String name) {
         return (tradesMap.get(name).size() > 0) ? tradesMap.get(name).entrySet().stream()
-                .filter(e -> e.getValue().getSizeAll() < 0)
-                .mapToInt(e -> e.getValue().getSizeAll()).sum() : 0;
+                .mapToInt(e -> e.getValue().getSizeSold()).sum() : 0;
     }
 
     private double getTotalDeltaBought(String name) {
