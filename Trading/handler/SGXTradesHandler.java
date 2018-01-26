@@ -27,7 +27,6 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
 
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
-
         LocalDateTime ldtRoundTo5 = Utility.roundTo5Ldt(ldt);
 
         if (contract.symbol().equals("XINA50")) {
@@ -70,8 +69,8 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
             String ticker = f.getTicker();
 
             if (ticker.equalsIgnoreCase("SGXA50PR")) {
-                HistChinaStocks.chinaTradeMap.get(ticker).put(LocalDateTime.of(LocalDate.parse(TradingConstants.A50_LAST_EXPIRY,DateTimeFormatter.ofPattern("yyyyMMdd")),
-                        LocalTime.of(15,0)), new TradeBlock(new FutureTrade(HistChinaStocks.futExpiryLevel, -1 * HistChinaStocks.futExpiryUnits)));
+                HistChinaStocks.chinaTradeMap.get(ticker).put(LocalDateTime.of(LocalDate.parse(TradingConstants.A50_LAST_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd")),
+                        LocalTime.of(15, 0)), new TradeBlock(new FutureTrade(HistChinaStocks.futExpiryLevel, -1 * HistChinaStocks.futExpiryUnits)));
             }
 
             int sgxLotsTraded = HistChinaStocks.chinaTradeMap.get(ticker).entrySet().stream()
@@ -79,7 +78,26 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
                             .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
 
+            int sgxLotsBot = HistChinaStocks.chinaTradeMap.get(ticker).entrySet().stream()
+                    .filter(e -> e.getKey().toLocalDate()
+                            .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
+                    .mapToInt(e -> e.getValue().getSizeBot()).sum();
+
+            int sgxLotsSold = HistChinaStocks.chinaTradeMap.get(ticker).entrySet().stream()
+                    .filter(e -> e.getKey().toLocalDate()
+                            .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
+                    .mapToInt(e -> e.getValue().getSizeSold()).sum();
+
             HistChinaStocks.wtdChgInPosition.put(ticker, sgxLotsTraded);
+            HistChinaStocks.wtdBotPosition.put(ticker, sgxLotsBot);
+            HistChinaStocks.wtdSoldPosition.put(ticker, sgxLotsSold);
+
+            System.out.println(" sgx trades handler " + HistChinaStocks.chinaTradeMap.get(ticker));
+
+            System.out.println(" sgx trades map size "
+                    + HistChinaStocks.chinaTradeMap.get(ticker).entrySet().stream().mapToInt(e->Math.abs(e.getValue().getSizeAll())).sum());
+
+
         }
     }
 

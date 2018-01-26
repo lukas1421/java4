@@ -21,7 +21,7 @@ public final class TradeBlock {
     }
 
     public TradeBlock(TradeBlock tb) {
-        tb.getTradeList().forEach(e->mergeList.add((Trade)e));
+        tb.getTradeList().forEach(e -> mergeList.add((Trade) e));
     }
 
     public void addTrade(Trade t) {
@@ -38,6 +38,14 @@ public final class TradeBlock {
 
     public int getSizeAll() {
         return mergeList.stream().mapToInt(t -> ((Trade) t).getSize()).sum();
+    }
+
+    public int getSizeBot() {
+        return mergeList.stream().mapToInt(t -> ((Trade) t).getSize()).filter(e -> e > 0).sum();
+    }
+
+    public int getSizeSold() {
+        return mergeList.stream().mapToInt(t -> ((Trade) t).getSize()).filter(e -> e < 0).sum();
     }
 
     public double getAveragePrice() {

@@ -56,7 +56,7 @@ public class HistChinaStocks extends JPanel {
 
     public static Map<String, String> nameMap = new HashMap<>();
 
-    public static Map<String, Double> ma60Map = new HashMap<>();
+    private static Map<String, Double> ma60Map = new HashMap<>();
 
     private static volatile GraphBarTemporal<LocalDate> graphYtd = new GraphBarTemporal<>();
     private static volatile GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
@@ -78,6 +78,8 @@ public class HistChinaStocks extends JPanel {
 
     private static volatile Map<String, Integer> weekOpenPositionMap = new HashMap<>();
     public static volatile Map<String, Integer> wtdChgInPosition = new HashMap<>();
+    public static volatile Map<String, Integer> wtdBotPosition = new HashMap<>();
+    public static volatile Map<String, Integer> wtdSoldPosition = new HashMap<>();
     public static volatile Map<String, Integer> currentPositionMap = new HashMap<>();
     private static volatile Map<String, Long> sharesOut = new HashMap<>();
     private static Map<String, NavigableMap<LocalDate, Integer>> netSharesTradedByDay = new HashMap<>();
@@ -97,8 +99,8 @@ public class HistChinaStocks extends JPanel {
     private static Map<String, Double> wtdMtmPnlMap = new HashMap<>();
     private static BinaryOperator<NavigableMap<LocalDateTime, Double>> mapSummingDouble =
             (a, b) -> Stream.of(a, b).flatMap(e -> e.entrySet().stream())
-            .collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, Collectors.summingDouble(
-                    Map.Entry::getValue)));
+                    .collect(Collectors.groupingBy(Map.Entry::getKey, ConcurrentSkipListMap::new, Collectors.summingDouble(
+                            Map.Entry::getValue)));
 
     //static BinaryOperator<NavigableMap<LocalDateTime, Double>> mapOp2 = (a,b) -> Stream.of(a,b).
 
@@ -121,10 +123,11 @@ public class HistChinaStocks extends JPanel {
     private static final int T_COST_COL = 16;
     private static final int A50_WEIGHT_COL = 44;
     private static final int MA60_COL = 45;
+    private static final int WEEK_BOT_COL = 46;
+    private static final int WEEK_SLD_COL = 47;
 
     public static double futExpiryLevel = 0.0;
     public static int futExpiryUnits = 0;
-
 
     private static String tdxDayPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export\\" : "J:\\TDX\\T0002\\export\\";
@@ -406,13 +409,15 @@ public class HistChinaStocks extends JPanel {
         JToggleButton futOnlyButton = new JToggleButton("fut only");
         JButton outputWtdButton = new JButton(" output wtd ");
         JButton activeOnlyButton = new JButton("Active Only");
+        JButton activeWeekButton = new JButton("Active Week");
+
         JButton allTradedButton = new JButton("All Traded");
         JToggleButton autoComputeButton = new JToggleButton("Auto On");
         JButton fillExpiredButton = new JButton("Fill Expired");
         JButton a50onlyButton = new JButton(" A50 Only ");
         JButton aboveMA60Button = new JButton(" >MA60 ");
 
-        aboveMA60Button.addActionListener(l->{
+        aboveMA60Button.addActionListener(l -> {
             if (filterOn) {
                 sorter.setRowFilter(null);
                 filterOn = false;
@@ -421,7 +426,7 @@ public class HistChinaStocks extends JPanel {
                 filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, 1.0, MA60_COL));
                 filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, 0.0, A50_WEIGHT_COL));
                 List<RowSorter.SortKey> keys = new ArrayList<>();
-                RowSorter.SortKey sortkey = new RowSorter.SortKey(A50_WEIGHT_COL,SortOrder.DESCENDING);
+                RowSorter.SortKey sortkey = new RowSorter.SortKey(A50_WEIGHT_COL, SortOrder.DESCENDING);
                 keys.add(sortkey);
                 sorter.setSortKeys(keys);
                 sorter.sort();
@@ -430,7 +435,7 @@ public class HistChinaStocks extends JPanel {
             }
         });
 
-        a50onlyButton.addActionListener(l->{
+        a50onlyButton.addActionListener(l -> {
             if (filterOn) {
                 sorter.setRowFilter(null);
                 filterOn = false;
@@ -438,7 +443,7 @@ public class HistChinaStocks extends JPanel {
                 List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
                 filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, 0.0, A50_WEIGHT_COL));
                 List<RowSorter.SortKey> keys = new ArrayList<>();
-                RowSorter.SortKey sortkey = new RowSorter.SortKey(A50_WEIGHT_COL,SortOrder.DESCENDING);
+                RowSorter.SortKey sortkey = new RowSorter.SortKey(A50_WEIGHT_COL, SortOrder.DESCENDING);
                 keys.add(sortkey);
                 sorter.setSortKeys(keys);
                 sorter.sort();
@@ -481,6 +486,19 @@ public class HistChinaStocks extends JPanel {
                 List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
                 filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, CHG_POS_COL));
                 filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, CURR_POS_COL));
+                sorter.setRowFilter(RowFilter.orFilter(filters));
+                filterOn = true;
+            }
+        });
+
+        activeWeekButton.addActionListener(l -> {
+            if (filterOn) {
+                sorter.setRowFilter(null);
+                filterOn = false;
+            } else {
+                List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
+                filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, WEEK_BOT_COL));
+                filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, WEEK_SLD_COL));
                 sorter.setRowFilter(RowFilter.orFilter(filters));
                 filterOn = true;
             }
@@ -667,6 +685,7 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(futOnlyButton);
         controlPanel.add(outputWtdButton);
         controlPanel.add(activeOnlyButton);
+        controlPanel.add(activeWeekButton);
         controlPanel.add(allTradedButton);
         controlPanel.add(autoComputeButton);
         controlPanel.add(fillExpiredButton);
@@ -780,7 +799,7 @@ public class HistChinaStocks extends JPanel {
                     }
                 } else {
                     priceMapForHist.put(ticker, close);
-                    System.out.println(getStr(" most recent price ", ticker, LocalDateTime.of(ld, lt), close));
+                    //System.out.println(getStr(" most recent price ", ticker, LocalDateTime.of(ld, lt), close));
                 }
             } else {
                 //System.out.println(" updating close of SGXA50 ");
@@ -901,9 +920,18 @@ public class HistChinaStocks extends JPanel {
                         .mapToInt(e -> e.getValue().getSizeAll()).sum();
                 int thisWeekPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
                         .mapToInt(e -> e.getValue().getSizeAll()).sum();
+
+                int botPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
+                        .filter(e -> e.getValue().getSizeAll() > 0).mapToInt(e -> e.getValue().getSizeAll()).sum();
+
+                int soldPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
+                        .filter(e -> e.getValue().getSizeAll() < 0).mapToInt(e -> e.getValue().getSizeAll()).sum();
+
                 int currentPos = chinaTradeMap.get(s).entrySet().stream().mapToInt(e -> e.getValue().getSizeAll()).sum();
                 weekOpenPositionMap.put(s, openPos);
                 wtdChgInPosition.put(s, thisWeekPos);
+                wtdBotPosition.put(s, botPos);
+                wtdSoldPosition.put(s, soldPos);
                 currentPositionMap.put(s, currentPos);
             }
         }
@@ -1182,8 +1210,6 @@ public class HistChinaStocks extends JPanel {
                             }
                         }
                     }
-
-
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -1213,7 +1239,6 @@ public class HistChinaStocks extends JPanel {
             mtdSharpe.put(name, sr);
             return sr;
         }
-
         return 0.0;
     }
 
@@ -1604,6 +1629,11 @@ public class HistChinaStocks extends JPanel {
                     return "A50 weight";
                 case 45:
                     return "60 DMA";
+                case 46:
+                    return "Bot";
+                case 47:
+                    return "Sld";
+
                 default:
                     return "";
             }
@@ -1757,10 +1787,15 @@ public class HistChinaStocks extends JPanel {
                     return lastYearCloseMap.getOrDefault(name, 0.0) == 0.0 ? 0.0 :
                             Math.round(1000d * (price / lastYearCloseMap.getOrDefault(name, 0.0) - 1)) / 10d;
                 case 44:
-                    return SinaStock.weightMapA50.getOrDefault(name,0.0);
-
+                    return SinaStock.weightMapA50.getOrDefault(name, 0.0);
                 case 45:
-                    return Math.round(price/ma60Map.getOrDefault(name,0.0)*100d)/100d;
+                    return ma60Map.getOrDefault(name, 0.0)==0.0?0.0:
+                            Math.round(price / ma60Map.get(name) * 100d) / 100d;
+                case 46:
+                    return wtdBotPosition.getOrDefault(name,0);
+                case 47:
+                    return wtdSoldPosition.getOrDefault(name,0);
+
 
                 default:
                     return null;
@@ -1798,6 +1833,10 @@ public class HistChinaStocks extends JPanel {
                 case 35:
                     return LocalDate.class;
                 case 40:
+                    return Integer.class;
+                case 46:
+                    return Integer.class;
+                case 47:
                     return Integer.class;
                 default:
                     return Double.class;
