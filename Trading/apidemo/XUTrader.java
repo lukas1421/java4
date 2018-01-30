@@ -770,7 +770,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public void tradeReportEnd() {
         System.out.println(" trade report end printing");
         XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).entrySet().forEach(System.out::println);
-
     }
 
     @Override
