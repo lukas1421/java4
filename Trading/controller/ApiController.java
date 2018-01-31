@@ -953,7 +953,8 @@ public class ApiController implements EWrapper {
     }
 
 
-    public void getSGXA50HistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc, int duration) {
+    public void getSGXA50HistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
+                                          int duration) {
         //Contract c = getFrontFutContract();
         //        Contract c = new Contract();
 //        c.symbol("XINA50");

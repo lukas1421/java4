@@ -499,6 +499,8 @@ public class HistChinaStocks extends JPanel {
                 List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
                 filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, WEEK_BOT_COL));
                 filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, WEEK_SLD_COL));
+                filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, CHG_POS_COL));
+                filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, CURR_POS_COL));
                 sorter.setRowFilter(RowFilter.orFilter(filters));
                 filterOn = true;
             }
@@ -593,12 +595,14 @@ public class HistChinaStocks extends JPanel {
                 });
             });
             CompletableFuture.runAsync(() -> {
-                ChinaMain.controller().getSGXA50HistoricalCustom(20000, getExpiredFutContract(), HistChinaStocks::handleSGXA50WtdData, 7);
-                ChinaMain.controller().getSGXA50HistoricalCustom(20001, getFrontFutContract(), HistChinaStocks::handleSGXA50WtdData, 7);
-                ChinaMain.controller().getSGXA50HistoricalCustom(20002, getBackFutContract(), HistChinaStocks::handleSGXA50WtdData, 7);
+                ChinaMain.controller().getSGXA50HistoricalCustom(20000, getExpiredFutContract()
+                        ,HistChinaStocks::handleSGXA50WtdData, 7);
+                ChinaMain.controller().getSGXA50HistoricalCustom(20001, getFrontFutContract()
+                        ,HistChinaStocks::handleSGXA50WtdData, 7);
+                ChinaMain.controller().getSGXA50HistoricalCustom(20002, getBackFutContract(),
+                        HistChinaStocks::handleSGXA50WtdData, 7);
 
             });
-
 
         });
 
@@ -774,6 +778,7 @@ public class HistChinaStocks extends JPanel {
 
         String ticker = ibContractToSymbol(c);
 
+        System.out.println(getStr(" handle sgx a50 wtd ",ticker, close));
         //System.out.println(" handle sgx a50 wtd data " + ticker);
 
         if (!date.startsWith("finished")) {
@@ -812,7 +817,6 @@ public class HistChinaStocks extends JPanel {
 
             if (ticker.equalsIgnoreCase("SGXA50PR")) {
                 chinaWtd.get(ticker).lastEntry().getValue().updateClose(futExpiryLevel);
-
             }
 
             NavigableMap<LocalDateTime, Double> ret =
