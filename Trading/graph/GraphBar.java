@@ -222,6 +222,19 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
             x += XU.graphBarWidth.get();
         }
 
+        if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0) {
+
+            int lowY = getY(tm.lastEntry().getValue().getLow());
+            int closeY = getY(tm.lastEntry().getValue().getClose());
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+            g.drawString(tm.lastKey().toString() + " " +
+                            Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
+                    x, lowY + (mouseYCord < closeY ? -10 : +10));
+            g.drawOval(x + 2, lowY, 5, 5);
+            g.fillOval(x + 2, lowY, 5, 5);
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
+        }
+
         g2.setColor(Color.red);
         g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.5F));
         g2.setStroke(BS3);
@@ -462,7 +475,8 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
 
     private int getPMchgY() {
         return (Utility.noZeroArrayGen(name, minMapY, amCloseY, closeMapY, maxMapY))
-                ? (int) min(100, round(100d * (closeMapY.get(name) - amCloseY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+                ? (int) min(100, round(100d * (closeMapY.get(name) - amCloseY.get(name))
+                / (maxMapY.get(name) - minMapY.get(name)))) : 0;
     }
 
 
