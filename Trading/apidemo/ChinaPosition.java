@@ -909,13 +909,15 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     //get margin position
     private static void getCurrentPositionMargin() {
 
+        File output = new File(TradingConstants.GLOBALPATH + "marginCurrentPositionProcessed.txt");
+        clearFile(output);
+
         int fillTimeCol = 0;
         int statusCol = 0;
         //int orderTimeCol = 0;
         int fillAmtCol = 0;
         int stockCodeCol = 0;
         int fillPriceCol = 0;
-
         int buySellCol = 0;
         int beizhuCol = 0;
 
@@ -1008,6 +1010,14 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                         //System.out.println ( "tradesmap includes " + tradesMapFront.containsKey(ticker));
                         x.printStackTrace();
                     }
+                    String outputString = Utility.getStrTabbed(LocalDate.now().toString(),
+                            dataList.get(fillTimeCol), "Margin", " ", "CNY",
+                            ticker.substring(0, 2).toUpperCase(), " ", "'" +
+                                    dataList.get(stockCodeCol), dataList.get(buySellCol).equals("证券买入") ? "B" : "S",
+                            "O", (dataList.get(buySellCol).equals("证券买入") ? "" : "-")
+                                    + dataList.get(fillAmtCol), "1", dataList.get(fillPriceCol));
+                    simpleWriteToFile(outputString, true, output);
+
                 }
             }
         } catch (IOException ex1) {
