@@ -214,8 +214,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         getOpenButton.addActionListener(l -> {
             getOpenPositionsNormal();
-            //getOpenPositionsFromMargin();
-
+            getOpenPositionsFromMargin();
         });
 
         getCurrentButton.addActionListener(l -> {
@@ -717,6 +716,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }*/
 
     private static void getOpenPositionsNormal() {
+
+        System.out.println(" get open position from normal ");
+
         int todaySoldCol = 0;
         int todayBoughtCol = 0;
         int chineseNameCol = 0;
@@ -743,7 +745,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     //System.out.println(" today sold col " + todaySoldCol);
                 }
 
-                if (dataList.size() > 1 && (nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol))
+                if (dataList.size() > 1 && (nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "")
+                        .replace(" ", "").equals(dataList.get(chineseNameCol))
                         || dataList.get(chineseNameCol).startsWith("XD"))) {
                     String nam = Utility.addSHSZ(dataList.get(stockCodeCol));
 
@@ -757,8 +760,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
     }
 
-    @SuppressWarnings("unused")
     public static void getOpenPositionsFromMargin() {
+
+        System.out.println(" get open position from margin ");
+
         int todaySoldCol = 0;
         int todayBoughtCol = 0;
         int chineseNameCol = 0;
@@ -769,22 +774,33 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader
                 (new FileInputStream(TradingConstants.GLOBALPATH + "openPositionMargin.txt"), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
-                dataList = Arrays.asList(line.split("\\s+"));
-                System.out.println(Arrays.asList(line.split("\\s+")));
+                dataList = Arrays.asList(line.split("\\s{2,}"));
+                System.out.println(Arrays.asList(line.split("\\s{2,}")));
                 //System.out.println( " datalist size" + dataList.size());
 
                 if (dataList.size() > 0 && dataList.get(0).equals("证券名称")) {
-                    chineseNameCol = dataList.indexOf("证券名称");
-                    openPosCol = dataList.indexOf("证券数量");
-                    costCol = dataList.indexOf("成本价");
-                    stockCodeCol = dataList.indexOf("证券代码");
-                    todayBoughtCol = dataList.indexOf("今买数量");
-                    todaySoldCol = dataList.indexOf("今卖数量");
+                    chineseNameCol = dataList.indexOf("证券名称"); //0
+                    openPosCol = dataList.indexOf("证券数量");   //
+                    costCol = dataList.indexOf("成本价");        //3
+                    stockCodeCol = dataList.indexOf("证券代码"); //10
+                    todayBoughtCol = dataList.indexOf("今买数量"); //8
+                    todaySoldCol = dataList.indexOf("今卖数量");   //9
                     System.out.println(" today sold col " + todaySoldCol);
                 }
 
+                if (dataList.size() > stockCodeCol) {
+                    System.out.println(getStr(" ticker ", dataList.get(stockCodeCol), " add sh sz ",
+                            Utility.addSHSZ(dataList.get(stockCodeCol)), " name map ",
+                            nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), ""),
+                            " replaced ", nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "")
+                                    .replace(" ", ""), " chin name in list  ",
+                            dataList.get(chineseNameCol)));
+                }
+
                 if (dataList.size() > stockCodeCol && (
-                        nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "").replace(" ", "").equals(dataList.get(chineseNameCol))
+                        nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "")
+                                //.replace(" ", "")
+                                .equals(dataList.get(chineseNameCol))
                                 || dataList.get(chineseNameCol).startsWith("XD"))) {
 
                     //System.out.println( " name " + addSHSZ(dataList.get(stockCodeCol)));
@@ -1018,7 +1034,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //                    .collect(Collectors.groupingBy(Entry::getKey, Collectors.summingInt(Entry::getValue))));
 
             // take account of the selling trades. (cannot be > 0)
-            return Stream.of(openPositionMap, trades).flatMap(e -> e.entrySet().stream()).filter(e -> e.getValue() !=0)
+            return Stream.of(openPositionMap, trades).flatMap(e -> e.entrySet().stream()).filter(e -> e.getValue() != 0)
                     //.peek(e->System.out.println(" openpos map, trades " +  e.getKey() + "  " + e.getValue()))
                     .collect(Collectors.groupingBy(Entry::getKey, Collectors.summingInt(Entry::getValue)));
         }

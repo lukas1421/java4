@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaKeyMonitor.dispGran;
 import static apidemo.ChinaStock.NORMAL_STOCK;
+import static apidemo.ChinaStock.closeMap;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.*;
@@ -294,9 +295,17 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
     }
 
     double getReturn() {
+
         if (tm.size() > 0) {
-            double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+            double initialP = 0.0;
+            if(dispGran == DisplayGranularity._1MDATA) {
+                initialP = closeMap.getOrDefault(name,
+                        tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0));
+            } else {
+                initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+            }
             double finalP = tm.lastEntry().getValue().getClose();
+            //System.out.println(getStr(" chinese initial final ", chineseName,initialP,finalP));
             return (double) round((finalP / initialP - 1) * 1000d) / 10d;
         }
         return 0.0;

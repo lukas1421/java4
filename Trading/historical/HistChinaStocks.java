@@ -115,6 +115,8 @@ public class HistChinaStocks extends JPanel {
     public static Map<String, Double> mtdSharpe = new HashMap<>();
     private static Map<String, Double> fxMap = new HashMap<>();
 
+    private static Map<String, LocalDate> histHighDateMap = new HashMap<>();
+
     private int avgPercentile;
     private int weightedAvgPercentile;
     private static volatile boolean filterOn = false;
@@ -191,6 +193,18 @@ public class HistChinaStocks extends JPanel {
         } catch (IOException x) {
             x.printStackTrace();
         }
+
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "histHighDate.txt")))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                histHighDateMap.put(al1.get(0), LocalDate.parse(al1.get(1)
+                        , DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+            }
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+
 
         File chinaInput = new File(GLOBALPATH + "ChinaAll.txt");
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(chinaInput), "GBK"))) {
@@ -596,9 +610,9 @@ public class HistChinaStocks extends JPanel {
             });
             CompletableFuture.runAsync(() -> {
                 ChinaMain.controller().getSGXA50HistoricalCustom(20000, getExpiredFutContract()
-                        ,HistChinaStocks::handleSGXA50WtdData, 7);
+                        , HistChinaStocks::handleSGXA50WtdData, 7);
                 ChinaMain.controller().getSGXA50HistoricalCustom(20001, getFrontFutContract()
-                        ,HistChinaStocks::handleSGXA50WtdData, 7);
+                        , HistChinaStocks::handleSGXA50WtdData, 7);
                 ChinaMain.controller().getSGXA50HistoricalCustom(20002, getBackFutContract(),
                         HistChinaStocks::handleSGXA50WtdData, 7);
 
@@ -778,7 +792,7 @@ public class HistChinaStocks extends JPanel {
 
         String ticker = ibContractToSymbol(c);
 
-        System.out.println(getStr(" handle sgx a50 wtd ",ticker, close));
+        System.out.println(getStr(" handle sgx a50 wtd ", ticker, close));
         //System.out.println(" handle sgx a50 wtd data " + ticker);
 
         if (!date.startsWith("finished")) {
@@ -1637,7 +1651,8 @@ public class HistChinaStocks extends JPanel {
                     return "Bot";
                 case 47:
                     return "Sld";
-
+                case 48:
+                    return "Hi Date";
                 default:
                     return "";
             }
@@ -1793,13 +1808,14 @@ public class HistChinaStocks extends JPanel {
                 case 44:
                     return SinaStock.weightMapA50.getOrDefault(name, 0.0);
                 case 45:
-                    return ma60Map.getOrDefault(name, 0.0)==0.0?0.0:
+                    return ma60Map.getOrDefault(name, 0.0) == 0.0 ? 0.0 :
                             Math.round(price / ma60Map.get(name) * 100d) / 100d;
                 case 46:
-                    return wtdBotPosition.getOrDefault(name,0);
+                    return wtdBotPosition.getOrDefault(name, 0);
                 case 47:
-                    return wtdSoldPosition.getOrDefault(name,0);
-
+                    return wtdSoldPosition.getOrDefault(name, 0);
+                case 48:
+                    return histHighDateMap.getOrDefault(name,LocalDate.of(1999,12,31));
 
                 default:
                     return null;
@@ -1842,6 +1858,9 @@ public class HistChinaStocks extends JPanel {
                     return Integer.class;
                 case 47:
                     return Integer.class;
+                case 48:
+                    return LocalDate.class;
+
                 default:
                     return Double.class;
             }
