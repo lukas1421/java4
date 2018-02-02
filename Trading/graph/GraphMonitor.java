@@ -124,9 +124,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
                 for (Map.Entry e : trades.subMap(lt, true, lt.plusMinutes(dispGran.getMinuteDiff()),
                         false).entrySet()) {
                     TradeBlock t = (TradeBlock) e.getValue();
-                    System.out.println(getStr(" trades in graph monitor margin%" +
-                            "", name, t, t.hasMargin()));
-
+                    //System.out.println(getStr(" trades in graph monitor margin%" +"", name, t, t.hasMargin()));
 
                     if (t.getSizeAll() > 0) {
                         g.setColor(Color.blue);
