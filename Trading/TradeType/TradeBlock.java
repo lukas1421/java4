@@ -1,11 +1,11 @@
 package TradeType;
 
-import utility.Utility;
-
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static utility.Utility.getStr;
 
 //trade block contains various trades
 public final class TradeBlock {
@@ -26,6 +26,14 @@ public final class TradeBlock {
 
     public void addTrade(Trade t) {
         mergeList.add(t);
+    }
+
+    public boolean hasMargin() {
+        //int total = getSizeAll();
+        int margin = mergeList.stream().filter(e -> e instanceof MarginTrade)
+                .mapToInt(t -> ((Trade) t).getSize()).sum();
+        //System.out.println(getStr("TRADEBLOCK count margin %", total, margin));
+        return margin > 0;
     }
 
     public void merge(TradeBlock tb) {
@@ -71,7 +79,7 @@ public final class TradeBlock {
 
     @Override
     public String toString() {
-        return Utility.getStr(" trade block size: ", mergeList.size(),
+        return getStr(" trade block size: ", mergeList.size(),
                 mergeList.stream().map(Object::toString).collect(Collectors.joining(",")));
     }
 }

@@ -850,7 +850,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     fillPriceCol = dataList.indexOf("成交价格");
                     stockCodeCol = dataList.indexOf("证券代码");
                     //beizhuCol = dataList.indexOf("备注");
-                    //System.out.println(ChinaStockHelper.getStr(orderTimeCol,buySellCol,statusCol,fillAmtCol,fillPriceCol,stockCodeCol));
+                    //System.out.println(StockHelper.getStr(orderTimeCol,buySellCol,statusCol,fillAmtCol,fillPriceCol,stockCodeCol));
                     //System.out.println("委托时间" + dataList.indexOf("委托时间"));
                 }
 
@@ -941,7 +941,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     //System.out.println("委托时间" + dataList.indexOf("委托时间"));
                 }
 
-                if (dataList.size() > 10 && !dataList.get(stockCodeCol).startsWith("2") && (dataList.get(statusCol).equals("已成")
+                if (dataList.size() > 10 && !dataList.get(stockCodeCol).startsWith("2")
+                        && (dataList.get(statusCol).equals("已成")
                         || dataList.get(statusCol).equals("部成"))
                         && (dataList.get(buySellCol).equals("证券买入") || dataList.get(buySellCol).equals("证券卖出"))) {
 

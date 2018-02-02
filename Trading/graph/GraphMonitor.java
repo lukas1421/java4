@@ -124,16 +124,26 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
                 for (Map.Entry e : trades.subMap(lt, true, lt.plusMinutes(dispGran.getMinuteDiff()),
                         false).entrySet()) {
                     TradeBlock t = (TradeBlock) e.getValue();
+                    System.out.println(getStr(" trades in graph monitor margin%" +
+                            "", name, t, t.hasMargin()));
+
+
                     if (t.getSizeAll() > 0) {
                         g.setColor(Color.blue);
-                        Polygon p = new Polygon(new int[]{x - 10, x, x + 10}, new int[]{lowY + 10, lowY, lowY + 10}, 3);
+                        Polygon p = new Polygon(new int[]{x - 10, x, x + 10},
+                                new int[]{lowY + 10, lowY, lowY + 10}, 3);
                         g.drawPolygon(p);
-                        g.fillPolygon(p);
+                        if (!t.hasMargin()) {
+                            g.fillPolygon(p);
+                        }
                     } else {
                         g.setColor(Color.black);
-                        Polygon p1 = new Polygon(new int[]{x - 10, x, x + 10}, new int[]{highY - 10, highY, highY - 10}, 3);
+                        Polygon p1 = new Polygon(new int[]{x - 10, x, x + 10},
+                                new int[]{highY - 10, highY, highY - 10}, 3);
                         g.drawPolygon(p1);
-                        g.fillPolygon(p1);
+                        if (!t.hasMargin()) {
+                            g.fillPolygon(p1);
+                        }
                     }
                 }
             }
@@ -298,7 +308,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
 
         if (tm.size() > 0) {
             double initialP = 0.0;
-            if(dispGran == DisplayGranularity._1MDATA) {
+            if (dispGran == DisplayGranularity._1MDATA) {
                 initialP = closeMap.getOrDefault(name,
                         tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0));
             } else {
@@ -310,7 +320,6 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         }
         return 0.0;
     }
-
 
     @SuppressWarnings("Duplicates")
     void clearGraph() {
