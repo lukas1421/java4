@@ -165,7 +165,6 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
                 } else {
                     if (lt.getDayOfMonth() != tm.lowerKey(lt).getDayOfMonth()) {
                         g.drawString(lt.toLocalDate().format(DateTimeFormatter.ofPattern("MM-dd")), x, getHeight() - 5);
-
                     }
                 }
             }
@@ -184,7 +183,6 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         }
 
         if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0) {
-
             int lowY = getY(tm.lastEntry().getValue().getLow());
             int closeY = getY(tm.lastEntry().getValue().getClose());
             g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
