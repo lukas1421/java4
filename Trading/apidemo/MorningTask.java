@@ -456,7 +456,6 @@ public final class MorningTask implements HistoricalHandler {
                             Double.parseDouble(al1.get(4)), Double.parseDouble(al1.get(5))));
                 }
             }
-
         } catch (IOException | NumberFormatException ex) {
             ex.printStackTrace();
         }

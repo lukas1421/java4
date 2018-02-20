@@ -476,6 +476,16 @@ public class HistChinaStocks extends JPanel {
                     }
                 });
             }
+
+            stockList.forEach(s->{
+                chinaWtd.get("SGXA50").keySet().forEach(k->{
+                    if(chinaWtd.containsKey(s) && !chinaWtd.get(s).containsKey(k) && k.isAfter(chinaWtd.get(s).firstKey()) ) {
+                        chinaWtd.get(s).put(k,new SimpleBar(chinaWtd.get(s).lowerEntry(k).getValue().getClose()));
+                    }
+                });
+
+            });
+
         });
 
         autoComputeButton.addActionListener(l -> {
