@@ -482,6 +482,10 @@ public class HistChinaStocks extends JPanel {
                     if(chinaWtd.containsKey(s) && !chinaWtd.get(s).containsKey(k) && k.isAfter(chinaWtd.get(s).firstKey()) ) {
                         chinaWtd.get(s).put(k,new SimpleBar(chinaWtd.get(s).lowerEntry(k).getValue().getClose()));
                     }
+
+                    if(chinaWtd.containsKey(s) && !chinaWtd.get(s).containsKey(k) && k.isBefore(chinaWtd.get(s).firstKey()) ) {
+                        chinaWtd.get(s).put(k,new SimpleBar(lastWeekCloseMap.getOrDefault(s,0.0)));
+                    }
                 });
 
             });
