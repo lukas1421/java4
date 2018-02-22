@@ -477,6 +477,7 @@ public class HistChinaStocks extends JPanel {
                 });
             }
 
+            //adjust for incomplete stock data
             stockList.forEach(s->{
                 chinaWtd.get("SGXA50").keySet().forEach(k->{
                     if(chinaWtd.containsKey(s) && !chinaWtd.get(s).containsKey(k) && k.isAfter(chinaWtd.get(s).firstKey()) ) {
