@@ -9,15 +9,15 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import static utility.Utility.roundDownToN;
+import static utility.Utility.*;
 
 public class GraphOptionVol extends JComponent implements MouseMotionListener, MouseListener {
 
 
-    double currentPrice;
-    NavigableMap<Double, Double> volSmileFront = new TreeMap<>();
-    NavigableMap<Double, Double> volSmileBack = new TreeMap<>();
-    NavigableMap<Double, Double> volSmileThird = new TreeMap<>();
+    private double currentPrice;
+    private NavigableMap<Double, Double> volSmileFront = new TreeMap<>();
+    private NavigableMap<Double, Double> volSmileBack = new TreeMap<>();
+    private NavigableMap<Double, Double> volSmileThird = new TreeMap<>();
 
     private int mouseYCord = Integer.MAX_VALUE;
     private int mouseXCord = Integer.MAX_VALUE;
@@ -46,33 +46,28 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
     @Override
     protected void paintComponent(Graphics g) {
         if (volSmileFront.size() > 0) {
-            double minStrike = volSmileFront.keySet().stream().reduce(Math::min).orElse(0.0);
-            double maxStrike = volSmileFront.keySet().stream().reduce(Math::max).orElse(0.0);
-            double minVol = Math.min(volSmileFront.values().stream().reduce(Math::min).orElse(0.0),
-                    volSmileBack.values().stream().reduce(Math::min).orElse(0.0));
-            double maxVol = Math.max(volSmileFront.values().stream().reduce(Math::max).orElse(0.0),
-                    volSmileBack.values().stream().reduce(Math::max).orElse(0.0));
 
-            //double strikeRange = maxStrike - minStrike;
-            //double heightRange = maxVol;
+            double minVol = minGen(volSmileFront.values().stream().reduce(Math::min).orElse(0.0),
+                    volSmileBack.values().stream().reduce(Math::min).orElse(0.0),
+                    volSmileThird.values().stream().reduce(Math::min).orElse(0.0));
+
+            double maxVol = maxGen(volSmileFront.values().stream().reduce(Math::max).orElse(0.0),
+                    volSmileBack.values().stream().reduce(Math::max).orElse(0.0),
+                    volSmileThird.values().stream().reduce(Math::max).orElse(0.0));
 
             int x = 5;
             int x_width = getWidth() / volSmileFront.size();
 
             int stepsOf10 = (int) Math.floor(maxVol * 10);
-            int topY = (int) (getHeight() * 0.8);
-            int stepSize = (int) (topY / stepsOf10);
+            //int topY = (int) (getHeight() * 0.8);
+            //int stepSize = (int) (topY / stepsOf10);
 
             for (int i = 1; i != stepsOf10; i++) {
-                //System.out.println(getStr(" stepsof10, stepsize i ", stepsOf10, stepSize, i));
                 g.drawString(Double.toString((double) i / 10), 5, getY((double) i / 10, maxVol, minVol));
             }
 
-
-            //for(int i )
-
             for (Map.Entry<Double, Double> e : volSmileFront.entrySet()) {
-                int yFront = getY((double) e.getValue(), maxVol, minVol);
+                int yFront = getY(e.getValue(), maxVol, minVol);
                 int yBack = getY(interpolateVol(e.getKey(), volSmileBack), maxVol, minVol);
                 int yThird = getY(interpolateVol(e.getKey(), volSmileThird), maxVol, minVol);
 
@@ -83,12 +78,12 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
 
                 g.drawString(e.getKey().toString(), x, getHeight() - 20);
                 g.drawString(priceInPercent, x, getHeight() - 5);
-                g.drawString(Math.round(e.getValue() * 100d) + "", x + 10, yFront+10);
+                g.drawString(Math.round(e.getValue() * 100d) + "", x + 10, yFront + 15);
 
                 g.setColor(Color.blue);
                 g.drawOval(x, yBack, 5, 5);
                 g.fillOval(x, yBack, 5, 5);
-                g.drawString(Math.round(interpolateVol(e.getKey(), volSmileBack) * 100d) + "", x + 10, yBack+10);
+                g.drawString(Math.round(interpolateVol(e.getKey(), volSmileBack) * 100d) + "", x + 10, yBack + 10);
                 g.setColor(Color.black);
 
                 g.setColor(Color.red);
