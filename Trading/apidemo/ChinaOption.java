@@ -34,8 +34,8 @@ public class ChinaOption extends JPanel implements Runnable {
 //    static String urlStringSH;
 
     private static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
-    private static final Pattern CALL_NAME_PATTERN = Pattern.compile("(?<=var\\shq_str_OP_UP_5100501802=)\"(.*?),\"");
-    private static final Pattern PUT_NAME_PATTERN = Pattern.compile("(?<=var\\shq_str_OP_DOWN_5100501802=)\"(.*?),\"");
+    private static final Pattern CALL_NAME_PATTERN = Pattern.compile("(?<=var\\shq_str_OP_UP_510050\\d{4}=)\"(.*?),\"");
+    private static final Pattern PUT_NAME_PATTERN = Pattern.compile("(?<=var\\shq_str_OP_DOWN_510050\\d{4}=)\"(.*?),\"");
 
     private static final Pattern OPTION_PATTERN = Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"(.*?)\";");
     //static final Pattern CALL_NAME = Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"");
@@ -56,14 +56,19 @@ public class ChinaOption extends JPanel implements Runnable {
     private static HashMap<String, Double> askMap = new HashMap<>();
     private static HashMap<String, Double> optionPriceMap = new HashMap<>();
     private static HashMap<String, Option> tickerOptionsMap = new HashMap<>();
-    private static NavigableMap<Double, Double> strikeVolMapCall = new TreeMap<>();
-    private static NavigableMap<Double, Double> strikeVolMapPut = new TreeMap<>();
+    private static Map<LocalDate, NavigableMap<Double, Double>> strikeVolMapCall = new TreeMap<>();
+    private static Map<LocalDate, NavigableMap<Double, Double>> strikeVolMapPut = new TreeMap<>();
     private static List<JLabel> labelList = new ArrayList<>();
     private static JLabel timeLabel = new JLabel();
 
     private static Option firstCall = new CallOption(2.95, frontExpiry);
 
     private ChinaOption() {
+
+        strikeVolMapCall.put(frontExpiry, new TreeMap<>());
+        strikeVolMapCall.put(backExpiry, new TreeMap<>());
+        strikeVolMapPut.put(frontExpiry, new TreeMap<>());
+        strikeVolMapPut.put(backExpiry, new TreeMap<>());
 
         setLayout(new BorderLayout());
         JPanel controlPanel = new JPanel();
@@ -182,52 +187,98 @@ public class ChinaOption extends JPanel implements Runnable {
     public void run() {
         try {
             String callStringFront = "http://hq.sinajs.cn/list=OP_UP_510050" + frontMonth;
-            String callStringBack = "http://hq.sinajs.cn/list=OP_UP_510050" + backMonth;
-            URL urlCall = new URL(callStringFront);
-            String putStringFront = "http://hq.sinajs.cn/list=OP_DOWN_510050" + frontMonth;
-            String putStringBack = "http://hq.sinajs.cn/list=OP_DOWN_510050" + backMonth;
+            URL urlCallFront = new URL(callStringFront);
+            URLConnection urlconnCallFront = urlCallFront.openConnection();
 
-            URL urlPul = new URL(putStringFront);
-            URLConnection urlconnCall = urlCall.openConnection();
-            URLConnection urlconnPut = urlPul.openConnection();
+            String putStringFront = "http://hq.sinajs.cn/list=OP_DOWN_510050" + frontMonth;
+            URL urlPutFront = new URL(putStringFront);
+            URLConnection urlconnPutFront = urlPutFront.openConnection();
+
+            String callStringBack = "http://hq.sinajs.cn/list=OP_UP_510050" + backMonth;
+            URL urlCallBack = new URL(callStringBack);
+            URLConnection urlconnCallBack = urlCallBack.openConnection();
+
+            String putStringBack = "http://hq.sinajs.cn/list=OP_DOWN_510050" + backMonth;
+            URL urlPutBack = new URL(putStringBack);
+            URLConnection urlconnPutBack = urlPutBack.openConnection();
+
+
             Matcher m;
             String line;
             List<String> datalist;
 
-            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnCall.getInputStream(), "gbk"))) {
+            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnCallFront.getInputStream(), "gbk"))) {
                 while ((line = reader2.readLine()) != null) {
                     m = CALL_NAME_PATTERN.matcher(line);
 
                     while (m.find()) {
                         String res = m.group(1);
                         datalist = Arrays.asList(res.split(","));
-                        URL allCalls = new URL("http://hq.sinajs.cn/list=" +
+                        URL allCallsFront = new URL("http://hq.sinajs.cn/list=" +
                                 datalist.stream().collect(Collectors.joining(",")));
-                        URLConnection urlconnAllCalls = allCalls.openConnection();
-                        getInfoFromURLConn(urlconnAllCalls, CallPutFlag.CALL);
+                        URLConnection urlconnAllCallsFront = allCallsFront.openConnection();
+                        getInfoFromURLConn(urlconnAllCallsFront, CallPutFlag.CALL, frontExpiry);
                     }
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
 
-            // get puts
-            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnPut.getInputStream(), "gbk"))) {
+            // front month put
+            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnPutFront.getInputStream(), "gbk"))) {
                 while ((line = reader2.readLine()) != null) {
                     m = PUT_NAME_PATTERN.matcher(line);
 
                     while (m.find()) {
                         String res = m.group(1);
                         datalist = Arrays.asList(res.split(","));
-                        URL allPuts = new URL("http://hq.sinajs.cn/list=" +
+                        URL allPutsFront = new URL("http://hq.sinajs.cn/list=" +
                                 datalist.stream().collect(Collectors.joining(",")));
-                        URLConnection urlconnAllPuts = allPuts.openConnection();
-                        getInfoFromURLConn(urlconnAllPuts, CallPutFlag.PUT);
+                        URLConnection urlconnAllPutsFront = allPutsFront.openConnection();
+                        getInfoFromURLConn(urlconnAllPutsFront, CallPutFlag.PUT, frontExpiry);
                     }
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
+
+            // back month call
+            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnCallBack.getInputStream(), "gbk"))) {
+                while ((line = reader2.readLine()) != null) {
+                    m = CALL_NAME_PATTERN.matcher(line);
+
+                    while (m.find()) {
+                        String res = m.group(1);
+                        datalist = Arrays.asList(res.split(","));
+                        URL allCallsBack = new URL("http://hq.sinajs.cn/list=" +
+                                datalist.stream().collect(Collectors.joining(",")));
+                        URLConnection urlconnAllCallsBack = allCallsBack.openConnection();
+                        getInfoFromURLConn(urlconnAllCallsBack, CallPutFlag.CALL, backExpiry);
+                    }
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+
+
+            //back month put
+            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnPutBack.getInputStream(), "gbk"))) {
+                while ((line = reader2.readLine()) != null) {
+                    m = PUT_NAME_PATTERN.matcher(line);
+
+                    while (m.find()) {
+                        String res = m.group(1);
+                        datalist = Arrays.asList(res.split(","));
+                        URL allPutsBack = new URL("http://hq.sinajs.cn/list=" +
+                                datalist.stream().collect(Collectors.joining(",")));
+                        URLConnection urlconnAllPutsBack = allPutsBack.openConnection();
+                        getInfoFromURLConn(urlconnAllPutsBack, CallPutFlag.PUT, backExpiry);
+                    }
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+
 
         } catch (IOException ex2) {
             ex2.printStackTrace();
@@ -247,7 +298,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     }
 
-    private static void getInfoFromURLConn(URLConnection conn, CallPutFlag f) {
+    private static void getInfoFromURLConn(URLConnection conn, CallPutFlag f, LocalDate expiry) {
         String line;
         Matcher matcher;
 
@@ -273,8 +324,8 @@ public class ChinaOption extends JPanel implements Runnable {
 
                     optionPriceMap.put(resName, Double.parseDouble(res1.get(2)));
                     tickerOptionsMap.put(resName, f == CallPutFlag.CALL ?
-                            new CallOption(Double.parseDouble(res1.get(7)), frontExpiry) :
-                            new PutOption(Double.parseDouble(res1.get(7)), frontExpiry));
+                            new CallOption(Double.parseDouble(res1.get(7)), expiry) :
+                            new PutOption(Double.parseDouble(res1.get(7)), expiry));
                     //System.out.println(tickerOptionsMap);
 
                 }
@@ -287,33 +338,38 @@ public class ChinaOption extends JPanel implements Runnable {
 
         tickerOptionsMap.forEach((k, v) -> {
             if (v.getCallOrPut() == CallPutFlag.CALL) {
-                strikeVolMapCall.put(v.getStrike(), simpleSolver(optionPriceMap.get(k), fillInBS(stockPrice, v),
+                strikeVolMapCall.get(v.getExpiryDate()).put(v.getStrike(), simpleSolver(optionPriceMap.get(k), fillInBS(stockPrice, v),
                         0, 1));
             } else {
-                strikeVolMapPut.put(v.getStrike(), simpleSolver(optionPriceMap.get(k), fillInBS(stockPrice, v),
+                strikeVolMapPut.get(v.getExpiryDate()).put(v.getStrike(), simpleSolver(optionPriceMap.get(k), fillInBS(stockPrice, v),
                         0, 1));
             }
         });
 
-        System.out.println(" CALL strike vol map " + strikeVolMapCall);
-        System.out.println(" PUT strike vol map " + strikeVolMapPut);
-        System.out.println(" merged vol map " + mergePutCallVols(strikeVolMapCall,strikeVolMapPut,
+        //System.out.println(" CALL strike vol map " + strikeVolMapCall);
+        // System.out.println(" PUT strike vol map " + strikeVolMapPut);
+        System.out.println(" merged vol map FRONT " + mergePutCallVols(strikeVolMapCall.get(frontExpiry), strikeVolMapPut.get(frontExpiry),
                 stockPrice));
-        graph.setVolSmile(mergePutCallVols(strikeVolMapCall,strikeVolMapPut,stockPrice));
+        System.out.println(" merged vol map BACK " + mergePutCallVols(strikeVolMapCall.get(backExpiry)
+                , strikeVolMapPut.get(backExpiry), stockPrice));
+
+        graph.setVolSmileFront(mergePutCallVols(strikeVolMapCall.get(frontExpiry), strikeVolMapPut.get(frontExpiry), stockPrice));
+        graph.setVolSmileBack(mergePutCallVols(strikeVolMapCall.get(backExpiry), strikeVolMapPut.get(backExpiry), stockPrice));
+        graph.setCurrentPrice(stockPrice);
     }
 
     private static NavigableMap<Double, Double> mergePutCallVols(NavigableMap<Double, Double> callMap
-            ,NavigableMap<Double, Double> putMap, double spot) {
+            , NavigableMap<Double, Double> putMap, double spot) {
         NavigableMap<Double, Double> res = new TreeMap<>();
 
         callMap.forEach((k, v) -> {
-            if(k>spot) {
-                res.put(k,v);
+            if (k > spot) {
+                res.put(k, v);
             }
         });
         putMap.forEach((k, v) -> {
-            if(k<spot) {
-                res.put(k,v);
+            if (k < spot) {
+                res.put(k, v);
             }
         });
         return res;
@@ -438,8 +494,12 @@ abstract class Option {
         return callput;
     }
 
+    LocalDate getExpiryDate() {
+        return expiryDate;
+    }
+
     double getTimeToExpiry() {
-        double x = ((ChronoUnit.DAYS.between(LocalDate.now(), expiryDate)) / 365.0d);
+        double x = ((ChronoUnit.DAYS.between(LocalDate.now(), expiryDate) + 1) / 365.0d);
         //System.out.println(" time to expiry " + x);
         return x;
     }

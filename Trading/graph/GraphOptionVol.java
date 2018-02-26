@@ -9,14 +9,14 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import static utility.Utility.getStr;
 import static utility.Utility.roundDownToN;
 
 public class GraphOptionVol extends JComponent implements MouseMotionListener, MouseListener {
 
 
-    NavigableMap<Double, Double> volSmileCall = new TreeMap<>();
-    NavigableMap<Double, Double> volSmilePut = new TreeMap<>();
+    double currentPrice;
+    NavigableMap<Double, Double> volSmileFront = new TreeMap<>();
+    NavigableMap<Double, Double> volSmileBack = new TreeMap<>();
     private int mouseYCord = Integer.MAX_VALUE;
     private int mouseXCord = Integer.MAX_VALUE;
 
@@ -25,49 +25,89 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
         addMouseListener(this);
     }
 
-    public void setVolSmile(NavigableMap<Double, Double> mp) {
-        volSmileCall = mp;
+    public void setCurrentPrice(double p) {
+        currentPrice = p;
+    }
+
+    public void setVolSmileFront(NavigableMap<Double, Double> mp) {
+        volSmileFront = mp;
+    }
+
+    public void setVolSmileBack(NavigableMap<Double, Double> mp) {
+        volSmileBack = mp;
     }
 
     @Override
     protected void paintComponent(Graphics g) {
-        if (volSmileCall.size() > 0) {
-            double minStrike = volSmileCall.keySet().stream().reduce(Math::min).orElse(0.0);
-            double maxStrike = volSmileCall.keySet().stream().reduce(Math::max).orElse(0.0);
-            double minVol = volSmileCall.values().stream().reduce(Math::min).orElse(0.0);
-            double maxVol = volSmileCall.values().stream().reduce(Math::max).orElse(0.0);
+        if (volSmileFront.size() > 0) {
+            double minStrike = volSmileFront.keySet().stream().reduce(Math::min).orElse(0.0);
+            double maxStrike = volSmileFront.keySet().stream().reduce(Math::max).orElse(0.0);
+            double minVol = Math.min(volSmileFront.values().stream().reduce(Math::min).orElse(0.0),
+                    volSmileBack.values().stream().reduce(Math::min).orElse(0.0));
+            double maxVol = Math.max(volSmileFront.values().stream().reduce(Math::max).orElse(0.0),
+                    volSmileBack.values().stream().reduce(Math::max).orElse(0.0));
 
             //double strikeRange = maxStrike - minStrike;
             //double heightRange = maxVol;
 
             int x = 5;
-            int x_width = getWidth() / volSmileCall.size();
+            int x_width = getWidth() / volSmileFront.size();
 
             int stepsOf10 = (int) Math.floor(maxVol * 10);
             int topY = (int) (getHeight() * 0.8);
             int stepSize = (int) (topY / stepsOf10);
 
             for (int i = 1; i != stepsOf10; i++) {
-                System.out.println(getStr(" stepsof10, stepsize i ", stepsOf10, stepSize, i));
-                g.drawString(Double.toString((double)i/10), 5, getY((double)i/10,maxVol,minVol));
+                //System.out.println(getStr(" stepsof10, stepsize i ", stepsOf10, stepSize, i));
+                g.drawString(Double.toString((double) i / 10), 5, getY((double) i / 10, maxVol, minVol));
             }
 
 
             //for(int i )
 
-            for (Map.Entry e : volSmileCall.entrySet()) {
-                int y = getY((double) e.getValue(), maxVol, minVol);
-                g.drawOval(x, y, 5, 5);
-                g.fillOval(x, y, 5, 5);
-                g.drawString(e.getKey().toString(), x, getHeight() - 10);
-                g.drawString(Integer.toString((int)(((double)e.getValue())*100d)), x, y + 20);
+            for (Map.Entry<Double, Double> e : volSmileFront.entrySet()) {
+                int yFront = getY((double) e.getValue(), maxVol, minVol);
+                int yBack = getY(interpolateVol(e.getKey(), volSmileBack), maxVol, minVol);
+
+                g.drawOval(x, yFront, 5, 5);
+                g.fillOval(x, yFront, 5, 5);
+                String priceInPercent = Integer.toString((int) (e.getKey() / currentPrice * 100)) + "%";
+                g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.5F));
+
+                g.drawString(e.getKey().toString(), x, getHeight() - 20);
+                g.drawString(priceInPercent, x, getHeight() - 5);
+                g.drawString(Math.round(e.getValue() * 100d)+"", x, yFront + 20);
+
+                g.setColor(Color.blue);
+                g.drawOval(x, yBack, 5, 5);
+                g.fillOval(x, yBack, 5, 5);
+                g.drawString(Math.round(interpolateVol(e.getKey(), volSmileBack)*100d) + "", x, yBack + 20);
+                g.setColor(Color.black);
+
+                g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.6666F));
+
 
                 if (roundDownToN(mouseXCord, x_width) == x - 5) {
                     g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 3F));
-                    g.drawString(e.toString(), x, y);
+                    g.drawString(e.toString(), x, yFront);
                     g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.333F));
                 }
+
                 x = x + x_width;
+            }
+        }
+    }
+
+    private double interpolateVol(double strike, NavigableMap<Double, Double> mp) {
+        if (mp.containsKey(strike)) {
+            return mp.get(strike);
+        } else {
+            if (strike >= mp.firstKey() && strike <= mp.lastKey()) {
+                double higherKey = mp.ceilingKey(strike);
+                double lowerKey = mp.floorKey(strike);
+                return mp.get(lowerKey) + (strike - lowerKey) / (higherKey - lowerKey) * (mp.get(higherKey) - mp.get(lowerKey));
+            } else {
+                return 0.0;
             }
         }
     }
