@@ -1,5 +1,6 @@
 package apidemo;
 
+import graph.GraphOptionVol;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import utility.Utility;
 
@@ -34,8 +35,12 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
     private static final Pattern CALL_NAME_PATTERN = Pattern.compile("(?<=var\\shq_str_OP_UP_5100501802=)\"(.*?),\"");
-    private static final Pattern CALL_PATTERN = Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"(.*?)\";");
+    private static final Pattern PUT_NAME_PATTERN = Pattern.compile("(?<=var\\shq_str_OP_DOWN_5100501802=)\"(.*?),\"");
+
+    private static final Pattern OPTION_PATTERN = Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"(.*?)\";");
     //static final Pattern CALL_NAME = Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"");
+
+    private static GraphOptionVol graph = new GraphOptionVol();
 
     private static String frontMonth = "1802";
     private static String backMonth = "1803";
@@ -51,11 +56,12 @@ public class ChinaOption extends JPanel implements Runnable {
     private static HashMap<String, Double> askMap = new HashMap<>();
     private static HashMap<String, Double> optionPriceMap = new HashMap<>();
     private static HashMap<String, Option> tickerOptionsMap = new HashMap<>();
-    private static Map<Double, Double> strikeVolMap = new TreeMap<>();
+    private static NavigableMap<Double, Double> strikeVolMapCall = new TreeMap<>();
+    private static NavigableMap<Double, Double> strikeVolMapPut = new TreeMap<>();
     private static List<JLabel> labelList = new ArrayList<>();
     private static JLabel timeLabel = new JLabel();
 
-    private static Option firstO = new Option(2.95, frontExpiry, CallPutFlag.CALL);
+    private static Option firstCall = new CallOption(2.95, frontExpiry);
 
     private ChinaOption() {
 
@@ -71,8 +77,19 @@ public class ChinaOption extends JPanel implements Runnable {
         bidMap.put(primaryCall, 0.0);
         askMap.put(primaryCall, 0.0);
 
+        JScrollPane jsp = new JScrollPane(graph) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 300;
+                d.width = 1000;
+                return d;
+            }
+        };
+
         add(controlPanel, BorderLayout.NORTH);
-        add(dataPanel, BorderLayout.SOUTH);
+        add(dataPanel, BorderLayout.CENTER);
+        add(jsp, BorderLayout.SOUTH);
 
         JLabel j11 = new JLabel(primaryCall);
         labelList.add(j11);
@@ -93,7 +110,6 @@ public class ChinaOption extends JPanel implements Runnable {
         labelList.add(j18);
         JLabel j19 = new JLabel(" Gamma  ");
         labelList.add(j19);
-
         JLabel j21 = new JLabel("0.0");
         labelList.add(j21);
         JLabel j22 = new JLabel("0.0");
@@ -102,7 +118,6 @@ public class ChinaOption extends JPanel implements Runnable {
         labelList.add(j23);
         JLabel j24 = new JLabel("0.0");
         labelList.add(j24);
-
         JLabel j25 = new JLabel("0.0");
         labelList.add(j25);
         JLabel j26 = new JLabel("0.0");
@@ -146,7 +161,7 @@ public class ChinaOption extends JPanel implements Runnable {
         dataPanel.add(j29);
     }
 
-    static void updateData(double opPrice, double stock, double vol, double bid, double ask, Option opt) {
+    private static void updateData(double opPrice, double stock, double vol, double bid, double ask, Option opt) {
         SwingUtilities.invokeLater(() -> {
 
             labelList.get(10).setText(Utility.getStrCheckNull(opPrice));
@@ -155,15 +170,11 @@ public class ChinaOption extends JPanel implements Runnable {
             labelList.get(13).setText(Utility.getStrCheckNull(vol));
             labelList.get(14).setText(Utility.getStrCheckNull(bid));
             labelList.get(15).setText(Utility.getStrCheckNull(ask));
-
             labelList.get(16).setText(Utility.getStrCheckNull(getDelta(stock, opt.getStrike(),
                     vol, opt.getTimeToExpiry(), interestRate)));
-
             labelList.get(17).setText(Utility.getStrCheckNull(getGamma(stock, opt.getStrike(),
                     vol, opt.getTimeToExpiry(), interestRate)));
-
             timeLabel.setText(LocalTime.now().toString());
-
         });
     }
 
@@ -190,42 +201,60 @@ public class ChinaOption extends JPanel implements Runnable {
                     while (m.find()) {
                         String res = m.group(1);
                         datalist = Arrays.asList(res.split(","));
-                        //System.out.println(datalist.stream().collect(Collectors.joining(",")));
-
                         URL allCalls = new URL("http://hq.sinajs.cn/list=" +
                                 datalist.stream().collect(Collectors.joining(",")));
-
-                        //System.out.println(" all calls is " + allCalls.toString());
                         URLConnection urlconnAllCalls = allCalls.openConnection();
-                        getInfoFromURLConn(urlconnAllCalls);
+                        getInfoFromURLConn(urlconnAllCalls, CallPutFlag.CALL);
                     }
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
+
+            // get puts
+            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnPut.getInputStream(), "gbk"))) {
+                while ((line = reader2.readLine()) != null) {
+                    m = PUT_NAME_PATTERN.matcher(line);
+
+                    while (m.find()) {
+                        String res = m.group(1);
+                        datalist = Arrays.asList(res.split(","));
+                        URL allPuts = new URL("http://hq.sinajs.cn/list=" +
+                                datalist.stream().collect(Collectors.joining(",")));
+                        URLConnection urlconnAllPuts = allPuts.openConnection();
+                        getInfoFromURLConn(urlconnAllPuts, CallPutFlag.PUT);
+                    }
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+
         } catch (IOException ex2) {
             ex2.printStackTrace();
         }
 
+        // get puts
+
+
         double pr = ChinaOption.optionPriceMap.get(primaryCall);
         double stock = get510050Price();
-        double vol = simpleSolver(pr, fillInBS(stock, firstO), 0, 1);
+        double vol = simpleSolver(pr, fillInBS(stock, firstCall), 0, 1);
 
         //System.out.println(" option price " + pr);
         //System.out.println(" stock price " + stock);
-        //System.out.println(simpleSolver(pr, fillInBS(stock, firstO), 0, 1));
-        updateData(pr, stock, vol, bidMap.getOrDefault(primaryCall, 0.0), askMap.getOrDefault(primaryCall, 0.0), firstO);
+        //System.out.println(simpleSolver(pr, fillInBS(stock, firstCall), 0, 1));
+        updateData(pr, stock, vol, bidMap.getOrDefault(primaryCall, 0.0), askMap.getOrDefault(primaryCall, 0.0), firstCall);
 
     }
 
-    static void getInfoFromURLConn(URLConnection conn) {
+    private static void getInfoFromURLConn(URLConnection conn, CallPutFlag f) {
         String line;
         Matcher matcher;
 
         System.out.println(" getting URL from conn ");
         try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(conn.getInputStream(), "gbk"))) {
             while ((line = reader2.readLine()) != null) {
-                matcher = CALL_PATTERN.matcher(line);
+                matcher = OPTION_PATTERN.matcher(line);
 
                 while (matcher.find()) {
                     String resName = matcher.group(1);
@@ -243,10 +272,9 @@ public class ChinaOption extends JPanel implements Runnable {
                     }
 
                     optionPriceMap.put(resName, Double.parseDouble(res1.get(2)));
-                    tickerOptionsMap.put(resName, new Option(Double.parseDouble(res1.get(7)), frontExpiry,
-                            CallPutFlag.CALL));
-
-
+                    tickerOptionsMap.put(resName, f == CallPutFlag.CALL ?
+                            new CallOption(Double.parseDouble(res1.get(7)), frontExpiry) :
+                            new PutOption(Double.parseDouble(res1.get(7)), frontExpiry));
                     //System.out.println(tickerOptionsMap);
 
                 }
@@ -257,14 +285,41 @@ public class ChinaOption extends JPanel implements Runnable {
 
         double stockPrice = get510050Price();
 
-        tickerOptionsMap.forEach((k, v) ->
-                strikeVolMap.put(v.getStrike(), simpleSolver(optionPriceMap.get(k), fillInBS(stockPrice, v),
-                        0, 1)));
+        tickerOptionsMap.forEach((k, v) -> {
+            if (v.getCallOrPut() == CallPutFlag.CALL) {
+                strikeVolMapCall.put(v.getStrike(), simpleSolver(optionPriceMap.get(k), fillInBS(stockPrice, v),
+                        0, 1));
+            } else {
+                strikeVolMapPut.put(v.getStrike(), simpleSolver(optionPriceMap.get(k), fillInBS(stockPrice, v),
+                        0, 1));
+            }
+        });
 
-        System.out.println(" strike vol map " + strikeVolMap);
+        System.out.println(" CALL strike vol map " + strikeVolMapCall);
+        System.out.println(" PUT strike vol map " + strikeVolMapPut);
+        System.out.println(" merged vol map " + mergePutCallVols(strikeVolMapCall,strikeVolMapPut,
+                stockPrice));
+        graph.setVolSmile(mergePutCallVols(strikeVolMapCall,strikeVolMapPut,stockPrice));
     }
 
-    static double bs(double s, double k, double v, double t, double r) {
+    private static NavigableMap<Double, Double> mergePutCallVols(NavigableMap<Double, Double> callMap
+            ,NavigableMap<Double, Double> putMap, double spot) {
+        NavigableMap<Double, Double> res = new TreeMap<>();
+
+        callMap.forEach((k, v) -> {
+            if(k>spot) {
+                res.put(k,v);
+            }
+        });
+        putMap.forEach((k, v) -> {
+            if(k<spot) {
+                res.put(k,v);
+            }
+        });
+        return res;
+    }
+
+    private static double bs(CallPutFlag f, double s, double k, double v, double t, double r) {
         double d1 = (Math.log(s / k) + (r + 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
         double d2 = (Math.log(s / k) + (r - 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
         double nd1 = (new NormalDistribution()).cumulativeProbability(d1);
@@ -276,7 +331,7 @@ public class ChinaOption extends JPanel implements Runnable {
         double gamma = 0.4 * exp(-0.5 * pow(d1, 2)) / (s * v * sqrt(t));
         double vega = 0.4 * s * sqrt(t) / 100;
 
-        return call;
+        return f == CallPutFlag.CALL ? call : put;
     }
 
     private static double getDelta(double s, double k, double v, double t, double r) {
@@ -297,7 +352,7 @@ public class ChinaOption extends JPanel implements Runnable {
         //System.out.println(" strike " + opt.getStrike());
         //System.out.println(" t " + opt.getTimeToExpiry());
         //System.out.println(" rate " + opt.getRate());
-        return (double v) -> bs(s, opt.getStrike(), v, opt.getTimeToExpiry(), interestRate);
+        return (double v) -> bs(opt.getCallOrPut(), s, opt.getStrike(), v, opt.getTimeToExpiry(), interestRate);
     }
 
     private static double simpleSolver(double target, DoubleUnaryOperator o, double lowerGuess, double higherGuess) {
@@ -330,7 +385,7 @@ public class ChinaOption extends JPanel implements Runnable {
                 while ((line = reader2.readLine()) != null) {
                     matcher = DATA_PATTERN.matcher(line);
                     datalist = Arrays.asList(line.split(","));
-                    while (matcher.find()) {
+                    if (matcher.find()) {
                         //String ticker = matcher.group(1);
                         //System.out.println("510050 price is " + datalist.get(3));
                         return Double.parseDouble(datalist.get(3));
@@ -348,7 +403,7 @@ public class ChinaOption extends JPanel implements Runnable {
     public static void main(String[] argsv) {
 
         JFrame jf = new JFrame();
-        jf.setSize(new Dimension(800, 800));
+        jf.setSize(new Dimension(1500, 1900));
         ChinaOption co = new ChinaOption();
         jf.add(co);
         jf.setLayout(new FlowLayout());
@@ -363,23 +418,23 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 }
 
-class Option {
+abstract class Option {
 
     private final double strike;
     private final LocalDate expiryDate;
     private final CallPutFlag callput;
 
-    Option(double k, LocalDate t, CallPutFlag cp) {
+    Option(double k, LocalDate t, CallPutFlag f) {
         strike = k;
         expiryDate = t;
-        callput = cp;
+        callput = f;
     }
 
     double getStrike() {
         return strike;
     }
 
-    CallPutFlag getCPFlag() {
+    CallPutFlag getCallOrPut() {
         return callput;
     }
 
@@ -394,6 +449,20 @@ class Option {
         return Utility.getStr(" strike expiry ", strike, expiryDate);
     }
 }
+
+class CallOption extends Option {
+    CallOption(double k, LocalDate t) {
+        super(k, t, CallPutFlag.CALL);
+    }
+
+}
+
+class PutOption extends Option {
+    PutOption(double k, LocalDate t) {
+        super(k, t, CallPutFlag.PUT);
+    }
+}
+
 
 enum CallPutFlag {
     CALL, PUT

@@ -279,7 +279,6 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         g2.drawString("CL " + Double.toString(getRetCLY()), getWidth() / 9 * 5 + 70, getHeight() - 25);
         g2.drawString("和 " + Double.toString(round(100d * (getRetCLY() + getRetCHY())) / 100d), getWidth() / 9 * 6 + 70, getHeight() - 25);
         g2.drawString("HO " + Double.toString(getHO()), getWidth() / 9 * 7 + 50, getHeight() - 25);
-
         g2.drawString("低 " + Integer.toString(getMinTY()), getWidth() / 9 * 2 + 70, getHeight() - 5);
         g2.drawString("高 " + Integer.toString(getMaxTY()), getWidth() / 9 * 4 - 90 + 70, getHeight() - 5);
         g2.drawString("CO " + Double.toString(getRetCO()), getWidth() / 9 * 4 + 70, getHeight() - 5);
@@ -326,7 +325,8 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
             minT = Double.MAX_VALUE;
         }
 
-        wtdP = (int) Math.round(100d * (current - reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0)))
+        wtdP = (int) Math.round(100d * (current - reduceDouble(Math::min, minT,
+                ChinaPosition.wtdMinMap.getOrDefault(name, 0.0)))
                 / (reduceDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
                 - reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0))));
     }
