@@ -501,7 +501,6 @@ public class HistChinaStocks extends JPanel {
                     getTodayTradesButton.doClick();
                     refreshAll();
                 }, 0L, 15L, TimeUnit.SECONDS);
-
             } else {
                 computeExe.shutdown();
             }

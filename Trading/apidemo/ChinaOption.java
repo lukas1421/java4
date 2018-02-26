@@ -14,9 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -35,19 +33,29 @@ public class ChinaOption extends JPanel implements Runnable {
 //    static String urlStringSH;
 
     private static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
-    private static final Pattern CALL_NAME_PATTERN = Pattern.compile("(?<=var\\shq_str_OP_UP_5100501706=)\"(.*?),\"");
+    private static final Pattern CALL_NAME_PATTERN = Pattern.compile("(?<=var\\shq_str_OP_UP_5100501802=)\"(.*?),\"");
     private static final Pattern CALL_PATTERN = Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"(.*?)\";");
     //static final Pattern CALL_NAME = Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"");
 
-    private static String primaryCall = "CON_OP_" + "10000801";
-    private static HashMap<String, Double> callPriceMap = new HashMap<>();
+    private static String frontMonth = "1802";
+    private static String backMonth = "1803";
+
+    private static LocalDate frontExpiry = LocalDate.of(2018, Month.FEBRUARY, 28);
+    private static LocalDate backExpiry = LocalDate.of(2018, Month.MARCH, 28);
+
+    private static double interestRate = 0.04;
+
+    private static String primaryCall = "CON_OP_" + "10001145";
+
     private static HashMap<String, Double> bidMap = new HashMap<>();
     private static HashMap<String, Double> askMap = new HashMap<>();
-    //static HashMap<String, Option> callOptionsMap = new HashMap<>();
+    private static HashMap<String, Double> optionPriceMap = new HashMap<>();
+    private static HashMap<String, Option> tickerOptionsMap = new HashMap<>();
+    private static Map<Double, Double> strikeVolMap = new TreeMap<>();
     private static List<JLabel> labelList = new ArrayList<>();
     private static JLabel timeLabel = new JLabel();
 
-    private static Option firstO = new Option(2.5, LocalDate.of(2017, Month.JUNE, 28), 0.045);
+    private static Option firstO = new Option(2.95, frontExpiry, CallPutFlag.CALL);
 
     private ChinaOption() {
 
@@ -59,7 +67,7 @@ public class ChinaOption extends JPanel implements Runnable {
         //JLabel timeLabel = new JLabel(LocalTime.now().toString());
         controlPanel.add(timeLabel);
 
-        callPriceMap.put(primaryCall, 0.0);
+        optionPriceMap.put(primaryCall, 0.0);
         bidMap.put(primaryCall, 0.0);
         askMap.put(primaryCall, 0.0);
 
@@ -148,8 +156,12 @@ public class ChinaOption extends JPanel implements Runnable {
             labelList.get(14).setText(Utility.getStrCheckNull(bid));
             labelList.get(15).setText(Utility.getStrCheckNull(ask));
 
-            labelList.get(16).setText(Utility.getStrCheckNull(getDelta(stock, opt.getStrike(), vol, opt.getTimeToExpiry(), opt.getRate())));
-            labelList.get(17).setText(Utility.getStrCheckNull(getGamma(stock, opt.getStrike(), vol, opt.getTimeToExpiry(), opt.getRate())));
+            labelList.get(16).setText(Utility.getStrCheckNull(getDelta(stock, opt.getStrike(),
+                    vol, opt.getTimeToExpiry(), interestRate)));
+
+            labelList.get(17).setText(Utility.getStrCheckNull(getGamma(stock, opt.getStrike(),
+                    vol, opt.getTimeToExpiry(), interestRate)));
+
             timeLabel.setText(LocalTime.now().toString());
 
         });
@@ -158,10 +170,13 @@ public class ChinaOption extends JPanel implements Runnable {
     @Override
     public void run() {
         try {
-            String callString = "http://hq.sinajs.cn/list=OP_UP_5100501706";
-            URL urlCall = new URL(callString);
-            String putString = "http://hq.sinajs.cn/list=OP_DOWN_5100501706";
-            URL urlPul = new URL(putString);
+            String callStringFront = "http://hq.sinajs.cn/list=OP_UP_510050" + frontMonth;
+            String callStringBack = "http://hq.sinajs.cn/list=OP_UP_510050" + backMonth;
+            URL urlCall = new URL(callStringFront);
+            String putStringFront = "http://hq.sinajs.cn/list=OP_DOWN_510050" + frontMonth;
+            String putStringBack = "http://hq.sinajs.cn/list=OP_DOWN_510050" + backMonth;
+
+            URL urlPul = new URL(putStringFront);
             URLConnection urlconnCall = urlCall.openConnection();
             URLConnection urlconnPut = urlPul.openConnection();
             Matcher m;
@@ -175,15 +190,16 @@ public class ChinaOption extends JPanel implements Runnable {
                     while (m.find()) {
                         String res = m.group(1);
                         datalist = Arrays.asList(res.split(","));
-                        System.out.println(datalist.stream().collect(Collectors.joining(",")));
+                        //System.out.println(datalist.stream().collect(Collectors.joining(",")));
 
-                        URL allCalls = new URL("http://hq.sinajs.cn/list=" + datalist.stream().collect(Collectors.joining(",")));
-                        System.out.println(" all calls is " + allCalls.toString());
+                        URL allCalls = new URL("http://hq.sinajs.cn/list=" +
+                                datalist.stream().collect(Collectors.joining(",")));
+
+                        //System.out.println(" all calls is " + allCalls.toString());
                         URLConnection urlconnAllCalls = allCalls.openConnection();
                         getInfoFromURLConn(urlconnAllCalls);
                     }
                 }
-
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
@@ -191,13 +207,13 @@ public class ChinaOption extends JPanel implements Runnable {
             ex2.printStackTrace();
         }
 
-        double pr = ChinaOption.callPriceMap.get(primaryCall);
+        double pr = ChinaOption.optionPriceMap.get(primaryCall);
         double stock = get510050Price();
         double vol = simpleSolver(pr, fillInBS(stock, firstO), 0, 1);
 
-        System.out.println(" option price " + pr);
-        System.out.println(" stock price " + stock);
-        System.out.println(simpleSolver(pr, fillInBS(stock, firstO), 0, 1));
+        //System.out.println(" option price " + pr);
+        //System.out.println(" stock price " + stock);
+        //System.out.println(simpleSolver(pr, fillInBS(stock, firstO), 0, 1));
         updateData(pr, stock, vol, bidMap.getOrDefault(primaryCall, 0.0), askMap.getOrDefault(primaryCall, 0.0), firstO);
 
     }
@@ -213,23 +229,39 @@ public class ChinaOption extends JPanel implements Runnable {
 
                 while (matcher.find()) {
                     String resName = matcher.group(1);
+                    String res = matcher.group(2);
+                    //System.out.println(Arrays.asList(res.split(",")));
+                    List<String> res1 = Arrays.asList(res.split(","));
+
                     if (resName.equals(primaryCall)) {
-                        //System.out.println(" name is " + resName);
-                        String res = matcher.group(2);
-                        System.out.println(Arrays.asList(res.split(",")));
-                        List<String> res1 = Arrays.asList(res.split(","));
-                        System.out.println(res1.size());
-                        System.out.println(res1.get(37));
-                        callPriceMap.put(resName, Double.parseDouble(res1.get(2)));
+                        //System.out.println(res1.size());
+                        //System.out.println(res1.get(37));
+                        optionPriceMap.put(resName, Double.parseDouble(res1.get(2)));
                         bidMap.put(resName, Double.parseDouble(res1.get(1)));
                         askMap.put(resName, Double.parseDouble(res1.get(3)));
-                        System.out.println(" call price " + callPriceMap.get(resName));
+                        //System.out.println(" call price " + optionPriceMap.get(resName));
                     }
+
+                    optionPriceMap.put(resName, Double.parseDouble(res1.get(2)));
+                    tickerOptionsMap.put(resName, new Option(Double.parseDouble(res1.get(7)), frontExpiry,
+                            CallPutFlag.CALL));
+
+
+                    //System.out.println(tickerOptionsMap);
+
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        double stockPrice = get510050Price();
+
+        tickerOptionsMap.forEach((k, v) ->
+                strikeVolMap.put(v.getStrike(), simpleSolver(optionPriceMap.get(k), fillInBS(stockPrice, v),
+                        0, 1)));
+
+        System.out.println(" strike vol map " + strikeVolMap);
     }
 
     static double bs(double s, double k, double v, double t, double r) {
@@ -244,14 +276,11 @@ public class ChinaOption extends JPanel implements Runnable {
         double gamma = 0.4 * exp(-0.5 * pow(d1, 2)) / (s * v * sqrt(t));
         double vega = 0.4 * s * sqrt(t) / 100;
 
-//         System.out.println( "delta call " + nd1);
-//         System.out.println( "delta gamma  vega "+ delta + " " + gamma + " " + vega);
-//         System.out.println(" call put " + call + " " +  put);
         return call;
     }
 
     private static double getDelta(double s, double k, double v, double t, double r) {
-        System.out.println(Utility.getStr(" delta params ", s, k, v, t, r));
+        //System.out.println(Utility.getStr(" s k v t r  ", s, k, v, t, r));
         double d1 = (Math.log(s / k) + (r + 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
         double nd1 = (new NormalDistribution()).cumulativeProbability(d1);
         return Math.round(1000d * nd1) / 1000d;
@@ -264,11 +293,11 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
     private static DoubleUnaryOperator fillInBS(double s, Option opt) {
-        System.out.println(" filling in bs ");
-        System.out.println(" strike " + opt.getStrike());
-        System.out.println(" t " + opt.getTimeToExpiry());
-        System.out.println(" rate " + opt.getRate());
-        return (double v) -> bs(s, opt.getStrike(), v, opt.getTimeToExpiry(), opt.getRate());
+        //System.out.println(" filling in bs ");
+        //System.out.println(" strike " + opt.getStrike());
+        //System.out.println(" t " + opt.getTimeToExpiry());
+        //System.out.println(" rate " + opt.getRate());
+        return (double v) -> bs(s, opt.getStrike(), v, opt.getTimeToExpiry(), interestRate);
     }
 
     private static double simpleSolver(double target, DoubleUnaryOperator o, double lowerGuess, double higherGuess) {
@@ -282,12 +311,12 @@ public class ChinaOption extends JPanel implements Runnable {
                 higherGuess = midGuess;
             }
             midGuess = (lowerGuess + higherGuess) / 2;
-            System.out.println("mid guess is " + midGuess);
+            //System.out.println("mid guess is " + midGuess);
         }
         return Math.round(10000d * midGuess) / 10000d;
     }
 
-//    static double simpleSolver2(double target, double stock, Option op) {
+    //    static double simpleSolver2(double target, double stock, Option op) {
 //        return simpleSolver(target, fillInBS(stock, op.getStrike(), op.getTimeToExpiry(),op.getRate()), 0, 1);
 //    }
     private static double get510050Price() {
@@ -303,7 +332,7 @@ public class ChinaOption extends JPanel implements Runnable {
                     datalist = Arrays.asList(line.split(","));
                     while (matcher.find()) {
                         //String ticker = matcher.group(1);
-                        System.out.println("510050 price is " + datalist.get(3));
+                        //System.out.println("510050 price is " + datalist.get(3));
                         return Double.parseDouble(datalist.get(3));
                     }
                 }
@@ -336,38 +365,36 @@ public class ChinaOption extends JPanel implements Runnable {
 
 class Option {
 
-    private double strike;
-    private LocalDate expiryDate;
-    String ticker;
-    double optionPrice;
-    private double rate;
+    private final double strike;
+    private final LocalDate expiryDate;
+    private final CallPutFlag callput;
 
-    Option(double k, LocalDate t, double r) {
+    Option(double k, LocalDate t, CallPutFlag cp) {
         strike = k;
         expiryDate = t;
-        rate = r;
-    }
-
-//    Option(String t) {
-//        ticker = t;
-//        expiryDate = LocalDate.now();
-//        strike = 0.0;
-//        rate = 0.0;
-//        optionPrice = 0.0;
-//    }
-    void setStrike(double k) {
-        strike = k;
+        callput = cp;
     }
 
     double getStrike() {
         return strike;
     }
 
-    double getTimeToExpiry() {
-        return (ChronoUnit.DAYS.between(LocalDate.now(), expiryDate) / 365.0d);
+    CallPutFlag getCPFlag() {
+        return callput;
     }
 
-    double getRate() {
-        return rate;
+    double getTimeToExpiry() {
+        double x = ((ChronoUnit.DAYS.between(LocalDate.now(), expiryDate)) / 365.0d);
+        //System.out.println(" time to expiry " + x);
+        return x;
     }
+
+    @Override
+    public String toString() {
+        return Utility.getStr(" strike expiry ", strike, expiryDate);
+    }
+}
+
+enum CallPutFlag {
+    CALL, PUT
 }
