@@ -44,9 +44,11 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private static String frontMonth = "1802";
     private static String backMonth = "1803";
+    private static String thirdMonth = "1806";
 
     private static LocalDate frontExpiry = LocalDate.of(2018, Month.FEBRUARY, 28);
     private static LocalDate backExpiry = LocalDate.of(2018, Month.MARCH, 28);
+    private static LocalDate thirdExpiry = LocalDate.of(2018, Month.JUNE, 27);
 
     private static double interestRate = 0.04;
 
@@ -67,8 +69,11 @@ public class ChinaOption extends JPanel implements Runnable {
 
         strikeVolMapCall.put(frontExpiry, new TreeMap<>());
         strikeVolMapCall.put(backExpiry, new TreeMap<>());
+        strikeVolMapCall.put(thirdExpiry, new TreeMap<>());
+
         strikeVolMapPut.put(frontExpiry, new TreeMap<>());
         strikeVolMapPut.put(backExpiry, new TreeMap<>());
+        strikeVolMapPut.put(thirdExpiry, new TreeMap<>());
 
         setLayout(new BorderLayout());
         JPanel controlPanel = new JPanel();
@@ -202,6 +207,14 @@ public class ChinaOption extends JPanel implements Runnable {
             URL urlPutBack = new URL(putStringBack);
             URLConnection urlconnPutBack = urlPutBack.openConnection();
 
+            String callStringThird = "http://hq.sinajs.cn/list=OP_UP_510050" + thirdMonth;
+            URL urlCallThird = new URL(callStringThird);
+            URLConnection urlconnCallThird = urlCallThird.openConnection();
+
+            String putStringThird = "http://hq.sinajs.cn/list=OP_DOWN_510050" + thirdMonth;
+            URL urlPutThird = new URL(putStringThird);
+            URLConnection urlconnPutThird = urlPutThird.openConnection();
+
 
             Matcher m;
             String line;
@@ -279,6 +292,43 @@ public class ChinaOption extends JPanel implements Runnable {
                 ex.printStackTrace();
             }
 
+            //third month call
+            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnCallThird.getInputStream(), "gbk"))) {
+                while ((line = reader2.readLine()) != null) {
+                    m = CALL_NAME_PATTERN.matcher(line);
+
+                    while (m.find()) {
+                        String res = m.group(1);
+                        datalist = Arrays.asList(res.split(","));
+                        URL allCallsThird = new URL("http://hq.sinajs.cn/list=" +
+                                datalist.stream().collect(Collectors.joining(",")));
+                        URLConnection urlconnAllCallsThird = allCallsThird.openConnection();
+                        getInfoFromURLConn(urlconnAllCallsThird, CallPutFlag.CALL, thirdExpiry);
+                    }
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+
+
+            //third month put
+            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnPutThird.getInputStream(), "gbk"))) {
+                while ((line = reader2.readLine()) != null) {
+                    m = PUT_NAME_PATTERN.matcher(line);
+
+                    while (m.find()) {
+                        String res = m.group(1);
+                        datalist = Arrays.asList(res.split(","));
+                        URL allPutsThird = new URL("http://hq.sinajs.cn/list=" +
+                                datalist.stream().collect(Collectors.joining(",")));
+                        URLConnection urlconnAllPutsThird = allPutsThird.openConnection();
+                        getInfoFromURLConn(urlconnAllPutsThird, CallPutFlag.PUT, thirdExpiry);
+                    }
+                }
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+
 
         } catch (IOException ex2) {
             ex2.printStackTrace();
@@ -294,7 +344,8 @@ public class ChinaOption extends JPanel implements Runnable {
         //System.out.println(" option price " + pr);
         //System.out.println(" stock price " + stock);
         //System.out.println(simpleSolver(pr, fillInBS(stock, firstCall), 0, 1));
-        updateData(pr, stock, vol, bidMap.getOrDefault(primaryCall, 0.0), askMap.getOrDefault(primaryCall, 0.0), firstCall);
+        updateData(pr, stock, vol, bidMap.getOrDefault(primaryCall, 0.0),
+                askMap.getOrDefault(primaryCall, 0.0), firstCall);
 
     }
 
@@ -352,9 +403,12 @@ public class ChinaOption extends JPanel implements Runnable {
                 stockPrice));
         System.out.println(" merged vol map BACK " + mergePutCallVols(strikeVolMapCall.get(backExpiry)
                 , strikeVolMapPut.get(backExpiry), stockPrice));
+        System.out.println(" merged vol map THIRD " + mergePutCallVols(strikeVolMapCall.get(thirdExpiry)
+                , strikeVolMapPut.get(thirdExpiry), stockPrice));
 
         graph.setVolSmileFront(mergePutCallVols(strikeVolMapCall.get(frontExpiry), strikeVolMapPut.get(frontExpiry), stockPrice));
         graph.setVolSmileBack(mergePutCallVols(strikeVolMapCall.get(backExpiry), strikeVolMapPut.get(backExpiry), stockPrice));
+        graph.setVolSmileThird(mergePutCallVols(strikeVolMapCall.get(thirdExpiry), strikeVolMapPut.get(thirdExpiry), stockPrice));
         graph.setCurrentPrice(stockPrice);
     }
 
