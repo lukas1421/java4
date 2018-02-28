@@ -103,7 +103,7 @@ public class ChinaOption extends JPanel implements Runnable {
         leftPanel.setLayout(new BorderLayout());
         rightPanel.setLayout(new BorderLayout());
 
-        leftPanel.add(optTableScroll,BorderLayout.NORTH);
+        leftPanel.add(optTableScroll, BorderLayout.NORTH);
 
         setLayout(new BorderLayout());
         add(leftPanel);
@@ -265,6 +265,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     @Override
     public void run() {
+        System.out.println(" running @ " + LocalTime.now());
         try {
             String callStringFront = "http://hq.sinajs.cn/list=OP_UP_510050" + frontMonth;
             URL urlCallFront = new URL(callStringFront);
@@ -538,7 +539,8 @@ public class ChinaOption extends JPanel implements Runnable {
         //System.out.println(" strike " + opt.getStrike());
         //System.out.println(" t " + opt.getTimeToExpiry());
         //System.out.println(" rate " + opt.getRate());
-        return (double v) -> bs(opt.getCallOrPut(), s, opt.getStrike(), v, opt.getTimeToExpiry(), interestRate);
+        return (double v) -> bs(opt.getCallOrPut(), s, opt.getStrike(), v,
+                opt.getTimeToExpiry(), interestRate);
     }
 
     private static double simpleSolver(double target, DoubleUnaryOperator o, double lowerGuess, double higherGuess) {
@@ -696,10 +698,36 @@ abstract class Option {
         return expiryDate;
     }
 
+
+    private double percentageDayLeft(LocalTime lt) {
+
+        if(lt.isBefore(LocalTime.of(9,30))) {
+            return 1.0;
+        } else if(lt.isAfter(LocalTime.of(15,0))) {
+            return 0.0;
+        }
+
+        if (lt.isAfter(LocalTime.of(11, 30)) && lt.isBefore(LocalTime.of(15, 0))) {
+            return 0.5;
+        }
+        return ((ChronoUnit.MINUTES.between(lt, LocalTime.of(15, 0))) -
+                (lt.isBefore(LocalTime.of(11, 30)) ? 90 : 0))/240;
+    }
+
+
     double getTimeToExpiry() {
-        double x = ((ChronoUnit.DAYS.between(LocalDate.now(), expiryDate) + 1) / 365.0d);
-        //System.out.println(" time to expiry " + x);
-        return x;
+
+        return (ChronoUnit.DAYS.between(LocalDate.now(), expiryDate) + percentageDayLeft(LocalTime.now())) / 365.0d;
+
+//        double x = ((ChronoUnit.DAYS.between(LocalDate.now(), expiryDate) + 1) / 365.0d);
+//        //System.out.println(" time to expiry " + x);
+//        return x;
+    }
+
+    double getTimeToExpiryDetailed() {
+        return (ChronoUnit.MINUTES.between(LocalDate.now(), LocalTime.of(15, 0)) / 350) / 365.0d
+                + ((ChronoUnit.DAYS.between(LocalDate.now(), expiryDate)) / 365.0d);
+
     }
 
     @Override
