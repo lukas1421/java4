@@ -12,9 +12,9 @@ public final class TradingConstants {
 //    public static final String A50_FRONT_EXPIRY = "20171129";
 //    public static final String A50_BACK_EXPIRY = "20171228";
 
-    public static final String A50_LAST_EXPIRY = "20180130";
-    public static final String A50_FRONT_EXPIRY = "20180227";
-    public static final String A50_BACK_EXPIRY = "20180329";
+    public static final String A50_LAST_EXPIRY = "20180227";
+    public static final String A50_FRONT_EXPIRY = "20180329";
+    public static final String A50_BACK_EXPIRY = "20180426";
     public static final String ftseIndex = "FTSEA50";
 
     public static final String GLOBALPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";

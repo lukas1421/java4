@@ -170,6 +170,7 @@ public final class ChinaData extends JPanel {
                 return comp;
             }
         };
+
         tab.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

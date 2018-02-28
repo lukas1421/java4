@@ -78,13 +78,15 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
 
                 g.drawString(e.getKey().toString(), x, getHeight() - 20);
                 g.drawString(priceInPercent, x, getHeight() - 5);
-                g.drawString(Math.round(e.getValue() * 100d) + "", x + 10, yFront + 15);
+                g.drawString(Math.round(e.getValue() * 100d) + "", x, Math.max(10, yFront - 5));
 
                 g.setColor(Color.blue);
                 g.drawOval(x, yBack, 5, 5);
                 g.fillOval(x, yBack, 5, 5);
-                g.drawString(Math.round(interpolateVol(e.getKey(), volSmileBack) * 100d) + "", x + 10, yBack + 10);
-                g.setColor(Color.black);
+                g.drawString(Math.round(interpolateVol(e.getKey(), volSmileBack) * 100d)
+                        + "", x + 10, yBack + 10);
+
+                //g.setColor(Color.black);
 
                 g.setColor(Color.red);
                 g.drawOval(x, yThird, 5, 5);
@@ -105,22 +107,26 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
     }
 
     private double interpolateVol(double strike, NavigableMap<Double, Double> mp) {
-        if (mp.containsKey(strike)) {
-            return mp.get(strike);
-        } else {
-            if (strike >= mp.firstKey() && strike <= mp.lastKey()) {
-                double higherKey = mp.ceilingKey(strike);
-                double lowerKey = mp.floorKey(strike);
-                return mp.get(lowerKey) + (strike - lowerKey) / (higherKey - lowerKey) * (mp.get(higherKey) - mp.get(lowerKey));
+        if (mp.size() > 0) {
+            if (mp.containsKey(strike)) {
+                return mp.get(strike);
             } else {
-                return 0.0;
+                if (strike >= mp.firstKey() && strike <= mp.lastKey()) {
+                    double higherKey = mp.ceilingKey(strike);
+                    double lowerKey = mp.floorKey(strike);
+                    return mp.get(lowerKey) + (strike - lowerKey) / (higherKey - lowerKey)
+                            * (mp.get(higherKey) - mp.get(lowerKey));
+                } else {
+                    return 0.0;
+                }
             }
         }
+        return 0.0;
     }
 
     int getY(double v, double maxV, double minV) {
         double span = maxV - minV;
-        int height = (int) (getHeight() * 0.8);
+        int height = (int) (getHeight() * 0.75);
         double pct = (v - minV) / span;
         double val = pct * height;
         return height - (int) val;
@@ -164,7 +170,7 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
     public void mouseMoved(MouseEvent e) {
         mouseXCord = e.getX();
         mouseYCord = e.getY();
-        System.out.println(" graph bar x mouse x is " + mouseXCord);
+        //System.out.println(" graph bar x mouse x is " + mouseXCord);
         this.repaint();
 
     }

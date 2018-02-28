@@ -30,9 +30,11 @@ import static apidemo.XU.indexVol;
 public class SinaStock implements Runnable {
     public static Map<String, Double> weightMapA50 = new HashMap<>();
     static private final SinaStock sinastock = new SinaStock();
+
     static SinaStock getInstance() {
         return sinastock;
     }
+
     private static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
     String line;
     //public static volatile LocalDate mostRecentTradingDay = LocalDate.now();
@@ -41,8 +43,8 @@ public class SinaStock implements Runnable {
     static volatile double rtn = 0.0;
 
     private SinaStock() {
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH +
-                "FTSEA50Ticker.txt")))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(
+                TradingConstants.GLOBALPATH + "FTSEA50Ticker.txt")))) {
             List<String> dataA50;
             while ((line = reader1.readLine()) != null) {
                 dataA50 = Arrays.asList(line.split("\t"));
