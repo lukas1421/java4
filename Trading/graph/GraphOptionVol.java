@@ -32,7 +32,17 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
     }
 
     public void setVolSmileFront(NavigableMap<Double, Double> mp) {
-        volSmileFront = mp;
+
+        //trim adjusted strikes
+        NavigableMap<Double, Double> trimmedMap = new TreeMap<>();
+        mp.forEach((k,v)->{
+            if((k*100)%5==0) {
+                trimmedMap.put(k,v);
+            }
+        });
+        //volSmileFront = mp;
+        volSmileFront = trimmedMap;
+
     }
 
     public void setVolSmileBack(NavigableMap<Double, Double> mp) {
