@@ -478,14 +478,14 @@ public class HistChinaStocks extends JPanel {
             }
 
             //adjust for incomplete stock data
-            stockList.forEach(s->{
-                chinaWtd.get("SGXA50").keySet().forEach(k->{
-                    if(chinaWtd.containsKey(s) && !chinaWtd.get(s).containsKey(k) && k.isAfter(chinaWtd.get(s).firstKey()) ) {
-                        chinaWtd.get(s).put(k,new SimpleBar(chinaWtd.get(s).lowerEntry(k).getValue().getClose()));
+            stockList.forEach(s -> {
+                chinaWtd.get("SGXA50").keySet().forEach(k -> {
+                    if (chinaWtd.containsKey(s) && !chinaWtd.get(s).containsKey(k) && k.isAfter(chinaWtd.get(s).firstKey())) {
+                        chinaWtd.get(s).put(k, new SimpleBar(chinaWtd.get(s).lowerEntry(k).getValue().getClose()));
                     }
 
-                    if(chinaWtd.containsKey(s) && !chinaWtd.get(s).containsKey(k) && k.isBefore(chinaWtd.get(s).firstKey()) ) {
-                        chinaWtd.get(s).put(k,new SimpleBar(lastWeekCloseMap.getOrDefault(s,0.0)));
+                    if (chinaWtd.containsKey(s) && !chinaWtd.get(s).containsKey(k) && k.isBefore(chinaWtd.get(s).firstKey())) {
+                        chinaWtd.get(s).put(k, new SimpleBar(lastWeekCloseMap.getOrDefault(s, 0.0)));
                     }
                 });
 
@@ -917,7 +917,8 @@ public class HistChinaStocks extends JPanel {
 
         CompletableFuture.runAsync(() -> graphWtdPnl.fillInGraph(""));
 
-        CompletableFuture.supplyAsync(() -> computeAvgPercentile(MTM_PRED)).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphWtdPnl.setAvgPerc(a)));
+        CompletableFuture.supplyAsync(() -> computeAvgPercentile(MTM_PRED)).thenAcceptAsync(a ->
+                SwingUtilities.invokeLater(() -> graphWtdPnl.setAvgPerc(a)));
 
         CompletableFuture.supplyAsync(() -> computeDeltaWeightedPercentile(MTM_PRED)).thenAcceptAsync(a ->
                 SwingUtilities.invokeLater(() -> graphWtdPnl.setDeltaWeightedAveragePerc(a)));
@@ -1082,8 +1083,9 @@ public class HistChinaStocks extends JPanel {
 
     private static void computeNetPnlByWeekday(NavigableMap<LocalDateTime, Double> mp) {
 
-        netPnlByWeekday = mp.keySet().stream().map(LocalDateTime::toLocalDate).distinct().collect(Collectors.toMap(d -> d,
-                d -> computeNetPnlForGivenDate(mp, d), (a, b) -> a, ConcurrentSkipListMap::new));
+        netPnlByWeekday = mp.keySet().stream().map(LocalDateTime::toLocalDate).distinct()
+                .collect(Collectors.toMap(d -> d,
+                        d -> computeNetPnlForGivenDate(mp, d), (a, b) -> a, ConcurrentSkipListMap::new));
 
         netPnlByWeekdayAM = mp.keySet().stream().map(LocalDateTime::toLocalDate).distinct().collect(Collectors.toMap(d -> d,
                 d -> computeAMNetPnlForGivenDate(mp, d), (a, b) -> a, ConcurrentSkipListMap::new));
@@ -1829,7 +1831,7 @@ public class HistChinaStocks extends JPanel {
                 case 47:
                     return wtdSoldPosition.getOrDefault(name, 0);
                 case 48:
-                    return histHighDateMap.getOrDefault(name,LocalDate.of(1999,12,31));
+                    return histHighDateMap.getOrDefault(name, LocalDate.of(1999, 12, 31));
 
                 default:
                     return null;

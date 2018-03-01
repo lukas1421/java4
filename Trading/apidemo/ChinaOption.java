@@ -1,6 +1,7 @@
 package apidemo;
 
 import graph.GraphOptionVol;
+import graph.GraphOptionVolDiff;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import utility.Utility;
 
@@ -14,6 +15,7 @@ import java.net.URLConnection;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
@@ -47,7 +49,9 @@ public class ChinaOption extends JPanel implements Runnable {
     static HashMap<String, Option> optionMap = new HashMap<>();
     private static TableRowSorter<OptionTableModel> sorter;
 
-    private static GraphOptionVol graph = new GraphOptionVol();
+    private static GraphOptionVol graphTS = new GraphOptionVol();
+    private static GraphOptionVolDiff graphLapse = new GraphOptionVolDiff();
+
 
     private static String frontMonth = "1803";
     private static String backMonth = "1804";
@@ -58,6 +62,8 @@ public class ChinaOption extends JPanel implements Runnable {
     private static LocalDate backExpiry = getOptionExpiryDate(2018, Month.APRIL);
     private static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.JUNE);
     private static LocalDate fourthExpiry = getOptionExpiryDate(2018, Month.SEPTEMBER);
+
+    private static volatile boolean filterOn = false;
 
 
     private static double interestRate = 0.04;
@@ -70,6 +76,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static volatile List<String> optionList = new LinkedList<>();
     //Map<Expiry, Map<Strike, vol>>
     private static Map<String, Double> impliedVolMap = new HashMap<>();
+    private static Map<String, Double> impliedVolMapYtd = new HashMap<>();
     private static Map<String, Double> deltaMap = new HashMap<>();
     private static Map<LocalDate, NavigableMap<Double, Double>> strikeVolMapCall = new TreeMap<>();
     private static Map<LocalDate, NavigableMap<Double, Double>> strikeVolMapPut = new TreeMap<>();
@@ -115,6 +122,7 @@ public class ChinaOption extends JPanel implements Runnable {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
+                d.height = 300;
                 d.width = 1500;
                 return d;
             }
@@ -139,7 +147,17 @@ public class ChinaOption extends JPanel implements Runnable {
         bidMap.put(primaryCall, 0.0);
         askMap.put(primaryCall, 0.0);
 
-        JScrollPane jsp = new JScrollPane(graph) {
+        JScrollPane scrollTS = new JScrollPane(graphTS) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 300;
+                d.width = 1500;
+                return d;
+            }
+        };
+
+        JScrollPane scrollLapse = new JScrollPane(graphLapse) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -152,20 +170,65 @@ public class ChinaOption extends JPanel implements Runnable {
         add(controlPanel, BorderLayout.NORTH);
         rightPanel.add(optTableScroll);
         //rightPanel.add(dataPanel, BorderLayout.CENTER);
-        rightPanel.add(jsp, BorderLayout.SOUTH);
+        JPanel graphPanel = new JPanel();
+        graphPanel.setLayout(new GridLayout(2, 1));
+        graphPanel.add(scrollTS);
+        graphPanel.add(scrollLapse);
+
+        rightPanel.add(graphPanel, BorderLayout.SOUTH);
 
         JButton saveVolsButton = new JButton(" Save Vols ");
         JButton saveVolsHibButton = new JButton(" Save Vols hib ");
-
         JButton saveOptionButton = new JButton(" Save options ");
+        JButton getPreviousVolButton = new JButton("Prev Vol");
+
+        JButton frontMonthButton = new JButton("Front");
+        JButton backMonthButton = new JButton("Back");
+        JButton thirdMonthButton = new JButton("Third");
+        JButton fourthMonthButton = new JButton("Fourth");
+
+        getPreviousVolButton.addActionListener(l -> {
+            loadPreviousOptions();
+        });
+
+        frontMonthButton.addActionListener(l -> {
+//            if (filterOn) {
+//                sorter.setRowFilter(null);
+//                filterOn = false;
+//            } else {
+//                List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
+//                filters.add(RowFilter.(RowFilter.ComparisonType.EQUAL, frontExpiry, 2));
+//                sorter.setRowFilter(RowFilter.orFilter(filters));
+//                filterOn = true;
+//            }
+
+        });
+
+        backMonthButton.addActionListener(l -> {
+
+        });
+
+        thirdMonthButton.addActionListener(l -> {
+
+        });
+
+        fourthMonthButton.addActionListener(l -> {
+
+        });
+
 
         saveVolsButton.addActionListener(l -> saveVols());
-
         saveOptionButton.addActionListener(l -> saveOptions());
 
         controlPanel.add(saveVolsButton);
         controlPanel.add(saveVolsHibButton);
         controlPanel.add(saveOptionButton);
+        controlPanel.add(getPreviousVolButton);
+
+//        controlPanel.add(frontMonthButton);
+//        controlPanel.add(backMonthButton);
+//        controlPanel.add(thirdMonthButton);
+//        controlPanel.add(fourthMonthButton);
 
         JLabel j11 = new JLabel(primaryCall);
         labelList.add(j11);
@@ -304,7 +367,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        System.out.println(" running @ " + LocalTime.now());
+        //System.out.println(" running @ " + LocalTime.now());
         try {
             String callStringFront = "http://hq.sinajs.cn/list=OP_UP_510050" + frontMonth;
             URL urlCallFront = new URL(callStringFront);
@@ -455,7 +518,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
         double pr = ChinaOption.optionPriceMap.get(primaryCall);
         double stock = get510050Price();
-        double vol = simpleSolver(pr, fillInBS(stock, firstCall), 0, 1);
+        double vol = ChinaOptionHelper.simpleSolver(pr, fillInBS(stock, firstCall), 0, 1);
 
         //System.out.println(" option price " + pr);
         //System.out.println(" stock price " + stock);
@@ -463,7 +526,8 @@ public class ChinaOption extends JPanel implements Runnable {
         updateData(pr, stock, vol, bidMap.getOrDefault(primaryCall, 0.0),
                 askMap.getOrDefault(primaryCall, 0.0), firstCall);
 
-        graph.repaint();
+        graphTS.repaint();
+        graphLapse.repaint();
     }
 
     private static void getInfoFromURLConn(URLConnection conn, CallPutFlag f, LocalDate expiry) {
@@ -507,7 +571,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
         tickerOptionsMap.forEach((k, v) -> {
 
-            double vol = simpleSolver(optionPriceMap.get(k), fillInBS(stockPrice, v), 0, 1);
+            double vol = ChinaOptionHelper.simpleSolver(optionPriceMap.get(k), fillInBS(stockPrice, v), 0, 1);
 
             impliedVolMap.put(k, vol);
             deltaMap.put(k, getDelta(v.getCallOrPut(), stockPrice, v.getStrike(), vol, v.getTimeToExpiry(), interestRate));
@@ -528,12 +592,102 @@ public class ChinaOption extends JPanel implements Runnable {
 //        System.out.println(" merged vol map THIRD " + mergePutCallVols(strikeVolMapCall.get(thirdExpiry)
 //                , strikeVolMapPut.get(thirdExpiry), stockPrice));
 
-        graph.setVolSmileFront(mergePutCallVols(strikeVolMapCall.get(frontExpiry), strikeVolMapPut.get(frontExpiry), stockPrice));
-        graph.setVolSmileBack(mergePutCallVols(strikeVolMapCall.get(backExpiry), strikeVolMapPut.get(backExpiry), stockPrice));
-        graph.setVolSmileThird(mergePutCallVols(strikeVolMapCall.get(thirdExpiry), strikeVolMapPut.get(thirdExpiry), stockPrice));
-        graph.setCurrentPrice(stockPrice);
+        graphTS.setVolSmileFront(mergePutCallVols(strikeVolMapCall.get(frontExpiry),
+                strikeVolMapPut.get(frontExpiry), stockPrice));
 
-        model.fireTableDataChanged();
+        graphTS.setVolSmileBack(mergePutCallVols(strikeVolMapCall.get(backExpiry),
+                strikeVolMapPut.get(backExpiry), stockPrice));
+
+        graphTS.setVolSmileThird(mergePutCallVols(strikeVolMapCall.get(thirdExpiry),
+                strikeVolMapPut.get(thirdExpiry), stockPrice));
+
+        graphTS.setCurrentPrice(stockPrice);
+
+        graphLapse.setCurrentPrice(stockPrice);
+
+        graphLapse.setVolNow(mergePutCallVols(strikeVolMapCall.get(frontExpiry),
+                strikeVolMapPut.get(frontExpiry), stockPrice));
+
+        if (impliedVolMapYtd.size() > 0) {
+            NavigableMap<Double, Double> callMap = impliedVolMapYtd.entrySet().stream()
+                    .filter(e -> (tickerOptionsMap.get(e.getKey()).getCallOrPut() == CallPutFlag.CALL)
+                            && tickerOptionsMap.get(e.getKey()).getExpiryDate().equals(frontExpiry))
+                    .collect(Collectors.toMap(e -> {
+                        if (tickerOptionsMap.containsKey(e.getKey())) {
+                            return tickerOptionsMap.get(e.getKey()).getStrike();
+                        } else {
+                            return 0.0;
+                        }
+                    }, Map.Entry::getValue, (a, b) -> a, TreeMap::new));
+
+            NavigableMap<Double, Double> putMap = impliedVolMapYtd.entrySet().stream()
+                    .filter(e -> tickerOptionsMap.get(e.getKey())
+                            .getCallOrPut() == CallPutFlag.PUT &&
+                            tickerOptionsMap.get(e.getKey()).getExpiryDate().equals(frontExpiry))
+                    .collect(Collectors.toMap(e -> {
+                        if (tickerOptionsMap.containsKey(e.getKey())) {
+                            return tickerOptionsMap.get(e.getKey()).getStrike();
+                        } else {
+                            return 0.0;
+                        }
+                    }, Map.Entry::getValue, (a, b) -> a, TreeMap::new));
+            System.out.println(" call map " + callMap);
+            System.out.println(" put map " + putMap);
+            System.out.println(" combined map " + mergePutCallVols(callMap, putMap, stockPrice));
+            graphLapse.setVolPrev1(mergePutCallVols(callMap, putMap, stockPrice));
+        }
+
+
+        SwingUtilities.invokeLater(() -> model.fireTableDataChanged());
+
+    }
+
+
+    private static void loadPreviousOptions() {
+        String line;
+        LocalDate lastDate = LocalDate.of(2018, 2, 28);
+
+        //2018/2/26	C	2.6	2018/2/28	0	88
+        // record date (at close) || CP Flag || strike || expiry date || vol || moneyness
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "volOutput.csv")))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split(","));
+                //System.out.println(" load previous options line " + al1);
+                //System.out.println(LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/M/dd")));
+                if (LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/M/dd")).equals(lastDate)) {
+                    CallPutFlag f = al1.get(1).equalsIgnoreCase("C") ? CallPutFlag.CALL : CallPutFlag.PUT;
+                    double strike = Double.parseDouble(al1.get(2));
+                    LocalDate expiry = LocalDate.parse(al1.get(3), DateTimeFormatter.ofPattern("yyyy/M/dd"));
+                    String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
+                    double volPrev = Double.parseDouble(al1.get(4));
+
+//                    if (f == CallPutFlag.CALL && strike == 2.7 && expiry.equals(LocalDate.of(2018, 3, 28))) {
+//                        System.out.println(" call available " + ticker);
+//                    }
+
+                    if (!ticker.equals("")) {
+                        impliedVolMapYtd.put(ticker, volPrev);
+//                        System.out.println(Utility.getStr(" ticker cp strike expiry vol ", f.toString(),
+//                                ticker, strike, expiry, volPrev));
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private static String getOptionTicker(Map<String, Option> mp, CallPutFlag f,
+                                          double strike, LocalDate expiry) {
+
+        for (Map.Entry<String, Option> e : mp.entrySet()) {
+            if (e.getValue().getCallOrPut() == f && e.getValue().getStrike() == strike
+                    && e.getValue().getExpiryDate().equals(expiry)) {
+                return e.getKey();
+            }
+        }
+        return "";
     }
 
     private static NavigableMap<Double, Double> mergePutCallVols(NavigableMap<Double, Double> callMap
@@ -589,22 +743,6 @@ public class ChinaOption extends JPanel implements Runnable {
         //System.out.println(" rate " + opt.getRate());
         return (double v) -> bs(opt.getCallOrPut(), s, opt.getStrike(), v,
                 opt.getTimeToExpiry(), interestRate);
-    }
-
-    private static double simpleSolver(double target, DoubleUnaryOperator o, double lowerGuess, double higherGuess) {
-        double guess = 0.0;
-        double res;
-        double midGuess = (lowerGuess + higherGuess) / 2;
-        while (!((Math.abs(target - o.applyAsDouble(midGuess)) < 0.000001) || midGuess == 0.0 || midGuess == 1.0)) {
-            if (o.applyAsDouble(midGuess) < target) {
-                lowerGuess = midGuess;
-            } else {
-                higherGuess = midGuess;
-            }
-            midGuess = (lowerGuess + higherGuess) / 2;
-            //System.out.println("mid guess is " + midGuess);
-        }
-        return Math.round(10000d * midGuess) / 10000d;
     }
 
     //    static double simpleSolver2(double target, double stock, Option op) {
@@ -688,9 +826,12 @@ public class ChinaOption extends JPanel implements Runnable {
                 case 7:
                     return "Vol Ytd";
                 case 8:
-                    return " Moneyness ";
+                    return "Vol Chg 1d";
                 case 9:
+                    return " Moneyness ";
+                case 10:
                     return " Delta ";
+
 
                 default:
                     return "";
@@ -709,7 +850,6 @@ public class ChinaOption extends JPanel implements Runnable {
                     return LocalDate.class;
                 case 3:
                     return Double.class;
-
                 default:
                     return Double.class;
             }
@@ -737,10 +877,12 @@ public class ChinaOption extends JPanel implements Runnable {
                 case 6:
                     return impliedVolMap.getOrDefault(name, 0.0);
                 case 7:
-                    return 0.0;
+                    return impliedVolMapYtd.getOrDefault(name, 0.0);
                 case 8:
-                    return currentStockPrice != 0.0 ? Math.round(100d * strike / currentStockPrice) : 0.0;
+                    return impliedVolMap.getOrDefault(name, 0.0) - impliedVolMapYtd.getOrDefault(name, 0.0);
                 case 9:
+                    return currentStockPrice != 0.0 ? Math.round(100d * strike / currentStockPrice) : 0.0;
+                case 10:
                     return deltaMap.getOrDefault(name, 0.0);
 
 
