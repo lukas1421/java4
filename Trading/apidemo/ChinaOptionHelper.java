@@ -31,8 +31,9 @@ public class ChinaOptionHelper {
         System.out.println(getOptionExpiryDate(2018, Month.SEPTEMBER));
     }
 
-    static double simpleSolver(double target, DoubleUnaryOperator o, double lowerGuess, double higherGuess) {
-        double guess = 0.0;
+    static double simpleSolver(double target, DoubleUnaryOperator o) {
+        double lowerGuess = 0.0;
+        double higherGuess = 1.0;
         double res;
         double midGuess = (lowerGuess + higherGuess) / 2;
         while (!((Math.abs(target - o.applyAsDouble(midGuess)) < 0.000001) || midGuess == 0.0 || midGuess == 1.0)) {

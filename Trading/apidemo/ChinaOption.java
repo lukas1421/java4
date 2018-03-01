@@ -67,14 +67,13 @@ public class ChinaOption extends JPanel implements Runnable {
 
 
     private static double interestRate = 0.04;
-    private static String primaryCall = "CON_OP_" + "10001144";
+    //private static String primaryCall = "CON_OP_" + "10001144";
 
     private static HashMap<String, Double> bidMap = new HashMap<>();
     private static HashMap<String, Double> askMap = new HashMap<>();
     private static HashMap<String, Double> optionPriceMap = new HashMap<>();
     private static Map<String, Option> tickerOptionsMap = new HashMap<>();
     private static volatile List<String> optionList = new LinkedList<>();
-    //Map<Expiry, Map<Strike, vol>>
     private static Map<String, Double> impliedVolMap = new HashMap<>();
     private static Map<String, Double> impliedVolMapYtd = new HashMap<>();
     private static Map<String, Double> deltaMap = new HashMap<>();
@@ -83,20 +82,30 @@ public class ChinaOption extends JPanel implements Runnable {
     private static List<JLabel> labelList = new ArrayList<>();
     private static JLabel timeLabel = new JLabel();
     private static volatile double currentStockPrice;
-    private static Option firstCall = new CallOption(2.9, frontExpiry);
     private static OptionTableModel model;
+    List<LocalDate> expiryList = new ArrayList<>();
+    static volatile LocalDate expiryToCheck = frontExpiry;
 
     private ChinaOption() {
 
-        strikeVolMapCall.put(frontExpiry, new TreeMap<>());
-        strikeVolMapCall.put(backExpiry, new TreeMap<>());
-        strikeVolMapCall.put(thirdExpiry, new TreeMap<>());
-        strikeVolMapCall.put(fourthExpiry, new TreeMap<>());
+        expiryList.add(frontExpiry);
+        expiryList.add(backExpiry);
+        expiryList.add(thirdExpiry);
+        expiryList.add(fourthExpiry);
 
-        strikeVolMapPut.put(frontExpiry, new TreeMap<>());
-        strikeVolMapPut.put(backExpiry, new TreeMap<>());
-        strikeVolMapPut.put(thirdExpiry, new TreeMap<>());
-        strikeVolMapPut.put(fourthExpiry, new TreeMap<>());
+        for (LocalDate d : expiryList) {
+            strikeVolMapCall.put(d, new TreeMap<>());
+            strikeVolMapPut.put(d, new TreeMap<>());
+        }
+//        strikeVolMapCall.put(frontExpiry, new TreeMap<>());
+//        strikeVolMapCall.put(backExpiry, new TreeMap<>());
+//        strikeVolMapCall.put(thirdExpiry, new TreeMap<>());
+//        strikeVolMapCall.put(fourthExpiry, new TreeMap<>());
+//
+//        strikeVolMapPut.put(frontExpiry, new TreeMap<>());
+//        strikeVolMapPut.put(backExpiry, new TreeMap<>());
+//        strikeVolMapPut.put(thirdExpiry, new TreeMap<>());
+//        strikeVolMapPut.put(fourthExpiry, new TreeMap<>());
 
         JPanel leftPanel = new JPanel();
         JPanel rightPanel = new JPanel();
@@ -143,9 +152,9 @@ public class ChinaOption extends JPanel implements Runnable {
 
         controlPanel.add(timeLabel);
 
-        optionPriceMap.put(primaryCall, 0.0);
-        bidMap.put(primaryCall, 0.0);
-        askMap.put(primaryCall, 0.0);
+//        optionPriceMap.put(primaryCall, 0.0);
+//        bidMap.put(primaryCall, 0.0);
+//        askMap.put(primaryCall, 0.0);
 
         JScrollPane scrollTS = new JScrollPane(graphTS) {
             @Override
@@ -192,28 +201,19 @@ public class ChinaOption extends JPanel implements Runnable {
         });
 
         frontMonthButton.addActionListener(l -> {
-//            if (filterOn) {
-//                sorter.setRowFilter(null);
-//                filterOn = false;
-//            } else {
-//                List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
-//                filters.add(RowFilter.(RowFilter.ComparisonType.EQUAL, frontExpiry, 2));
-//                sorter.setRowFilter(RowFilter.orFilter(filters));
-//                filterOn = true;
-//            }
-
+            expiryToCheck = frontExpiry;
         });
 
         backMonthButton.addActionListener(l -> {
-
+            expiryToCheck = backExpiry;
         });
 
         thirdMonthButton.addActionListener(l -> {
-
+            expiryToCheck = thirdExpiry;
         });
 
         fourthMonthButton.addActionListener(l -> {
-
+            expiryToCheck = fourthExpiry;
         });
 
 
@@ -224,13 +224,14 @@ public class ChinaOption extends JPanel implements Runnable {
         controlPanel.add(saveVolsHibButton);
         controlPanel.add(saveOptionButton);
         controlPanel.add(getPreviousVolButton);
+        controlPanel.add(Box.createHorizontalStrut(10));
 
-//        controlPanel.add(frontMonthButton);
-//        controlPanel.add(backMonthButton);
-//        controlPanel.add(thirdMonthButton);
-//        controlPanel.add(fourthMonthButton);
+        controlPanel.add(frontMonthButton);
+        controlPanel.add(backMonthButton);
+        controlPanel.add(thirdMonthButton);
+        controlPanel.add(fourthMonthButton);
 
-        JLabel j11 = new JLabel(primaryCall);
+        JLabel j11 = new JLabel("call");
         labelList.add(j11);
         JLabel j12 = new JLabel(" option price ");
         labelList.add(j12);
@@ -317,19 +318,19 @@ public class ChinaOption extends JPanel implements Runnable {
         File output = new File(TradingConstants.GLOBALPATH + "volOutput.csv");
 
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
-
             saveVolHelper(out, LocalDate.now().minusDays(1L), CallPutFlag.CALL, strikeVolMapCall, frontExpiry, currentStockPrice);
             saveVolHelper(out, LocalDate.now().minusDays(1L), CallPutFlag.CALL, strikeVolMapCall, backExpiry, currentStockPrice);
             saveVolHelper(out, LocalDate.now().minusDays(1L), CallPutFlag.CALL, strikeVolMapCall, thirdExpiry, currentStockPrice);
+            saveVolHelper(out, LocalDate.now().minusDays(1L), CallPutFlag.CALL, strikeVolMapCall, fourthExpiry, currentStockPrice);
 
             saveVolHelper(out, LocalDate.now().minusDays(1L), CallPutFlag.PUT, strikeVolMapPut, frontExpiry, currentStockPrice);
             saveVolHelper(out, LocalDate.now().minusDays(1L), CallPutFlag.PUT, strikeVolMapPut, backExpiry, currentStockPrice);
             saveVolHelper(out, LocalDate.now().minusDays(1L), CallPutFlag.PUT, strikeVolMapPut, thirdExpiry, currentStockPrice);
+            saveVolHelper(out, LocalDate.now().minusDays(1L), CallPutFlag.PUT, strikeVolMapPut, fourthExpiry, currentStockPrice);
 
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-
     }
 
     private void saveVolHelper(BufferedWriter w, LocalDate writeDate, CallPutFlag f,
@@ -338,8 +339,9 @@ public class ChinaOption extends JPanel implements Runnable {
         if (mp.containsKey(expireDate)) {
             mp.get(expireDate).forEach((k, v) -> {
                 try {
+                    //w.newLine();
                     w.append(Utility.getStrComma(writeDate, f == CallPutFlag.CALL ? "C" : "P", k, expireDate, v
-                            , Math.round((k / spot) * 100d)));
+                            , Math.round((k / spot) * 100d), getOptionTicker(tickerOptionsMap, f, k, expireDate)));
                     w.newLine();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -367,7 +369,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        //System.out.println(" running @ " + LocalTime.now());
+        System.out.println(" running @ " + LocalTime.now());
         try {
             String callStringFront = "http://hq.sinajs.cn/list=OP_UP_510050" + frontMonth;
             URL urlCallFront = new URL(callStringFront);
@@ -393,141 +395,55 @@ public class ChinaOption extends JPanel implements Runnable {
             URL urlPutThird = new URL(putStringThird);
             URLConnection urlconnPutThird = urlPutThird.openConnection();
 
+            String callStringFourth = "http://hq.sinajs.cn/list=OP_UP_510050" + fourthMonth;
+            URL urlCallFourth = new URL(callStringFourth);
+            URLConnection urlconnCallFourth = urlCallFourth.openConnection();
 
-            Matcher m;
-            String line;
-            List<String> datalist;
+            String putStringFourth = "http://hq.sinajs.cn/list=OP_DOWN_510050" + fourthMonth;
+            URL urlPutFourth = new URL(putStringFourth);
+            URLConnection urlconnPutFourth = urlPutFourth.openConnection();
 
-            //front month call
-            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnCallFront.getInputStream(), "gbk"))) {
-                while ((line = reader2.readLine()) != null) {
-                    m = CALL_NAME_PATTERN.matcher(line);
+            getOptionInfo(urlconnCallFront, CallPutFlag.CALL, frontExpiry);
+            getOptionInfo(urlconnPutFront, CallPutFlag.PUT, frontExpiry);
 
-                    while (m.find()) {
-                        String res = m.group(1);
-                        datalist = Arrays.asList(res.split(","));
-                        URL allCallsFront = new URL("http://hq.sinajs.cn/list=" +
-                                datalist.stream().collect(Collectors.joining(",")));
-                        URLConnection urlconnAllCallsFront = allCallsFront.openConnection();
-                        getInfoFromURLConn(urlconnAllCallsFront, CallPutFlag.CALL, frontExpiry);
-                    }
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+            getOptionInfo(urlconnCallBack, CallPutFlag.CALL, backExpiry);
+            getOptionInfo(urlconnPutBack, CallPutFlag.PUT, backExpiry);
 
-            // front month put
-            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnPutFront.getInputStream(), "gbk"))) {
-                while ((line = reader2.readLine()) != null) {
-                    m = PUT_NAME_PATTERN.matcher(line);
+            getOptionInfo(urlconnCallThird, CallPutFlag.CALL, thirdExpiry);
+            getOptionInfo(urlconnPutThird, CallPutFlag.PUT, thirdExpiry);
 
-                    while (m.find()) {
-                        String res = m.group(1);
-                        datalist = Arrays.asList(res.split(","));
-                        URL allPutsFront = new URL("http://hq.sinajs.cn/list=" +
-                                datalist.stream().collect(Collectors.joining(",")));
-                        URLConnection urlconnAllPutsFront = allPutsFront.openConnection();
-                        getInfoFromURLConn(urlconnAllPutsFront, CallPutFlag.PUT, frontExpiry);
-                    }
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-
-            // back month call
-            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnCallBack.getInputStream(), "gbk"))) {
-                while ((line = reader2.readLine()) != null) {
-                    m = CALL_NAME_PATTERN.matcher(line);
-
-                    while (m.find()) {
-                        String res = m.group(1);
-                        datalist = Arrays.asList(res.split(","));
-                        URL allCallsBack = new URL("http://hq.sinajs.cn/list=" +
-                                datalist.stream().collect(Collectors.joining(",")));
-                        URLConnection urlconnAllCallsBack = allCallsBack.openConnection();
-                        getInfoFromURLConn(urlconnAllCallsBack, CallPutFlag.CALL, backExpiry);
-                    }
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-
-
-            //back month put
-            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnPutBack.getInputStream(), "gbk"))) {
-                while ((line = reader2.readLine()) != null) {
-                    m = PUT_NAME_PATTERN.matcher(line);
-
-                    while (m.find()) {
-                        String res = m.group(1);
-                        datalist = Arrays.asList(res.split(","));
-                        URL allPutsBack = new URL("http://hq.sinajs.cn/list=" +
-                                datalist.stream().collect(Collectors.joining(",")));
-                        URLConnection urlconnAllPutsBack = allPutsBack.openConnection();
-                        getInfoFromURLConn(urlconnAllPutsBack, CallPutFlag.PUT, backExpiry);
-                    }
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-
-            //third month call
-            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnCallThird.getInputStream(), "gbk"))) {
-                while ((line = reader2.readLine()) != null) {
-                    m = CALL_NAME_PATTERN.matcher(line);
-
-                    while (m.find()) {
-                        String res = m.group(1);
-                        datalist = Arrays.asList(res.split(","));
-                        URL allCallsThird = new URL("http://hq.sinajs.cn/list=" +
-                                datalist.stream().collect(Collectors.joining(",")));
-                        URLConnection urlconnAllCallsThird = allCallsThird.openConnection();
-                        getInfoFromURLConn(urlconnAllCallsThird, CallPutFlag.CALL, thirdExpiry);
-                    }
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
-
-
-            //third month put
-            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconnPutThird.getInputStream(), "gbk"))) {
-                while ((line = reader2.readLine()) != null) {
-                    m = PUT_NAME_PATTERN.matcher(line);
-
-                    while (m.find()) {
-                        String res = m.group(1);
-                        datalist = Arrays.asList(res.split(","));
-                        URL allPutsThird = new URL("http://hq.sinajs.cn/list=" +
-                                datalist.stream().collect(Collectors.joining(",")));
-                        URLConnection urlconnAllPutsThird = allPutsThird.openConnection();
-                        getInfoFromURLConn(urlconnAllPutsThird, CallPutFlag.PUT, thirdExpiry);
-                    }
-                }
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+            getOptionInfo(urlconnCallFourth, CallPutFlag.CALL, fourthExpiry);
+            getOptionInfo(urlconnPutFourth, CallPutFlag.PUT, fourthExpiry);
 
 
         } catch (IOException ex2) {
             ex2.printStackTrace();
         }
 
-        // get puts
-
-
-        double pr = ChinaOption.optionPriceMap.get(primaryCall);
-        double stock = get510050Price();
-        double vol = ChinaOptionHelper.simpleSolver(pr, fillInBS(stock, firstCall), 0, 1);
-
-        //System.out.println(" option price " + pr);
-        //System.out.println(" stock price " + stock);
-        //System.out.println(simpleSolver(pr, fillInBS(stock, firstCall), 0, 1));
-        updateData(pr, stock, vol, bidMap.getOrDefault(primaryCall, 0.0),
-                askMap.getOrDefault(primaryCall, 0.0), firstCall);
-
         graphTS.repaint();
         graphLapse.repaint();
+    }
+
+    private static void getOptionInfo(URLConnection conn, CallPutFlag f, LocalDate expiry) {
+        String line = "";
+        try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(conn.getInputStream(), "gbk"))) {
+
+            while ((line = reader2.readLine()) != null) {
+                Matcher m = (f == CallPutFlag.CALL ? CALL_NAME_PATTERN.matcher(line) : PUT_NAME_PATTERN.matcher(line));
+                List<String> datalist;
+
+                while (m.find()) {
+                    String res = m.group(1);
+                    datalist = Arrays.asList(res.split(","));
+                    URL allOptions = new URL("http://hq.sinajs.cn/list=" +
+                            datalist.stream().collect(Collectors.joining(",")));
+                    URLConnection urlconnAllPutsThird = allOptions.openConnection();
+                    getInfoFromURLConn(urlconnAllPutsThird, f, expiry);
+                }
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     private static void getInfoFromURLConn(URLConnection conn, CallPutFlag f, LocalDate expiry) {
@@ -543,15 +459,6 @@ public class ChinaOption extends JPanel implements Runnable {
                     String res = matcher.group(2);
                     //System.out.println(Arrays.asList(res.split(",")));
                     List<String> res1 = Arrays.asList(res.split(","));
-
-//                    if (resName.equals(primaryCall)) {
-//                        //System.out.println(res1.size());
-//                        //System.out.println(res1.get(37));
-//                        optionPriceMap.put(resName, Double.parseDouble(res1.get(2)));
-//                        bidMap.put(resName, Double.parseDouble(res1.get(1)));
-//                        askMap.put(resName, Double.parseDouble(res1.get(3)));
-//                        //System.out.println(" call price " + optionPriceMap.get(resName));
-//                    }
 
                     optionPriceMap.put(resName, Double.parseDouble(res1.get(2)));
                     bidMap.put(resName, Double.parseDouble(res1.get(1)));
@@ -571,7 +478,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
         tickerOptionsMap.forEach((k, v) -> {
 
-            double vol = ChinaOptionHelper.simpleSolver(optionPriceMap.get(k), fillInBS(stockPrice, v), 0, 1);
+            double vol = ChinaOptionHelper.simpleSolver(optionPriceMap.get(k), fillInBS(stockPrice, v));
 
             impliedVolMap.put(k, vol);
             deltaMap.put(k, getDelta(v.getCallOrPut(), stockPrice, v.getStrike(), vol, v.getTimeToExpiry(), interestRate));
@@ -601,17 +508,20 @@ public class ChinaOption extends JPanel implements Runnable {
         graphTS.setVolSmileThird(mergePutCallVols(strikeVolMapCall.get(thirdExpiry),
                 strikeVolMapPut.get(thirdExpiry), stockPrice));
 
+        graphTS.setVolSmileFourth(mergePutCallVols(strikeVolMapCall.get(fourthExpiry),
+                strikeVolMapPut.get(fourthExpiry), stockPrice));
+
         graphTS.setCurrentPrice(stockPrice);
 
         graphLapse.setCurrentPrice(stockPrice);
 
-        graphLapse.setVolNow(mergePutCallVols(strikeVolMapCall.get(frontExpiry),
-                strikeVolMapPut.get(frontExpiry), stockPrice));
+        graphLapse.setVolNow(mergePutCallVols(strikeVolMapCall.get(expiryToCheck),
+                strikeVolMapPut.get(expiryToCheck), stockPrice));
 
         if (impliedVolMapYtd.size() > 0) {
             NavigableMap<Double, Double> callMap = impliedVolMapYtd.entrySet().stream()
                     .filter(e -> (tickerOptionsMap.get(e.getKey()).getCallOrPut() == CallPutFlag.CALL)
-                            && tickerOptionsMap.get(e.getKey()).getExpiryDate().equals(frontExpiry))
+                            && tickerOptionsMap.get(e.getKey()).getExpiryDate().equals(expiryToCheck))
                     .collect(Collectors.toMap(e -> {
                         if (tickerOptionsMap.containsKey(e.getKey())) {
                             return tickerOptionsMap.get(e.getKey()).getStrike();
@@ -623,7 +533,7 @@ public class ChinaOption extends JPanel implements Runnable {
             NavigableMap<Double, Double> putMap = impliedVolMapYtd.entrySet().stream()
                     .filter(e -> tickerOptionsMap.get(e.getKey())
                             .getCallOrPut() == CallPutFlag.PUT &&
-                            tickerOptionsMap.get(e.getKey()).getExpiryDate().equals(frontExpiry))
+                            tickerOptionsMap.get(e.getKey()).getExpiryDate().equals(expiryToCheck))
                     .collect(Collectors.toMap(e -> {
                         if (tickerOptionsMap.containsKey(e.getKey())) {
                             return tickerOptionsMap.get(e.getKey()).getStrike();
@@ -636,10 +546,7 @@ public class ChinaOption extends JPanel implements Runnable {
             System.out.println(" combined map " + mergePutCallVols(callMap, putMap, stockPrice));
             graphLapse.setVolPrev1(mergePutCallVols(callMap, putMap, stockPrice));
         }
-
-
         SwingUtilities.invokeLater(() -> model.fireTableDataChanged());
-
     }
 
 
@@ -661,10 +568,6 @@ public class ChinaOption extends JPanel implements Runnable {
                     LocalDate expiry = LocalDate.parse(al1.get(3), DateTimeFormatter.ofPattern("yyyy/M/dd"));
                     String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
                     double volPrev = Double.parseDouble(al1.get(4));
-
-//                    if (f == CallPutFlag.CALL && strike == 2.7 && expiry.equals(LocalDate.of(2018, 3, 28))) {
-//                        System.out.println(" call available " + ticker);
-//                    }
 
                     if (!ticker.equals("")) {
                         impliedVolMapYtd.put(ticker, volPrev);
