@@ -848,7 +848,7 @@ abstract class Option {
             return 0.0;
         }
 
-        if (lt.isAfter(LocalTime.of(11, 30)) && lt.isBefore(LocalTime.of(15, 0))) {
+        if (lt.isAfter(LocalTime.of(11, 30)) && lt.isBefore(LocalTime.of(13, 0))) {
             return 0.5;
         }
         return ((ChronoUnit.MINUTES.between(lt, LocalTime.of(15, 0))) -
