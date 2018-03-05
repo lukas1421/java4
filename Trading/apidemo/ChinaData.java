@@ -91,7 +91,7 @@ public final class ChinaData extends JPanel {
     private static File priceBarYtdSource = new File(TradingConstants.GLOBALPATH + "priceBarYtd.ser");
 
     private static File shcompSource = new File(TradingConstants.GLOBALPATH + "shcomp.txt");
-//    public static JButton btnSave2;
+    //    public static JButton btnSave2;
     static ExecutorService es = Executors.newCachedThreadPool();
     private static final Predicate<? super Entry<LocalTime, Double>> IS_OPEN = e -> e.getKey().isAfter(Utility.AM929T) && e.getValue() != 0.0;
 
@@ -130,7 +130,7 @@ public final class ChinaData extends JPanel {
             String line;
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                if(lineNo>2) {
+                if (lineNo > 2) {
                     throw new IllegalArgumentException(" ERROR: date map has more than 3 lines ");
                 }
 
@@ -138,7 +138,7 @@ public final class ChinaData extends JPanel {
                 ftseOpenMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(1)));
                 ftseCloseMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(2)));
                 currentTradingDate = LocalDate.parse(al1.get(0));
-                System.out.println(getStr(" date ", lineNo, dateMap.getOrDefault(lineNo,LocalDate.MIN)));
+                System.out.println(getStr(" date ", lineNo, dateMap.getOrDefault(lineNo, LocalDate.MIN)));
                 lineNo++;
             }
         } catch (IOException ex) {
@@ -373,7 +373,7 @@ public final class ChinaData extends JPanel {
 
         outputPricesButton.addActionListener(l -> outputPrices());
 
-        fixYtdZeroButton.addActionListener(l-> fixYtdSuspendedStocks());
+        fixYtdZeroButton.addActionListener(l -> fixYtdSuspendedStocks());
     }
 
     static void outputPrices() {
@@ -406,7 +406,7 @@ public final class ChinaData extends JPanel {
     }
 
     private static void getFromTDX(LocalDate today, LocalDate ytd, LocalDate y2) {
-        CompletableFuture.runAsync(()-> {
+        CompletableFuture.runAsync(() -> {
             Utility.getFilesFromTDXGen(today, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
             Utility.getFilesFromTDXGen(ytd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
             Utility.getFilesFromTDXGen(y2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
@@ -502,9 +502,12 @@ public final class ChinaData extends JPanel {
         Hibtask.loadHibGen(ChinaSaveBidAsk.getInstance());
     }
 
-    private static void saveHibGen(Map<String, ? extends NavigableMap<LocalTime, ?>> mp, Map<String, ? extends NavigableMap<LocalTime, ?>> mp2,
+    private static void saveHibGen(Map<String, ? extends NavigableMap<LocalTime, ?>> mp,
+                                   Map<String, ? extends NavigableMap<LocalTime, ?>> mp2,
                                    ChinaSaveInterface2Blob saveclass) {
+
         LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
+
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
 
         CompletableFuture.runAsync(() -> {
@@ -574,7 +577,9 @@ public final class ChinaData extends JPanel {
                 try {
                     symbolNames.forEach(name -> {
                         if (Utility.noZeroArrayGen(name, openMap, maxMap, minMap, priceMap, closeMap, sizeMap)) {
-                            ChinaSaveOHLCYV c = new ChinaSaveOHLCYV(name, openMap.get(name), maxMap.get(name), minMap.get(name), priceMap.get(name), closeMap.get(name), sizeMap.get(name).intValue());
+                            ChinaSaveOHLCYV c = new ChinaSaveOHLCYV(name, openMap.get(name), maxMap.get(name), minMap.get(name),
+                                    priceMap.get(name), closeMap.get(name), sizeMap.get(name).intValue());
+
                             session.saveOrUpdate(c);
                         } else if (Utility.NO_ZERO.test(closeMap, name)) {
                             System.out.println("only close available " + name);
@@ -766,7 +771,7 @@ public final class ChinaData extends JPanel {
     private static void handleSGXDataToday(Contract c, String date, double open, double high, double low, double close, int volume) {
         String ticker = utility.Utility.ibContractToSymbol(c);
 
-        System.out.println(" ChinaData : jhandling SGX today " + ticker );
+        System.out.println(" ChinaData : jhandling SGX today " + ticker);
 
 
         //LocalDate currDate = currentTradingDate;

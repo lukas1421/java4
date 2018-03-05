@@ -5,10 +5,19 @@ import java.time.LocalDate;
 import java.time.Month;
 import java.util.NavigableMap;
 import java.util.function.DoubleUnaryOperator;
+import java.util.regex.Pattern;
 
 import static utility.Utility.getStr;
 
 public class ChinaOptionHelper {
+
+    static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
+    static final Pattern CALL_NAME_PATTERN =
+            Pattern.compile("(?<=var\\shq_str_OP_UP_510050\\d{4}=)\"(.*?),\"");
+    static final Pattern PUT_NAME_PATTERN =
+                    Pattern.compile("(?<=var\\shq_str_OP_DOWN_510050\\d{4}=)\"(.*?),\"");
+    static final Pattern OPTION_PATTERN =
+                            Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"(.*?)\";");
 
     private ChinaOptionHelper() {
         throw new UnsupportedOperationException(" utility class ");
