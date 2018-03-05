@@ -67,6 +67,8 @@ public class ChinaOption extends JPanel implements Runnable {
 
 
     private static double interestRate = 0.04;
+
+    private static LocalDate lastTradingDate = LocalDate.now();
     //private static String primaryCall = "CON_OP_" + "10001144";
 
     private static HashMap<String, Double> bidMap = new HashMap<>();
@@ -88,6 +90,8 @@ public class ChinaOption extends JPanel implements Runnable {
     public static volatile boolean showDelta = false;
 
     private ChinaOption() {
+
+        getLastTradingDate();
 
         expiryList.add(frontExpiry);
         expiryList.add(backExpiry);
@@ -334,7 +338,8 @@ public class ChinaOption extends JPanel implements Runnable {
         if (mp.containsKey(expireDate)) {
             mp.get(expireDate).forEach((k, v) -> {
                 try {
-                    w.append(Utility.getStrComma(writeDate, f == CallPutFlag.CALL ? "C" : "P", k, expireDate, v
+                    w.append(Utility.getStrComma(writeDate.format(DateTimeFormatter.ofPattern("yyyy/M/d"))
+                            , f == CallPutFlag.CALL ? "C" : "P", k, expireDate, v
                             , Math.round((k / spot) * 100d), getOptionTicker(tickerOptionsMap, f, k, expireDate)));
                     w.newLine();
                 } catch (IOException e) {
@@ -523,10 +528,30 @@ public class ChinaOption extends JPanel implements Runnable {
         SwingUtilities.invokeLater(() -> model.fireTableDataChanged());
     }
 
+    private void getLastTradingDate() {
+        int lineNo = 0;
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
+            String line;
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                if (lineNo > 2) {
+                    throw new IllegalArgumentException(" ERROR: date map has more than 3 lines ");
+                }
+                lastTradingDate = LocalDate.parse(al1.get(0));
+                //System.out.println(getStr(" date ", lineNo, dateMap.getOrDefault(lineNo,LocalDate.MIN)));
+                lineNo++;
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     private static void loadPreviousOptions() {
         String line;
-        LocalDate lastDate = LocalDate.of(2018, 3, 1);
+        //LocalDate lastDate = LocalDate.of(2018, 3, 1);
 
+        LocalDate lastDate = lastTradingDate;
         //2018/2/26	C	2.6	2018/2/28	0	88
         // record date (at close) || CP Flag || strike || expiry date || vol || moneyness
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
