@@ -58,7 +58,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static String fourthMonth = fourthExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
 
     private static volatile boolean filterOn = false;
-    private static volatile String selectedOption = "";
+    private static volatile String selectedTicker = "";
 
 
     private static double interestRate = 0.04;
@@ -112,16 +112,27 @@ public class ChinaOption extends JPanel implements Runnable {
             public Component prepareRenderer(TableCellRenderer tableCellRenderer, int r, int c) {
 
                 if (optionList.size() > r) {
-                    selectedOption = optionList.get(r);
-                    //System.out.println(" selected option is " + selectedOption);
-                    if (histVol.containsKey(selectedOption)) {
-                        //System.out.println(" hist vol " + histVol.get(selectedOption));
+                    selectedTicker = optionList.get(r);
+                    //System.out.println(" selected option is " + selectedTicker);
+                    if (histVol.containsKey(selectedTicker)) {
+                        //System.out.println(" hist vol " + histVol.get(selectedTicker));
                     }
                 }
 
                 Component comp = super.prepareRenderer(tableCellRenderer, r, c);
                 if (isCellSelected(r, c)) {
                     comp.setBackground(Color.GREEN);
+
+                    if (histVol.containsKey(selectedTicker)) {
+                        graphLapse.setVolLapse(histVol.get(selectedTicker));
+                        if (tickerOptionsMap.containsKey(selectedTicker)) {
+                            graphLapse.setNameStrikeExp(selectedTicker, tickerOptionsMap.get(selectedTicker).getStrike(),
+                                    tickerOptionsMap.get(selectedTicker).getExpiryDate(),
+                                    tickerOptionsMap.get(selectedTicker).getCPString());
+                            graphLapse.repaint();
+                        }
+                    }
+                    //graphLapse.setVolLapse();
                 } else if (r % 2 == 0) {
                     comp.setBackground(Color.lightGray);
                 } else {
@@ -438,7 +449,7 @@ public class ChinaOption extends JPanel implements Runnable {
             }
             graphTS.repaint();
             graphVolDiff.repaint();
-            graphLapse.repaint();
+            //graphLapse.repaint();
         }
     }
 
@@ -556,13 +567,17 @@ public class ChinaOption extends JPanel implements Runnable {
             graphVolDiff.setVolPrev1(mergePutCallVols(callMap, putMap, stockPrice));
         }
 
-        if (histVol.containsKey(selectedOption)) {
-            graphLapse.setVolLapse(histVol.get(selectedOption));
-            graphLapse.setNameStrikeExp(selectedOption, tickerOptionsMap.get(selectedOption).getStrike(),
-                    tickerOptionsMap.get(selectedOption).getExpiryDate());
-
+        if (histVol.containsKey(selectedTicker)) {
+            graphLapse.setVolLapse(histVol.get(selectedTicker));
+            if (tickerOptionsMap.containsKey(selectedTicker)) {
+                graphLapse.setNameStrikeExp(selectedTicker, tickerOptionsMap.get(selectedTicker).getStrike(),
+                        tickerOptionsMap.get(selectedTicker).getExpiryDate(),
+                        tickerOptionsMap.get(selectedTicker).getCPString());
+                graphLapse.repaint();
+            }
         }
-        SwingUtilities.invokeLater(() -> model.fireTableDataChanged());
+
+        //SwingUtilities.invokeLater(() -> model.fireTableDataChanged());
     }
 
     private void getLastTradingDate() {
@@ -628,15 +643,15 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
 
-    private static Option getOption(Map<String, Option> mp, CallPutFlag f, double strike, LocalDate expiry) {
-        for (Map.Entry<String, Option> e : mp.entrySet()) {
-            if (e.getValue().getCallOrPut() == f && e.getValue().getStrike() == strike
-                    && e.getValue().getExpiryDate().equals(expiry)) {
-                return e.getValue();
-            }
-        }
-        throw new IllegalStateException(" no option found ");
-    }
+//    private static Option getOption(Map<String, Option> mp, CallPutFlag f, double strike, LocalDate expiry) {
+//        for (Map.Entry<String, Option> e : mp.entrySet()) {
+//            if (e.getValue().getCallOrPut() == f && e.getValue().getStrike() == strike
+//                    && e.getValue().getExpiryDate().equals(expiry)) {
+//                return e.getValue();
+//            }
+//        }
+//        throw new IllegalStateException(" no option found ");
+//    }
 
 
     private static double getDeltaFromStrikeExpiry(CallPutFlag f, double strike, LocalDate expiry, double stock, double vol) {
@@ -694,9 +709,9 @@ public class ChinaOption extends JPanel implements Runnable {
         return Math.round(100d * (f == CallPutFlag.CALL ? nd1 : (nd1 - 1)));
     }
 
-    private static double getDeltaForOption(Option opt, double s, double v) {
-        return getDelta(opt.getCallOrPut(), s, opt.getStrike(), v, opt.getTimeToExpiry(), interestRate);
-    }
+//    private static double getDeltaForOption(Option opt, double s, double v) {
+//        return getDelta(opt.getCallOrPut(), s, opt.getStrike(), v, opt.getTimeToExpiry(), interestRate);
+//    }
 
     private static double getGamma(double s, double k, double v, double t, double r) {
         double d1 = (Math.log(s / k) + (r + 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
@@ -749,7 +764,6 @@ public class ChinaOption extends JPanel implements Runnable {
         jf.setVisible(true);
         ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
         ses.scheduleAtFixedRate(co, 0, 5, TimeUnit.SECONDS);
-
     }
 
     class OptionTableModel extends javax.swing.table.AbstractTableModel {
@@ -818,6 +832,7 @@ public class ChinaOption extends JPanel implements Runnable {
         public Object getValueAt(int rowIn, int col) {
 
             String name = optionList.size() > rowIn ? optionList.get(rowIn) : "";
+
             double strike = tickerOptionsMap.containsKey(name) ? tickerOptionsMap.get(name).getStrike() : 0.0;
             switch (col) {
                 case 0:

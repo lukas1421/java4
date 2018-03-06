@@ -17,6 +17,7 @@ public class GraphOptionLapse extends JComponent implements MouseMotionListener,
     private double strike = 0.0;
     private LocalDate expiryDate = LocalDate.MAX;
     private String optionTicker = "";
+    private String callPutFlag = "";
     private NavigableMap<LocalDate, Double> volLapse = new ConcurrentSkipListMap<>();
 
     private int mouseYCord = Integer.MAX_VALUE;
@@ -31,10 +32,11 @@ public class GraphOptionLapse extends JComponent implements MouseMotionListener,
         volLapse = m;
     }
 
-    public void setNameStrikeExp(String name, double k, LocalDate exp) {
+    public void setNameStrikeExp(String name, double k, LocalDate exp, String flag) {
         optionTicker = name;
         strike = k;
         expiryDate = exp;
+        callPutFlag = flag;
     }
 
     @Override
@@ -50,6 +52,7 @@ public class GraphOptionLapse extends JComponent implements MouseMotionListener,
         g.drawString(optionTicker, getWidth() - 400, 20);
         g.drawString(strike + "", getWidth() - 400, 40);
         g.drawString(expiryDate.toString(), getWidth() - 400, 60);
+        g.drawString(callPutFlag, getWidth() - 400, 80);
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
 
 
@@ -72,14 +75,10 @@ public class GraphOptionLapse extends JComponent implements MouseMotionListener,
                     g.drawString(e.toString(), x, y + 30);
                     g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.333F));
                 }
-
                 g.drawString(e.getKey().toString(), x, getHeight() - 10);
                 x += x_width;
             }
-
         }
-
-
     }
 
     int getY(double v, double maxV, double minV) {
