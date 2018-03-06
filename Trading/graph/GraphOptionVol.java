@@ -28,7 +28,6 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
     private NavigableMap<Double, Double> deltaMapThird = new TreeMap<>();
     private NavigableMap<Double, Double> deltaMapFourth = new TreeMap<>();
 
-
     private int mouseYCord = Integer.MAX_VALUE;
     private int mouseXCord = Integer.MAX_VALUE;
 
@@ -42,7 +41,6 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
     }
 
     public void setVolSmileFront(NavigableMap<Double, Double> mp) {
-
         //trim adjusted strikes
         NavigableMap<Double, Double> trimmedMap = new TreeMap<>();
         mp.forEach((k, v) -> {
@@ -52,7 +50,6 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
         });
         //volSmileFront = mp;
         volSmileFront = trimmedMap;
-
     }
 
     public void setVolSmileBack(NavigableMap<Double, Double> mp) {
@@ -236,6 +233,5 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
         mouseYCord = e.getY();
         //System.out.println(" graph bar x mouse x is " + mouseXCord);
         this.repaint();
-
     }
 }

@@ -5,10 +5,12 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
+import static apidemo.ChinaOption.previousTradingDate;
 import static apidemo.ChinaOptionHelper.interpolateVol;
 import static utility.Utility.*;
 
@@ -52,7 +54,6 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
     @Override
     protected void paintComponent(Graphics g) {
         if (volNow.size() > 0) {
-
             double minVol = minGen(volNow.values().stream().reduce(Math::min).orElse(0.0),
                     volPrev1.values().stream().reduce(Math::min).orElse(0.0));
 
@@ -86,7 +87,7 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
                 g.drawString(Math.round(e.getValue() * 1000d)/10d + "", x + 10, Math.max(10, yNow + 10));
 
                 if ((double) e.getKey() == volNow.lastKey()) {
-                    g.drawString("(Now)", x, getHeight() / 2 + 20);
+                    g.drawString(LocalDate.now().toString(), x, getHeight() / 2 + 20);
                 }
 
 
@@ -98,7 +99,7 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
                             + "", x + 10, Math.max(10, yPrev1 + 10));
 
                     if ((double) e.getKey() == volPrev1.lastKey()) {
-                        g.drawString("(Prev1)", x, getHeight() / 2);
+                        g.drawString(previousTradingDate.toString(), x, getHeight() / 2);
                     }
                 }
                 //g.setColor(Color.black);
