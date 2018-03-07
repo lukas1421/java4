@@ -46,9 +46,8 @@ public final class MorningTask implements HistoricalHandler {
 
         Utility.clearFile(output);
         //processShcomp();
-        mt.getFX();
+        mt.getFromIB();
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
-            //writeIndex(out);
             writeIndexTDX(out);
             writeETF(out);
             writeA50(out);
@@ -124,7 +123,8 @@ public final class MorningTask implements HistoricalHandler {
 
     private static void writeETF(BufferedWriter out) {
         String line;
-        List<String> etfs = Arrays.asList("2823:HK", "2822:HK", "3147:HK", "3188:HK", "FXI:US", "CNXT:US", "ASHR:US", "ASHS:US");
+        List<String> etfs = Arrays.asList("2823:HK", "2822:HK", "3147:HK", "3188:HK",
+                "FXI:US", "CNXT:US", "ASHR:US", "ASHS:US");
         Pattern p = Pattern.compile("(?<=\"price\":)(\\d+(.\\d+)?)");
         Pattern p2 = Pattern.compile("(?<=\"netAssetValue\":)\\d+(.\\d+)?");
         Pattern p3 = Pattern.compile("(?<=\"netAssetValueDate\":\")\\d{4}-\\d{2}-\\d{2}(?=\")");
@@ -297,7 +297,6 @@ public final class MorningTask implements HistoricalHandler {
         try {
             URL url = new URL(urlString);
             URLConnection urlconn = url.openConnection(proxy);
-
             try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream()))) {
                 while ((line1 = reader2.readLine()) != null) {
                     if (!found) {
@@ -388,7 +387,7 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
-    private void getFX() {
+    private void getFromIB() {
         ApiController ap = new ApiController(new DefaultConnectionHandler(), new DefaultLogger(), new DefaultLogger());
         try {
             //ap.connect( "127.0.0.1", 4001, 2,"" );
@@ -396,7 +395,11 @@ public final class MorningTask implements HistoricalHandler {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+        getFXDetailed(ap);
+        //getFXIAfterMarket(ap);
+    }
 
+    public void getFXDetailed(ApiController ap) {
         Contract c = new Contract();
         c.symbol("USD");
         c.secType(Types.SecType.CASH);
@@ -414,7 +417,26 @@ public final class MorningTask implements HistoricalHandler {
 
         ap.reqHistoricalDataSimple(this, c, formatTime, 2, Types.DurationUnit.DAY,
                 Types.BarSize._1_hour, Types.WhatToShow.MIDPOINT, false);
+
     }
+
+    public void getFXIAfterMarket(ApiController ap) {
+        Contract c = new Contract();
+        c.symbol("FXI");
+        c.secType(Types.SecType.STK);
+        c.exchange("SMART");
+        c.currency("USD");
+
+        LocalDateTime lt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
+        String formatTime = lt.format(dtf);
+
+        ap.reqHistoricalDataSimple(this, c, formatTime, 2, Types.DurationUnit.DAY,
+                Types.BarSize._1_min, Types.WhatToShow.MIDPOINT, false);
+
+
+    }
+
 
     @SuppressWarnings({"SpellCheckingInspection", "ConstantConditions"})
     private static void processShcomp() {
@@ -500,15 +522,17 @@ public final class MorningTask implements HistoricalHandler {
     }
 
     public static void main(String[] args) {
-        //MorningTask mt = new MorningTask();
-        //mt.getIndices();
-        //MorningTask.getFX();
         MorningTask.runThis();
+
+        //MorningTask mt = new MorningTask();
+        //mt.getFromIB();
     }
 
     @Override
     public void handleHist(String name, String date, double open, double high, double low, double close) {
         //System.out.println(" FX ");
+
+        System.out.println(" handle hist name " + name);
 
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);

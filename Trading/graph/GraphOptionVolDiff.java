@@ -75,7 +75,6 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
 
                 int yNow = getY(e.getValue(), maxVol, minVol);
                 int yPrev1 = getY(interpolateVol(e.getKey(), volPrev1), maxVol, minVol);
-                //int yThird = getY(interpolateVol(e.getKey(), ), maxVol, minVol);
 
                 g.drawOval(x, yNow, 5, 5);
                 g.fillOval(x, yNow, 5, 5);
@@ -84,7 +83,20 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
 
                 g.drawString(e.getKey().toString(), x, getHeight() - 20);
                 g.drawString(priceInPercent, x, getHeight() - 5);
-                g.drawString(Math.round(e.getValue() * 1000d)/10d + "", x + 10, Math.max(10, yNow + 10));
+
+                double changeVol = Math.round(1000d * (e.getValue() - volPrev1.getOrDefault(e.getKey(), 0.0))) / 10d;
+
+                g.drawString(Math.round(e.getValue() * 1000d) / 10d + "", x + 10, Math.max(10, yNow + 10));
+
+                if (changeVol >= 0) {
+                    g.setColor(new Color(46, 139, 87));
+                } else {
+                    g.setColor(Color.red);
+                }
+
+                g.drawString("(" + (changeVol > 0 ? "+" : "") + changeVol + ")"
+                        , x + 45, Math.max(10, yNow + 10));
+                g.setColor(Color.black);
 
                 if ((double) e.getKey() == volNow.lastKey()) {
                     g.drawString(LocalDate.now().toString(), x, getHeight() / 2 + 20);
@@ -95,7 +107,7 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
                     g.setColor(Color.blue);
                     g.drawOval(x, yPrev1, 5, 5);
                     g.fillOval(x, yPrev1, 5, 5);
-                    g.drawString(Math.round(interpolateVol(e.getKey(), volPrev1) * 1000d)/10d
+                    g.drawString(Math.round(interpolateVol(e.getKey(), volPrev1) * 1000d) / 10d
                             + "", x + 10, Math.max(10, yPrev1 + 10));
 
                     if ((double) e.getKey() == volPrev1.lastKey()) {
@@ -121,9 +133,6 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
                     g.drawString(e.toString(), x, yNow);
                     g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.333F));
                 }
-
-                //g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 3F));
-                //g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.333F));
 
                 x = x + x_width;
             }
