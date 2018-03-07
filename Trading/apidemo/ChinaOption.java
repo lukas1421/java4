@@ -45,6 +45,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static GraphOptionVol graphTS = new GraphOptionVol();
     private static GraphOptionVolDiff graphVolDiff = new GraphOptionVolDiff();
     private static GraphOptionLapse graphLapse = new GraphOptionLapse();
+    private static GraphOptionLapse graphATMLapse = new GraphOptionLapse();
 
     public static LocalDate frontExpiry = getOptionExpiryDate(2018, Month.MARCH);
     public static LocalDate backExpiry = getOptionExpiryDate(2018, Month.APRIL);
@@ -81,14 +82,14 @@ public class ChinaOption extends JPanel implements Runnable {
     public static volatile boolean showDelta = false;
     private static volatile boolean computeOn = true;
     private static volatile Map<String, ConcurrentSkipListMap<LocalDate, Double>> histVol = new HashMap<>();
-    private static volatile Map<Moneyness, ConcurrentSkipListMap<LocalDate, Double>> moneynessHistVol = new HashMap<>();
+    private static volatile Map<Moneyness, ConcurrentSkipListMap<LocalDate, Double>> atmHistVol = new HashMap<>();
     //map<option ticker, map<time,vol>>
     private static Map<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>> todayImpliedVolMap = new HashMap<>();
 
     private ChinaOption() {
 
-        for(Moneyness m:Moneyness.values()) {
-            moneynessHistVol.put(m, new ConcurrentSkipListMap<>());
+        for (Moneyness m : Moneyness.values()) {
+            atmHistVol.put(m, new ConcurrentSkipListMap<>());
         }
 
         getLastTradingDate();
@@ -199,6 +200,16 @@ public class ChinaOption extends JPanel implements Runnable {
             }
         };
 
+        JScrollPane scrollATMLapse = new JScrollPane(graphATMLapse) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 300;
+                d.width = 1500;
+                return d;
+            }
+        };
+
         add(controlPanel, BorderLayout.NORTH);
         rightPanel.add(optTableScroll);
         //rightPanel.add(dataPanel, BorderLayout.CENTER);
@@ -212,6 +223,7 @@ public class ChinaOption extends JPanel implements Runnable {
         p.addTab("Graph2", graphPanel2);
         graphPanel2.setLayout(new GridLayout(2, 1));
         graphPanel2.add(scrollLapse);
+        graphPanel2.add(scrollATMLapse);
         p.select("Graph2");
 
 
@@ -588,6 +600,11 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private static void loadPreviousOptions() {
         String line;
+
+        Map<String, Integer> tickerMoneynessMap = new HashMap<>();
+        //expiry, map<moneyness, vol>
+        //Map<LocalDate, TreeMap<Integer, Double>> moneynessMap = new HashMap<>();
+
         //LocalDate lastDate = lastTradingDate;
         //2018/2/26	C	2.6	2018/2/28	0	88
         // record date (at close) || CP Flag || strike || expiry date || vol || moneyness
@@ -601,6 +618,16 @@ public class ChinaOption extends JPanel implements Runnable {
                 String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
                 double volPrev = Double.parseDouble(al1.get(4));
                 LocalDate volDate = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/M/d"));
+                int moneyness = Integer.parseInt(al1.get(5));
+
+                tickerMoneynessMap.put(ticker, moneyness);
+
+//                if (!moneynessMap.containsKey(expiry)) {
+//                    moneynessMap.put(expiry, new TreeMap<>());
+//                    moneynessMap.get(expiry).put(moneyness, volPrev);
+//                } else {
+//                    moneynessMap.get(expiry).put(moneyness, volPrev);
+//                }
 
                 if (histVol.containsKey(ticker)) {
                     histVol.get(ticker).put(volDate, volPrev);
@@ -608,6 +635,8 @@ public class ChinaOption extends JPanel implements Runnable {
                     histVol.put(ticker, new ConcurrentSkipListMap<>());
                     histVol.get(ticker).put(volDate, volPrev);
                 }
+
+                //dd
 
                 if (volDate.equals(previousTradingDate)) {
                     if (!ticker.equals("")) {
@@ -618,6 +647,12 @@ public class ChinaOption extends JPanel implements Runnable {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+
+        histVol.entrySet().stream().filter(e->tickerOptionsMap.get(e.getKey()).getExpiryDate().equals(frontExpiry))
+                .flatMap(e->e.getValue().entrySet().stream())
+                .collect(Collectors.groupingBy(Map.Entry::getKey, TreeMap::new, Collectors.summingDouble(e->e.getValue())));
+
+
     }
 
     private static String getOptionTicker(Map<String, Option> mp, CallPutFlag f, double strike, LocalDate expiry) {
@@ -655,10 +690,8 @@ public class ChinaOption extends JPanel implements Runnable {
         for (double strike : volMap.keySet()) {
             if (strike < stock) {
                 res.put(strike, getDeltaFromStrikeExpiry(CallPutFlag.PUT, strike, expiry));
-                //, stock, volMap.get(strike)
             } else {
                 res.put(strike, getDeltaFromStrikeExpiry(CallPutFlag.CALL, strike, expiry));
-                //, stock, volMap.get(strike)
             }
         }
         return res;
@@ -688,7 +721,6 @@ public class ChinaOption extends JPanel implements Runnable {
         double nd2 = (new NormalDistribution()).cumulativeProbability(d2);
         double call = s * nd1 - exp(-r * t) * k * nd2;
         double put = exp(-r * t) * k * (1 - nd2) - s * (1 - nd1);
-
         return f == CallPutFlag.CALL ? call : put;
     }
 
@@ -833,7 +865,7 @@ public class ChinaOption extends JPanel implements Runnable {
                     return tickerOptionsMap.containsKey(name) ? tickerOptionsMap.get(name).getExpiryDate() :
                             LocalDate.MIN;
                 case 3:
-                    return tickerOptionsMap.containsKey(name) ? tickerOptionsMap.get(name).getTimeToExpiry() : 0.0;
+                    return tickerOptionsMap.containsKey(name) ? tickerOptionsMap.get(name).getTimeToExpiryDays() : 0.0;
                 case 4:
                     return strike;
                 case 5:
@@ -898,7 +930,7 @@ abstract class Option {
             return 0.5;
         }
         return ((ChronoUnit.MINUTES.between(lt, LocalTime.of(15, 0))) -
-                (lt.isBefore(LocalTime.of(11, 30)) ? 90 : 0)) / 240;
+                (lt.isBefore(LocalTime.of(11, 30)) ? 90 : 0)) / 240.0;
     }
 
 
@@ -909,6 +941,11 @@ abstract class Option {
 //        double x = ((ChronoUnit.DAYS.between(LocalDate.now(), expiryDate) + 1) / 365.0d);
 //        //System.out.println(" time to expiry " + x);
 //        return x;
+    }
+
+    double getTimeToExpiryDays() {
+        return ChronoUnit.DAYS.between(LocalDate.now(), expiryDate)
+                + percentageDayLeft(LocalTime.now());
     }
 
 //    double getTimeToExpiryDetailed() {

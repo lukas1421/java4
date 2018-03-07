@@ -18,12 +18,14 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static utility.Utility.getStr;
 import static utility.Utility.pd;
 
 //import java.net.InetSocketAddress;
@@ -40,6 +42,7 @@ public final class MorningTask implements HistoricalHandler {
     private static String urlString;
     //static Proxy proxy = new Proxy(Proxy.Type.HTTP,new InetSocketAddress("127.0.0.1",1080));
     private static Proxy proxy = Proxy.NO_PROXY;
+    private static NavigableMap<LocalDateTime, Double> fxiAfterClose = new ConcurrentSkipListMap<>();
 
     private static void runThis() {
         MorningTask mt = new MorningTask();
@@ -168,6 +171,9 @@ public final class MorningTask implements HistoricalHandler {
                             sb.append(m3.group());
                         }
                     }
+
+                    sb.append(e.equals("FXI:US") ? ("\t" + fxiAfterClose.lastKey() + "\t"
+                            + fxiAfterClose.lastEntry().getValue()) : "");
                     out.append(sb);
                     out.newLine();
                     System.out.println(" sb " + sb);
@@ -396,7 +402,7 @@ public final class MorningTask implements HistoricalHandler {
             ex.printStackTrace();
         }
         getFXDetailed(ap);
-        //getFXIAfterMarket(ap);
+        getFXIAfterMarket(ap);
     }
 
     public void getFXDetailed(ApiController ap) {
@@ -431,9 +437,8 @@ public final class MorningTask implements HistoricalHandler {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
         String formatTime = lt.format(dtf);
 
-        ap.reqHistoricalDataSimple(this, c, formatTime, 2, Types.DurationUnit.DAY,
-                Types.BarSize._1_min, Types.WhatToShow.MIDPOINT, false);
-
+        ap.reqHistoricalDataSimple(this, c, formatTime, 1, Types.DurationUnit.DAY,
+                Types.BarSize._5_mins, Types.WhatToShow.TRADES, false);
 
     }
 
@@ -534,51 +539,70 @@ public final class MorningTask implements HistoricalHandler {
 
         System.out.println(" handle hist name " + name);
 
-        if (!date.startsWith("finished")) {
-            Date dt = new Date(Long.parseLong(date) * 1000);
+        if (!name.equals("FXI")) {
 
+            if (!date.startsWith("finished")) {
+                Date dt = new Date(Long.parseLong(date) * 1000);
+
+                ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
+                ZoneId nyZone = ZoneId.of("America/New_York");
+                LocalDateTime ldt = LocalDateTime.ofInstant(dt.toInstant(), chinaZone);
+                ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
+                //System.out.println(" zdt " + zdt);
+
+                switch (zdt.getHour()) {
+                    // hk time 14:00 (13:59)
+                    case 13:
+                        System.out.println(" Date " + ldt.toString() + " HK noon " + close);
+                        Utility.simpleWrite("HK NOON" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                                + "\t" + zdt.getHour(), false);
+                        break;
+
+                    // hk time 17:00 (16:59)
+                    case 16:
+                        System.out.println(" Date " + ldt.toString() + " HK close " + close);
+                        Utility.simpleWrite("HK CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                                + "\t" + zdt.getHour(), true);
+                        break;
+                }
+
+                switch (zdt.withZoneSameInstant(nyZone).getHour()) {
+                    // NY time 15:59 (could be HK time 4:59 (winter) or 3:59 (summer)
+                    case 15:
+                        System.out.println(" Date " + ldt.toString() + " US close " + close);
+                        Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                                + "\t" + zdt.getHour(), true);
+
+                        //for(FutType f :FutType.values()) {
+                        //Utility.simpleWriteToFile(f.getTicker() + "\t" + close, false, fxOutput);
+                        Utility.simpleWriteToFile("SGXA50PR" + "\t" + close, false, fxOutput);
+                        Utility.simpleWriteToFile("SGXA50" + "\t" + close, true, fxOutput);
+                        Utility.simpleWriteToFile("SGXA50BM" + "\t" + close, true, fxOutput);
+                        //}
+                        break;
+                }
+            }
+        } else {
+            Date dt = new Date(Long.parseLong(date) * 1000);
             ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
             ZoneId nyZone = ZoneId.of("America/New_York");
-            LocalDateTime ldt = LocalDateTime.ofInstant(dt.toInstant(), chinaZone);
-            ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
-            //System.out.println(" zdt " + zdt);
+            LocalDateTime nyTime = LocalDateTime.ofInstant(dt.toInstant(), nyZone);
+            LocalDateTime chinadt = LocalDateTime.ofInstant(dt.toInstant(), chinaZone);
 
-            switch (zdt.getHour()) {
-                // hk time 14:00 (13:59)
-                case 13:
-                    System.out.println(" Date " + ldt.toString() + " HK noon " + close);
-                    Utility.simpleWrite("HK NOON" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
-                            + "\t" + zdt.getHour(), false);
-                    break;
 
-                // hk time 17:00 (16:59)
-                case 16:
-                    System.out.println(" Date " + ldt.toString() + " HK close " + close);
-                    Utility.simpleWrite("HK CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
-                            + "\t" + zdt.getHour(), true);
-                    break;
-            }
-
-            switch (zdt.withZoneSameInstant(nyZone).getHour()) {
-                // NY time 15:59 (could be HK time 4:59 (winter) or 3:59 (summer)
-                case 15:
-                    System.out.println(" Date " + ldt.toString() + " US close " + close);
-                    Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
-                            + "\t" + zdt.getHour(), true);
-
-                    //for(FutType f :FutType.values()) {
-                    //Utility.simpleWriteToFile(f.getTicker() + "\t" + close, false, fxOutput);
-                    Utility.simpleWriteToFile("SGXA50PR" + "\t" + close, false, fxOutput);
-                    Utility.simpleWriteToFile("SGXA50" + "\t" + close, true, fxOutput);
-                    Utility.simpleWriteToFile("SGXA50BM" + "\t" + close, true, fxOutput);
-                    //}
-                    break;
+            fxiAfterClose.put(nyTime, close);
+            if (nyTime.toLocalTime().equals(LocalTime.of(15, 55))) {
+                System.out.println(getStr(" fxi data 15 55 ", nyTime, chinadt, open, high, low, close));
             }
         }
     }
 
     @Override
     public void actionUponFinish(String name) {
+        if (name.equals("FXI")) {
+            System.out.println(getStr("FXI is finished "));
+            fxiAfterClose.entrySet().forEach(System.out::println);
+        }
         System.out.println(" data is finished ");
     }
 }

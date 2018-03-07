@@ -1675,7 +1675,7 @@ public class ApiController implements EWrapper {
     public void historicalData(int reqId, String date, double open, double high, double low,
                                double close, int volume, int count, double wap, boolean hasGaps) {
 
-        System.out.println(getStr("historical data in apicontroller/reqid / date / close ", reqId, date, close));
+        //System.out.println(getStr("historical data in apicontroller/reqid / date / close ", reqId, date, close));
 
 
         if (ChinaMain.globalRequestMap.containsKey(reqId)) {
