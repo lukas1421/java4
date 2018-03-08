@@ -80,7 +80,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static List<JLabel> labelList = new ArrayList<>();
     private static JLabel timeLabel = new JLabel();
     private static volatile double currentStockPrice;
-    private static volatile LocalDate expiryToCheck = frontExpiry;
+    public static volatile LocalDate expiryToCheck = frontExpiry;
     public static volatile boolean showDelta = false;
     private static volatile boolean computeOn = true;
     private static volatile Map<String, ConcurrentSkipListMap<LocalDate, Double>> histVol = new HashMap<>();
@@ -94,15 +94,15 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private ChinaOption() {
 
-//        for (Moneyness m : Moneyness.values()) {
-//            atmFrontExpiryHist.put(m, new ConcurrentSkipListMap<>());
-//        }
         getLastTradingDate();
 
         expiryList.add(frontExpiry);
         expiryList.add(backExpiry);
         expiryList.add(thirdExpiry);
         expiryList.add(fourthExpiry);
+
+        graphLapse.setGraphTitle("Fixed K Lapse");
+        graphATMLapse.setGraphTitle("ATM Lapse");
 
         for (LocalDate d : expiryList) {
             strikeVolMapCall.put(d, new TreeMap<>());
@@ -287,7 +287,6 @@ public class ChinaOption extends JPanel implements Runnable {
         computeOnButton.addActionListener(l -> computeOn = computeOnButton.isSelected());
 
         saveVolsButton.addActionListener(l -> saveVols());
-        //saveOptionButton.addActionListener(l -> saveOptions());
 
         controlPanel.add(saveVolsButton);
         controlPanel.add(saveVolsHibButton);
@@ -378,7 +377,7 @@ public class ChinaOption extends JPanel implements Runnable {
         TableRowSorter<OptionTableModel> sorter = (TableRowSorter<OptionTableModel>) optionTable.getRowSorter();
     }
 
-    public static void refreshAll() {
+    private static void refreshAll() {
         graphTS.repaint();
         graphVolDiff.repaint();
         graphLapse.repaint();

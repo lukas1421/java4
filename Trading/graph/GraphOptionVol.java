@@ -76,6 +76,11 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
 
     @Override
     protected void paintComponent(Graphics g) {
+
+        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2.5F));
+        g.drawString(" Current Vols 4 Expiries", 20,30);
+        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.4F));
+
         if (volSmileFront.size() > 0) {
 
             computeDelta();

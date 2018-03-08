@@ -19,6 +19,7 @@ public class GraphOptionLapse extends JComponent implements MouseMotionListener,
     private String optionTicker = "";
     private String callPutFlag = "";
     private NavigableMap<LocalDate, Double> volLapse = new ConcurrentSkipListMap<>();
+    private volatile String graphTitle = "";
 
     private int mouseYCord = Integer.MAX_VALUE;
     private int mouseXCord = Integer.MAX_VALUE;
@@ -32,6 +33,10 @@ public class GraphOptionLapse extends JComponent implements MouseMotionListener,
         volLapse = m;
     }
 
+    public void setGraphTitle(String s) {
+        graphTitle = s;
+    }
+
     public void setNameStrikeExp(String name, double k, LocalDate exp, String flag) {
         optionTicker = name;
         strike = k;
@@ -41,6 +46,11 @@ public class GraphOptionLapse extends JComponent implements MouseMotionListener,
 
     @Override
     protected void paintComponent(Graphics g) {
+
+        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2.5F));
+        g.drawString(graphTitle, 20,30);
+        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.4F));
+
         super.paintComponent(g);
         double max = getMax(volLapse);
         double min = getMin(volLapse);

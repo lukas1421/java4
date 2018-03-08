@@ -1,5 +1,7 @@
 package graph;
 
+import apidemo.ChinaOption;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -53,6 +55,11 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
 
     @Override
     protected void paintComponent(Graphics g) {
+
+        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2.5F));
+        g.drawString(" Vol Diff " + ChinaOption.expiryToCheck, 20,30);
+        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.4F));
+
         if (volNow.size() > 0) {
             double minVol = minGen(volNow.values().stream().reduce(Math::min).orElse(0.0),
                     volPrev1.values().stream().reduce(Math::min).orElse(0.0));
