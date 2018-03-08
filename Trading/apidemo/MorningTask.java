@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -42,7 +43,8 @@ public final class MorningTask implements HistoricalHandler {
     private static String urlString;
     //static Proxy proxy = new Proxy(Proxy.Type.HTTP,new InetSocketAddress("127.0.0.1",1080));
     private static Proxy proxy = Proxy.NO_PROXY;
-    private static NavigableMap<LocalDateTime, Double> fxiAfterClose = new ConcurrentSkipListMap<>();
+    private static Map<String, NavigableMap<LocalDateTime, Double>> usAfterClose = new HashMap<>();
+    private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
 
     private static void runThis() {
         MorningTask mt = new MorningTask();
@@ -172,8 +174,11 @@ public final class MorningTask implements HistoricalHandler {
                         }
                     }
 
-                    sb.append(e.equals("FXI:US") ? ("\t" + fxiAfterClose.lastKey() + "\t"
-                            + fxiAfterClose.lastEntry().getValue()) : "");
+                    String etfTicker = e.substring(0, e.length() - 3);
+
+                    sb.append(e.endsWith(":US") && usAfterClose.containsKey(etfTicker) ? ("\t" +
+                            usAfterClose.get(etfTicker).lastKey()
+                            + "\t" + usAfterClose.get(etfTicker).lastEntry().getValue()) : "");
                     out.append(sb);
                     out.newLine();
                     System.out.println(" sb " + sb);
@@ -402,7 +407,7 @@ public final class MorningTask implements HistoricalHandler {
             ex.printStackTrace();
         }
         getFXDetailed(ap);
-        getFXIAfterMarket(ap);
+        getUSPricesAfterMarket(ap);
     }
 
     public void getFXDetailed(ApiController ap) {
@@ -421,25 +426,49 @@ public final class MorningTask implements HistoricalHandler {
 
         System.out.println(" format time " + formatTime);
 
-        ap.reqHistoricalDataSimple(this, c, formatTime, 2, Types.DurationUnit.DAY,
+        ap.reqHistoricalDataSimple(generateReqId(c), this, c, formatTime, 2, Types.DurationUnit.DAY,
                 Types.BarSize._1_hour, Types.WhatToShow.MIDPOINT, false);
 
     }
 
-    public void getFXIAfterMarket(ApiController ap) {
-        Contract c = new Contract();
-        c.symbol("FXI");
-        c.secType(Types.SecType.STK);
-        c.exchange("SMART");
-        c.currency("USD");
+    public void getUSPricesAfterMarket(ApiController ap) {
 
-        LocalDateTime lt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
-        String formatTime = lt.format(dtf);
+        List<String> etfs = Arrays.asList("FXI:US", "CNXT:US", "ASHR:US", "ASHS:US");
+        //List<String> etfs = Arrays.asList("ASHR:US");
 
-        ap.reqHistoricalDataSimple(this, c, formatTime, 1, Types.DurationUnit.DAY,
-                Types.BarSize._5_mins, Types.WhatToShow.TRADES, false);
+        for (String e : etfs) {
 
+            String ticker = e.substring(0, e.length() - 3);
+            Contract c = new Contract();
+            c.symbol(ticker);
+            c.secType(Types.SecType.STK);
+            c.exchange("SMART");
+            c.currency("USD");
+
+            System.out.println(" etf is " + ticker);
+
+            LocalDateTime lt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
+            String formatTime = lt.format(dtf);
+
+            ap.reqHistoricalDataSimple(generateReqId(c), this, c, formatTime, 1, Types.DurationUnit.DAY,
+                    Types.BarSize._5_mins, Types.WhatToShow.TRADES, false);
+        }
+
+    }
+
+    private int generateReqId(Contract contract) {
+        int reqId;
+        if (contract.secType() == Types.SecType.CASH) {
+            reqId = 10000;
+        } else if (contract.secType() == Types.SecType.STK) {
+            reqId = ibStockReqId.incrementAndGet();
+        } else if (contract.secType() == Types.SecType.FUT) {
+            reqId = 20000;
+        } else {
+            reqId = 100000;
+        }
+        return reqId;
     }
 
 
@@ -539,7 +568,7 @@ public final class MorningTask implements HistoricalHandler {
 
         System.out.println(" handle hist name " + name);
 
-        if (!name.equals("FXI")) {
+        if (name.equals("USD")) {
 
             if (!date.startsWith("finished")) {
                 Date dt = new Date(Long.parseLong(date) * 1000);
@@ -589,19 +618,22 @@ public final class MorningTask implements HistoricalHandler {
             LocalDateTime nyTime = LocalDateTime.ofInstant(dt.toInstant(), nyZone);
             LocalDateTime chinadt = LocalDateTime.ofInstant(dt.toInstant(), chinaZone);
 
+            if (!usAfterClose.containsKey(name)) {
+                usAfterClose.put(name, new ConcurrentSkipListMap<>());
+            }
 
-            fxiAfterClose.put(nyTime, close);
+            usAfterClose.get(name).put(nyTime, close);
             if (nyTime.toLocalTime().equals(LocalTime.of(15, 55))) {
-                System.out.println(getStr(" fxi data 15 55 ", nyTime, chinadt, open, high, low, close));
+                System.out.println(getStr(" US data 15 55 ", name, nyTime, chinadt, open, high, low, close));
             }
         }
     }
 
     @Override
     public void actionUponFinish(String name) {
-        if (name.equals("FXI")) {
-            System.out.println(getStr("FXI is finished "));
-            fxiAfterClose.entrySet().forEach(System.out::println);
+        if (!name.equals("USD")) {
+            System.out.println(getStr(name, "is finished "));
+            usAfterClose.entrySet().forEach(e -> System.out.println(getStr(e.getKey(), e.getValue().lastEntry())));
         }
         System.out.println(" data is finished ");
     }

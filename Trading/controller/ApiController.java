@@ -1636,22 +1636,12 @@ public class ApiController implements EWrapper {
                 barSize.toString(), whatToShow.toString(), rthOnly ? 1 : 0, 2, Collections.<TagValue>emptyList());
     }
 
-    public void reqHistoricalDataSimple(HistoricalHandler hh, Contract contract, String endDateTime, int duration,
+    public void reqHistoricalDataSimple(int reqId, HistoricalHandler hh, Contract contract, String endDateTime, int duration,
                                         DurationUnit durationUnit, BarSize barSize, WhatToShow whatToShow, boolean rthOnly) {
 
         System.out.println(" getting historical data simple ");
         System.out.println(" contract " + contract);
-        int reqId;
 
-        if (contract.secType() == Types.SecType.CASH) {
-            reqId = 10000;
-        } else if (contract.secType() == Types.SecType.STK) {
-            reqId = 60000;
-        } else if (contract.secType() == Types.SecType.FUT) {
-            reqId = 20000;
-        } else {
-            reqId = 100000;
-        }
 
         System.out.println(getStr("stock reqid ", contract.symbol(), reqId));
         ChinaMain.globalRequestMap.put(reqId, new Request(contract, hh));
