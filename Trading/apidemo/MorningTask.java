@@ -434,8 +434,6 @@ public final class MorningTask implements HistoricalHandler {
     public void getUSPricesAfterMarket(ApiController ap) {
 
         List<String> etfs = Arrays.asList("FXI:US", "CNXT:US", "ASHR:US", "ASHS:US");
-        //List<String> etfs = Arrays.asList("ASHR:US");
-
         for (String e : etfs) {
 
             String ticker = e.substring(0, e.length() - 3);

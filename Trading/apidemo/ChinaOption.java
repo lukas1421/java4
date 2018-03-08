@@ -40,6 +40,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     //static final Pattern CALL_NAME = Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"");
 
+    private static List<LocalDate> expiryList = new ArrayList<>();
     static HashMap<String, Option> optionMap = new HashMap<>();
 
     private static GraphOptionVol graphTS = new GraphOptionVol();
@@ -59,7 +60,6 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private static volatile boolean filterOn = false;
     private static volatile String selectedTicker = "";
-
 
     private static double interestRate = 0.04;
 
@@ -82,18 +82,21 @@ public class ChinaOption extends JPanel implements Runnable {
     public static volatile boolean showDelta = false;
     private static volatile boolean computeOn = true;
     private static volatile Map<String, ConcurrentSkipListMap<LocalDate, Double>> histVol = new HashMap<>();
-    private static volatile Map<Moneyness, ConcurrentSkipListMap<LocalDate, Double>> atmHistVol = new HashMap<>();
+    //private static volatile Map<Moneyness, ConcurrentSkipListMap<LocalDate, Double>> atmFrontExpiryHist = new HashMap<>();
     //map<option ticker, map<time,vol>>
+
     private static Map<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>> todayImpliedVolMap = new HashMap<>();
+
+    public static NavigableMap<LocalDate, Double> timeLapseVolFront = new TreeMap<>();
+    public static NavigableMap<LocalDate, TreeMap<LocalDate, Double>> timeLapseVolAllExpiries = new TreeMap<>();
 
     private ChinaOption() {
 
-        for (Moneyness m : Moneyness.values()) {
-            atmHistVol.put(m, new ConcurrentSkipListMap<>());
-        }
-
+//        for (Moneyness m : Moneyness.values()) {
+//            atmFrontExpiryHist.put(m, new ConcurrentSkipListMap<>());
+//        }
         getLastTradingDate();
-        List<LocalDate> expiryList = new ArrayList<>();
+
         expiryList.add(frontExpiry);
         expiryList.add(backExpiry);
         expiryList.add(thirdExpiry);
@@ -371,8 +374,9 @@ public class ChinaOption extends JPanel implements Runnable {
             mp.get(expireDate).forEach((k, v) -> {
                 try {
                     w.append(Utility.getStrComma(writeDate.format(DateTimeFormatter.ofPattern("yyyy/M/d"))
-                            , f == CallPutFlag.CALL ? "C" : "P", k, expireDate, v
-                            , Math.round((k / spot) * 100d), getOptionTicker(tickerOptionsMap, f, k, expireDate)));
+                            , f == CallPutFlag.CALL ? "C" : "P", k,
+                            expireDate.format(DateTimeFormatter.ofPattern("yyyy/M/d")),
+                            v, Math.round((k / spot) * 100d), getOptionTicker(tickerOptionsMap, f, k, expireDate)));
                     w.newLine();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -400,7 +404,6 @@ public class ChinaOption extends JPanel implements Runnable {
 
     @Override
     public void run() {
-
         if (computeOn) {
             System.out.println(" running @ " + LocalTime.now());
             try {
@@ -601,9 +604,14 @@ public class ChinaOption extends JPanel implements Runnable {
     private static void loadPreviousOptions() {
         String line;
 
-        Map<String, Integer> tickerMoneynessMap = new HashMap<>();
-        //expiry, map<moneyness, vol>
-        //Map<LocalDate, TreeMap<Integer, Double>> moneynessMap = new HashMap<>();
+        NavigableMap<LocalDate, TreeMap<Integer, Double>> timeLapseMoneynessVolFront = new TreeMap<>();
+        NavigableMap<LocalDate, TreeMap<LocalDate, TreeMap<Integer, Double>>>
+                timeLapseMoneynessVolAllExpiries = new TreeMap<>();
+
+        for(LocalDate expiry:expiryList) {
+            timeLapseMoneynessVolAllExpiries.put(expiry, new TreeMap<>());
+            timeLapseVolAllExpiries.put(expiry, new TreeMap<>());
+        }
 
         //LocalDate lastDate = lastTradingDate;
         //2018/2/26	C	2.6	2018/2/28	0	88
@@ -618,16 +626,27 @@ public class ChinaOption extends JPanel implements Runnable {
                 String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
                 double volPrev = Double.parseDouble(al1.get(4));
                 LocalDate volDate = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/M/d"));
+
+                //not front expiry
                 int moneyness = Integer.parseInt(al1.get(5));
 
-                tickerMoneynessMap.put(ticker, moneyness);
+                if (expiry.equals(frontExpiry)) {
+                    if (!timeLapseMoneynessVolFront.containsKey(volDate)) {
+                        timeLapseMoneynessVolFront.put(volDate, new TreeMap<>());
+                    }
+                    if ((f == CallPutFlag.CALL && moneyness >= 100) || (f == CallPutFlag.PUT && moneyness < 100)) {
+                        timeLapseMoneynessVolFront.get(volDate).put(moneyness, volPrev);
+                    }
+                }
 
-//                if (!moneynessMap.containsKey(expiry)) {
-//                    moneynessMap.put(expiry, new TreeMap<>());
-//                    moneynessMap.get(expiry).put(moneyness, volPrev);
-//                } else {
-//                    moneynessMap.get(expiry).put(moneyness, volPrev);
-//                }
+                if (expiryList.contains(expiry)) {
+                    if (!timeLapseMoneynessVolAllExpiries.get(expiry).containsKey(volDate)) {
+                        timeLapseMoneynessVolAllExpiries.get(expiry).put(volDate, new TreeMap<>());
+                    }
+                    if ((f == CallPutFlag.CALL && moneyness >= 100) || (f == CallPutFlag.PUT && moneyness < 100)) {
+                        timeLapseMoneynessVolAllExpiries.get(expiry).get(volDate).put(moneyness, volPrev);
+                    }
+                }
 
                 if (histVol.containsKey(ticker)) {
                     histVol.get(ticker).put(volDate, volPrev);
@@ -635,8 +654,6 @@ public class ChinaOption extends JPanel implements Runnable {
                     histVol.put(ticker, new ConcurrentSkipListMap<>());
                     histVol.get(ticker).put(volDate, volPrev);
                 }
-
-                //dd
 
                 if (volDate.equals(previousTradingDate)) {
                     if (!ticker.equals("")) {
@@ -648,12 +665,38 @@ public class ChinaOption extends JPanel implements Runnable {
             ex.printStackTrace();
         }
 
-        histVol.entrySet().stream().filter(e->tickerOptionsMap.get(e.getKey()).getExpiryDate().equals(frontExpiry))
-                .flatMap(e->e.getValue().entrySet().stream())
-                .collect(Collectors.groupingBy(Map.Entry::getKey, TreeMap::new, Collectors.summingDouble(e->e.getValue())));
+        timeLapseMoneynessVolFront.entrySet().forEach(System.out::println);
+        timeLapseMoneynessVolFront.forEach((key, value) ->
+                timeLapseVolFront.put(key, getVolByMoneyness(value, 100)));
+        timeLapseVolFront.entrySet().forEach(System.out::println);
 
+        for (LocalDate expiry : expiryList) {
+            timeLapseMoneynessVolAllExpiries.get(expiry).forEach((k, v) ->
+                    timeLapseVolAllExpiries.get(expiry).put(k, getVolByMoneyness(v, 100)));
+            System.out.println(" expiry is " + expiry);
+            timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(System.out::println);
+        }
+
+        //timeLapseVolAllExpiries.entrySet().forEach(System.out::println);
+    }
+
+    public static double getVolByMoneyness(NavigableMap<Integer, Double> moneyVolMap, int moneyness) {
+
+        if (moneyVolMap.size() > 0) {
+            if (moneyVolMap.containsKey(moneyness)) {
+                return moneyVolMap.get(moneyness);
+            } else {
+                Map.Entry<Integer, Double> ceilEntry = moneyVolMap.ceilingEntry(moneyness);
+                Map.Entry<Integer, Double> floorEntry = moneyVolMap.floorEntry(moneyness);
+                return floorEntry.getValue()
+                        + (1.0 * (moneyness - floorEntry.getKey()) / (ceilEntry.getKey() - floorEntry.getKey()))
+                        * (ceilEntry.getValue() - floorEntry.getValue());
+            }
+        }
+        return 0.0;
 
     }
+
 
     private static String getOptionTicker(Map<String, Option> mp, CallPutFlag f, double strike, LocalDate expiry) {
         for (Map.Entry<String, Option> e : mp.entrySet()) {
