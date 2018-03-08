@@ -3,11 +3,10 @@ package apidemo;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Month;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.function.DoubleUnaryOperator;
 import java.util.regex.Pattern;
-
-import static utility.Utility.getStr;
 
 public class ChinaOptionHelper {
 
@@ -29,7 +28,7 @@ public class ChinaOptionHelper {
         while(res.getDayOfWeek()!= DayOfWeek.WEDNESDAY) {
             res = res.minusDays(1);
         }
-        System.out.println(getStr(" return expiry date for month ",year,m, res));
+        //System.out.println(getStr(" return expiry date for month ",year,m, res));
         return res;
     }
 
@@ -73,5 +72,22 @@ public class ChinaOptionHelper {
             }
         }
         return 0.0;
+    }
+
+    static double getVolByMoneyness(NavigableMap<Integer, Double> moneyVolMap, int moneyness) {
+
+        if (moneyVolMap.size() > 0) {
+            if (moneyVolMap.containsKey(moneyness)) {
+                return moneyVolMap.get(moneyness);
+            } else {
+                Map.Entry<Integer, Double> ceilEntry = moneyVolMap.ceilingEntry(moneyness);
+                Map.Entry<Integer, Double> floorEntry = moneyVolMap.floorEntry(moneyness);
+                return floorEntry.getValue()
+                        + (1.0 * (moneyness - floorEntry.getKey()) / (ceilEntry.getKey() - floorEntry.getKey()))
+                        * (ceilEntry.getValue() - floorEntry.getValue());
+            }
+        }
+        return 0.0;
+
     }
 }
