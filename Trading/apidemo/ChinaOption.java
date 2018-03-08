@@ -292,43 +292,6 @@ public class ChinaOption extends JPanel implements Runnable {
         controlPanel.add(Box.createHorizontalStrut(10));
         controlPanel.add(computeOnButton);
 
-//        JLabel j11 = new JLabel("call");
-//        labelList.add(j11);
-//        JLabel j12 = new JLabel(" option price ");
-//        labelList.add(j12);
-//        JLabel j13 = new JLabel(" stock price ");
-//        labelList.add(j13);
-//        JLabel j14 = new JLabel(" Strike ");
-//        labelList.add(j14);
-//        JLabel j15 = new JLabel(" IV ");
-//        labelList.add(j15);
-//        JLabel j16 = new JLabel(" BID ");
-//        labelList.add(j16);
-//        JLabel j17 = new JLabel(" ASK  ");
-//        labelList.add(j17);
-//        JLabel j18 = new JLabel(" Delta ");
-//        labelList.add(j18);
-//        JLabel j19 = new JLabel(" Gamma  ");
-//        labelList.add(j19);
-//        JLabel j21 = new JLabel("0.0");
-//        labelList.add(j21);
-//        JLabel j22 = new JLabel("0.0");
-//        labelList.add(j22);
-//        JLabel j23 = new JLabel("0.0");
-//        labelList.add(j23);
-//        JLabel j24 = new JLabel("0.0");
-//        labelList.add(j24);
-//        JLabel j25 = new JLabel("0.0");
-//        labelList.add(j25);
-//        JLabel j26 = new JLabel("0.0");
-//        labelList.add(j26);
-//        JLabel j27 = new JLabel("0.0");
-//        labelList.add(j27);
-//        JLabel j28 = new JLabel("0.0");
-//        labelList.add(j28);
-//        JLabel j29 = new JLabel("0.0 ");
-//        labelList.add(j29);
-
         timeLabel.setOpaque(true);
         timeLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         timeLabel.setFont(timeLabel.getFont().deriveFont(30F));
@@ -340,25 +303,6 @@ public class ChinaOption extends JPanel implements Runnable {
             l.setFont(l.getFont().deriveFont(30F));
             l.setHorizontalAlignment(SwingConstants.CENTER);
         });
-//
-//        dataPanel.add(j11);
-//        dataPanel.add(j21);
-//        dataPanel.add(j12);
-//        dataPanel.add(j22);
-//        dataPanel.add(j13);
-//        dataPanel.add(j23);
-//        dataPanel.add(j14);
-//        dataPanel.add(j24);
-//        dataPanel.add(j15);
-//        dataPanel.add(j25);
-//        dataPanel.add(j16);
-//        dataPanel.add(j26);
-//        dataPanel.add(j17);
-//        dataPanel.add(j27);
-//        dataPanel.add(j18);
-//        dataPanel.add(j28);
-//        dataPanel.add(j19);
-//        dataPanel.add(j29);
 
         optionTable.setAutoCreateRowSorter(true);
         @SuppressWarnings("unchecked")
@@ -664,14 +608,14 @@ public class ChinaOption extends JPanel implements Runnable {
                 //not front expiry
                 int moneyness = Integer.parseInt(al1.get(5));
 
-                if (expiry.equals(frontExpiry)) {
-                    if (!timeLapseMoneynessVolFront.containsKey(volDate)) {
-                        timeLapseMoneynessVolFront.put(volDate, new TreeMap<>());
-                    }
-                    if ((f == CallPutFlag.CALL && moneyness >= 100) || (f == CallPutFlag.PUT && moneyness < 100)) {
-                        timeLapseMoneynessVolFront.get(volDate).put(moneyness, volPrev);
-                    }
-                }
+//                if (expiry.equals(frontExpiry)) {
+//                    if (!timeLapseMoneynessVolFront.containsKey(volDate)) {
+//                        timeLapseMoneynessVolFront.put(volDate, new TreeMap<>());
+//                    }
+//                    if ((f == CallPutFlag.CALL && moneyness >= 100) || (f == CallPutFlag.PUT && moneyness < 100)) {
+//                        timeLapseMoneynessVolFront.get(volDate).put(moneyness, volPrev);
+//                    }
+//                }
 
                 if (expiryList.contains(expiry)) {
                     if (!timeLapseMoneynessVolAllExpiries.get(expiry).containsKey(volDate)) {
@@ -937,7 +881,6 @@ public class ChinaOption extends JPanel implements Runnable {
                 case 10:
                     return Math.round(deltaMap.getOrDefault(name, 0.0));
 
-
                 default:
                     return 0.0;
             }
@@ -993,21 +936,12 @@ abstract class Option {
     double getTimeToExpiry() {
         return (ChronoUnit.DAYS.between(LocalDate.now(), expiryDate)
                 + percentageDayLeft(LocalTime.now())) / 365.0d;
-
-//        double x = ((ChronoUnit.DAYS.between(LocalDate.now(), expiryDate) + 1) / 365.0d);
-//        //System.out.println(" time to expiry " + x);
-//        return x;
     }
 
     double getTimeToExpiryDays() {
         return ChronoUnit.DAYS.between(LocalDate.now(), expiryDate)
                 + percentageDayLeft(LocalTime.now());
     }
-
-//    double getTimeToExpiryDetailed() {
-//        return (ChronoUnit.MINUTES.between(LocalDate.now(), LocalTime.of(15, 0)) / 350) / 365.0d
-//                + ((ChronoUnit.DAYS.between(LocalDate.now(), expiryDate)) / 365.0d);
-//    }
 
     @Override
     public String toString() {
