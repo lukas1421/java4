@@ -19,7 +19,7 @@ public class XuSave implements Serializable {
 
     @Column(name = "FUT")
     @Lob
-    static Blob lastFutPriceBlob;
+    private static Blob lastFutPriceBlob;
 
     @Column(name = "INDEX")
     @Lob

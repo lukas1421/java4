@@ -45,8 +45,13 @@ public class ChinaOptionHelper {
                 session.getTransaction().begin();
                 try {
 
-                    ChinaVolSave v = new ChinaVolSave();
-                    session.saveOrUpdate(v);
+                    int i = 0;
+                    while (i < 500) {
+                        ChinaVolSave v = new ChinaVolSave();
+                        session.saveOrUpdate(v);
+                        i++;
+                    }
+
 //                    symbolNames.forEach(name -> {
 //                        if (Utility.noZeroArrayGen(name, openMap, maxMap, minMap, priceMap, closeMap, sizeMap)) {
 //                            ChinaSaveOHLCYV c = new ChinaSaveOHLCYV(name, openMap.get(name), maxMap.get(name), minMap.get(name),

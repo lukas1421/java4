@@ -9,7 +9,6 @@ public class HibernateUtil {
     private static SessionFactory sessionFactory;
 
     private static SessionFactory buildSessionFactory() {
-
         try {
             Configuration cfg = new Configuration();
             cfg.configure("hibernate.cfg.xml").configure();

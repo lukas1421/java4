@@ -21,7 +21,6 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class Hibtask {
 
-
     public static ConcurrentSkipListMap<LocalTime, ?> unblob(Blob b) {
         try {
             int len = (int) b.length();
@@ -30,6 +29,7 @@ public class Hibtask {
                 try (ObjectInputStream iin = new ObjectInputStream(new ByteArrayInputStream(buf))) {
                     //saveclass.updateFirstMap(key, (ConcurrentSkipListMap<LocalTime,?>)iin.readObject());
                     //c.accept((ConcurrentSkipListMap<LocalTime,?>)iin.readObject());
+                    //noinspection unchecked
                     return ((ConcurrentSkipListMap<LocalTime, ?>) iin.readObject());
                 } catch (IOException | ClassNotFoundException io) {
                     System.out.println(" issue is with " + "XU");
@@ -92,12 +92,8 @@ public class Hibtask {
                     ChinaMain.updateSystemNotif(Utility.getStr(" HIB Today -> YTD DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
                 }
         ).thenAccept(v -> {
-            CompletableFuture.runAsync(() -> {
-                loadHibGenPrice();
-            });
-            CompletableFuture.runAsync(() -> {
-                ChinaData.loadHibernateYesterday();
-            });
+            CompletableFuture.runAsync(Hibtask::loadHibGenPrice);
+            CompletableFuture.runAsync(ChinaData::loadHibernateYesterday);
         }).thenAccept(v -> {
             ChinaMain.updateSystemNotif(Utility.getStr(" Loading done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
         });

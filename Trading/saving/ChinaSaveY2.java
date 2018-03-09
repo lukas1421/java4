@@ -2,20 +2,16 @@ package saving;
 
 import auxiliary.SimpleBar;
 
-import static apidemo.ChinaData.priceMapBarY2;
-import static apidemo.ChinaData.sizeTotalMapY2;
-import static utility.Utility.trimSkipMap;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.time.LocalTime;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
+
+import static apidemo.ChinaData.priceMapBarY2;
+import static apidemo.ChinaData.sizeTotalMapY2;
+import static utility.Utility.trimSkipMap;
 
 @Entity
 @Table(name = "CHINASAVEY2")
@@ -77,11 +73,13 @@ public class ChinaSaveY2 implements Serializable, ChinaSaveInterface2Blob {
 
     @Override
     public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
+        //noinspection unchecked
         priceMapBarY2.put(name, (ConcurrentSkipListMap<LocalTime, SimpleBar>) trimSkipMap(mp, LocalTime.of(9, 29)));
     }
 
     @Override
     public void updateSecondMap(String name, NavigableMap<LocalTime, ?> mp) {
+        //noinspection unchecked
         sizeTotalMapY2.put(name, (ConcurrentSkipListMap<LocalTime, Double>) trimSkipMap(mp, LocalTime.of(9, 29)));
     }
 

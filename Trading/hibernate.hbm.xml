@@ -50,7 +50,9 @@
     </class>
 
     <class name="saving.ChinaVolSave" table="CHINAVOLSAVE">
-        <id column="ID" name="id" type="integer"/>
+        <id column="ID" name="id" type="integer">
+            <generator class="identity"/>
+        </id>
         <property column="VOLDATE" name="volDate" type="java.time.LocalDate"/>
         <property column="CALLPUT" name="callPut" type="string"/>
         <property column="STRIKE" name="strike" type="double"/>

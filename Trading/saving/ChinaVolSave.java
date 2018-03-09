@@ -5,6 +5,7 @@ import apidemo.ChinaOption;
 
 import javax.persistence.*;
 import java.time.LocalDate;
+import java.util.Random;
 
 @javax.persistence.Entity
 
@@ -13,7 +14,7 @@ import java.time.LocalDate;
 public class ChinaVolSave {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     int id;
 
     @Column(name = "VOLDATE")
@@ -38,10 +39,10 @@ public class ChinaVolSave {
     String optionTicker;
 
     public ChinaVolSave() {
-        id = 3;
         volDate = LocalDate.now();
-        callPut = "P";
-        strike = 2.8;
+        callPut = "C";
+        Random r = new Random();
+        strike = r.nextDouble();
         expiryDate = ChinaOption.frontExpiry;
         vol = 0.25;
         moneyness = 100;

@@ -76,7 +76,7 @@ public class ChinaOption extends JPanel implements Runnable {
     public volatile static Map<String, Double> deltaMap = new HashMap<>();
     private static NavigableMap<LocalDate, NavigableMap<Double, Double>> strikeVolMapCall = new TreeMap<>();
     private static NavigableMap<LocalDate, NavigableMap<Double, Double>> strikeVolMapPut = new TreeMap<>();
-    private static List<JLabel> labelList = new ArrayList<>();
+    //private static List<JLabel> labelList = new ArrayList<>();
     private static JLabel timeLabel = new JLabel();
     private static volatile double currentStockPrice;
     public static volatile LocalDate expiryToCheck = frontExpiry;
@@ -300,12 +300,12 @@ public class ChinaOption extends JPanel implements Runnable {
         timeLabel.setFont(timeLabel.getFont().deriveFont(30F));
         timeLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
-        labelList.forEach(l -> {
-            l.setOpaque(true);
-            l.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-            l.setFont(l.getFont().deriveFont(30F));
-            l.setHorizontalAlignment(SwingConstants.CENTER);
-        });
+//        labelList.forEach(l -> {
+//            l.setOpaque(true);
+//            l.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+//            l.setFont(l.getFont().deriveFont(30F));
+//            l.setHorizontalAlignment(SwingConstants.CENTER);
+//        });
 
         optionTable.setAutoCreateRowSorter(true);
         @SuppressWarnings("unchecked")
@@ -356,22 +356,22 @@ public class ChinaOption extends JPanel implements Runnable {
         }
     }
 
-    private static void updateData(double opPrice, double stock, double vol, double bid, double ask, Option opt) {
-        SwingUtilities.invokeLater(() -> {
-
-            labelList.get(10).setText(Utility.getStrCheckNull(opPrice));
-            labelList.get(11).setText(Utility.getStrCheckNull(stock));
-            labelList.get(12).setText(Utility.getStrCheckNull(opt.getStrike()));
-            labelList.get(13).setText(Utility.getStrCheckNull(vol));
-            labelList.get(14).setText(Utility.getStrCheckNull(bid));
-            labelList.get(15).setText(Utility.getStrCheckNull(ask));
-            labelList.get(16).setText(Utility.getStrCheckNull(getDelta(opt.getCallOrPut(), stock, opt.getStrike(),
-                    vol, opt.getTimeToExpiry(), interestRate)));
-            labelList.get(17).setText(Utility.getStrCheckNull(getGamma(stock, opt.getStrike(),
-                    vol, opt.getTimeToExpiry(), interestRate)));
-            timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
-        });
-    }
+//    private static void updateData(double opPrice, double stock, double vol, double bid, double ask, Option opt) {
+//        SwingUtilities.invokeLater(() -> {
+//
+//            labelList.get(10).setText(Utility.getStrCheckNull(opPrice));
+//            labelList.get(11).setText(Utility.getStrCheckNull(stock));
+//            labelList.get(12).setText(Utility.getStrCheckNull(opt.getStrike()));
+//            labelList.get(13).setText(Utility.getStrCheckNull(vol));
+//            labelList.get(14).setText(Utility.getStrCheckNull(bid));
+//            labelList.get(15).setText(Utility.getStrCheckNull(ask));
+//            labelList.get(16).setText(Utility.getStrCheckNull(getDelta(opt.getCallOrPut(), stock, opt.getStrike(),
+//                    vol, opt.getTimeToExpiry(), interestRate)));
+//            labelList.get(17).setText(Utility.getStrCheckNull(getGamma(stock, opt.getStrike(),
+//                    vol, opt.getTimeToExpiry(), interestRate)));
+//            timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
+//        });
+//    }
 
     @Override
     public void run() {
