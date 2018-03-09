@@ -275,7 +275,10 @@ public class ChinaOption extends JPanel implements Runnable {
         });
         computeOnButton.addActionListener(l -> computeOn = computeOnButton.isSelected());
 
+
         saveVolsButton.addActionListener(l -> saveVols());
+
+        saveVolsHibButton.addActionListener(l->ChinaOptionHelper.saveVolsEODHib());
         controlPanel.add(saveVolsButton);
         controlPanel.add(saveVolsHibButton);
         controlPanel.add(getPreviousVolButton);

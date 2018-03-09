@@ -1,10 +1,16 @@
 package apidemo;
 
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import saving.ChinaVolSave;
+import saving.HibernateUtil;
+
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Month;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.DoubleUnaryOperator;
 import java.util.regex.Pattern;
 
@@ -14,9 +20,9 @@ public class ChinaOptionHelper {
     static final Pattern CALL_NAME_PATTERN =
             Pattern.compile("(?<=var\\shq_str_OP_UP_510050\\d{4}=)\"(.*?),\"");
     static final Pattern PUT_NAME_PATTERN =
-                    Pattern.compile("(?<=var\\shq_str_OP_DOWN_510050\\d{4}=)\"(.*?),\"");
+            Pattern.compile("(?<=var\\shq_str_OP_DOWN_510050\\d{4}=)\"(.*?),\"");
     static final Pattern OPTION_PATTERN =
-                            Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"(.*?)\";");
+            Pattern.compile("(?<=var\\shq_str_)(CON_OP_\\d{8})=\"(.*?)\";");
 
     private ChinaOptionHelper() {
         throw new UnsupportedOperationException(" utility class ");
@@ -25,19 +31,47 @@ public class ChinaOptionHelper {
     public static LocalDate getOptionExpiryDate(int year, Month m) {
         LocalDate res = LocalDate.of(year, m.plus(1), 1);
 
-        while(res.getDayOfWeek()!= DayOfWeek.WEDNESDAY) {
+        while (res.getDayOfWeek() != DayOfWeek.WEDNESDAY) {
             res = res.minusDays(1);
         }
         //System.out.println(getStr(" return expiry date for month ",year,m, res));
         return res;
     }
 
-    public static void main(String[] args) {
-        System.out.println(getOptionExpiryDate(2018, Month.MARCH));
-        System.out.println(getOptionExpiryDate(2018, Month.APRIL));
-        System.out.println(getOptionExpiryDate(2018, Month.JUNE));
-        System.out.println(getOptionExpiryDate(2018, Month.SEPTEMBER));
+    public static void saveVolsEODHib() {
+        CompletableFuture.runAsync(() -> {
+            SessionFactory sessionF = HibernateUtil.getSessionFactory();
+            try (Session session = sessionF.openSession()) {
+                session.getTransaction().begin();
+                try {
+
+                    ChinaVolSave v = new ChinaVolSave();
+                    session.saveOrUpdate(v);
+//                    symbolNames.forEach(name -> {
+//                        if (Utility.noZeroArrayGen(name, openMap, maxMap, minMap, priceMap, closeMap, sizeMap)) {
+//                            ChinaSaveOHLCYV c = new ChinaSaveOHLCYV(name, openMap.get(name), maxMap.get(name), minMap.get(name),
+//                                    priceMap.get(name), closeMap.get(name), sizeMap.get(name).intValue());
+//
+//                            session.saveOrUpdate(c);
+//                        }
+//                    });
+                    session.getTransaction().commit();
+                } catch (org.hibernate.exception.LockAcquisitionException x) {
+                    x.printStackTrace();
+                    session.getTransaction().rollback();
+                    session.close();
+                }
+            }
+        });
+
     }
+
+//    public static void main(String[] args) {
+//        System.out.println(getOptionExpiryDate(2018, Month.MARCH));
+//        System.out.println(getOptionExpiryDate(2018, Month.APRIL));
+//        System.out.println(getOptionExpiryDate(2018, Month.JUNE));
+//        System.out.println(getOptionExpiryDate(2018, Month.SEPTEMBER));
+//    }
 
     static double simpleSolver(double target, DoubleUnaryOperator o) {
         double lowerGuess = 0.0;
