@@ -5,14 +5,24 @@ import org.hibernate.SessionFactory;
 import saving.ChinaVolSave;
 import saving.HibernateUtil;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.Month;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.DoubleUnaryOperator;
 import java.util.regex.Pattern;
+
+import static apidemo.ChinaOption.getOptionTicker;
+import static apidemo.ChinaOption.tickerOptionsMap;
 
 public class ChinaOptionHelper {
 
@@ -39,37 +49,48 @@ public class ChinaOptionHelper {
     }
 
     public static void saveVolsEODHib() {
-        CompletableFuture.runAsync(() -> {
-            SessionFactory sessionF = HibernateUtil.getSessionFactory();
-            try (Session session = sessionF.openSession()) {
-                session.getTransaction().begin();
-                try {
 
-                    int i = 0;
-                    while (i < 500) {
-                        ChinaVolSave v = new ChinaVolSave();
+
+        String line;
+        SessionFactory sessionF = HibernateUtil.getSessionFactory();
+
+        try (Session session = sessionF.openSession()) {
+            session.getTransaction().begin();
+
+            try {
+                try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                        new FileInputStream(TradingConstants.GLOBALPATH + "volOutput.csv")))) {
+                    AtomicLong i = new AtomicLong(0L);
+                    while ((line = reader1.readLine()) != null) {
+                        List<String> al1 = Arrays.asList(line.split(","));
+                        LocalDate volDate = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/M/d"));
+                        CallPutFlag f = al1.get(1).equalsIgnoreCase("C") ? CallPutFlag.CALL : CallPutFlag.PUT;
+                        String callput = al1.get(1);
+                        double strike = Double.parseDouble(al1.get(2));
+                        LocalDate expiry = LocalDate.parse(al1.get(3), DateTimeFormatter.ofPattern("yyyy/M/dd"));
+                        double volPrev = Double.parseDouble(al1.get(4));
+                        int moneyness = Integer.parseInt(al1.get(5));
+                        String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
+                        ChinaVolSave v = new ChinaVolSave(volDate,callput,strike, expiry, volPrev, moneyness, ticker);
                         session.saveOrUpdate(v);
-                        i++;
+                        i.incrementAndGet();
+                        if (i.get() % 100 == 0) {
+                            session.flush();
+                        }
                     }
-
-//                    symbolNames.forEach(name -> {
-//                        if (Utility.noZeroArrayGen(name, openMap, maxMap, minMap, priceMap, closeMap, sizeMap)) {
-//                            ChinaSaveOHLCYV c = new ChinaSaveOHLCYV(name, openMap.get(name), maxMap.get(name), minMap.get(name),
-//                                    priceMap.get(name), closeMap.get(name), sizeMap.get(name).intValue());
-//
-//                            session.saveOrUpdate(c);
-//                        }
-//                    });
-                    session.getTransaction().commit();
-                } catch (org.hibernate.exception.LockAcquisitionException x) {
-                    x.printStackTrace();
-                    session.getTransaction().rollback();
-                    session.close();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
-            }
-        });
 
+                session.getTransaction().commit();
+            } catch (org.hibernate.exception.LockAcquisitionException x) {
+                x.printStackTrace();
+                session.getTransaction().rollback();
+                session.close();
+            }
+        }
     }
+
 
 //    public static void main(String[] args) {
 //        System.out.println(getOptionExpiryDate(2018, Month.MARCH));

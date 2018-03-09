@@ -62,7 +62,7 @@ public final class ChinaMain implements IConnectionHandler {
     private final static ILogger M_INLOGGER = new DefaultLogger(); //new Logger( m_inLog);
     private final static ILogger M_OUTLOGGER = new DefaultLogger(); // new Logger( m_outLog);
     private final static ApiController M_CONTROLLER = new ApiController(new ChinaMainHandler(), M_INLOGGER, M_OUTLOGGER);
-    public static volatile CountDownLatch ibConnLatch =  new CountDownLatch(1);
+    public static volatile CountDownLatch ibConnLatch = new CountDownLatch(1);
 
     private final ArrayList<String> m_acctList = new ArrayList<>();
     private final JFrame m_frame = new JFrame();
@@ -91,9 +91,6 @@ public final class ChinaMain implements IConnectionHandler {
     private static volatile JLabel systemTime = new JLabel(Utility.timeNowToString());
     private static volatile JLabel systemNotif = new JLabel("");
     public static volatile JLabel connectionIndicator = new JLabel("CONN");
-
-
-
 
     //private final Data data = new Data();
     //private final HistData histdata = new HistData();
@@ -141,9 +138,7 @@ public final class ChinaMain implements IConnectionHandler {
     private static XUTrader xutrader = new XUTrader(M_CONTROLLER);
 
     private SinaStock sinastock1 = SinaStock.getInstance();
-
     private ExecutorService pool;
-
     private volatile AnaCompute anacompute = new AnaCompute();
     private volatile StratCompute stratcompute = new StratCompute();
     private final ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
@@ -570,7 +565,7 @@ public final class ChinaMain implements IConnectionHandler {
             }
         });
 
-        CompletableFuture.runAsync(()-> {
+        CompletableFuture.runAsync(() -> {
             try {
                 ibConnLatch.await();
                 System.out.println(" ib conn latch finished waiting " + LocalTime.now());

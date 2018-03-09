@@ -69,7 +69,7 @@ public class ChinaOption extends JPanel implements Runnable {
     //private static HashMap<String, Double> bidMap = new HashMap<>();
     //private static HashMap<String, Double> askMap = new HashMap<>();
     private static HashMap<String, Double> optionPriceMap = new HashMap<>();
-    private static Map<String, Option> tickerOptionsMap = new HashMap<>();
+    public static Map<String, Option> tickerOptionsMap = new HashMap<>();
     private static volatile List<String> optionList = new LinkedList<>();
     private static Map<String, Double> impliedVolMap = new HashMap<>();
     private static Map<String, Double> impliedVolMapYtd = new HashMap<>();
@@ -601,15 +601,14 @@ public class ChinaOption extends JPanel implements Runnable {
                 new FileInputStream(TradingConstants.GLOBALPATH + "volOutput.csv")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split(","));
+                LocalDate volDate = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/M/d"));
                 CallPutFlag f = al1.get(1).equalsIgnoreCase("C") ? CallPutFlag.CALL : CallPutFlag.PUT;
                 double strike = Double.parseDouble(al1.get(2));
                 LocalDate expiry = LocalDate.parse(al1.get(3), DateTimeFormatter.ofPattern("yyyy/M/dd"));
-                String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
                 double volPrev = Double.parseDouble(al1.get(4));
-                LocalDate volDate = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/M/d"));
-
-                //not front expiry
                 int moneyness = Integer.parseInt(al1.get(5));
+                String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
+
 
 //                if (expiry.equals(frontExpiry)) {
 //                    if (!timeLapseMoneynessVolFront.containsKey(volDate)) {
@@ -660,7 +659,7 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
 
-    private static String getOptionTicker(Map<String, Option> mp, CallPutFlag f, double strike, LocalDate expiry) {
+    public static String getOptionTicker(Map<String, Option> mp, CallPutFlag f, double strike, LocalDate expiry) {
         for (Map.Entry<String, Option> e : mp.entrySet()) {
             if (e.getValue().getCallOrPut() == f && e.getValue().getStrike() == strike
                     && e.getValue().getExpiryDate().equals(expiry)) {

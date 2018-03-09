@@ -49,11 +49,12 @@ public class ChinaVolSave {
         optionTicker = "CON_OP_10000987";
     }
 
-    public ChinaVolSave(LocalDate voldate, String cp, double k, LocalDate expirydate, int mness, String ticker) {
+    public ChinaVolSave(LocalDate voldate, String cp, double k, LocalDate expirydate, double v, int mness, String ticker) {
         volDate = voldate;
         callPut = cp;
         strike = k;
         expiryDate = expirydate;
+        vol = v;
         moneyness = mness;
         optionTicker = ticker;
     }
