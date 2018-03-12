@@ -95,9 +95,8 @@ public class Hibtask {
                 }
                 session.getTransaction().commit();
             }
-        }).thenAccept(v -> {
-                    ChinaMain.updateSystemNotif(Utility.getStr(" HIB Today -> YTD DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
-                }
+        }).thenAccept(v -> ChinaMain.updateSystemNotif(Utility.getStr(
+                " HIB Today -> YTD DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)))
         ).thenAccept(v -> {
             CompletableFuture.runAsync(Hibtask::loadHibGenPrice);
             CompletableFuture.runAsync(ChinaData::loadHibernateYesterday);

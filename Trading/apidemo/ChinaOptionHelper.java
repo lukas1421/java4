@@ -49,15 +49,16 @@ public class ChinaOptionHelper {
         return res;
     }
 
-    public static void saveVolsEODHib() {
+    public static void saveVolsEoDHIB() {
 
+    }
 
+    public static void getVolsFromVolOutputToHib() {
         String line;
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
 
         try (Session session = sessionF.openSession()) {
             session.getTransaction().begin();
-
             try {
                 try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                         new FileInputStream(TradingConstants.GLOBALPATH + "volOutput.csv")))) {
@@ -74,6 +75,7 @@ public class ChinaOptionHelper {
                         String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
                         ChinaVolSave v = new ChinaVolSave(volDate,callput,strike, expiry, volPrev, moneyness, ticker);
                         session.saveOrUpdate(v);
+
                         i.incrementAndGet();
                         if (i.get() % 100 == 0) {
                             session.flush();
@@ -82,7 +84,6 @@ public class ChinaOptionHelper {
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }
-
                 session.getTransaction().commit();
             } catch (org.hibernate.exception.LockAcquisitionException x) {
                 x.printStackTrace();
