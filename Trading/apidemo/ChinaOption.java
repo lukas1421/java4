@@ -378,8 +378,6 @@ public class ChinaOption extends JPanel implements Runnable {
                 saveclass.updateFirstMap(key, unblob(blob1));
             });
         }
-
-
     }
 
 

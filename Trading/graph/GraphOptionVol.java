@@ -66,7 +66,7 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
         volSmileFourth = mp;
     }
 
-    public void computeDelta() {
+    private void computeDelta() {
         deltaMapFront = getStrikeDeltaMapFromVol(volSmileFront, currentPrice, frontExpiry);
         deltaMapBack = getStrikeDeltaMapFromVol(volSmileBack, currentPrice, backExpiry);
         deltaMapThird = getStrikeDeltaMapFromVol(volSmileThird, currentPrice, thirdExpiry);
@@ -78,7 +78,7 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
     protected void paintComponent(Graphics g) {
 
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2.5F));
-        g.drawString(" Current Vols 4 Expiries", 20,30);
+        g.drawString(" Current Vols 4 Expiries", 20, 30);
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.4F));
 
         if (volSmileFront.size() > 0) {

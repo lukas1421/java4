@@ -57,7 +57,7 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
     protected void paintComponent(Graphics g) {
 
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2.5F));
-        g.drawString(" Vol Diff " + ChinaOption.expiryToCheck, 20,30);
+        g.drawString(" Vol Diff " + ChinaOption.expiryToCheck, 20, 30);
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.4F));
 
         if (volNow.size() > 0) {

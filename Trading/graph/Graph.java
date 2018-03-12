@@ -59,12 +59,12 @@ public class Graph extends JComponent implements GraphFillable {
     }
 
     public <S> void setNavigableMap(NavigableMap<LocalTime, S> tm, ToDoubleFunction<S> f, Predicate<S> zeroCondition) {
-        this.tm = (tm != null) ? new ConcurrentSkipListMap<>(tm.entrySet().stream().filter(e->!zeroCondition.test(e.getValue()))
-                .collect(toMap(Entry::getKey, e->f.applyAsDouble(e.getValue())))) : new ConcurrentSkipListMap<>();
+        this.tm = (tm != null) ? new ConcurrentSkipListMap<>(tm.entrySet().stream().filter(e -> !zeroCondition.test(e.getValue()))
+                .collect(toMap(Entry::getKey, e -> f.applyAsDouble(e.getValue())))) : new ConcurrentSkipListMap<>();
     }
 
     public void setNavigableMap(NavigableMap<LocalTime, Double> tm) {
-        setNavigableMap(tm, d->d, d->d==0.0);
+        setNavigableMap(tm, d -> d, d -> d == 0.0);
     }
 
 //    public ConcurrentSkipListMap<LocalTime, Double> getNavigableMap() {
@@ -141,7 +141,7 @@ public class Graph extends JComponent implements GraphFillable {
 //            if (last == 0) {
 //                last = close;
 //            }
-            last = last==0?close:last;
+            last = last == 0 ? close : last;
 
             g.drawLine(x, last, x + 3, close);
             last = close;
@@ -226,7 +226,7 @@ public class Graph extends JComponent implements GraphFillable {
 
     private double getRangeY() {
         return (Utility.noZeroArrayGen(name, minMapY, maxMapY)) ?
-                Math.round(100d * (maxMapY.get(name) / minMapY.get(name)-1)) / 100d : 0.0;
+                Math.round(100d * (maxMapY.get(name) / minMapY.get(name) - 1)) / 100d : 0.0;
     }
 
     public static double getMinRtn(NavigableMap<LocalTime, Double> tm) {
@@ -309,7 +309,7 @@ public class Graph extends JComponent implements GraphFillable {
         if (!tm.isEmpty() & tm.size() > 2 && tm.firstKey().isBefore(LocalTime.of(12, 1)) && tm.lastKey().isAfter(LocalTime.of(9, 30))) {
             return tm.entrySet().stream().filter(entry -> entry.getValue() != 0.0 && entry.getKey()
                     .isAfter(LocalTime.of(9, 29)) && entry.getKey().isBefore(LocalTime.of(12, 1)))
-                    .max(Entry.comparingByValue()).map(Entry::getKey).orElse(LocalTime.of(9,30));
+                    .max(Entry.comparingByValue()).map(Entry::getKey).orElse(LocalTime.of(9, 30));
         }
         return LocalTime.of(9, 30);
     }

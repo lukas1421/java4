@@ -289,6 +289,6 @@ public class GraphChinaFut extends JComponent {
     }
 
     private double getMax(ConcurrentSkipListMap<LocalTime, Double> tm) {
-        return Utility.reduceMapToDouble(tm, d->d, Math::max);
+        return Utility.reduceMapToDouble(tm, d -> d, Math::max);
     }
 }

@@ -103,9 +103,9 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         }
     }
 
-    public void fillTradesMap(NavigableMap<LocalTime,TradeBlock> m) {
+    public void fillTradesMap(NavigableMap<LocalTime, TradeBlock> m) {
         if (XUTrader.gran == DisplayGranularity._1MDATA) {
-            this.setTradesMap(tradeBlockRoundGen(m, t->t.truncatedTo(ChronoUnit.MINUTES)));
+            this.setTradesMap(tradeBlockRoundGen(m, t -> t.truncatedTo(ChronoUnit.MINUTES)));
         } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
             this.setTradesMap(tradeBlock1mTo5M(m));
         }
@@ -131,16 +131,16 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         maxRtn = getMaxRtn();
         last = 0;
 
-        XUTrader.activeFutLiveOrder.forEach((k,v)->{
+        XUTrader.activeFutLiveOrder.forEach((k, v) -> {
             int y = getY(k);
-            if(v>0.0) {
+            if (v > 0.0) {
                 g.setColor(Color.blue);
-                g.drawLine(0,y,getWidth(),y);
-                g.drawString("Buy: " + Double.toString(v) + " at " + k, Math.round(getWidth()*7/8), y + 10);
+                g.drawLine(0, y, getWidth(), y);
+                g.drawString("Buy: " + Double.toString(v) + " at " + k, Math.round(getWidth() * 7 / 8), y + 10);
             } else {
                 g.setColor(Color.red);
-                g.drawLine(0,y,getWidth(),y);
-                g.drawString("Sell: " + Double.toString(v)  + " at " + k, Math.round(getWidth()*7/8), y + 10);
+                g.drawLine(0, y, getWidth(), y);
+                g.drawString("Sell: " + Double.toString(v) + " at " + k, Math.round(getWidth() * 7 / 8), y + 10);
             }
         });
 
@@ -169,7 +169,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                 g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 20);
             } else {
                 if (XUTrader.gran == DisplayGranularity._1MDATA) {
-                    if ( (lt.getMinute() == 0 || lt.getMinute() % 30 == 0)) {
+                    if ((lt.getMinute() == 0 || lt.getMinute() % 30 == 0)) {
                         g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 20);
                     }
                 } else {
@@ -197,12 +197,12 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                     }
                 }
             }
-            if (roundDownToN(mouseXCord,XUTrader.graphWidth.get()) == x-5) {
+            if (roundDownToN(mouseXCord, XUTrader.graphWidth.get()) == x - 5) {
                 //lowY+(mouseYCord<closeY?-20:+20
                 g.drawString(lt.toString() + " " + Math.round(tm.floorEntry(lt).getValue().getClose()), x,
-                        lowY + (mouseYCord<closeY?-50:+50));
-                g.drawOval(x -3, lowY, 5, 5);
-                g.fillOval(x - 3 , lowY , 5, 5);
+                        lowY + (mouseYCord < closeY ? -50 : +50));
+                g.drawOval(x - 3, lowY, 5, 5);
+                g.fillOval(x - 3, lowY, 5, 5);
             }
             x += XUTrader.graphWidth.get();
         }
@@ -224,7 +224,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         g2.setStroke(BS3);
 
         g2.drawString(min + "  " + Double.toString(minRtn) + "%", getWidth() - 140, getHeight() - 20);
-        g2.drawString(max  + "   " + Double.toString(maxRtn) + "%", getWidth() - 140, 15);
+        g2.drawString(max + "   " + Double.toString(maxRtn) + "%", getWidth() - 140, 15);
         //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2);
         int wtdP = SharpeUtility.getPercentile(tm);
         g2.drawString("周" + Integer.toString(wtdP), getWidth() - 40, getHeight() / 2);
@@ -243,10 +243,10 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         //g2.drawString(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString(), 15, 15);
         g2.drawString(Double.toString(getReturn()) + "%", getWidth() / 8, 15);
         g2.drawString("收: " + Integer.toString((int) Math.round(prevClose)), getWidth() * 3 / 16, 15);
-        g2.drawString("开: " + Integer.toString((int)Math.round(getOpen())), getWidth() * 2 / 8, 15);
+        g2.drawString("开: " + Integer.toString((int) Math.round(getOpen())), getWidth() * 2 / 8, 15);
         g2.drawString("P: " + Double.toString(getLast()), getWidth() * 6 / 16, 15);
-        g2.drawString(" Index: " + Math.round(getIndex()) , getWidth() * 8 / 16, 15);
-        g2.drawString("PD: " + getPD() , getWidth() * 10 / 16, 15);
+        g2.drawString(" Index: " + Math.round(getIndex()), getWidth() * 8 / 16, 15);
+        g2.drawString("PD: " + getPD(), getWidth() * 10 / 16, 15);
         g2.drawString("Pos: " + XUTrader.currentPosMap.getOrDefault(fut, 0), getWidth() * 11 / 16, 15);
         g2.drawString("Pnl: " + getTradePnl(), getWidth() * 12 / 16, 15);
         g2.drawString("B: " + XUTrader.botMap.getOrDefault(fut, 0), getWidth() * 13 / 16, 15);
@@ -351,9 +351,9 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
     public double getReturn() {
         if (tm.size() > 0) {
-            double initialP = prevClose!=0.0? prevClose:
+            double initialP = prevClose != 0.0 ? prevClose :
                     tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
-            double finalP =  tm.lastEntry().getValue().getClose();
+            double finalP = tm.lastEntry().getValue().getClose();
             return (double) round((finalP / initialP - 1) * 10000d) / 100d;
         }
         return 0.0;
@@ -385,16 +385,16 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         return (tm.size() > 0) ? tm.lastEntry().getValue().getClose() : 0.0;
     }
 
-    public double getIndex(){
-        if(ChinaData.priceMapBar.get(ftseIndex).size() >0) {
+    public double getIndex() {
+        if (ChinaData.priceMapBar.get(ftseIndex).size() > 0) {
             return ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose();
         }
         return 0.0;
     }
 
     private double getPD() {
-        if(getIndex()!=0.0) {
-            return r(100d*(getLast() / getIndex() - 1));
+        if (getIndex() != 0.0) {
+            return r(100d * (getLast() / getIndex() - 1));
         }
         return 0.0;
     }

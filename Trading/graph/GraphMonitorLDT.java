@@ -25,7 +25,7 @@ import static apidemo.ChinaStock.NORMAL_STOCK;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.*;
 
-public class GraphMonitorLDT extends JComponent implements GraphFillable  {
+public class GraphMonitorLDT extends JComponent implements GraphFillable {
     static final int WIDTH_MON = 2;
     String name;
     String chineseName;
@@ -113,8 +113,8 @@ public class GraphMonitorLDT extends JComponent implements GraphFillable  {
             }
             g.drawLine(x + 1, highY, x + 1, lowY);
 
-            if(trades.subMap(ldt,true,  ldt.plusMinutes(1L),false).size()>0) {
-                for(Map.Entry e: trades.subMap(ldt,true,ldt.plusMinutes(1L),false).entrySet()) {
+            if (trades.subMap(ldt, true, ldt.plusMinutes(1L), false).size() > 0) {
+                for (Map.Entry e : trades.subMap(ldt, true, ldt.plusMinutes(1L), false).entrySet()) {
                     Trade t = (Trade) e.getValue();
                     if (t.getSize() > 0) {
                         g.setColor(Color.blue);
@@ -131,8 +131,10 @@ public class GraphMonitorLDT extends JComponent implements GraphFillable  {
                         g.drawPolygon(p1);
                         g.fillPolygon(p1);
                     }
-                };
-            };
+                }
+                ;
+            }
+            ;
 
             g.setColor(Color.black);
 
@@ -287,11 +289,11 @@ public class GraphMonitorLDT extends JComponent implements GraphFillable  {
         setSize1(ChinaStock.sizeMap.getOrDefault(name, 0L));
 
         //trades needs to be this weeks's trades
-        trades = ChinaPosition.tradesMap.containsKey(name)?
-                Utility.mergeMaps(ChinaPosition.tradesMap.get(name)):new ConcurrentSkipListMap<>();
+        trades = ChinaPosition.tradesMap.containsKey(name) ?
+                Utility.mergeMaps(ChinaPosition.tradesMap.get(name)) : new ConcurrentSkipListMap<>();
 
         if (NORMAL_STOCK.test(name)) {
-            price5mWtd.put(name,(ConcurrentSkipListMap<LocalDateTime, SimpleBar>) mergeMaps(HistChinaStocks.chinaWtd.get(name),
+            price5mWtd.put(name, (ConcurrentSkipListMap<LocalDateTime, SimpleBar>) mergeMaps(HistChinaStocks.chinaWtd.get(name),
                     Utility.priceMap1mTo5M(priceMapBar.get(name))));
             this.setNavigableMap(price5mWtd.get(name));
             //getYtdY2CloseP(name);

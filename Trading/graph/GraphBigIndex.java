@@ -804,7 +804,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
         if (!tmYtd.isEmpty() & tmYtd.size() > 2) {
             if (tmYtd.firstKey().isBefore(LocalTime.of(12, 1)) && tmYtd.lastKey().isAfter(LocalTime.of(9, 30))) {
                 return tmYtd.entrySet().stream().filter(entry -> !entry.getValue().containsZero())
-                        .filter(Utility.AM_PRED).max(Utility.BAR_HIGH).map(Map.Entry::getKey).orElse(LocalTime.of(9,30));
+                        .filter(Utility.AM_PRED).max(Utility.BAR_HIGH).map(Map.Entry::getKey).orElse(LocalTime.of(9, 30));
             }
 
         }

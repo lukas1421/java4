@@ -131,7 +131,7 @@ public class GraphBig extends JComponent implements GraphFillable {
     }
 
     private void setSize1(long s) {
-        size = (int)s;
+        size = (int) s;
     }
 
     public void setMaxAMT(LocalTime t) {
@@ -491,7 +491,7 @@ public class GraphBig extends JComponent implements GraphFillable {
 
         double avgForThisIndus = priceMapBar.entrySet().stream().filter(e -> !e.getKey().equals("sh204001") && e.getValue().size() > 2 && ChinaStock.industryNameMap.get(e.getKey()).equals(industry))
                 .mapToDouble(e -> (e.getValue().lastEntry().getValue().getClose()
-                / ofNullable(ChinaStock.openMap.get(e.getKey())).orElse(e.getValue().ceilingEntry(LocalTime.of(9, 30)).getValue().getOpen()) - 1)).average().orElse(0.0);
+                        / ofNullable(ChinaStock.openMap.get(e.getKey())).orElse(e.getValue().ceilingEntry(LocalTime.of(9, 30)).getValue().getOpen()) - 1)).average().orElse(0.0);
 
         Map<String, Double> mp = priceMapBar.entrySet().stream().filter(e -> !e.getKey().equals("sh204001") && e.getValue().size() > 2)
                 .collect(Collectors.groupingBy(e -> ChinaStock.industryNameMap.get(e.getKey()),

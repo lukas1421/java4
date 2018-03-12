@@ -290,7 +290,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                 //noinspection Duplicates
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
                 g.drawString(lt.toString() + " " + Math.round(100d * mainMap.floorEntry(lt).getValue().getClose()) / 100d,
-                         x, lowY + (mouseYCord < closeY ? -20 : +20));
+                        x, lowY + (mouseYCord < closeY ? -20 : +20));
                 g.drawOval(x + 2, lowY, 5, 5);
                 g.fillOval(x + 2, lowY, 5, 5);
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
@@ -300,7 +300,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
             x += WIDTH_BAR;
         }
 
-        if(mouseXCord > x && mouseXCord < getWidth() && mainMap.size()>0) {
+        if (mouseXCord > x && mouseXCord < getWidth() && mainMap.size() > 0) {
             int lowY = getY(mainMap.lastEntry().getValue().getLow());
             int closeY = getY(mainMap.lastEntry().getValue().getClose());
             g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));

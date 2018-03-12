@@ -29,7 +29,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
     private NavigableMap<LocalDate, Double> mtmByAm = new ConcurrentSkipListMap<>();
     private NavigableMap<LocalDate, Double> mtmByPm = new ConcurrentSkipListMap<>();
 
-    private int averagePerc ;
+    private int averagePerc;
     private int deltaWeightedAveragePerc;
 
     //NavigableMap<T, Double> deltaMap;
@@ -75,7 +75,6 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
     public void setDeltaWeightedAveragePerc(int p) {
         deltaWeightedAveragePerc = p;
     }
-
 
 
     @Override
@@ -185,10 +184,10 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
                 last = close;
                 x += WIDTH_PNL;
 
-                if (roundDownToN(mouseXCord,WIDTH_PNL) == x-5) {
+                if (roundDownToN(mouseXCord, WIDTH_PNL) == x - 5) {
                     g.drawString(lt.toString() + " " + Math.round(netMap.floorEntry(lt).getValue()), x, close + 50);
-                    g.drawOval(x -3, close, 5, 5);
-                    g.fillOval(x - 3 , close, 5, 5);
+                    g.drawOval(x - 3, close, 5, 5);
+                    g.fillOval(x - 3, close, 5, 5);
                 }
 
 
@@ -218,36 +217,36 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         }
 
         int temp = 20;
-        for(Map.Entry e:mtmByDay.entrySet()) {
-            temp = temp +20;
-            g2.drawString(e.getKey().toString() + ": " + Math.round((Double)e.getValue()), getWidth()*6/8, temp);
+        for (Map.Entry e : mtmByDay.entrySet()) {
+            temp = temp + 20;
+            g2.drawString(e.getKey().toString() + ": " + Math.round((Double) e.getValue()), getWidth() * 6 / 8, temp);
         }
         g2.drawString("Total:         "
-                +Math.round(mtmByDay.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth()*6/8, temp+20);
+                + Math.round(mtmByDay.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth() * 6 / 8, temp + 20);
 
         temp = 20;
-        for(Map.Entry e:mtmByAm.entrySet()) {
-            temp = temp +20;
-            g2.drawString(""+Math.round((Double)e.getValue()), getWidth()*7/8, temp);
+        for (Map.Entry e : mtmByAm.entrySet()) {
+            temp = temp + 20;
+            g2.drawString("" + Math.round((Double) e.getValue()), getWidth() * 7 / 8, temp);
         }
-        g2.drawString(""+Math.round(mtmByAm.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth()*7/8, temp+20);
+        g2.drawString("" + Math.round(mtmByAm.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth() * 7 / 8, temp + 20);
 
         temp = 20;
-        for(Map.Entry e:mtmByPm.entrySet()) {
-            temp = temp +20;
-            g2.drawString(""+Math.round((Double)e.getValue()), getWidth()*15/16, temp);
+        for (Map.Entry e : mtmByPm.entrySet()) {
+            temp = temp + 20;
+            g2.drawString("" + Math.round((Double) e.getValue()), getWidth() * 15 / 16, temp);
         }
-        g2.drawString(""+ Math.round(mtmByPm.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth()*15/16, temp+20);
+        g2.drawString("" + Math.round(mtmByPm.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth() * 15 / 16, temp + 20);
 
         g.setColor(Color.black);
         g2.setFont(g.getFont().deriveFont(20F));
         g2.drawString(name, 0, 20);
         g2.drawString(chineseName, getWidth() / 10, 20);
-        g2.drawString("" +averagePerc, getWidth()*5/8, 20);
-        g2.drawString("" +deltaWeightedAveragePerc, getWidth()*5/8+30, 20);
+        g2.drawString("" + averagePerc, getWidth() * 5 / 8, 20);
+        g2.drawString("" + deltaWeightedAveragePerc, getWidth() * 5 / 8 + 30, 20);
         g2.drawString("" + (mtmMap.size() > 0 ? Math.round(mtmMap.lastEntry().getValue()) : 0.0), getWidth() * 2 / 10, 20);
         g2.drawString(Long.toString(Math.round(max)), getWidth() - 60, 20);
-        g2.drawString(Long.toString(Math.round(min)), getWidth() - 60,getHeight() - 20);
+        g2.drawString(Long.toString(Math.round(min)), getWidth() - 60, getHeight() - 20);
     }
 
     private int getY(double v) {

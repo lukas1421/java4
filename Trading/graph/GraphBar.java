@@ -76,7 +76,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         maxAMT = LocalTime.of(9, 30);
         minAMT = Utility.AMOPENT;
         this.tm = new ConcurrentSkipListMap<>();
-        graphBarDispPred = e->e.getKey().isAfter(LocalTime.of(9,19));
+        graphBarDispPred = e -> e.getKey().isAfter(LocalTime.of(9, 19));
         addMouseMotionListener(this);
         addMouseListener(this);
     }
@@ -136,9 +136,9 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         //System.out.println(" filling HK " + name);
         this.name = name;
         setName(name);
-        setChineseName(HKStock.hkNameMap.getOrDefault(name,""));
+        setChineseName(HKStock.hkNameMap.getOrDefault(name, ""));
 
-        if (HKData.hkPriceBar.containsKey(name) && HKData.hkPriceBar.get(name).size()>0) {
+        if (HKData.hkPriceBar.containsKey(name) && HKData.hkPriceBar.get(name).size() > 0) {
             this.setNavigableMap(HKData.hkPriceBar.get(name));
         } else {
             this.setNavigableMap(new ConcurrentSkipListMap<>());
@@ -150,7 +150,6 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
 //        this.name = name;
 //        setName(name);
 //        //setChineseName(HKStock.hkNameMap.getOrDefault(name,""));
-//
 //        if (mp.containsKey(name) && mp.get(name).size()>0) {
 //            this.setNavigableMap(mp.get(name));
 //        } else {
@@ -210,12 +209,12 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
                     g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
                 }
             }
-            if (roundDownToN(mouseXCord,XU.graphBarWidth.get()) == x-5) {
-                g2.setFont(g.getFont().deriveFont(g.getFont().getSize()*2F));
-                g.drawString(lt.toString() + " " + Math.round(100d*tm.floorEntry(lt).getValue().getClose())/100d, x, lowY+(mouseYCord<closeY?-20:+20));
+            if (roundDownToN(mouseXCord, XU.graphBarWidth.get()) == x - 5) {
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+                g.drawString(lt.toString() + " " + Math.round(100d * tm.floorEntry(lt).getValue().getClose()) / 100d, x, lowY + (mouseYCord < closeY ? -20 : +20));
                 g.drawOval(x + 2, lowY, 5, 5);
                 g.fillOval(x + 2, lowY, 5, 5);
-                g2.setFont(g.getFont().deriveFont(g.getFont().getSize()*0.5F));
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
 
             }
 
@@ -255,7 +254,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         }
 
         //add bench here
-        g2.drawString(Double.toString(getLast()) + " (" + (Math.round(100d*closeMap.getOrDefault(name,0.0)))/100d +")"
+        g2.drawString(Double.toString(getLast()) + " (" + (Math.round(100d * closeMap.getOrDefault(name, 0.0))) / 100d + ")"
                 , getWidth() * 3 / 8, 15);
 
         g2.drawString("P%:" + Integer.toString(getCurrentPercentile()), getWidth() * 9 / 16, 15);
@@ -338,12 +337,12 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
 
 
     double getMin() {
-        return (tm.size() > 0) ? reduceMapToDouble(tm,SimpleBar::getLow, Math::min) : 0.0;
+        return (tm.size() > 0) ? reduceMapToDouble(tm, SimpleBar::getLow, Math::min) : 0.0;
         //tm.entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0)
     }
 
     double getMax() {
-        return (tm.size() > 0) ? reduceMapToDouble(tm,SimpleBar::getHigh,Math::max) : 0.0;
+        return (tm.size() > 0) ? reduceMapToDouble(tm, SimpleBar::getHigh, Math::max) : 0.0;
         //tm.entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)
     }
 
@@ -414,7 +413,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
 
     private int getCurrentPercentile() {
         return (Utility.noZeroArrayGen(name, priceMap, maxMap, minMap)) ?
-                (int)Math.round(min(100, round(100d * ((priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))))) : 0;
+                (int) Math.round(min(100, round(100d * ((priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))))) : 0;
     }
 
     private double getRetCHY() {

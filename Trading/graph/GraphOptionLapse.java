@@ -48,7 +48,7 @@ public class GraphOptionLapse extends JComponent implements MouseMotionListener,
     protected void paintComponent(Graphics g) {
 
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2.5F));
-        g.drawString(graphTitle, 20,30);
+        g.drawString(graphTitle, 20, 30);
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.4F));
 
         super.paintComponent(g);
