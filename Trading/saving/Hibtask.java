@@ -23,6 +23,7 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 public class Hibtask {
 
     public static <T extends Temporal> ConcurrentSkipListMap<T, ?> unblob(Blob b) {
+
         try {
             int len = (int) b.length();
             if (len > 1) {
@@ -36,8 +37,11 @@ public class Hibtask {
                     System.out.println(" issue is with " + "XU");
                     io.printStackTrace();
                 }
+            } else {
+                System.out.println(" length less than 1");
             }
         } catch (SQLException sq) {
+            //System.out.println(" sql exception unblobbing ");
             sq.printStackTrace();
         }
         return new ConcurrentSkipListMap<>();
@@ -54,6 +58,8 @@ public class Hibtask {
                 saveclass.updateFirstMap(key, unblob(blob1));
                 saveclass.updateSecondMap(key, unblob(blob2));
             });
+        } catch (Exception ex) {
+            ex.printStackTrace();
         }
     }
 

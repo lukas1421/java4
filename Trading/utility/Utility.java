@@ -152,6 +152,7 @@ public class Utility {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+        System.out.println(" saving null blob ");
         return null;
     }
 

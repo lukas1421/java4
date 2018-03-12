@@ -1,5 +1,6 @@
 package graph;
 
+import apidemo.ChinaOption;
 import auxiliary.SimpleBar;
 
 import javax.swing.*;
@@ -65,12 +66,10 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
 
     double getMin() {
         return (tm.size() > 0) ? reduceMapToDouble(tm, SimpleBar::getLow, Math::min) : 0.0;
-        //tm.entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0)
     }
 
     double getMax() {
         return (tm.size() > 0) ? reduceMapToDouble(tm, SimpleBar::getHigh, Math::max) : 0.0;
-        //tm.entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)
     }
 
     @Override
@@ -79,7 +78,7 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
         g.setColor(Color.black);
 
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2.5F));
-        g.drawString(" Intraday Vols ", 20, 30);
+        g.drawString(ticker, 20, 30);
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.4F));
 
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
@@ -116,11 +115,11 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
 
             g.setColor(Color.black);
             if (lt.equals(tm.firstKey())) {
-                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
+                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString(), x, getHeight() - 40);
             } else {
                 if (lt.getMinute() == 0 || (lt.getHour() != 9 && lt.getHour() != 11
                         && lt.getMinute() == 30)) {
-                    g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
+                    g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString(), x, getHeight() - 40);
                 }
             }
 
@@ -136,7 +135,7 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
 
             }
 
-            x += graphBarWidth;
+            x += ChinaOption.graphBarWidth.get();
         }
 
         if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0) {
@@ -186,6 +185,9 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
 
     @Override
     public void mouseExited(MouseEvent mouseEvent) {
+        mouseXCord = Integer.MAX_VALUE;
+        mouseYCord = Integer.MAX_VALUE;
+        this.repaint();
 
     }
 
@@ -196,6 +198,9 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
 
     @Override
     public void mouseMoved(MouseEvent mouseEvent) {
+        mouseXCord = mouseEvent.getX();
+        mouseYCord = mouseEvent.getY();
+        this.repaint();
 
     }
 }

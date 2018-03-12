@@ -13,19 +13,22 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 public class ChinaVolIntraday implements ChinaSaveInterface1Blob {
 
-    static final ChinaVolIntraday CVI = new ChinaVolIntraday();
-
     @Id
-    String ticker;
+    public String ticker;
 
-    @Column(name = "VOL")
+    @Column(name = "VOLMAP")
     @Lob
-    private Blob intradayVolBlob;
+    public Blob intradayVolBlob;
 
-    public ChinaVolIntraday() {}
+    private static final ChinaVolIntraday CVI = new ChinaVolIntraday();
+
+
+    public ChinaVolIntraday() {
+    }
 
     public ChinaVolIntraday(String t) {
         this.ticker = t;
+        intradayVolBlob = null;
     }
 
 
@@ -34,10 +37,15 @@ public class ChinaVolIntraday implements ChinaSaveInterface1Blob {
         intradayVolBlob = x;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void updateFirstMap(String name, NavigableMap<LocalDateTime, ?> mp) {
-        //noinspection unchecked
-        ChinaOption.todayImpliedVolMap.put(name, (ConcurrentSkipListMap<LocalDateTime, SimpleBar>)mp);
+        System.out.println(" updating first map " + name + " mp size " + mp.size());
+        if (mp.size() > 0) {
+            ChinaOption.todayImpliedVolMap.put(name, (ConcurrentSkipListMap<LocalDateTime, SimpleBar>) mp);
+        } else {
+            System.out.println(" nothing in map " + name);
+        }
     }
 
     @Override
@@ -50,13 +58,14 @@ public class ChinaVolIntraday implements ChinaSaveInterface1Blob {
         return "China Vol Intraday";
     }
 
+
     public static ChinaVolIntraday getInstance() {
         return CVI;
     }
 
 
     @Override
-    public ChinaSaveInterface1Blob createInstance(String name) {
+    public ChinaVolIntraday createInstance(String name) {
         return new ChinaVolIntraday(name);
     }
 }
