@@ -2,6 +2,7 @@
 <!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping default-access="field">
+
     <class name="saving.ChinaSave" table="CHINASAVE">
         <id column="STOCK" name="stockName" type="string"/>
         <property column="DATA" name="dayPriceMapBlob" type="blob"/>
@@ -61,5 +62,11 @@
         <property column="MONEYNESS" name="moneyness" type="integer"/>
         <property column="OPTIONTICKER" name="optionTicker" type="string"/>
     </class>
+
+    <class name="saving.ChinaVolIntraday" table="CHINAVOLINTRADAY">
+        <id column="TICKER" name="ticker" type="string"/>
+        <property column="VOLMAP" name="intradayVolBlob" type="blob"/>
+    </class>
+
 
 </hibernate-mapping>

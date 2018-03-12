@@ -1,6 +1,7 @@
 package apidemo;
 
 import auxiliary.SimpleBar;
+import graph.GraphOptionIntraday;
 import graph.GraphOptionLapse;
 import graph.GraphOptionVol;
 import graph.GraphOptionVolDiff;
@@ -52,6 +53,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static GraphOptionVolDiff graphVolDiff = new GraphOptionVolDiff();
     private static GraphOptionLapse graphLapse = new GraphOptionLapse();
     private static GraphOptionLapse graphATMLapse = new GraphOptionLapse();
+    private static GraphOptionIntraday graphIntraday = new GraphOptionIntraday();
 
     public static LocalDate frontExpiry = getOptionExpiryDate(2018, Month.MARCH);
     public static LocalDate backExpiry = getOptionExpiryDate(2018, Month.APRIL);
@@ -105,6 +107,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
         graphLapse.setGraphTitle("Fixed K Lapse");
         graphATMLapse.setGraphTitle(" ATM Lapse ");
+        graphIntraday.setGraphTitle(" Intraday Vol ");
 
         for (LocalDate d : expiryList) {
             strikeVolMapCall.put(d, new TreeMap<>());
@@ -142,14 +145,20 @@ public class ChinaOption extends JPanel implements Runnable {
                     }
 
 //                    //if(ticker)
-//                    if (tickerOptionsMap.containsKey(selectedTicker)) {
-//                        LocalDate selectedExpiry = tickerOptionsMap.get(selectedTicker).getExpiryDate();
-//                        if (timeLapseVolAllExpiries.containsKey(selectedExpiry)) {
+                    if (tickerOptionsMap.containsKey(selectedTicker)) {
+                        LocalDate selectedExpiry = tickerOptionsMap.get(selectedTicker).getExpiryDate();
+                        double strike = tickerOptionsMap.get(selectedTicker).getStrike();
+                        String callput = tickerOptionsMap.get(selectedTicker).getCPString();
+                        graphIntraday.setNameStrikeExp(selectedTicker, strike, selectedExpiry, callput);
+                        graphIntraday.setMap(todayImpliedVolMap.get(selectedTicker));
+                        graphIntraday.repaint();
+
+//                       if (timeLapseVolAllExpiries.containsKey(selectedExpiry)) {
 //                            graphATMLapse.setVolLapse(timeLapseVolAllExpiries.get(selectedExpiry));
 //                            //graphATMLapse.setNameStrikeExp("ATM lapse", 0.0, selectedExpiry, "");
 //                        }
 //                        graphATMLapse.repaint();
-//                    }
+                    }
                     //graphLapse.setVolLapse();
 
                 } else if (r % 2 == 0) {
@@ -225,8 +234,19 @@ public class ChinaOption extends JPanel implements Runnable {
             }
         };
 
+        JScrollPane scrollIntraday = new JScrollPane(graphIntraday) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 300;
+                d.width = 1500;
+                return d;
+            }
+        };
+
         add(controlPanel, BorderLayout.NORTH);
         rightPanel.add(optTableScroll);
+
         JPanel graphPanel = new JPanel();
         p.addTab("Graph1", graphPanel);
         graphPanel.setLayout(new GridLayout(2, 1));
@@ -238,7 +258,16 @@ public class ChinaOption extends JPanel implements Runnable {
         graphPanel2.setLayout(new GridLayout(2, 1));
         graphPanel2.add(scrollLapse);
         graphPanel2.add(scrollATMLapse);
+
+        //graph 3
+        JPanel graphPanel3 = new JPanel();
+        p.addTab("Graph Intraday", graphPanel3);
+        graphPanel3.setLayout(new GridLayout(2, 1));
+        graphPanel3.add(scrollIntraday);
+
+        //selecting
         p.select("Graph2");
+
 
 
         //rightPanel.add(graphPanel, BorderLayout.SOUTH);

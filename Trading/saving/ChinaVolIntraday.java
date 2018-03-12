@@ -16,7 +16,7 @@ public class ChinaVolIntraday implements ChinaSaveInterface1Blob {
     static final ChinaVolIntraday CVI = new ChinaVolIntraday();
 
     @Id
-    String optionTicker;
+    String ticker;
 
     @Column(name = "VOL")
     @Lob
@@ -24,8 +24,8 @@ public class ChinaVolIntraday implements ChinaSaveInterface1Blob {
 
     public ChinaVolIntraday() {}
 
-    public ChinaVolIntraday(String ticker) {
-        optionTicker = ticker;
+    public ChinaVolIntraday(String t) {
+        this.ticker = t;
     }
 
 
