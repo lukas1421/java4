@@ -1,11 +1,8 @@
 package saving;
 
 
-import apidemo.ChinaOption;
-
 import javax.persistence.*;
 import java.time.LocalDate;
-import java.util.Random;
 
 @javax.persistence.Entity
 
@@ -36,17 +33,18 @@ public class ChinaVolSave {
     int moneyness;
 
     @Column(name = "OPTIONTICKER")
+    private
     String optionTicker;
 
     public ChinaVolSave() {
-        volDate = LocalDate.now();
-        callPut = "C";
-        Random r = new Random();
-        strike = r.nextDouble();
-        expiryDate = ChinaOption.frontExpiry;
-        vol = 0.25;
-        moneyness = 100;
-        optionTicker = "CON_OP_10000987";
+//        volDate = LocalDate.now();
+//        callPut = "C";
+//        Random r = new Random();
+//        strike = r.nextDouble();
+//        expiryDate = ChinaOption.frontExpiry;
+//        vol = 0.25;
+//        moneyness = 100;
+//        optionTicker = "CON_OP_10000987";
     }
 
     public ChinaVolSave(LocalDate voldate, String cp, double k, LocalDate expirydate, double v, int mness, String ticker) {

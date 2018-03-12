@@ -714,7 +714,7 @@ public final class ChinaMain implements IConnectionHandler {
     public static void updateSystemNotif(String text) {
 
         systemNotif.setText(text);
-        systemNotif.setBackground(shiftColor(systemNotif.getBackground()));
+        systemNotif.setBackground(Utility.shiftColor(systemNotif.getBackground()));
 
         ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
 
@@ -735,11 +735,7 @@ public final class ChinaMain implements IConnectionHandler {
         //systemNotif.setBackground(shiftColor(systemNotif.getBackground()));
     }
 
-    private static Color shiftColor(Color c) {
-        return new Color(c.getRed(), (c.getGreen() + 50) % 250, c.getBlue());
-    }
-
-//    private static class Logger implements ILogger {
+    //    private static class Logger implements ILogger {
 //
 //        final private JTextArea m_area;
 //

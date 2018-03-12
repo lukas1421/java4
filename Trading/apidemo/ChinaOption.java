@@ -30,7 +30,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
@@ -41,15 +44,17 @@ import java.util.stream.Collectors;
 import static apidemo.ChinaOptionHelper.getOptionExpiryDate;
 import static apidemo.ChinaOptionHelper.getVolByMoneyness;
 import static java.lang.Math.*;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static saving.Hibtask.unblob;
-import static utility.Utility.blobify;
-import static utility.Utility.getStr;
+import static utility.Utility.*;
 
 //import org.apache.commons.math3.*;
 
 public class ChinaOption extends JPanel implements Runnable {
 
-    private static volatile int runFrequency = 5;
+    static ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
+    private static volatile JLabel optionNotif = new JLabel(" Option Notif ");
+    private static volatile int runFrequency = 6;
     private static final List<LocalDate> expiryList = new ArrayList<>();
     static HashMap<String, Option> optionMap = new HashMap<>();
 
@@ -91,7 +96,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static NavigableMap<LocalDate, NavigableMap<Double, Double>> strikeVolMapPut = new TreeMap<>();
     //private static List<JLabel> labelList = new ArrayList<>();
     private static JLabel timeLabel = new JLabel();
-    private static volatile double currentStockPrice;
+    public static volatile double currentStockPrice;
     public static volatile LocalDate expiryToCheck = frontExpiry;
     public static volatile boolean showDelta = false;
     private static volatile boolean computeOn = true;
@@ -103,7 +108,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private static NavigableMap<LocalDate, TreeMap<LocalDate, Double>> timeLapseVolAllExpiries = new TreeMap<>();
 
-    public static volatile AtomicInteger graphBarWidth = new AtomicInteger(3);
+    public static volatile AtomicInteger graphBarWidth = new AtomicInteger(5);
 
     private ChinaOption() {
 
@@ -133,7 +138,6 @@ public class ChinaOption extends JPanel implements Runnable {
         JTable optionTable = new JTable(model) {
             @Override
             public Component prepareRenderer(TableCellRenderer tableCellRenderer, int r, int c) {
-
 
                 if (optionListLoaded.size() > r) {
                     int modelRow = this.convertRowIndexToModel(r);
@@ -185,7 +189,7 @@ public class ChinaOption extends JPanel implements Runnable {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = 300;
+                d.height = 200;
                 d.width = 1500;
                 return d;
             }
@@ -203,7 +207,7 @@ public class ChinaOption extends JPanel implements Runnable {
         JPanel dataPanel = new JPanel();
         dataPanel.setLayout(new GridLayout(10, 3));
 
-        controlPanel.add(timeLabel);
+        //controlPanel.add(timeLabel);
 
         JScrollPane scrollTS = new JScrollPane(graphTS) {
             @Override
@@ -277,7 +281,7 @@ public class ChinaOption extends JPanel implements Runnable {
         graphPanel3.add(scrollIntraday);
 
         //selecting
-        p.select("Graph2");
+        p.select("Graph Intraday");
 
 
         //rightPanel.add(graphPanel, BorderLayout.SOUTH);
@@ -382,6 +386,24 @@ public class ChinaOption extends JPanel implements Runnable {
         timeLabel.setFont(timeLabel.getFont().deriveFont(30F));
         timeLabel.setHorizontalAlignment(SwingConstants.CENTER);
 
+        optionNotif.setOpaque(true);
+        optionNotif.setBackground(Color.orange);
+        optionNotif.setForeground(Color.black);
+        optionNotif.setFont(optionNotif.getFont().deriveFont(15F));
+
+        JPanel notifPanel = new JPanel() {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 50;
+                return d;
+            }
+        };
+
+        notifPanel.setLayout(new GridLayout(1, 5));
+        notifPanel.add(timeLabel);
+        notifPanel.add(optionNotif);
+        add(notifPanel, BorderLayout.SOUTH);
 //        labelList.forEach(l -> {
 //            l.setOpaque(true);
 //            l.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -392,6 +414,25 @@ public class ChinaOption extends JPanel implements Runnable {
         optionTable.setAutoCreateRowSorter(true);
         @SuppressWarnings("unchecked")
         TableRowSorter<OptionTableModel> sorter = (TableRowSorter<OptionTableModel>) optionTable.getRowSorter();
+    }
+
+    private static void updateOptionSystemInfo(String text) {
+        SwingUtilities.invokeLater(() -> {
+            optionNotif.setText(text);
+            optionNotif.setBackground(shiftColor(optionNotif.getBackground()));
+        });
+
+        if (!es.isShutdown()) {
+            es.shutdown();
+        }
+        es = Executors.newScheduledThreadPool(10);
+        es.schedule(() -> {
+            //timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
+            optionNotif.setText("");
+            optionNotif.setBackground(Color.orange);
+        }, 10, SECONDS);
+
+
     }
 
     private static void refreshAllGraphs() {
@@ -436,6 +477,8 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private void saveIntradayVolsHib(Map<String, ? extends NavigableMap<LocalDateTime, ?>> mp,
                                      ChinaSaveInterface1Blob saveclass) {
+
+        LocalTime start = LocalTime.now();
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
         CompletableFuture.runAsync(() -> {
 
@@ -460,12 +503,20 @@ public class ChinaOption extends JPanel implements Runnable {
                     session.close();
                 }
             }
-        });
+        }).thenAccept(
+                v -> {
+                    updateOptionSystemInfo(Utility.getStr("存", saveclass.getSimpleName(),
+                            LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
+                            ChronoUnit.SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
+                    System.out.println(getStr(" done saving ", LocalTime.now()));
+                }
+        );
 
     }
 
     private void loadIntradayVolsHib(ChinaSaveInterface1Blob saveclass) {
-        CompletableFuture.runAsync(()-> {
+        LocalTime start = LocalTime.now();
+        CompletableFuture.runAsync(() -> {
             SessionFactory sessionF = HibernateUtil.getSessionFactory();
             String problemKey = " ";
             try (Session session = sessionF.openSession()) {
@@ -474,19 +525,25 @@ public class ChinaOption extends JPanel implements Runnable {
                         //System.out.println(" loading key " + key + " save class " + saveclass.getClass());
                         ChinaSaveInterface1Blob cs = session.load(saveclass.getClass(), key);
                         Blob blob1 = cs.getFirstBlob();
-                        //System.out.println(getStr("key : blob1 length is ",key,blob1.length()));
                         saveclass.updateFirstMap(key, unblob(blob1));
                     } catch (Exception ex) {
-                        //System.out.println(" key has problem with unblobbing " + key);
+                        ex.printStackTrace();
                         System.out.println(" error message " + key + " " + ex.getMessage());
-                        //ex.printStackTrace();
                     }
                 }
             } catch (Exception ex) {
                 System.out.println(getStr(" ticker has problem " + problemKey));
                 ex.printStackTrace();
             }
-        });
+        }).thenAccept(
+                v -> {
+                    updateOptionSystemInfo(Utility.getStr(" LOAD INTRADAY VOLS DONE ",
+                            LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
+                            ChronoUnit.SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
+                    ));
+                }
+        );
+        ;
     }
 
 
@@ -528,6 +585,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     @Override
     public void run() {
+        timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + (LocalTime.now().getSecond() == 0 ? ":00" : ""));
         if (computeOn) {
             System.out.println(" running @ " + LocalTime.now());
             try {
@@ -629,7 +687,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
                     optionPriceMap.put(resName, Double.parseDouble(res1.get(2)));
                     optionPriceMap.put(resName, Double.parseDouble(res1.get(2)));
-                    if(!optionListLive.contains(resName)) {
+                    if (!optionListLive.contains(resName)) {
                         optionListLive.add(resName);
                     }
 
@@ -898,7 +956,7 @@ public class ChinaOption extends JPanel implements Runnable {
         jf.setVisible(true);
         ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
 
-        ses.scheduleAtFixedRate(co, 0, 5, TimeUnit.SECONDS);
+        ses.scheduleAtFixedRate(co, 0, 5, SECONDS);
 
     }
 

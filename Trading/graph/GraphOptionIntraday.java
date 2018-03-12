@@ -14,6 +14,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import static apidemo.ChinaOption.currentStockPrice;
+import static apidemo.ChinaOption.deltaMap;
 import static utility.Utility.reduceMapToDouble;
 import static utility.Utility.roundDownToN;
 
@@ -33,7 +35,7 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
     private volatile int mouseXCord = Integer.MAX_VALUE;
     private volatile int mouseYCord = Integer.MAX_VALUE;
 
-    public volatile int graphBarWidth = 3;
+    //public volatile int graphBarWidth = 5;
 
     public GraphOptionIntraday() {
         ticker = "";
@@ -41,6 +43,8 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
         strike = 0.0;
         expiryDate = LocalDate.MIN;
         callPutFlag = "C";
+        addMouseListener(this);
+        addMouseMotionListener(this);
     }
 
     public void setGraphTitle(String t) {
@@ -75,22 +79,41 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        g.setColor(Color.black);
-
-        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2.5F));
-        g.drawString(ticker, 20, 30);
-        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.4F));
-
-        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
-        g.drawString(ticker, getWidth() - 400, 20);
-        g.drawString(strike + "", getWidth() - 400, 40);
-        g.drawString(expiryDate.toString(), getWidth() - 400, 60);
-        g.drawString(callPutFlag, getWidth() - 400, 80);
-        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
 
         height = getHeight() - 70;
         min = getMin();
         max = getMax();
+
+
+        g.setColor(Color.black);
+
+        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2.5F));
+        g.drawString(ticker, 20, 30);
+
+        if (tm.size() > 0) {
+            g.drawString(tm.lastEntry().getKey().toLocalTime().toString() + " "
+                    + tm.lastEntry().getValue().getClose(), getWidth() / 2, 40);
+        }
+
+        g.drawString(Math.round(max * 1000d) / 10d + "", getWidth() - 60, getY(max, max, min));
+        g.drawString(Math.round(min * 1000d) / 10d + "", getWidth() - 60, getY(min, max, min));
+
+
+        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.4F));
+
+        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+        g.drawString(strike + "", getWidth() - 500, 20);
+        g.drawString(expiryDate.toString(), getWidth() - 500, 40);
+        g.drawString(callPutFlag, getWidth() - 500, 60);
+
+        g.drawString(" M% " + Math.round(100d * strike / currentStockPrice) +"", getWidth()-250, 20);
+        g.drawString(" Delta " + deltaMap.getOrDefault(ticker, 0.0) + "", getWidth()-250, 40);
+
+
+        g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
+
+
+
 
         int last = 0;
 
@@ -123,7 +146,7 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
                 }
             }
 
-            if (roundDownToN(mouseXCord, graphBarWidth) == x - 5) {
+            if (roundDownToN(mouseXCord, ChinaOption.graphBarWidth.get()) == x - 5) {
                 g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
 
                 g.drawString(lt.toString() + " " + Math.round(100d * tm.floorEntry(lt).getValue().getClose()) / 100d
@@ -159,7 +182,7 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
         int height = (int) (getHeight() * 0.75);
         double pct = (v - minV) / span;
         double val = pct * height;
-        return height - (int) val;
+        return height - (int) val + 20;
     }
 
 

@@ -9,6 +9,7 @@ import graph.GraphIndustry;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
 
+import java.awt.*;
 import java.io.*;
 import java.sql.Blob;
 import java.time.DayOfWeek;
@@ -19,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -789,5 +791,9 @@ public class Utility {
 
     public static boolean tickerNotFuture(String s) {
         return !s.startsWith("SGXA50");
+    }
+
+    public static Color shiftColor(Color c) {
+        return new Color(c.getRed(), (c.getGreen() + 50) % 250, c.getBlue());
     }
 }
