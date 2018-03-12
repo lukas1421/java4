@@ -13,6 +13,7 @@ import java.sql.Blob;
 import java.sql.SQLException;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -21,7 +22,7 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class Hibtask {
 
-    public static ConcurrentSkipListMap<LocalTime, ?> unblob(Blob b) {
+    public static <T extends Temporal> ConcurrentSkipListMap<T, ?> unblob(Blob b) {
         try {
             int len = (int) b.length();
             if (len > 1) {
@@ -30,7 +31,7 @@ public class Hibtask {
                     //saveclass.updateFirstMap(key, (ConcurrentSkipListMap<LocalTime,?>)iin.readObject());
                     //c.accept((ConcurrentSkipListMap<LocalTime,?>)iin.readObject());
                     //noinspection unchecked
-                    return ((ConcurrentSkipListMap<LocalTime, ?>) iin.readObject());
+                    return ((ConcurrentSkipListMap<T, ?>) iin.readObject());
                 } catch (IOException | ClassNotFoundException io) {
                     System.out.println(" issue is with " + "XU");
                     io.printStackTrace();

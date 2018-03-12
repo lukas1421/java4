@@ -564,7 +564,7 @@ public final class MorningTask implements HistoricalHandler {
     public void handleHist(String name, String date, double open, double high, double low, double close) {
         //System.out.println(" FX ");
 
-        System.out.println(" handle hist name " + name);
+        //System.out.println(" handle hist name " + name);
 
         if (name.equals("USD")) {
 
@@ -631,7 +631,7 @@ public final class MorningTask implements HistoricalHandler {
     public void actionUponFinish(String name) {
         if (!name.equals("USD")) {
             System.out.println(getStr(name, "is finished "));
-            usAfterClose.entrySet().forEach(e -> System.out.println(getStr(e.getKey(), e.getValue().lastEntry())));
+            usAfterClose.forEach((key, value) -> System.out.println(getStr(key, value.lastEntry())));
         }
         System.out.println(" data is finished ");
     }

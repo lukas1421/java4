@@ -5,6 +5,11 @@ import graph.GraphOptionLapse;
 import graph.GraphOptionVol;
 import graph.GraphOptionVolDiff;
 import org.apache.commons.math3.distribution.NormalDistribution;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import saving.ChinaSaveInterface1Blob;
+import saving.ChinaVolIntraday;
+import saving.HibernateUtil;
 import util.NewTabbedPanel;
 import utility.Utility;
 
@@ -15,6 +20,7 @@ import java.awt.*;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
+import java.sql.Blob;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -23,17 +29,16 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.function.DoubleUnaryOperator;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
 
 import static apidemo.ChinaOptionHelper.getOptionExpiryDate;
 import static apidemo.ChinaOptionHelper.getVolByMoneyness;
 import static java.lang.Math.*;
+import static saving.Hibtask.unblob;
+import static utility.Utility.blobify;
 
 //import org.apache.commons.math3.*;
 
@@ -62,7 +67,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static volatile String selectedTicker = "";
 
     private static double stockPrice = 0.0;
-    private static double interestRate = 0.04;
+    public static double interestRate = 0.04;
 
     public static volatile LocalDate previousTradingDate = LocalDate.now();
     private static volatile LocalDate pricingDate = LocalDate.now();
@@ -84,14 +89,14 @@ public class ChinaOption extends JPanel implements Runnable {
     private static volatile boolean computeOn = true;
     private static volatile Map<String, ConcurrentSkipListMap<LocalDate, Double>> histVol = new HashMap<>();
 
-    private static Map<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>> todayImpliedVolMap = new HashMap<>();
+    public static Map<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>> todayImpliedVolMap = new HashMap<>();
 
     private static NavigableMap<LocalDate, Double> timeLapseVolFront = new TreeMap<>();
     private static NavigableMap<LocalDate, TreeMap<LocalDate, Double>> timeLapseVolAllExpiries = new TreeMap<>();
 
     private ChinaOption() {
 
-        getLastTradingDate();
+        ChinaOptionHelper.getLastTradingDate();
 
         expiryList.add(frontExpiry);
         expiryList.add(backExpiry);
@@ -252,33 +257,44 @@ public class ChinaOption extends JPanel implements Runnable {
         JToggleButton computeOnButton = new JToggleButton("compute");
         computeOnButton.setSelected(true);
 
+        JButton saveIntradayButton = new JButton(" Save Intraday ");
+        JButton loadIntradayButton = new JButton(" Load intraday");
+
+        saveIntradayButton.addActionListener(l -> {
+            saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance());
+        });
+
+        loadIntradayButton.addActionListener(l -> {
+            loadIntradayVolsHib(ChinaVolIntraday.getInstance());
+        });
+
         showDeltaButton.addActionListener(l -> showDelta = !showDelta);
 
         getPreviousVolButton.addActionListener(l -> loadPreviousOptions());
 
         frontMonthButton.addActionListener(l -> {
             expiryToCheck = frontExpiry;
-            refreshAll();
+            refreshAllGraphs();
         });
 
         backMonthButton.addActionListener(l -> {
             expiryToCheck = backExpiry;
-            refreshAll();
+            refreshAllGraphs();
         });
         thirdMonthButton.addActionListener(l -> {
             expiryToCheck = thirdExpiry;
-            refreshAll();
+            refreshAllGraphs();
         });
         fourthMonthButton.addActionListener(l -> {
             expiryToCheck = fourthExpiry;
-            refreshAll();
+            refreshAllGraphs();
         });
         computeOnButton.addActionListener(l -> computeOn = computeOnButton.isSelected());
 
 
         saveVolsButton.addActionListener(l -> saveVols());
+        saveVolsHibButton.addActionListener(l -> ChinaOptionHelper.saveVolsEODHib());
 
-        saveVolsHibButton.addActionListener(l->ChinaOptionHelper.saveVolsEODHib());
         controlPanel.add(saveVolsButton);
         controlPanel.add(saveVolsHibButton);
         controlPanel.add(getPreviousVolButton);
@@ -294,6 +310,10 @@ public class ChinaOption extends JPanel implements Runnable {
         controlPanel.add(showDeltaButton);
         controlPanel.add(Box.createHorizontalStrut(10));
         controlPanel.add(computeOnButton);
+
+        controlPanel.add(saveIntradayButton);
+        controlPanel.add(loadIntradayButton);
+
 
         timeLabel.setOpaque(true);
         timeLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -312,11 +332,54 @@ public class ChinaOption extends JPanel implements Runnable {
         TableRowSorter<OptionTableModel> sorter = (TableRowSorter<OptionTableModel>) optionTable.getRowSorter();
     }
 
-    private static void refreshAll() {
+    private static void refreshAllGraphs() {
         graphTS.repaint();
         graphVolDiff.repaint();
         graphLapse.repaint();
         graphATMLapse.repaint();
+    }
+
+    private void saveIntradayVolsHib(Map<String, ? extends NavigableMap<LocalDateTime, ?>> mp,
+                                     ChinaSaveInterface1Blob saveclass) {
+//        LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
+        SessionFactory sessionF = HibernateUtil.getSessionFactory();
+        CompletableFuture.runAsync(() -> {
+
+            try (Session session = sessionF.openSession()) {
+                try {
+                    session.getTransaction().begin();
+                    session.createQuery("DELETE from " + saveclass.getClass().getName()).executeUpdate();
+                    AtomicLong i = new AtomicLong(0L);
+                    mp.keySet().forEach(name -> {
+                        ChinaSaveInterface1Blob cs = saveclass.createInstance(name);
+                        cs.setFirstBlob(blobify(mp.get(name), session));
+                        session.save(cs);
+                        if (i.get() % 100 == 0) {
+                            session.flush();
+                        }
+                        i.incrementAndGet();
+                    });
+                    session.getTransaction().commit();
+                    session.close();
+                } catch (org.hibernate.exception.LockAcquisitionException x) {
+                    x.printStackTrace();
+                    session.close();
+                }
+            }
+        });
+    }
+
+    private void loadIntradayVolsHib(ChinaSaveInterface1Blob saveclass) {
+        SessionFactory sessionF = HibernateUtil.getSessionFactory();
+        try (Session session = sessionF.openSession()) {
+            optionList.forEach((key) -> {
+                ChinaSaveInterface1Blob cs = session.load(saveclass.getClass(), key);
+                Blob blob1 = cs.getFirstBlob();
+                saveclass.updateFirstMap(key, unblob(blob1));
+            });
+        }
+
+
     }
 
 
@@ -347,7 +410,7 @@ public class ChinaOption extends JPanel implements Runnable {
                     w.append(Utility.getStrComma(writeDate.format(DateTimeFormatter.ofPattern("yyyy/M/d"))
                             , f == CallPutFlag.CALL ? "C" : "P", k,
                             expireDate.format(DateTimeFormatter.ofPattern("yyyy/M/d")),
-                            v, Math.round((k / spot) * 100d), getOptionTicker(tickerOptionsMap, f, k, expireDate)));
+                            v, Math.round((k / spot) * 100d), ChinaOptionHelper.getOptionTicker(tickerOptionsMap, f, k, expireDate)));
                     w.newLine();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -355,23 +418,6 @@ public class ChinaOption extends JPanel implements Runnable {
             });
         }
     }
-
-//    private static void updateData(double opPrice, double stock, double vol, double bid, double ask, Option opt) {
-//        SwingUtilities.invokeLater(() -> {
-//
-//            labelList.get(10).setText(Utility.getStrCheckNull(opPrice));
-//            labelList.get(11).setText(Utility.getStrCheckNull(stock));
-//            labelList.get(12).setText(Utility.getStrCheckNull(opt.getStrike()));
-//            labelList.get(13).setText(Utility.getStrCheckNull(vol));
-//            labelList.get(14).setText(Utility.getStrCheckNull(bid));
-//            labelList.get(15).setText(Utility.getStrCheckNull(ask));
-//            labelList.get(16).setText(Utility.getStrCheckNull(getDelta(opt.getCallOrPut(), stock, opt.getStrike(),
-//                    vol, opt.getTimeToExpiry(), interestRate)));
-//            labelList.get(17).setText(Utility.getStrCheckNull(getGamma(stock, opt.getStrike(),
-//                    vol, opt.getTimeToExpiry(), interestRate)));
-//            timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
-//        });
-//    }
 
     @Override
     public void run() {
@@ -490,7 +536,7 @@ public class ChinaOption extends JPanel implements Runnable {
         LocalDateTime currentLDT = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
 
         tickerOptionsMap.forEach((k, v) -> {
-            double vol = ChinaOptionHelper.simpleSolver(optionPriceMap.get(k), fillInBS(stockPrice, v));
+            double vol = ChinaOptionHelper.simpleSolver(optionPriceMap.get(k), ChinaOptionHelper.fillInBS(stockPrice, v));
             impliedVolMap.put(k, vol);
             deltaMap.put(k, getDelta(v.getCallOrPut(), stockPrice, v.getStrike(), vol, v.getTimeToExpiry(), interestRate));
 
@@ -565,28 +611,10 @@ public class ChinaOption extends JPanel implements Runnable {
         }
     }
 
-    private void getLastTradingDate() {
-        int lineNo = 0;
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
-            String line;
-            while ((line = reader1.readLine()) != null) {
-                List<String> al1 = Arrays.asList(line.split("\t"));
-                if (lineNo > 2) {
-                    throw new IllegalArgumentException(" ERROR: date map has more than 3 lines ");
-                }
-                previousTradingDate = LocalDate.parse(al1.get(0));
-                lineNo++;
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
     private static void loadPreviousOptions() {
         String line;
 
-        NavigableMap<LocalDate, TreeMap<Integer, Double>> timeLapseMoneynessVolFront = new TreeMap<>();
+        //NavigableMap<LocalDate, TreeMap<Integer, Double>> timeLapseMoneynessVolFront = new TreeMap<>();
         NavigableMap<LocalDate, TreeMap<LocalDate, TreeMap<Integer, Double>>>
                 timeLapseMoneynessVolAllExpiries = new TreeMap<>();
 
@@ -607,7 +635,7 @@ public class ChinaOption extends JPanel implements Runnable {
                 LocalDate expiry = LocalDate.parse(al1.get(3), DateTimeFormatter.ofPattern("yyyy/M/dd"));
                 double volPrev = Double.parseDouble(al1.get(4));
                 int moneyness = Integer.parseInt(al1.get(5));
-                String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
+                String ticker = ChinaOptionHelper.getOptionTicker(tickerOptionsMap, f, strike, expiry);
 
 
 //                if (expiry.equals(frontExpiry)) {
@@ -645,10 +673,10 @@ public class ChinaOption extends JPanel implements Runnable {
             ex.printStackTrace();
         }
 
-        timeLapseMoneynessVolFront.entrySet().forEach(System.out::println);
-        timeLapseMoneynessVolFront.forEach((key, value) ->
-                timeLapseVolFront.put(key, ChinaOptionHelper.getVolByMoneyness(value, 100)));
-        timeLapseVolFront.entrySet().forEach(System.out::println);
+//        timeLapseMoneynessVolFront.entrySet().forEach(System.out::println);
+//        timeLapseMoneynessVolFront.forEach((key, value) ->
+//                timeLapseVolFront.put(key, ChinaOptionHelper.getVolByMoneyness(value, 100)));
+//        timeLapseVolFront.entrySet().forEach(System.out::println);
 
         for (LocalDate expiry : expiryList) {
             timeLapseMoneynessVolAllExpiries.get(expiry).forEach((k, v) ->
@@ -659,19 +687,8 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
 
-    public static String getOptionTicker(Map<String, Option> mp, CallPutFlag f, double strike, LocalDate expiry) {
-        for (Map.Entry<String, Option> e : mp.entrySet()) {
-            if (e.getValue().getCallOrPut() == f && e.getValue().getStrike() == strike
-                    && e.getValue().getExpiryDate().equals(expiry)) {
-                return e.getKey();
-            }
-        }
-        return "";
-    }
-
-
     private static double getDeltaFromStrikeExpiry(CallPutFlag f, double strike, LocalDate expiry) {
-        String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
+        String ticker = ChinaOptionHelper.getOptionTicker(tickerOptionsMap, f, strike, expiry);
         return deltaMap.getOrDefault(ticker, 0.0);
     }
 
@@ -723,16 +740,6 @@ public class ChinaOption extends JPanel implements Runnable {
         return res;
     }
 
-    private static double bs(CallPutFlag f, double s, double k, double v, double t, double r) {
-        double d1 = (Math.log(s / k) + (r + 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
-        double d2 = (Math.log(s / k) + (r - 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
-        double nd1 = (new NormalDistribution()).cumulativeProbability(d1);
-        double nd2 = (new NormalDistribution()).cumulativeProbability(d2);
-        double call = s * nd1 - exp(-r * t) * k * nd2;
-        double put = exp(-r * t) * k * (1 - nd2) - s * (1 - nd1);
-        return f == CallPutFlag.CALL ? call : put;
-    }
-
     private static double getDelta(CallPutFlag f, double s, double k, double v, double t, double r) {
         double d1 = (Math.log(s / k) + (r + 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
         double nd1 = (new NormalDistribution()).cumulativeProbability(d1);
@@ -743,11 +750,6 @@ public class ChinaOption extends JPanel implements Runnable {
         double d1 = (Math.log(s / k) + (r + 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
         double gamma = 0.4 * exp(-0.5 * pow(d1, 2)) / (s * v * sqrt(t));
         return Math.round(1000d * gamma) / 1000d;
-    }
-
-    private static DoubleUnaryOperator fillInBS(double s, Option opt) {
-        return (double v) -> bs(opt.getCallOrPut(), s, opt.getStrike(), v,
-                opt.getTimeToExpiry(), interestRate);
     }
 
     private static double get510050Price() {

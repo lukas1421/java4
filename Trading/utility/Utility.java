@@ -143,7 +143,7 @@ public class Utility {
         return res;
     }
 
-    public static Blob blobify(NavigableMap<LocalTime, ?> mp, Session s) {
+    public static Blob blobify(NavigableMap<? extends Temporal, ?> mp, Session s) {
         ByteArrayOutputStream bos;
         try (ObjectOutputStream out = new ObjectOutputStream(bos = new ByteArrayOutputStream())) {
             out.writeObject(mp);

@@ -1,5 +1,6 @@
 package apidemo;
 
+import org.apache.commons.math3.distribution.NormalDistribution;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import saving.ChinaVolSave;
@@ -21,8 +22,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.DoubleUnaryOperator;
 import java.util.regex.Pattern;
 
-import static apidemo.ChinaOption.getOptionTicker;
 import static apidemo.ChinaOption.tickerOptionsMap;
+import static java.lang.Math.*;
 
 public class ChinaOptionHelper {
 
@@ -149,5 +150,48 @@ public class ChinaOptionHelper {
         }
         return 0.0;
 
+    }
+
+    public static void getLastTradingDate() {
+        int lineNo = 0;
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
+            String line;
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                if (lineNo > 2) {
+                    throw new IllegalArgumentException(" ERROR: date map has more than 3 lines ");
+                }
+                ChinaOption.previousTradingDate = LocalDate.parse(al1.get(0));
+                lineNo++;
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static String getOptionTicker(Map<String, Option> mp, CallPutFlag f, double strike, LocalDate expiry) {
+        for (Map.Entry<String, Option> e : mp.entrySet()) {
+            if (e.getValue().getCallOrPut() == f && e.getValue().getStrike() == strike
+                    && e.getValue().getExpiryDate().equals(expiry)) {
+                return e.getKey();
+            }
+        }
+        return "";
+    }
+
+    public static double bs(CallPutFlag f, double s, double k, double v, double t, double r) {
+        double d1 = (Math.log(s / k) + (r + 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
+        double d2 = (Math.log(s / k) + (r - 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
+        double nd1 = (new NormalDistribution()).cumulativeProbability(d1);
+        double nd2 = (new NormalDistribution()).cumulativeProbability(d2);
+        double call = s * nd1 - exp(-r * t) * k * nd2;
+        double put = exp(-r * t) * k * (1 - nd2) - s * (1 - nd1);
+        return f == CallPutFlag.CALL ? call : put;
+    }
+
+    public static DoubleUnaryOperator fillInBS(double s, Option opt) {
+        return (double v) -> bs(opt.getCallOrPut(), s, opt.getStrike(), v,
+                opt.getTimeToExpiry(), ChinaOption.interestRate);
     }
 }
