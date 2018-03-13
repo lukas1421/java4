@@ -41,7 +41,6 @@ public class Hibtask {
                 System.out.println(" length less than 1");
             }
         } catch (SQLException sq) {
-            //System.out.println(" sql exception unblobbing ");
             sq.printStackTrace();
         }
         return new ConcurrentSkipListMap<>();

@@ -517,7 +517,6 @@ public class ChinaOption extends JPanel implements Runnable {
             try (Session session = sessionF.openSession()) {
                 for (String key : optionListLoaded) {
                     try {
-                        //System.out.println(" loading key " + key + " save class " + saveclass.getClass());
                         ChinaSaveInterface1Blob cs = session.load(saveclass.getClass(), key);
                         Blob blob1 = cs.getFirstBlob();
                         saveclass.updateFirstMap(key, unblob(blob1));
