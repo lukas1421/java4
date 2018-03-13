@@ -455,7 +455,6 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
     private void loadOptionTickers() {
-
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "optionList.txt"), "gbk"))) {
             String line;
@@ -467,11 +466,10 @@ public class ChinaOption extends JPanel implements Runnable {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-
     }
 
-    private void saveIntradayVolsHib(Map<String, ? extends NavigableMap<LocalDateTime, ?>> mp,
-                                     ChinaSaveInterface1Blob saveclass) {
+    private static void saveIntradayVolsHib(Map<String, ? extends NavigableMap<LocalDateTime, ?>> mp,
+                                            ChinaSaveInterface1Blob saveclass) {
 
         LocalTime start = LocalTime.now();
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
@@ -565,8 +563,10 @@ public class ChinaOption extends JPanel implements Runnable {
         try (Session session = sessionF.openSession()) {
             session.getTransaction().begin();
             AtomicInteger i = new AtomicInteger(1);
-            HashMap<CallPutFlag, NavigableMap<LocalDate, NavigableMap<Double, Double>>> strikeVolMaps =
-                    new HashMap<>();
+
+            EnumMap<CallPutFlag, NavigableMap<LocalDate, NavigableMap<Double, Double>>> strikeVolMaps =
+                    new EnumMap<>(CallPutFlag.class);
+
             strikeVolMaps.put(CallPutFlag.CALL, strikeVolMapCall);
             strikeVolMaps.put(CallPutFlag.PUT, strikeVolMapPut);
 
@@ -618,6 +618,9 @@ public class ChinaOption extends JPanel implements Runnable {
     @Override
     public void run() {
         timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + (LocalTime.now().getSecond() == 0 ? ":00" : ""));
+        //save
+
+
         if (computeOn) {
             System.out.println(" running @ " + LocalTime.now());
             try {
@@ -661,6 +664,7 @@ public class ChinaOption extends JPanel implements Runnable {
                 getOptionInfo(urlconnPutThird, CallPutFlag.PUT, thirdExpiry);
                 getOptionInfo(urlconnCallFourth, CallPutFlag.CALL, fourthExpiry);
                 getOptionInfo(urlconnPutFourth, CallPutFlag.PUT, fourthExpiry);
+
             } catch (IOException ex2) {
                 ex2.printStackTrace();
             }
@@ -990,6 +994,12 @@ public class ChinaOption extends JPanel implements Runnable {
 
         ses.scheduleAtFixedRate(co, 0, 5, SECONDS);
 
+        ses.scheduleAtFixedRate(() -> {
+            if (LocalTime.now().isAfter(LocalTime.of(9, 20)) && LocalTime.now().isBefore(LocalTime.of(15, 30))) {
+                System.out.println(" saving vols hib ");
+                saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance());
+            }
+        }, 0, 60, SECONDS);
     }
 
     class OptionTableModel extends javax.swing.table.AbstractTableModel {
