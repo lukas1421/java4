@@ -56,7 +56,7 @@ public class ChinaOption extends JPanel implements Runnable {
     public static final int moneynessCol = 9;
 
     public static volatile String tickerInFocus = "";
-    public static volatile String selectedTicker = "";
+    private static volatile String selectedTicker = "";
 
     static ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
     private static volatile JLabel optionNotif = new JLabel(" Option Notif ");
@@ -95,7 +95,7 @@ public class ChinaOption extends JPanel implements Runnable {
     //private static HashMap<String, Double> bidMap = new HashMap<>();
     //private static HashMap<String, Double> askMap = new HashMap<>();
     private static HashMap<String, Double> optionPriceMap = new HashMap<>();
-    static Map<String, Option> tickerOptionsMap = new HashMap<>();
+    public static Map<String, Option> tickerOptionsMap = new HashMap<>();
     //private static volatile List<String> optionListLive = new LinkedList<>();
     private static volatile List<String> optionListLive = new LinkedList<>();
     private static final List<String> optionListLoaded = new LinkedList<>();
@@ -106,8 +106,11 @@ public class ChinaOption extends JPanel implements Runnable {
     private static NavigableMap<LocalDate, NavigableMap<Double, Double>> strikeVolMapCall = new TreeMap<>();
     private static NavigableMap<LocalDate, NavigableMap<Double, Double>> strikeVolMapPut = new TreeMap<>();
     //private static List<JLabel> labelList = new ArrayList<>();
+    private static JLabel priceLabel = new JLabel();
+    private static JLabel priceChgLabel = new JLabel();
     private static JLabel timeLabel = new JLabel();
     public static volatile double currentStockPrice;
+    public static volatile double previousClose;
     public static volatile LocalDate expiryToCheck = frontExpiry;
     public static volatile boolean showDelta = false;
     private static volatile boolean computeOn = true;
@@ -186,6 +189,11 @@ public class ChinaOption extends JPanel implements Runnable {
                         graphIntraday.setNameStrikeExp(selectedTicker, strike, selectedExpiry, callput);
                         graphIntraday.setMap(todayImpliedVolMap.get(selectedTicker));
                         graphIntraday.repaint();
+
+                        graphTS2.setCurrentOption(selectedTicker, callput, strike, selectedExpiry,
+                                todayImpliedVolMap.get(selectedTicker).lastEntry().getValue().getClose());
+
+                        graphTS2.repaint();
                         //System.out.println(" ticker intraday vol " + selectedTicker + " " + todayImpliedVolMap.get(selectedTicker));
 //                       if (timeLapseVolAllExpiries.containsKey(selectedExpiry)) {
 //                            graphATMLapse.setVolLapse(timeLapseVolAllExpiries.get(selectedExpiry));
@@ -415,6 +423,19 @@ public class ChinaOption extends JPanel implements Runnable {
         controlPanel.add(filterOTMButton);
 
 
+        for (JLabel l : Arrays.asList(priceLabel, priceChgLabel, timeLabel, optionNotif)) {
+            l.setOpaque(true);
+            l.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            l.setFont(l.getFont().deriveFont(30F));
+            l.setHorizontalAlignment(SwingConstants.CENTER);
+        }
+
+        priceLabel.setOpaque(true);
+        priceLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        priceLabel.setFont(priceLabel.getFont().deriveFont(30F));
+        priceLabel.setHorizontalAlignment(SwingConstants.CENTER);
+
+
         timeLabel.setOpaque(true);
         timeLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         timeLabel.setFont(timeLabel.getFont().deriveFont(30F));
@@ -435,6 +456,8 @@ public class ChinaOption extends JPanel implements Runnable {
         };
 
         notifPanel.setLayout(new GridLayout(1, 5));
+        notifPanel.add(priceLabel);
+        notifPanel.add(priceChgLabel);
         notifPanel.add(timeLabel);
         notifPanel.add(optionNotif);
         add(notifPanel, BorderLayout.SOUTH);
@@ -657,9 +680,10 @@ public class ChinaOption extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + (LocalTime.now().getSecond() == 0 ? ":00" : ""));
-        //save
-
+        priceLabel.setText(currentStockPrice + "");
+        priceChgLabel.setText(Math.round(1000d * (currentStockPrice / previousClose - 1)) / 10d + "%");
+        timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
+                + (LocalTime.now().getSecond() == 0 ? ":00" : ""));
 
         if (computeOn) {
             System.out.println(" running @ " + LocalTime.now());
@@ -810,12 +834,15 @@ public class ChinaOption extends JPanel implements Runnable {
             histVol.get(k).put(LocalDate.now(), vol);
         });
 
-        graphTS.setVolSmileFront(mergePutCallVols(strikeVolMapCall.get(frontExpiry), strikeVolMapPut.get(frontExpiry), currentStockPrice));
-        graphTS.setVolSmileBack(mergePutCallVols(strikeVolMapCall.get(backExpiry), strikeVolMapPut.get(backExpiry), currentStockPrice));
-        graphTS.setVolSmileThird(mergePutCallVols(strikeVolMapCall.get(thirdExpiry), strikeVolMapPut.get(thirdExpiry), currentStockPrice));
-        graphTS.setVolSmileFourth(mergePutCallVols(strikeVolMapCall.get(fourthExpiry), strikeVolMapPut.get(fourthExpiry), currentStockPrice));
+        for (GraphOptionVol g : Arrays.asList(graphTS, graphTS2)) {
+            g.setVolSmileFront(mergePutCallVols(strikeVolMapCall.get(frontExpiry), strikeVolMapPut.get(frontExpiry), currentStockPrice));
+            g.setVolSmileBack(mergePutCallVols(strikeVolMapCall.get(backExpiry), strikeVolMapPut.get(backExpiry), currentStockPrice));
+            g.setVolSmileThird(mergePutCallVols(strikeVolMapCall.get(thirdExpiry), strikeVolMapPut.get(thirdExpiry), currentStockPrice));
+            g.setVolSmileFourth(mergePutCallVols(strikeVolMapCall.get(fourthExpiry), strikeVolMapPut.get(fourthExpiry), currentStockPrice));
 
-        graphTS.setCurrentPrice(currentStockPrice);
+            g.setCurrentPrice(currentStockPrice);
+        }
+
         graphVolDiff.setCurrentPrice(currentStockPrice);
         graphVolDiff.setVolNow(mergePutCallVols(strikeVolMapCall.get(expiryToCheck),
                 strikeVolMapPut.get(expiryToCheck), currentStockPrice));
@@ -1010,6 +1037,7 @@ public class ChinaOption extends JPanel implements Runnable {
                     matcher = ChinaOptionHelper.DATA_PATTERN.matcher(line);
                     datalist = Arrays.asList(line.split(","));
                     if (matcher.find()) {
+                        previousClose = Double.parseDouble(datalist.get(2));
                         currentStockPrice = Double.parseDouble(datalist.get(3));
                         return currentStockPrice;
                     }

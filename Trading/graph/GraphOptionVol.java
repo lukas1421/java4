@@ -8,19 +8,24 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.time.LocalDate;
+import java.time.Month;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
 import static apidemo.ChinaOption.*;
+import static apidemo.ChinaOptionHelper.getOptionExpiryDate;
 import static utility.Utility.*;
 
 public class GraphOptionVol extends JComponent implements MouseMotionListener, MouseListener {
 
 
-    private double selectedStock;
-    private double selectedStrike;
-    private LocalDate selectedExpiry;
+    private String selectedOptionTicker = "";
+    private String selectedCP = "";
+    private double selectedStrike = 0.0;
+    private double selectedVol = 0.0;
+    private LocalDate selectedExpiry = LocalDate.MIN;
 
     private double currentPrice;
     private NavigableMap<Double, Double> volSmileFront = new TreeMap<>();
@@ -37,12 +42,19 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
     private static Color color2Exp = Color.blue;
     private static Color color3Exp = Color.red;
     private static Color color4Exp = Color.magenta;
+    private static HashMap<LocalDate, Color> colorMap = new HashMap<>();
 
 
     private int mouseYCord = Integer.MAX_VALUE;
     private int mouseXCord = Integer.MAX_VALUE;
 
     public GraphOptionVol() {
+        colorMap.put(getOptionExpiryDate(2018, Month.MARCH), Color.black);
+        colorMap.put(getOptionExpiryDate(2018, Month.APRIL), Color.blue);
+        colorMap.put(getOptionExpiryDate(2018, Month.JUNE), Color.red);
+        colorMap.put(getOptionExpiryDate(2018, Month.SEPTEMBER), Color.magenta);
+
+        System.out.println(" color map in constructor " + colorMap);
         addMouseMotionListener(this);
         addMouseListener(this);
     }
@@ -73,6 +85,14 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
 
     public void setVolSmileFourth(NavigableMap<Double, Double> mp) {
         volSmileFourth = mp;
+    }
+
+    public void setCurrentOption(String ticker, String f, double k, LocalDate exp, double vol) {
+        selectedOptionTicker = ticker;
+        selectedCP = f;
+        selectedStrike = k;
+        selectedExpiry = exp;
+        selectedVol = vol;
     }
 
     private void computeDelta() {
@@ -129,6 +149,19 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
                 g.drawString(e.getKey().toString(), x, getHeight() - 20);
                 g.drawString(priceInPercent, x, getHeight() - 5);
                 g.drawString(Math.round(e.getValue() * 100d) + "", x, Math.max(10, yFront - 5));
+
+                // draw circle on selected stock
+                if (!selectedOptionTicker.equals("") && e.getKey() == selectedStrike) {
+                    int y = getY(selectedVol, maxVol, minVol);
+                    g.setColor(colorMap.getOrDefault(selectedExpiry, Color.black));
+//                    System.out.println(" current selected color is " + selectedExpiry + " "
+//                            + (colorMap.getOrDefault(selectedExpiry, Color.black)));
+                    g.drawOval(x, y, 15, 15);
+                    g.fillOval(x, y, 15, 15);
+                }
+
+                //g.setColor(Color.black);
+
 
                 if (showDelta) {
                     g.drawString(" [" + Math.round((deltaMapFront.getOrDefault(e.getKey(), 0.0))) + "d]",

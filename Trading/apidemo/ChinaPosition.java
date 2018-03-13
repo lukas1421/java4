@@ -100,6 +100,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     private static GraphPnl gPnl = new GraphPnl();
 
     private final int OPEN_POS_COL = 2;
+    private final int BOT_POS_COL = 13;
     private final int NET_POS_COL = 21;
 
     private static TableRowSorter<BarModel_POS> sorter;
@@ -239,6 +240,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
                 filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, 0, OPEN_POS_COL));
                 filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, NET_POS_COL));
+                filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.NOT_EQUAL, 0, BOT_POS_COL));
                 sorter.setRowFilter(RowFilter.orFilter(filters));
                 filterOn = true;
             }
