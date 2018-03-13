@@ -11,11 +11,13 @@ import java.awt.event.MouseMotionListener;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import static apidemo.ChinaOption.currentStockPrice;
 import static apidemo.ChinaOption.deltaMap;
+import static java.util.stream.Collectors.toMap;
 import static utility.Utility.reduceMapToDouble;
 import static utility.Utility.roundDownToN;
 
@@ -53,7 +55,9 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
 
     public void setMap(NavigableMap<LocalDateTime, SimpleBar> mapIn) {
         if (mapIn.size() > 0) {
-            tm = mapIn;
+            tm = mapIn.entrySet().stream().filter(e -> !e.getValue().containsZero())
+                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
+                            ConcurrentSkipListMap::new));
         }
     }
 

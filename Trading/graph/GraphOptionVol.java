@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.time.LocalDate;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -16,6 +17,10 @@ import static utility.Utility.*;
 
 public class GraphOptionVol extends JComponent implements MouseMotionListener, MouseListener {
 
+
+    private double selectedStock;
+    private double selectedStrike;
+    private LocalDate selectedExpiry;
 
     private double currentPrice;
     private NavigableMap<Double, Double> volSmileFront = new TreeMap<>();
@@ -27,6 +32,12 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
     private NavigableMap<Double, Double> deltaMapBack = new TreeMap<>();
     private NavigableMap<Double, Double> deltaMapThird = new TreeMap<>();
     private NavigableMap<Double, Double> deltaMapFourth = new TreeMap<>();
+
+    private static Color color1Exp = Color.black;
+    private static Color color2Exp = Color.blue;
+    private static Color color3Exp = Color.red;
+    private static Color color4Exp = Color.magenta;
+
 
     private int mouseYCord = Integer.MAX_VALUE;
     private int mouseXCord = Integer.MAX_VALUE;
@@ -54,12 +65,10 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
 
     public void setVolSmileBack(NavigableMap<Double, Double> mp) {
         volSmileBack = mp;
-
     }
 
     public void setVolSmileThird(NavigableMap<Double, Double> mp) {
         volSmileThird = mp;
-
     }
 
     public void setVolSmileFourth(NavigableMap<Double, Double> mp) {
@@ -122,7 +131,8 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
                 g.drawString(Math.round(e.getValue() * 100d) + "", x, Math.max(10, yFront - 5));
 
                 if (showDelta) {
-                    g.drawString(" [" + Math.round((deltaMapFront.getOrDefault(e.getKey(), 0.0))) + "d]", x + 20, Math.max(10, yFront - 5));
+                    g.drawString(" [" + Math.round((deltaMapFront.getOrDefault(e.getKey(), 0.0))) + "d]",
+                            x + 20, Math.max(10, yFront - 5));
                 }
 
                 if ((double) e.getKey() == volSmileFront.lastKey()) {
@@ -130,7 +140,7 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
                 }
 
                 if (volSmileBack.size() > 0) {
-                    g.setColor(Color.blue);
+                    g.setColor(color2Exp);
                     g.drawOval(x, yBack, 5, 5);
                     g.fillOval(x, yBack, 5, 5);
                     g.drawString(Math.round(ChinaOptionHelper.interpolateVol(e.getKey(), volSmileBack) * 100d)
@@ -146,10 +156,8 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
                     }
                 }
 
-                //g.setColor(Color.black);
-
                 if (volSmileThird.size() > 0) {
-                    g.setColor(Color.red);
+                    g.setColor(color3Exp);
                     g.drawOval(x, yThird, 5, 5);
                     g.fillOval(x, yThird, 5, 5);
                     g.drawString(Math.round(ChinaOptionHelper.interpolateVol(e.getKey(), volSmileThird) * 100d) + "", x, yThird + 20);
@@ -159,9 +167,8 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
                     }
                 }
 
-
                 if (volSmileFourth.size() > 0) {
-                    g.setColor(Color.magenta);
+                    g.setColor(color4Exp);
                     g.drawOval(x, yFourth, 5, 5);
                     g.fillOval(x, yFourth, 5, 5);
                     g.drawString(Math.round(ChinaOptionHelper.interpolateVol(e.getKey(),
@@ -171,8 +178,8 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
                         g.drawString("(4)", getWidth() - 20, height / 2 + 60);
                     }
                 }
-                g.setColor(Color.black);
 
+                g.setColor(Color.black);
 
                 g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.6666F));
 
@@ -181,9 +188,6 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
                     g.drawString(e.toString(), x, yFront);
                     g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.333F));
                 }
-
-                //g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 3F));
-                //g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.333F));
 
                 x = x + x_width;
             }
@@ -224,7 +228,6 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
         mouseYCord = Integer.MAX_VALUE;
         mouseXCord = Integer.MAX_VALUE;
         this.repaint();
-
     }
 
     @Override
@@ -236,7 +239,6 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
     public void mouseMoved(MouseEvent e) {
         mouseXCord = e.getX();
         mouseYCord = e.getY();
-        //System.out.println(" graph bar x mouse x is " + mouseXCord);
         this.repaint();
     }
 }
