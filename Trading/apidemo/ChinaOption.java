@@ -52,6 +52,8 @@ import static utility.Utility.*;
 
 public class ChinaOption extends JPanel implements Runnable {
 
+    public static volatile AtomicInteger intradayGraphStartTimeOffset = new AtomicInteger(0);
+
     private static final int CPStringCol = 1;
     private static final int moneynessCol = 9;
 
@@ -84,7 +86,6 @@ public class ChinaOption extends JPanel implements Runnable {
     private static String fourthMonth = fourthExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
 
     private static volatile boolean filterOn = false;
-
 
     //private static double stockPrice = 0.0;
     public static double interestRate = 0.04;
@@ -338,6 +339,13 @@ public class ChinaOption extends JPanel implements Runnable {
         JButton loadIntradayButton = new JButton(" Load intraday");
         JButton outputOptionsButton = new JButton(" Output Options ");
 
+        JButton graphPlus1mButton = new JButton(" Graph +1m");
+        JButton graphMinute1mButton = new JButton(" Graph -1m");
+
+        graphPlus1mButton.addActionListener(l-> intradayGraphStartTimeOffset.incrementAndGet());
+        graphMinute1mButton.addActionListener(l-> intradayGraphStartTimeOffset.decrementAndGet() );
+
+
         outputOptionsButton.addActionListener(l -> outputOptions());
 
         JButton barWidthUp = new JButton(" UP ");
@@ -380,10 +388,12 @@ public class ChinaOption extends JPanel implements Runnable {
             expiryToCheck = backExpiry;
             refreshAllGraphs();
         });
+
         thirdMonthButton.addActionListener(l -> {
             expiryToCheck = thirdExpiry;
             refreshAllGraphs();
         });
+
         fourthMonthButton.addActionListener(l -> {
             expiryToCheck = fourthExpiry;
             refreshAllGraphs();
@@ -391,7 +401,7 @@ public class ChinaOption extends JPanel implements Runnable {
         computeOnButton.addActionListener(l -> computeOn = computeOnButton.isSelected());
 
 
-        saveVolsButton.addActionListener(l -> saveVols());
+        saveVolsButton.addActionListener(l -> saveVolsCSV());
         saveVolsHibButton.addActionListener(l -> {
             saveHibEOD();
             //ChinaOptionHelper.getVolsFromVolOutputToHib();
@@ -421,30 +431,32 @@ public class ChinaOption extends JPanel implements Runnable {
         controlPanel.add(barWidthDown);
 
         controlPanel.add(filterOTMButton);
+        controlPanel.add(graphPlus1mButton);
+        controlPanel.add(graphMinute1mButton);
 
 
         for (JLabel l : Arrays.asList(priceLabel, priceChgLabel, timeLabel, optionNotif)) {
             l.setOpaque(true);
             l.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-            l.setFont(l.getFont().deriveFont(30F));
+            l.setFont(l.getFont().deriveFont(15F));
             l.setHorizontalAlignment(SwingConstants.CENTER);
         }
 
-        priceLabel.setOpaque(true);
-        priceLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        priceLabel.setFont(priceLabel.getFont().deriveFont(30F));
-        priceLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
-
-        timeLabel.setOpaque(true);
-        timeLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        timeLabel.setFont(timeLabel.getFont().deriveFont(30F));
-        timeLabel.setHorizontalAlignment(SwingConstants.CENTER);
-
-        optionNotif.setOpaque(true);
-        optionNotif.setBackground(Color.orange);
-        optionNotif.setForeground(Color.black);
-        optionNotif.setFont(optionNotif.getFont().deriveFont(15F));
+//        priceLabel.setOpaque(true);
+//        priceLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+//        priceLabel.setFont(priceLabel.getFont().deriveFont(30F));
+//        priceLabel.setHorizontalAlignment(SwingConstants.CENTER);
+//
+//
+//        timeLabel.setOpaque(true);
+//        timeLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+//        timeLabel.setFont(timeLabel.getFont().deriveFont(30F));
+//        timeLabel.setHorizontalAlignment(SwingConstants.CENTER);
+//
+//        optionNotif.setOpaque(true);
+//        optionNotif.setBackground(Color.orange);
+//        optionNotif.setForeground(Color.black);
+//        optionNotif.setFont(optionNotif.getFont().deriveFont(15F));
 
         JPanel notifPanel = new JPanel() {
             @Override
@@ -461,6 +473,7 @@ public class ChinaOption extends JPanel implements Runnable {
         notifPanel.add(timeLabel);
         notifPanel.add(optionNotif);
         add(notifPanel, BorderLayout.SOUTH);
+
 //        labelList.forEach(l -> {
 //            l.setOpaque(true);
 //            l.setBorder(BorderFactory.createLineBorder(Color.BLACK));
@@ -484,7 +497,7 @@ public class ChinaOption extends JPanel implements Runnable {
         if (!es.isShutdown()) {
             es.shutdown();
         }
-        es = Executors.newScheduledThreadPool(10);
+        es = Executors.newScheduledThreadPool(5);
         es.schedule(() -> {
             //timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
             optionNotif.setText("");
@@ -539,8 +552,8 @@ public class ChinaOption extends JPanel implements Runnable {
 
         LocalTime start = LocalTime.now();
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
-        CompletableFuture.runAsync(() -> {
 
+        CompletableFuture.runAsync(() -> {
             try (Session session = sessionF.openSession()) {
                 try {
                     session.getTransaction().begin();
@@ -570,7 +583,6 @@ public class ChinaOption extends JPanel implements Runnable {
                     System.out.println(getStr(" done saving ", LocalTime.now()));
                 }
         );
-
     }
 
     private void loadIntradayVolsHib(ChinaSaveInterface1Blob saveclass) {
@@ -595,14 +607,13 @@ public class ChinaOption extends JPanel implements Runnable {
             }
         }).thenAccept(
                 v -> updateOptionSystemInfo(Utility.getStr(" LOAD INTRADAY VOLS DONE ",
-                        LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
                         ChronoUnit.SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
                 ))
         );
     }
 
 
-    private void saveVols() {
+    private void saveVolsCSV() {
 
         File output = new File(TradingConstants.GLOBALPATH + "volOutput.csv");
 

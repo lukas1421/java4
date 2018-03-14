@@ -10,13 +10,14 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Predicate;
 
-import static apidemo.ChinaOption.currentStockPrice;
-import static apidemo.ChinaOption.deltaMap;
+import static apidemo.ChinaOption.*;
 import static java.util.stream.Collectors.toMap;
 import static utility.Utility.reduceMapToDouble;
 import static utility.Utility.roundDownToN;
@@ -24,6 +25,14 @@ import static utility.Utility.roundDownToN;
 public class GraphOptionIntraday extends JComponent implements MouseListener, MouseMotionListener {
 
     private NavigableMap<LocalDateTime, SimpleBar> tm = new ConcurrentSkipListMap<>();
+
+    public static volatile boolean onlyShowToday = false;
+
+    private static Predicate<LocalDate> onlyShowTodayPredicate = d -> d.equals(pricingDate);
+
+    private static Predicate<LocalDate> displayDatePredicate = d -> true;
+
+    private static volatile LocalTime startGraphingTime = LocalTime.of(9, 29);
 
     int height;
     double min;
@@ -55,7 +64,18 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
 
     public void setMap(NavigableMap<LocalDateTime, SimpleBar> mapIn) {
         if (mapIn.size() > 0) {
+//            if (ChinaOption.intradayGraphStartTimeOffset.get() > 0) {
+//                startGraphingTime = startGraphingTime.plusMinutes(ChinaOption.intradayGraphStartTimeOffset.get());
+//            } else {
+//                startGraphingTime = startGraphingTime.minusMinutes(ChinaOption.intradayGraphStartTimeOffset.get());
+//            }
+            startGraphingTime = LocalTime.of(9, 29).plusMinutes(ChinaOption.intradayGraphStartTimeOffset.get());
+            System.out.println(" graphing start time is " + startGraphingTime);
+
             tm = mapIn.entrySet().stream().filter(e -> !e.getValue().containsZero())
+                    .filter(e-> displayDatePredicate.test(e.getKey().toLocalDate()))
+                    .filter(e -> e.getKey().toLocalTime().isAfter(startGraphingTime)
+                            && e.getKey().toLocalTime().isBefore(LocalTime.of(15, 15)))
                     .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
                             ConcurrentSkipListMap::new));
         }
@@ -110,13 +130,11 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
         g.drawString(expiryDate.toString(), getWidth() - 500, 40);
         g.drawString(callPutFlag, getWidth() - 500, 60);
 
-        g.drawString(" M% " + Math.round(100d * strike / currentStockPrice) +"", getWidth()-250, 20);
-        g.drawString(" Delta " + deltaMap.getOrDefault(ticker, 0.0) + "", getWidth()-250, 40);
+        g.drawString(" M% " + Math.round(100d * strike / currentStockPrice) + "", getWidth() - 250, 20);
+        g.drawString(" Delta " + deltaMap.getOrDefault(ticker, 0.0) + "", getWidth() - 250, 40);
 
 
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
-
-
 
 
         int last = 0;
@@ -143,7 +161,11 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
             g.setColor(Color.black);
             if (lt.equals(tm.firstKey())) {
                 g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString(), x, getHeight() - 40);
+
+            } else if (!lt.toLocalDate().equals(tm.lowerEntry(lt).getKey().toLocalDate())) {
+                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString(), x, getHeight() - 40);
             } else {
+
                 if (lt.getMinute() == 0 || (lt.getHour() != 9 && lt.getHour() != 11
                         && lt.getMinute() == 30)) {
                     g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString(), x, getHeight() - 40);
@@ -165,7 +187,9 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
             x += ChinaOption.graphBarWidth.get();
         }
 
-        if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0) {
+        if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0)
+
+        {
 
             int lowY = getY(tm.lastEntry().getValue().getLow(), max, min);
             int closeY = getY(tm.lastEntry().getValue().getClose(), max, min);

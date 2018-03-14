@@ -560,6 +560,27 @@ public class Utility {
         return res;
     }
 
+    public static NavigableMap<LocalDateTime, SimpleBar> priceMap1mTo5MGen(NavigableMap<LocalDateTime, SimpleBar> mp
+            , Predicate<LocalDateTime> p) {
+
+        NavigableMap<LocalDateTime, SimpleBar> res = new ConcurrentSkipListMap<>();
+
+        mp.forEach((key, value) -> {
+            //T t = roundTo5(key);
+            LocalDateTime t = roundTo5Ldt(key);
+            SimpleBar sb = new SimpleBar(value);
+            if (p.test(t)) {
+                if (!res.containsKey(t)) {
+                    res.put(t, sb);
+                } else {
+                    res.get(t).updateBar(sb);
+                }
+            }
+        });
+        return res;
+    }
+
+
     public static NavigableMap<LocalTime, SimpleBar> priceMap1mTo5M(NavigableMap<LocalTime, SimpleBar> mp) {
         NavigableMap<LocalTime, SimpleBar> res = new ConcurrentSkipListMap<>();
         Predicate<LocalTime> p =

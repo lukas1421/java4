@@ -6,6 +6,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -89,7 +90,7 @@ public class GraphOptionLapse extends JComponent implements MouseMotionListener,
                     g.drawString(e.toString(), x, y + 30);
                     g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.333F));
                 }
-                g.drawString(e.getKey().toString(), x, getHeight() - 10);
+                g.drawString(e.getKey().format(DateTimeFormatter.ofPattern("M-d")), x, getHeight() - 10);
                 x += x_width;
             }
         }
