@@ -52,10 +52,9 @@ import static utility.Utility.*;
 
 public class ChinaOption extends JPanel implements Runnable {
 
-    public static final int CPStringCol = 1;
-    public static final int moneynessCol = 9;
+    private static final int CPStringCol = 1;
+    private static final int moneynessCol = 9;
 
-    public static volatile String tickerInFocus = "";
     private static volatile String selectedTicker = "";
 
     static ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
@@ -91,11 +90,12 @@ public class ChinaOption extends JPanel implements Runnable {
     public static double interestRate = 0.04;
 
     public static volatile LocalDate previousTradingDate = LocalDate.now();
-    private static volatile LocalDate pricingDate = LocalDate.now();
+    public static volatile LocalDate pricingDate = LocalDate.now();
+    private static LocalDate savingDate = LocalDate.now();
     //private static HashMap<String, Double> bidMap = new HashMap<>();
     //private static HashMap<String, Double> askMap = new HashMap<>();
     private static HashMap<String, Double> optionPriceMap = new HashMap<>();
-    public static Map<String, Option> tickerOptionsMap = new HashMap<>();
+    static Map<String, Option> tickerOptionsMap = new HashMap<>();
     //private static volatile List<String> optionListLive = new LinkedList<>();
     private static volatile List<String> optionListLive = new LinkedList<>();
     private static final List<String> optionListLoaded = new LinkedList<>();
@@ -110,7 +110,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static JLabel priceChgLabel = new JLabel();
     private static JLabel timeLabel = new JLabel();
     public static volatile double currentStockPrice;
-    public static volatile double previousClose;
+    private static volatile double previousClose;
     public static volatile LocalDate expiryToCheck = frontExpiry;
     public static volatile boolean showDelta = false;
     private static volatile boolean computeOn = true;
@@ -607,15 +607,15 @@ public class ChinaOption extends JPanel implements Runnable {
         File output = new File(TradingConstants.GLOBALPATH + "volOutput.csv");
 
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
-            saveVolHelper(out, pricingDate, CallPutFlag.CALL, strikeVolMapCall, frontExpiry, currentStockPrice);
-            saveVolHelper(out, pricingDate, CallPutFlag.CALL, strikeVolMapCall, backExpiry, currentStockPrice);
-            saveVolHelper(out, pricingDate, CallPutFlag.CALL, strikeVolMapCall, thirdExpiry, currentStockPrice);
-            saveVolHelper(out, pricingDate, CallPutFlag.CALL, strikeVolMapCall, fourthExpiry, currentStockPrice);
+            saveVolHelper(out, savingDate, CallPutFlag.CALL, strikeVolMapCall, frontExpiry, currentStockPrice);
+            saveVolHelper(out, savingDate, CallPutFlag.CALL, strikeVolMapCall, backExpiry, currentStockPrice);
+            saveVolHelper(out, savingDate, CallPutFlag.CALL, strikeVolMapCall, thirdExpiry, currentStockPrice);
+            saveVolHelper(out, savingDate, CallPutFlag.CALL, strikeVolMapCall, fourthExpiry, currentStockPrice);
 
-            saveVolHelper(out, pricingDate, CallPutFlag.PUT, strikeVolMapPut, frontExpiry, currentStockPrice);
-            saveVolHelper(out, pricingDate, CallPutFlag.PUT, strikeVolMapPut, backExpiry, currentStockPrice);
-            saveVolHelper(out, pricingDate, CallPutFlag.PUT, strikeVolMapPut, thirdExpiry, currentStockPrice);
-            saveVolHelper(out, pricingDate, CallPutFlag.PUT, strikeVolMapPut, fourthExpiry, currentStockPrice);
+            saveVolHelper(out, savingDate, CallPutFlag.PUT, strikeVolMapPut, frontExpiry, currentStockPrice);
+            saveVolHelper(out, savingDate, CallPutFlag.PUT, strikeVolMapPut, backExpiry, currentStockPrice);
+            saveVolHelper(out, savingDate, CallPutFlag.PUT, strikeVolMapPut, thirdExpiry, currentStockPrice);
+            saveVolHelper(out, savingDate, CallPutFlag.PUT, strikeVolMapPut, fourthExpiry, currentStockPrice);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -640,7 +640,7 @@ public class ChinaOption extends JPanel implements Runnable {
                             String callput = (f == CallPutFlag.CALL ? "C" : "P");
                             String ticker = getOptionTicker(tickerOptionsMap, f, strike, exp);
                             int moneyness = (int) Math.round((strike / currentStockPrice) * 100d);
-                            ChinaVolSave v = new ChinaVolSave(pricingDate, callput, strike, exp, vol, moneyness, ticker);
+                            ChinaVolSave v = new ChinaVolSave(savingDate, callput, strike, exp, vol, moneyness, ticker);
                             System.out.println(getStr(" pricingdate callput exp vol moneyness ticker counter "
                                     , pricingDate, callput, strike, exp, vol, moneyness, ticker, i.get()));
                             session.saveOrUpdate(v);
@@ -1142,7 +1142,7 @@ public class ChinaOption extends JPanel implements Runnable {
         public Object getValueAt(int rowIn, int col) {
 
             String name = optionListLoaded.size() > rowIn ? optionListLoaded.get(rowIn) : "";
-            CallPutFlag f = tickerOptionsMap.containsKey(name) ? tickerOptionsMap.get(name).getCallOrPut() : CallPutFlag.CALL;
+            //CallPutFlag f = tickerOptionsMap.containsKey(name) ? tickerOptionsMap.get(name).getCallOrPut() : CallPutFlag.CALL;
             double strike = tickerOptionsMap.containsKey(name) ? tickerOptionsMap.get(name).getStrike() : 0.0;
 
             switch (col) {
@@ -1169,9 +1169,6 @@ public class ChinaOption extends JPanel implements Runnable {
                     return currentStockPrice != 0.0 ? (int) (Math.round(100d * strike / currentStockPrice)) : 0;
                 case 10:
                     return Math.round(deltaMap.getOrDefault(name, 0.0));
-                case 11:
-                    //return f == CallPutFlag.CALL ? (strike > currentStockPrice) : (strike < currentStockPrice);
-
 
                 default:
                     return 0.0;
@@ -1226,12 +1223,12 @@ abstract class Option {
 
 
     double getTimeToExpiry() {
-        return (ChronoUnit.DAYS.between(LocalDate.now(), expiryDate)
+        return (ChronoUnit.DAYS.between(ChinaOption.pricingDate, expiryDate)
                 + percentageDayLeft(LocalTime.now())) / 365.0d;
     }
 
     double getTimeToExpiryDays() {
-        return ChronoUnit.DAYS.between(LocalDate.now(), expiryDate)
+        return ChronoUnit.DAYS.between(ChinaOption.pricingDate, expiryDate)
                 + percentageDayLeft(LocalTime.now());
     }
 
