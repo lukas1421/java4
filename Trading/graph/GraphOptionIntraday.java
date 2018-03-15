@@ -70,12 +70,14 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
 //                startGraphingTime = startGraphingTime.minusMinutes(ChinaOption.intradayGraphStartTimeOffset.get());
 //            }
             startGraphingTime = LocalTime.of(9, 29).plusMinutes(ChinaOption.intradayGraphStartTimeOffset.get());
-            System.out.println(" graphing start time is " + startGraphingTime);
+            //System.out.println(" graphing start time is " + startGraphingTime);
 
             tm = mapIn.entrySet().stream().filter(e -> !e.getValue().containsZero())
-                    .filter(e-> displayDatePredicate.test(e.getKey().toLocalDate()))
-                    .filter(e -> e.getKey().toLocalTime().isAfter(startGraphingTime)
-                            && e.getKey().toLocalTime().isBefore(LocalTime.of(15, 15)))
+                    .filter(e -> displayDatePredicate.test(e.getKey().toLocalDate()))
+                    .filter(e -> (e.getKey().toLocalTime().isAfter(startGraphingTime)
+                            && e.getKey().toLocalTime().isBefore(LocalTime.of(11, 31)))
+                            || (e.getKey().toLocalTime().isAfter(LocalTime.of(12, 59))
+                            && e.getKey().toLocalTime().isBefore(LocalTime.of(15, 5))))
                     .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
                             ConcurrentSkipListMap::new));
         }
