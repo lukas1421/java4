@@ -12,7 +12,6 @@ import static utility.Utility.getStr;
 
 public class ChinaVolSave {
 
-
     private static final ChinaVolSave cvs = new ChinaVolSave();
 
     @Id
@@ -20,26 +19,25 @@ public class ChinaVolSave {
     int id;
 
     @Column(name = "VOLDATE")
-    LocalDate volDate;
+    private LocalDate volDate;
 
     @Column(name = "CALLPUT")
-    String callPut;
+    private String callPut;
 
     @Column(name = "STRIKE")
-    double strike;
+    private double strike;
 
     @Column(name = "EXPIRYDATE")
-    LocalDate expiryDate;
+    private LocalDate expiryDate;
 
     @Column(name = "VOL")
-    double vol;
+    private double vol;
 
     @Column(name = "MONEYNESS")
-    int moneyness;
+    private int moneyness;
 
     @Column(name = "OPTIONTICKER")
-    private
-    String optionTicker;
+    private String optionTicker;
 
     public LocalDate getVolDate() {
         return volDate;

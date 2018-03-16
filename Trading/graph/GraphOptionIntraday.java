@@ -11,6 +11,7 @@ import java.awt.event.MouseMotionListener;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -143,6 +144,7 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
 
         int x = 5;
         for (LocalDateTime lt : tm.keySet()) {
+
             int openY = getY(tm.floorEntry(lt).getValue().getOpen(), max, min);
             int highY = getY(tm.floorEntry(lt).getValue().getHigh(), max, min);
             int lowY = getY(tm.floorEntry(lt).getValue().getLow(), max, min);
@@ -163,11 +165,9 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
             g.setColor(Color.black);
             if (lt.equals(tm.firstKey())) {
                 g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString(), x, getHeight() - 40);
-
             } else if (!lt.toLocalDate().equals(tm.lowerEntry(lt).getKey().toLocalDate())) {
-                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString(), x, getHeight() - 40);
+                g.drawString(lt.toLocalDate().format(DateTimeFormatter.ofPattern("M-d")), x, getHeight() - 20);
             } else {
-
                 if (lt.getMinute() == 0 || (lt.getHour() != 9 && lt.getHour() != 11
                         && lt.getMinute() == 30)) {
                     g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString(), x, getHeight() - 40);
@@ -189,10 +189,7 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
             x += ChinaOption.graphBarWidth.get();
         }
 
-        if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0)
-
-        {
-
+        if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0) {
             int lowY = getY(tm.lastEntry().getValue().getLow(), max, min);
             int closeY = getY(tm.lastEntry().getValue().getClose(), max, min);
             g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));

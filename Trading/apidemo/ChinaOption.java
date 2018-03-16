@@ -128,7 +128,6 @@ public class ChinaOption extends JPanel implements Runnable {
     private static RowFilter<OptionTableModel, Integer> otmFilter;
 
     private ChinaOption() {
-
         otmFilter = new RowFilter<OptionTableModel, Integer>() {
             @Override
             public boolean include(Entry<? extends OptionTableModel, ? extends Integer> entry) {
@@ -232,7 +231,14 @@ public class ChinaOption extends JPanel implements Runnable {
         setLayout(new BorderLayout());
         add(rightPanel, BorderLayout.CENTER);
 
-        JPanel controlPanel = new JPanel();
+        JPanel controlPanelTop = new JPanel();
+        JPanel controlPanelBottom = new JPanel();
+        JPanel controlPanelHolder = new JPanel();
+
+        controlPanelHolder.setLayout(new GridLayout(2, 1));
+        controlPanelHolder.add(controlPanelTop);
+        controlPanelHolder.add(controlPanelBottom);
+
         JPanel dataPanel = new JPanel();
         dataPanel.setLayout(new GridLayout(10, 3));
 
@@ -296,7 +302,7 @@ public class ChinaOption extends JPanel implements Runnable {
             }
         };
 
-        add(controlPanel, BorderLayout.NORTH);
+        add(controlPanelHolder, BorderLayout.NORTH);
         rightPanel.add(optTableScroll);
 
         JPanel graphPanel = new JPanel();
@@ -348,7 +354,6 @@ public class ChinaOption extends JPanel implements Runnable {
         graphPlus1mButton.addActionListener(l -> intradayGraphStartTimeOffset.incrementAndGet());
         graphMinute1mButton.addActionListener(l -> intradayGraphStartTimeOffset.decrementAndGet());
 
-
         outputOptionsButton.addActionListener(l -> outputOptions());
 
         JButton barWidthUp = new JButton(" UP ");
@@ -382,7 +387,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
         getPreviousVolButton.addActionListener(l -> {
                     loadVolsHib();
-                    //loadPreviousOptions();
+                    //loadPreviousOptionsExcel();
                 }
         );
 
@@ -414,32 +419,32 @@ public class ChinaOption extends JPanel implements Runnable {
             //ChinaOptionHelper.getVolsFromVolOutputToHib();
         });
 
-        controlPanel.add(saveVolsButton);
-        controlPanel.add(saveVolsHibButton);
-        controlPanel.add(getPreviousVolButton);
+        controlPanelTop.add(saveVolsButton);
+        controlPanelTop.add(saveVolsHibButton);
+        controlPanelTop.add(getPreviousVolButton);
 
-        controlPanel.add(Box.createHorizontalStrut(10));
+        controlPanelTop.add(Box.createHorizontalStrut(10));
 
-        controlPanel.add(frontMonthButton);
-        controlPanel.add(backMonthButton);
-        controlPanel.add(thirdMonthButton);
-        controlPanel.add(fourthMonthButton);
+        controlPanelTop.add(frontMonthButton);
+        controlPanelTop.add(backMonthButton);
+        controlPanelTop.add(thirdMonthButton);
+        controlPanelTop.add(fourthMonthButton);
 
-        controlPanel.add(Box.createHorizontalStrut(10));
-        controlPanel.add(showDeltaButton);
-        controlPanel.add(Box.createHorizontalStrut(10));
-        controlPanel.add(computeOnButton);
+        controlPanelTop.add(Box.createHorizontalStrut(10));
+        controlPanelTop.add(showDeltaButton);
+        controlPanelTop.add(Box.createHorizontalStrut(10));
+        controlPanelTop.add(computeOnButton);
 
-        controlPanel.add(saveIntradayButton);
-        controlPanel.add(loadIntradayButton);
-        controlPanel.add(outputOptionsButton);
+        controlPanelTop.add(saveIntradayButton);
+        controlPanelTop.add(loadIntradayButton);
+        controlPanelTop.add(outputOptionsButton);
 
-        controlPanel.add(barWidthUp);
-        controlPanel.add(barWidthDown);
+        controlPanelTop.add(barWidthUp);
+        controlPanelTop.add(barWidthDown);
 
-        controlPanel.add(filterOTMButton);
-        controlPanel.add(graphPlus1mButton);
-        controlPanel.add(graphMinute1mButton);
+        controlPanelTop.add(filterOTMButton);
+        controlPanelTop.add(graphPlus1mButton);
+        controlPanelTop.add(graphMinute1mButton);
 
 
         for (JLabel l : Arrays.asList(priceLabel, priceChgLabel, timeLabel, optionNotif)) {
@@ -634,6 +639,7 @@ public class ChinaOption extends JPanel implements Runnable {
             saveVolHelper(out, savingDate, PUT, strikeVolMapPut, backExpiry, currentStockPrice);
             saveVolHelper(out, savingDate, PUT, strikeVolMapPut, thirdExpiry, currentStockPrice);
             saveVolHelper(out, savingDate, PUT, strikeVolMapPut, fourthExpiry, currentStockPrice);
+
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -902,7 +908,7 @@ public class ChinaOption extends JPanel implements Runnable {
         }
     }
 
-    private static void loadPreviousOptions() {
+    private static void loadPreviousOptionsExcel() {
         String line;
 
         //NavigableMap<LocalDate, TreeMap<Integer, Double>> timeLapseMoneynessVolFront = new TreeMap<>();
@@ -1159,6 +1165,11 @@ public class ChinaOption extends JPanel implements Runnable {
                 saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance());
             }
         }, 3, 1, TimeUnit.MINUTES);
+
+        ses.scheduleAtFixedRate(()->{
+            timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
+                    + (LocalTime.now().getSecond() == 0 ? ":00" : ""));
+        },0,1,TimeUnit.SECONDS);
     }
 
     class OptionTableModel extends javax.swing.table.AbstractTableModel {
