@@ -168,9 +168,10 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
             } else if (!lt.toLocalDate().equals(tm.lowerEntry(lt).getKey().toLocalDate())) {
                 g.drawString(lt.toLocalDate().format(DateTimeFormatter.ofPattern("M-d")), x, getHeight() - 20);
             } else {
-                if (lt.getMinute() == 0 || (lt.getHour() != 9 && lt.getHour() != 11
-                        && lt.getMinute() == 30)) {
-                    g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString(), x, getHeight() - 40);
+                if (lt.getMinute() == 0) {
+                    // || (lt.getHour() != 9 && lt.getHour() != 11 && lt.getMinute() == 30)
+                    g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toLocalTime()
+                            .format(DateTimeFormatter.ofPattern("H")), x, getHeight() - 40);
                 }
             }
 

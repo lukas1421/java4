@@ -150,7 +150,6 @@ public class ChinaOptionHelper {
             }
         }
         return 0.0;
-
     }
 
     public static void getLastTradingDate() {

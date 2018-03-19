@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
@@ -90,12 +91,14 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private static volatile boolean filterOn = false;
 
+
     //private static double stockPrice = 0.0;
     public static double interestRate = 0.04;
 
     public static volatile LocalDate previousTradingDate = LocalDate.now();
     public static volatile LocalDate pricingDate = LocalDate.now();
     private static LocalDate savingDate = LocalDate.now();
+    private static LocalDate saveCutoffDate = savingDate.minusDays(7L);
     //private static HashMap<String, Double> bidMap = new HashMap<>();
     //private static HashMap<String, Double> askMap = new HashMap<>();
     private static HashMap<String, Double> optionPriceMap = new HashMap<>();
@@ -559,11 +562,16 @@ public class ChinaOption extends JPanel implements Runnable {
         }
     }
 
-    private static void saveIntradayVolsHib(Map<String, ? extends NavigableMap<LocalDateTime, ?>> mp,
+    // load intraday vols
+    private static <T> void saveIntradayVolsHib(Map<String, ? extends NavigableMap<LocalDateTime, T>> mp,
                                             ChinaSaveInterface1Blob saveclass) {
 
         LocalTime start = LocalTime.now();
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
+
+        Predicate<Map.Entry<LocalDateTime, ?>> p = e -> e.getKey().toLocalDate().isAfter(saveCutoffDate);
+
+        //NavigableMap<LocalDateTime, T> res =
 
         CompletableFuture.runAsync(() -> {
             try (Session session = sessionF.openSession()) {
@@ -573,7 +581,13 @@ public class ChinaOption extends JPanel implements Runnable {
                     AtomicLong i = new AtomicLong(0L);
                     optionListLoaded.forEach(name -> {
                         ChinaSaveInterface1Blob cs = saveclass.createInstance(name);
-                        cs.setFirstBlob(blobify(mp.get(name), session));
+
+                        NavigableMap<LocalDateTime, T> res = mp.get(name).entrySet().stream().filter(p)
+                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                                        (a, b) -> a, ConcurrentSkipListMap::new));
+
+                        cs.setFirstBlob(blobify(res, session));
+
                         session.save(cs);
                         if (i.get() % 100 == 0) {
                             session.flush();
@@ -602,6 +616,7 @@ public class ChinaOption extends JPanel implements Runnable {
         CompletableFuture.runAsync(() -> {
             SessionFactory sessionF = HibernateUtil.getSessionFactory();
             String problemKey = " ";
+
             try (Session session = sessionF.openSession()) {
                 for (String key : optionListLoaded) {
                     try {
@@ -934,16 +949,6 @@ public class ChinaOption extends JPanel implements Runnable {
                 int moneyness = Integer.parseInt(al1.get(5));
                 String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
 
-
-//                if (expiry.equals(frontExpiry)) {
-//                    if (!timeLapseMoneynessVolFront.containsKey(volDate)) {
-//                        timeLapseMoneynessVolFront.put(volDate, new TreeMap<>());
-//                    }
-//                    if ((f == CallPutFlag.CALL && moneyness >= 100) || (f == CallPutFlag.PUT && moneyness < 100)) {
-//                        timeLapseMoneynessVolFront.get(volDate).put(moneyness, volPrev);
-//                    }
-//                }
-
                 if (expiryList.contains(expiry)) {
                     if (!timeLapseMoneynessVolAllExpiries.get(expiry).containsKey(volDate)) {
                         timeLapseMoneynessVolAllExpiries.get(expiry).put(volDate, new TreeMap<>());
@@ -1166,10 +1171,10 @@ public class ChinaOption extends JPanel implements Runnable {
             }
         }, 3, 1, TimeUnit.MINUTES);
 
-        ses.scheduleAtFixedRate(()->{
+        ses.scheduleAtFixedRate(() -> {
             timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
                     + (LocalTime.now().getSecond() == 0 ? ":00" : ""));
-        },0,1,TimeUnit.SECONDS);
+        }, 0, 1, TimeUnit.SECONDS);
     }
 
     class OptionTableModel extends javax.swing.table.AbstractTableModel {
