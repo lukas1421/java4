@@ -56,6 +56,8 @@ import static utility.Utility.*;
 
 public class ChinaOption extends JPanel implements Runnable {
 
+    public static volatile boolean todayVolOnly = false;
+
     public static volatile AtomicInteger intradayGraphStartTimeOffset = new AtomicInteger(0);
 
     private static final int CPStringCol = 1;
@@ -99,11 +101,8 @@ public class ChinaOption extends JPanel implements Runnable {
     public static volatile LocalDate pricingDate = LocalDate.now();
     private static LocalDate savingDate = LocalDate.now();
     private static LocalDate saveCutoffDate = savingDate.minusDays(7L);
-    //private static HashMap<String, Double> bidMap = new HashMap<>();
-    //private static HashMap<String, Double> askMap = new HashMap<>();
     private static HashMap<String, Double> optionPriceMap = new HashMap<>();
     static Map<String, Option> tickerOptionsMap = new HashMap<>();
-    //private static volatile List<String> optionListLive = new LinkedList<>();
     private static volatile List<String> optionListLive = new LinkedList<>();
     private static final List<String> optionListLoaded = new LinkedList<>();
 
@@ -112,7 +111,6 @@ public class ChinaOption extends JPanel implements Runnable {
     public volatile static Map<String, Double> deltaMap = new HashMap<>();
     private static NavigableMap<LocalDate, NavigableMap<Double, Double>> strikeVolMapCall = new TreeMap<>();
     private static NavigableMap<LocalDate, NavigableMap<Double, Double>> strikeVolMapPut = new TreeMap<>();
-    //private static List<JLabel> labelList = new ArrayList<>();
     private static JLabel priceLabel = new JLabel();
     private static JLabel priceChgLabel = new JLabel();
     private static JLabel timeLabel = new JLabel();
@@ -123,7 +121,6 @@ public class ChinaOption extends JPanel implements Runnable {
     private static volatile boolean computeOn = true;
     private static volatile Map<String, ConcurrentSkipListMap<LocalDate, Double>> histVol = new HashMap<>();
     public static volatile Map<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>> todayImpliedVolMap = new HashMap<>();
-    //private static NavigableMap<LocalDate, Double> timeLapseVolFront = new TreeMap<>();
     private static NavigableMap<LocalDate, TreeMap<LocalDate, Double>> timeLapseVolAllExpiries = new TreeMap<>();
     public static volatile AtomicInteger graphBarWidth = new AtomicInteger(5);
 
@@ -134,7 +131,6 @@ public class ChinaOption extends JPanel implements Runnable {
         otmFilter = new RowFilter<OptionTableModel, Integer>() {
             @Override
             public boolean include(Entry<? extends OptionTableModel, ? extends Integer> entry) {
-                //OptionTableModel m = entry.getModel();
                 if (entry.getValue(CPStringCol).equals("C")) {
                     return ((int) entry.getValue(moneynessCol)) > 100;
                 } else {
@@ -242,6 +238,15 @@ public class ChinaOption extends JPanel implements Runnable {
         controlPanelHolder.add(controlPanelTop);
         controlPanelHolder.add(controlPanelBottom);
 
+        JButton todayVolOnlyButton = new JButton(" Today vols ");
+        controlPanelBottom.add(todayVolOnlyButton);
+
+        todayVolOnlyButton.addActionListener(l -> {
+            todayVolOnly = !todayVolOnly;
+            SwingUtilities.invokeLater(() ->
+                    todayVolOnlyButton.setText(todayVolOnly ? " All Vols " : " Only T Vol"));
+        });
+
         JPanel dataPanel = new JPanel();
         dataPanel.setLayout(new GridLayout(10, 3));
 
@@ -329,8 +334,6 @@ public class ChinaOption extends JPanel implements Runnable {
 
         //selecting
         p.select("Graph Intraday");
-
-
         //rightPanel.add(graphPanel, BorderLayout.SOUTH);
         rightPanel.add(p, BorderLayout.SOUTH);
 
@@ -564,7 +567,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     // load intraday vols
     private static <T> void saveIntradayVolsHib(Map<String, ? extends NavigableMap<LocalDateTime, T>> mp,
-                                            ChinaSaveInterface1Blob saveclass) {
+                                                ChinaSaveInterface1Blob saveclass) {
 
         LocalTime start = LocalTime.now();
         SessionFactory sessionF = HibernateUtil.getSessionFactory();

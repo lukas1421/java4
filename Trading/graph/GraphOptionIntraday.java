@@ -73,6 +73,11 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
             startGraphingTime = LocalTime.of(9, 29).plusMinutes(ChinaOption.intradayGraphStartTimeOffset.get());
             //System.out.println(" graphing start time is " + startGraphingTime);
 
+            if (ChinaOption.todayVolOnly) {
+                displayDatePredicate = d -> d.equals(ChinaOption.pricingDate);
+            } else {
+                displayDatePredicate = d -> true;
+            }
             tm = mapIn.entrySet().stream().filter(e -> !e.getValue().containsZero())
                     .filter(e -> displayDatePredicate.test(e.getKey().toLocalDate()))
                     .filter(e -> (e.getKey().toLocalTime().isAfter(startGraphingTime)
