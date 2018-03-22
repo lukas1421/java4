@@ -51,11 +51,12 @@ import static saving.Hibtask.unblob;
 import static utility.Utility.*;
 
 //import javax.swing.table.TableRowSorter;
-
 //import org.apache.commons.math3.*;
 
 public class ChinaOption extends JPanel implements Runnable {
 
+
+    public static volatile boolean loadedBeforeSaveGuard = false;
     public static volatile boolean todayVolOnly = false;
 
     public static volatile AtomicInteger intradayGraphStartTimeOffset = new AtomicInteger(0);
@@ -569,52 +570,58 @@ public class ChinaOption extends JPanel implements Runnable {
     private static <T> void saveIntradayVolsHib(Map<String, ? extends NavigableMap<LocalDateTime, T>> mp,
                                                 ChinaSaveInterface1Blob saveclass) {
 
-        LocalTime start = LocalTime.now();
-        SessionFactory sessionF = HibernateUtil.getSessionFactory();
+        if (loadedBeforeSaveGuard) {
+            LocalTime start = LocalTime.now();
+            SessionFactory sessionF = HibernateUtil.getSessionFactory();
 
-        Predicate<Map.Entry<LocalDateTime, ?>> p = e -> e.getKey().toLocalDate().isAfter(saveCutoffDate);
+            Predicate<Map.Entry<LocalDateTime, ?>> p = e -> e.getKey().toLocalDate().isAfter(saveCutoffDate);
 
-        //NavigableMap<LocalDateTime, T> res =
+            //NavigableMap<LocalDateTime, T> res =
 
-        CompletableFuture.runAsync(() -> {
-            try (Session session = sessionF.openSession()) {
-                try {
-                    session.getTransaction().begin();
-                    session.createQuery("DELETE from " + saveclass.getClass().getName()).executeUpdate();
-                    AtomicLong i = new AtomicLong(0L);
-                    optionListLoaded.forEach(name -> {
-                        ChinaSaveInterface1Blob cs = saveclass.createInstance(name);
+            CompletableFuture.runAsync(() -> {
+                try (Session session = sessionF.openSession()) {
+                    try {
+                        session.getTransaction().begin();
+                        session.createQuery("DELETE from " + saveclass.getClass().getName()).executeUpdate();
+                        AtomicLong i = new AtomicLong(0L);
+                        optionListLoaded.forEach(name -> {
+                            ChinaSaveInterface1Blob cs = saveclass.createInstance(name);
 
-                        NavigableMap<LocalDateTime, T> res = mp.get(name).entrySet().stream().filter(p)
-                                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                                        (a, b) -> a, ConcurrentSkipListMap::new));
+                            NavigableMap<LocalDateTime, T> res = mp.get(name).entrySet().stream().filter(p)
+                                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                                            (a, b) -> a, ConcurrentSkipListMap::new));
 
-                        cs.setFirstBlob(blobify(res, session));
+                            cs.setFirstBlob(blobify(res, session));
 
-                        session.save(cs);
-                        if (i.get() % 100 == 0) {
-                            session.flush();
-                        }
-                        i.incrementAndGet();
-                    });
-                    session.getTransaction().commit();
-                    session.close();
-                } catch (org.hibernate.exception.LockAcquisitionException x) {
-                    x.printStackTrace();
-                    session.close();
+                            session.save(cs);
+                            if (i.get() % 100 == 0) {
+                                session.flush();
+                            }
+                            i.incrementAndGet();
+                        });
+                        session.getTransaction().commit();
+                        session.close();
+                    } catch (org.hibernate.exception.LockAcquisitionException x) {
+                        x.printStackTrace();
+                        session.close();
+                    }
                 }
-            }
-        }).thenAccept(
-                v -> {
-                    updateOptionSystemInfo(Utility.getStr("存", saveclass.getSimpleName(),
-                            LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
-                            ChronoUnit.SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
-                    System.out.println(getStr(" done saving ", LocalTime.now()));
-                }
-        );
+            }).thenAccept(
+                    v -> {
+                        updateOptionSystemInfo(Utility.getStr("存", saveclass.getSimpleName(),
+                                LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
+                                ChronoUnit.SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
+                        System.out.println(getStr(" done saving ", LocalTime.now()));
+                    }
+            );
+        } else {
+            JOptionPane.showMessageDialog(null," cannot save before load ");
+        }
     }
 
     private void loadIntradayVolsHib(ChinaSaveInterface1Blob saveclass) {
+        loadedBeforeSaveGuard = true;
+
         LocalTime start = LocalTime.now();
         CompletableFuture.runAsync(() -> {
             SessionFactory sessionF = HibernateUtil.getSessionFactory();

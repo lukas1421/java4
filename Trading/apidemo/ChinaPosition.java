@@ -461,13 +461,15 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
 
             CompletableFuture.supplyAsync(() ->
-                    openDelta = openPositionMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
-                            * e.getValue() * openMap.getOrDefault(e.getKey(), 0.0)).sum()
+                    openDelta = openPositionMap.entrySet().stream().filter(p)
+                            .mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
+                                    * e.getValue() * openMap.getOrDefault(e.getKey(), 0.0)).sum()
             ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setOpenDelta(a)));
 
             CompletableFuture.supplyAsync(() ->
-                    netDelta = openPositionMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
-                            * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum()
+                    netDelta = openPositionMap.entrySet().stream().filter(p)
+                            .mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
+                                    * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum()
                             + tradesMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
                             * priceMap.getOrDefault(e.getKey(), 0.0)
                             * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum()
@@ -483,10 +485,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())
             ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setNetDeltaMap(a)));
 
-
             CompletableFuture.supplyAsync(() ->
-                    mtmDeltaMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p).map(Entry::getKey).collect(Collectors.toSet())
-                            .stream().distinct().map(e -> getDelta(e, 0)).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>()))
+                    mtmDeltaMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0)
+                            .filter(p).map(Entry::getKey).collect(Collectors.toSet())
+                            .stream().distinct().map(e -> getDelta(e, 0))
+                            .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>()))
                     .thenAcceptAsync(a -> CompletableFuture.supplyAsync(
                             () -> mtmDeltaSharpe = SharpeUtility.computeMinuteSharpeFromMtmDeltaMp(a))
                             .thenAcceptAsync(b -> SwingUtilities.invokeLater(() -> gPnl.setMtmDeltaSharpe(b))));
@@ -516,7 +519,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setNetPnlYtd(a))),
 
                     CompletableFuture.supplyAsync(() ->
-                            mtmPNLMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() > 0).filter(p)
+                            mtmPNLMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p)
                                     .map(e -> getMtmPNL(ChinaData.priceMapBar.get(e.getKey()), closeMap.getOrDefault(e.getKey(), 0.0), e.getValue(),
                                             fxMap.getOrDefault(e.getKey(), 1.0))).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())
                     ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setMtmPnl(Optional.ofNullable(a.lastEntry()).map(Entry::getValue).orElse(0.0)))),
