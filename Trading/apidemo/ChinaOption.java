@@ -56,7 +56,7 @@ import static utility.Utility.*;
 public class ChinaOption extends JPanel implements Runnable {
 
 
-    public static volatile boolean loadedBeforeSaveGuard = false;
+    private static volatile boolean loadedBeforeSaveGuard = false;
     public static volatile boolean todayVolOnly = false;
 
     public static volatile AtomicInteger intradayGraphStartTimeOffset = new AtomicInteger(0);

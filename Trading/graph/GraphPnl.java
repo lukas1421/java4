@@ -2,6 +2,7 @@ package graph;
 
 import TradeType.TradeBlock;
 import apidemo.ChinaPosition;
+import apidemo.ChinaStock;
 import utility.Utility;
 
 import javax.swing.*;
@@ -430,12 +431,14 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
 
         g2.drawString(Double.toString(min), getWidth() - 80, getHeight() - 5);
         g2.drawString(Double.toString(max), getWidth() - 80, 15);
-        g2.drawString(Double.toString(minDelta), 5, getHeight() - 30);
+
+        // min and max delta
+        g2.drawString(Double.toString(minDelta), 5, getHeight() - 50);
         g2.drawString(Double.toString(maxDelta), 5, 40);
 
         g2.drawString(name, 5, 15);
         g2.drawString(chineseName, getWidth() / 7, 15);
-        g2.drawString(Double.toString(getLast()), getWidth() / 7 * 2, 15);
+        g2.drawString(Double.toString(ChinaStock.priceMap.getOrDefault(name,0.0)), getWidth() / 7 * 2, 15);
 
         g2.drawString("A低:" + getAMMinT().toString(), getWidth() / 7 * 3, 15);
         g2.drawString(Double.toString(getMinAM()), getWidth() / 7 * 4, 15);

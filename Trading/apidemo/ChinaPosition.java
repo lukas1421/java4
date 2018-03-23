@@ -44,7 +44,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static apidemo.ChinaData.dateMap;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaMain.currentTradingDate;
 import static apidemo.ChinaStock.*;
@@ -657,7 +656,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     @Override
     public void handleHist(String name, String date, double open, double high, double low, double close) {
 
-        LocalDate ytd = currentTradingDate.equals(dateMap.get(2)) ? dateMap.get(1) : dateMap.get(2);
+        //LocalDate ytd = currentTradingDate.equals(dateMap.get(2)) ? dateMap.get(1) : dateMap.get(2);
 
         if (!date.startsWith("finished")) {
             Date dt = new Date();
@@ -668,12 +667,24 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             }
             Calendar cal = Calendar.getInstance();
             cal.setTime(dt);
-            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1,
+                    cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
-            if (lt.isBefore(LocalTime.of(9, 0))) {
+            // standardize future close to closing price.
+            //how to classify overnight trades? To T+1 or T?
+            // before market opens, the price should be closing price of T-1
+            if (lt.equals(LocalTime.of(14, 59)) && !ld.equals(currentTradingDate)) {
                 ChinaStock.closeMap.put(name, close);
+                //System.out.println(" current trading date is " + currentTradingDate);
+                System.out.println(" Trading date " + currentTradingDate
+                        + " checking close " + lt + " " + name + " " + close);
             }
+
+            // use last closing price
+//            if (lt.isBefore(LocalTime.of(9, 0))) {
+//                ChinaStock.closeMap.put(name, close);
+//            }
 
             if (((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
                     || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
@@ -681,12 +692,13 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     openMap.put(name, open);
                     //System.out.println(Utility.getStrCheckNull("updating open in chinapos", ld, lt, open));
                 }
-            } else {
-//                if (ld.isEqual(ytd) && lt.isBefore(LocalTime.of(17, 1))) {
-//                    ChinaStock.closeMap.put(name, open);
-//                    //System.out.println(getStr(" updating close ", ytd, lt, name, closeMap.getOrDefault(name, 0.0)));
-//                }
             }
+//            else {
+////                if (ld.isEqual(ytd) && lt.isBefore(LocalTime.of(17, 1))) {
+////                    ChinaStock.closeMap.put(name, open);
+////                    //System.out.println(getStr(" updating close ", ytd, lt, name, closeMap.getOrDefault(name, 0.0)));
+////                }
+//            }
         } else {
             System.out.println(getStr(date, open, high, low, close));
         }
@@ -765,7 +777,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
     }
 
-    public static void getOpenPositionsFromMargin() {
+    private static void getOpenPositionsFromMargin() {
 
         System.out.println(" get open position from margin ");
 
@@ -811,7 +823,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     //System.out.println( " name " + addSHSZ(dataList.get(stockCodeCol)));
                     String nam = Utility.addSHSZ(dataList.get(stockCodeCol));
                     System.out.println(" nam " + nam);
-                    openPositionMap.put(nam, Integer.parseInt(dataList.get(openPosCol)) + Integer.parseInt(dataList.get(todaySoldCol))
+                    openPositionMap.put(nam, Integer.parseInt(dataList.get(openPosCol))
+                            + Integer.parseInt(dataList.get(todaySoldCol))
                             - Integer.parseInt(dataList.get(todayBoughtCol)));
                     costMap.put(nam, Double.parseDouble(dataList.get(costCol)));
                     //ytdPNLMap.put(nam, (closeMap.getOrDefault(nam,0.0)-costMap.getOrDefault(nam,0.0))*Integer.parseInt(dataList.get(1)));

@@ -168,17 +168,33 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
             g.drawLine(x + 1, highY, x + 1, lowY);
 
             g.setColor(Color.black);
+
             if (lt.equals(tm.firstKey())) {
                 g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toLocalTime().toString(), x, getHeight() - 40);
+                g.drawString(lt.toLocalDate().format(DateTimeFormatter.ofPattern("M-d")), x, getHeight() - 20);
             } else if (!lt.toLocalDate().equals(tm.lowerEntry(lt).getKey().toLocalDate())) {
                 g.drawString(lt.toLocalDate().format(DateTimeFormatter.ofPattern("M-d")), x, getHeight() - 20);
             } else {
                 if (lt.getMinute() == 0) {
-                    // || (lt.getHour() != 9 && lt.getHour() != 11 && lt.getMinute() == 30)
-                    g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toLocalTime()
-                            .format(DateTimeFormatter.ofPattern("H")), x, getHeight() - 40);
+                    g.drawString(lt.toLocalTime().format(DateTimeFormatter.ofPattern("H")), x, getHeight() - 40);
                 }
             }
+
+            double dayHigh = tm.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(lt.toLocalDate()))
+                    .mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
+
+            double dayLow = tm.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(lt.toLocalDate()))
+                    .mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
+
+            g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+            if (tm.get(lt).getHigh() == dayHigh) {
+                g.drawString(Math.round(tm.floorEntry(lt).getValue().getHigh() * 1000d) / 10d + "", x, highY);
+            }
+            if (tm.get(lt).getLow() == dayLow) {
+                g.drawString(Math.round(tm.floorEntry(lt).getValue().getLow() * 1000d) / 10d + "", x + 2, lowY);
+            }
+            g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
+
 
             if (roundDownToN(mouseXCord, ChinaOption.graphBarWidth.get()) == x - 5) {
                 g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
