@@ -133,9 +133,9 @@ public class ChinaOption extends JPanel implements Runnable {
             @Override
             public boolean include(Entry<? extends OptionTableModel, ? extends Integer> entry) {
                 if (entry.getValue(CPStringCol).equals("C")) {
-                    return ((int) entry.getValue(moneynessCol)) > 100;
+                    return ((int) entry.getValue(moneynessCol)) >= 100;
                 } else {
-                    return ((int) entry.getValue(moneynessCol)) < 100;
+                    return ((int) entry.getValue(moneynessCol)) <= 100;
                 }
             }
         };
@@ -504,6 +504,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
         //noinspection unchecked
         sorter = (TableRowSorter<OptionTableModel>) optionTable.getRowSorter();
+        sorter.setRowFilter(otmFilter);
         //sorter.setRowFilter(otmFilter);
     }
 
@@ -522,8 +523,6 @@ public class ChinaOption extends JPanel implements Runnable {
             optionNotif.setText("");
             optionNotif.setBackground(Color.orange);
         }, 10, SECONDS);
-
-
     }
 
     private static void refreshAllGraphs() {
@@ -615,7 +614,7 @@ public class ChinaOption extends JPanel implements Runnable {
                     }
             );
         } else {
-            JOptionPane.showMessageDialog(null," cannot save before load ");
+            JOptionPane.showMessageDialog(null, " cannot save before load ");
         }
     }
 

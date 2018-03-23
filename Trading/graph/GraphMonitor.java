@@ -20,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import static apidemo.ChinaData.priceMapBar;
@@ -222,7 +223,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
             g2.drawString(ChinaStock.shortIndustryMap.get(name), 7 * getWidth() / 24, 15);
         }
 
-        if (!ofNullable(bench).orElse("").equals("")) {
+        if (bench != null && !Optional.of(bench).orElse("").equals("")) {
             g2.drawString("(" + bench + ")", getWidth() * 2 / 6, 15);
         }
 

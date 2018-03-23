@@ -685,12 +685,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             //System.out.println(" handle hist in xu trader ld lt  " + LocalDateTime.of(ld, lt));
             //System.out.println(getStr("name date open high low close ", name, date, open, high, low, close));
 
-            if (!ld.equals(currDate) && lt.isBefore(LocalTime.of(17, 1))) {
-
-                //System.out.println(getStr(" fut close map (open close) ", FutType.get(name), lt, open, close));
-
-                futPrevCloseMap.put(FutType.get(name), open);
+            if (!ld.equals(currDate) && lt.equals(LocalTime.of(14, 59))) {
+                futPrevCloseMap.put(FutType.get(name), close);
             }
+
+//            if (!ld.equals(currDate) && lt.isBefore(LocalTime.of(17, 1))) {
+//                //System.out.println(getStr(" fut close map (open close) ", FutType.get(name), lt, open, close));
+//                futPrevCloseMap.put(FutType.get(name), open);
+//            }
 
             if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
                     || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(23, 59))))) {

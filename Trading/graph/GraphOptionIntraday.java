@@ -124,7 +124,7 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
 
         if (tm.size() > 0) {
             g.drawString(tm.lastEntry().getKey().toLocalTime().toString() + " "
-                    + tm.lastEntry().getValue().getClose(), getWidth() / 2, 40);
+                    + Math.round(tm.lastEntry().getValue().getClose() * 1000d) / 10d, getWidth() / 2, 40);
         }
 
         g.drawString(Math.round(max * 1000d) / 10d + "", getWidth() - 60, getY(max, max, min));
