@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -183,14 +184,22 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
             double dayHigh = tm.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(lt.toLocalDate()))
                     .mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
 
+            LocalDateTime firstHigh = tm.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(lt.toLocalDate()))
+                    .max(Comparator.comparingDouble(e -> e.getValue().getHigh())).map(Map.Entry::getKey)
+                    .orElse(LocalDateTime.now());
+
+            LocalDateTime firstLow = tm.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(lt.toLocalDate()))
+                    .min(Comparator.comparingDouble(e -> e.getValue().getLow())).map(Map.Entry::getKey)
+                    .orElse(LocalDateTime.now());
+
             double dayLow = tm.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(lt.toLocalDate()))
                     .mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
 
             g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
-            if (tm.get(lt).getHigh() == dayHigh) {
+            if (tm.get(lt).getHigh() == dayHigh && lt.equals(firstHigh)) {
                 g.drawString(Math.round(tm.floorEntry(lt).getValue().getHigh() * 1000d) / 10d + "", x, highY);
             }
-            if (tm.get(lt).getLow() == dayLow) {
+            if (tm.get(lt).getLow() == dayLow && lt.equals(firstLow)) {
                 g.drawString(Math.round(tm.floorEntry(lt).getValue().getLow() * 1000d) / 10d + "", x + 2, lowY);
             }
             g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
