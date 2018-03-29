@@ -73,7 +73,7 @@ public class ChinaOptionHelper {
                         double volPrev = Double.parseDouble(al1.get(4));
                         int moneyness = Integer.parseInt(al1.get(5));
                         String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
-                        ChinaVolSave v = new ChinaVolSave(volDate,callput,strike, expiry, volPrev, moneyness, ticker);
+                        ChinaVolSave v = new ChinaVolSave(volDate, callput, strike, expiry, volPrev, moneyness, ticker);
                         session.saveOrUpdate(v);
 
                         i.incrementAndGet();
@@ -180,7 +180,10 @@ public class ChinaOptionHelper {
         return "";
     }
 
-    public static double bs(CallPutFlag f, double s, double k, double v, double t, double r) {
+    private static double bs(CallPutFlag f, double s, double k, double v, double t, double r) {
+        if (t < 0.0) {
+            return 0.0;
+        }
         double d1 = (Math.log(s / k) + (r + 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
         double d2 = (Math.log(s / k) + (r - 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
         double nd1 = (new NormalDistribution()).cumulativeProbability(d1);
@@ -188,6 +191,7 @@ public class ChinaOptionHelper {
         double call = s * nd1 - exp(-r * t) * k * nd2;
         double put = exp(-r * t) * k * (1 - nd2) - s * (1 - nd1);
         return f == CallPutFlag.CALL ? call : put;
+
     }
 
     public static DoubleUnaryOperator fillInBS(double s, Option opt) {

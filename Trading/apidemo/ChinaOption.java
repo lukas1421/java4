@@ -82,8 +82,8 @@ public class ChinaOption extends JPanel implements Runnable {
     private static GraphOptionIntraday graphIntraday = new GraphOptionIntraday();
     private static GraphOptionVol graphTS2 = new GraphOptionVol();
 
-    public static LocalDate frontExpiry = getOptionExpiryDate(2018, Month.MARCH);
-    public static LocalDate backExpiry = getOptionExpiryDate(2018, Month.APRIL);
+    public static LocalDate frontExpiry = getOptionExpiryDate(2018, Month.APRIL);
+    public static LocalDate backExpiry = getOptionExpiryDate(2018, Month.MAY);
     public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.JUNE);
     public static LocalDate fourthExpiry = getOptionExpiryDate(2018, Month.SEPTEMBER);
 
@@ -193,8 +193,10 @@ public class ChinaOption extends JPanel implements Runnable {
                         graphIntraday.setMap(todayImpliedVolMap.get(selectedTicker));
                         graphIntraday.repaint();
 
-                        graphTS2.setCurrentOption(selectedTicker, callput, strike, selectedExpiry,
-                                todayImpliedVolMap.get(selectedTicker).lastEntry().getValue().getClose());
+                        if (todayImpliedVolMap.containsKey(selectedTicker) && todayImpliedVolMap.get(selectedTicker).size() > 0) {
+                            graphTS2.setCurrentOption(selectedTicker, callput, strike, selectedExpiry,
+                                    todayImpliedVolMap.get(selectedTicker).lastEntry().getValue().getClose());
+                        }
 
                         graphTS2.repaint();
                         //System.out.println(" ticker intraday vol " + selectedTicker + " " + todayImpliedVolMap.get(selectedTicker));
@@ -790,6 +792,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
                     NavigableMap<Integer, Double> todayMoneynessVol =
                             mergePutCallVolsMoneyness(strikeVolMapCall.get(d), strikeVolMapPut.get(d), currentStockPrice);
+
                     timeLapseVolAllExpiries.get(d).put(pricingDate, getVolByMoneyness(todayMoneynessVol, 100));
                 }
             }
