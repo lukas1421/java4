@@ -74,8 +74,8 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
             //int topY = (int) (getHeight() * 0.8);
             //int stepSize = (int) (topY / stepsOf10);
 
-            for (int i = 1; i != stepsOf10; i++) {
-                g.drawString(Double.toString((double) i / 10), 5, getY((double) i / 10, maxVol, minVol));
+            for (int i = 1; i <= stepsOf10; i++) {
+                g.drawString(Double.toString((double) i * 10) + "v", 5, getY((double) i / 10, maxVol, minVol));
             }
 
             for (Map.Entry<Double, Double> e : volNow.entrySet()) {

@@ -39,6 +39,24 @@ public class ChinaOptionHelper {
         throw new UnsupportedOperationException(" utility class ");
     }
 
+    static final DayOfWeek OptionExpiryWeekDay = DayOfWeek.WEDNESDAY;
+
+    static LocalDate getExpiryDateAuto(int lag) {
+        LocalDate today = LocalDate.now();
+        LocalDate expiryThisMonth = getOptionExpiryDate(today, OptionExpiryWeekDay);
+        if (today.isAfter(expiryThisMonth)) {
+            //System.out.println(" lag is " + lag + " expiry " + getOptionExpiryDate(today.plusMonths(lag), OptionExpiryWeekDay));
+            return getOptionExpiryDate(today.plusMonths(lag), OptionExpiryWeekDay);
+        } else {
+            //System.out.println(" lag is " + lag + " expiry " + getOptionExpiryDate(today.plusMonths(lag - 1), OptionExpiryWeekDay));
+            return getOptionExpiryDate(today.plusMonths(lag - 1), OptionExpiryWeekDay);
+        }
+    }
+
+    public static LocalDate getOptionExpiryDate(LocalDate now, DayOfWeek weekday) {
+        return getOptionExpiryDate(now.getYear(), now.getMonth(), weekday);
+    }
+
     public static LocalDate getOptionExpiryDate(int year, Month m, DayOfWeek weekday) {
         LocalDate res = LocalDate.of(year, m.plus(1), 1);
 

@@ -24,7 +24,10 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.Blob;
-import java.time.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -79,10 +82,16 @@ public class ChinaOption extends JPanel implements Runnable {
     private static GraphOptionIntraday graphIntraday = new GraphOptionIntraday();
     private static GraphOptionVol graphTS2 = new GraphOptionVol();
 
-    public static LocalDate frontExpiry = getOptionExpiryDate(2018, Month.APRIL, DayOfWeek.WEDNESDAY);
-    public static LocalDate backExpiry = getOptionExpiryDate(2018, Month.MAY, DayOfWeek.WEDNESDAY);
-    public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.JUNE, DayOfWeek.WEDNESDAY);
-    public static LocalDate fourthExpiry = getOptionExpiryDate(2018, Month.SEPTEMBER, DayOfWeek.WEDNESDAY);
+//    public static LocalDate frontExpiry = getOptionExpiryDate(2018, Month.APRIL, OptionExpiryWeekDay);
+//    public static LocalDate backExpiry = getOptionExpiryDate(2018, Month.MAY, OptionExpiryWeekDay);
+//    public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.JUNE, OptionExpiryWeekDay);
+//    public static LocalDate fourthExpiry = getOptionExpiryDate(2018, Month.SEPTEMBER, OptionExpiryWeekDay);
+
+    public static LocalDate frontExpiry = getExpiryDateAuto(1);
+    public static LocalDate backExpiry = getExpiryDateAuto(2);
+    public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.JUNE, OptionExpiryWeekDay);
+    public static LocalDate fourthExpiry = getOptionExpiryDate(2018, Month.SEPTEMBER, OptionExpiryWeekDay);
+
 
     private static String frontMonth = frontExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
     private static String backMonth = backExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
@@ -992,8 +1001,8 @@ public class ChinaOption extends JPanel implements Runnable {
         for (LocalDate expiry : expiryList) {
             timeLapseMoneynessVolAllExpiries.get(expiry).forEach((k, v) ->
                     timeLapseVolAllExpiries.get(expiry).put(k, ChinaOptionHelper.getVolByMoneyness(v, 100)));
-            System.out.println(" expiry is " + expiry);
-            timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(System.out::println);
+            //System.out.println(" expiry is " + expiry);
+            //timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(System.out::println);
         }
     }
 
