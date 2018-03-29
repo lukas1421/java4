@@ -2,9 +2,8 @@ package apidemo;
 
 import utility.Utility;
 
-import java.time.DayOfWeek;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -12,10 +11,48 @@ public final class TradingConstants {
 //    public static final String A50_FRONT_EXPIRY = "20171129";
 //    public static final String A50_BACK_EXPIRY = "20171228";
 
-    public static final String A50_LAST_EXPIRY = "20180227";
-    public static final String A50_FRONT_EXPIRY = "20180329";
-    public static final String A50_BACK_EXPIRY = "20180426";
+    public static final DayOfWeek expiryDayOfWeek = DayOfWeek.THURSDAY;
+    public static final String A50_LAST_EXPIRY = getFutureExpiryDateString(2018, Month.FEBRUARY, expiryDayOfWeek);
+    public static final String A50_FRONT_EXPIRY = getFutureExpiryDateString(2018, Month.MARCH, expiryDayOfWeek);
+    public static final String A50_BACK_EXPIRY = getFutureExpiryDateString(2018, Month.APRIL, expiryDayOfWeek);
     public static final String ftseIndex = "FTSEA50";
+
+    public static String getFutLastExpiry() {
+        LocalDate today = LocalDate.now();
+        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today.getYear(), today.getMonth(), expiryDayOfWeek);
+        if (today.isAfter(thisMonthExpiryDate)) {
+            return getFutureExpiryDateString(today.getYear(), today.getMonth(), expiryDayOfWeek);
+        } else {
+            return getFutureExpiryDateString(today.getYear() + (today.getMonth().getValue() == 1 ? -1 : 0)
+                    , today.getMonth().minus(1L), expiryDayOfWeek);
+        }
+        //return A50_LAST_EXPIRY;
+    }
+
+    public static String getFutFrontExpiry() {
+        LocalDate today = LocalDate.now();
+        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today.getYear(), today.getMonth(), expiryDayOfWeek);
+        if (today.isAfter(thisMonthExpiryDate)) {
+            return getFutureExpiryDateString(today.getYear() + (today.getMonth() == Month.DECEMBER ? 1 : 0)
+                    , today.getMonth().plus(1L), expiryDayOfWeek);
+        } else {
+            return getFutureExpiryDateString(today.getYear(), today.getMonth(), expiryDayOfWeek);
+        }
+        //return A50_FRONT_EXPIRY;
+    }
+
+    public static String getFutBackExpiry() {
+        LocalDate today = LocalDate.now();
+        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today.getYear(), today.getMonth(), expiryDayOfWeek);
+        if (today.isAfter(thisMonthExpiryDate)) {
+            return getFutureExpiryDateString(today.getYear() + (today.getMonth().getValue() >= 11 ? 1 : 0)
+                    , today.getMonth().plus(2L), expiryDayOfWeek);
+        } else {
+            return getFutureExpiryDateString(today.getYear() + (today.getMonth().getValue() >= 12 ? 1 : 0),
+                    today.getMonth().plus(1L), expiryDayOfWeek);
+        }
+        //return A50_BACK_EXPIRY;
+    }
 
     public static final String GLOBALPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";
     public static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
@@ -46,4 +83,22 @@ public final class TradingConstants {
     }
 
     static volatile double CNHHKD = 1.18;
+
+    public static LocalDate getFutureExpiryDate(int year, Month m, DayOfWeek weekday) {
+        LocalDate res = LocalDate.of(year, m.plus(1), 1);
+        while (res.getDayOfWeek() != weekday) {
+            res = res.minusDays(1);
+        }
+        return res;
+    }
+
+    public final static String getFutureExpiryDateString(int year, Month m, DayOfWeek weekday) {
+        LocalDate res = LocalDate.of(year, m.plus(1), 1);
+        while (res.getDayOfWeek() != weekday) {
+            res = res.minusDays(1);
+        }
+        return res.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+    }
+
+
 }

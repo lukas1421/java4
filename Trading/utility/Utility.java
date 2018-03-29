@@ -782,13 +782,20 @@ public class Utility {
     @SuppressWarnings("SpellCheckingInspection")
     public static String ibContractToSymbol(Contract ct) {
         if (ct.symbol().equals("XINA50")) {
-            switch (ct.lastTradeDateOrContractMonth()) {
-                case TradingConstants.A50_FRONT_EXPIRY:
-                    return "SGXA50";
-                case TradingConstants.A50_BACK_EXPIRY:
-                    return "SGXA50BM";
-                case TradingConstants.A50_LAST_EXPIRY:
-                    return "SGXA50PR";
+//            switch (ct.lastTradeDateOrContractMonth()) {
+//                case TradingConstants.A50_FRONT_EXPIRY:
+//                    return "SGXA50";
+//                case TradingConstants.A50_BACK_EXPIRY:
+//                    return "SGXA50BM";
+//                case TradingConstants.A50_LAST_EXPIRY:
+//                    return "SGXA50PR";
+//            }
+            if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutFrontExpiry())) {
+                return "SGXA50";
+            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutBackExpiry())) {
+                return "SGXA50BM";
+            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutLastExpiry())) {
+                return "SGXA50PR";
             }
         }
         return ct.symbol();
@@ -796,14 +803,23 @@ public class Utility {
 
     public static FutType ibContractToFutType(Contract ct) {
         if (ct.symbol().equals("XINA50")) {
-            switch (ct.lastTradeDateOrContractMonth()) {
-                case TradingConstants.A50_LAST_EXPIRY:
-                    return FutType.PreviousFut;
-                case TradingConstants.A50_FRONT_EXPIRY:
-                    return FutType.FrontFut;
-                case TradingConstants.A50_BACK_EXPIRY:
-                    return FutType.BackFut;
+//            switch (ct.lastTradeDateOrContractMonth()) {
+//                case TradingConstants.A50_LAST_EXPIRY:
+//                    return FutType.PreviousFut;
+//                case TradingConstants.A50_FRONT_EXPIRY:
+//                    return FutType.FrontFut;
+//                case TradingConstants.A50_BACK_EXPIRY:
+//                    return FutType.BackFut;
+//            }
+            if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutFrontExpiry())) {
+                return FutType.FrontFut;
+            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutBackExpiry())) {
+                return FutType.BackFut;
+            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutLastExpiry())) {
+                return FutType.PreviousFut;
             }
+
+
         }
         throw new IllegalArgumentException("not a fut " + ct.symbol());
         //return ct.symbol();

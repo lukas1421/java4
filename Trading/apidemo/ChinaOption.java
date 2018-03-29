@@ -24,10 +24,7 @@ import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
 import java.sql.Blob;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -82,10 +79,10 @@ public class ChinaOption extends JPanel implements Runnable {
     private static GraphOptionIntraday graphIntraday = new GraphOptionIntraday();
     private static GraphOptionVol graphTS2 = new GraphOptionVol();
 
-    public static LocalDate frontExpiry = getOptionExpiryDate(2018, Month.APRIL);
-    public static LocalDate backExpiry = getOptionExpiryDate(2018, Month.MAY);
-    public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.JUNE);
-    public static LocalDate fourthExpiry = getOptionExpiryDate(2018, Month.SEPTEMBER);
+    public static LocalDate frontExpiry = getOptionExpiryDate(2018, Month.APRIL, DayOfWeek.WEDNESDAY);
+    public static LocalDate backExpiry = getOptionExpiryDate(2018, Month.MAY, DayOfWeek.WEDNESDAY);
+    public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.JUNE, DayOfWeek.WEDNESDAY);
+    public static LocalDate fourthExpiry = getOptionExpiryDate(2018, Month.SEPTEMBER, DayOfWeek.WEDNESDAY);
 
     private static String frontMonth = frontExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
     private static String backMonth = backExpiry.format(DateTimeFormatter.ofPattern("YYMM"));

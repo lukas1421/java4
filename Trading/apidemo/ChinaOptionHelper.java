@@ -39,10 +39,10 @@ public class ChinaOptionHelper {
         throw new UnsupportedOperationException(" utility class ");
     }
 
-    public static LocalDate getOptionExpiryDate(int year, Month m) {
+    public static LocalDate getOptionExpiryDate(int year, Month m, DayOfWeek weekday) {
         LocalDate res = LocalDate.of(year, m.plus(1), 1);
 
-        while (res.getDayOfWeek() != DayOfWeek.WEDNESDAY) {
+        while (res.getDayOfWeek() != weekday) {
             res = res.minusDays(1);
         }
         //System.out.println(getStr(" return expiry date for month ",year,m, res));
