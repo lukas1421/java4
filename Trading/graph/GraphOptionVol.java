@@ -8,10 +8,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.time.LocalDate;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static apidemo.ChinaOption.*;
 import static utility.Utility.*;
@@ -61,28 +60,36 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
         currentPrice = p;
     }
 
-    public void setVolSmileFront(NavigableMap<Double, Double> mp) {
-        //trim adjusted strikes
+    public NavigableMap<Double, Double> trimMap(NavigableMap<Double, Double> mp) {
         NavigableMap<Double, Double> trimmedMap = new TreeMap<>();
         mp.forEach((k, v) -> {
             if ((k * 100) % 5 == 0) {
                 trimmedMap.put(k, v);
             }
         });
-        //volSmileFront = mp;
-        volSmileFront = trimmedMap;
+        return trimmedMap;
+    }
+
+    public void setVolSmileFront(NavigableMap<Double, Double> mp) {
+//        NavigableMap<Double, Double> trimmedMap = new TreeMap<>();
+//        mp.forEach((k, v) -> {
+//            if ((k * 100) % 5 == 0) {
+//                trimmedMap.put(k, v);
+//            }
+//        });
+        volSmileFront = trimMap(mp);
     }
 
     public void setVolSmileBack(NavigableMap<Double, Double> mp) {
-        volSmileBack = mp;
+        volSmileBack = trimMap(mp);
     }
 
     public void setVolSmileThird(NavigableMap<Double, Double> mp) {
-        volSmileThird = mp;
+        volSmileThird = trimMap(mp);
     }
 
     public void setVolSmileFourth(NavigableMap<Double, Double> mp) {
-        volSmileFourth = mp;
+        volSmileFourth = trimMap(mp);
     }
 
     public void setCurrentOption(String ticker, String f, double k, LocalDate exp, double vol) {
@@ -118,6 +125,10 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
 
             computeDelta();
 
+            double minK = minGen(volSmileFront.firstKey(), volSmileBack.firstKey(), volSmileThird.firstKey(), volSmileFourth.firstKey());
+            double maxK = maxGen(volSmileFront.lastKey(), volSmileBack.lastKey(), volSmileThird.lastKey(), volSmileFourth.lastKey());
+
+
             double minVol = minGen(volSmileFront.values().stream().reduce(Math::min).orElse(0.0),
                     volSmileBack.values().stream().reduce(Math::min).orElse(0.0),
                     volSmileThird.values().stream().reduce(Math::min).orElse(0.0),
@@ -128,37 +139,49 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
                     volSmileThird.values().stream().reduce(Math::max).orElse(0.0),
                     volSmileFourth.values().stream().reduce(Math::max).orElse(0.0));
 
+
+            NavigableSet<Double> strikeList = Stream.of(volSmileFront.keySet(), volSmileBack.keySet()
+                    , volSmileThird.keySet(), volSmileFourth.keySet())
+                    .flatMap(Collection::stream).collect(Collectors.toCollection(TreeSet::new));
+
             int x = 5;
-            int x_width = getWidth() / volSmileFront.size();
+            int x_width = getWidth() / strikeList.size();
             int height = (int) (getHeight() * 0.8);
 
             int stepsOf10 = (int) Math.floor(maxVol * 10);
             //int topY = (int) (getHeight() * 0.8);
             //int stepSize = (int) (topY / stepsOf10);
 
-            for (int i = 1; i != stepsOf10; i++) {
-                g.drawString(Double.toString((double) i / 10), 5, getY((double) i / 10, maxVol, minVol));
+            //System.out.println(" steps of 10 " + stepsOf10);
+
+            for (int i = 1; i <= stepsOf10; i++) {
+                double vol = i / 10.0d;
+                g.drawString((i * 10) + "v", 5, getY(vol, maxVol, minVol));
             }
 
-            for (Map.Entry<Double, Double> e : volSmileFront.entrySet()) {
 
-                int yFront = getY(ChinaOptionHelper.interpolateVol(e.getKey(), volSmileFront), maxVol, minVol);
-                int yBack = getY(ChinaOptionHelper.interpolateVol(e.getKey(), volSmileBack), maxVol, minVol);
-                int yThird = getY(ChinaOptionHelper.interpolateVol(e.getKey(), volSmileThird), maxVol, minVol);
-                int yFourth = getY(ChinaOptionHelper.interpolateVol(e.getKey(), volSmileFourth), maxVol, minVol);
+            //System.out.println(" strike list is " + strikeList);
+
+            //for (Map.Entry<Double, Double> e : volSmileFront.entrySet()) {
+            for (double k : strikeList) {
+
+                int yFront = getY(ChinaOptionHelper.interpolateVol(k, volSmileFront), maxVol, minVol);
+                int yBack = getY(ChinaOptionHelper.interpolateVol(k, volSmileBack), maxVol, minVol);
+                int yThird = getY(ChinaOptionHelper.interpolateVol(k, volSmileThird), maxVol, minVol);
+                int yFourth = getY(ChinaOptionHelper.interpolateVol(k, volSmileFourth), maxVol, minVol);
 
                 g.drawOval(x, yFront, 5, 5);
                 g.fillOval(x, yFront, 5, 5);
-                String priceInPercent = Integer.toString((int) (e.getKey() / currentPrice * 100)) + "%";
+                String priceInPercent = Integer.toString((int) (k / currentPrice * 100)) + "%";
                 g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.5F));
 
-                g.drawString(e.getKey().toString(), x, getHeight() - 20);
+                g.drawString(k + "", x, getHeight() - 20);
                 g.drawString(priceInPercent, x, getHeight() - 5);
-                g.drawString(Math.round(ChinaOptionHelper.interpolateVol(e.getKey(), volSmileFront) * 100d)
+                g.drawString(Math.round(ChinaOptionHelper.interpolateVol(k, volSmileFront) * 100d)
                         + "", x, Math.max(10, yFront - 5));
 
                 // draw circle on selected stock
-                if (!selectedOptionTicker.equals("") && e.getKey() == selectedStrike) {
+                if (!selectedOptionTicker.equals("") && k == selectedStrike) {
                     int y = getY(selectedVol, maxVol, minVol);
                     g.setColor(colorMap.getOrDefault(selectedExpiry, Color.black));
 //                    System.out.println(" current selected color is " + selectedExpiry + " "
@@ -171,11 +194,11 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
 
 
                 if (showDelta) {
-                    g.drawString(" [" + Math.round((deltaMapFront.getOrDefault(e.getKey(), 0.0))) + "d]",
+                    g.drawString(" [" + Math.round((deltaMapFront.getOrDefault(k, 0.0))) + "d]",
                             x + 20, Math.max(10, yFront - 5));
                 }
 
-                if ((double) e.getKey() == volSmileFront.lastKey()) {
+                if (k == volSmileFront.lastKey()) {
                     g.drawString("(1)", getWidth() - 20, height / 2);
                 }
 
@@ -183,15 +206,15 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
                     g.setColor(color2Exp);
                     g.drawOval(x, yBack, 5, 5);
                     g.fillOval(x, yBack, 5, 5);
-                    g.drawString(Math.round(ChinaOptionHelper.interpolateVol(e.getKey(), volSmileBack) * 100d)
+                    g.drawString(Math.round(ChinaOptionHelper.interpolateVol(k, volSmileBack) * 100d)
                             + "", x + 10, yBack + 10);
 
                     if (showDelta) {
-                        g.drawString(" [" + Math.round((deltaMapBack.getOrDefault(e.getKey(), 0.0))) + "d]",
+                        g.drawString(" [" + Math.round((deltaMapBack.getOrDefault(k, 0.0))) + "d]",
                                 x + 30, Math.max(10, yBack + 10));
                     }
 
-                    if ((double) e.getKey() == volSmileBack.lastKey()) {
+                    if (k == volSmileBack.lastKey()) {
                         g.drawString("(2)", getWidth() - 20, height / 2 + 20);
                     }
                 }
@@ -200,9 +223,9 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
                     g.setColor(color3Exp);
                     g.drawOval(x, yThird, 5, 5);
                     g.fillOval(x, yThird, 5, 5);
-                    g.drawString(Math.round(ChinaOptionHelper.interpolateVol(e.getKey(), volSmileThird) * 100d) + "", x, yThird + 20);
+                    g.drawString(Math.round(ChinaOptionHelper.interpolateVol(k, volSmileThird) * 100d) + "", x, yThird + 20);
 
-                    if ((double) e.getKey() == volSmileThird.lastKey()) {
+                    if (k == volSmileThird.lastKey()) {
                         g.drawString("(3)", getWidth() - 20, height / 2 + 40);
                     }
                 }
@@ -211,10 +234,9 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
                     g.setColor(color4Exp);
                     g.drawOval(x, yFourth, 5, 5);
                     g.fillOval(x, yFourth, 5, 5);
-                    g.drawString(Math.round(ChinaOptionHelper.interpolateVol(e.getKey(),
-                            volSmileFourth) * 100d) + "", x, yFourth + 20);
+                    g.drawString(Math.round(ChinaOptionHelper.interpolateVol(k, volSmileFourth) * 100d) + "", x, yFourth + 20);
 
-                    if ((double) e.getKey() == volSmileFourth.lastKey()) {
+                    if (k == volSmileFourth.lastKey()) {
                         g.drawString("(4)", getWidth() - 20, height / 2 + 60);
                     }
                 }
@@ -225,7 +247,7 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
 
                 if (roundDownToN(mouseXCord, x_width) == x - 5) {
                     g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 3F));
-                    g.drawString(e.toString(), x, yFront);
+                    g.drawString(k + "", x, yFront);
                     g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.333F));
                 }
 
