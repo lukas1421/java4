@@ -11,10 +11,10 @@ public final class TradingConstants {
 //    public static final String A50_FRONT_EXPIRY = "20171129";
 //    public static final String A50_BACK_EXPIRY = "20171228";
 
-    private static final DayOfWeek expiryDayOfWeek = DayOfWeek.THURSDAY;
-//    public static final String A50_LAST_EXPIRY = getFutureExpiryDateString(2018, Month.FEBRUARY, expiryDayOfWeek);
-//    public static final String A50_FRONT_EXPIRY = getFutureExpiryDateString(2018, Month.MARCH, expiryDayOfWeek);
-//    public static final String A50_BACK_EXPIRY = getFutureExpiryDateString(2018, Month.APRIL, expiryDayOfWeek);
+    private static final DayOfWeek futExpiryWeekDay = DayOfWeek.THURSDAY;
+//    public static final String A50_LAST_EXPIRY = getFutureExpiryDateString(2018, Month.FEBRUARY, futExpiryWeekDay);
+//    public static final String A50_FRONT_EXPIRY = getFutureExpiryDateString(2018, Month.MARCH, futExpiryWeekDay);
+//    public static final String A50_BACK_EXPIRY = getFutureExpiryDateString(2018, Month.APRIL, futExpiryWeekDay);
 
     public static final String A50_LAST_EXPIRY = getFutLastExpiry();
     public static final String A50_FRONT_EXPIRY = getFutFrontExpiry();
@@ -91,7 +91,7 @@ public final class TradingConstants {
 
     private static LocalDate getFutureExpiryDate(int year, Month m) {
         LocalDate res = LocalDate.of(year, m.plus(1), 1);
-        while (res.getDayOfWeek() != TradingConstants.expiryDayOfWeek) {
+        while (res.getDayOfWeek() != TradingConstants.futExpiryWeekDay) {
             res = res.minusDays(1);
         }
         return res;
@@ -104,7 +104,7 @@ public final class TradingConstants {
 
     private static String getFutureExpiryDateString(int year, Month m) {
         LocalDate res = LocalDate.of(year, m.plus(1), 1);
-        while (res.getDayOfWeek() != TradingConstants.expiryDayOfWeek) {
+        while (res.getDayOfWeek() != TradingConstants.futExpiryWeekDay) {
             res = res.minusDays(1);
         }
         return res.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
