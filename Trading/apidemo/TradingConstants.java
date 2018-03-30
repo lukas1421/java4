@@ -10,7 +10,7 @@ import java.util.function.Predicate;
 public final class TradingConstants {
 //    public static final String A50_FRONT_EXPIRY = "20171129";
 //    public static final String A50_BACK_EXPIRY = "20171228";
-
+    //to push
     private static final DayOfWeek futExpiryWeekDay = DayOfWeek.THURSDAY;
 //    public static final String A50_LAST_EXPIRY = getFutureExpiryDateString(2018, Month.FEBRUARY, futExpiryWeekDay);
 //    public static final String A50_FRONT_EXPIRY = getFutureExpiryDateString(2018, Month.MARCH, futExpiryWeekDay);
