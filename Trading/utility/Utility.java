@@ -755,7 +755,10 @@ public class Utility {
         ct.exchange("SGX");
         ct.currency("USD");
         ct.lastTradeDateOrContractMonth(TradingConstants.A50_LAST_EXPIRY);
+        ct.includeExpired(true);
         ct.secType(Types.SecType.FUT);
+        System.out.println(" get expired fut contract " + " expiry date " + TradingConstants.A50_LAST_EXPIRY + " "
+                + ct.lastTradeDateOrContractMonth());
         return ct;
     }
 
