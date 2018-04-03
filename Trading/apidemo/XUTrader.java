@@ -20,12 +20,15 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
+import static apidemo.TradingConstants.ftseIndex;
 import static utility.Utility.*;
 
 //import java.util.concurrent.atomic.AtomicInteger;
@@ -35,6 +38,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         , ApiController.IPositionHandler, ApiController.IConnectionHandler {
 
     static ApiController apcon;
+
+    private static final double maxOvernightTrades = 5.0;
+    private static AtomicInteger overnightTradesDone = new AtomicInteger(0);
 
     //new ApiController(new XUConnectionHandler(),
     //new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
@@ -46,7 +52,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @SuppressWarnings("unused")
     private static Predicate<? super Map.Entry<FutType, ?>> graphPred = e -> true;
-    public static volatile Contract activeFuture = frontFut;
+    static volatile Contract activeFuture = frontFut;
     public static volatile DisplayGranularity gran = DisplayGranularity._1MDATA;
 
     public static volatile Map<Double, Double> activeFutLiveOrder = new HashMap<>();
@@ -74,7 +80,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
     private ScheduledExecutorService ses2 = Executors.newScheduledThreadPool(10);
 
-    public static EnumMap<FutType, NavigableMap<LocalTime, TradeBlock>> tradesMap = new EnumMap<>(FutType.class);
+    public static EnumMap<FutType, NavigableMap<LocalDateTime, TradeBlock>> tradesMap = new EnumMap<>(FutType.class);
 
     private GraphXuTrader xuGraph = new GraphXuTrader() {
         @Override
@@ -88,7 +94,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     public static AtomicInteger graphWidth = new AtomicInteger(3);
 
-    public static volatile EnumMap<FutType, NavigableMap<LocalTime, SimpleBar>> futData = new EnumMap<>(FutType.class);
+    public static volatile EnumMap<FutType, NavigableMap<LocalDateTime, SimpleBar>> futData = new EnumMap<>(FutType.class);
     //static volatile NavigableMap<LocalTime, SimpleBar> xuFrontData = new ConcurrentSkipListMap<>();
     //static volatile NavigableMap<LocalTime, SimpleBar> xuBackData = new ConcurrentSkipListMap<>();
 //    public static volatile int netPositionFront;
@@ -158,13 +164,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JButton buyOfferButton = new JButton(" Buy Now");
         buyOfferButton.addActionListener(l -> {
             System.out.println(" buy offer ");
-            apcon.placeOrModifyOrder(activeFuture, buyAtOffer(askMap.get(ibContractToFutType(activeFuture))), this);
+            apcon.placeOrModifyOrder(activeFuture, buyAtOffer(askMap.get(ibContractToFutType(activeFuture)), 1.0)
+                    , this);
         });
 
         JButton sellBidButton = new JButton(" Sell Now");
         sellBidButton.addActionListener(l -> {
             System.out.println(" sell bid ");
-            apcon.placeOrModifyOrder(activeFuture, sellAtBid(bidMap.get(ibContractToFutType(activeFuture))), this);
+            apcon.placeOrModifyOrder(activeFuture, sellAtBid(bidMap.get(ibContractToFutType(activeFuture)), 1.0), this);
         });
 
         JButton getPositionButton = new JButton(" get pos ");
@@ -257,7 +264,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }, 0, 10, TimeUnit.SECONDS));
 
         //JButton connect7496 = new JButton("Connect 7496");
-
 //        connect7496.addActionListener(l -> {
 //            System.out.println(" trying to connect 7496");
 //            try {
@@ -266,9 +272,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //                ex.printStackTrace();
 //            }
 //        });
-//
 //        JButton connect4001 = new JButton("Connect 4001");
-//
 //        connect4001.addActionListener(l -> {
 //            System.out.println(" trying to connect 4001");
 //            try {
@@ -325,7 +329,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         });
 
         xuGraph.setAutoscrolls(false);
-        JScrollPane chartScroll = new JScrollPane(xuGraph, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS) {
+        JScrollPane chartScroll = new JScrollPane(xuGraph, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -361,7 +366,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         ButtonGroup dispGranGroup = new ButtonGroup();
         dispGranGroup.add(_1mButton);
         dispGranGroup.add(_5mButton);
-
 
         JLabel widthLabel = new JLabel("Width");
         widthLabel.setOpaque(true);
@@ -524,6 +528,59 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         add(chartScroll);
     }
 
+    private void overnightTrader() {
+
+        LocalTime now = LocalTime.now();
+
+        double indexPrice = (ChinaData.priceMapBar.containsKey(ftseIndex) &&
+                ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
+                ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : 0.0;
+
+
+        NavigableMap<LocalDateTime, SimpleBar> futPrice = futData.get(ibContractToFutType(activeFuture));
+
+
+        LocalDateTime ytdClose = LocalDateTime.of(LocalDate.now().minusDays(1L), LocalTime.of(15, 0));
+
+        NavigableMap<LocalDateTime, SimpleBar> filteredPrice = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(ytdClose))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
+
+        int currPercentile = getPercentileForLast(filteredPrice);
+        double pd = indexPrice != 0.0 ? (futPrice.lastEntry().getValue().getClose() / indexPrice - 1) : 0.0;
+
+
+        if (overnightTradesDone.get() < maxOvernightTrades) {
+            if (now.truncatedTo(ChronoUnit.MINUTES).equals(LocalTime.of(4, 40))) {
+                if (currPercentile > 90 && pd > 0.01) {
+                    apcon.placeOrModifyOrder(activeFuture, sellAtBid(bidMap.get(ibContractToFutType(activeFuture)), 1.0),
+                            this);
+                    overnightTradesDone.incrementAndGet();
+                } else if (currPercentile < 10 && pd < -0.01) {
+
+                    apcon.placeOrModifyOrder(activeFuture, buyAtOffer(askMap.get(ibContractToFutType(activeFuture)), 1.0)
+                            , this);
+                    overnightTradesDone.incrementAndGet();
+
+                } else {
+                    System.out.println(" nothign done ");
+                }
+            }
+        } else {
+            System.out.println(" trades exceeded max number allowed ");
+        }
+    }
+
+    private <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> map) {
+        if (map.size() > 0) {
+            double max = map.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
+            double min = map.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
+            double last = map.lastEntry().getValue().getClose();
+            return (int) Math.round(100d * ((last - min) / (max - min)));
+        }
+        return 50;
+    }
+
     private void loadXU() {
         //apcon.reqHistoricalData(frontFut, TOOL_TIP_TEXT_KEY, ERROR, Types.DurationUnit.SECOND, Types.BarSize._1_secs, Types.WhatToShow.TRADES, true, handler);
         System.out.println(" getting XU data ");
@@ -605,18 +662,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return apcon;
     }
 
-    private Order buyAtOffer(double p) {
+    private Order buyAtOffer(double p, double quantity) {
         System.out.println(" buy at offer " + p);
         Order o = new Order();
         o.action(Types.Action.BUY);
         o.lmtPrice(p);
         o.orderType(OrderType.LMT);
-        o.totalQuantity(1);
+        o.totalQuantity(quantity);
         o.outsideRth(true);
         return o;
     }
 
-    private Order sellAtBid(double p) {
+    private Order sellAtBid(double p, double quantity) {
         System.out.println(" sell at bid " + p);
 
         Order o = new Order();
@@ -624,7 +681,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //o.auxPrice(0.0);
         o.lmtPrice(p);
         o.orderType(OrderType.LMT);
-        o.totalQuantity(1);
+        o.totalQuantity(quantity);
         o.outsideRth(true);
         //o.orderId(orderIdNo.incrementAndGet());
         return o;
@@ -682,6 +739,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             cal.setTime(dt);
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+            LocalDateTime ldt = LocalDateTime.of(ld, lt);
             //System.out.println(" handle hist in xu trader ld lt  " + LocalDateTime.of(ld, lt));
             //System.out.println(getStr("name date open high low close ", name, date, open, high, low, close));
 
@@ -704,7 +762,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
                 //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
                 //System.out.println(Utility.getStrCheckNull(dt, open, high, low, close));
-                futData.get(FutType.get(name)).put(lt, new SimpleBar(open, high, low, close));
+                futData.get(FutType.get(name)).put(ldt, new SimpleBar(open, high, low, close));
                 //xuFrontData.put(lt, new SimpleBar(open, high, low, close));
 
             }
@@ -749,11 +807,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
         if (ldt.getDayOfMonth() == LocalDateTime.now().getDayOfMonth()) {
-            if (XUTrader.tradesMap.get(f).containsKey(ldt.toLocalTime())) {
-                XUTrader.tradesMap.get(f).get(ldt.toLocalTime())
+            if (XUTrader.tradesMap.get(f).containsKey(ldt)) {
+                XUTrader.tradesMap.get(f).get(ldt)
                         .addTrade(new FutureTrade(execution.price(), sign * execution.cumQty()));
             } else {
-                XUTrader.tradesMap.get(f).put(ldt.toLocalTime(),
+                XUTrader.tradesMap.get(f).put(ldt,
                         new TradeBlock(new FutureTrade(execution.price(), sign * execution.cumQty())));
             }
 //            if (XUTrader.tradesMapFront.containsKey(ldt.toLocalTime())) {
