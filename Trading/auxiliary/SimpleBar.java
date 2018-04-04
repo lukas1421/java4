@@ -90,6 +90,12 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         return low;
     }
 
+    public double getAverage() {
+        return (high + low) / 2;
+    }
+
+    //public double
+
     public double getClose() {
         return close;
     }
@@ -112,15 +118,15 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
     }
 
     public void updateBar(SimpleBar sb) {
-        updateBar(sb.getOpen(),sb.getHigh(),sb.getLow(),sb.getClose());
+        updateBar(sb.getOpen(), sb.getHigh(), sb.getLow(), sb.getClose());
     }
 
     @SuppressWarnings("unused")
     public void updateBar(double o, double h, double l, double c) {
-        if(h > high) {
+        if (h > high) {
             high = h;
         }
-        if(l < low) {
+        if (l < low) {
             low = l;
         }
         close = c;

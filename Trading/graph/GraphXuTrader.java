@@ -36,6 +36,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     int last = 0;
     double rtn = 0;
     NavigableMap<LocalDateTime, SimpleBar> tm;
+    NavigableMap<LocalDateTime, Double> ma60 = new ConcurrentSkipListMap<>();
     private NavigableMap<LocalDateTime, TradeBlock> trademap;
     private volatile FutType fut;
     volatile String name;
@@ -64,6 +65,22 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue().containsZero())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
                         ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
+    }
+
+    private void setMA60Map(NavigableMap<LocalDateTime, SimpleBar> mp) {
+        NavigableMap<LocalDateTime, Double> sma60 = new ConcurrentSkipListMap<>();
+        for (Map.Entry<LocalDateTime, SimpleBar> e : mp.entrySet()) {
+            //futPrice5m.
+            if (mp.firstKey().isBefore(e.getKey().minusMinutes(300L))) {
+
+                long size = mp.entrySet().stream().filter(e1 -> e1.getKey().isAfter(e.getKey().minusMinutes(300))
+                        && e1.getKey().isBefore(e.getKey())).count();
+                double val = mp.entrySet().stream().filter(e1 -> e1.getKey().isAfter(e.getKey().minusMinutes(300))
+                        && e1.getKey().isBefore(e.getKey())).mapToDouble(e2 -> e2.getValue().getAverage()).sum() / size;
+                sma60.put(e.getKey(), val);
+            }
+        }
+        this.ma60 = sma60;
     }
 
     private void setTradesMap(NavigableMap<LocalDateTime, TradeBlock> trade) {
@@ -101,6 +118,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             this.setNavigableMap(mp);
         } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
             this.setNavigableMap(map1mTo5mLDT(mp));
+            this.setMA60Map(map1mTo5mLDT(mp));
         }
     }
 
@@ -152,6 +170,11 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             int highY = getY(tm.floorEntry(lt).getValue().getHigh());
             int lowY = getY(tm.floorEntry(lt).getValue().getLow());
             int closeY = getY(tm.floorEntry(lt).getValue().getClose());
+
+            if (ma60.size() > 0 && ma60.containsKey(lt)) {
+                int maY = getY(ma60.get(lt));
+                g.drawLine(x, maY, x + 1, maY);
+            }
 
             //noinspection Duplicates
             if (closeY < openY) {  //close>open
@@ -208,6 +231,14 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                         lowY + (mouseYCord < closeY ? -50 : +50));
                 g.drawOval(x - 3, lowY, 5, 5);
                 g.fillOval(x - 3, lowY, 5, 5);
+
+                if (ma60.size() > 0 && ma60.containsKey(lt)) {
+                    int maY = getY(ma60.get(lt));
+                    g.drawString(lt.toString() + " " + Math.round(ma60.floorEntry(lt).getValue()), x,
+                            maY + (mouseYCord < maY ? -50 : +50));
+                    g.drawOval(x - 3, lowY, 5, 5);
+                    g.fillOval(x - 3, lowY, 5, 5);
+                }
             }
             x += XUTrader.graphWidth.get();
         }
@@ -220,6 +251,15 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                     x, lowY + (mouseYCord < closeY ? -20 : +20));
             g.drawOval(x + 2, lowY, 5, 5);
             g.fillOval(x + 2, lowY, 5, 5);
+
+            if (ma60.size() > 0) {
+                int maY = getY(ma60.lastEntry().getValue());
+                g.drawString(ma60.lastKey().toString() + " " + Math.round(ma60.lastEntry().getValue()), x,
+                        maY + (mouseYCord < maY ? -50 : +50));
+                g.drawOval(x + 2, maY, 5, 5);
+                g.fillOval(x + 2, maY, 5, 5);
+            }
+
             g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
         }
 

@@ -93,7 +93,6 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
             if (!ChinaOption.todayVolOnly) {
                 tm = Utility.map1mTo5mLDT(tm);
             }
-
         }
     }
 
@@ -123,7 +122,6 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
         height = getHeight() - 70;
         min = getMin();
         max = getMax();
-
 
         g.setColor(Color.black);
 

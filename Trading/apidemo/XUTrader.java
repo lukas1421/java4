@@ -263,6 +263,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             XUTrader.processTradeMapActive();
         }, 0, 10, TimeUnit.SECONDS));
 
+        JButton overnightButton = new JButton(" Overnight ");
+        overnightButton.addActionListener(l -> ses2.scheduleAtFixedRate(this::overnightTrader, 0, 1, TimeUnit.MINUTES));
+
+        JButton maTraderButton = new JButton(" MA Trader ");
+        maTraderButton.addActionListener(l -> ses2.scheduleAtFixedRate(this::movingAverageTrader, 0, 1, TimeUnit.MINUTES));
+
         //JButton connect7496 = new JButton("Connect 7496");
 //        connect7496.addActionListener(l -> {
 //            System.out.println(" trying to connect 7496");
@@ -417,6 +423,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel2.add(graphWidthUp);
         controlPanel2.add(graphWidthDown);
         controlPanel2.add(stopComputeButton);
+        controlPanel2.add(overnightButton);
+        controlPanel2.add(maTraderButton);
 
         JLabel bid1 = new JLabel("1");
         bidLabelList.add(bid1);
@@ -528,6 +536,31 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         add(chartScroll);
     }
 
+    private void movingAverageTrader() {
+        //start with 5 min candles, 60 min lines
+        NavigableMap<LocalDateTime, SimpleBar> futPrice5m = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
+        NavigableMap<LocalDateTime, Double> sma60 = new ConcurrentSkipListMap<>();
+        for (Map.Entry<LocalDateTime, SimpleBar> e : futPrice5m.entrySet()) {
+            //futPrice5m.
+            if (futPrice5m.firstKey().isBefore(e.getKey().minusMinutes(300L))) {
+
+                long size = futPrice5m.entrySet().stream().filter(e1 -> e1.getKey().isAfter(e.getKey().minusMinutes(300))
+                        && e1.getKey().isBefore(e.getKey())).count();
+
+                System.out.println(getStr(" time  size is ", e.getKey(), size));
+
+                double val = futPrice5m.entrySet().stream().filter(e1 -> e1.getKey().isAfter(e.getKey().minusMinutes(300))
+                        && e1.getKey().isBefore(e.getKey())).mapToDouble(e2 -> e2.getValue().getAverage()).sum() / size;
+
+                sma60.put(e.getKey(), val);
+            }
+        }
+        System.out.println(" current time is " + LocalDateTime.now());
+        System.out.println(" fut 5m map is " + futPrice5m);
+        System.out.println(" 60 dma is " + sma60);
+
+    }
+
     private void overnightTrader() {
 
         LocalTime now = LocalTime.now();
@@ -538,10 +571,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         NavigableMap<LocalDateTime, SimpleBar> futPrice = futData.get(ibContractToFutType(activeFuture));
 
-        LocalDateTime ytdClose = LocalDateTime.of(LocalDate.now().minusDays(1L), LocalTime.of(15, 0));
+        LocalDateTime ytdCloseTime = LocalDateTime.of(LocalDate.now().minusDays(1L), LocalTime.of(15, 0));
 
         NavigableMap<LocalDateTime, SimpleBar> filteredPrice = futPrice.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ytdClose))
+                .filter(e -> e.getKey().isAfter(ytdCloseTime))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
@@ -563,14 +596,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             , this);
 
                     overnightTradesDone.incrementAndGet();
-
                 } else {
-                    System.out.println(" nothign done ");
+                    System.out.println(" nothing done ");
                 }
             }
         } else {
             System.out.println(" trades exceeded max number allowed ");
         }
+
+        System.out.println(getStr("overnight trader ", now, " overnight trade dones ", overnightTradesDone.get(),
+                "current percentile ", currPercentile, " PD: ", pd, "current price ",
+                filteredPrice.lastEntry().getValue().getClose(), " index ", indexPrice));
+        //System.out.println(" overnight trades done " + );
     }
 
     private <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> map) {
@@ -821,7 +858,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //            } else {
 //                XUTrader.tradesMapFront.put(ldt.toLocalTime(), new IBTrade(execution.price(), sign * execution.cumQty()));
 //            }
-
             //System.out.println(" printing all trades");
             //XUTrader.tradesMapFront.entrySet().stream().forEach(System.out::println);
             //XUTrader.processTradeMapActive();
@@ -836,12 +872,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @Override
     public void commissionReport(String tradeKey, CommissionReport commissionReport) {
-//        System.out.println(" commion report "  + commissionReport.m_commission);
-//        System.out.println(" realized pnl  "  + commissionReport.m_realizedPNL);
-//        System.out.println(" yield  "  + commissionReport.m_yield);
-//        System.out.println("  redemption date "  + commissionReport.m_yieldRedemptionDate);
-//        XUTrader.netTotalCommissions += Math.round(100d*commissionReport.m_commission)/100d;
-        //System.out.println(" net total com so far " + XUTrader.netTotalCommissions);
     }
 
 
