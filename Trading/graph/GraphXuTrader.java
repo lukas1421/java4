@@ -36,7 +36,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     int last = 0;
     double rtn = 0;
     NavigableMap<LocalDateTime, SimpleBar> tm;
-    NavigableMap<LocalDateTime, Double> ma60 = new ConcurrentSkipListMap<>();
+    private NavigableMap<LocalDateTime, Double> ma60 = new ConcurrentSkipListMap<>();
     private NavigableMap<LocalDateTime, TradeBlock> trademap;
     private volatile FutType fut;
     volatile String name;

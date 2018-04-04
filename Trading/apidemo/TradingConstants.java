@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 
 public final class TradingConstants {
-//    public static final String A50_FRONT_EXPIRY = "20171129";
+    //    public static final String A50_FRONT_EXPIRY = "20171129";
 //    public static final String A50_BACK_EXPIRY = "20171228";
     //to push
     private static final DayOfWeek futExpiryWeekDay = DayOfWeek.THURSDAY;
@@ -65,11 +65,14 @@ public final class TradingConstants {
     public static final Predicate<? super Map.Entry<LocalTime, ?>> TRADING_HOURS =
             e -> ((e.getKey().isAfter(LocalTime.of(9, 29)) && e.getKey().isBefore(LocalTime.of(11, 31))) || Utility.PM_PRED.test(e));
 
-    public static final Predicate<LocalDateTime> DATA_COLLECTION_TIME =
+    public static final Predicate<LocalDateTime> STOCK_COLLECTION_TIME =
             lt -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) &&
                     !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
                     && ((lt.toLocalTime().isAfter(LocalTime.of(8, 59)) && lt.toLocalTime().isBefore(LocalTime.of(11, 35)))
-                    || (lt.toLocalTime().isAfter(LocalTime.of(12, 58))));
+                    || (lt.toLocalTime().isAfter(LocalTime.of(12, 58))) && lt.toLocalTime().isBefore(LocalTime.of(15, 30)));
+
+    public static final Predicate<LocalDateTime> FUT_COLLECTION_TIME =
+            ldt -> ldt.toLocalTime().isBefore(LocalTime.of(5, 0)) || ldt.toLocalTime().isAfter(LocalTime.of(8, 59));
 
     //&& lt.toLocalTime().isBefore(LocalTime.of(15, 5))
 

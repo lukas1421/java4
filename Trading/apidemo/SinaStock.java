@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.sizeTotalMap;
 import static apidemo.ChinaStock.*;
-import static apidemo.TradingConstants.DATA_COLLECTION_TIME;
+import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
 import static apidemo.TradingConstants.ftseIndex;
 import static apidemo.XU.indexPriceSina;
 import static apidemo.XU.indexVol;
@@ -73,7 +73,7 @@ public class SinaStock implements Runnable {
             getInfoFromURLConn(ldt, urlconnSH);
             getInfoFromURLConn(ldt, urlconnSZ);
 
-            if (DATA_COLLECTION_TIME.test(LocalDateTime.now())) {
+            if (STOCK_COLLECTION_TIME.test(LocalDateTime.now())) {
                 rtn = weightMapA50.entrySet().stream().mapToDouble(a -> returnMap.getOrDefault(a.getKey(), 0.0) * a.getValue()).sum();
                 double currPrice = OPEN * (1 + (Math.round(rtn) / 10000d));
                 double sinaVol = weightMapA50.entrySet().stream()
@@ -138,7 +138,7 @@ public class SinaStock implements Runnable {
                         //System.out.println(" last data available date " + datalist.get(30) + " " + datalist.get(31));
 
                         if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker)
-                                && DATA_COLLECTION_TIME.test(ldt)) {
+                                && STOCK_COLLECTION_TIME.test(ldt)) {
 
                             double last = Utility.pd(datalist, 3);
                             //priceMapPlain.get(ticker).put(lt,last);
@@ -159,7 +159,7 @@ public class SinaStock implements Runnable {
                         //updateBidAskMap(ticker, lt, datalist, BidAsk.BID, bidMap);
                         //updateBidAskMap(ticker, lt, datalist, BidAsk.ASK, askMap);
                     } else {
-                        if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker) && DATA_COLLECTION_TIME.test(ldt)) {
+                        if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker) && STOCK_COLLECTION_TIME.test(ldt)) {
                             ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(Utility.pd(datalist, 2)));
                         }
 

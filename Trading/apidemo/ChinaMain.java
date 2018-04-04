@@ -33,7 +33,7 @@ import java.util.concurrent.*;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
-import static apidemo.TradingConstants.DATA_COLLECTION_TIME;
+import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
 
 //import java.time.temporal.ChronoUnit;
 //import java.time.temporal.TemporalUnit;
@@ -272,7 +272,7 @@ public final class ChinaMain implements IConnectionHandler {
             ses.scheduleAtFixedRate(sinastock1, 0, 1, TimeUnit.SECONDS);
             xu.startIndex();
             ses.scheduleAtFixedRate(() -> {
-                if (DATA_COLLECTION_TIME.test(LocalDateTime.now())) {
+                if (STOCK_COLLECTION_TIME.test(LocalDateTime.now())) {
                     XU.saveHibXU();
                     ChinaData.withHibernate();
                     ChinaData.saveChinaOHLC();

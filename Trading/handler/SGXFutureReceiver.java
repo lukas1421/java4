@@ -8,7 +8,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import static apidemo.ChinaData.priceMapBar;
-import static apidemo.TradingConstants.DATA_COLLECTION_TIME;
+import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
+import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
 
 public class SGXFutureReceiver implements LiveHandler {
 
@@ -42,20 +43,23 @@ public class SGXFutureReceiver implements LiveHandler {
 
                 // need to capture overnight data
                 if (t.isAfter(LocalTime.of(8, 55)) || t.isBefore(LocalTime.of(5, 0))) {
-                    if (DATA_COLLECTION_TIME.test(ldt)) {
+                    if (STOCK_COLLECTION_TIME.test(ldt)) {
                         ChinaMain.currentTradingDate = ldt.toLocalDate();
                         if (priceMapBar.get(name).containsKey(t)) {
                             priceMapBar.get(name).get(t).add(price);
                         } else {
                             priceMapBar.get(name).put(t, new SimpleBar(price));
                         }
+                    }
 
+                    if (FUT_COLLECTION_TIME.test(ldt)) {
                         if (XUTrader.futData.get(f).containsKey(ldt)) {
                             XUTrader.futData.get(f).get(ldt).add(price);
                         } else {
                             XUTrader.futData.get(f).put(ldt, new SimpleBar(price));
                         }
                     }
+
                 }
                 break;
         }
@@ -67,7 +71,7 @@ public class SGXFutureReceiver implements LiveHandler {
         LocalTime t = ldt.toLocalTime();
         ChinaStock.sizeMap.put(name, (long) vol);
 
-        if (DATA_COLLECTION_TIME.test(ldt)) {
+        if (STOCK_COLLECTION_TIME.test(ldt)) {
             XU.frontFutVol.put(t, (int) vol);
             ChinaData.sizeTotalMap.get(name).put(t, 1d * vol);
         }
