@@ -1106,6 +1106,7 @@ public class ChinaOption extends JPanel implements Runnable {
                 res.put((int) Math.round(k / spot * 100), v);
             }
         });
+
         putMap.forEach((k, v) -> {
             if (k < spot) {
                 res.put((int) Math.round(k / spot * 100), v);

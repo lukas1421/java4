@@ -2,6 +2,7 @@ package graph;
 
 import apidemo.ChinaOption;
 import auxiliary.SimpleBar;
+import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,9 +19,9 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static apidemo.ChinaOption.*;
-import static java.util.stream.Collectors.toMap;
 import static utility.Utility.reduceMapToDouble;
 import static utility.Utility.roundDownToN;
 
@@ -71,22 +72,28 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
 //            } else {
 //                startGraphingTime = startGraphingTime.minusMinutes(ChinaOption.intradayGraphStartTimeOffset.get());
 //            }
+
             startGraphingTime = LocalTime.of(9, 29).plusMinutes(ChinaOption.intradayGraphStartTimeOffset.get());
-            //System.out.println(" graphing start time is " + startGraphingTime);
 
             if (ChinaOption.todayVolOnly) {
                 displayDatePredicate = d -> d.equals(ChinaOption.pricingDate);
             } else {
                 displayDatePredicate = d -> true;
             }
+
             tm = mapIn.entrySet().stream().filter(e -> !e.getValue().containsZero())
                     .filter(e -> displayDatePredicate.test(e.getKey().toLocalDate()))
                     .filter(e -> (e.getKey().toLocalTime().isAfter(startGraphingTime)
                             && e.getKey().toLocalTime().isBefore(LocalTime.of(11, 31)))
                             || (e.getKey().toLocalTime().isAfter(LocalTime.of(12, 59))
                             && e.getKey().toLocalTime().isBefore(LocalTime.of(15, 5))))
-                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
                             ConcurrentSkipListMap::new));
+
+            if (!ChinaOption.todayVolOnly) {
+                tm = Utility.map1mTo5mLDT(tm);
+            }
+
         }
     }
 

@@ -580,9 +580,7 @@ public class Utility {
         return res;
     }
 
-
-
-    public static NavigableMap<LocalDateTime, SimpleBar> priceMap1mTo5MLDT(NavigableMap<LocalDateTime, SimpleBar> mp) {
+    public static NavigableMap<LocalDateTime, SimpleBar> map1mTo5mLDT(NavigableMap<LocalDateTime, SimpleBar> mp) {
         NavigableMap<LocalDateTime, SimpleBar> res = new ConcurrentSkipListMap<>();
         Predicate<LocalTime> p =
                 tradingTimePred(LocalTime.of(8, 59), LocalTime.of(11, 30),
@@ -603,7 +601,7 @@ public class Utility {
     }
 
 
-    public static NavigableMap<LocalTime, SimpleBar> priceMap1mTo5M(NavigableMap<LocalTime, SimpleBar> mp) {
+    public static NavigableMap<LocalTime, SimpleBar> map1mTo5m(NavigableMap<LocalTime, SimpleBar> mp) {
         NavigableMap<LocalTime, SimpleBar> res = new ConcurrentSkipListMap<>();
         Predicate<LocalTime> p =
                 tradingTimePred(LocalTime.of(8, 59), LocalTime.of(11, 30),

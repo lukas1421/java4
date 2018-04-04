@@ -385,9 +385,10 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
             res = priceMapToLDT(tmIn, ChinaMain.currentTradingDate);
         } else if (dispGran == DisplayGranularity._5MDATA) {
             if (HistChinaStocks.chinaWtd.containsKey(name) && HistChinaStocks.chinaWtd.get(name).size() > 0) {
-                res = trimMapWithLocalTimePred(mergeMaps(HistChinaStocks.chinaWtd.get(name), Utility.priceMap1mTo5M(tmIn)), chinaTradingTimePred);
+                res = trimMapWithLocalTimePred(mergeMaps(HistChinaStocks.chinaWtd.get(name)
+                        , Utility.map1mTo5m(tmIn)), chinaTradingTimePred);
             } else {
-                res = trimMapWithLocalTimePred(priceMapToLDT(priceMap1mTo5M(tmIn), ChinaMain.currentTradingDate), chinaTradingTimePred);
+                res = trimMapWithLocalTimePred(priceMapToLDT(map1mTo5m(tmIn), ChinaMain.currentTradingDate), chinaTradingTimePred);
             }
         }
         NavigableMap<LocalDateTime, SimpleBar> finalRes = res;

@@ -294,7 +294,7 @@ public class GraphMonitorLDT extends JComponent implements GraphFillable {
 
         if (NORMAL_STOCK.test(name)) {
             price5mWtd.put(name, (ConcurrentSkipListMap<LocalDateTime, SimpleBar>) mergeMaps(HistChinaStocks.chinaWtd.get(name),
-                    Utility.priceMap1mTo5M(priceMapBar.get(name))));
+                    Utility.map1mTo5m(priceMapBar.get(name))));
             this.setNavigableMap(price5mWtd.get(name));
             //getYtdY2CloseP(name);
         } else {

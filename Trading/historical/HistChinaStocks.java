@@ -674,7 +674,7 @@ public class HistChinaStocks extends JPanel {
                 for (String s : chinaWtd.keySet()) {
                     if (priceMapBar.containsKey(s) && priceMapBar.get(s).size() > 0) {
                         NavigableMap<LocalDateTime, SimpleBar> wtdNew = mergeMaps(chinaWtd.get(s),
-                                Utility.priceMapToLDT(priceMap1mTo5M(priceMapBar.get(s)), ChinaMain.currentTradingDate));
+                                Utility.priceMapToLDT(map1mTo5m(priceMapBar.get(s)), ChinaMain.currentTradingDate));
                         chinaWtd.put(s, wtdNew);
                         NavigableMap<LocalDate, SimpleBar> ytdNew = mergeMapGen(chinaYtd.get(s), reduceMapToBar(priceMapBar.get(s), ChinaMain.currentTradingDate));
                         chinaYtd.put(s, ytdNew);

@@ -100,7 +100,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         if (XUTrader.gran == DisplayGranularity._1MDATA) {
             this.setNavigableMap(mp);
         } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
-            this.setNavigableMap(priceMap1mTo5MLDT(mp));
+            this.setNavigableMap(map1mTo5mLDT(mp));
         }
     }
 
@@ -147,6 +147,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
         int x = 5;
         for (LocalDateTime lt : tm.keySet()) {
+
             int openY = getY(tm.floorEntry(lt).getValue().getOpen());
             int highY = getY(tm.floorEntry(lt).getValue().getHigh());
             int lowY = getY(tm.floorEntry(lt).getValue().getLow());
@@ -171,11 +172,13 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             } else {
                 if (XUTrader.gran == DisplayGranularity._1MDATA) {
                     if ((lt.getMinute() == 0 || lt.getMinute() % 30 == 0)) {
-                        g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 20);
+                        g.drawString(lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString()
+                                , x, getHeight() - 20);
                     }
                 } else {
                     if (lt.getMinute() == 0) {
-                        g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 20);
+                        g.drawString(lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString()
+                                , x, getHeight() - 20);
                     }
                 }
             }
@@ -183,6 +186,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             if (XUTrader.showTrades) {
                 if (trademap.containsKey(lt)) {
                     TradeBlock tb = trademap.get(lt);
+                    //System.out.println("GRAPHXUTRADER getting trade block " + tb + " at " + lt);
                     if (tb.getSizeAll() > 0) {
                         g.setColor(Color.blue);
                         int yCord = getY(tb.getAveragePrice());
