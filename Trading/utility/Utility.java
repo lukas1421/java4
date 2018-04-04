@@ -581,6 +581,28 @@ public class Utility {
     }
 
 
+
+    public static NavigableMap<LocalDateTime, SimpleBar> priceMap1mTo5MLDT(NavigableMap<LocalDateTime, SimpleBar> mp) {
+        NavigableMap<LocalDateTime, SimpleBar> res = new ConcurrentSkipListMap<>();
+        Predicate<LocalTime> p =
+                tradingTimePred(LocalTime.of(8, 59), LocalTime.of(11, 30),
+                        LocalTime.of(13, 0), LocalTime.of(15, 0));
+
+        mp.forEach((key, value) -> {
+            LocalDateTime t = roundTo5(key);
+            SimpleBar sb = new SimpleBar(value);
+            if (p.test(t.toLocalTime())) {
+                if (!res.containsKey(t)) {
+                    res.put(t, sb);
+                } else {
+                    res.get(t).updateBar(sb);
+                }
+            }
+        });
+        return res;
+    }
+
+
     public static NavigableMap<LocalTime, SimpleBar> priceMap1mTo5M(NavigableMap<LocalTime, SimpleBar> mp) {
         NavigableMap<LocalTime, SimpleBar> res = new ConcurrentSkipListMap<>();
         Predicate<LocalTime> p =
@@ -601,13 +623,13 @@ public class Utility {
         return res;
     }
 
-    public static NavigableMap<LocalTime, TradeBlock> tradeBlock1mTo5M(NavigableMap<LocalTime, TradeBlock> mp) {
-        NavigableMap<LocalTime, TradeBlock> res = new ConcurrentSkipListMap<>();
+    public static NavigableMap<LocalDateTime, TradeBlock> tradeBlock1mTo5M(NavigableMap<LocalDateTime, TradeBlock> mp) {
+        NavigableMap<LocalDateTime, TradeBlock> res = new ConcurrentSkipListMap<>();
 //        Predicate<LocalTime> p =
 //                tradingTimePred(LocalTime.of(9, 30), LocalTime.of(11, 30),
 //                        LocalTime.of(13, 0), LocalTime.of(15, 0));
         mp.forEach((key, value) -> {
-            LocalTime t = roundTo5(key);
+            LocalDateTime t = roundTo5(key);
             TradeBlock tb = new TradeBlock(value);
             if (!res.containsKey(t)) {
                 res.put(t, tb);
@@ -618,14 +640,14 @@ public class Utility {
         return res;
     }
 
-    public static NavigableMap<LocalTime, TradeBlock> tradeBlockRoundGen(NavigableMap<LocalTime, TradeBlock> mp,
-                                                                         UnaryOperator<LocalTime> o) {
-        NavigableMap<LocalTime, TradeBlock> res = new ConcurrentSkipListMap<>();
+    public static NavigableMap<LocalDateTime, TradeBlock> tradeBlockRoundGen(NavigableMap<LocalDateTime, TradeBlock> mp,
+                                                                         UnaryOperator<LocalDateTime> o) {
+        NavigableMap<LocalDateTime, TradeBlock> res = new ConcurrentSkipListMap<>();
 //        Predicate<LocalTime> p =
 //                tradingTimePred(LocalTime.of(9, 30), LocalTime.of(11, 30),
 //                        LocalTime.of(13, 0), LocalTime.of(15, 0));
         mp.forEach((key, value) -> {
-            LocalTime t = o.apply(key);
+            LocalDateTime t = o.apply(key);
             TradeBlock tb = new TradeBlock(value);
             if (!res.containsKey(t)) {
                 res.put(t, tb);
@@ -657,6 +679,11 @@ public class Utility {
         LocalTime t1 = t.truncatedTo(ChronoUnit.MINUTES);
         return min(max(LocalTime.of(9, 0), (t1.getMinute() % 5 == 0) ?
                 t1 : t1.plusMinutes(5 - t1.getMinute() % 5)), LocalTime.of(15, 0));
+    }
+
+    public static LocalDateTime roundTo5(LocalDateTime t) {
+//        LocalTime t1 = t.toLocalTime().truncatedTo(ChronoUnit.MINUTES);
+        return LocalDateTime.of(t.toLocalDate(),roundTo5(t.toLocalTime()));
     }
 
     public static LocalDateTime roundTo5Ldt(LocalDateTime t) {

@@ -536,13 +536,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
                 ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : 0.0;
 
-
         NavigableMap<LocalDateTime, SimpleBar> futPrice = futData.get(ibContractToFutType(activeFuture));
-
 
         LocalDateTime ytdClose = LocalDateTime.of(LocalDate.now().minusDays(1L), LocalTime.of(15, 0));
 
-        NavigableMap<LocalDateTime, SimpleBar> filteredPrice = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(ytdClose))
+        NavigableMap<LocalDateTime, SimpleBar> filteredPrice = futPrice.entrySet().stream()
+                .filter(e -> e.getKey().isAfter(ytdClose))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
@@ -551,7 +550,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
         if (overnightTradesDone.get() < maxOvernightTrades) {
-            if (now.truncatedTo(ChronoUnit.MINUTES).equals(LocalTime.of(4, 40))) {
+            if (now.truncatedTo(ChronoUnit.MINUTES).isAfter(LocalTime.of(4, 40)) &&
+                    now.truncatedTo(ChronoUnit.MINUTES).isBefore(LocalTime.of(5, 0))) {
+
                 if (currPercentile > 90 && pd > 0.01) {
                     apcon.placeOrModifyOrder(activeFuture, sellAtBid(bidMap.get(ibContractToFutType(activeFuture)), 1.0),
                             this);
@@ -560,6 +561,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
                     apcon.placeOrModifyOrder(activeFuture, buyAtOffer(askMap.get(ibContractToFutType(activeFuture)), 1.0)
                             , this);
+
                     overnightTradesDone.incrementAndGet();
 
                 } else {

@@ -279,7 +279,6 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
             x += WIDTH_PNL;
         }
 
-
         x = 5;
         last = 0;
         g2.setColor(Color.RED);
@@ -437,8 +436,17 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
         g2.drawString(Double.toString(maxDelta), 5, 40);
 
         g2.drawString(name, 5, 15);
+        //mtm pnl/open delta
+
+        if (mtmMap.size() > 0) {
+            g2.drawString(Math.round(mtmMap.lastEntry().getValue() / openDelta * 1000d) / 10d + "%",
+                    getWidth() / 14, 15);
+        }
+
         g2.drawString(chineseName, getWidth() / 7, 15);
-        g2.drawString(Double.toString(ChinaStock.priceMap.getOrDefault(name,0.0)), getWidth() / 7 * 2, 15);
+
+
+        g2.drawString(Double.toString(ChinaStock.priceMap.getOrDefault(name, 0.0)), getWidth() / 7 * 2, 15);
 
         g2.drawString("A低:" + getAMMinT().toString(), getWidth() / 7 * 3, 15);
         g2.drawString(Double.toString(getMinAM()), getWidth() / 7 * 4, 15);

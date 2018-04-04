@@ -125,8 +125,9 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
 
             computeDelta();
 
-            double minK = minGen(volSmileFront.firstKey(), volSmileBack.firstKey(), volSmileThird.firstKey(), volSmileFourth.firstKey());
-            double maxK = maxGen(volSmileFront.lastKey(), volSmileBack.lastKey(), volSmileThird.lastKey(), volSmileFourth.lastKey());
+
+            //double minK = minGen(volSmileFront.firstKey(), volSmileBack.firstKey(), volSmileThird.firstKey(), volSmileFourth.firstKey());
+            //double maxK = maxGen(volSmileFront.lastKey(), volSmileBack.lastKey(), volSmileThird.lastKey(), volSmileFourth.lastKey());
 
 
             double minVol = minGen(volSmileFront.values().stream().reduce(Math::min).orElse(0.0),

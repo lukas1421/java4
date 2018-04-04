@@ -12,16 +12,17 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Collectors;
 
 import static apidemo.TradingConstants.ftseIndex;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
-import static java.util.stream.Collectors.toMap;
 import static utility.Utility.*;
 
 public class GraphXuTrader extends JComponent implements MouseMotionListener, MouseListener {
@@ -34,8 +35,8 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     double minRtn;
     int last = 0;
     double rtn = 0;
-    NavigableMap<LocalTime, SimpleBar> tm;
-    private NavigableMap<LocalTime, TradeBlock> trademap;
+    NavigableMap<LocalDateTime, SimpleBar> tm;
+    private NavigableMap<LocalDateTime, TradeBlock> trademap;
     private volatile FutType fut;
     volatile String name;
     String chineseName;
@@ -59,13 +60,13 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         addMouseMotionListener(this);
     }
 
-    public void setNavigableMap(NavigableMap<LocalTime, SimpleBar> tm) {
+    public void setNavigableMap(NavigableMap<LocalDateTime, SimpleBar> tm) {
         this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue().containsZero())
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
                         ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
     }
 
-    private void setTradesMap(NavigableMap<LocalTime, TradeBlock> trade) {
+    private void setTradesMap(NavigableMap<LocalDateTime, TradeBlock> trade) {
         trademap = trade;
     }
 
@@ -95,15 +96,15 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         prevClose = p;
     }
 
-    public void fillInGraph(NavigableMap<LocalTime, SimpleBar> mp) {
+    public void fillInGraph(NavigableMap<LocalDateTime, SimpleBar> mp) {
         if (XUTrader.gran == DisplayGranularity._1MDATA) {
             this.setNavigableMap(mp);
         } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
-            this.setNavigableMap(priceMap1mTo5M(mp));
+            this.setNavigableMap(priceMap1mTo5MLDT(mp));
         }
     }
 
-    public void fillTradesMap(NavigableMap<LocalTime, TradeBlock> m) {
+    public void fillTradesMap(NavigableMap<LocalDateTime, TradeBlock> m) {
         if (XUTrader.gran == DisplayGranularity._1MDATA) {
             this.setTradesMap(tradeBlockRoundGen(m, t -> t.truncatedTo(ChronoUnit.MINUTES)));
         } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
@@ -145,7 +146,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         });
 
         int x = 5;
-        for (LocalTime lt : tm.keySet()) {
+        for (LocalDateTime lt : tm.keySet()) {
             int openY = getY(tm.floorEntry(lt).getValue().getOpen());
             int highY = getY(tm.floorEntry(lt).getValue().getHigh());
             int lowY = getY(tm.floorEntry(lt).getValue().getLow());
@@ -173,7 +174,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                         g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 20);
                     }
                 } else {
-                    if ((lt.getMinute() == 0 || lt.getMinute() == 0)) {
+                    if (lt.getMinute() == 0) {
                         g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 20);
                     }
                 }
