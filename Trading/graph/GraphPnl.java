@@ -445,7 +445,6 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
 
         g2.drawString(chineseName, getWidth() / 7, 15);
 
-
         g2.drawString(Double.toString(ChinaStock.priceMap.getOrDefault(name, 0.0)), getWidth() / 7 * 2, 15);
 
         g2.drawString("A低:" + getAMMinT().toString(), getWidth() / 7 * 3, 15);

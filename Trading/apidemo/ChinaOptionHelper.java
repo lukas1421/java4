@@ -199,7 +199,7 @@ public class ChinaOptionHelper {
     }
 
     private static double bs(CallPutFlag f, double s, double k, double v, double t, double r) {
-        if (t < 0.0) {
+        if (t <= 0.0 || s == 0.0 || k == 0.0 || v == 0.0) {
             return 0.0;
         }
         double d1 = (Math.log(s / k) + (r + 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
@@ -212,7 +212,7 @@ public class ChinaOptionHelper {
 
     }
 
-    public static DoubleUnaryOperator fillInBS(double s, Option opt) {
+    static DoubleUnaryOperator fillInBS(double s, Option opt) {
         return (double v) -> bs(opt.getCallOrPut(), s, opt.getStrike(), v,
                 opt.getTimeToExpiry(), ChinaOption.interestRate);
     }

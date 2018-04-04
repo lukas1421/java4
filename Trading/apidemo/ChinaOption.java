@@ -102,7 +102,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
 
     //private static double stockPrice = 0.0;
-    public static double interestRate = 0.04;
+    static double interestRate = 0.04;
 
     public static volatile LocalDate previousTradingDate = LocalDate.now();
     public static volatile LocalDate pricingDate = LocalDate.now();
@@ -862,7 +862,8 @@ public class ChinaOption extends JPanel implements Runnable {
         LocalDateTime currentLDT = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
 
         tickerOptionsMap.forEach((k, v) -> {
-            double vol = ChinaOptionHelper.simpleSolver(optionPriceMap.get(k), ChinaOptionHelper.fillInBS(currentStockPrice, v));
+            double vol = ChinaOptionHelper.simpleSolver(optionPriceMap.getOrDefault(k, 0.0)
+                    , ChinaOptionHelper.fillInBS(currentStockPrice, v));
             impliedVolMap.put(k, vol);
             deltaMap.put(k, getDelta(v.getCallOrPut(), currentStockPrice,
                     v.getStrike(), vol, v.getTimeToExpiry(), interestRate));
@@ -1132,6 +1133,9 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
     private static double getDelta(CallPutFlag f, double s, double k, double v, double t, double r) {
+        if (s == 0.0 || k == 0.0 || v == 0.0 || t <= 0.0) {
+            return 0.0;
+        }
         double d1 = (Math.log(s / k) + (r + 0.5 * pow(v, 2)) * t) / (sqrt(t) * v);
         double nd1 = (new NormalDistribution()).cumulativeProbability(d1);
         return Math.round(100d * (f == CALL ? nd1 : (nd1 - 1)));
@@ -1169,7 +1173,7 @@ public class ChinaOption extends JPanel implements Runnable {
         return 0.0;
     }
 
-    public static void main(String[] argsv) {
+    public static void main(String[] args) {
 
         JFrame jf = new JFrame();
         jf.setSize(new Dimension(1500, 1900));
