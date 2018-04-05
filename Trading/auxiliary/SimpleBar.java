@@ -94,6 +94,10 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         return (high + low) / 2;
     }
 
+    public boolean includes(double p) {
+        return (p <= high && p >= low);
+    }
+
     //public double
 
     public double getClose() {

@@ -1,5 +1,6 @@
 package graph;
 
+import TradeType.MATrade;
 import TradeType.TradeBlock;
 import apidemo.ChinaData;
 import apidemo.FutType;
@@ -14,9 +15,10 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Map;
-import java.util.NavigableMap;
+import java.util.*;
+import java.util.List;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
 
@@ -38,6 +40,8 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     NavigableMap<LocalDateTime, SimpleBar> tm;
     private NavigableMap<LocalDateTime, Double> ma60 = new ConcurrentSkipListMap<>();
     private NavigableMap<LocalDateTime, TradeBlock> trademap;
+    TreeSet<MATrade> maTradeSet = new TreeSet<>(Comparator.comparing(MATrade::getTradeTime));
+    List<MATrade> maTradeList = new LinkedList<>();
     private volatile FutType fut;
     volatile String name;
     String chineseName;
@@ -128,12 +132,51 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
             this.setTradesMap(tradeBlock1mTo5M(m));
         }
-
     }
 
     public void refresh() {
         this.setNavigableMap(tm);
         repaint();
+    }
+
+    public void computeMAStrategy() {
+        if (ma60.size() > 0 && tm.size() > 0) {
+            System.out.println(" computing MA strategy");
+            ma60.forEach((lt, ma) -> {
+                if (tm.containsKey(lt) && tm.get(lt).includes(ma)) {
+                    SimpleBar sb = tm.get(lt);
+                    System.out.println(getStr(" crossed @ ", lt, ma));
+                    if (ma > sb.getOpen()) {
+                        maTradeSet.add(new MATrade(lt, ma, 1));
+                        maTradeList.add(new MATrade(lt, ma, 1));
+                        System.out.println(" long ");
+                    } else {
+                        maTradeSet.add(new MATrade(lt, ma, -1));
+                        maTradeList.add(new MATrade(lt, ma, -1));
+                        System.out.println(" short ");
+                    }
+                }
+            });
+            processTradeSet(maTradeList, tm.lastEntry().getValue().getClose());
+        }
+    }
+
+    private void processTradeSet(List<MATrade> tradeList, double currentPrice) {
+        System.out.println(" ************* processing trade set *************" + tradeList);
+        System.out.println(" current price is " + currentPrice);
+        int runningPosition = 0;
+        double unrealizedPnl = 0.0;
+
+        for (MATrade t : tradeList) {
+            System.out.println(" trade is " + t);
+            runningPosition += t.getSize();
+            unrealizedPnl += t.getSize() * (currentPrice - t.getTradePrice());
+            System.out.println(getStr(" unrealized pnl on trade ", t.getSize() * (currentPrice - t.getTradePrice())));
+            System.out.println(getStr(" running position after ", runningPosition, " cumu pnl ", unrealizedPnl));
+
+        }
+
+
     }
 
     @Override
@@ -165,7 +208,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
         int x = 5;
         for (LocalDateTime lt : tm.keySet()) {
-
             int openY = getY(tm.floorEntry(lt).getValue().getOpen());
             int highY = getY(tm.floorEntry(lt).getValue().getHigh());
             int lowY = getY(tm.floorEntry(lt).getValue().getLow());
@@ -191,7 +233,9 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
             g.setColor(Color.black);
             if (lt.equals(tm.firstKey())) {
-                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 20);
+                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 10);
+            } else if (!lt.toLocalDate().isEqual(tm.lowerKey(lt).toLocalDate())) {
+                g.drawString(lt.toLocalDate().format(DateTimeFormatter.ofPattern("M-d")), x, getHeight() - 10);
             } else {
                 if (XUTrader.gran == DisplayGranularity._1MDATA) {
                     if ((lt.getMinute() == 0 || lt.getMinute() % 30 == 0)) {
@@ -200,8 +244,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                     }
                 } else {
                     if (lt.getMinute() == 0) {
-                        g.drawString(lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString()
-                                , x, getHeight() - 20);
+                        g.drawString(lt.toLocalTime().format(DateTimeFormatter.ofPattern("H")), x, getHeight() - 20);
                     }
                 }
             }

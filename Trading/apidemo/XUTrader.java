@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
 import static apidemo.TradingConstants.ftseIndex;
 import static utility.Utility.*;
 
@@ -203,6 +204,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             xuGraph.refresh();
             apcon.reqPositions(getThis());
             repaint();
+            xuGraph.computeMAStrategy();
         });
 
         JButton computeButton = new JButton("Compute");
@@ -390,7 +392,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             SwingUtilities.invokeLater(xuGraph::refresh);
         });
 
-
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         JPanel controlPanel1 = new JPanel();
@@ -540,6 +541,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //start with 5 min candles, 60 min lines
         NavigableMap<LocalDateTime, SimpleBar> futPrice5m = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         NavigableMap<LocalDateTime, Double> sma60 = new ConcurrentSkipListMap<>();
+
         for (Map.Entry<LocalDateTime, SimpleBar> e : futPrice5m.entrySet()) {
             //futPrice5m.
             if (futPrice5m.firstKey().isBefore(e.getKey().minusMinutes(300L))) {
@@ -772,6 +774,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public void handleHist(String name, String date, double open, double high, double low, double close) {
 
         LocalDate currDate = LocalDate.now();
+
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);
             Calendar cal = Calendar.getInstance();
@@ -791,8 +794,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //                futPrevCloseMap.put(FutType.get(name), open);
 //            }
 
-            if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
-                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(23, 59))))) {
+//            if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
+//                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(23, 59))))) {
+
+            if (ldt.toLocalDate().isAfter(currDate.minusDays(2)) && FUT_COLLECTION_TIME.test(ldt)) {
 
                 if (lt.equals(LocalTime.of(9, 0))) {
                     futOpenMap.put(FutType.get(name), open);
@@ -845,23 +850,23 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
-        if (ldt.getDayOfMonth() == LocalDateTime.now().getDayOfMonth()) {
-            if (XUTrader.tradesMap.get(f).containsKey(ldt)) {
-                XUTrader.tradesMap.get(f).get(ldt)
-                        .addTrade(new FutureTrade(execution.price(), sign * execution.cumQty()));
-            } else {
-                XUTrader.tradesMap.get(f).put(ldt,
-                        new TradeBlock(new FutureTrade(execution.price(), sign * execution.cumQty())));
-            }
+        //if (ldt.getDayOfMonth() == LocalDateTime.now().getDayOfMonth()) {
+        if (XUTrader.tradesMap.get(f).containsKey(ldt)) {
+            XUTrader.tradesMap.get(f).get(ldt)
+                    .addTrade(new FutureTrade(execution.price(), sign * execution.cumQty()));
+        } else {
+            XUTrader.tradesMap.get(f).put(ldt,
+                    new TradeBlock(new FutureTrade(execution.price(), sign * execution.cumQty())));
+        }
 //            if (XUTrader.tradesMapFront.containsKey(ldt.toLocalTime())) {
 //                XUTrader.tradesMapFront.get(ldt.toLocalTime()).addTrade(new IBTrade(execution.price(), sign * execution.cumQty()));
 //            } else {
 //                XUTrader.tradesMapFront.put(ldt.toLocalTime(), new IBTrade(execution.price(), sign * execution.cumQty()));
 //            }
-            //System.out.println(" printing all trades");
-            //XUTrader.tradesMapFront.entrySet().stream().forEach(System.out::println);
-            //XUTrader.processTradeMapActive();
-        }
+        //System.out.println(" printing all trades");
+        //XUTrader.tradesMapFront.entrySet().stream().forEach(System.out::println);
+        //XUTrader.processTradeMapActive();
+        //}
     }
 
     @Override
