@@ -14,8 +14,6 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
     private double low;
     private double close;
 
-    //private static SimpleBar ZERO_BAR = new SimpleBar(0.0);
-
     public SimpleBar() {
         open = 0.0;
         high = 0.0;
@@ -53,7 +51,7 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         close = v;
     }
 
-    public void adjustByFactor(double f) {
+    void adjustByFactor(double f) {
         //System.out.println ( ChinaStockHelper.getStr("BEFORE open high low close ",open, high, low, close ));
         open = open * f;
         high = high * f;
@@ -97,8 +95,6 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
     public boolean includes(double p) {
         return (p <= high && p >= low);
     }
-
-    //public double
 
     public double getClose() {
         return close;

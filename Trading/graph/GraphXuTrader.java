@@ -5,6 +5,7 @@ import TradeType.TradeBlock;
 import apidemo.ChinaData;
 import apidemo.FutType;
 import apidemo.XUTrader;
+import apidemo.XuTraderHelper;
 import auxiliary.SimpleBar;
 import utility.SharpeUtility;
 
@@ -20,6 +21,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static apidemo.TradingConstants.ftseIndex;
@@ -39,6 +41,9 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     double rtn = 0;
     NavigableMap<LocalDateTime, SimpleBar> tm;
     private NavigableMap<LocalDateTime, Double> ma60 = new ConcurrentSkipListMap<>();
+    private NavigableMap<LocalDateTime, Double> ma80 = new ConcurrentSkipListMap<>();
+
+
     private NavigableMap<LocalDateTime, TradeBlock> trademap;
     TreeSet<MATrade> maTradeSet = new TreeSet<>(Comparator.comparing(MATrade::getTradeTime));
     List<MATrade> maTradeList = new LinkedList<>();
@@ -74,13 +79,14 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     private void setMA60Map(NavigableMap<LocalDateTime, SimpleBar> mp) {
         NavigableMap<LocalDateTime, Double> sma60 = new ConcurrentSkipListMap<>();
         for (Map.Entry<LocalDateTime, SimpleBar> e : mp.entrySet()) {
-            //futPrice5m.
-            if (mp.firstKey().isBefore(e.getKey().minusMinutes(300L))) {
 
-                long size = mp.entrySet().stream().filter(e1 -> e1.getKey().isAfter(e.getKey().minusMinutes(300))
-                        && e1.getKey().isBefore(e.getKey())).count();
-                double val = mp.entrySet().stream().filter(e1 -> e1.getKey().isAfter(e.getKey().minusMinutes(300))
-                        && e1.getKey().isBefore(e.getKey())).mapToDouble(e2 -> e2.getValue().getAverage()).sum() / size;
+            long n = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey())).count();
+            if (n > 60) {
+                long size = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey())).skip(n - 60)
+                        .count();
+                double val = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey()))
+                        .skip(n - 60).mapToDouble(e2 -> e2.getValue().getAverage()).sum() / size;
+                System.out.println(getStr(" n, size, val ", n, size, val));
                 sma60.put(e.getKey(), val);
             }
         }
@@ -122,7 +128,8 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             this.setNavigableMap(mp);
         } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
             this.setNavigableMap(map1mTo5mLDT(mp));
-            this.setMA60Map(map1mTo5mLDT(mp));
+            ma60 = XuTraderHelper.getMAGen(map1mTo5mLDT(mp), 60);
+            ma80 = XuTraderHelper.getMAGen(map1mTo5mLDT(mp), 80);
         }
     }
 
@@ -139,30 +146,50 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         repaint();
     }
 
-    public void computeMAStrategy() {
-        if (ma60.size() > 0 && tm.size() > 0) {
-            System.out.println(" computing MA strategy");
-            ma60.forEach((lt, ma) -> {
+    public void computeMAStrategyForAll() {
+        System.out.println(" computing MA strategy 60 ");
+        computeMAStrategy(ma60);
+
+        System.out.println(" computing MA strategy 80 ");
+        computeMAStrategy(ma80);
+    }
+
+    private void computeMAStrategy(NavigableMap<LocalDateTime, Double> sma) {
+        List<MATrade> maTrades = new LinkedList<>();
+        AtomicBoolean currentLong = new AtomicBoolean(true);
+        //LocalDateTime lastTradeTime;
+
+        if (sma.size() > 0 && tm.size() > 0) {
+            System.out.println(" computing MA strategy ");
+            sma.forEach((lt, ma) -> {
                 if (tm.containsKey(lt) && tm.get(lt).includes(ma)) {
                     SimpleBar sb = tm.get(lt);
                     System.out.println(getStr(" crossed @ ", lt, ma));
                     if (ma > sb.getOpen()) {
-                        maTradeSet.add(new MATrade(lt, ma, 1));
-                        maTradeList.add(new MATrade(lt, ma, 1));
-                        System.out.println(" long ");
+                        //maTradeSet.add(new MATrade(lt, ma, 1));
+                        if (!currentLong.get()) {
+                            System.out.println(" Minutes since last trade is " +
+                                    (ChronoUnit.MINUTES.between(((LinkedList<MATrade>) maTrades).peekLast().getTradeTime(), lt)));
+                            maTrades.add(new MATrade(lt, ma, maTrades.size() == 0 ? 1 : 2));
+                            currentLong.set(true);
+                            System.out.println(" long ");
+                        }
                     } else {
-                        maTradeSet.add(new MATrade(lt, ma, -1));
-                        maTradeList.add(new MATrade(lt, ma, -1));
-                        System.out.println(" short ");
+                        //maTradeSet.add(new MATrade(lt, ma, -1));
+                        if (currentLong.get()) {
+                            maTrades.add(new MATrade(lt, ma, maTrades.size() == 0 ? -1 : -2));
+                            currentLong.set(false);
+                            System.out.println(" short ");
+                        }
                     }
                 }
             });
-            processTradeSet(maTradeList, tm.lastEntry().getValue().getClose());
+            processTradeSet(maTrades, tm.lastEntry().getValue().getClose());
         }
     }
 
     private void processTradeSet(List<MATrade> tradeList, double currentPrice) {
-        System.out.println(" ************* processing trade set *************" + tradeList);
+        System.out.println(" ************* processing trade set ************* ");
         System.out.println(" current price is " + currentPrice);
         int runningPosition = 0;
         double unrealizedPnl = 0.0;
@@ -172,11 +199,9 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             runningPosition += t.getSize();
             unrealizedPnl += t.getSize() * (currentPrice - t.getTradePrice());
             System.out.println(getStr(" unrealized pnl on trade ", t.getSize() * (currentPrice - t.getTradePrice())));
-            System.out.println(getStr(" running position after ", runningPosition, " cumu pnl ", unrealizedPnl));
-
+            System.out.println(getStr(" running position after ", runningPosition, " cumu pnl ", Math.round(unrealizedPnl)));
+            //tradeList.
         }
-
-
     }
 
     @Override
@@ -214,8 +239,23 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             int closeY = getY(tm.floorEntry(lt).getValue().getClose());
 
             if (ma60.size() > 0 && ma60.containsKey(lt)) {
-                int maY = getY(ma60.get(lt));
-                g.drawLine(x, maY, x + 1, maY);
+                g.setColor(Color.blue);
+                int ma60Y = getY(ma60.get(lt));
+                g.drawLine(x, ma60Y, x + 1, ma60Y);
+                if (lt.equals(ma60.lastKey())) {
+                    g.drawString("MA60", x + 20, ma60Y);
+                }
+                g.setColor(Color.black);
+            }
+
+            if (ma80.size() > 0 && ma80.containsKey(lt)) {
+                g.setColor(Color.orange);
+                int ma80Y = getY(ma80.get(lt));
+                g.drawLine(x, ma80Y, x + 1, ma80Y);
+                if (lt.equals(ma80.lastKey())) {
+                    g.drawString("MA80", x + 20, ma80Y);
+                }
+                g.setColor(Color.black);
             }
 
             //noinspection Duplicates
@@ -407,7 +447,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 //            throw new IllegalArgumentException("BAGAYARO");
 //        }
 //    }
-//
 //    public int getYForLTBuy(LocalTime t) {
 //        SimpleBar sb = (SimpleBar) XUTrader.xuData.floorEntry(t).getValue();
 //        if (sb.normalBar()) {

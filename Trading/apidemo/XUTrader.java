@@ -204,7 +204,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             xuGraph.refresh();
             apcon.reqPositions(getThis());
             repaint();
-            xuGraph.computeMAStrategy();
+            xuGraph.computeMAStrategyForAll();
         });
 
         JButton computeButton = new JButton("Compute");
@@ -541,22 +541,23 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //start with 5 min candles, 60 min lines
         NavigableMap<LocalDateTime, SimpleBar> futPrice5m = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         NavigableMap<LocalDateTime, Double> sma60 = new ConcurrentSkipListMap<>();
+        NavigableMap<LocalDateTime, Double> sma80 = new ConcurrentSkipListMap<>();
+        sma60 = XuTraderHelper.getMAGen(futPrice5m, 60);
+        sma80 = XuTraderHelper.getMAGen(futPrice5m, 80);
 
-        for (Map.Entry<LocalDateTime, SimpleBar> e : futPrice5m.entrySet()) {
-            //futPrice5m.
-            if (futPrice5m.firstKey().isBefore(e.getKey().minusMinutes(300L))) {
+//        for (Map.Entry<LocalDateTime, SimpleBar> e : futPrice5m.entrySet()) {
+//            if (futPrice5m.firstKey().isBefore(e.getKey().minusMinutes(300L))) {
+//                long size = futPrice5m.entrySet().stream().filter(e1 -> e1.getKey().isAfter(e.getKey().minusMinutes(300))
+//                        && e1.getKey().isBefore(e.getKey())).count();
+//                System.out.println(getStr(" time  size is ", e.getKey(), size));
+//                double val = futPrice5m.entrySet().stream().filter(e1 -> e1.getKey().isAfter(e.getKey().minusMinutes(300))
+//                        && e1.getKey().isBefore(e.getKey())).mapToDouble(e2 -> e2.getValue().getAverage()).sum() / size;
+//                sma60.put(e.getKey(), val);
+//            }
+//        }
 
-                long size = futPrice5m.entrySet().stream().filter(e1 -> e1.getKey().isAfter(e.getKey().minusMinutes(300))
-                        && e1.getKey().isBefore(e.getKey())).count();
 
-                System.out.println(getStr(" time  size is ", e.getKey(), size));
 
-                double val = futPrice5m.entrySet().stream().filter(e1 -> e1.getKey().isAfter(e.getKey().minusMinutes(300))
-                        && e1.getKey().isBefore(e.getKey())).mapToDouble(e2 -> e2.getValue().getAverage()).sum() / size;
-
-                sma60.put(e.getKey(), val);
-            }
-        }
         System.out.println(" current time is " + LocalDateTime.now());
         System.out.println(" fut 5m map is " + futPrice5m);
         System.out.println(" 60 dma is " + sma60);
