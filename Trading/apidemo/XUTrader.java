@@ -48,6 +48,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     // ma trades
     private static volatile int currentMAPeriod = 60;
+    private static AtomicBoolean lastTradeLong = new AtomicBoolean(true);
+    private static LocalDateTime lastTradeTime = LocalDateTime.now();
+    private static AtomicInteger cumuMATrades = new AtomicInteger(0);
 
     //new ApiController(new XUConnectionHandler(),
     //new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
@@ -150,14 +153,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         bidLimitButton.addActionListener(l -> {
             System.out.println(" buying limit ");
-            apcon.placeOrModifyOrder(activeFuture, placeBidLimit(bidMap.get(ibContractToFutType(activeFuture))), this);
+            apcon.placeOrModifyOrder(activeFuture, placeBidLimit(bidMap.get(ibContractToFutType(activeFuture)), 1.0), this);
         });
 
         JButton offerLimitButton = new JButton("Sell Limit");
 
         offerLimitButton.addActionListener(l -> {
             System.out.println(" selling limit ");
-            apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(askMap.get(ibContractToFutType(activeFuture))), this);
+            apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(askMap.get(ibContractToFutType(activeFuture)), 1.0), this);
         });
 
         JButton buyOfferButton = new JButton(" Buy Now");
@@ -470,7 +473,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         System.out.println(" bid price " + bidPrice + " check if order price makes sense "
                                 + checkIfOrderPriceMakeSense(bidPrice));
                         if (checkIfOrderPriceMakeSense(bidPrice) && marketOpen(LocalTime.now())) {
-                            apcon.placeOrModifyOrder(activeFuture, placeBidLimit(bidPrice), getThis());
+                            apcon.placeOrModifyOrder(activeFuture, placeBidLimit(bidPrice, 1.0), getThis());
                         } else {
                             throw new IllegalArgumentException("price out of bound");
                         }
@@ -493,7 +496,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         System.out.println(" offer  price list " + offerPriceList.toString());
 
                         if (checkIfOrderPriceMakeSense(offerPrice) && marketOpen(LocalTime.now())) {
-                            apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(offerPrice), getThis());
+                            apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(offerPrice, 1.0), getThis());
                         } else {
                             throw new IllegalArgumentException("price out of bound");
                         }
@@ -535,33 +538,60 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         add(chartScroll);
     }
 
+
     private void movingAverageTrader() {
         //start with 5 min candles, 60 min lines
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
-        NavigableMap<LocalDateTime, Double> sma60 = new ConcurrentSkipListMap<>();
-        NavigableMap<LocalDateTime, Double> sma80 = new ConcurrentSkipListMap<>();
-        //int defaultMAPeriod = 60;
+        SimpleBar lastBar = price5.lastEntry().getValue();
+        NavigableMap<LocalDateTime, Double> sma;
 
         AtomicBoolean currentLong = new AtomicBoolean(true);
         List<MATrade> maTrades = new LinkedList<>();
 
-        sma60 = XuTraderHelper.getMAGen(price5, currentMAPeriod);
-        //sma80 = XuTraderHelper.getMAGen(price5, 80);
+        sma = XuTraderHelper.getMAGen(price5, currentMAPeriod);
+        double maLast = sma.lastEntry().getValue();
 
-        sma60.forEach((lt, ma) -> {
+        if (lastBar.includes(maLast)) {
+            if (maLast > lastBar.getOpen()) {
+                if (ChronoUnit.MINUTES.between(lastTradeTime, price5.lastEntry().getKey()) > 10) {
+                    if (!lastTradeLong.get()) {
+                        apcon.placeOrModifyOrder(activeFuture, placeBidLimit(bidMap.get(ibContractToFutType(activeFuture)),
+                                2.0), this);
+                        lastTradeLong.set(true);
+                        lastTradeTime = LocalDateTime.now();
+                    }
+                } else {
+                    currentMAPeriod = getUntouchedMAPeriod(price5, lastTradeTime);
+                }
+            } else if (maLast < lastBar.getOpen()) {
+                if (ChronoUnit.MINUTES.between(lastTradeTime, price5.lastEntry().getKey()) > 10) {
+                    if (lastTradeLong.get()) {
+                        apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(askMap.get(ibContractToFutType(activeFuture)),
+                                2.0), this);
+                        lastTradeLong.set(false);
+                        lastTradeTime = LocalDateTime.now();
+                    }
+                } else {
+                    currentMAPeriod = getUntouchedMAPeriod(price5, lastTradeTime);
+                }
+            }
+        }
+
+        // analysis
+        sma.forEach((lt, ma) -> {
             if (price5.containsKey(lt) && price5.get(lt).includes(ma)) {
                 SimpleBar sb = price5.get(lt);
                 System.out.println(getStr(" crossed @ ", lt, ma));
                 if (ma > sb.getOpen()) {
                     if (!currentLong.get()) {
-
                         if (maTrades.size() > 0) {
                             LocalDateTime lastTradeTime = ((LinkedList<MATrade>) maTrades).peekLast().getTradeTime();
                             long minSinceLastTrade = ChronoUnit.MINUTES.between(lastTradeTime, lt);
-                            //long minSinceLastTrade = ChronoUnit.MINUTES.between(((LinkedList<MATrade>) maTrades).peekLast().getTradeTime(), lt);
                             System.out.println(" Mins since last trade is " + minSinceLastTrade);
                             if (minSinceLastTrade <= 10) {
-                                System.out.println(lt + " untouched period is " + getUntouchedMAPeriod(price5, lastTradeTime));
+                                int untouchedMAPeriod = getUntouchedMAPeriod(price5, lastTradeTime);
+                                System.out.println(lt + " untouched period is " + untouchedMAPeriod);
+                                currentMAPeriod = untouchedMAPeriod;
                             }
                         }
 
@@ -578,7 +608,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             System.out.println(" Mins since last trade is " + minSinceLastTrade);
 
                             if (minSinceLastTrade <= 10) {
-                                System.out.println(lt + " untouched period is " + getUntouchedMAPeriod(price5, lastTradeTime));
+                                int untouchedMAPeriod = getUntouchedMAPeriod(price5, lastTradeTime);
+                                System.out.println(lt + " untouched period is " + untouchedMAPeriod);
+                                currentMAPeriod = untouchedMAPeriod;
                             }
                         }
                         maTrades.add(new MATrade(lt, ma, maTrades.size() == 0 ? -1 : -2));
@@ -589,26 +621,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         });
 
+    }
 
-//        for (Map.Entry<LocalDateTime, SimpleBar> e : futPrice5m.entrySet()) {
-//            if (futPrice5m.firstKey().isBefore(e.getKey().minusMinutes(300L))) {
-//                long size = futPrice5m.entrySet().stream().filter(e1 -> e1.getKey().isAfter(e.getKey().minusMinutes(300))
-//                        && e1.getKey().isBefore(e.getKey())).count();
-//                System.out.println(getStr(" time  size is ", e.getKey(), size));
-//                double val = futPrice5m.entrySet().stream().filter(e1 -> e1.getKey().isAfter(e.getKey().minusMinutes(300))
-//                        && e1.getKey().isBefore(e.getKey())).mapToDouble(e2 -> e2.getValue().getAverage()).sum() / size;
-//                sma60.put(e.getKey(), val);
-//            }
-//        }
-
-
-        System.out.println(" current time is " + LocalDateTime.now());
-        System.out.println(" fut 5m map is " + price5);
-        System.out.println(" 60 dma is " + sma60);
+    private static void maTradeAnalysis() {
 
     }
 
-    public static int getUntouchedMAPeriod(NavigableMap<LocalDateTime, SimpleBar> mp, LocalDateTime lastTradeTime) {
+    private static int getUntouchedMAPeriod(NavigableMap<LocalDateTime, SimpleBar> mp, LocalDateTime lastTradeTime) {
         int defaultPeriod = 60;
         int increaseStep = 5;
         int maxPeriod = 150;
@@ -787,25 +806,25 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return o;
     }
 
-    private Order placeBidLimit(double p) {
+    private Order placeBidLimit(double p, double quantity) {
         System.out.println(" place bid limit " + p);
         Order o = new Order();
         o.action(Types.Action.BUY);
         o.lmtPrice(p);
         o.orderType(OrderType.LMT);
-        o.totalQuantity(1);
+        o.totalQuantity(quantity);
         o.outsideRth(true);
         o.tif(Types.TimeInForce.GTC);
         return o;
     }
 
-    private Order placeOfferLimit(double p) {
+    private Order placeOfferLimit(double p, double quantity) {
         System.out.println(" place offer limit " + p);
         Order o = new Order();
         o.action(Types.Action.SELL);
         o.lmtPrice(p);
         o.orderType(OrderType.LMT);
-        o.totalQuantity(1);
+        o.totalQuantity(quantity);
         o.tif(Types.TimeInForce.GTC);
         o.outsideRth(true);
         return o;
