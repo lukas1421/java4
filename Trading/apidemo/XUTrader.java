@@ -1,6 +1,7 @@
 package apidemo;
 
 import TradeType.FutureTrade;
+import TradeType.MATrade;
 import TradeType.TradeBlock;
 import auxiliary.SimpleBar;
 import client.*;
@@ -24,6 +25,7 @@ import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -40,8 +42,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     static ApiController apcon;
 
+    //overnight trades
     private static final double maxOvernightTrades = 5.0;
     private static AtomicInteger overnightTradesDone = new AtomicInteger(0);
+
+    // ma trades
+    private static volatile int currentMAPeriod = 60;
 
     //new ApiController(new XUConnectionHandler(),
     //new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
@@ -96,14 +102,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static AtomicInteger graphWidth = new AtomicInteger(3);
 
     public static volatile EnumMap<FutType, NavigableMap<LocalDateTime, SimpleBar>> futData = new EnumMap<>(FutType.class);
-    //static volatile NavigableMap<LocalTime, SimpleBar> xuFrontData = new ConcurrentSkipListMap<>();
-    //static volatile NavigableMap<LocalTime, SimpleBar> xuBackData = new ConcurrentSkipListMap<>();
-//    public static volatile int netPositionFront;
-//    public static volatile int netBoughtPositionFront;
-//    public static volatile int netSoldPositionFront;
-//    public static volatile int netPositionBack;
-//    public static volatile int netBoughtPositionBack;
-//    public static volatile int netSoldPositionBack;
 
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     public static volatile EnumMap<FutType, Integer> currentPosMap = new EnumMap<>(FutType.class);
@@ -539,11 +537,58 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private void movingAverageTrader() {
         //start with 5 min candles, 60 min lines
-        NavigableMap<LocalDateTime, SimpleBar> futPrice5m = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
+        NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         NavigableMap<LocalDateTime, Double> sma60 = new ConcurrentSkipListMap<>();
         NavigableMap<LocalDateTime, Double> sma80 = new ConcurrentSkipListMap<>();
-        sma60 = XuTraderHelper.getMAGen(futPrice5m, 60);
-        sma80 = XuTraderHelper.getMAGen(futPrice5m, 80);
+        //int defaultMAPeriod = 60;
+
+        AtomicBoolean currentLong = new AtomicBoolean(true);
+        List<MATrade> maTrades = new LinkedList<>();
+
+        sma60 = XuTraderHelper.getMAGen(price5, currentMAPeriod);
+        //sma80 = XuTraderHelper.getMAGen(price5, 80);
+
+        sma60.forEach((lt, ma) -> {
+            if (price5.containsKey(lt) && price5.get(lt).includes(ma)) {
+                SimpleBar sb = price5.get(lt);
+                System.out.println(getStr(" crossed @ ", lt, ma));
+                if (ma > sb.getOpen()) {
+                    if (!currentLong.get()) {
+
+                        if (maTrades.size() > 0) {
+                            LocalDateTime lastTradeTime = ((LinkedList<MATrade>) maTrades).peekLast().getTradeTime();
+                            long minSinceLastTrade = ChronoUnit.MINUTES.between(lastTradeTime, lt);
+                            //long minSinceLastTrade = ChronoUnit.MINUTES.between(((LinkedList<MATrade>) maTrades).peekLast().getTradeTime(), lt);
+                            System.out.println(" Mins since last trade is " + minSinceLastTrade);
+                            if (minSinceLastTrade <= 10) {
+                                System.out.println(lt + " untouched period is " + getUntouchedMAPeriod(price5, lastTradeTime));
+                            }
+                        }
+
+                        maTrades.add(new MATrade(lt, ma, maTrades.size() == 0 ? 1 : 2));
+                        currentLong.set(true);
+                        System.out.println(" long ");
+                    }
+                } else {
+                    //maTradeSet.add(new MATrade(lt, ma, -1));
+                    if (currentLong.get()) {
+                        if (maTrades.size() > 0) {
+                            LocalDateTime lastTradeTime = ((LinkedList<MATrade>) maTrades).peekLast().getTradeTime();
+                            long minSinceLastTrade = ChronoUnit.MINUTES.between(lastTradeTime, lt);
+                            System.out.println(" Mins since last trade is " + minSinceLastTrade);
+
+                            if (minSinceLastTrade <= 10) {
+                                System.out.println(lt + " untouched period is " + getUntouchedMAPeriod(price5, lastTradeTime));
+                            }
+                        }
+                        maTrades.add(new MATrade(lt, ma, maTrades.size() == 0 ? -1 : -2));
+                        currentLong.set(false);
+                        System.out.println(" short ");
+                    }
+                }
+            }
+        });
+
 
 //        for (Map.Entry<LocalDateTime, SimpleBar> e : futPrice5m.entrySet()) {
 //            if (futPrice5m.firstKey().isBefore(e.getKey().minusMinutes(300L))) {
@@ -557,11 +602,24 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //        }
 
 
-
         System.out.println(" current time is " + LocalDateTime.now());
-        System.out.println(" fut 5m map is " + futPrice5m);
+        System.out.println(" fut 5m map is " + price5);
         System.out.println(" 60 dma is " + sma60);
 
+    }
+
+    public static int getUntouchedMAPeriod(NavigableMap<LocalDateTime, SimpleBar> mp, LocalDateTime lastTradeTime) {
+        int defaultPeriod = 60;
+        int increaseStep = 5;
+        int maxPeriod = 150;
+        int res = defaultPeriod;
+        //NavigableMap<LocalDateTime, Double> smaSeed = XuTraderHelper.getMAGen(mp, defaultPeriod);
+
+        while (!XuTraderHelper.priceMAUntouched(mp, res, lastTradeTime) && res <= maxPeriod) {
+            res += increaseStep;
+            System.out.println(" res is " + res);
+        }
+        return res;
     }
 
     private void overnightTrader() {

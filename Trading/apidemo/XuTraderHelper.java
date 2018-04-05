@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Collectors;
 
 public class XuTraderHelper {
 
@@ -23,4 +24,19 @@ public class XuTraderHelper {
         }
         return sma;
     }
+
+    public static boolean priceMAUntouched(NavigableMap<LocalDateTime, SimpleBar> mp, int period, LocalDateTime lastTradeTime) {
+        NavigableMap<LocalDateTime, Double> sma = getMAGen(mp, period);
+        NavigableMap<LocalDateTime, Double> smaFiltered = sma.entrySet().stream().filter(e -> e.getKey().isAfter(lastTradeTime))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
+
+        for (LocalDateTime t : smaFiltered.keySet()) {
+            SimpleBar sb = mp.get(t);
+            if (sb.includes(sma.get(t))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
 }
