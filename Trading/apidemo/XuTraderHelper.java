@@ -39,4 +39,17 @@ public class XuTraderHelper {
         return true;
     }
 
+    static int getUntouchedMAPeriod(NavigableMap<LocalDateTime, SimpleBar> mp, LocalDateTime lastTradeTime) {
+        int defaultPeriod = 60;
+        int increaseStep = 5;
+        int maxPeriod = 150;
+        int res = defaultPeriod;
+        //NavigableMap<LocalDateTime, Double> smaSeed = XuTraderHelper.getMAGen(mp, defaultPeriod);
+
+        while (!priceMAUntouched(mp, res, lastTradeTime) && res <= maxPeriod) {
+            res += increaseStep;
+            System.out.println(" res is " + res);
+        }
+        return res;
+    }
 }

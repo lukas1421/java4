@@ -257,14 +257,16 @@ public final class XU extends JPanel {
 
         graphButton.addActionListener(al -> {
             String ticker = ibContractToSymbol(XUTrader.activeFuture);
-            if (priceMapBar.get(ticker).size() > 0 && indexPriceSina.size() > 0) {
+            if (priceMapBar.get(ticker).size() > 0 && priceMapBar.get(ftseIndex).size() > 0) {
 //                 graph1.setNavigableMap(lastFutPrice);
 //                 graph2.setNavigableMap(indexPriceSina);
+                getPricePercentile();
+                getDiscPremPercentile();
 
                 SwingUtilities.invokeLater(() -> {
                     graph1.fillInGraph(ftseIndex);
                     graph2.fillInGraph(ticker);
-                    graph3.setSkipMap(priceMapBar.get(ticker), indexPriceSina);
+                    graph3.setSkipMap(priceMapBar.get(ticker), priceMapBar.get(ftseIndex));
                     graph4.setSkipMap(discPremSina);
                     graph5.setSkipMap(discPremPercentile);
                     graph6.setSkipMap(pricePercentile);
@@ -611,67 +613,6 @@ public final class XU extends JPanel {
         }
         return maxminArray;
     }
-
-//    @Override
-//    public void tickPrice(TickType tickType, double price, int canAutoExecute) {
-//        LocalTime lt = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
-//
-//        switch (tickType) {
-//            case BID:
-//                break;
-//            case ASK:
-//                break;
-//            case LAST:
-//                ChinaStock.priceMap.put("SGXA50", price);
-//                if (lt.isAfter(LocalTime.of(8, 55))) {
-//                    if (lastFutPrice.containsKey(lt)) {
-//                        lastFutPrice.get(lt).add(price);
-//                    } else {
-//                        lastFutPrice.put(lt, new SimpleBar(price));
-//                    }
-//
-//                    if (priceMapBar.get("SGXA50").containsKey(lt)) {
-//                        priceMapBar.get("SGXA50").get(lt).add(price);
-//                    } else {
-//                        priceMapBar.get("SGXA50").put(lt, new SimpleBar(price));
-//                    }
-//                }
-//                break;
-//            case CLOSE:
-//                break;
-//        }
-//
-//        SwingUtilities.invokeLater(() -> {
-//            m_model.fireTableDataChanged();
-//        });
-//    }
-//
-//    @Override
-//    public void tickSize(TickType tickType, int size) {
-//        LocalTime lt = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
-//        switch (tickType) {
-//            case BID_SIZE:
-////               bidVol.put(lt,size);
-//                break;
-//            case ASK_SIZE:
-////               askVol.put(lt,size);
-//                break;
-//            case VOLUME:
-//                frontFutVol.put(lt, size);
-//                ChinaStock.sizeMap.put("SGXA50", size * 1l);
-//                ChinaData.sizeTotalMap.get("SGXA50").put(lt, 1d * size);
-//                break;
-//        }
-//        SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
-//    }
-//
-//    @Override
-//    public void tickString(TickType tickType, String value) {
-//    }
-//
-//    @Override
-//    public void tickSnapshotEnd() {
-//    }
 
 
     class BarModel extends AbstractTableModel {

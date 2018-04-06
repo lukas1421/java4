@@ -14,6 +14,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -22,9 +23,11 @@ import java.util.*;
 import java.util.List;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static apidemo.TradingConstants.ftseIndex;
+import static apidemo.XUTrader.displayPred;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.*;
@@ -70,8 +73,14 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         addMouseMotionListener(this);
     }
 
-    public void setNavigableMap(NavigableMap<LocalDateTime, SimpleBar> tm) {
+    public void setNavigableMap(NavigableMap<LocalDateTime, SimpleBar> tm, Predicate<LocalDateTime> pred) {
+//        Predicate<LocalDateTime> pred = t -> true;
+//        if (XUTrader.displayTodayOnly.get()) {
+//            pred = t -> t.toLocalDate().equals(LocalDate.now());
+//        }
+
         this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue().containsZero())
+                .filter(e -> pred.test(e.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
                         ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
     }
@@ -125,9 +134,11 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
     public void fillInGraph(NavigableMap<LocalDateTime, SimpleBar> mp) {
         if (XUTrader.gran == DisplayGranularity._1MDATA) {
-            this.setNavigableMap(mp);
+            this.setNavigableMap(mp, displayPred);
+            ma60 = new ConcurrentSkipListMap<>();
+            ma80 = new ConcurrentSkipListMap<>();
         } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
-            this.setNavigableMap(map1mTo5mLDT(mp));
+            this.setNavigableMap(map1mTo5mLDT(mp), displayPred);
             ma60 = XuTraderHelper.getMAGen(map1mTo5mLDT(mp), 60);
             ma80 = XuTraderHelper.getMAGen(map1mTo5mLDT(mp), 80);
         }
@@ -142,7 +153,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     }
 
     public void refresh() {
-        this.setNavigableMap(tm);
+        this.setNavigableMap(tm, displayPred);
         repaint();
     }
 
@@ -310,14 +321,14 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             }
             if (roundDownToN(mouseXCord, XUTrader.graphWidth.get()) == x - 5) {
                 //lowY+(mouseYCord<closeY?-20:+20
-                g.drawString(lt.toString() + " " + Math.round(tm.floorEntry(lt).getValue().getClose()), x,
+                g.drawString("F: " + lt.toLocalTime() + " " + Math.round(tm.floorEntry(lt).getValue().getClose()), x,
                         lowY + (mouseYCord < closeY ? -50 : +50));
                 g.drawOval(x - 3, lowY, 5, 5);
                 g.fillOval(x - 3, lowY, 5, 5);
 
                 if (ma60.size() > 0 && ma60.containsKey(lt)) {
                     int maY = getY(ma60.get(lt));
-                    g.drawString(lt.toString() + " " + Math.round(ma60.floorEntry(lt).getValue()), x,
+                    g.drawString("MA60: " + lt.toLocalTime() + " " + Math.round(ma60.floorEntry(lt).getValue()), x,
                             maY + (mouseYCord < maY ? -50 : +50));
                     g.drawOval(x - 3, lowY, 5, 5);
                     g.fillOval(x - 3, lowY, 5, 5);
@@ -330,15 +341,15 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             int lowY = getY(tm.lastEntry().getValue().getLow());
             int closeY = getY(tm.lastEntry().getValue().getClose());
             g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
-            g.drawString(tm.lastKey().toString() + " " + Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
+            g.drawString(" F: " + tm.lastKey().toLocalTime().toString() + " " + Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
                     x, lowY + (mouseYCord < closeY ? -20 : +20));
             g.drawOval(x + 2, lowY, 5, 5);
             g.fillOval(x + 2, lowY, 5, 5);
 
             if (ma60.size() > 0) {
                 int maY = getY(ma60.lastEntry().getValue());
-                g.drawString(ma60.lastKey().toString() + " " + Math.round(ma60.lastEntry().getValue()), x,
-                        maY + (mouseYCord < maY ? -50 : +50));
+                g.drawString(" ma60: " + ma60.lastKey().toLocalTime().toString() + " " + Math.round(ma60.lastEntry().getValue()), x,
+                        maY + (mouseYCord < maY ? -20 : +20));
                 g.drawOval(x + 2, maY, 5, 5);
                 g.fillOval(x + 2, maY, 5, 5);
             }
@@ -360,9 +371,16 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         if (!ofNullable(name).orElse("").equals("")) {
             g2.drawString(name, 5, 15);
         }
-        if (!ofNullable(chineseName).orElse("").equals("")) {
-            g2.drawString(chineseName, getWidth() / 8, 15);
+
+        if (!ofNullable(name).orElse("").equals("")) {
+            g2.drawString(LocalTime.now().format(DateTimeFormatter.ofPattern("H:mm:s")), getWidth() / 16, 15);
         }
+
+
+//        if (!ofNullable(chineseName).orElse("").equals("")) {
+//            g2.drawString(chineseName, getWidth() / 8, 15);
+//        }
+
         if (!ofNullable(bench).orElse("").equals("")) {
             g2.drawString("(" + bench + ")", getWidth() * 2 / 8, 15);
         }
@@ -374,7 +392,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         g2.drawString("开: " + Integer.toString((int) Math.round(getOpen())), getWidth() * 2 / 8, 15);
         g2.drawString("P: " + Double.toString(getLast()), getWidth() * 6 / 16, 15);
         g2.drawString(" Index: " + Math.round(getIndex()), getWidth() * 8 / 16, 15);
-        g2.drawString("PD: " + getPD(), getWidth() * 10 / 16, 15);
+        g2.drawString("PD: " + getPD() + "%", getWidth() * 10 / 16, 15);
         g2.drawString("Pos: " + XUTrader.currentPosMap.getOrDefault(fut, 0), getWidth() * 11 / 16, 15);
         g2.drawString("Pnl: " + getTradePnl(), getWidth() * 12 / 16, 15);
         g2.drawString("B: " + XUTrader.botMap.getOrDefault(fut, 0), getWidth() * 13 / 16, 15);
@@ -385,43 +403,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         //g2.fillRect(0,0, getWidth(), getHeight());
         g2.fillRect(getWidth() - 30, 20, 20, 20);
         g2.setColor(getForeground());
-
-//        if (XUTrader.showTrades) {
-//            if(XUTrader.tradesMap.get(fut).size()>0) {
-//                XUTrader.tradesMap.get(fut).forEach((key, value) -> {
-//                    if (value.getSizeAll() > 0) {
-//                        g.setColor(Color.blue);
-//                        int xCord = getXForLT(key);
-//                        int yCord = getY(value.getAveragePrice());
-//                        g.drawPolygon(new int[]{xCord - 2, xCord, xCord + 2}, new int[]{yCord + 4, yCord, yCord + 4}, 3);
-//                    } else {
-//                        g.setColor(Color.black);
-//                        int xCord = getXForLT(key);
-//                        int yCord = getY(value.getAveragePrice());
-//                        g.drawPolygon(new int[]{xCord - 2, xCord, xCord + 2}, new int[]{yCord - 4, yCord, yCord - 4}, 3);
-//                    }
-//                });
-//            }
-//        }
     }
-
-//    private int getXForLT(LocalTime t) {
-//        if (XUTrader.gran == DisplayGranularity._1MDATA) {
-//            long timeDiff = ChronoUnit.MINUTES.between(LocalTime.of(9, 0), t);
-//            if (t.isAfter(LocalTime.of(11, 30))) {
-//                timeDiff = timeDiff - 90;
-//            }
-//            return (int) (WIDTH_BAR * timeDiff + 5);
-//        } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
-//            long timeDiff = (ChronoUnit.MINUTES.between(LocalTime.of(9, 0), t)) / 5;
-//
-//            if (t.isAfter(LocalTime.of(11, 30))) {
-//                timeDiff = timeDiff - 18;
-//            }
-//            return (int) (WIDTH_BAR * timeDiff + 1);
-//        }
-//        return 0;
-//    }
 
     private double getTradePnl() {
 
@@ -437,24 +419,8 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             return Math.round(100d * (mv + cost)) / 100d;
         }
         return 0.0;
-
     }
-//    public int getYForLTSell(LocalTime t) {
-//        SimpleBar sb = (SimpleBar) XUTrader.xuData.floorEntry(t).getValue();
-//        if (sb.normalBar()) {
-//            return getY(sb.getHigh());
-//        } else {
-//            throw new IllegalArgumentException("BAGAYARO");
-//        }
-//    }
-//    public int getYForLTBuy(LocalTime t) {
-//        SimpleBar sb = (SimpleBar) XUTrader.xuData.floorEntry(t).getValue();
-//        if (sb.normalBar()) {
-//            return getY(sb.getLow());
-//        } else {
-//            throw new IllegalArgumentException("BAGAYARO");
-//        }
-//    }
+
 
     /**
      * Convert bar value to y coordinate.
@@ -505,7 +471,11 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     }
 
     public double getOpen() {
-        return (tm.size() > 0) ? tm.firstEntry().getValue().getOpen() : 0.0;
+        if (tm.size() > 0) {
+            LocalDate t = tm.lastEntry().getKey().toLocalDate();
+            return tm.ceilingEntry(LocalDateTime.of(t, LocalTime.of(9, 0))).getValue().getOpen();
+        }
+        return 0.0;
     }
 
     public double getLast() {
