@@ -815,15 +815,15 @@ public class HistChinaStocks extends JPanel {
             cal.setTime(dt);
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+            LocalDateTime ldt = LocalDateTime.of(ld, lt);
 
             //System.out.println(" vol " + volume);
-
-
             if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
+//            if (ldt.isAfter(LocalDateTime.of(HistChinaStocks.MONDAY_OF_WEEK.minusDays(4L), LocalTime.of(14, 59)))) {
                 if ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
-                        || (lt.isAfter(LocalTime.of(13, 0)) && lt.isBefore(LocalTime.of(15, 1)))) {
+                        || (lt.isAfter(LocalTime.of(13, 0)) && lt.isBefore(LocalTime.of(15, 0)))) {
 
-                    LocalDateTime ldt = LocalDateTime.of(ld, lt);
+                    //LocalDateTime ldt = LocalDateTime.of(ld, lt);
                     LocalDateTime ltTo5 = Utility.roundTo5Ldt(ldt);
                     if (!chinaWtd.get(ticker).containsKey(ltTo5)) {
                         chinaWtd.get(ticker).put(ltTo5, new SimpleBar(open, high, low, close));
@@ -1045,6 +1045,9 @@ public class HistChinaStocks extends JPanel {
         weekTradePnlMap = chinaTradeMap.entrySet().stream().filter(p).map(e ->
                 computeTrade(e.getKey(), chinaWtd.get(e.getKey()), (e.getValue())))
                 .reduce(mapSummingDouble).orElse(new ConcurrentSkipListMap<>());
+
+        //System.out.println(" computing weekly trade pnl " + )
+
         return weekTradePnlMap;
     }
 
@@ -1058,22 +1061,69 @@ public class HistChinaStocks extends JPanel {
         double fx = fxMap.getOrDefault(ticker, 1.0);
 
 
+        NavigableMap<LocalDateTime, TradeBlock> trimmedTrades = new ConcurrentSkipListMap<>();
+
+        trades.forEach((k, v) -> {
+            LocalDateTime dayClose = LocalDateTime.of(k.toLocalDate(), LocalTime.of(15, 0));
+            if (k.toLocalTime().isAfter(LocalTime.of(8, 59, 59)) &&
+                    k.toLocalTime().isBefore(LocalTime.of(15, 0, 0))) {
+                trimmedTrades.put(k, v);
+            } else if (k.toLocalTime().isAfter(LocalTime.of(14, 59, 59))) {
+                if (!trimmedTrades.containsKey(dayClose)) {
+                    trimmedTrades.put(dayClose, v);
+                } else {
+                    TradeBlock current = trimmedTrades.get(dayClose);
+                    trimmedTrades.put(dayClose, mergeTradeBlocks(current, v));
+                }
+            } else {
+                LocalDateTime ytdClose = LocalDateTime.of(k.toLocalDate().minusDays(1L), LocalTime.of(15, 0));
+                if (!trimmedTrades.containsKey(ytdClose)) {
+                    trimmedTrades.put(ytdClose, v);
+                } else {
+                    TradeBlock current = trimmedTrades.get(ytdClose);
+                    trimmedTrades.put(ytdClose, mergeTradeBlocks(current, v));
+                }
+            }
+        });
+
+        System.out.println(" trimmed trades is " + trimmedTrades);
+
         for (LocalDateTime lt : prices.keySet()) {
+
             //note that prices start from 9:35 to 15:00, it needs to back-include trade in slot
-            if (trades.subMap(lt.minusMinutes(5L), false, lt, true).size() > 0) {
-                currPos += trades.subMap(lt.minusMinutes(5L), false, lt, true)
+            if (trimmedTrades.subMap(lt.minusMinutes(5L), false, lt, true).size() > 0) {
+
+                System.out.println(getStr(" trade in submap between ", lt.minusMinutes(5L), lt,
+                        trimmedTrades.subMap(lt.minusMinutes(5L), false, lt, true)));
+
+                currPos += trimmedTrades.subMap(lt.minusMinutes(5L), false, lt, true)
                         .entrySet().stream().mapToInt(e -> e.getValue().getSizeAll()).sum();
-                costBasis += trades.subMap(lt.minusMinutes(5L), false, lt, true)
+                costBasis += trimmedTrades.subMap(lt.minusMinutes(5L), false, lt, true)
                         .entrySet().stream().mapToDouble(e -> e.getValue().getCostBasisAll(ticker)).sum();
             }
             mv = currPos * prices.get(lt).getClose();
 
+            System.out.println(getStr(" lt | currpos | mv | cost basis ", lt, currPos, mv, costBasis));
             if (chinaTradingTimeHist.test(lt.toLocalTime())) {
                 res.put(lt, fx * (costBasis + mv));
             }
         }
+        if (ticker.equalsIgnoreCase("SGXA50"))
+
+        {
+            System.out.println(getStr("SGXA50 FX ", fx));
+            System.out.println(" SGXA50 prices " + prices);
+            System.out.println(" SGXA50 Trades " + trades);
+        }
         return res;
     }
+
+    public static TradeBlock mergeTradeBlocks(TradeBlock... tbs) {
+        TradeBlock res = new TradeBlock();
+        Arrays.stream(tbs).flatMap(e -> e.getTradeList().stream()).forEach(e -> res.addTrade((Trade) e));
+        return res;
+    }
+
 
     private static NavigableMap<LocalDateTime, Double> computeNet(Predicate<? super Map.Entry<String, ?>> p) {
         NavigableMap<LocalDateTime, Double> res = mapSummingDouble.apply(computeWtdMtmPnl(p), computeWtdTradePnl(p));

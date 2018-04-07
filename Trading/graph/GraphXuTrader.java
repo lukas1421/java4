@@ -472,8 +472,14 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
     public double getOpen() {
         if (tm.size() > 0) {
+
             LocalDate t = tm.lastEntry().getKey().toLocalDate();
-            return tm.ceilingEntry(LocalDateTime.of(t, LocalTime.of(9, 0))).getValue().getOpen();
+            if (tm.lastKey().isAfter(LocalDateTime.of(t, LocalTime.of(9, 30)))) {
+                return tm.ceilingEntry(LocalDateTime.of(t, LocalTime.of(9, 0))).getValue().getOpen();
+            } else {
+                return tm.firstEntry().getValue().getOpen();
+            }
+
         }
         return 0.0;
     }
