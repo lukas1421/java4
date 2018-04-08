@@ -512,16 +512,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
         JScrollPane outputPanel = new JScrollPane(outputArea);
 
-        //JPanel graphPanel = new JPanel();
-        //graphPanel.add(chartScroll);
-
         controlPanel1.setLayout(new FlowLayout());
-//        add(controlPanel,BorderLayout.NORTH);
-//        add(deepPanel, BorderLayout.CENTER);
-//        add(jp, BorderLayout.EAST);
-//        add(graphPanel,BorderLayout.SOUTH);
-        //add(controlPanel);
-
         add(controlPanel1);
         add(controlPanel2);
         add(deepPanel);

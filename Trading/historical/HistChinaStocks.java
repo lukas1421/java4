@@ -478,18 +478,15 @@ public class HistChinaStocks extends JPanel {
             }
 
             //adjust for incomplete stock data
-            stockList.forEach(s -> {
-                chinaWtd.get("SGXA50").keySet().forEach(k -> {
-                    if (chinaWtd.containsKey(s) && !chinaWtd.get(s).containsKey(k) && k.isAfter(chinaWtd.get(s).firstKey())) {
-                        chinaWtd.get(s).put(k, new SimpleBar(chinaWtd.get(s).lowerEntry(k).getValue().getClose()));
-                    }
+            stockList.forEach(s -> chinaWtd.get("SGXA50").keySet().forEach(k -> {
+                if (chinaWtd.containsKey(s) && !chinaWtd.get(s).containsKey(k) && k.isAfter(chinaWtd.get(s).firstKey())) {
+                    chinaWtd.get(s).put(k, new SimpleBar(chinaWtd.get(s).lowerEntry(k).getValue().getClose()));
+                }
 
-                    if (chinaWtd.containsKey(s) && !chinaWtd.get(s).containsKey(k) && k.isBefore(chinaWtd.get(s).firstKey())) {
-                        chinaWtd.get(s).put(k, new SimpleBar(lastWeekCloseMap.getOrDefault(s, 0.0)));
-                    }
-                });
-
-            });
+                if (chinaWtd.containsKey(s) && !chinaWtd.get(s).containsKey(k) && k.isBefore(chinaWtd.get(s).firstKey())) {
+                    chinaWtd.get(s).put(k, new SimpleBar(lastWeekCloseMap.getOrDefault(s, 0.0)));
+                }
+            }));
 
         });
 
@@ -1103,7 +1100,7 @@ public class HistChinaStocks extends JPanel {
             }
             mv = currPos * prices.get(lt).getClose();
 
-            System.out.println(getStr(" lt | currpos | mv | cost basis ", lt, currPos, mv, costBasis));
+            //System.out.println(getStr(" lt | currpos | mv | cost basis ", lt, currPos, mv, costBasis));
             if (chinaTradingTimeHist.test(lt.toLocalTime())) {
                 res.put(lt, fx * (costBasis + mv));
             }
@@ -1118,7 +1115,7 @@ public class HistChinaStocks extends JPanel {
         return res;
     }
 
-    public static TradeBlock mergeTradeBlocks(TradeBlock... tbs) {
+    private static TradeBlock mergeTradeBlocks(TradeBlock... tbs) {
         TradeBlock res = new TradeBlock();
         Arrays.stream(tbs).flatMap(e -> e.getTradeList().stream()).forEach(e -> res.addTrade((Trade) e));
         return res;
