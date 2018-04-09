@@ -10,12 +10,18 @@ import controller.ApiController;
 import graph.DisplayGranularity;
 import graph.GraphXuTrader;
 import handler.HistoricalHandler;
+import handler.XUOvernightTradeExecHandler;
 import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -45,6 +51,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //overnight trades
     private static final int maxOvernightTrades = 5;
     private static AtomicInteger overnightTradesDone = new AtomicInteger(0);
+    private static final double maxOvernightDeltaChgUSD = 50000.0;
 
     // ma trades
     private static volatile int currentMAPeriod = 60;
@@ -93,8 +100,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static Map<String, Double> offerPriceList = new HashMap<>();
     private ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
     private ScheduledExecutorService ses2 = Executors.newScheduledThreadPool(10);
-
     public static EnumMap<FutType, NavigableMap<LocalDateTime, TradeBlock>> tradesMap = new EnumMap<>(FutType.class);
+    public static EnumMap<FutType, NavigableMap<LocalDateTime, TradeBlock>> overnightTradesMap = new EnumMap<>(FutType.class);
 
     private GraphXuTrader xuGraph = new GraphXuTrader() {
         @Override
@@ -134,6 +141,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         for (FutType f : FutType.values()) {
             futData.put(f, new ConcurrentSkipListMap<>());
             tradesMap.put(f, new ConcurrentSkipListMap<>());
+            overnightTradesMap.put(f, new ConcurrentSkipListMap<>());
             futOpenMap.put(f, 0.0);
             futPrevCloseMap.put(f, 0.0);
         }
@@ -609,9 +617,24 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     }
 
+
+    // overnight close trading
     private void overnightTrader() {
 
-        LocalTime now = LocalTime.now();
+
+        System.out.println(" outputting options");
+        LocalDateTime now = LocalDateTime.now();
+
+        int lotsTraded = 0;
+        double tradedDelta = 0.0;
+
+        if (XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
+            lotsTraded = XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture))
+                    .entrySet().stream().mapToInt(e -> e.getValue().getSizeAllAbs()).sum();
+            tradedDelta = XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture))
+                    .entrySet().stream().mapToDouble(e -> e.getValue().getDeltaAll()).sum();
+        }
+
 
         double indexPrice = (ChinaData.priceMapBar.containsKey(ftseIndex) &&
                 ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
@@ -627,35 +650,69 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
         int currPercentile = getPercentileForLast(filteredPrice);
-        double pd = indexPrice != 0.0 ? (futPrice.lastEntry().getValue().getClose() / indexPrice - 1) : 0.0;
 
-        if (overnightTradesDone.get() < maxOvernightTrades) {
-            if (now.truncatedTo(ChronoUnit.MINUTES).isAfter(LocalTime.of(4, 40)) &&
-                    now.truncatedTo(ChronoUnit.MINUTES).isBefore(LocalTime.of(5, 0))) {
+        double currentPrice = 0.0;
+        double pd = 0.0;
+
+        if (futPrice.size() > 0) {
+            currentPrice = futPrice.lastEntry().getValue().getClose();
+            pd = indexPrice != 0.0 ? Math.round(10000d * (futPrice.lastEntry().getValue().getClose() / indexPrice - 1)) / 10000d : 0.0;
+        }
+
+        if (lotsTraded < maxOvernightTrades && Math.abs(tradedDelta) < maxOvernightDeltaChgUSD) {
+            if (now.toLocalTime().truncatedTo(ChronoUnit.MINUTES).isAfter(LocalTime.of(4, 40)) &&
+                    now.toLocalTime().truncatedTo(ChronoUnit.MINUTES).isBefore(LocalTime.of(5, 0))) {
 
                 if (currPercentile > 90 && pd > 0.01) {
-                    apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(askMap.get(ibContractToFutType(activeFuture)), 1.0),
-                            this);
-                    overnightTradesDone.incrementAndGet();
+                    double candidatePrice = askMap.getOrDefault(ibContractToFutType((activeFuture)), 0.0);
+
+                    if (checkIfOrderPriceMakeSense(candidatePrice)) {
+                        outputToOvernightLog(getStr(now, " placing sell order @ ", candidatePrice,
+                                " curr percentile ", currPercentile, " current pd ", pd));
+                        apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(candidatePrice, 1.0),
+                                this);
+                    }
+
                 } else if (currPercentile < 10 && pd < -0.01) {
+                    double candidatePrice = bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0);
 
-                    apcon.placeOrModifyOrder(activeFuture, placeBidLimit(bidMap.get(ibContractToFutType(activeFuture)), 1.0)
-                            , this);
-
-                    overnightTradesDone.incrementAndGet();
+                    if (checkIfOrderPriceMakeSense(candidatePrice)) {
+                        outputToOvernightLog(getStr(now, " placing buy order @ ", candidatePrice,
+                                " curr percentile ", currPercentile, " current pd ", pd));
+                        apcon.placeOrModifyOrder(activeFuture, placeBidLimit(candidatePrice, 1.0)
+                                , this);
+                    }
                 } else {
                     System.out.println(" nothing done ");
                 }
             }
         } else {
+            outputToOvernightLog(getStr(now, " trades exceeded max number allowed"));
             System.out.println(" trades exceeded max number allowed ");
         }
 
-        System.out.println(getStr("overnight trader ", now, " overnight trade dones ", overnightTradesDone.get(),
-                "current percentile ", currPercentile, " PD: ", pd, "current price ",
-                filteredPrice.lastEntry().getValue().getClose(), " index ", indexPrice));
+        String outputString = getStr("overnight trader ", now.format(DateTimeFormatter.ofPattern("M-d H:mm:ss")),
+                " overnight trade dones ", lotsTraded, "current percentile ", currPercentile, " PD: ", pd, "current price ",
+                filteredPrice.lastEntry().getValue().getClose(), " index ", indexPrice);
+
+        System.out.println(outputString);
+
+        outputToOvernightLog(outputString);
+
+        requestOvernightExecHistory();
         //System.out.println(" overnight trades done " + );
     }
+
+    private static void outputToOvernightLog(String s) {
+        File output = new File(TradingConstants.GLOBALPATH + "overnightLog.txt");
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
+            out.append(s);
+            out.newLine();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
 
     private <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> map) {
         if (map.size() > 0) {
@@ -714,12 +771,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         Order o = new Order();
         o.action(Types.Action.SELL);
-        //o.auxPrice(0.0);
         o.lmtPrice(p);
         o.orderType(OrderType.LMT);
         o.totalQuantity(quantity);
         o.outsideRth(true);
-        //o.orderId(orderIdNo.incrementAndGet());
         return o;
     }
 
@@ -784,18 +839,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //            if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
 //                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(23, 59))))) {
 
-            if (ldt.toLocalDate().isAfter(currDate.minusDays(2)) && FUT_COLLECTION_TIME.test(ldt)) {
+            int daysToGoBack;
+            if (currDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
+                daysToGoBack = 4;
+            } else {
+                daysToGoBack = 2;
+            }
+
+            if (ldt.toLocalDate().isAfter(currDate.minusDays(daysToGoBack)) && FUT_COLLECTION_TIME.test(ldt)) {
 
                 if (lt.equals(LocalTime.of(9, 0))) {
                     futOpenMap.put(FutType.get(name), open);
                     System.out.println(" today open is for " + name + " " + open);
                 }
-
-                //SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                //System.out.println(Utility.getStrCheckNull(dt, open, high, low, close));
                 futData.get(FutType.get(name)).put(ldt, new SimpleBar(open, high, low, close));
-                //xuFrontData.put(lt, new SimpleBar(open, high, low, close));
-
             }
         } else {
             System.out.println(getStr(date, open, high, low, close));
@@ -951,7 +1008,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         SwingUtilities.invokeLater(() -> {
-
             if (ticker.equals("SGXA50")) {
 //                XUTrader.updateLog(" account " + account + "\n");
 //                XUTrader.updateLog(" contract " + contract.symbol()+ "\n");
@@ -1022,6 +1078,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         tradesMap.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
         apcon.reqExecutions(new ExecutionFilter(), this);
     }
+
+    private void requestOvernightExecHistory() {
+        System.out.println(" requesting overnight exec history ");
+        overnightTradesMap.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
+        apcon.reqExecutions(new ExecutionFilter(), XUOvernightTradeExecHandler.DefaultOvernightHandler);
+    }
+
 
     private void requestXUData() {
         getAPICon().reqXUDataArray();

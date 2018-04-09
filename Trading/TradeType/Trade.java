@@ -29,8 +29,12 @@ public abstract class Trade {
         return size;
     }
 
+    public int getAbsSize() {
+        return Math.abs(size);
+    }
+
     public double getDelta() {
-        return size*price;
+        return size * price;
     }
 
     // guohu + stamp + brokerage

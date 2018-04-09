@@ -147,6 +147,7 @@ public class ChinaOption extends JPanel implements Runnable {
         };
 
         ChinaOptionHelper.getLastTradingDate();
+        //System.out.println()
         loadOptionTickers();
 
         expiryList.add(frontExpiry);

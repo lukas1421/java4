@@ -180,12 +180,15 @@ public class ChinaOptionHelper {
                 if (lineNo > 2) {
                     throw new IllegalArgumentException(" ERROR: date map has more than 3 lines ");
                 }
-                ChinaOption.previousTradingDate = LocalDate.parse(al1.get(0));
+                if (Double.parseDouble(al1.get(1)) != Double.parseDouble(al1.get(2))) {
+                    ChinaOption.previousTradingDate = LocalDate.parse(al1.get(0));
+                }
                 lineNo++;
             }
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+        System.out.println(" get last trading date " + ChinaOption.previousTradingDate);
     }
 
     public static String getOptionTicker(Map<String, Option> mp, CallPutFlag f, double strike, LocalDate expiry) {
