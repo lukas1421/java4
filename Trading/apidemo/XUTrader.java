@@ -620,9 +620,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     // overnight close trading
     private void overnightTrader() {
 
-
         System.out.println(" outputting options");
         LocalDateTime now = LocalDateTime.now();
+
+        LocalDate TDate = now.toLocalTime().isAfter(LocalTime.of(0, 0))
+                && now.toLocalTime().isBefore(LocalTime.of(5, 0)) ? LocalDate.now().minusDays(1L)
+                : LocalDate.now();
 
         int absLotsTraded = 0;
         double netTradedDelta = 0.0;
@@ -641,7 +644,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         NavigableMap<LocalDateTime, SimpleBar> futPriceMap = futData.get(ibContractToFutType(activeFuture));
 
-        LocalDateTime ytdCloseTime = LocalDateTime.of(LocalDate.now().minusDays(1L), LocalTime.of(15, 0));
+        LocalDateTime ytdCloseTime = LocalDateTime.of(TDate, LocalTime.of(15, 0));
 
         NavigableMap<LocalDateTime, SimpleBar> filteredPriceMap = futPriceMap.entrySet().stream()
                 .filter(e -> e.getKey().isAfter(ytdCloseTime))
@@ -720,6 +723,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             double max = map.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
             double min = map.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
             double last = map.lastEntry().getValue().getClose();
+            System.out.println(getStr(" getPercentileForLast max min last ", max, min, last));
             return (int) Math.round(100d * ((last - min) / (max - min)));
         }
         return 50;
