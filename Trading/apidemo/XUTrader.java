@@ -610,7 +610,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
             }
         });
-
     }
 
     private static void maTradeAnalysis() {
@@ -625,13 +624,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         System.out.println(" outputting options");
         LocalDateTime now = LocalDateTime.now();
 
-        int lotsTraded = 0;
-        double tradedDelta = 0.0;
+        int absLotsTraded = 0;
+        double netTradedDelta = 0.0;
 
         if (XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
-            lotsTraded = XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture))
+            absLotsTraded = XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture))
                     .entrySet().stream().mapToInt(e -> e.getValue().getSizeAllAbs()).sum();
-            tradedDelta = XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture))
+            netTradedDelta = XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture))
                     .entrySet().stream().mapToDouble(e -> e.getValue().getDeltaAll()).sum();
         }
 
@@ -640,28 +639,30 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
                 ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : 0.0;
 
-        NavigableMap<LocalDateTime, SimpleBar> futPrice = futData.get(ibContractToFutType(activeFuture));
+        NavigableMap<LocalDateTime, SimpleBar> futPriceMap = futData.get(ibContractToFutType(activeFuture));
 
         LocalDateTime ytdCloseTime = LocalDateTime.of(LocalDate.now().minusDays(1L), LocalTime.of(15, 0));
 
-        NavigableMap<LocalDateTime, SimpleBar> filteredPrice = futPrice.entrySet().stream()
+        NavigableMap<LocalDateTime, SimpleBar> filteredPriceMap = futPriceMap.entrySet().stream()
                 .filter(e -> e.getKey().isAfter(ytdCloseTime))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
-        int currPercentile = getPercentileForLast(filteredPrice);
+        int currPercentile = getPercentileForLast(filteredPriceMap);
 
         double currentPrice = 0.0;
         double pd = 0.0;
 
-        if (futPrice.size() > 0) {
-            currentPrice = futPrice.lastEntry().getValue().getClose();
-            pd = indexPrice != 0.0 ? Math.round(10000d * (futPrice.lastEntry().getValue().getClose() / indexPrice - 1)) / 10000d : 0.0;
+        if (futPriceMap.size() > 0) {
+            currentPrice = futPriceMap.lastEntry().getValue().getClose();
+            pd = indexPrice != 0.0 ? Math.round(10000d * (futPriceMap.lastEntry().getValue().getClose() / indexPrice - 1)) / 10000d : 0.0;
         }
 
-        if (lotsTraded < maxOvernightTrades && Math.abs(tradedDelta) < maxOvernightDeltaChgUSD) {
-            if (now.toLocalTime().truncatedTo(ChronoUnit.MINUTES).isAfter(LocalTime.of(4, 40)) &&
-                    now.toLocalTime().truncatedTo(ChronoUnit.MINUTES).isBefore(LocalTime.of(5, 0))) {
+        if (absLotsTraded < maxOvernightTrades
+                && Math.abs(netTradedDelta) < maxOvernightDeltaChgUSD) {
+
+            if (now.toLocalTime().isBefore(LocalTime.of(5, 0)) &&
+                    now.toLocalTime().truncatedTo(ChronoUnit.MINUTES).isAfter(LocalTime.of(4, 40))) {
 
                 if (currPercentile > 90 && pd > 0.01) {
                     double candidatePrice = askMap.getOrDefault(ibContractToFutType((activeFuture)), 0.0);
@@ -683,24 +684,24 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                                 , this);
                     }
                 } else {
+                    outputToOvernightLog(getStr(now, " nothing done "));
                     System.out.println(" nothing done ");
                 }
+            } else {
+                System.out.println(" outside tradable time slot");
             }
         } else {
-            outputToOvernightLog(getStr(now, " trades exceeded max number allowed"));
-            System.out.println(" trades exceeded max number allowed ");
+            outputToOvernightLog(getStr(now, " trades or delta exceeded MAX "));
+            //System.out.println(" trades exceeded max number allowed ");
         }
 
-        String outputString = getStr("overnight trader ", now.format(DateTimeFormatter.ofPattern("M-d H:mm:ss")),
-                " overnight trade dones ", lotsTraded, "current percentile ", currPercentile, " PD: ", pd, "current price ",
-                filteredPrice.lastEntry().getValue().getClose(), " index ", indexPrice);
+        String outputString = getStr("overnight", now.format(DateTimeFormatter.ofPattern("M-d H:mm:ss")),
+                " overnight trade done", absLotsTraded, "current percentile ", currPercentile, " PD: ", pd, "current price ",
+                filteredPriceMap.lastEntry().getValue().getClose(), " index ", Math.round(100d * indexPrice) / 100d);
 
         System.out.println(outputString);
-
         outputToOvernightLog(outputString);
-
         requestOvernightExecHistory();
-        //System.out.println(" overnight trades done " + );
     }
 
     private static void outputToOvernightLog(String s) {
