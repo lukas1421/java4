@@ -56,6 +56,7 @@ public final class TradingConstants {
     }
 
     public static final String GLOBALPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";
+    public static final String DESKTOPPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\";
     public static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export_1m\\" : "J:\\TDX\\T0002\\export_1m\\";
     //public final static int PORT_IBAPI = 4001;

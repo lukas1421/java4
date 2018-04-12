@@ -40,8 +40,6 @@ import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
 import static apidemo.TradingConstants.ftseIndex;
 import static utility.Utility.*;
 
-//import java.util.concurrent.atomic.AtomicInteger;
-
 public final class XUTrader extends JPanel implements HistoricalHandler, ApiController.IDeepMktDataHandler,
         ApiController.ITradeReportHandler, ApiController.IOrderHandler, ApiController.ILiveOrderHandler
         , ApiController.IPositionHandler, ApiController.IConnectionHandler {
@@ -63,11 +61,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //display
     public static volatile Predicate<LocalDateTime> displayPred = e -> true;
 
-    //new ApiController(new XUConnectionHandler(),
-    //new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
-    //ApiController apcon = new ApiController(new IConnectionHandler.DefaultConnectionHandler()
-    // ,new ApiConnection.ILogger.DefaultLogger(),new ApiConnection.ILogger.DefaultLogger());
-
     private final static Contract frontFut = utility.Utility.getFrontFutContract();
     private final static Contract backFut = utility.Utility.getBackFutContract();
 
@@ -77,15 +70,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static volatile DisplayGranularity gran = DisplayGranularity._1MDATA;
 
     public static volatile Map<Double, Double> activeFutLiveOrder = new HashMap<>();
-
-    //List<Integer> orderList = new LinkedList<>();
-    //AtomicInteger orderInitial = new AtomicInteger(3000001);
-//    private static volatile double currentBidFront;
-//    private static volatile double currentAskFront;
-//    private static volatile double currentPriceFront;
-//    static volatile double currentBidBack;
-//    static volatile double currentAskBack;
-//    static volatile double currentPriceBack;
 
     public static volatile EnumMap<FutType, Double> bidMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Double> askMap = new EnumMap<>(FutType.class);
@@ -519,6 +503,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             deepPanel.add(j);
         }
         JScrollPane outputPanel = new JScrollPane(outputArea);
+
+
 
         controlPanel1.setLayout(new FlowLayout());
         add(controlPanel1);
