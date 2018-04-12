@@ -658,7 +658,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (futPriceMap.size() > 0) {
             currentPrice = futPriceMap.lastEntry().getValue().getClose();
-            pd = indexPrice != 0.0 ? Math.round(10000d * (futPriceMap.lastEntry().getValue().getClose() / indexPrice - 1)) / 10000d : 0.0;
+            pd = indexPrice != 0.0 ? Math.round(10000d * (currentPrice / indexPrice - 1)) / 10000d : 0.0;
         }
 
         if (absLotsTraded < maxOvernightTrades
@@ -676,7 +676,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(candidatePrice, 1.0),
                                 this);
                     }
-
                 } else if (currPercentile < 10 && pd < -0.01) {
                     double candidatePrice = bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0);
 
@@ -700,7 +699,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         String outputString = getStr("overnight", now.format(DateTimeFormatter.ofPattern("M-d H:mm:ss")),
                 " overnight trade done", absLotsTraded, "current percentile ", currPercentile, " PD: ", pd, "current price ",
-                filteredPriceMap.lastEntry().getValue().getClose(), " index ", Math.round(100d * indexPrice) / 100d);
+                filteredPriceMap.lastEntry().getValue().getClose(), " index ", Math.round(100d * indexPrice) / 100d,
+                "bid ", bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
+                " ask ", askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0));
 
         System.out.println(outputString);
         outputToOvernightLog(outputString);
