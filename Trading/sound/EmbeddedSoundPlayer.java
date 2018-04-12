@@ -11,7 +11,6 @@ import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
 
 import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 import java.net.URI;
 
@@ -19,33 +18,44 @@ public class EmbeddedSoundPlayer {
 
     private static MediaPlayer player;
 
-    private static void initAndShowGUI() {
-        JFrame jf = new JFrame(" Sound player ");
-        jf.setSize(300,300);
-        JButton startButton = new JButton("Start");
-        JButton stopButton = new JButton("Stop");
-        startButton.addActionListener(l->{
-            System.out.println(" player status is " + player.getStatus());
-            try {
-                if(player.getStatus()== MediaPlayer.Status.PLAYING) {
-                    player.stop();
-                    player.play();
-                } else {
-                    player.play();
-                }
-            } catch(MediaException ex) {
-                System.out.println(" media not available ");
-                ex.printStackTrace();
+    public EmbeddedSoundPlayer() {
+        SwingUtilities.invokeLater(EmbeddedSoundPlayer::initAndShowGUI);
+    }
+
+    public void playClip() {
+        try {
+            if(player.getStatus()== MediaPlayer.Status.PLAYING) {
+                player.stop();
+            } else {
+                player.play();
             }
-        });
-        stopButton.addActionListener(l->{
-            player.stop();
-        });
-        jf.setLayout(new GridLayout(1,2));
-        jf.add(startButton);
-        jf.add(stopButton);
-        jf.setVisible(true);
-        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        } catch(MediaException ex) {
+            System.out.println(" media not available ");
+            ex.printStackTrace();
+        };
+    }
+
+    private static void initAndShowGUI() {
+        //JFrame jf = new JFrame(" Sound player ");
+        //jf.setSize(300,300);
+        //JButton startButton = new JButton("Start");
+        //JButton stopButton = new JButton("Stop");
+//        startButton.addActionListener(l->{
+//            if(player.getStatus()== MediaPlayer.Status.PLAYING) {
+//                player.stop();
+//                player.play();
+//            } else {
+//                player.play();
+//            }
+//        });
+//        stopButton.addActionListener(l->{
+//            player.stop();
+//        });
+//        jf.setLayout(new GridLayout(1,2));
+//        jf.add(startButton);
+//        jf.add(stopButton);
+//        jf.setVisible(true);
+//        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         final JFXPanel fxPanel = new JFXPanel();
         Platform.runLater(() -> initFX(fxPanel));

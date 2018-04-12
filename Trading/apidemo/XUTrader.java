@@ -11,6 +11,7 @@ import graph.DisplayGranularity;
 import graph.GraphXuTrader;
 import handler.HistoricalHandler;
 import handler.XUOvernightTradeExecHandler;
+import sound.EmbeddedSoundPlayer;
 import utility.Utility;
 
 import javax.swing.*;
@@ -57,6 +58,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static LocalDateTime lastTradeTime = LocalDateTime.now();
     private static AtomicInteger cumuMATrades = new AtomicInteger(0);
 
+
+    //music
+    private EmbeddedSoundPlayer soundplayer = new EmbeddedSoundPlayer();
 
     //display
     public static volatile Predicate<LocalDateTime> displayPred = e -> true;
@@ -160,6 +164,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             System.out.println(" sell bid ");
             apcon.placeOrModifyOrder(activeFuture, sellAtBid(bidMap.get(ibContractToFutType(activeFuture)), 1.0), this);
         });
+
+        JButton toggleMusicButton = new JButton(" Music ");
+        toggleMusicButton.addActionListener(l->{
+            soundplayer.playClip();
+        });
+
 
         JButton getPositionButton = new JButton(" get pos ");
         getPositionButton.addActionListener(l -> {
@@ -391,6 +401,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(offerLimitButton);
         controlPanel1.add(buyOfferButton);
         controlPanel1.add(sellBidButton);
+        controlPanel1.add(toggleMusicButton);
+
         controlPanel2.add(getPositionButton);
         controlPanel2.add(level2Button);
         controlPanel2.add(refreshButton);
