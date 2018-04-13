@@ -57,7 +57,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static AtomicBoolean lastTradeLong = new AtomicBoolean(true);
     private static LocalDateTime lastTradeTime = LocalDateTime.now();
     private static AtomicInteger cumuMATrades = new AtomicInteger(0);
-
+    private static final int MAX_DIRECTION_CHANGE = 2;
 
     //music
     private EmbeddedSoundPlayer soundplayer = new EmbeddedSoundPlayer();
@@ -114,15 +114,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static volatile boolean connectionStatus = false;
     static volatile JLabel connectionLabel = new JLabel();
 
-    //private static volatile AtomicInteger connectionID = new AtomicInteger(100);
-
     public XUTrader getThis() {
         return this;
     }
-
-//    public static ApiController getStandAloneApicon() {
-//        return new ApiController(new XUConnectionHandler(), new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
-//    }
 
     XUTrader(ApiController ap) {
 
@@ -142,7 +136,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         bidLimitButton.addActionListener(l -> {
             System.out.println(" buying limit ");
-            apcon.placeOrModifyOrder(activeFuture, placeBidLimit(bidMap.get(ibContractToFutType(activeFuture)), 1.0), this);
+            apcon.placeOrModifyOrder(activeFuture,
+                    placeBidLimit(bidMap.get(ibContractToFutType(activeFuture)), 1.0), this);
         });
 
         JButton offerLimitButton = new JButton("Sell Limit");
@@ -162,14 +157,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JButton sellBidButton = new JButton(" Sell Now");
         sellBidButton.addActionListener(l -> {
             System.out.println(" sell bid ");
-            apcon.placeOrModifyOrder(activeFuture, sellAtBid(bidMap.get(ibContractToFutType(activeFuture)), 1.0), this);
+            apcon.placeOrModifyOrder(activeFuture,
+                    sellAtBid(bidMap.get(ibContractToFutType(activeFuture)), 1.0), this);
         });
 
-        JButton toggleMusicButton = new JButton(" Music ");
-        toggleMusicButton.addActionListener(l->{
-            soundplayer.playClip();
+        JButton toggleMusicButton = new JButton("停乐");
+        toggleMusicButton.addActionListener(l -> {
+            //if(soundplayer.)
+            soundplayer.stopIfPlaying();
+            //soundplayer.playClip();
         });
-
 
         JButton getPositionButton = new JButton(" get pos ");
         getPositionButton.addActionListener(l -> {
@@ -235,6 +232,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     repaint();
                 });
             }, 0, 1, TimeUnit.SECONDS);
+
+            ses.scheduleAtFixedRate(this::observeMATouch, 0, 1, TimeUnit.MINUTES);
         });
 
         JButton stopComputeButton = new JButton("Stop Processing");
@@ -246,10 +245,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         JButton execButton = new JButton("Exec");
 
-        execButton.addActionListener(l -> {
-            System.out.println(" getting exec details");
-            requestExecHistory();
-        });
+        execButton.addActionListener(l -> requestExecHistory());
 
         JButton processTradesButton = new JButton("Process");
 
@@ -266,25 +262,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         JButton maTraderButton = new JButton(" MA Trader ");
         maTraderButton.addActionListener(l -> ses2.scheduleAtFixedRate(this::movingAverageTrader, 0, 1, TimeUnit.MINUTES));
-
-        //JButton connect7496 = new JButton("Connect 7496");
-//        connect7496.addActionListener(l -> {
-//            System.out.println(" trying to connect 7496");
-//            try {
-//                apcon.connect("127.0.0.1", 7496, connectionID.incrementAndGet(), "");
-//            } catch (Exception ex) {
-//                ex.printStackTrace();
-//            }
-//        });
-//        JButton connect4001 = new JButton("Connect 4001");
-//        connect4001.addActionListener(l -> {
-//            System.out.println(" trying to connect 4001");
-//            try {
-//                apcon.connect("127.0.0.1", 4001, connectionID.incrementAndGet(), "");
-//            } catch (Exception ex) {
-//                ex.printStackTrace();
-//            }
-//        });
 
         JButton getData = new JButton("Data");
         getData.addActionListener(l -> {
@@ -508,7 +485,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         });
 
         JPanel deepPanel = new JPanel();
-        //deepPanel.setPreferredSize(new Dimension(100,100));
         deepPanel.setLayout(new GridLayout(5, 2));
 
         for (JLabel j : Arrays.asList(bid1, ask1, bid2, ask2, bid3, ask3, bid4, ask4, bid5, ask5)) {
@@ -517,13 +493,38 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JScrollPane outputPanel = new JScrollPane(outputArea);
 
 
-
         controlPanel1.setLayout(new FlowLayout());
         add(controlPanel1);
         add(controlPanel2);
         add(deepPanel);
         add(outputPanel);
         add(chartScroll);
+    }
+
+    /**
+     * if touched, play music
+     */
+    private void observeMATouch() {
+        NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
+        SimpleBar lastBar = price5.lastEntry().getValue();
+        NavigableMap<LocalDateTime, Double> sma;
+        sma = XuTraderHelper.getMAGen(price5, 60);
+
+        if (sma.size() > 0) {
+            System.out.println(getStr("Observing MA Touch ||",
+                    " Time ", LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
+                    , " last price ", lastBar.toString(),
+                    " SMA60 ", Math.round(100d * sma.lastEntry().getValue()) / 100d));
+            if (lastBar.includes(sma.lastEntry().getValue())) {
+                System.out.println(" touching MA, playing clip ");
+                soundplayer.stopIfPlaying();
+                soundplayer.playClip();
+            } else {
+                System.out.println(" no touch ");
+            }
+        }
+
+
     }
 
 

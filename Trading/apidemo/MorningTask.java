@@ -71,6 +71,7 @@ public final class MorningTask implements HistoricalHandler {
         es.schedule(() -> System.exit(0), 5, TimeUnit.SECONDS);
     }
 
+    // this
     private static void writeIndexTDX(BufferedWriter out) {
         String line;
         List<String> ind = Arrays.asList(indices.split(","));
