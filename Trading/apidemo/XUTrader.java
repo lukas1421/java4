@@ -548,6 +548,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     maSignals.incrementAndGet();
                     apcon.placeOrModifyOrder(activeFuture, o, this);
                     lastTradeTime = LocalDateTime.now();
+                    XuTraderHelper.outputToOvernightLog(getStr(now, " MA Trade || bidding @ ", o.toString()));
                 }
             } else if (maLast < lastBar.getOpen()) {
                 if (timeDiffinMinutes(lastTradeTime, now) >= 5 && maSignals.get() <= MAX_MA_SIGNALS) {
@@ -556,11 +557,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     maSignals.incrementAndGet();
                     apcon.placeOrModifyOrder(activeFuture, o, this);
                     lastTradeTime = LocalDateTime.now();
+                    XuTraderHelper.outputToOvernightLog(getStr(now, " MA Trade || selling @ ", o.toString()));
                 }
             }
         }
-        System.out.println(getStr("MA TRADER || ", now.truncatedTo(ChronoUnit.MINUTES)
-                , "#: ", maSignals.get(), maOrderMap.toString()));
+        String outputMsg = getStr("MA TRADER || ", now.truncatedTo(ChronoUnit.MINUTES)
+                , "#: ", maSignals.get(), maOrderMap.toString());
+
+        XuTraderHelper.outputToOvernightLog(outputMsg);
+        System.out.println(outputMsg);
     }
 
     private void movingAverageTrader() {
@@ -595,60 +600,63 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
 
+    }
+
+    private static void maTradeAnalysis() {
         // analysis
+        NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
+        SimpleBar lastBar = price5.lastEntry().getValue();
+        NavigableMap<LocalDateTime, Double> sma;
+
+        AtomicBoolean currentLong = new AtomicBoolean(true);
+        List<MATrade> maTrades = new LinkedList<>();
+
+        sma = XuTraderHelper.getMAGen(price5, currentMAPeriod);
+        double maLast = sma.lastEntry().getValue();
         sma.forEach((lt, ma) -> {
             if (price5.containsKey(lt) && price5.get(lt).includes(ma)) {
                 SimpleBar sb = price5.get(lt);
                 System.out.println(getStr(" crossed @ ", lt, ma));
                 if (ma > sb.getOpen()) {
-                    if (!currentLong.get()) {
-                        if (maTrades.size() > 0) {
-                            LocalDateTime lastTradeTime = ((LinkedList<MATrade>) maTrades).peekLast().getTradeTime();
-                            long minSinceLastTrade = ChronoUnit.MINUTES.between(lastTradeTime, lt);
-                            System.out.println(" Mins since last trade is " + minSinceLastTrade);
-                            if (minSinceLastTrade <= 10) {
-                                int untouchedMAPeriod = XuTraderHelper.getUntouchedMAPeriod(price5, lastTradeTime);
-                                System.out.println(lt + " untouched period is " + untouchedMAPeriod);
-                                currentMAPeriod = untouchedMAPeriod;
-                            }
+                    if (maTrades.size() > 0) {
+                        LocalDateTime lastTradeTime = ((LinkedList<MATrade>) maTrades).peekLast().getTradeTime();
+                        long minSinceLastTrade = ChronoUnit.MINUTES.between(lastTradeTime, lt);
+                        System.out.println(" Mins since last trade is " + minSinceLastTrade);
+                        if (minSinceLastTrade <= 10) {
+                            int untouchedMAPeriod = XuTraderHelper.getUntouchedMAPeriod(price5, lastTradeTime);
+                            System.out.println(lt + " untouched period is " + untouchedMAPeriod);
+                            currentMAPeriod = untouchedMAPeriod;
                         }
-
                         maTrades.add(new MATrade(lt, ma, maTrades.size() == 0 ? 1 : 2));
                         currentLong.set(true);
                         System.out.println(" long ");
                     }
                 } else {
                     //maTradeSet.add(new MATrade(lt, ma, -1));
-                    if (currentLong.get()) {
-                        if (maTrades.size() > 0) {
-                            LocalDateTime lastTradeTime = ((LinkedList<MATrade>) maTrades).peekLast().getTradeTime();
-                            long minSinceLastTrade = ChronoUnit.MINUTES.between(lastTradeTime, lt);
-                            System.out.println(" Mins since last trade is " + minSinceLastTrade);
+                    if (maTrades.size() > 0) {
+                        LocalDateTime lastTradeTime = ((LinkedList<MATrade>) maTrades).peekLast().getTradeTime();
+                        long minSinceLastTrade = ChronoUnit.MINUTES.between(lastTradeTime, lt);
+                        System.out.println(" Mins since last trade is " + minSinceLastTrade);
 
-                            if (minSinceLastTrade <= 10) {
-                                int untouchedMAPeriod = XuTraderHelper.getUntouchedMAPeriod(price5, lastTradeTime);
-                                System.out.println(lt + " untouched period is " + untouchedMAPeriod);
-                                currentMAPeriod = untouchedMAPeriod;
-                            }
+                        if (minSinceLastTrade <= 10) {
+                            int untouchedMAPeriod = XuTraderHelper.getUntouchedMAPeriod(price5, lastTradeTime);
+                            System.out.println(lt + " untouched period is " + untouchedMAPeriod);
+                            currentMAPeriod = untouchedMAPeriod;
                         }
-                        maTrades.add(new MATrade(lt, ma, maTrades.size() == 0 ? -1 : -2));
-                        currentLong.set(false);
-                        System.out.println(" short ");
                     }
+                    maTrades.add(new MATrade(lt, ma, maTrades.size() == 0 ? -1 : -2));
+                    currentLong.set(false);
+                    System.out.println(" short ");
                 }
             }
         });
     }
 
-    private static void maTradeAnalysis() {
 
-    }
-
-
-    // overnight close trading
+    /**
+     *  overnight close trading
+     */
     private void overnightTrader() {
-
-        System.out.println(" outputting options");
         LocalDateTime now = LocalDateTime.now();
 
         LocalDate TDate = now.toLocalTime().isAfter(LocalTime.of(0, 0))
@@ -689,8 +697,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pd = indexPrice != 0.0 ? Math.round(10000d * (currentPrice / indexPrice - 1)) / 10000d : 0.0;
         }
 
-        if (absLotsTraded < maxOvernightTrades
-                && Math.abs(netTradedDelta) < maxOvernightDeltaChgUSD) {
+        if (absLotsTraded < maxOvernightTrades && Math.abs(netTradedDelta) < maxOvernightDeltaChgUSD) {
 
             if (now.toLocalTime().isBefore(LocalTime.of(5, 0)) &&
                     now.toLocalTime().truncatedTo(ChronoUnit.MINUTES).isAfter(LocalTime.of(4, 40))) {

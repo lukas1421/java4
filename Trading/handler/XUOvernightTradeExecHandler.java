@@ -34,7 +34,7 @@ public class XUOvernightTradeExecHandler implements ApiController.ITradeReportHa
 
         //if (ldt.getDayOfMonth() == LocalDateTime.now().getDayOfMonth()) {
         if (ldt.isAfter(LocalDateTime.of(TDate, LocalTime.of(15, 0)))) {
-            System.out.println(" in XUOvernightTradeExechandler ");
+            System.out.println(" in XUOvernightTradeExecHandler ");
 
             FutType f = ibContractToFutType(contract);
             System.out.println(" exec " + execution.side() + "　" + execution.time() + " " + execution.cumQty()
