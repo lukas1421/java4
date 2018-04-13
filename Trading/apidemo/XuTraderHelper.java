@@ -2,6 +2,10 @@ package apidemo;
 
 import auxiliary.SimpleBar;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -25,7 +29,7 @@ public class XuTraderHelper {
         return sma;
     }
 
-    public static boolean priceMAUntouched(NavigableMap<LocalDateTime, SimpleBar> mp, int period, LocalDateTime lastTradeTime) {
+    private static boolean priceMAUntouched(NavigableMap<LocalDateTime, SimpleBar> mp, int period, LocalDateTime lastTradeTime) {
         NavigableMap<LocalDateTime, Double> sma = getMAGen(mp, period);
         NavigableMap<LocalDateTime, Double> smaFiltered = sma.entrySet().stream().filter(e -> e.getKey().isAfter(lastTradeTime))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
@@ -51,5 +55,15 @@ public class XuTraderHelper {
             System.out.println(" res is " + res);
         }
         return res;
+    }
+
+    static void outputToOvernightLog(String s) {
+        File output = new File(TradingConstants.GLOBALPATH + "overnightLog.txt");
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
+            out.append(s);
+            out.newLine();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 }

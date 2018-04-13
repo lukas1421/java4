@@ -862,4 +862,8 @@ public class Utility {
     public static Color shiftColor(Color c) {
         return new Color(c.getRed(), (c.getGreen() + 50) % 250, c.getBlue());
     }
+
+    public static long timeDiffinMinutes(LocalDateTime t1, LocalDateTime t2) {
+        return ChronoUnit.MINUTES.between(t1, t2);
+    }
 }

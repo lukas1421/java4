@@ -46,6 +46,7 @@ public class EmbeddedSoundPlayer {
     private static void initFX(JFXPanel fxPanel) {
         Scene scene = createScene();
         fxPanel.setScene(scene);
+        //player.play();
     }
 
     private static MediaPlayer fileNameToURIString(String s) {
