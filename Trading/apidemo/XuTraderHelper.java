@@ -60,8 +60,8 @@ public class XuTraderHelper {
         return res;
     }
 
-    static void outputToOvernightLog(String s) {
-        File output = new File(TradingConstants.GLOBALPATH + "overnightLog.txt");
+    static void outputToAutoLog(String s) {
+        File output = new File(TradingConstants.GLOBALPATH + "autoLog.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
             out.append(s);
             out.newLine();

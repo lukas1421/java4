@@ -145,18 +145,6 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         }
     }
 
-//    public void fillInGraphHKGen(String name, Map<String, NavigableMap<? extends  Temporal, SimpleBar>> mp) {
-//        //System.out.println(" filling HK " + name);
-//        this.name = name;
-//        setName(name);
-//        //setChineseName(HKStock.hkNameMap.getOrDefault(name,""));
-//        if (mp.containsKey(name) && mp.get(name).size()>0) {
-//            this.setNavigableMap(mp.get(name));
-//        } else {
-//            this.setNavigableMap(new ConcurrentSkipListMap<>());
-//        }
-//    }
-
     @Override
     public void refresh() {
         fillInGraph(name);

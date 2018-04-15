@@ -517,7 +517,7 @@ public final class ChinaMain implements IConnectionHandler {
 //        m_frame10.setTitle("Index Graph");
 //        m_frame10.setSize(1920,1080);
 //        m_frame10.setVisible(true);
-//
+
         JPanel posOnly = new JPanel();
         posOnly.setLayout(new BorderLayout());
         posOnly.add(chinaPos, BorderLayout.CENTER);
@@ -717,25 +717,4 @@ public final class ChinaMain implements IConnectionHandler {
         twsTime.setText(text);
         //systemNotif.setBackground(shiftColor(systemNotif.getBackground()));
     }
-
-    //    private static class Logger implements ILogger {
-//
-//        final private JTextArea m_area;
-//
-//        Logger(JTextArea area) {
-//            m_area = area;
-//        }
-//
-//        @Override
-//        public void log(final String str) {
-//            SwingUtilities.invokeLater(() -> {
-//                LocalTime start = LocalTime.now();
-//                System.out.println(" start " + LocalTime.now());
-//                m_area.append(str);
-//                Dimension d = m_area.getSize();
-//                m_area.scrollRectToVisible(new Rectangle(0, d.height, 1, 1));
-//                LocalTime end = LocalTime.now();
-//            });
-//        }
-//    }
 }
