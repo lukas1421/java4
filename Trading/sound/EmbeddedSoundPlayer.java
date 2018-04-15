@@ -46,7 +46,6 @@ public class EmbeddedSoundPlayer {
     private static void initFX(JFXPanel fxPanel) {
         Scene scene = createScene();
         fxPanel.setScene(scene);
-        //player.play();
     }
 
     private static MediaPlayer fileNameToURIString(String s) {
@@ -59,12 +58,9 @@ public class EmbeddedSoundPlayer {
     private static Scene createScene() {
         String fileName = TradingConstants.GLOBALPATH + "suju.wav";
         player = fileNameToURIString(fileName);
-        player.setOnEndOfMedia(()->{
-            player.seek(Duration.ZERO);
-        });
+        player.setOnEndOfMedia(()-> player.seek(Duration.ZERO));
         MediaView mediaView = new MediaView(player);
         Group root = new Group(mediaView);
-
         return (new Scene(root, 500, 200));
     }
 

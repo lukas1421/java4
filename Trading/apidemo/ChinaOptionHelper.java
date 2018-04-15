@@ -39,37 +39,31 @@ public class ChinaOptionHelper {
         throw new UnsupportedOperationException(" utility class ");
     }
 
-    static final DayOfWeek OptionExpiryWeekDay = DayOfWeek.WEDNESDAY;
+    private static final DayOfWeek OptionExpiryWeekDay = DayOfWeek.WEDNESDAY;
 
     static LocalDate getExpiryDateAuto(int lag) {
         LocalDate today = LocalDate.now();
-        LocalDate expiryThisMonth = getOptionExpiryDate(today, OptionExpiryWeekDay);
+        LocalDate expiryThisMonth = getOptionExpiryDate(today);
         if (today.isAfter(expiryThisMonth)) {
-            //System.out.println(" lag is " + lag + " expiry " + getOptionExpiryDate(today.plusMonths(lag), OptionExpiryWeekDay));
-            return getOptionExpiryDate(today.plusMonths(lag), OptionExpiryWeekDay);
+            return getOptionExpiryDate(today.plusMonths(lag));
         } else {
-            //System.out.println(" lag is " + lag + " expiry " + getOptionExpiryDate(today.plusMonths(lag - 1), OptionExpiryWeekDay));
-            return getOptionExpiryDate(today.plusMonths(lag - 1), OptionExpiryWeekDay);
+            return getOptionExpiryDate(today.plusMonths(lag - 1));
         }
     }
 
-    public static LocalDate getOptionExpiryDate(LocalDate now, DayOfWeek weekday) {
-        return getOptionExpiryDate(now.getYear(), now.getMonth(), weekday);
+    private static LocalDate getOptionExpiryDate(LocalDate now) {
+        return getOptionExpiryDate(now.getYear(), now.getMonth());
     }
 
-    public static LocalDate getOptionExpiryDate(int year, Month m, DayOfWeek weekday) {
+    static LocalDate getOptionExpiryDate(int year, Month m) {
         LocalDate res = LocalDate.of(year, m.plus(1), 1);
 
-        while (res.getDayOfWeek() != weekday) {
+        while (res.getDayOfWeek() != ChinaOptionHelper.OptionExpiryWeekDay) {
             res = res.minusDays(1);
         }
-        //System.out.println(getStr(" return expiry date for month ",year,m, res));
         return res;
     }
 
-    public static void saveVolsEoDHIB() {
-
-    }
 
     public static void getVolsFromVolOutputToHib() {
         String line;
@@ -111,14 +105,6 @@ public class ChinaOptionHelper {
         }
     }
 
-
-//    public static void main(String[] args) {
-//        System.out.println(getOptionExpiryDate(2018, Month.MARCH));
-//        System.out.println(getOptionExpiryDate(2018, Month.APRIL));
-//        System.out.println(getOptionExpiryDate(2018, Month.JUNE));
-//        System.out.println(getOptionExpiryDate(2018, Month.SEPTEMBER));
-//    }
-
     static double simpleSolver(double target, DoubleUnaryOperator o) {
         double lowerGuess = 0.0;
         double higherGuess = 1.0;
@@ -131,7 +117,6 @@ public class ChinaOptionHelper {
                 higherGuess = midGuess;
             }
             midGuess = (lowerGuess + higherGuess) / 2;
-            //System.out.println("mid guess is " + midGuess);
         }
         return Math.round(10000d * midGuess) / 10000d;
     }
@@ -162,9 +147,13 @@ public class ChinaOptionHelper {
             } else {
                 Map.Entry<Integer, Double> ceilEntry = moneyVolMap.ceilingEntry(moneyness);
                 Map.Entry<Integer, Double> floorEntry = moneyVolMap.floorEntry(moneyness);
-                return floorEntry.getValue()
-                        + (1.0 * (moneyness - floorEntry.getKey()) / (ceilEntry.getKey() - floorEntry.getKey()))
-                        * (ceilEntry.getValue() - floorEntry.getValue());
+                if (ceilEntry.getKey().intValue() == floorEntry.getKey().intValue()) {
+                    return floorEntry.getValue();
+                } else {
+                    return floorEntry.getValue()
+                            + (1.0d * (moneyness - floorEntry.getKey()) / (ceilEntry.getKey() - floorEntry.getKey()))
+                            * (ceilEntry.getValue() - floorEntry.getValue());
+                }
             }
         }
         return 0.0;
@@ -191,7 +180,7 @@ public class ChinaOptionHelper {
         System.out.println(" get last trading date " + ChinaOption.previousTradingDate);
     }
 
-    public static String getOptionTicker(Map<String, Option> mp, CallPutFlag f, double strike, LocalDate expiry) {
+    static String getOptionTicker(Map<String, Option> mp, CallPutFlag f, double strike, LocalDate expiry) {
         for (Map.Entry<String, Option> e : mp.entrySet()) {
             if (e.getValue().getCallOrPut() == f && e.getValue().getStrike() == strike
                     && e.getValue().getExpiryDate().equals(expiry)) {

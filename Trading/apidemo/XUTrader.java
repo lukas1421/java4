@@ -24,7 +24,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
@@ -35,6 +34,7 @@ import java.util.stream.Collectors;
 
 import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
 import static apidemo.TradingConstants.ftseIndex;
+import static apidemo.XuTraderHelper.outputToOvernightLog;
 import static utility.Utility.*;
 
 public final class XUTrader extends JPanel implements HistoricalHandler, ApiController.IDeepMktDataHandler,
@@ -47,10 +47,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final int maxOvernightTrades = 5;
     private static AtomicInteger overnightTradesDone = new AtomicInteger(0);
     private static final double maxOvernightDeltaChgUSD = 50000.0;
+    private static final double OVERNIGHT_MAX_DELTA = 500000.0;
+    private static final double OVERNIGHT_MIN_DELTA = -500000.0;
 
     // ma trades
     private static volatile int currentMAPeriod = 60;
-    //private static AtomicBoolean lastTradeLong = new AtomicBoolean(true);
     private static Direction lastTradeDirection = Direction.Short;
     private static LocalDateTime lastTradeTime = LocalDateTime.now();
     private static AtomicInteger cumuMATrades = new AtomicInteger(0);
@@ -58,6 +59,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final int MAX_MA_SIGNALS = 5;
     private static AtomicInteger maSignals = new AtomicInteger(0);
     private static NavigableMap<LocalDateTime, Order> maOrderMap = new ConcurrentSkipListMap<>();
+
 
     //music
     private EmbeddedSoundPlayer soundplayer = new EmbeddedSoundPlayer();
@@ -537,8 +539,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (maLast != 0.0 && lastBar.includes(maLast)) {
-            //soundplayer.stopIfPlaying();
-            //soundplayer.playClip();
 
             if (maLast > lastBar.getOpen()) {
                 //long
@@ -548,7 +548,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     maSignals.incrementAndGet();
                     apcon.placeOrModifyOrder(activeFuture, o, this);
                     lastTradeTime = LocalDateTime.now();
-                    XuTraderHelper.outputToOvernightLog(getStr(now, " MA Trade || bidding @ ", o.toString()));
+                    outputToOvernightLog(getStr(now, " MA Trade || bidding @ ", o.toString()));
                 }
             } else if (maLast < lastBar.getOpen()) {
                 if (timeDiffinMinutes(lastTradeTime, now) >= 5 && maSignals.get() <= MAX_MA_SIGNALS) {
@@ -557,15 +557,102 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     maSignals.incrementAndGet();
                     apcon.placeOrModifyOrder(activeFuture, o, this);
                     lastTradeTime = LocalDateTime.now();
-                    XuTraderHelper.outputToOvernightLog(getStr(now, " MA Trade || selling @ ", o.toString()));
+                    outputToOvernightLog(getStr(now, " MA Trade || selling @ ", o.toString()));
                 }
             }
         }
         String outputMsg = getStr("MA TRADER || ", now.truncatedTo(ChronoUnit.MINUTES)
                 , "#: ", maSignals.get(), maOrderMap.toString());
 
-        XuTraderHelper.outputToOvernightLog(outputMsg);
+        outputToOvernightLog(outputMsg);
         System.out.println(outputMsg);
+    }
+
+    /**
+     * overnight close trading
+     */
+    private void overnightTrader() {
+        LocalDateTime now = LocalDateTime.now();
+
+        LocalDate TDate = now.toLocalTime().isAfter(LocalTime.of(0, 0))
+                && now.toLocalTime().isBefore(LocalTime.of(5, 0)) ? LocalDate.now().minusDays(1L)
+                : LocalDate.now();
+
+        int absLotsTraded = 0;
+        double netTradedDelta = 0.0;
+
+        if (XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
+            absLotsTraded = XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture))
+                    .entrySet().stream().mapToInt(e -> e.getValue().getSizeAllAbs()).sum();
+            netTradedDelta = XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture))
+                    .entrySet().stream().mapToDouble(e -> e.getValue().getDeltaAll()).sum();
+        }
+
+
+        double indexPrice = (ChinaData.priceMapBar.containsKey(ftseIndex) &&
+                ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
+                ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : 0.0;
+
+        NavigableMap<LocalDateTime, SimpleBar> futPriceMap = futData.get(ibContractToFutType(activeFuture));
+
+        LocalDateTime ytdCloseTime = LocalDateTime.of(TDate, LocalTime.of(15, 0));
+
+        NavigableMap<LocalDateTime, SimpleBar> filteredPriceMap = futPriceMap.entrySet().stream()
+                .filter(e -> e.getKey().isAfter(ytdCloseTime))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
+
+        int currPercentile = XuTraderHelper.getPercentileForLast(filteredPriceMap);
+
+        double currentPrice = 0.0;
+        double pd = 0.0;
+
+        if (futPriceMap.size() > 0) {
+            currentPrice = futPriceMap.lastEntry().getValue().getClose();
+            pd = indexPrice != 0.0 ? Math.round(10000d * (currentPrice / indexPrice - 1)) / 10000d : 0.0;
+        }
+
+        if (absLotsTraded < maxOvernightTrades && Math.abs(netTradedDelta) < maxOvernightDeltaChgUSD) {
+            if (now.toLocalTime().isBefore(LocalTime.of(5, 0)) &&
+                    now.toLocalTime().truncatedTo(ChronoUnit.MINUTES).isAfter(LocalTime.of(4, 40))) {
+                if (currPercentile > 90 && pd > 0.01) {
+                    double candidatePrice = askMap.getOrDefault(ibContractToFutType((activeFuture)), 0.0);
+
+                    if (checkIfOrderPriceMakeSense(candidatePrice)) {
+                        outputToOvernightLog(getStr(now, " placing sell order @ ", candidatePrice,
+                                " curr percentile ", currPercentile, " current pd ", pd));
+                        apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(candidatePrice, 1.0),
+                                this);
+                    }
+                } else if (currPercentile < 10 && pd < -0.01) {
+                    double candidatePrice = bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0);
+
+                    if (checkIfOrderPriceMakeSense(candidatePrice)) {
+                        outputToOvernightLog(getStr(now, " placing buy order @ ", candidatePrice,
+                                " curr percentile ", currPercentile, " current pd ", pd));
+                        apcon.placeOrModifyOrder(activeFuture, placeBidLimit(candidatePrice, 1.0)
+                                , this);
+                    }
+                } else {
+                    outputToOvernightLog(getStr(now, " nothing done "));
+                    System.out.println(" nothing done ");
+                }
+            } else {
+                System.out.println(" outside tradable time slot");
+            }
+        } else {
+            outputToOvernightLog(getStr(now, " trades or delta exceeded MAX "));
+        }
+
+        String outputString = getStr("overnight", now.format(DateTimeFormatter.ofPattern("M-d H:mm:ss")),
+                " overnight trade done", absLotsTraded, "current percentile ", currPercentile, " PD: ", pd, "current price ",
+                filteredPriceMap.lastEntry().getValue().getClose(), " index ", Math.round(100d * indexPrice) / 100d,
+                "bid ", bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
+                " ask ", askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0));
+
+        System.out.println(outputString);
+        outputToOvernightLog(outputString);
+        requestOvernightExecHistory();
     }
 
     private void movingAverageTrader() {
@@ -599,7 +686,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 currentMAPeriod = XuTraderHelper.getUntouchedMAPeriod(price5, lastTradeTime);
             }
         }
-
     }
 
     private static void maTradeAnalysis() {
@@ -653,107 +739,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
 
-    /**
-     *  overnight close trading
-     */
-    private void overnightTrader() {
-        LocalDateTime now = LocalDateTime.now();
 
-        LocalDate TDate = now.toLocalTime().isAfter(LocalTime.of(0, 0))
-                && now.toLocalTime().isBefore(LocalTime.of(5, 0)) ? LocalDate.now().minusDays(1L)
-                : LocalDate.now();
-
-        int absLotsTraded = 0;
-        double netTradedDelta = 0.0;
-
-        if (XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
-            absLotsTraded = XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture))
-                    .entrySet().stream().mapToInt(e -> e.getValue().getSizeAllAbs()).sum();
-            netTradedDelta = XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture))
-                    .entrySet().stream().mapToDouble(e -> e.getValue().getDeltaAll()).sum();
-        }
-
-
-        double indexPrice = (ChinaData.priceMapBar.containsKey(ftseIndex) &&
-                ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
-                ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : 0.0;
-
-        NavigableMap<LocalDateTime, SimpleBar> futPriceMap = futData.get(ibContractToFutType(activeFuture));
-
-        LocalDateTime ytdCloseTime = LocalDateTime.of(TDate, LocalTime.of(15, 0));
-
-        NavigableMap<LocalDateTime, SimpleBar> filteredPriceMap = futPriceMap.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ytdCloseTime))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                        (a, b) -> a, ConcurrentSkipListMap::new));
-
-        int currPercentile = getPercentileForLast(filteredPriceMap);
-
-        double currentPrice = 0.0;
-        double pd = 0.0;
-
-        if (futPriceMap.size() > 0) {
-            currentPrice = futPriceMap.lastEntry().getValue().getClose();
-            pd = indexPrice != 0.0 ? Math.round(10000d * (currentPrice / indexPrice - 1)) / 10000d : 0.0;
-        }
-
-        if (absLotsTraded < maxOvernightTrades && Math.abs(netTradedDelta) < maxOvernightDeltaChgUSD) {
-
-            if (now.toLocalTime().isBefore(LocalTime.of(5, 0)) &&
-                    now.toLocalTime().truncatedTo(ChronoUnit.MINUTES).isAfter(LocalTime.of(4, 40))) {
-
-                if (currPercentile > 90 && pd > 0.01) {
-                    double candidatePrice = askMap.getOrDefault(ibContractToFutType((activeFuture)), 0.0);
-
-                    if (checkIfOrderPriceMakeSense(candidatePrice)) {
-                        XuTraderHelper.outputToOvernightLog(getStr(now, " placing sell order @ ", candidatePrice,
-                                " curr percentile ", currPercentile, " current pd ", pd));
-                        apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(candidatePrice, 1.0),
-                                this);
-                    }
-                } else if (currPercentile < 10 && pd < -0.01) {
-                    double candidatePrice = bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0);
-
-                    if (checkIfOrderPriceMakeSense(candidatePrice)) {
-                        XuTraderHelper.outputToOvernightLog(getStr(now, " placing buy order @ ", candidatePrice,
-                                " curr percentile ", currPercentile, " current pd ", pd));
-                        apcon.placeOrModifyOrder(activeFuture, placeBidLimit(candidatePrice, 1.0)
-                                , this);
-                    }
-                } else {
-                    XuTraderHelper.outputToOvernightLog(getStr(now, " nothing done "));
-                    System.out.println(" nothing done ");
-                }
-            } else {
-                System.out.println(" outside tradable time slot");
-            }
-        } else {
-            XuTraderHelper.outputToOvernightLog(getStr(now, " trades or delta exceeded MAX "));
-            //System.out.println(" trades exceeded max number allowed ");
-        }
-
-        String outputString = getStr("overnight", now.format(DateTimeFormatter.ofPattern("M-d H:mm:ss")),
-                " overnight trade done", absLotsTraded, "current percentile ", currPercentile, " PD: ", pd, "current price ",
-                filteredPriceMap.lastEntry().getValue().getClose(), " index ", Math.round(100d * indexPrice) / 100d,
-                "bid ", bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
-                " ask ", askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0));
-
-        System.out.println(outputString);
-        XuTraderHelper.outputToOvernightLog(outputString);
-        requestOvernightExecHistory();
-    }
-
-
-    private <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> map) {
-        if (map.size() > 0) {
-            double max = map.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
-            double min = map.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
-            double last = map.lastEntry().getValue().getClose();
-            System.out.println(getStr(" getPercentileForLast max min last ", max, min, last));
-            return (int) Math.round(100d * ((last - min) / (max - min)));
-        }
-        return 50;
-    }
 
     private void loadXU() {
         System.out.println(" getting XU data ");
@@ -869,7 +855,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
 
             if (ldt.toLocalDate().isAfter(currDate.minusDays(daysToGoBack)) && FUT_COLLECTION_TIME.test(ldt)) {
-
                 if (lt.equals(LocalTime.of(9, 0))) {
                     futOpenMap.put(FutType.get(name), open);
                     System.out.println(" today open is for " + name + " " + open);

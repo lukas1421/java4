@@ -89,8 +89,8 @@ public class ChinaOption extends JPanel implements Runnable {
 
     public static LocalDate frontExpiry = getExpiryDateAuto(1);
     public static LocalDate backExpiry = getExpiryDateAuto(2);
-    public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.JUNE, OptionExpiryWeekDay);
-    public static LocalDate fourthExpiry = getOptionExpiryDate(2018, Month.SEPTEMBER, OptionExpiryWeekDay);
+    public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.JUNE);
+    public static LocalDate fourthExpiry = getOptionExpiryDate(2018, Month.SEPTEMBER);
 
 
     private static String frontMonth = frontExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
@@ -116,8 +116,8 @@ public class ChinaOption extends JPanel implements Runnable {
     private static Map<String, Double> impliedVolMap = new HashMap<>();
     private static Map<String, Double> impliedVolMapYtd = new HashMap<>();
     public volatile static Map<String, Double> deltaMap = new HashMap<>();
-    private static NavigableMap<LocalDate, NavigableMap<Double, Double>> strikeVolMapCall = new TreeMap<>();
-    private static NavigableMap<LocalDate, NavigableMap<Double, Double>> strikeVolMapPut = new TreeMap<>();
+    private static NavigableMap<LocalDate, NavigableMap<Double, Double>> strikeVolMapCall = new ConcurrentSkipListMap<>();
+    private static NavigableMap<LocalDate, NavigableMap<Double, Double>> strikeVolMapPut = new ConcurrentSkipListMap<>();
     private static JLabel priceLabel = new JLabel();
     private static JLabel priceChgLabel = new JLabel();
     private static JLabel timeLabel = new JLabel();
@@ -737,13 +737,13 @@ public class ChinaOption extends JPanel implements Runnable {
 
     @Override
     public void run() {
+        System.out.println(" running @ " + LocalTime.now());
         priceLabel.setText(currentStockPrice + "");
         priceChgLabel.setText(Math.round(1000d * (currentStockPrice / previousClose - 1)) / 10d + "%");
         timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
                 + (LocalTime.now().getSecond() == 0 ? ":00" : ""));
 
         if (computeOn) {
-            System.out.println(" running @ " + LocalTime.now());
             try {
                 String callStringFront = "http://hq.sinajs.cn/list=OP_UP_510050" + frontMonth;
                 URL urlCallFront = new URL(callStringFront);

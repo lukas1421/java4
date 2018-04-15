@@ -32,7 +32,6 @@ public class XUOvernightTradeExecHandler implements ApiController.ITradeReportHa
 
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
-        //if (ldt.getDayOfMonth() == LocalDateTime.now().getDayOfMonth()) {
         if (ldt.isAfter(LocalDateTime.of(TDate, LocalTime.of(15, 0)))) {
             System.out.println(" in XUOvernightTradeExecHandler ");
 

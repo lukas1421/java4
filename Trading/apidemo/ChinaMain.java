@@ -102,21 +102,13 @@ public final class ChinaMain implements IConnectionHandler {
     //private ChinaFut chinafut = new ChinaFut();
 
     private final ChinaStock chinastock = new ChinaStock();
-    //System.out.println("time after chinastock");
     private final ChinaIndex chinaindex = new ChinaIndex();
-
     private final ChinaKeyMonitor keyMon = new ChinaKeyMonitor();
-
     private final ChinaData chinaData = new ChinaData();
-
     private final ChinaDataMapYtd chinadatamapytd = new ChinaDataMapYtd();
-
     private final ChinaDataYesterday chinaDataYtd = new ChinaDataYesterday();
-
     private final ChinaSizeDataYtd csdy = new ChinaSizeDataYtd();
-
     private final ChinaSizeData chinaSizeData = new ChinaSizeData();
-
     //private final ChinaSizeRatio chinasizeratio = new ChinaSizeRatio();
     private final ChinaPosition chinaPos = new ChinaPosition();
 
@@ -151,11 +143,6 @@ public final class ChinaMain implements IConnectionHandler {
         return M_CONTROLLER;
     }
 
-//    public JFrame frame() {
-//        return m_frame;
-//    }
-
-    //public static JComponent indexWatcher;
     public static void main(String[] args) {
         start(new ChinaMain(new DefaultConnectionConfiguration()));
     }
@@ -206,7 +193,6 @@ public final class ChinaMain implements IConnectionHandler {
         // m_tabbedPanel.addTab( "Contract Info", m_contractInfoPanel);
         //m_tabbedPanel.addTab( "Advisor", m_advisorPanel);
         // m_tabbedPanel.addTab( "Strategy", m_stratPanel); in progress
-
         //m_tabbedPanel.addTab("Hist", histdata);
 
         m_tabbedPanel.addTab(" HK Data", hkdata);
@@ -229,16 +215,13 @@ public final class ChinaMain implements IConnectionHandler {
         systemTime.setFont(systemTime.getFont().deriveFont(25F));
         systemTime.setBackground(Color.orange);
         systemTime.setForeground(Color.black);
-
         twsTime.setFont(systemTime.getFont().deriveFont(25F));
         twsTime.setBackground(Color.orange);
         twsTime.setForeground(Color.black);
-
         systemNotif.setOpaque(true);
         systemNotif.setBackground(Color.orange);
         systemNotif.setForeground(Color.black);
         systemNotif.setFont(systemNotif.getFont().deriveFont(25F));
-
         connectionIndicator.setOpaque(true);
         connectionIndicator.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         connectionIndicator.setBackground(Color.red);

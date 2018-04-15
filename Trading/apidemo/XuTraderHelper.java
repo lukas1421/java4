@@ -7,10 +7,13 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.temporal.Temporal;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
+
+import static utility.Utility.getStr;
 
 public class XuTraderHelper {
 
@@ -65,5 +68,16 @@ public class XuTraderHelper {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public static <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> map) {
+        if (map.size() > 0) {
+            double max = map.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
+            double min = map.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
+            double last = map.lastEntry().getValue().getClose();
+            System.out.println(getStr(" getPercentileForLast max min last ", max, min, last));
+            return (int) Math.round(100d * ((last - min) / (max - min)));
+        }
+        return 50;
     }
 }
