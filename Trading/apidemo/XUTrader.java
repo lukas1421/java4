@@ -256,17 +256,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         overnightButton.addActionListener(l -> ses2.scheduleAtFixedRate(this::overnightTrader, 0, 1, TimeUnit.MINUTES));
 
         JButton maTraderButton = new JButton(" MA Trader ");
-        maTraderButton.addActionListener(l -> ses2.scheduleAtFixedRate(this::movingAverageTrader, 0, 1, TimeUnit.MINUTES));
+        maTraderButton.addActionListener(l -> ses2.scheduleAtFixedRate(this::movingAverageTraderV2, 0, 1, TimeUnit.MINUTES));
 
         JButton getData = new JButton("Data");
-        getData.addActionListener(l -> {
-            System.out.println(" getting data ");
-            loadXU();
-        });
+        getData.addActionListener(l -> loadXU());
 
         JButton graphButton = new JButton("graph");
         graphButton.addActionListener(l -> {
-            System.out.println(" graphing ");
             xuGraph.setNavigableMap(futData.get(ibContractToFutType(activeFuture)), displayPred);
             xuGraph.refresh();
             repaint();
@@ -284,15 +280,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         });
 
         JToggleButton showGraphButton = new JToggleButton("Show Trades");
-        showGraphButton.addActionListener(l -> {
-            if (showGraphButton.isSelected()) {
-                showTrades = true;
-                System.out.println(" show trade is " + showTrades);
-            } else {
-                showTrades = false;
-                System.out.println(" show trade is " + showTrades);
-            }
-        });
+        showGraphButton.addActionListener(l -> showTrades = showGraphButton.isSelected());
 
 
         JButton cancelAllOrdersButton = new JButton("Cancel Orders");
@@ -334,10 +322,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         JRadioButton _1mButton = new JRadioButton("1m");
         _1mButton.addActionListener(l -> gran = DisplayGranularity._1MDATA);
-        _1mButton.setSelected(true);
 
         JRadioButton _5mButton = new JRadioButton("5m");
         _5mButton.addActionListener(l -> gran = DisplayGranularity._5MDATA);
+        _5mButton.setSelected(true);
 
         ButtonGroup frontBackGroup = new ButtonGroup();
         frontBackGroup.add(frontFutButton);
@@ -446,7 +434,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         double bidPrice = bidPriceList.getOrDefault(l.getName(), 0.0);
                         System.out.println(" bid price " + bidPrice + " check if order price makes sense "
                                 + checkIfOrderPriceMakeSense(bidPrice));
-                        if (checkIfOrderPriceMakeSense(bidPrice) && marketOpen(LocalTime.now())) {
+                        if (checkIfOrderPriceMakeSense(bidPrice) && futMarketOpen(LocalTime.now())) {
                             apcon.placeOrModifyOrder(activeFuture, placeBidLimit(bidPrice, 1.0), getThis());
                         } else {
                             throw new IllegalArgumentException("price out of bound");
@@ -469,7 +457,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         double offerPrice = offerPriceList.get(l.getName());
                         System.out.println(" offer  price list " + offerPriceList.toString());
 
-                        if (checkIfOrderPriceMakeSense(offerPrice) && marketOpen(LocalTime.now())) {
+                        if (checkIfOrderPriceMakeSense(offerPrice) && futMarketOpen(LocalTime.now())) {
                             apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(offerPrice, 1.0), getThis());
                         } else {
                             throw new IllegalArgumentException("price out of bound");
@@ -486,8 +474,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             deepPanel.add(j);
         }
         JScrollPane outputPanel = new JScrollPane(outputArea);
-
-
         controlPanel1.setLayout(new FlowLayout());
         add(controlPanel1);
         add(controlPanel2);
@@ -506,15 +492,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         sma = XuTraderHelper.getMAGen(price5, 60);
         soundplayer.stopIfPlaying();
         if (sma.size() > 0) {
-            System.out.println(getStr("Observing MA Touch ||",
+            String msg = getStr("Observing MA Touch ||",
                     " Time: ", LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
                     , " || Last Bar", lastBar.toString(),
-                    " || SMA60 ", Math.round(100d * sma.lastEntry().getValue()) / 100d));
+                    " || SMA60 ", Math.round(100d * sma.lastEntry().getValue()) / 100d);
+            outputToAutoLog(msg);
             if (lastBar.includes(sma.lastEntry().getValue())) {
-                System.out.println(" touching MA, playing clip ");
+                outputToAutoLog(" touching MA, playing clip ");
                 soundplayer.playClip();
             } else {
-                System.out.println(" no touch ");
+                outputToAutoLog(" no touch ");
             }
         }
     }
@@ -570,9 +557,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
         String outputMsg = getStr("MA TRADER || ", now.truncatedTo(ChronoUnit.MINUTES)
                 , "#: ", maSignals.get(), maOrderMap.toString());
-
         outputToAutoLog(outputMsg);
-        System.out.println(outputMsg);
     }
 
     /**
@@ -610,8 +595,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
         int currPercentile = XuTraderHelper.getPercentileForLast(filteredPriceMap);
-
-        double currentPrice = 0.0;
+        double currentPrice;
         double pd = 0.0;
 
         if (futPriceMap.size() > 0) {
@@ -642,10 +626,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     }
                 } else {
                     outputToAutoLog(getStr(now, " nothing done "));
-                    System.out.println(" nothing done ");
                 }
             } else {
-                System.out.println(" outside tradable time slot");
+                outputToAutoLog(" outside tradable time slot");
             }
         } else {
             outputToAutoLog(getStr(now, " trades or delta exceeded MAX "));
@@ -657,7 +640,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "bid ", bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
                 " ask ", askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0));
 
-        System.out.println(outputString);
         outputToAutoLog(outputString);
         requestOvernightExecHistory();
     }
@@ -762,8 +744,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 && Math.abs(askMap.get(f) - bidMap.get(f)) < 10;
     }
 
-    private boolean marketOpen(LocalTime t) {
-        return t.isAfter(LocalTime.of(8, 59));
+    private boolean futMarketOpen(LocalTime t) {
+        return !(t.isAfter(LocalTime.of(5, 0)) && t.isBefore(LocalTime.of(9, 0)));
+        //return t.isAfter(LocalTime.of(8, 59));
     }
 
     private void connectToTWS() {

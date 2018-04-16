@@ -61,6 +61,7 @@ public class XuTraderHelper {
     }
 
     static void outputToAutoLog(String s) {
+        System.out.println(s);
         File output = new File(TradingConstants.GLOBALPATH + "autoLog.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
             out.append(s);
