@@ -14,6 +14,7 @@ import javafx.util.Duration;
 import javax.swing.*;
 import java.io.File;
 import java.net.URI;
+import java.time.LocalTime;
 
 public class EmbeddedSoundPlayer {
 
@@ -30,11 +31,15 @@ public class EmbeddedSoundPlayer {
     }
 
     public void playClip() {
-        try {
-            player.play();
-        } catch (MediaException ex) {
-            System.out.println(" media not available ");
-            ex.printStackTrace();
+        if (LocalTime.now().isAfter(LocalTime.of(8, 59)) && LocalTime.now().isBefore(LocalTime.of(15, 0))) {
+            try {
+                player.play();
+            } catch (MediaException ex) {
+                System.out.println(" media not available ");
+                ex.printStackTrace();
+            }
+        } else {
+            System.out.println(" too late cannot play music ");
         }
     }
 
@@ -58,7 +63,7 @@ public class EmbeddedSoundPlayer {
     private static Scene createScene() {
         String fileName = TradingConstants.GLOBALPATH + "suju.wav";
         player = fileNameToURIString(fileName);
-        player.setOnEndOfMedia(()-> player.seek(Duration.ZERO));
+        player.setOnEndOfMedia(() -> player.seek(Duration.ZERO));
         MediaView mediaView = new MediaView(player);
         Group root = new Group(mediaView);
         return (new Scene(root, 500, 200));

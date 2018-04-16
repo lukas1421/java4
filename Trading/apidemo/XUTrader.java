@@ -52,7 +52,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     // ma trades
     private static volatile int currentMAPeriod = 60;
-    //private static Direction lastTradeDirection = Direction.Short;
+    private static Direction currentDirection = Direction.Short;
     private static LocalDateTime lastTradeTime = LocalDateTime.now();
     //private static AtomicInteger cumuMATrades = new AtomicInteger(0);
     private static final int MAX_DIRECTION_CHANGE = 2;
@@ -267,10 +267,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         overnightButton.addActionListener(l -> ses2.scheduleAtFixedRate(this::overnightTrader, 0, 1, TimeUnit.MINUTES));
 
         JButton maAnalysisButton = new JButton(" MA Analysis ");
+
         maAnalysisButton.addActionListener(l -> {
                     maTradeAnalysis();
-                    //ses2.scheduleAtFixedRate(this::movingAverageTraderV2, 0, 1, TimeUnit.MINUTES);
                 }
+                //ses2.scheduleAtFixedRate(this::movingAverageTraderV2, 0, 1, TimeUnit.MINUTES);}
         );
 
 
@@ -280,9 +281,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 loadXU());
 
         JButton graphButton = new JButton("graph");
-        graphButton.addActionListener(l ->
-
-        {
+        graphButton.addActionListener(l -> {
             xuGraph.setNavigableMap(futData.get(ibContractToFutType(activeFuture)), displayPred);
             xuGraph.refresh();
             repaint();
@@ -513,28 +512,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
                 GridLayout(5, 2));
 
-        for (
-                JLabel j : Arrays.asList(bid1, ask1, bid2, ask2, bid3, ask3, bid4, ask4, bid5, ask5))
-
-        {
+        for (JLabel j : Arrays.asList(bid1, ask1, bid2, ask2, bid3, ask3, bid4, ask4, bid5, ask5)) {
             deepPanel.add(j);
         }
 
         JScrollPane outputPanel = new JScrollPane(outputArea);
-        controlPanel1.setLayout(new
-
-                FlowLayout());
+        controlPanel1.setLayout(new FlowLayout());
 
         add(controlPanel1);
-
         add(controlPanel2);
-
         add(deepPanel);
-
         add(outputPanel);
-
         add(chartScroll);
-
     }
 
     /**
@@ -628,7 +617,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             maLast = sma.lastEntry().getValue();
         }
 
-        int timeBtwnTrades = XuTraderHelper.getTimeBetweenTrade(now.toLocalTime());
+        //int timeBtwnTrades = XuTraderHelper.getTimeBetweenTrade(now.toLocalTime());
+        int timeBtwnTrades = (int) Math.round(5 * Math.pow(2, maSignals.get()));
 
         if (!lastBar.containsZero() && maLast != 0.0 && lastBar.includes(maLast)) {
             if (maLast > lastBar.getOpen()) {
@@ -641,6 +631,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         maSignals.incrementAndGet();
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
                         lastTradeTime = LocalDateTime.now();
+                        currentDirection = Direction.Long;
                     }
                     outputToAutoLog(getStr(now, " FAST MA || bidding @ ", o.toString()));
                 }
@@ -653,13 +644,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         maSignals.incrementAndGet();
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
                         lastTradeTime = LocalDateTime.now();
+                        currentDirection = Direction.Short;
                     }
                     outputToAutoLog(getStr(now, " FAST MA || offering @ ", o.toString()));
                 }
             }
             String outputMsg = getStr("FAST MA TRADER || ", now.truncatedTo(ChronoUnit.MINUTES)
                     , "#: ", maSignals.get(), maOrderMap.toString(), " Last Bar: ", lastBar.toString()
-                    , " SMA: ", maLast, " Last Trade Time: ", lastTradeTime.truncatedTo(ChronoUnit.MINUTES));
+                    , " SMA: ", maLast, " Last Trade Time: ", lastTradeTime.truncatedTo(ChronoUnit.MINUTES),
+                    " wait time ", timeBtwnTrades);
             outputToAutoLog(outputMsg);
         }
         if (detailedMA.get()) {
