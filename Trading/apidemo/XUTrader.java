@@ -64,6 +64,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //music
     private EmbeddedSoundPlayer soundplayer = new EmbeddedSoundPlayer();
 
+    //detailed MA
+    private static AtomicBoolean detailedMA = new AtomicBoolean(false);
+
     //display
     public static volatile Predicate<LocalDateTime> displayPred = e -> true;
 
@@ -164,6 +167,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JButton toggleMusicButton = new JButton("停乐");
         toggleMusicButton.addActionListener(l -> {
             soundplayer.stopIfPlaying();
+        });
+
+        JButton detailedMAButton = new JButton("Detailed MA: False");
+        detailedMAButton.addActionListener(l -> {
+            detailedMA.set(!detailedMA.get());
+            detailedMAButton.setText(" Detailed MA: " + detailedMA.get());
         });
 
         JButton getPositionButton = new JButton(" get pos ");
@@ -365,6 +374,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(buyOfferButton);
         controlPanel1.add(sellBidButton);
         controlPanel1.add(toggleMusicButton);
+        controlPanel1.add(detailedMAButton);
 
         controlPanel2.add(getPositionButton);
         controlPanel2.add(level2Button);
@@ -577,7 +587,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (!lastBar.containsZero() && maLast != 0.0 && lastBar.includes(maLast)) {
-            //outputToAutoLog(getStr(" fast MA TRADER working ", LocalDateTime.now()));
             if (maLast > lastBar.getOpen()) {
                 //long
                 if (timeDiffinMinutes(lastTradeTime, now) >= 5 && maSignals.get() <= MAX_MA_SIGNALS) {
@@ -601,7 +610,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
                         lastTradeTime = LocalDateTime.now();
                     }
-                    outputToAutoLog(getStr(now, " FAST MA || selling @ ", o.toString()));
+                    outputToAutoLog(getStr(now, " FAST MA || offering @ ", o.toString()));
                 }
             }
             String outputMsg = getStr("FAST MA TRADER || ", now.truncatedTo(ChronoUnit.MINUTES)
@@ -609,6 +618,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     , " SMA: ", maLast, " Last Trade Time: ", lastTradeTime.truncatedTo(ChronoUnit.MINUTES));
             outputToAutoLog(outputMsg);
         }
+        if (detailedMA.get()) {
+            System.out.println(getStr("Detailed Fast MA || ", LocalTime.now()
+                    , " fresh price ", freshPrice, "SMA ", Math.round(100d * maLast) / 100d,
+                    "last bar ", lastBar, " last trade time ", lastTradeTime.truncatedTo(ChronoUnit.MINUTES)));
+        }
+
     }
 
 

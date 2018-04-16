@@ -1409,7 +1409,7 @@ public class ApiController implements EWrapper {
 
         void handle(int errorCode, String errorMsg);
 
-        public static class DefaultOrderHandler implements IOrderHandler {
+        class DefaultOrderHandler implements IOrderHandler {
 
             @Override
             public void orderState(OrderState orderState) {

@@ -173,7 +173,7 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
 
     @Override
     public String toString() {
-        return getStr("open:", open, " high:", high, "low:", low, "close:", close);
+        return getStr("O: ", open, "H: ", high, "L: ", low, "C: ", close);
     }
 
     @Override

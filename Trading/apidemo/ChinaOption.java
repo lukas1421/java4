@@ -255,6 +255,7 @@ public class ChinaOption extends JPanel implements Runnable {
             todayVolOnly = !todayVolOnly;
             SwingUtilities.invokeLater(() ->
                     todayVolOnlyButton.setText(todayVolOnly ? " All Vols " : " Only T Vol"));
+            graphIntraday.repaint();
         });
 
         JPanel dataPanel = new JPanel();
@@ -429,9 +430,20 @@ public class ChinaOption extends JPanel implements Runnable {
         computeOnButton.addActionListener(l -> computeOn = computeOnButton.isSelected());
 
 
-        saveVolsButton.addActionListener(l -> saveVolsCSV());
+        saveVolsButton.addActionListener(l -> {
+            if (LocalTime.now().isAfter(LocalTime.of(15, 0))) {
+                saveVolsCSV();
+            } else {
+                JOptionPane.showMessageDialog(null, " cannot save before 15pm");
+            }
+        });
+
         saveVolsHibButton.addActionListener(l -> {
-            saveHibEOD();
+            if (LocalTime.now().isAfter(LocalTime.of(15, 0))) {
+                saveHibEOD();
+            } else {
+                JOptionPane.showMessageDialog(null, " cannot save before 15pm");
+            }
             //ChinaOptionHelper.getVolsFromVolOutputToHib();
         });
 
@@ -737,7 +749,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        System.out.println(" running @ " + LocalTime.now());
+        System.out.println(" running @ " + LocalTime.now().truncatedTo(ChronoUnit.MINUTES));
         priceLabel.setText(currentStockPrice + "");
         priceChgLabel.setText(Math.round(1000d * (currentStockPrice / previousClose - 1)) / 10d + "%");
         timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
