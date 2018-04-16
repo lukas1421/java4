@@ -1,13 +1,21 @@
 package apidemo;
 
 import auxiliary.SimpleBar;
+import client.Order;
+import client.OrderType;
+import client.Types;
+import controller.ApiController;
 
+import javax.swing.*;
+import java.awt.*;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.Temporal;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -80,5 +88,116 @@ public class XuTraderHelper {
             return (int) Math.round(100d * ((last - min) / (max - min)));
         }
         return 50;
+    }
+
+    public static Order placeOfferLimit(double p, double quantity) {
+        System.out.println(" place offer limit " + p);
+        Order o = new Order();
+        o.action(Types.Action.SELL);
+        o.lmtPrice(p);
+        o.orderType(OrderType.LMT);
+        o.totalQuantity(quantity);
+        o.tif(Types.TimeInForce.GTC);
+        o.outsideRth(true);
+        return o;
+    }
+
+    public static Order placeBidLimit(double p, double quantity) {
+        System.out.println(" place bid limit " + p);
+        Order o = new Order();
+        o.action(Types.Action.BUY);
+        o.lmtPrice(p);
+        o.orderType(OrderType.LMT);
+        o.totalQuantity(quantity);
+        o.outsideRth(true);
+        o.tif(Types.TimeInForce.GTC);
+        return o;
+    }
+
+    static Order buyAtOffer(double p, double quantity) {
+        System.out.println(" buy at offer " + p);
+        Order o = new Order();
+        o.action(Types.Action.BUY);
+        o.lmtPrice(p);
+        o.orderType(OrderType.LMT);
+        o.totalQuantity(quantity);
+        o.outsideRth(true);
+        return o;
+    }
+
+    static Order sellAtBid(double p, double quantity) {
+        System.out.println(" sell at bid " + p);
+        Order o = new Order();
+        o.action(Types.Action.SELL);
+        o.lmtPrice(p);
+        o.orderType(OrderType.LMT);
+        o.totalQuantity(quantity);
+        o.outsideRth(true);
+        return o;
+    }
+
+    static void createDialog(String msg) {
+        JDialog jd = new JDialog();
+        jd.setFocusableWindowState(false);
+        jd.setSize(new Dimension(700, 200));
+
+        JLabel j1 = new JLabel(msg);
+        j1.setPreferredSize(new Dimension(300, 60));
+
+        j1.setFont(j1.getFont().deriveFont(25F));
+        j1.setForeground(Color.red);
+        j1.setHorizontalAlignment(SwingConstants.CENTER);
+        jd.getContentPane().add(j1, BorderLayout.NORTH);
+
+        jd.getContentPane().add(new JLabel(msg), BorderLayout.CENTER);
+        jd.setAlwaysOnTop(false);
+        jd.getContentPane().setLayout(new BorderLayout());
+        jd.setVisible(true);
+    }
+
+    public static int getTimeBetweenTrade(LocalTime t) {
+        if (t.isAfter(LocalTime.of(8, 59)) && t.isBefore(LocalTime.of(10, 0))) {
+            return 3;
+        } else {
+            return 5;
+        }
+    }
+
+    static class XUConnectionHandler implements ApiController.IConnectionHandler {
+        @Override
+        public void connected() {
+            System.out.println("connected in XUconnectionhandler");
+            XUTrader.connectionStatus = true;
+            XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
+            XUTrader.apcon.setConnectionStatus(true);
+        }
+
+        @Override
+        public void disconnected() {
+            System.out.println("disconnected in XUConnectionHandler");
+            XUTrader.connectionStatus = false;
+            XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
+        }
+
+        @Override
+        public void accountList(ArrayList<String> list) {
+            System.out.println(" account list is " + list);
+        }
+
+        @Override
+        public void error(Exception e) {
+            System.out.println(" error in XUConnectionHandler");
+            e.printStackTrace();
+        }
+
+        @Override
+        public void message(int id, int errorCode, String errorMsg) {
+            System.out.println(getStr(" error ID ", id, " error code ", errorCode, " errormsg ", errorMsg));
+        }
+
+        @Override
+        public void show(String string) {
+            System.out.println(" show string " + string);
+        }
     }
 }
