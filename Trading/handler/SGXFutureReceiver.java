@@ -41,6 +41,8 @@ public class SGXFutureReceiver implements LiveHandler {
                 ChinaStock.priceMap.put(name, price);
                 XUTrader.futPriceMap.put(f, price);
 
+
+
                 // need to capture overnight data
                 if (t.isAfter(LocalTime.of(8, 55)) || t.isBefore(LocalTime.of(5, 0))) {
                     if (STOCK_COLLECTION_TIME.test(ldt)) {
@@ -53,12 +55,17 @@ public class SGXFutureReceiver implements LiveHandler {
                     }
 
                     if (FUT_COLLECTION_TIME.test(ldt)) {
+
+                        XUTrader.fastMATrader(price);
+
                         if (XUTrader.futData.get(f).containsKey(ldt)) {
                             XUTrader.futData.get(f).get(ldt).add(price);
                         } else {
                             XUTrader.futData.get(f).put(ldt, new SimpleBar(price));
                         }
                     }
+                    // MA trader here to immediately get involved
+
 
                 }
                 break;

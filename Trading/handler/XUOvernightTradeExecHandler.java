@@ -25,14 +25,14 @@ public class XUOvernightTradeExecHandler implements ApiController.ITradeReportHa
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
 
         LocalTime now = LocalTime.now();
-        LocalDate TDate = now.isAfter(LocalTime.of(0, 0)) && now.isBefore(LocalTime.of(5, 0)) ? LocalDate.now().minusDays(1L)
-                : LocalDate.now();
+        LocalDate TDate = now.isAfter(LocalTime.of(0, 0)) && now.isBefore(LocalTime.of(5, 0)) ?
+                LocalDate.now().minusDays(1L) : LocalDate.now();
 
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
 
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
-        if (ldt.isAfter(LocalDateTime.of(TDate, LocalTime.of(15, 0)))) {
+        if (ldt.isAfter(LocalDateTime.of(TDate, LocalTime.of(17, 0)))) {
             System.out.println(" in XUOvernightTradeExecHandler ");
 
             FutType f = ibContractToFutType(contract);
