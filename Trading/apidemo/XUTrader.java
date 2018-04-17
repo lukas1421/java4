@@ -612,19 +612,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int timeBtwnTrades = (int) Math.round(5 * Math.pow(2, maSignalsPersist));
 
         if (timeDiffinMinutes(lastTradeTime, now) >= timeBtwnTrades && maSignalsPersist <= MAX_MA_SIGNALS) {
-
             if (maTradesList.size() > 0) {
-                //ma correction trade. Last MA is missed in mandatory waiting period
-                if (maTradesList.getLast().getSize() * (freshPrice - maLast) > 0) {
-                    outputToAutoLog(getStr(" correction trade ", now, " last MA ", maTradesList.getLast(),
+                if (maTradesList.getLast().getSize() * currentDirection.getValue() < 0) {
+                    outputToAutoLog(getStr(" correction trade ", now, " last MA trade ", maTradesList.getLast(),
                             " fresh price: ", freshPrice, " ma Last ", maLast));
                     if (maTradesList.getLast().getSize() > 0) {
-                        outputToAutoLog(getStr(" CORRECTION TRADING bidding @ " ));
+                        outputToAutoLog(getStr(" CORRECTION TRADING bidding @ "
+                                + bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0)));
                     } else {
-                        outputToAutoLog(getStr(" CORRECTION TRADE offering @ " ));
+                        outputToAutoLog(getStr(" CORRECTION TRADE offering @ "
+                                + askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0)));
                     }
                 } else {
-                    System.out.println(" correction trade is losing money ");
+                    outputToAutoLog(" direction is correct - no need to do correction trade ");
                 }
             }
             if (!lastBar.containsZero() && maLast != 0.0 && lastBar.includes(maLast)) {
