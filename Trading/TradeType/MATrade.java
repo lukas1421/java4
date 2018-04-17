@@ -10,8 +10,10 @@ public class MATrade {
     private double tradePrice;
     private int size;
 
-    MATrade() {
-
+    public MATrade(LocalDateTime t, double p, int q) {
+        tradeTime = t;
+        tradePrice = p;
+        size = q;
     }
 
     public LocalDateTime getTradeTime() {
@@ -26,14 +28,11 @@ public class MATrade {
         return size;
     }
 
-    public MATrade(LocalDateTime t, double p, int q) {
-        tradeTime = t;
-        tradePrice = p;
-        size = q;
-    }
+
 
     @Override
     public String toString() {
-        return Utility.getStr(" time price quantity ", tradeTime, Math.round(tradePrice), size > 0 ? "BUY" : "SELL", size);
+        return Utility.getStr(" MATrade", tradeTime, size > 0 ? "BUY" : "SELL", size
+                , " @ ", Math.round(100d * tradePrice) / 100d);
     }
 }

@@ -12,6 +12,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.Temporal;
@@ -25,6 +26,11 @@ import java.util.stream.Collectors;
 import static utility.Utility.getStr;
 
 public class XuTraderHelper {
+
+    // ma trades
+    public static final LocalTime AM_BEGIN = LocalTime.of(9, 0);
+    public static final LocalTime PM_BEGIN = LocalTime.of(13, 0);
+    public static final LocalTime OVERNIGHT_BEGIN = LocalTime.of(15, 0);
 
     public static NavigableMap<LocalDateTime, Double> getMAGen(NavigableMap<LocalDateTime, SimpleBar> mp, int period) {
         NavigableMap<LocalDateTime, Double> sma = new ConcurrentSkipListMap<>();
@@ -165,7 +171,27 @@ public class XuTraderHelper {
     }
 
     public static Predicate<LocalTime> futureTSession() {
-        return t -> t.isAfter(LocalTime.of(8, 59)) && t.isBefore(LocalTime.of(17, 0));
+        return t -> t.isAfter(LocalTime.of(8, 59)) && t.isBefore(LocalTime.of(15, 0));
+    }
+
+    private static Predicate<LocalTime> futureAMSession() {
+        return t -> t.isAfter(LocalTime.of(8, 59)) && t.isBefore(LocalTime.of(13, 0));
+    }
+
+    public static Predicate<LocalTime> futurePMSession() {
+        return t -> t.isAfter(LocalTime.of(13, 0)) && t.isBefore(LocalTime.of(15, 0));
+    }
+
+    private static Predicate<LocalTime> futureOvernightSession() {
+        return t -> t.isAfter(LocalTime.of(15, 0)) || t.isBefore(LocalTime.of(5, 0));
+    }
+
+    static LocalDateTime getSessionOpenTime() {
+        LocalTime sessionBeginTime = futureOvernightSession().test(LocalTime.now()) ? OVERNIGHT_BEGIN :
+                (futureAMSession().test(LocalTime.now()) ? AM_BEGIN : PM_BEGIN);
+        LocalDate TDate = LocalTime.now().isAfter(LocalTime.of(0, 0)) && LocalTime.now().isBefore(LocalTime.of(5, 0))
+                ? LocalDate.now().minusDays(1L) : LocalDate.now();
+        return LocalDateTime.of(TDate, sessionBeginTime);
     }
 
     static class XUConnectionHandler implements ApiController.IConnectionHandler {

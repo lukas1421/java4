@@ -1370,7 +1370,7 @@ public class Order {
     }
 
     public String toString() {
-        return Utility.getStr(m_action, m_orderType, m_totalQuantity, " at ", m_lmtPrice);
+        return Utility.getStr(m_action, m_orderType, m_totalQuantity, "at", m_lmtPrice);
 
     }
 

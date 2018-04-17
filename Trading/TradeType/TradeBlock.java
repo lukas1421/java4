@@ -42,14 +42,7 @@ public final class TradeBlock {
     }
 
     public void merge(TradeBlock tb) {
-        System.out.println("tb to merge is " + tb);
-        System.out.println(" mergelist before " + mergeList);
-
         tb.getTradeList().forEach(e -> mergeList.add((Trade) e));
-
-        //mergeList.addAll(tb.getTradeList());
-
-        System.out.println(" merge list after " + mergeList);
     }
 
     private int getNumberOfTrades() {

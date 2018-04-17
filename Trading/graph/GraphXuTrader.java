@@ -46,7 +46,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     private NavigableMap<LocalDateTime, Double> ma60 = new ConcurrentSkipListMap<>();
     private NavigableMap<LocalDateTime, Double> ma80 = new ConcurrentSkipListMap<>();
 
-
     private NavigableMap<LocalDateTime, TradeBlock> trademap;
     TreeSet<MATrade> maTradeSet = new TreeSet<>(Comparator.comparing(MATrade::getTradeTime));
     List<MATrade> maTradeList = new LinkedList<>();
