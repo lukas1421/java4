@@ -159,6 +159,10 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         return (low != 0.0) ? (high / low - 1) : 0.0;
     }
 
+    public double getHMinusL() {
+        return high - low;
+    }
+
     public double getBarReturn() {
         return (open != 0.0) ? (close / open - 1) : 0.0;
     }

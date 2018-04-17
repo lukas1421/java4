@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static utility.Utility.getStr;
@@ -161,6 +162,10 @@ public class XuTraderHelper {
         } else {
             return 5;
         }
+    }
+
+    public static Predicate<LocalTime> futureTSession() {
+        return t -> t.isAfter(LocalTime.of(8, 59)) && t.isBefore(LocalTime.of(17, 0));
     }
 
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
