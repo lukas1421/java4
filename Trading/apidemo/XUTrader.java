@@ -53,10 +53,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static volatile int currentMAPeriod = 60;
     private static Direction currentDirection = Direction.Short;
-    private static LocalDateTime lastTradeTime = XuTraderHelper.getSessionOpenTime();
-    //private static LocalDateTime lastOrderTime = XuTraderHelper.getSessionOpenTime();
+    private static LocalDateTime lastTradeTime = LocalDateTime.now();
+    private static LocalDateTime lastOrderTime = LocalDateTime.now();
     private static final int MAX_MA_SIGNALS = 5;
-    private static final int MAX_TRADES = 40;
+    private static final int MAX_TRADES_PER_SESSION = 10;
     private static AtomicInteger maSignals = new AtomicInteger(0); //session transient
     private static long maSignalsPersist = 0L; //computed from maAnalysis, persistent through sessions.
     private static volatile NavigableMap<LocalDateTime, Order> maOrderMap = new ConcurrentSkipListMap<>();
@@ -549,8 +549,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         int timeBtwnTrades = (int) Math.max(5, Math.round(5d * Math.pow(2d, Math.min(7, Math.max(numTrades, numOrder)))));
 
-        if (timeDiffinMinutes(lastTradeTime, now) >= timeBtwnTrades && maSignalsPersist <= MAX_MA_SIGNALS
-                && maSignals.get() <= MAX_MA_SIGNALS && numTrades <= MAX_TRADES) {
+        if (timeDiffinMinutes(lastOrderTime, now) >= timeBtwnTrades
+                && timeDiffinMinutes(lastOrderTime, now) >= timeBtwnTrades
+                && maSignalsPersist <= MAX_MA_SIGNALS
+                && maSignals.get() <= MAX_MA_SIGNALS
+                && numTrades <= MAX_TRADES_PER_SESSION) {
 
             //correction trade to trade MA_Trade.getLast() or increase position
             if (maTradesList.size() > 0) {
@@ -579,7 +582,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         maOrderMap.put(now, o);
                         maSignals.incrementAndGet();
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
-                        lastTradeTime = LocalDateTime.now();
+                        //lastTradeTime = LocalDateTime.now();
+                        lastOrderTime = LocalDateTime.now();
                         currentDirection = Direction.Long;
                     }
                     outputToAutoLog(getStr(now, " FAST MA || bidding @ ", o.toString()));
@@ -590,15 +594,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         maOrderMap.put(now, o);
                         maSignals.incrementAndGet();
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
-                        lastTradeTime = LocalDateTime.now();
+                        //lastTradeTime = LocalDateTime.now();
+                        lastOrderTime = LocalDateTime.now();
                         currentDirection = Direction.Short;
                     }
                     outputToAutoLog(getStr(now, " FAST MA || offering @ ", o.toString()));
                 }
-                String outputMsg = getStr("FAST MA TRADER || ", now.truncatedTo(ChronoUnit.MINUTES)
-                        , "#: ", maSignals.get(), maOrderMap.toString(), " Last Bar: ", lastBar.toString()
-                        , " SMA: ", maLast, " Last Trade Time: ", lastTradeTime.truncatedTo(ChronoUnit.MINUTES),
-                        " wait time ", timeBtwnTrades);
+                String outputMsg = getStr("FAST MA|| ", now.truncatedTo(ChronoUnit.MINUTES)
+                        , "#: ", maSignals.get(), maOrderMap.toString(), "||Last Bar: ", lastBar.toString()
+                        , "|SMA:", maLast, "|Last Trade Time:", lastTradeTime.truncatedTo(ChronoUnit.MINUTES),
+                        "|Last Order Time:", lastOrderTime.truncatedTo(ChronoUnit.MINUTES),
+                        "|wait time:", timeBtwnTrades);
                 outputToAutoLog(outputMsg);
             }
         }
@@ -706,15 +712,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double lastPrice = price5.lastEntry().getValue().getClose();
 
         sma.forEach((lt, ma) -> {
-            if (lt.isAfter(sessionBeginLDT) && !lt.equals(price5.firstKey()) &&
-                    price5.containsKey(lt) && price5.get(lt).includes(ma)) {
-
+            if (lt.isAfter(sessionBeginLDT) && !lt.equals(price5.firstKey()) && price5.containsKey(lt)) {
                 SimpleBar sb = price5.get(lt);
                 SimpleBar sbPrevious = price5.lowerEntry(lt).getValue();
-                if (sb.getOpen() > ma && sbPrevious.getBarReturn() > 0.0) {
-                    maTradesList.add(new MATrade(lt, ma, +1));
-                } else if (sb.getOpen() < ma && sbPrevious.getBarReturn() < 0.0) {
-                    maTradesList.add(new MATrade(lt, ma, -1));
+                if (sbPrevious.includes(ma)) {
+                    if (sb.getOpen() > ma && sbPrevious.getBarReturn() > 0.0) {
+                        maTradesList.add(new MATrade(lt, ma, +1));
+                    } else if (sb.getOpen() < ma && sbPrevious.getBarReturn() < 0.0) {
+                        maTradesList.add(new MATrade(lt, ma, -1));
+                    }
                 }
             }
         });
@@ -723,10 +729,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         System.out.println(" compute MA profit ");
         computeMAProfit(maTradesList, lastPrice);
 
-        maSignalsPersist = maTradesList.stream().filter(e -> e.getTradeTime().isAfter(sessionBeginLDT)
-                && e.getTradeTime().isBefore(lastTradeTime)).count();
-        String maOutput = (getStr(" ma signals persist || BeginT, EndT, # signals",
-                sessionBeginLDT, lastTradeTime, maSignalsPersist));
+        maSignalsPersist = maTradesList.stream().filter(e -> e.getTradeTime().isAfter(sessionBeginLDT)).count();
+        String maOutput = (getStr(" ma signals persist || BeginT: ", sessionBeginLDT,
+                "EndT: ", lastOrderTime, "Signal #: ", maSignalsPersist, "list: ", maTradesList));
         outputToAutoLog(maOutput);
     }
 
