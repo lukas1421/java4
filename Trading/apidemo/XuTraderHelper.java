@@ -194,6 +194,15 @@ public class XuTraderHelper {
         return LocalDateTime.of(TDate, sessionBeginTime);
     }
 
+    static double roundToXUTradablePrice(double x, Direction dir) {
+        return (Math.round(x * 10) - Math.round(x * 10) % 25 + (dir == Direction.Long ? 0 : 25)) / 10d;
+    }
+
+    static double roundToXUTradablePrice(double x) {
+        return (Math.round(x * 10) - Math.round(x * 10) % 25) / 10d;
+    }
+
+
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
         @Override
         public void connected() {
@@ -230,5 +239,9 @@ public class XuTraderHelper {
         public void show(String string) {
             System.out.println(" show string " + string);
         }
+    }
+
+    public static void main(String[] args) {
+        System.out.println(roundToXUTradablePrice(10001.5, Direction.Short));
     }
 }
