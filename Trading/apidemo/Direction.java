@@ -1,7 +1,7 @@
 package apidemo;
 
 public enum Direction {
-    Long(1), Short(-1);
+    Long(1), Flat(0), Short(-1);
     private int value;
 
     Direction(int v) {
