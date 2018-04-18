@@ -588,9 +588,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             if (!lastBar.containsZero() && maLast != 0.0 && secLastBar.includes(maLast)) {
                 if (lastBar.getOpen() > maLast && secLastBar.getBarReturn() > 0.0) {
-                    double candidatePrice = maSignals.get() == 0 ?
-                            bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0) :
-                            roundToXUTradablePrice(lastBar.getOpen(), Direction.Long);
+                    double candidatePrice =
+                            currentDirection == Direction.Long ?
+                                    roundToXUTradablePrice(maLast, Direction.Long) :
+                                    (maSignals.get() == 0 ?
+                                            bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0) :
+                                            roundToXUTradablePrice(lastBar.getOpen(), Direction.Long));
 
                     Order o = placeBidLimit(candidatePrice, 1);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
@@ -603,8 +606,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     outputToAutoLog(getStr(now, " FAST MA || bidding @ ", o.toString()));
                 } else if (lastBar.getOpen() < maLast && secLastBar.getBarReturn() < 0.0) {
 
-                    double candidatePrice = maSignals.get() == 0 ? askMap.get(ibContractToFutType(activeFuture)) :
-                            roundToXUTradablePrice(lastBar.getOpen(), Direction.Short);
+                    double candidatePrice = currentDirection == Direction.Short ?
+                            roundToXUTradablePrice(maLast, Direction.Short) :
+                            (maSignals.get() == 0 ? askMap.get(ibContractToFutType(activeFuture)) :
+                                    roundToXUTradablePrice(lastBar.getOpen(), Direction.Short));
 
                     Order o = placeOfferLimit(candidatePrice, 1);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
