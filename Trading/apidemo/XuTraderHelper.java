@@ -28,9 +28,9 @@ import static utility.Utility.getStr;
 public class XuTraderHelper {
 
     // ma trades
-    public static final LocalTime AM_BEGIN = LocalTime.of(9, 0);
-    public static final LocalTime PM_BEGIN = LocalTime.of(13, 0);
-    public static final LocalTime OVERNIGHT_BEGIN = LocalTime.of(15, 0);
+    private static final LocalTime AM_BEGIN = LocalTime.of(9, 0);
+    private static final LocalTime PM_BEGIN = LocalTime.of(13, 0);
+    private static final LocalTime OVERNIGHT_BEGIN = LocalTime.of(15, 0);
 
     public static NavigableMap<LocalDateTime, Double> getMAGen(NavigableMap<LocalDateTime, SimpleBar> mp, int period) {
         NavigableMap<LocalDateTime, Double> sma = new ConcurrentSkipListMap<>();
@@ -86,7 +86,7 @@ public class XuTraderHelper {
         }
     }
 
-    public static <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> map) {
+    static <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> map) {
         if (map.size() > 0) {
             double max = map.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
             double min = map.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
@@ -97,7 +97,7 @@ public class XuTraderHelper {
         return 50;
     }
 
-    public static Order placeOfferLimit(double p, double quantity) {
+    static Order placeOfferLimit(double p, double quantity) {
         System.out.println(" place offer limit " + p);
         Order o = new Order();
         o.action(Types.Action.SELL);
@@ -109,7 +109,7 @@ public class XuTraderHelper {
         return o;
     }
 
-    public static Order placeBidLimit(double p, double quantity) {
+    static Order placeBidLimit(double p, double quantity) {
         System.out.println(" place bid limit " + p);
         Order o = new Order();
         o.action(Types.Action.BUY);

@@ -749,7 +749,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        System.out.println(" running @ " + LocalTime.now().truncatedTo(ChronoUnit.MINUTES));
+        System.out.println(" running @ " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
         priceLabel.setText(currentStockPrice + "");
         priceChgLabel.setText(Math.round(1000d * (currentStockPrice / previousClose - 1)) / 10d + "%");
         timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
