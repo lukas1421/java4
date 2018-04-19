@@ -320,15 +320,14 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             }
             if (roundDownToN(mouseXCord, XUTrader.graphWidth.get()) == x - 5) {
                 //lowY+(mouseYCord<closeY?-20:+20
-                g.drawString("F: " + lt.toLocalTime() + " " + Math.round(tm.floorEntry(lt).getValue().getClose()), x,
+                g.drawString("F: " + lt.toLocalTime() + " " + (tm.floorEntry(lt).getValue().toString()), x,
                         lowY + (mouseYCord < closeY ? -50 : +50));
                 g.drawOval(x - 3, lowY, 5, 5);
                 g.fillOval(x - 3, lowY, 5, 5);
 
                 if (ma60.size() > 0 && ma60.containsKey(lt)) {
                     int maY = getY(ma60.get(lt));
-                    g.drawString("MA60: " + lt.toLocalTime() + " " + Math.round(ma60.floorEntry(lt).getValue()), x,
-                            maY + (mouseYCord < maY ? -50 : +50));
+                    g.drawString("MA60: " + lt.toLocalTime() + " " + Math.round(ma60.floorEntry(lt).getValue()), x, maY);
                     g.drawOval(x - 3, lowY, 5, 5);
                     g.fillOval(x - 3, lowY, 5, 5);
                 }
