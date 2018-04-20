@@ -411,7 +411,7 @@ public final class MorningTask implements HistoricalHandler {
         getUSPricesAfterMarket(ap);
     }
 
-    public void getFXDetailed(ApiController ap) {
+    private void getFXDetailed(ApiController ap) {
         Contract c = new Contract();
         c.symbol("USD");
         c.secType(Types.SecType.CASH);
@@ -432,7 +432,7 @@ public final class MorningTask implements HistoricalHandler {
 
     }
 
-    public void getUSPricesAfterMarket(ApiController ap) {
+    private void getUSPricesAfterMarket(ApiController ap) {
 
         List<String> etfs = Arrays.asList("FXI:US", "CNXT:US", "ASHR:US", "ASHS:US");
         for (String e : etfs) {
