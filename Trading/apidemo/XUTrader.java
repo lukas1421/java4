@@ -51,8 +51,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double OVERNIGHT_MAX_DELTA = 500000.0;
     private static final double OVERNIGHT_MIN_DELTA = -500000.0;
 
+    //ma
     private static volatile int currentMAPeriod = 60;
     private static Direction currentDirection = Direction.Flat;
+    private static final int DEFAULT_SIZE = 1;
     private static LocalDateTime lastTradeTime = LocalDateTime.now();
     private static LocalDateTime lastOrderTime = getSessionOpenTime();
     private static final int MAX_MA_SIGNALS_PER_SESSION = 5;
@@ -62,6 +64,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static volatile LinkedList<MATrade> maTradesList = new LinkedList<>();
     //private static volatile long timeBtwnTrades = 5;
     private static volatile long timeBtwnOrders = 5;
+    private static final double PD_UP_THRESH = 0.003;
+    private static final double PD_DOWN_THRESH = -0.003;
+
 
     //music
     private EmbeddedSoundPlayer soundPlayer = new EmbeddedSoundPlayer();
@@ -488,6 +493,29 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         add(chartScroll);
     }
 
+    private static int determineSize(LocalTime t, double pd, Direction dir) {
+
+        int factor = 1;
+        if (pd > PD_UP_THRESH) {
+            factor = dir == Direction.Long ? 1 : 2;
+        } else if (pd < PD_DOWN_THRESH) {
+            factor = dir == Direction.Long ? 2 : 1;
+        } else {
+            if (t.isAfter(LocalTime.of(8, 59)) && t.isBefore(LocalTime.of(9, 40))) {
+                factor = 1;
+            } else if (futureAMSession().test(t)) {
+                factor = dir == Direction.Long ? 1 : 2;
+            } else if (futurePMSession().test(t)) {
+                factor = dir == Direction.Long ? 2 : 1;
+            }
+        }
+
+        outputToAutoLog(getStr(" Determining Order Size || T PD DIRECTION -> FACTOR, FINAL SIZE ", t, pd, dir, factor,
+                factor * DEFAULT_SIZE));
+
+        return factor * DEFAULT_SIZE;
+    }
+
     /**
      * if touched, play music
      */
@@ -569,12 +597,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (timeDiffinMinutes(lastOrderTime, now) >= timeBtwnOrders && maSignals.get() <= MAX_MA_SIGNALS_PER_SESSION) {
             if (!lastBar.containsZero() && maLast != 0.0 && secLastBar.strictIncludes(maLast)) {
                 if (lastBar.getOpen() > maLast && secLastBar.getBarReturn() > 0.0) {
-                    if (currentDirection == Direction.Long || pd > 0.003) {
+                    if (currentDirection == Direction.Long || pd > PD_UP_THRESH) {
                         candidatePrice = roundToXUTradablePrice(maLast, Direction.Long);
-                        priceType = (pd > 0.003 ? "pd > 0.003" : "already Long") + " BUY @ MA";
-                    } else if (pd < -0.003) {
+                        priceType = (pd > PD_UP_THRESH ? "pd > " + PD_UP_THRESH : "already Long") + " BUY @ MA";
+                    } else if (pd < PD_DOWN_THRESH) {
                         candidatePrice = askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0);
-                        priceType = "pd < -0.003 -> LIFT OFFER";
+                        priceType = "pd < " + PD_DOWN_THRESH + " -> LIFT OFFER";
                     } else if (maSignals.get() == 0) {
                         candidatePrice = bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0);
                         priceType = "maSignals = 0 -> BUY BID";
@@ -583,7 +611,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         priceType = " maSignals > 0 -> BUY @ LAST OPEN";
                     }
 
-                    Order o = placeBidLimit(candidatePrice, 1);
+                    Order o = placeBidLimit(candidatePrice, determineSize(now.toLocalTime(), pd, Direction.Long));
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         apcon.cancelAllOrders();
                         maOrderMap.put(now, o);
@@ -596,12 +624,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         outputToAutoLog("****************ORDER************************");
                     }
                 } else if (lastBar.getOpen() < maLast && secLastBar.getBarReturn() < 0.0) {
-                    if (currentDirection == Direction.Short || pd < -0.003) {
+                    if (currentDirection == Direction.Short || pd < PD_DOWN_THRESH) {
                         candidatePrice = roundToXUTradablePrice(maLast, Direction.Short);
-                        priceType = (pd < -0.003 ? "pd < -0.0003" : "currDir is short(same)") + " SELL @ MA";
-                    } else if (pd > 0.003) {
+                        priceType = (pd < PD_DOWN_THRESH ? "pd < " + PD_DOWN_THRESH : "currDir is short(same)") + " SELL @ MA";
+                    } else if (pd > PD_UP_THRESH) {
                         candidatePrice = bidMap.get(ibContractToFutType(activeFuture));
-                        priceType = "pd > 0.0003 -> SELL @ BID";
+                        priceType = "pd > " + PD_UP_THRESH + " -> SELL @ BID";
                     } else if (maSignals.get() == 0) {
                         candidatePrice = askMap.get(ibContractToFutType(activeFuture));
                         priceType = "SELL: maSignals -> SELL @ OFFER";
@@ -609,7 +637,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         candidatePrice = roundToXUTradablePrice(lastBar.getOpen(), Direction.Short);
                         priceType = "SELL: maSignals > 0 -> SELL @ LAST OPEN";
                     }
-                    Order o = placeOfferLimit(candidatePrice, 1);
+                    Order o = placeOfferLimit(candidatePrice, determineSize(now.toLocalTime(), pd, Direction.Short));
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         maOrderMap.put(now, o);
                         maSignals.incrementAndGet();

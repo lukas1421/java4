@@ -174,15 +174,15 @@ public class XuTraderHelper {
         return t -> t.isAfter(LocalTime.of(8, 59)) && t.isBefore(LocalTime.of(15, 0));
     }
 
-    private static Predicate<LocalTime> futureAMSession() {
+    static Predicate<LocalTime> futureAMSession() {
         return t -> t.isAfter(LocalTime.of(8, 59)) && t.isBefore(LocalTime.of(13, 0));
     }
 
-    public static Predicate<LocalTime> futurePMSession() {
+    static Predicate<LocalTime> futurePMSession() {
         return t -> t.isAfter(LocalTime.of(13, 0)) && t.isBefore(LocalTime.of(15, 0));
     }
 
-    private static Predicate<LocalTime> futureOvernightSession() {
+    static Predicate<LocalTime> futureOvernightSession() {
         return t -> t.isAfter(LocalTime.of(15, 0)) || t.isBefore(LocalTime.of(5, 0));
     }
 
