@@ -1388,6 +1388,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 case 12:
                     return r(fxMap.getOrDefault(name, 1.0) * (currPrice - costMap.getOrDefault(name, 0.0)) * openpos);
                 case 13:
+//                    if (name.equalsIgnoreCase("SGXA50")) {
+//                        System.out.println("getting A50 Bot in Trades map " + tradesMap.get("SGXA50"));
+//                    }
                     return getTotalTodayBought(name);
                 case 14:
                     return Math.round(getTotalDeltaBought(name) / 1000d);
@@ -1482,12 +1485,14 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
 
             if (ChinaPosition.tradesMap.get(ticker).containsKey(lt)) {
                 System.out.println(" lt is " + lt);
+                //ChinaPosition.tradesMap.get(ticker).get(lt).clear();
                 ChinaPosition.tradesMap.get(ticker).get(lt)
-                        .addTrade(new FutureTrade(execution.price(), sign * execution.cumQty()));
+                        .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
             } else {
                 System.out.println(" else lt " + lt);
                 ChinaPosition.tradesMap.get(ticker).put(lt,
-                        new TradeBlock(new FutureTrade(execution.price(), sign * execution.cumQty())));
+                        new TradeBlock(new FutureTrade(execution.price(),
+                                (int) Math.round(sign * execution.shares()))));
             }
         }
     }

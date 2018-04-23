@@ -512,7 +512,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         outputToAutoLog(getStr(" Determining Order Size || T PD DIRECTION -> FACTOR, FINAL SIZE ", t, pd, dir, factor,
                 factor * DEFAULT_SIZE));
-
         return factor * DEFAULT_SIZE;
     }
 
@@ -907,13 +906,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
+        System.out.println(getStr(" XU exec details || price, cumQty, shares ",
+                execution.price(), execution.cumQty(), execution.shares()));
+
         if (ldt.isAfter(LocalDateTime.of(LocalDateTime.now().toLocalDate().minusDays(1L), LocalTime.of(15, 0)))) {
             if (XUTrader.tradesMap.get(f).containsKey(ldt)) {
                 XUTrader.tradesMap.get(f).get(ldt)
-                        .addTrade(new FutureTrade(execution.price(), sign * execution.cumQty()));
+                        .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
             } else {
                 XUTrader.tradesMap.get(f).put(ldt,
-                        new TradeBlock(new FutureTrade(execution.price(), sign * execution.cumQty())));
+                        new TradeBlock(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
             }
         }
     }

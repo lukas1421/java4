@@ -53,6 +53,10 @@ public final class TradeBlock {
         return mergeList.stream().mapToInt(t -> ((Trade) t).getSize()).sum();
     }
 
+    public void clear() {
+        mergeList = Collections.synchronizedList(new LinkedList<>());
+    }
+
     public int getSizeAllAbs() {
         return mergeList.stream().mapToInt(t -> ((Trade) t).getAbsSize()).sum();
     }
