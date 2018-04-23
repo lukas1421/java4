@@ -561,7 +561,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    public static void fastMATrader(double freshPrice) {
+    public static void MATrader(double freshPrice) {
         LocalDateTime now = LocalDateTime.now();
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         SimpleBar lastBar = new SimpleBar(0.0);
@@ -906,8 +906,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
-        System.out.println(getStr(" XU exec details || price, cumQty, shares ",
-                execution.price(), execution.cumQty(), execution.shares()));
+//        System.out.println(getStr(" XU exec details || price, cumQty, shares ",
+//                execution.price(), execution.cumQty(), execution.shares()));
 
         if (ldt.isAfter(LocalDateTime.of(LocalDateTime.now().toLocalDate().minusDays(1L), LocalTime.of(15, 0)))) {
             if (XUTrader.tradesMap.get(f).containsKey(ldt)) {
@@ -923,20 +923,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void tradeReportEnd() {
         System.out.println(" trade report end printing");
-        XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).entrySet().forEach(System.out::println);
+        //XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).entrySet().forEach(System.out::println);
 
         if (XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
             currentDirection = XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getValue().getSizeAll() > 0 ?
                     Direction.Long : Direction.Short;
         }
-
-        //XUTrader.tradesMap.get(ibContractToFutType(activeFuture))
     }
 
     @Override
     public void commissionReport(String tradeKey, CommissionReport commissionReport) {
     }
-
 
     //ApiController.IOrderHandler
     @Override

@@ -57,7 +57,7 @@ public final class MorningTask implements HistoricalHandler {
             writeETF(out);
             writeA50(out);
             writeA50FT(out);
-            writeXIN0U(out);
+            writeXIN0U2(out);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
@@ -266,18 +266,46 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
+    private static void writeXIN0U2(BufferedWriter out) {
+        System.out.println((" getting XIN0U"));
+        String line;
+        urlString = "https://www.marketwatch.com/investing/index/xin0u?countrycode=xx";
+        Pattern p = Pattern.compile("Close:.*?(\\d{2},\\d{3}(\\.\\d+))");
+
+        try {
+            URL url = new URL(urlString);
+            URLConnection urlconn = url.openConnection(proxy);
+
+            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream()))) {
+                while ((line = reader2.readLine()) != null) {
+                    Matcher m = p.matcher(line);
+                    while (m.find()) {
+                        String res = m.group(1).replace(",","");
+                        System.out.println(res);
+                        System.out.println("XIN0U" + "\t" + res);
+                        out.append("XIN0U" + "\t").append(res);
+                        out.newLine();
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     private static void writeXIN0U(BufferedWriter out) {
         System.out.println((" getting XIN0U"));
         String line;
         urlString = "https://finance.yahoo.com/quote/XIN0UN.FGI?ltr=1";
-        Pattern p;
-        p = Pattern.compile("\"exchangeName\":\"FTSE Index\".*?\"regularMarketPrice\":\\{\"raw\":(\\d+(\\.\\d+)?)");
+        Pattern p = Pattern.compile("\"exchangeName\":\"FTSE Index\".*?\"regularMarketPrice\":\\{\"raw\":(\\d+(\\.\\d+)?)");
 
-        //Proxy proxy = proxy;
         try {
             URL url = new URL(urlString);
-            @SuppressWarnings("SpellCheckingInspection") URLConnection urlconn = url.openConnection(proxy);
-            //URLConnection urlconn = url.openConnection();
+            URLConnection urlconn = url.openConnection(proxy);
+            urlconn.addRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)");
+
             try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream()))) {
                 while ((line = reader2.readLine()) != null) {
                     Matcher m = p.matcher(line);
@@ -299,7 +327,6 @@ public final class MorningTask implements HistoricalHandler {
     static void getBOCFX() {
         urlString = "http://www.boc.cn/sourcedb/whpj";
         String line1;
-        //Pattern p = Pattern.compile("美元</td>(.*?)(?:</tr>)");
         Pattern p1 = Pattern.compile("(?s)美元</td>.*");
         Pattern p2 = Pattern.compile("<td>(.*?)</td>");
         Pattern p3 = Pattern.compile("</tr>");
@@ -332,7 +359,6 @@ public final class MorningTask implements HistoricalHandler {
                 if (l.size() > 0) {
                     Utility.clearFile(bocOutput);
                     Utility.simpleWriteToFile("BOCFX" + "\t" + Double.parseDouble(l.get(4)) / 100d + "\t" + l.get(5) + "\t" + l.get(6), true, bocOutput);
-                    //simpleWrite("BOCFX" + "\t" + Double.parseDouble(l.get(4)) / 100d + "\t" + l.get(5) + "\t" + l.get(6), true);
                 }
 
             } catch (Exception ex) {

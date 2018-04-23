@@ -242,6 +242,6 @@ public class XuTraderHelper {
     }
 
     public static void main(String[] args) {
-        System.out.println(roundToXUTradablePrice(10001.5, Direction.Short));
+        System.out.println(roundToXUTradablePrice(12312.5, Direction.Short));
     }
 }

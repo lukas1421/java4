@@ -771,9 +771,7 @@ public final class ChinaData extends JPanel {
     private static void handleSGXDataToday(Contract c, String date, double open, double high, double low, double close, int volume) {
         String ticker = utility.Utility.ibContractToSymbol(c);
 
-        System.out.println(" ChinaData : jhandling SGX today " + ticker);
-
-
+        //System.out.println(" ChinaData : jhandling SGX today " + ticker);
         //LocalDate currDate = currentTradingDate;
 
         if (!date.startsWith("finished")) {

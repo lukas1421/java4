@@ -56,7 +56,7 @@ public class SGXFutureReceiver implements LiveHandler {
 
                     if (FUT_COLLECTION_TIME.test(ldt)) {
 
-                        XUTrader.fastMATrader(price);
+                        XUTrader.MATrader(price);
 
                         if (XUTrader.futData.get(f).containsKey(ldt)) {
                             XUTrader.futData.get(f).get(ldt).add(price);
