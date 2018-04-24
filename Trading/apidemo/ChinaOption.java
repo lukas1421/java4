@@ -251,12 +251,19 @@ public class ChinaOption extends JPanel implements Runnable {
         JButton todayVolOnlyButton = new JButton(" Today vols ");
         controlPanelBottom.add(todayVolOnlyButton);
 
+
         todayVolOnlyButton.addActionListener(l -> {
             todayVolOnly = !todayVolOnly;
             SwingUtilities.invokeLater(() ->
                     todayVolOnlyButton.setText(todayVolOnly ? " All Vols " : " Only T Vol"));
             graphIntraday.repaint();
         });
+
+        JButton fixIntradayVolButton = new JButton(" Fix Intraday");
+        fixIntradayVolButton.addActionListener(l -> {
+            fixIntradayVol();
+        });
+        controlPanelBottom.add(fixIntradayVolButton);
 
         JPanel dataPanel = new JPanel();
         dataPanel.setLayout(new GridLayout(10, 3));
@@ -583,6 +590,28 @@ public class ChinaOption extends JPanel implements Runnable {
             }
         } catch (IOException ex) {
             ex.printStackTrace();
+        }
+    }
+
+    private static void fixIntradayVol() {
+        for (String s : todayImpliedVolMap.keySet()) {
+            for (Map.Entry<LocalDateTime, SimpleBar> e : todayImpliedVolMap.get(s).entrySet()) {
+
+                if (todayImpliedVolMap.get(s).size() > 2) {
+                    if (e.getValue().getHigh() - e.getValue().getLow() > 0.1 || e.getValue().getHigh() == 1.0 ||
+                            e.getValue().getHigh() < 0.1) {
+                        SimpleBar newBar;
+                        if (!e.getKey().equals(todayImpliedVolMap.get(s).lastKey())) {
+                            newBar = new SimpleBar(todayImpliedVolMap.get(s).higherEntry(e.getKey()).getValue().getOpen());
+                        } else {
+                            newBar = new SimpleBar(todayImpliedVolMap.get(s).lowerEntry(e.getKey()).getValue().getClose());
+                        }
+
+                        todayImpliedVolMap.get(s).put(e.getKey(), newBar);
+                        System.out.println(getStr("replacing option vol ", s, e.getKey(), e.getValue(), newBar));
+                    }
+                }
+            }
         }
     }
 

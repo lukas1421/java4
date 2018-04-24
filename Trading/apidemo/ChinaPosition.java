@@ -1475,11 +1475,13 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
 
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
+        LocalDate d = ldt.toLocalDate();
+        LocalTime t = ldt.toLocalTime();
 
         System.out.println(getStr("china position date name time ", ldt, ticker));
 
         //equals current trading day
-        if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth()) {
+        if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth() && t.isAfter(LocalTime.of(8, 59))) {
 
             LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
 
