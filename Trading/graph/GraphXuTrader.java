@@ -19,8 +19,10 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
@@ -35,7 +37,6 @@ import static utility.Utility.*;
 
 public class GraphXuTrader extends JComponent implements MouseMotionListener, MouseListener {
 
-    //private static final int WIDTH_BAR = 5;
     int height;
     double min;
     double max;
@@ -48,8 +49,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     private NavigableMap<LocalDateTime, Double> ma80 = new ConcurrentSkipListMap<>();
 
     private NavigableMap<LocalDateTime, TradeBlock> trademap;
-    TreeSet<MATrade> maTradeSet = new TreeSet<>(Comparator.comparing(MATrade::getTradeTime));
-    List<MATrade> maTradeList = new LinkedList<>();
     private volatile FutType fut;
     volatile String name;
     String chineseName;
@@ -74,11 +73,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     }
 
     public void setNavigableMap(NavigableMap<LocalDateTime, SimpleBar> tm, Predicate<LocalDateTime> pred) {
-//        Predicate<LocalDateTime> pred = t -> true;
-//        if (XUTrader.displayTodayOnly.get()) {
-//            pred = t -> t.toLocalDate().equals(LocalDate.now());
-//        }
-
         this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue().containsZero())
                 .filter(e -> pred.test(e.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
@@ -168,7 +162,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     private void computeMAStrategy(NavigableMap<LocalDateTime, Double> sma) {
         List<MATrade> maTrades = new LinkedList<>();
         AtomicBoolean currentLong = new AtomicBoolean(true);
-        //LocalDateTime lastTradeTime;
 
         if (sma.size() > 0 && tm.size() > 0) {
             System.out.println(" computing MA strategy ");
@@ -303,7 +296,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             if (XUTrader.showTrades) {
                 if (trademap.containsKey(lt)) {
                     TradeBlock tb = trademap.get(lt);
-                    //System.out.println("GRAPHXUTRADER getting trade block " + tb + " at " + lt);
                     if (tb.getSizeAll() > 0) {
                         g.setColor(Color.blue);
                         int yCord = getY(tb.getAveragePrice());
@@ -320,7 +312,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                 }
             }
             if (roundDownToN(mouseXCord, XUTrader.graphWidth.get()) == x - 5) {
-                //lowY+(mouseYCord<closeY?-20:+20
                 g.drawString("F: " + lt.toLocalTime() + " " + (tm.floorEntry(lt).getValue().toString()), x,
                         lowY + (mouseYCord < closeY ? -50 : +50));
                 g.drawOval(x - 3, lowY, 5, 5);
@@ -363,7 +354,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
         g2.drawString(min + "  " + Double.toString(minRtn) + "%", getWidth() - 140, getHeight() - 20);
         g2.drawString(max + "   " + Double.toString(maxRtn) + "%", getWidth() - 140, 15);
-        //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2);
         int wtdP = SharpeUtility.getPercentile(tm);
         g2.drawString("周" + Integer.toString(wtdP), getWidth() - 40, getHeight() / 2);
 
@@ -380,7 +370,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         }
 
         //add bench here
-        //g2.drawString(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString(), 15, 15);
         g2.drawString(Double.toString(getReturn()) + "%", getWidth() / 8, 15);
         g2.drawString("收: " + Integer.toString((int) Math.round(prevClose)), getWidth() * 3 / 16, 15);
         g2.drawString("开: " + Integer.toString((int) Math.round(getOpen())), getWidth() * 2 / 8, 15);
@@ -395,7 +384,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
 
         g2.setColor(new Color(0, 255 * (100 - wtdP) / 100, 0));
-        //g2.fillRect(0,0, getWidth(), getHeight());
         g2.fillRect(getWidth() - 30, 20, 20, 20);
         g2.setColor(getForeground());
     }
@@ -476,10 +464,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
     public double getLast() {
         return (tm.size() > 0) ? tm.lastEntry().getValue().getClose() : 0.0;
-    }
-
-    public int getPerc() {
-        return getPercentileForLast(tm);
     }
 
     public double getIndex() {

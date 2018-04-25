@@ -506,9 +506,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return 0;
         }
 
-        if (pd > PD_UP_THRESH) {
+        if (pd > PD_UP_THRESH || perc > 80) {
             factor = dir == Direction.Long ? 1 : 2;
-        } else if (pd < PD_DOWN_THRESH) {
+        } else if (pd < PD_DOWN_THRESH || perc < 20) {
             factor = dir == Direction.Long ? 2 : 1;
         } else {
             if (t.isAfter(LocalTime.of(8, 59)) && t.isBefore(LocalTime.of(9, 40))) {
@@ -519,8 +519,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 factor = dir == Direction.Long ? 2 : 1;
             }
         }
-        outputToAutoLog(getStr(" Determining Order Size || T PD DIRECTION -> FACTOR, FINAL SIZE ", t, pd, dir, factor,
-                factor * DEFAULT_SIZE));
+        outputToAutoLog(getStr(" Determining Order Size ||T PERC PD DIRECTION -> FACTOR, FINAL SIZE ", t, perc
+                , pd, dir, factor, factor * DEFAULT_SIZE));
         return factor * DEFAULT_SIZE;
     }
 
