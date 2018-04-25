@@ -18,9 +18,9 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -210,7 +210,7 @@ public class XuTraderHelper {
         return (Math.round(x * 10) - Math.round(x * 10) % 25) / 10d;
     }
 
-    public static void computeMAProfit(List<MATrade> l, double lastPrice) {
+    static void computeMAProfit(Set<MATrade> l, double lastPrice) {
         double totalProfit = l.stream().mapToDouble(t -> t.getSize() * (lastPrice - t.getTradePrice())).sum();
         outputToAutoLog(" computeMAProfit total " + Math.round(100d * totalProfit) / 100d);
         for (MATrade t : l) {

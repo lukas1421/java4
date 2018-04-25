@@ -53,27 +53,30 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //ma
     public static AtomicBoolean MATraderStatus = new AtomicBoolean(true);
-    static volatile int currentMAPeriod = 60;
+    private static volatile int currentMAPeriod = 60;
     private static Direction currentDirection = Direction.Flat;
     private static final int DEFAULT_SIZE = 1;
-    static LocalDateTime lastMATradeTime = LocalDateTime.now();
-    static LocalDateTime lastMAOrderTime = getSessionOpenTime();
+    private static LocalDateTime lastMATradeTime = LocalDateTime.now();
+    private static LocalDateTime lastMAOrderTime = getSessionOpenTime();
     private static final int MAX_MA_SIGNALS_PER_SESSION = 5;
     private static final int MAX_TRADES_PER_SESSION = 10;
     private static AtomicInteger maSignals = new AtomicInteger(0); //session transient
     private static volatile NavigableMap<LocalDateTime, Order> maOrderMap = new ConcurrentSkipListMap<>();
-    static volatile LinkedList<MATrade> maTradesList = new LinkedList<>();
+    private static volatile TreeSet<MATrade> maTradesList = new TreeSet<>(Comparator.comparing(MATrade::getTradeTime));
     //private static volatile long timeBtwnTrades = 5;
-    static volatile long timeBtwnMAOrders = 5;
+    private static volatile long timeBtwnMAOrders = 5;
     private static final double PD_UP_THRESH = 0.003;
     private static final double PD_DOWN_THRESH = -0.003;
 
 
     //open trading
     static LocalDateTime lastOpenTradeTime = LocalDateTime.now();
-    static LocalDateTime lastOpenOrderTime = LocalDateTime.now();
+    private static LocalDateTime lastOpenOrderTime = LocalDateTime.now();
     private static AtomicInteger openTradeSignals = new AtomicInteger(0);
     private static final long MAX_OPEN_TRADES_ORDERS = 20;
+
+    //direction makeup trade
+    private static final int MIN_LAST_TWO_APART_TIME = 5;
 
     //music
     private EmbeddedSoundPlayer soundPlayer = new EmbeddedSoundPlayer();
@@ -133,7 +136,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void maTradeAnalysis() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime sessionBeginLDT = XuTraderHelper.getSessionOpenTime();
-        maTradesList = new LinkedList<>();
+        maTradesList = new TreeSet<>();
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         NavigableMap<LocalDateTime, Double> sma = XuTraderHelper.getMAGen(price5, currentMAPeriod);
         if (price5.size() == 0) {
@@ -159,10 +162,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         System.out.println(" compute MA profit ");
         computeMAProfit(maTradesList, lastPrice);
 
+        boolean lastTwoTradesFarApart = true;
+
+        if (maTradesList.size() > 2) {
+            LocalDateTime lastTradeTime = maTradesList.last().getTradeTime();
+            LocalDateTime secLastTime = maTradesList.lower(maTradesList.last()).getTradeTime();
+            long diffInMin = timeDiffinMinutes(secLastTime, lastTradeTime);
+            lastTwoTradesFarApart = diffInMin > MIN_LAST_TWO_APART_TIME;
+        }
+
         // make up for the last MA trade wihch was missing due to in restriction period
-        if (maTradesList.getLast().getTradeTime().isAfter(lastMATradeTime)
-                && now.isAfter(lastMAOrderTime.plusMinutes(timeBtwnMAOrders))) {
-            MATrade lastTrade = maTradesList.getLast();
+        if (maTradesList.last().getTradeTime().isAfter(lastMATradeTime)
+                && now.isAfter(lastMAOrderTime.plusMinutes(timeBtwnMAOrders))
+                && lastTwoTradesFarApart) {
+            MATrade lastTrade = maTradesList.last();
             outputToAutoLog(getStr(now, "LAST MA Trade MAKE UP ", lastTrade));
             if (lastTrade.getSize() > 0) {
                 Order o = placeBidLimit(roundToXUTradablePrice(lastTrade.getTradePrice(), Direction.Long), 1);
@@ -790,7 +803,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     " ||LastBar:", lastBar, "||LastOrder T ", lastMAOrderTime.truncatedTo(ChronoUnit.MINUTES),
                     "|| WaitT Order:", timeBtwnMAOrders, "Tr#", numTrades,
                     "||Curr Direction:", currentDirection, "||MA Last: "
-                    , maTradesList.size() > 0 ? maTradesList.getLast() : ""));
+                    , maTradesList.size() > 0 ? maTradesList.last() : ""));
         }
     }
 
