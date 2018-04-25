@@ -4,13 +4,13 @@ import utility.Utility;
 
 import java.time.LocalDateTime;
 
-public class MATrade {
+public class MAIdea {
 
     private LocalDateTime tradeTime;
     private double tradePrice;
     private int size;
 
-    public MATrade(LocalDateTime t, double p, int q) {
+    public MAIdea(LocalDateTime t, double p, int q) {
         tradeTime = t;
         tradePrice = p;
         size = q;
@@ -32,7 +32,7 @@ public class MATrade {
 
     @Override
     public String toString() {
-        return Utility.getStr(" MATrade", tradeTime, size > 0 ? "BUY" : "SELL", size
+        return Utility.getStr(" MAIdea", tradeTime, size > 0 ? "BUY" : "SELL", size
                 , " @ ", Math.round(100d * tradePrice) / 100d);
     }
 }

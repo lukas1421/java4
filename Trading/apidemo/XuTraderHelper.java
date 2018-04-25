@@ -1,6 +1,6 @@
 package apidemo;
 
-import TradeType.MATrade;
+import TradeType.MAIdea;
 import auxiliary.SimpleBar;
 import client.Order;
 import client.OrderType;
@@ -210,10 +210,10 @@ public class XuTraderHelper {
         return (Math.round(x * 10) - Math.round(x * 10) % 25) / 10d;
     }
 
-    static void computeMAProfit(Set<MATrade> l, double lastPrice) {
+    static void computeMAProfit(Set<MAIdea> l, double lastPrice) {
         double totalProfit = l.stream().mapToDouble(t -> t.getSize() * (lastPrice - t.getTradePrice())).sum();
         outputToAutoLog(" computeMAProfit total " + Math.round(100d * totalProfit) / 100d);
-        for (MATrade t : l) {
+        for (MAIdea t : l) {
             outputToAutoLog(getStr(t, " PnL: ", Math.round(100d * t.getSize() * (lastPrice - t.getTradePrice())) / 100d));
         }
     }

@@ -1,6 +1,6 @@
 package graph;
 
-import TradeType.MATrade;
+import TradeType.MAIdea;
 import TradeType.TradeBlock;
 import apidemo.ChinaData;
 import apidemo.FutType;
@@ -160,7 +160,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     }
 
     private void computeMAStrategy(NavigableMap<LocalDateTime, Double> sma) {
-        List<MATrade> maTrades = new LinkedList<>();
+        List<MAIdea> maIdeas = new LinkedList<>();
         AtomicBoolean currentLong = new AtomicBoolean(true);
 
         if (sma.size() > 0 && tm.size() > 0) {
@@ -172,31 +172,31 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                     if (ma > sb.getOpen()) {
                         if (!currentLong.get()) {
                             System.out.println(" Minutes since last trade is " +
-                                    (ChronoUnit.MINUTES.between(((LinkedList<MATrade>) maTrades).peekLast().getTradeTime(), lt)));
-                            maTrades.add(new MATrade(lt, ma, maTrades.size() == 0 ? 1 : 2));
+                                    (ChronoUnit.MINUTES.between(((LinkedList<MAIdea>) maIdeas).peekLast().getTradeTime(), lt)));
+                            maIdeas.add(new MAIdea(lt, ma, maIdeas.size() == 0 ? 1 : 2));
                             currentLong.set(true);
                             System.out.println(" long ");
                         }
                     } else {
                         if (currentLong.get()) {
-                            maTrades.add(new MATrade(lt, ma, maTrades.size() == 0 ? -1 : -2));
+                            maIdeas.add(new MAIdea(lt, ma, maIdeas.size() == 0 ? -1 : -2));
                             currentLong.set(false);
                             System.out.println(" short ");
                         }
                     }
                 }
             });
-            processTradeSet(maTrades, tm.lastEntry().getValue().getClose());
+            processTradeSet(maIdeas, tm.lastEntry().getValue().getClose());
         }
     }
 
-    private void processTradeSet(List<MATrade> tradeList, double currentPrice) {
+    private void processTradeSet(List<MAIdea> tradeList, double currentPrice) {
         System.out.println(" ************* processing trade set ************* ");
         System.out.println(" current price is " + currentPrice);
         int runningPosition = 0;
         double unrealizedPnl = 0.0;
 
-        for (MATrade t : tradeList) {
+        for (MAIdea t : tradeList) {
             System.out.println(" trade is " + t);
             runningPosition += t.getSize();
             unrealizedPnl += t.getSize() * (currentPrice - t.getTradePrice());

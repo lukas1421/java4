@@ -1,7 +1,7 @@
 package apidemo;
 
 import TradeType.FutureTrade;
-import TradeType.MATrade;
+import TradeType.MAIdea;
 import TradeType.TradeBlock;
 import auxiliary.SimpleBar;
 import client.*;
@@ -62,7 +62,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final int MAX_TRADES_PER_SESSION = 10;
     private static AtomicInteger maSignals = new AtomicInteger(0); //session transient
     private static volatile NavigableMap<LocalDateTime, Order> maOrderMap = new ConcurrentSkipListMap<>();
-    private static volatile TreeSet<MATrade> maTradesList = new TreeSet<>(Comparator.comparing(MATrade::getTradeTime));
+    private static volatile TreeSet<MAIdea> maIdeasList = new TreeSet<>(Comparator.comparing(MAIdea::getTradeTime));
     //private static volatile long timeBtwnTrades = 5;
     private static volatile long timeBtwnMAOrders = 5;
     private static final double PD_UP_THRESH = 0.003;
@@ -136,7 +136,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void maTradeAnalysis() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime sessionBeginLDT = XuTraderHelper.getSessionOpenTime();
-        maTradesList = new TreeSet<>();
+        maIdeasList = new TreeSet<>();
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         NavigableMap<LocalDateTime, Double> sma = XuTraderHelper.getMAGen(price5, currentMAPeriod);
         if (price5.size() == 0) {
@@ -150,50 +150,50 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 SimpleBar sbPrevious = price5.lowerEntry(lt).getValue();
                 if (sbPrevious.strictIncludes(ma)) {
                     if (sb.getOpen() > ma && sbPrevious.getBarReturn() > 0.0) {
-                        maTradesList.add(new MATrade(lt, ma, +1));
+                        maIdeasList.add(new MAIdea(lt, ma, +1));
                     } else if (sb.getOpen() < ma && sbPrevious.getBarReturn() < 0.0) {
-                        maTradesList.add(new MATrade(lt, ma, -1));
+                        maIdeasList.add(new MAIdea(lt, ma, -1));
                     }
                 }
             }
         });
         System.out.println(" MA analysis: ");
-        maTradesList.forEach(System.out::println);
+        maIdeasList.forEach(System.out::println);
         System.out.println(" compute MA profit ");
-        computeMAProfit(maTradesList, lastPrice);
+        computeMAProfit(maIdeasList, lastPrice);
 
-        boolean lastTwoTradesFarApart = true;
+        boolean lastTwoMAIdeasFarApart = true;
 
-        if (maTradesList.size() > 2) {
-            LocalDateTime lastTradeTime = maTradesList.last().getTradeTime();
-            LocalDateTime secLastTime = maTradesList.lower(maTradesList.last()).getTradeTime();
-            long diffInMin = timeDiffinMinutes(secLastTime, lastTradeTime);
-            lastTwoTradesFarApart = diffInMin > MIN_LAST_TWO_APART_TIME;
+        if (maIdeasList.size() >= 2) {
+            LocalDateTime lastIdeaTime = maIdeasList.last().getTradeTime();
+            LocalDateTime secLastIdeaTime = Objects.requireNonNull(maIdeasList.lower(maIdeasList.last())).getTradeTime();
+            long diffInMin = timeDiffinMinutes(secLastIdeaTime, lastIdeaTime);
+            lastTwoMAIdeasFarApart = diffInMin > MIN_LAST_TWO_APART_TIME;
         }
 
         // make up for the last MA trade wihch was missing due to in restriction period
-        if (maTradesList.last().getTradeTime().isAfter(lastMATradeTime)
+        if (maIdeasList.last().getTradeTime().isAfter(lastMATradeTime)
                 && now.isAfter(lastMAOrderTime.plusMinutes(timeBtwnMAOrders))
-                && lastTwoTradesFarApart) {
-            MATrade lastTrade = maTradesList.last();
-            outputToAutoLog(getStr(now, "LAST MA Trade MAKE UP ", lastTrade));
-            if (lastTrade.getSize() > 0) {
-                Order o = placeBidLimit(roundToXUTradablePrice(lastTrade.getTradePrice(), Direction.Long), 1);
+                && lastTwoMAIdeasFarApart) {
+            MAIdea lastIdea = maIdeasList.last();
+            outputToAutoLog(getStr(now, "LAST MA Trade MAKE UP ", lastIdea));
+            if (lastIdea.getSize() > 0) {
+                Order o = placeBidLimit(roundToXUTradablePrice(lastIdea.getTradePrice(), Direction.Long), 1);
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
                 outputOrderToAutoLog(getStr(now, " MakeUp BUY || BIDDING @ ", o.toString(), "SMA",
-                        lastTrade));
+                        lastIdea));
             } else {
-                Order o = placeOfferLimit(roundToXUTradablePrice(lastTrade.getTradePrice(), Direction.Short), 1);
+                Order o = placeOfferLimit(roundToXUTradablePrice(lastIdea.getTradePrice(), Direction.Short), 1);
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
                 outputOrderToAutoLog(getStr(now, " MakeUp SELL || OFFERING @ ", o.toString(), "SMA",
-                        lastTrade));
+                        lastIdea));
             }
         }
 
         //computed from maAnalysis, persistent through sessions.
-        long maSignalsPersist = maTradesList.stream().filter(e -> e.getTradeTime().isAfter(sessionBeginLDT)).count();
+        long maSignalsPersist = maIdeasList.stream().filter(e -> e.getTradeTime().isAfter(sessionBeginLDT)).count();
         String maOutput = (getStr("MA signals persist || BeginT: ", sessionBeginLDT,
-                "||Last Order Time: ", lastMAOrderTime, "||Signal #: ", maSignalsPersist, "||list: ", maTradesList));
+                "||Last Order Time: ", lastMAOrderTime, "||Signal #: ", maSignalsPersist, "||list: ", maIdeasList));
         outputToAutoLog(maOutput);
     }
 
@@ -803,7 +803,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     " ||LastBar:", lastBar, "||LastOrder T ", lastMAOrderTime.truncatedTo(ChronoUnit.MINUTES),
                     "|| WaitT Order:", timeBtwnMAOrders, "Tr#", numTrades,
                     "||Curr Direction:", currentDirection, "||MA Last: "
-                    , maTradesList.size() > 0 ? maTradesList.last() : ""));
+                    , maIdeasList.size() > 0 ? maIdeasList.last() : ""));
         }
     }
 
