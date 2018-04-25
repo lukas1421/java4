@@ -202,9 +202,14 @@ public class XuTraderHelper {
         return LocalDateTime.of(TDate, sessionBeginTime);
     }
 
-    static double roundToXUTradablePrice(double x, Direction dir) {
+    static double roundToXUPricePassive(double x, Direction dir) {
         return (Math.round(x * 10) - Math.round(x * 10) % 25 + (dir == Direction.Long ? 0 : 25)) / 10d;
     }
+
+    static double roundToXUPriceAggressive(double x, Direction dir) {
+        return (Math.round(x * 10) - Math.round(x * 10) % 25 + (dir == Direction.Long ? 25 : 0)) / 10d;
+    }
+
 
     static double roundToXUTradablePrice(double x) {
         return (Math.round(x * 10) - Math.round(x * 10) % 25) / 10d;
@@ -305,6 +310,6 @@ public class XuTraderHelper {
     }
 
     public static void main(String[] args) {
-        System.out.println(roundToXUTradablePrice(12312.5, Direction.Short));
+        System.out.println(roundToXUPricePassive(12312.5, Direction.Short));
     }
 }
