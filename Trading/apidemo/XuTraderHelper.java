@@ -218,6 +218,53 @@ public class XuTraderHelper {
         }
     }
 
+    static boolean bullishTouchMet(SimpleBar secLastBar, SimpleBar lastBar, double sma) {
+        if (secLastBar.containsZero() || lastBar.containsZero() || sma == 0.0) {
+            return false;
+        }
+        if (secLastBar.strictIncludes(sma) && secLastBar.getBarReturn() > 0 && lastBar.getOpen() > sma) {
+            outputToAutoLog(" bullish touch ");
+            return true;
+        }
+        if (sma > secLastBar.getHigh() && secLastBar.getBarReturn() > 0 && lastBar.getOpen() > sma) {
+            outputToAutoLog(" bullish jump through ");
+            return true;
+        }
+        return false;
+    }
+
+    static boolean bearishTouchMet(SimpleBar secLastBar, SimpleBar lastBar, double sma) {
+        if (secLastBar.containsZero() || lastBar.containsZero() || sma == 0.0) {
+            return false;
+        }
+        if (secLastBar.strictIncludes(sma) && secLastBar.getBarReturn() < 0 && lastBar.getOpen() < sma) {
+            outputToAutoLog(" bearish cross ");
+            return true;
+        }
+        if (sma < secLastBar.getLow() && secLastBar.getBarReturn() < 0.0 && lastBar.getOpen() < sma) {
+            outputToAutoLog(" bearish jump through ");
+            return true;
+        }
+
+        return false;
+    }
+
+    static boolean touchConditionMet(SimpleBar secLastBar, SimpleBar lastBar, double sma) {
+        if (secLastBar.containsZero() || lastBar.containsZero() || sma == 0.0) {
+            return false;
+        }
+        if (secLastBar.strictIncludes(sma) && secLastBar.getBarReturn() * (lastBar.getOpen() > sma ? 1 : -1) > 0) {
+            return true;
+        }
+        if (sma > secLastBar.getHigh() && lastBar.getOpen() > sma) {
+            return true; //bullish jump
+        }
+        if (sma < secLastBar.getLow() && lastBar.getOpen() < sma) {
+            return true; //bearish jump
+        }
+        return false;
+    }
+
 
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
         @Override

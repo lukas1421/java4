@@ -77,7 +77,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final long MAX_OPEN_TRADE_ORDERS = 10;
 
     //direction makeup trade
-    private static final int MIN_LAST_TWO_APART_TIME = 5;
+    private static final int MIN_LAST_IDEA_LAPSE_TIME = 5;
 
     //music
     private EmbeddedSoundPlayer soundPlayer = new EmbeddedSoundPlayer();
@@ -149,12 +149,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (lt.isAfter(sessionBeginLDT) && !lt.equals(price5.firstKey()) && price5.containsKey(lt)) {
                 SimpleBar sb = price5.get(lt);
                 SimpleBar sbPrevious = price5.lowerEntry(lt).getValue();
-                if (sbPrevious.strictIncludes(ma)) {
-                    if (sb.getOpen() > ma && sbPrevious.getBarReturn() > 0.0) {
-                        maIdeasList.add(new MAIdea(lt, ma, +1));
-                    } else if (sb.getOpen() < ma && sbPrevious.getBarReturn() < 0.0) {
-                        maIdeasList.add(new MAIdea(lt, ma, -1));
-                    }
+                if (bullishTouchMet(sbPrevious, sb, ma)) {
+                    maIdeasList.add(new MAIdea(lt, ma, +1));
+                } else if (bearishTouchMet(sbPrevious, sb, ma)) {
+                    maIdeasList.add(new MAIdea(lt, ma, -1));
                 }
             }
         });
@@ -166,16 +164,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         boolean lastTwoMAIdeasFarApart = true;
 
         if (maIdeasList.size() >= 2) {
+            // last two ma ideas far apart not used yet
             LocalDateTime lastIdeaTime = maIdeasList.last().getIdeaTime();
             LocalDateTime secLastIdeaTime = Objects.requireNonNull(maIdeasList.lower(maIdeasList.last())).getIdeaTime();
             long diffInMin = timeDiffinMinutes(secLastIdeaTime, lastIdeaTime);
-            lastTwoMAIdeasFarApart = diffInMin > MIN_LAST_TWO_APART_TIME;
+            lastTwoMAIdeasFarApart = diffInMin > MIN_LAST_IDEA_LAPSE_TIME;
         }
 
         // make up for the last MA trade wihch was missing due to in restriction period
         if (maIdeasList.last().getIdeaTime().isAfter(lastMATradeTime)
                 && now.isAfter(lastMAOrderTime.plusMinutes(timeBtwnMAOrders))
-                && lastTwoMAIdeasFarApart) {
+                && timeDiffinMinutes(maIdeasList.last().getIdeaTime(), now) > MIN_LAST_IDEA_LAPSE_TIME) {
+
             MAIdea lastIdea = maIdeasList.last();
             outputToAutoLog(getStr(now, "LAST MA Trade MAKE UP ", lastIdea));
             if (lastIdea.getIdeaSize() > 0) {
@@ -642,8 +642,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             outputToAutoLog(msg);
             double lastMA = sma.lastEntry().getValue();
-            if (secLastBar.strictIncludes(lastMA)
-                    && (secLastBar.getBarReturn() * (lastBar.getOpen() > lastMA ? 1 : -1) > 0)) {
+            if (touchConditionMet(secLastBar, lastBar, lastMA)) {
                 outputToAutoLog(" sec last bar touched MA, playing clip ");
                 soundPlayer.playClip();
             } else {
@@ -672,10 +671,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double candidatePrice;
 
         long secBtwnOpenOrders = openTradeSignals.get() == 0 ? 0 :
-                Math.max(1, Math.round(1 * Math.pow(2, Math.min(15, openTradeSignals.get() - 1))));
+                Math.max(5, Math.round(5 * Math.pow(2, Math.min(15, openTradeSignals.get() - 1))));
 
-        if (timeDiffInSeconds(lastOpenOrderTime, now) >= secBtwnOpenOrders
-                && openTradeSignals.get() <= MAX_OPEN_TRADE_ORDERS) {
+        if (timeDiffInSeconds(lastOpenOrderTime, now) >= secBtwnOpenOrders &&
+                openTradeSignals.get() <= MAX_OPEN_TRADE_ORDERS) {
 
             if (lastBar.getOpen() < maLast && freshPrice >= maLast) {
                 candidatePrice = roundToXUTradablePrice(maLast, Direction.Long);
@@ -738,8 +737,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Math.max(5, Math.round(5 * Math.pow(2, Math.min(7, maOrderMap.size() - 1))));
 
         if (timeDiffinMinutes(lastMAOrderTime, now) >= timeBtwnMAOrders && maSignals.get() <= MAX_MA_SIGNALS_PER_SESSION) {
-            if (!lastBar.containsZero() && maLast != 0.0 && secLastBar.strictIncludes(maLast)) {
-                if (lastBar.getOpen() > maLast && secLastBar.getBarReturn() > 0.0) {
+            if (touchConditionMet(secLastBar, lastBar, maLast)) {
+                if (bullishTouchMet(secLastBar, lastBar, maLast)) {
                     if (currentDirection == Direction.Long || pd > PD_UP_THRESH) {
                         candidatePrice = roundToXUTradablePrice(maLast, Direction.Long);
                         priceType = (pd > PD_UP_THRESH ? "pd > " + PD_UP_THRESH : "already Long") + " BUY @ MA";
@@ -765,7 +764,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         currentDirection = Direction.Long;
                         outputOrderToAutoLog(getStr(now, "MA ORDER || bidding @ ", o.toString(), "type", priceType));
                     }
-                } else if (lastBar.getOpen() < maLast && secLastBar.getBarReturn() < 0.0) {
+                } else if (bearishTouchMet(secLastBar, lastBar, maLast)) {
                     if (currentDirection == Direction.Short || pd < PD_DOWN_THRESH) {
                         candidatePrice = roundToXUTradablePrice(maLast, Direction.Short);
                         priceType = (pd < PD_DOWN_THRESH ? "pd < " + PD_DOWN_THRESH : "currDir is short(same)") + " SELL @ MA";
