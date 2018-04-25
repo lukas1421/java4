@@ -539,7 +539,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private void observeMATouch() {
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         LocalTime lastKey = price5.lastEntry().getKey().toLocalTime();
-
         if (price5.size() < 2) {
             return;
         }
@@ -570,7 +569,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             outputToAutoLog(msg);
             double lastMA = sma.lastEntry().getValue();
-
             if (secLastBar.strictIncludes(lastMA)
                     && (secLastBar.getBarReturn() * (lastBar.getOpen() > lastMA ? 1 : -1) > 0)) {
                 outputToAutoLog(" sec last bar touched MA, playing clip ");
@@ -604,23 +602,24 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Math.max(1, Math.round(1 * Math.pow(2, Math.min(15, openTradeSignals.get() - 1))));
 
         if (timeDiffInSeconds(lastOpenOrderTime, now) >= secBtwnOpenOrders && openTradeSignals.get() <= MAX_OPEN_TRADES_ORDERS) {
-            if (lastBar.getOpen() < maLast && freshPrice > maLast) {
+            if (lastBar.getOpen() < maLast && freshPrice >= maLast) {
                 candidatePrice = roundToXUTradablePrice(maLast, Direction.Long);
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
                     Order o = placeBidLimit(candidatePrice, 1);
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
                     openTradeSignals.incrementAndGet();
                     lastOpenOrderTime = LocalDateTime.now();
+                    outputOrderToAutoLog(getStr(now, "OPEN ORDER || BIDDING @ ", o.toString(), "SMA"));
                 }
             }
-
-            if (lastBar.getOpen() > maLast && freshPrice < maLast) {
+            if (lastBar.getOpen() > maLast && freshPrice <= maLast) {
                 candidatePrice = roundToXUTradablePrice(maLast, Direction.Short);
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
                     Order o = placeOfferLimit(candidatePrice, 1);
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
                     openTradeSignals.incrementAndGet();
                     lastOpenOrderTime = LocalDateTime.now();
+                    outputOrderToAutoLog(getStr(now, "OPEN ORDER || OFFERING @ ", o.toString(), "SMA"));
                 }
             }
         }
@@ -632,6 +631,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     public static void MATrader(double freshPrice) {
         LocalDateTime now = LocalDateTime.now();
+
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         SimpleBar lastBar = new SimpleBar(0.0);
         SimpleBar secLastBar = new SimpleBar(0.0);
@@ -689,9 +689,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
                         lastMAOrderTime = LocalDateTime.now();
                         currentDirection = Direction.Long;
-                        outputToAutoLog("****************ORDER************************");
-                        outputToAutoLog(getStr(now, "MA ORDER || bidding @ ", o.toString(), "type", priceType));
-                        outputToAutoLog("****************ORDER************************");
+                        outputOrderToAutoLog(getStr(now, "MA ORDER || bidding @ ", o.toString(), "type", priceType));
                     }
                 } else if (lastBar.getOpen() < maLast && secLastBar.getBarReturn() < 0.0) {
                     if (currentDirection == Direction.Short || pd < PD_DOWN_THRESH) {
@@ -716,9 +714,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
                         lastMAOrderTime = LocalDateTime.now();
                         currentDirection = Direction.Short;
-                        outputToAutoLog("****************ORDER************************");
-                        outputToAutoLog(getStr(now, "MA ORDER || offering @ ", o.toString(), priceType));
-                        outputToAutoLog("****************ORDER************************");
+                        outputOrderToAutoLog(getStr(now, "MA ORDER || offering @ ", o.toString(), priceType));
                     }
                 }
                 if (candidatePrice != 0.0) {
@@ -744,7 +740,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     , maTradesList.size() > 0 ? maTradesList.getLast() : ""));
         }
     }
-
 
     /**
      * overnight close trading
