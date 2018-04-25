@@ -876,4 +876,9 @@ public class Utility {
     public static long timeDiffinMinutes(LocalDateTime t1, LocalDateTime t2) {
         return ChronoUnit.MINUTES.between(t1, t2);
     }
+
+    public static long timeDiffInSeconds(LocalDateTime t1, LocalDateTime t2) {
+        return ChronoUnit.SECONDS.between(t1, t2);
+    }
+
 }

@@ -170,7 +170,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                     SimpleBar sb = tm.get(lt);
                     System.out.println(getStr(" crossed @ ", lt, ma));
                     if (ma > sb.getOpen()) {
-                        //maTradeSet.add(new MATrade(lt, ma, 1));
                         if (!currentLong.get()) {
                             System.out.println(" Minutes since last trade is " +
                                     (ChronoUnit.MINUTES.between(((LinkedList<MATrade>) maTrades).peekLast().getTradeTime(), lt)));
@@ -179,7 +178,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                             System.out.println(" long ");
                         }
                     } else {
-                        //maTradeSet.add(new MATrade(lt, ma, -1));
                         if (currentLong.get()) {
                             maTrades.add(new MATrade(lt, ma, maTrades.size() == 0 ? -1 : -2));
                             currentLong.set(false);
@@ -204,7 +202,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             unrealizedPnl += t.getSize() * (currentPrice - t.getTradePrice());
             System.out.println(getStr(" unrealized pnl on trade ", t.getSize() * (currentPrice - t.getTradePrice())));
             System.out.println(getStr(" running position after ", runningPosition, " cumu pnl ", Math.round(unrealizedPnl)));
-            //tradeList.
         }
     }
 
@@ -450,7 +447,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
     public double getOpen() {
         if (tm.size() > 0) {
-
             LocalDate t = tm.lastEntry().getKey().toLocalDate();
             if (tm.lastKey().isAfter(LocalDateTime.of(t, LocalTime.of(9, 30)))) {
                 return tm.ceilingEntry(LocalDateTime.of(t, LocalTime.of(9, 0))).getValue().getOpen();

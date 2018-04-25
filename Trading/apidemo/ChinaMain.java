@@ -459,34 +459,6 @@ public final class ChinaMain implements IConnectionHandler {
             }
         });
 
-//        JPanel vrOnly = new JPanel();
-//        vrOnly.setLayout(new BorderLayout());
-//        vrOnly.add(chinasizeratio, BorderLayout.CENTER);
-//        m_frame3.add(vrOnly);
-//        m_frame3.setTitle("VR");
-//        m_frame3.setSize(1920,1080);
-//        m_frame3.setVisible(false);
-//        JPanel ipOnly = new JPanel();
-//        ipOnly.setLayout(new BorderLayout());
-//        ipOnly.add(ip, BorderLayout.CENTER);
-//        m_frame4.add(ipOnly);
-//        m_frame4.setTitle("Idea");
-//        m_frame4.setSize(1920,1080);
-//        m_frame4.setVisible(false);
-//        JPanel ipJoltOnly = new JPanel();
-//        ipJoltOnly.setLayout(new BorderLayout());
-//        ipJoltOnly.add(ipJolt, BorderLayout.CENTER);
-//        m_frame5.add(ipJoltOnly);
-//        m_frame5.setTitle("Jolt");
-//        m_frame5.setSize(1920,1080);
-//        m_frame5.setVisible(false);
-//        JPanel ipPMOnly = new JPanel();
-//        ipPMOnly.setLayout(new BorderLayout());
-//        ipPMOnly.add(ipPM, BorderLayout.CENTER);
-//        m_frame6.add(ipPMOnly);
-//        m_frame6.setTitle("PM");
-//        m_frame6.setSize(1920,1080);
-//        m_frame6.setVisible(false);
         JPanel bigGraphOnly = new JPanel();
         bigGraphOnly.setLayout(new BorderLayout());
         bigGraphOnly.add(bg, BorderLayout.CENTER);
@@ -502,21 +474,6 @@ public final class ChinaMain implements IConnectionHandler {
         m_frame8.setTitle("IndustryGraph");
         m_frame8.setSize(1920, 1080);
         m_frame8.setVisible(false);
-
-//        JPanel graphBAOnly = new JPanel();
-//        graphBAOnly.setLayout(new BorderLayout());
-//        graphBAOnly.add(gba,BorderLayout.CENTER);
-//        m_frame9.add(graphBAOnly);
-//        m_frame9.setTitle("BA Graph");
-//        m_frame9.setSize(1920,1080);
-//        m_frame9.setVisible(false);
-//        JPanel indexOnly = new JPanel();
-//        indexOnly.setLayout(new BorderLayout());
-//        indexOnly.add(chinaindex,BorderLayout.CENTER);
-//        m_frame10.add(indexOnly);
-//        m_frame10.setTitle("Index Graph");
-//        m_frame10.setSize(1920,1080);
-//        m_frame10.setVisible(true);
 
         JPanel posOnly = new JPanel();
         posOnly.setLayout(new BorderLayout());
@@ -536,7 +493,7 @@ public final class ChinaMain implements IConnectionHandler {
 
         // make initial connection to local host, port 7496, client id 0, 4001 is for with IBAPI
         // m_controller.connect( "127.0.0.1", PORT_IBAPI, 0);
-        // m_controller.connect( "1i27.0.0.1", 7496, 0);
+        // m_controller.connect( "127.0.0.1", 7496, 0);
         CompletableFuture.runAsync(() -> {
             try {
                 M_CONTROLLER.connect("127.0.0.1", 7496, 0,
@@ -695,26 +652,20 @@ public final class ChinaMain implements IConnectionHandler {
     }
 
     public static void updateSystemNotif(String text) {
-
         systemNotif.setText(text);
         systemNotif.setBackground(Utility.shiftColor(systemNotif.getBackground()));
-
         ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
-
         es.schedule(() -> {
             systemNotif.setText("");
             systemNotif.setBackground(Color.orange);
         }, 10, TimeUnit.SECONDS);
-
     }
 
     static void updateSystemTime(String text) {
         systemTime.setText(text);
-        //systemNotif.setBackground(shiftColor(systemNotif.getBackground()));
     }
 
     public static void updateTWSTime(String text) {
         twsTime.setText(text);
-        //systemNotif.setBackground(shiftColor(systemNotif.getBackground()));
     }
 }
