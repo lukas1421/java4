@@ -43,6 +43,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     static ApiController apcon;
 
+    //global
+    private static volatile MASentiment sentiment = MASentiment.Directionless;
+
     //overnight trades
     private static final int maxOvernightTrades = 10;
     private static AtomicInteger overnightClosingOrders = new AtomicInteger(0);
@@ -59,11 +62,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static LocalDateTime lastMATradeTime = LocalDateTime.now();
     private static LocalDateTime lastMAOrderTime = getSessionOpenTime();
     private static final int MAX_MA_SIGNALS_PER_SESSION = 5;
-    private static final int MAX_TRADES_PER_SESSION = 10;
     private static AtomicInteger maSignals = new AtomicInteger(0); //session transient
     private static volatile NavigableMap<LocalDateTime, Order> maOrderMap = new ConcurrentSkipListMap<>();
     private static volatile TreeSet<MAIdea> maIdeasList = new TreeSet<>(Comparator.comparing(MAIdea::getIdeaTime));
-    //private static volatile long timeBtwnTrades = 5;
     private static volatile long timeBtwnMAOrders = 5;
     private static final double PD_UP_THRESH = 0.003;
     private static final double PD_DOWN_THRESH = -0.003;
@@ -73,7 +74,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static LocalDateTime lastOpenTradeTime = LocalDateTime.now();
     private static LocalDateTime lastOpenOrderTime = LocalDateTime.now();
     private static AtomicInteger openTradeSignals = new AtomicInteger(0);
-    private static final long MAX_OPEN_TRADES_ORDERS = 20;
+    private static final long MAX_OPEN_TRADE_ORDERS = 10;
 
     //direction makeup trade
     private static final int MIN_LAST_TWO_APART_TIME = 5;
@@ -560,10 +561,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         for (JLabel j : Arrays.asList(bid1, ask1, bid2, ask2, bid3, ask3, bid4, ask4, bid5, ask5)) {
             deepPanel.add(j);
         }
-
         JScrollPane outputPanel = new JScrollPane(outputArea);
         controlPanel1.setLayout(new FlowLayout());
-
         add(controlPanel1);
         add(controlPanel2);
         add(deepPanel);
@@ -574,7 +573,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /*
      * Determine order size by taking into account the trade time, PD, proposed direction and percentile
      */
-    private static int determineSize(LocalTime t, double pd, Direction dir, int perc) {
+    private static int determinePDPercFactor(LocalTime t, double pd, Direction dir, int perc) {
         int factor = 1;
         if (perc > 80 && dir == Direction.Long) {
             return 0;
@@ -588,7 +587,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             factor = dir == Direction.Long ? 2 : 1;
         } else {
             if (t.isAfter(LocalTime.of(8, 59)) && t.isBefore(LocalTime.of(9, 40))) {
-                factor = 1;
+                System.out.println(" No sizing in open trading ");
             } else if (futureAMSession().test(t)) {
                 factor = dir == Direction.Long ? 1 : 2;
             } else if (futurePMSession().test(t)) {
@@ -596,8 +595,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
         outputToAutoLog(getStr(" Determining Order Size ||T PERC PD DIRECTION -> FACTOR, FINAL SIZE ", t, perc
-                , pd, dir, factor, factor * DEFAULT_SIZE));
-        return factor * DEFAULT_SIZE;
+                , pd, dir, factor, factor));
+
+        return factor;
+    }
+
+    private static int determineTimeDiffFactor() {
+        if (maOrderMap.size() == 0) return 1;
+        return Math.max(1, Math.min(2,
+                (int) Math.floor(timeDiffinMinutes(maOrderMap.lastEntry().getKey(), LocalDateTime.now()) / 60d)));
     }
 
     /**
@@ -668,7 +674,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long secBtwnOpenOrders = openTradeSignals.get() == 0 ? 0 :
                 Math.max(1, Math.round(1 * Math.pow(2, Math.min(15, openTradeSignals.get() - 1))));
 
-        if (timeDiffInSeconds(lastOpenOrderTime, now) >= secBtwnOpenOrders && openTradeSignals.get() <= MAX_OPEN_TRADES_ORDERS) {
+        if (timeDiffInSeconds(lastOpenOrderTime, now) >= secBtwnOpenOrders
+                && openTradeSignals.get() <= MAX_OPEN_TRADE_ORDERS) {
+
             if (lastBar.getOpen() < maLast && freshPrice >= maLast) {
                 candidatePrice = roundToXUTradablePrice(maLast, Direction.Long);
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
@@ -711,7 +719,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
         int numTrades = 0;
         double candidatePrice = 0.0;
-        String priceType = "";
+        String priceType;
         int percentile = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
 
         double indexPrice = (ChinaData.priceMapBar.containsKey(ftseIndex) &&
@@ -746,8 +754,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         priceType = " maSignals > 0 -> BUY @ LAST OPEN";
                     }
 
-                    Order o = placeBidLimit(candidatePrice, determineSize(now.toLocalTime(), pd, Direction.Long,
-                            percentile));
+                    Order o = placeBidLimit(candidatePrice, determinePDPercFactor(now.toLocalTime(), pd, Direction.Long,
+                            percentile) * determineTimeDiffFactor());
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         apcon.cancelAllOrders();
                         maOrderMap.put(now, o);
@@ -771,8 +779,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         candidatePrice = roundToXUTradablePrice(lastBar.getOpen(), Direction.Short);
                         priceType = "SELL: maSignals > 0 -> SELL @ LAST OPEN";
                     }
-                    Order o = placeOfferLimit(candidatePrice, determineSize(now.toLocalTime(), pd, Direction.Short,
-                            percentile));
+                    Order o = placeOfferLimit(candidatePrice, determinePDPercFactor(now.toLocalTime(), pd, Direction.Short,
+                            percentile) * determineTimeDiffFactor());
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         maOrderMap.put(now, o);
                         maSignals.incrementAndGet();
