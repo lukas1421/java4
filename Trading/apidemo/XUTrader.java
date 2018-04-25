@@ -52,6 +52,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double OVERNIGHT_MIN_DELTA = -500000.0;
 
     //ma
+    public static AtomicBoolean MATraderStatus = new AtomicBoolean(true);
     private static volatile int currentMAPeriod = 60;
     private static Direction currentDirection = Direction.Flat;
     private static final int DEFAULT_SIZE = 1;
@@ -84,9 +85,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static Predicate<? super Map.Entry<FutType, ?>> graphPred = e -> true;
     static volatile Contract activeFuture = frontFut;
     public static volatile DisplayGranularity gran = DisplayGranularity._5MDATA;
-
     public static volatile Map<Double, Double> activeFutLiveOrder = new HashMap<>();
-
     public static volatile EnumMap<FutType, Double> bidMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Double> askMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Double> futPriceMap = new EnumMap<>(FutType.class);
@@ -154,32 +153,37 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         offerLimitButton.addActionListener(l -> {
             System.out.println(" selling limit ");
-            apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(askMap.get(ibContractToFutType(activeFuture)), 1.0), this);
+            apcon.placeOrModifyOrder(activeFuture,
+                    placeOfferLimit(askMap.get(ibContractToFutType(activeFuture)), 1.0), this);
         });
 
         JButton buyOfferButton = new JButton(" Buy Now");
         buyOfferButton.addActionListener(l -> {
             System.out.println(" buy offer ");
-            apcon.placeOrModifyOrder(activeFuture, XuTraderHelper.buyAtOffer(askMap.get(ibContractToFutType(activeFuture)), 1.0)
-                    , this);
+            apcon.placeOrModifyOrder(activeFuture,
+                    buyAtOffer(askMap.get(ibContractToFutType(activeFuture)), 1.0), this);
         });
 
         JButton sellBidButton = new JButton(" Sell Now");
         sellBidButton.addActionListener(l -> {
             System.out.println(" sell bid ");
             apcon.placeOrModifyOrder(activeFuture,
-                    XuTraderHelper.sellAtBid(bidMap.get(ibContractToFutType(activeFuture)), 1.0), this);
+                    sellAtBid(bidMap.get(ibContractToFutType(activeFuture)), 1.0), this);
         });
 
         JButton toggleMusicButton = new JButton("停乐");
-        toggleMusicButton.addActionListener(l -> {
-            soundPlayer.stopIfPlaying();
-        });
+        toggleMusicButton.addActionListener(l -> soundPlayer.stopIfPlaying());
 
         JButton detailedMAButton = new JButton("Detailed MA: False");
         detailedMAButton.addActionListener(l -> {
             detailedMA.set(!detailedMA.get());
             detailedMAButton.setText(" Detailed MA: " + detailedMA.get());
+        });
+
+        JButton maTraderStatusButton = new JButton("MA Trader: " + (MATraderStatus.get() ? "ON" : "OFF"));
+        maTraderStatusButton.addActionListener(l -> {
+            MATraderStatus.set(!MATraderStatus.get());
+            maTraderStatusButton.setText("MA Trader " + (MATraderStatus.get() ? "ON" : "OFF"));
         });
 
         JButton getPositionButton = new JButton(" get pos ");
@@ -375,6 +379,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(sellBidButton);
         controlPanel1.add(toggleMusicButton);
         controlPanel1.add(detailedMAButton);
+        controlPanel1.add(maTraderStatusButton);
 
         controlPanel2.add(getPositionButton);
         controlPanel2.add(level2Button);

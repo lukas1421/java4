@@ -42,7 +42,6 @@ public class SGXFutureReceiver implements LiveHandler {
                 XUTrader.futPriceMap.put(f, price);
 
 
-
                 // need to capture overnight data
                 if (t.isAfter(LocalTime.of(8, 55)) || t.isBefore(LocalTime.of(5, 0))) {
                     if (STOCK_COLLECTION_TIME.test(ldt)) {
@@ -56,7 +55,9 @@ public class SGXFutureReceiver implements LiveHandler {
 
                     if (FUT_COLLECTION_TIME.test(ldt)) {
 
-                        XUTrader.MATrader(price);
+                        if (XUTrader.MATraderStatus.get()) {
+                            XUTrader.MATrader(price);
+                        }
 
                         if (XUTrader.futData.get(f).containsKey(ldt)) {
                             XUTrader.futData.get(f).get(ldt).add(price);

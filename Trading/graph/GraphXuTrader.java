@@ -254,7 +254,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                 int ma60Y = getY(ma60.get(lt));
                 g.drawLine(x, ma60Y, x + 1, ma60Y);
                 if (lt.equals(ma60.lastKey())) {
-                    g.drawString("MA60: " + ma60.lastEntry().getValue(), x + 20, ma60Y);
+                    g.drawString("MA60: " + Math.round(100d * ma60.lastEntry().getValue()) / 100d, x + 20, ma60Y);
                 }
                 g.setColor(Color.black);
             }
@@ -353,7 +353,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                 g.drawOval(x + 2, maY, 5, 5);
                 g.fillOval(x + 2, maY, 5, 5);
             }
-
             g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
         }
 
@@ -375,11 +374,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         if (!ofNullable(name).orElse("").equals("")) {
             g2.drawString(LocalTime.now().format(DateTimeFormatter.ofPattern("H:mm:s")), getWidth() / 16, 15);
         }
-
-
-//        if (!ofNullable(chineseName).orElse("").equals("")) {
-//            g2.drawString(chineseName, getWidth() / 8, 15);
-//        }
 
         if (!ofNullable(bench).orElse("").equals("")) {
             g2.drawString("(" + bench + ")", getWidth() * 2 / 8, 15);
@@ -407,21 +401,16 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     }
 
     private double getTradePnl() {
-
         double currPrice = getLast();
-        //double fx = fxMap.getOrDefault(name,1.0);
         if (XUTrader.tradesMap.containsKey(fut) && XUTrader.tradesMap.get(fut).size() > 0) {
             int netTradedPosition = XUTrader.tradesMap.get(fut).entrySet().stream().mapToInt(e -> e.getValue().getSizeAll()).sum();
             double cost = XUTrader.tradesMap.get(fut).entrySet().stream().mapToDouble(e -> e.getValue().getCostBasisAll(""))
                     .sum();
             double mv = netTradedPosition * currPrice;
-            //System.out.println(getStr(" currprice, net traded pos cost mv", currPrice, netTradedPosition, cost, mv));
-            //System.out.println(getStr(" cost mv ", cost, mv));
             return Math.round(100d * (mv + cost)) / 100d;
         }
         return 0.0;
     }
-
 
     /**
      * Convert bar value to y coordinate.
