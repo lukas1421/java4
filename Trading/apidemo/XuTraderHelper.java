@@ -211,10 +211,10 @@ public class XuTraderHelper {
     }
 
     static void computeMAProfit(Set<MAIdea> l, double lastPrice) {
-        double totalProfit = l.stream().mapToDouble(t -> t.getSize() * (lastPrice - t.getTradePrice())).sum();
+        double totalProfit = l.stream().mapToDouble(t -> t.getIdeaSize() * (lastPrice - t.getIdeaPrice())).sum();
         outputToAutoLog(" computeMAProfit total " + Math.round(100d * totalProfit) / 100d);
         for (MAIdea t : l) {
-            outputToAutoLog(getStr(t, " PnL: ", Math.round(100d * t.getSize() * (lastPrice - t.getTradePrice())) / 100d));
+            outputToAutoLog(getStr(t, " PnL: ", Math.round(100d * t.getIdeaSize() * (lastPrice - t.getIdeaPrice())) / 100d));
         }
     }
 

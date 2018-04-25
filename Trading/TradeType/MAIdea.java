@@ -16,18 +16,17 @@ public class MAIdea {
         size = q;
     }
 
-    public LocalDateTime getTradeTime() {
+    public LocalDateTime getIdeaTime() {
         return tradeTime;
     }
 
-    public double getTradePrice() {
+    public double getIdeaPrice() {
         return tradePrice;
     }
 
-    public int getSize() {
+    public int getIdeaSize() {
         return size;
     }
-
 
 
     @Override

@@ -172,7 +172,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                     if (ma > sb.getOpen()) {
                         if (!currentLong.get()) {
                             System.out.println(" Minutes since last trade is " +
-                                    (ChronoUnit.MINUTES.between(((LinkedList<MAIdea>) maIdeas).peekLast().getTradeTime(), lt)));
+                                    (ChronoUnit.MINUTES.between(((LinkedList<MAIdea>) maIdeas).peekLast().getIdeaTime(), lt)));
                             maIdeas.add(new MAIdea(lt, ma, maIdeas.size() == 0 ? 1 : 2));
                             currentLong.set(true);
                             System.out.println(" long ");
@@ -198,9 +198,9 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
         for (MAIdea t : tradeList) {
             System.out.println(" trade is " + t);
-            runningPosition += t.getSize();
-            unrealizedPnl += t.getSize() * (currentPrice - t.getTradePrice());
-            System.out.println(getStr(" unrealized pnl on trade ", t.getSize() * (currentPrice - t.getTradePrice())));
+            runningPosition += t.getIdeaSize();
+            unrealizedPnl += t.getIdeaSize() * (currentPrice - t.getIdeaPrice());
+            System.out.println(getStr(" unrealized pnl on trade ", t.getIdeaSize() * (currentPrice - t.getIdeaPrice())));
             System.out.println(getStr(" running position after ", runningPosition, " cumu pnl ", Math.round(unrealizedPnl)));
         }
     }
