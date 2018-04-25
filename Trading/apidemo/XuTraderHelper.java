@@ -17,13 +17,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.Temporal;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static utility.Utility.*;
+import static utility.Utility.getStr;
 
 public class XuTraderHelper {
 
@@ -214,41 +216,6 @@ public class XuTraderHelper {
         for (MATrade t : l) {
             outputToAutoLog(getStr(t, " PnL: ", Math.round(100d * t.getSize() * (lastPrice - t.getTradePrice())) / 100d));
         }
-    }
-
-    static void maTradeAnalysis() {
-        LocalDateTime sessionBeginLDT = XuTraderHelper.getSessionOpenTime();
-        XUTrader.maTradesList = new LinkedList<>();
-        NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(XUTrader.futData.get(ibContractToFutType(XUTrader.activeFuture)));
-        NavigableMap<LocalDateTime, Double> sma = XuTraderHelper.getMAGen(price5, XUTrader.currentMAPeriod);
-        if (price5.size() == 0) {
-            return;
-        }
-        double lastPrice = price5.lastEntry().getValue().getClose();
-
-        sma.forEach((lt, ma) -> {
-            if (lt.isAfter(sessionBeginLDT) && !lt.equals(price5.firstKey()) && price5.containsKey(lt)) {
-                SimpleBar sb = price5.get(lt);
-                SimpleBar sbPrevious = price5.lowerEntry(lt).getValue();
-                if (sbPrevious.strictIncludes(ma)) {
-                    if (sb.getOpen() > ma && sbPrevious.getBarReturn() > 0.0) {
-                        XUTrader.maTradesList.add(new MATrade(lt, ma, +1));
-                    } else if (sb.getOpen() < ma && sbPrevious.getBarReturn() < 0.0) {
-                        XUTrader.maTradesList.add(new MATrade(lt, ma, -1));
-                    }
-                }
-            }
-        });
-        System.out.println(" MA analysis: ");
-        XUTrader.maTradesList.forEach(System.out::println);
-        System.out.println(" compute MA profit ");
-        computeMAProfit(XUTrader.maTradesList, lastPrice);
-
-        //computed from maAnalysis, persistent through sessions.
-        long maSignalsPersist = XUTrader.maTradesList.stream().filter(e -> e.getTradeTime().isAfter(sessionBeginLDT)).count();
-        String maOutput = (getStr("MA signals persist || BeginT: ", sessionBeginLDT,
-                "||Last Order Time: ", XUTrader.lastMAOrderTime, "||Signal #: ", maSignalsPersist, "||list: ", XUTrader.maTradesList));
-        outputToAutoLog(maOutput);
     }
 
 
