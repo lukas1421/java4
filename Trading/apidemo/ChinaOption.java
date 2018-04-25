@@ -260,9 +260,7 @@ public class ChinaOption extends JPanel implements Runnable {
         });
 
         JButton fixIntradayVolButton = new JButton(" Fix Intraday");
-        fixIntradayVolButton.addActionListener(l -> {
-            fixIntradayVol();
-        });
+        fixIntradayVolButton.addActionListener(l -> fixIntradayVol());
         controlPanelBottom.add(fixIntradayVolButton);
 
         JPanel dataPanel = new JPanel();
@@ -404,11 +402,8 @@ public class ChinaOption extends JPanel implements Runnable {
         });
 
         saveIntradayButton.addActionListener(l -> saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance()));
-
         loadIntradayButton.addActionListener(l -> loadIntradayVolsHib(ChinaVolIntraday.getInstance()));
-
         showDeltaButton.addActionListener(l -> showDelta = !showDelta);
-
         getPreviousVolButton.addActionListener(l -> {
                     loadVolsHib();
                     //loadPreviousOptionsExcel();
@@ -435,7 +430,6 @@ public class ChinaOption extends JPanel implements Runnable {
             refreshAllGraphs();
         });
         computeOnButton.addActionListener(l -> computeOn = computeOnButton.isSelected());
-
 
         saveVolsButton.addActionListener(l -> {
             if (LocalTime.now().isAfter(LocalTime.of(15, 0))) {
@@ -606,7 +600,6 @@ public class ChinaOption extends JPanel implements Runnable {
                         } else {
                             newBar = new SimpleBar(todayImpliedVolMap.get(s).lowerEntry(e.getKey()).getValue().getClose());
                         }
-
                         todayImpliedVolMap.get(s).put(e.getKey(), newBar);
                         System.out.println(getStr("replacing option vol ", s, e.getKey(), e.getValue(), newBar));
                     }

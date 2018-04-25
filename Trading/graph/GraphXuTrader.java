@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import static apidemo.TradingConstants.ftseIndex;
 import static apidemo.XUTrader.displayPred;
+import static apidemo.XuTraderHelper.getPercentileForLast;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.*;
@@ -253,7 +254,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                 int ma60Y = getY(ma60.get(lt));
                 g.drawLine(x, ma60Y, x + 1, ma60Y);
                 if (lt.equals(ma60.lastKey())) {
-                    g.drawString("MA60", x + 20, ma60Y);
+                    g.drawString("MA60: " + ma60.lastEntry().getValue(), x + 20, ma60Y);
                 }
                 g.setColor(Color.black);
             }
@@ -339,15 +340,16 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             int lowY = getY(tm.lastEntry().getValue().getLow());
             int closeY = getY(tm.lastEntry().getValue().getClose());
             g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
-            g.drawString(" F: " + tm.lastKey().toLocalTime().toString() + " " + Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
-                    x, lowY + (mouseYCord < closeY ? -20 : +20));
+            g.drawString(" Fut: "
+                            + tm.lastKey().toLocalTime().toString() + " " + Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
+                    x, lowY + (mouseYCord < closeY ? -30 : +30));
             g.drawOval(x + 2, lowY, 5, 5);
             g.fillOval(x + 2, lowY, 5, 5);
 
             if (ma60.size() > 0) {
                 int maY = getY(ma60.lastEntry().getValue());
-                g.drawString(" ma60: " + ma60.lastKey().toLocalTime().toString() + " " + Math.round(ma60.lastEntry().getValue()), x,
-                        maY + (mouseYCord < maY ? -20 : +20));
+                g.drawString(" ma60: " + ma60.lastKey().toLocalTime() + " " +
+                        Math.round(ma60.lastEntry().getValue()), x, maY);
                 g.drawOval(x + 2, maY, 5, 5);
                 g.fillOval(x + 2, maY, 5, 5);
             }
@@ -388,7 +390,8 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         g2.drawString(Double.toString(getReturn()) + "%", getWidth() / 8, 15);
         g2.drawString("收: " + Integer.toString((int) Math.round(prevClose)), getWidth() * 3 / 16, 15);
         g2.drawString("开: " + Integer.toString((int) Math.round(getOpen())), getWidth() * 2 / 8, 15);
-        g2.drawString("P: " + Double.toString(getLast()), getWidth() * 6 / 16, 15);
+        g2.drawString(" P: " + Double.toString(getLast()), getWidth() * 6 / 16, 15);
+        g2.drawString(" Perc%: " + getPercentileForLast(tm), getWidth() * 7 / 16, 15);
         g2.drawString(" Index: " + Math.round(getIndex()), getWidth() * 8 / 16, 15);
         g2.drawString("PD: " + getPD() + "%", getWidth() * 10 / 16, 15);
         g2.drawString("Pos: " + XUTrader.currentPosMap.getOrDefault(fut, 0), getWidth() * 11 / 16, 15);
@@ -484,6 +487,10 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
     public double getLast() {
         return (tm.size() > 0) ? tm.lastEntry().getValue().getClose() : 0.0;
+    }
+
+    public int getPerc() {
+        return getPercentileForLast(tm);
     }
 
     public double getIndex() {

@@ -238,8 +238,8 @@ public class ApiController implements EWrapper {
                     ChinaMain.connectionIndicator.setBackground(Color.green);
                     ChinaMain.connectionIndicator.setText("通");
                     ibConnLatch.countDown();
-                    System.out.println(" ib con latch counted down in Apicontroller connected "+ LocalTime.now()
-                    + " latch remains: " + ibConnLatch.getCount());
+                    System.out.println(" ib con latch counted down in Apicontroller connected " + LocalTime.now()
+                            + " latch remains: " + ibConnLatch.getCount());
                 });
 
                 controller().reqCurrentTime((long time) -> {
@@ -928,7 +928,7 @@ public class ApiController implements EWrapper {
 
     //xu data
     public void reqXUDataArray() {
-        System.out.println("requesting XU data begins" +LocalTime.now());
+        System.out.println("requesting XU data begins" + LocalTime.now());
         Contract frontCt = getFrontFutContract();
         Contract backCt = getBackFutContract();
 
@@ -1221,7 +1221,7 @@ public class ApiController implements EWrapper {
     }
 
     public void reqDeepMktData(Contract contract, int numRows, IDeepMktDataHandler handler) {
-        CompletableFuture.runAsync(()-> m_deepMktDataMap.values().forEach(this::cancelDeepMktData)).thenRun(()-> {
+        CompletableFuture.runAsync(() -> m_deepMktDataMap.values().forEach(this::cancelDeepMktData)).thenRun(() -> {
             int reqId = m_reqId.getAndIncrement();
             m_deepMktDataMap.put(reqId, handler);
             ArrayList<TagValue> mktDepthOptions = new ArrayList<>();
@@ -1431,6 +1431,10 @@ public class ApiController implements EWrapper {
 
     public void placeOrModifyOrder(Contract contract, final Order order, final IOrderHandler handler) {
         // when placing new order, assign new order id
+        if (order.lmtPrice() == 0.0 || order.totalQuantity() == 0.0) {
+            return;
+        }
+
         if (order.orderId() == 0) {
             order.orderId(m_orderId.incrementAndGet());
         }

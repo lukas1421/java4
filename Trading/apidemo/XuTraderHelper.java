@@ -86,12 +86,12 @@ public class XuTraderHelper {
         }
     }
 
-    static <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> map) {
+    public static <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> map) {
         if (map.size() > 0) {
             double max = map.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
             double min = map.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
             double last = map.lastEntry().getValue().getClose();
-            System.out.println(getStr(" getPercentileForLast max min last ", max, min, last));
+            //System.out.println(getStr(" getPercentileForLast max min last ", max, min, last));
             return (int) Math.round(100d * ((last - min) / (max - min)));
         }
         return 50;

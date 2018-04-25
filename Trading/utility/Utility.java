@@ -680,13 +680,23 @@ public class Utility {
         return (t1.getMinute() % 5 == 0) ? t1 : t1.plusMinutes(5 - t1.getMinute() % 5);
     }
 
-    public static LocalDateTime roundTo5(LocalDateTime t) {
+    private static LocalDateTime roundTo5(LocalDateTime t) {
 //        LocalTime t1 = t.toLocalTime().truncatedTo(ChronoUnit.MINUTES);
-        return LocalDateTime.of(t.toLocalDate(), roundTo5(t.toLocalTime()));
+        LocalDateTime t1 = t.truncatedTo(ChronoUnit.MINUTES);
+//        return min(max(LocalTime.of(9, 0), (t1.getMinute() % 5 == 0) ?
+//                t1 : t1.plusMinutes(5 - t1.getMinute() % 5)), LocalTime.of(15, 0));
+        return (t1.getMinute() % 5 == 0) ? t1 : t1.plusMinutes(5 - t1.getMinute() % 5);
+
+//        return LocalDateTime.of(t.toLocalDate().plusDays(t.toLocalTime().isAfter(LocalTime.of(23, 55)) ? 1 : 0)
+//                , roundTo5(t.toLocalTime()));
     }
 
     public static LocalDateTime roundTo5Ldt(LocalDateTime t) {
-        return LocalDateTime.of(t.toLocalDate(), roundTo5(t.truncatedTo(ChronoUnit.MINUTES).toLocalTime()));
+        LocalDateTime t1 = t.truncatedTo(ChronoUnit.MINUTES);
+        return (t1.getMinute() % 5 == 0) ? t1 : t1.plusMinutes(5 - t1.getMinute() % 5);
+
+//        return LocalDateTime.of(t.toLocalDate().plusDays(t.toLocalTime().isAfter(LocalTime.of(23, 55)) ? 1 : 0)
+//                , roundTo5(t.truncatedTo(ChronoUnit.MINUTES).toLocalTime()));
     }
 
     public static LocalTime min(LocalTime... lts) {
