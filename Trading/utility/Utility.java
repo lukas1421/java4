@@ -812,14 +812,10 @@ public class Utility {
 
     public static FutType ibContractToFutType(Contract ct) {
         if (ct.symbol().equals("XINA50")) {
-//            switch (ct.lastTradeDateOrContractMonth()) {
-//                case TradingConstants.A50_LAST_EXPIRY:
-//                    return FutType.PreviousFut;
-//                case TradingConstants.A50_FRONT_EXPIRY:
-//                    return FutType.FrontFut;
-//                case TradingConstants.A50_BACK_EXPIRY:
-//                    return FutType.BackFut;
-//            }
+//            System.out.println(getStr("ct last trade date ", ct.lastTradeDateOrContractMonth()
+//                    , " front expiry ", TradingConstants.getFutFrontExpiry()
+//                    , " back expiry ", TradingConstants.getFutBackExpiry()
+//                    , "previous fut ", TradingConstants.getFutLastExpiry()));
             if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutFrontExpiry())) {
                 return FutType.FrontFut;
             } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutBackExpiry())) {
@@ -827,11 +823,8 @@ public class Utility {
             } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutLastExpiry())) {
                 return FutType.PreviousFut;
             }
-
-
         }
         throw new IllegalArgumentException("not a fut " + ct.symbol());
-        //return ct.symbol();
     }
 
 

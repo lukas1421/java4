@@ -421,6 +421,7 @@ public class HistChinaStocks extends JPanel {
         JButton sgxTradesButton = new JButton(" SGX Trades");
         JToggleButton noFutButton = new JToggleButton(" no fut");
         JToggleButton futOnlyButton = new JToggleButton("fut only");
+
         JButton outputWtdButton = new JButton(" output wtd ");
         JButton activeOnlyButton = new JButton("Active Only");
         JButton activeWeekButton = new JButton("Active Week");
@@ -574,6 +575,8 @@ public class HistChinaStocks extends JPanel {
                 MTM_PRED = m -> true;
             }
         });
+
+
 
 //        ButtonGroup futNoFutBg = new ButtonGroup();
 //        futNoFutBg.add(noFutButton);

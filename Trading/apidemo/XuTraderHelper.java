@@ -216,6 +216,9 @@ public class XuTraderHelper {
     }
 
     static void computeMAProfit(Set<MAIdea> l, double lastPrice) {
+        if (l.size() <= 1) {
+            return;
+        }
         double totalProfit = l.stream().mapToDouble(t -> t.getIdeaSize() * (lastPrice - t.getIdeaPrice())).sum();
         outputToAutoLog(" computeMAProfit total " + Math.round(100d * totalProfit) / 100d);
         for (MAIdea t : l) {

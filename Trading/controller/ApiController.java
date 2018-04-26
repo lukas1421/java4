@@ -987,6 +987,7 @@ public class ApiController implements EWrapper {
 //                Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
 //    }
     public void getSGXA50Historical2(int reqID, HistoricalHandler hh) {
+        Contract previousFut = getExpiredFutContract();
         Contract frontFut = getFrontFutContract();
         Contract backFut = getBackFutContract();
 
@@ -1002,16 +1003,19 @@ public class ApiController implements EWrapper {
 //        if(!globalRequestMap.containsKey(reqID) && !globalRequestMap.containsKey(reqID+1)) {
         ChinaMain.globalRequestMap.put(reqID, new Request(frontFut, hh));
         ChinaMain.globalRequestMap.put(reqID + 1, new Request(backFut, hh));
-//        } else {
-//            throw new IllegalArgumentException(" getSGXA50Historical2 reqID used ");
-//        }
+        ChinaMain.globalRequestMap.put(reqID + 2, new Request(previousFut, hh));
+
 
         CompletableFuture.runAsync(() -> {
             //note formatdate is date formatting selection
+
             m_client.reqHistoricalData(reqID, frontFut, "", durationStr, barSize.toString(), whatToShow.toString(),
                     0, 2, Collections.<TagValue>emptyList());
             m_client.reqHistoricalData(reqID + 1, backFut, "", durationStr, barSize.toString(), whatToShow.toString(),
                     0, 2, Collections.<TagValue>emptyList());
+            m_client.reqHistoricalData(reqID + 2, previousFut, "", durationStr, barSize.toString(), whatToShow.toString(),
+                    0, 2, Collections.<TagValue>emptyList());
+
         });
         System.out.println("getSGXA50HistoricalCustom END thread " + Thread.currentThread().getName());
     }

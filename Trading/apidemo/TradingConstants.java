@@ -24,8 +24,11 @@ public final class TradingConstants {
 
     public static String getFutLastExpiry() {
         LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+        LocalTime time = now.toLocalTime();
         LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
-        if (today.isAfter(thisMonthExpiryDate)) {
+        if (today.isAfter(thisMonthExpiryDate) ||
+                (today.isEqual(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
             return getFutureExpiryDateString(today);
         } else {
             return getFutureExpiryDateString(today.minusMonths(1L));
@@ -34,9 +37,12 @@ public final class TradingConstants {
     }
 
     public static String getFutFrontExpiry() {
+        LocalDateTime now = LocalDateTime.now();
         LocalDate today = LocalDate.now();
+        LocalTime time = LocalTime.now();
         LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
-        if (today.isAfter(thisMonthExpiryDate)) {
+        if (today.isAfter(thisMonthExpiryDate) ||
+                (today.equals(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
             return getFutureExpiryDateString(today.plusMonths(1L));
         } else {
             return getFutureExpiryDateString(today);
@@ -45,9 +51,13 @@ public final class TradingConstants {
     }
 
     public static String getFutBackExpiry() {
+        LocalDateTime now = LocalDateTime.now();
         LocalDate today = LocalDate.now();
+        LocalTime time = LocalTime.now();
+
         LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
-        if (today.isAfter(thisMonthExpiryDate)) {
+        if (today.isAfter(thisMonthExpiryDate) ||
+                (today.isEqual(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
             return getFutureExpiryDateString(today.plusMonths(2L));
         } else {
             return getFutureExpiryDateString(today.plusMonths(1L));
@@ -107,10 +117,21 @@ public final class TradingConstants {
 
 
     private static String getFutureExpiryDateString(int year, Month m) {
-        LocalDate res = LocalDate.of(year, m.plus(1), 1);
-        while (res.getDayOfWeek() != TradingConstants.futExpiryWeekDay) {
+        LocalDate res = LocalDate.of(year + ((m == Month.DECEMBER) ? 1 : 0), m.plus(1), 1);
+
+        int businessOffsetTarget = 2;
+        int i = 0;
+//        while (res.getDayOfWeek() != TradingConstants.futExpiryWeekDay) {
+//            res = res.minusDays(1);
+//        }
+        while (i != businessOffsetTarget) {
             res = res.minusDays(1);
+            if (res.getDayOfWeek() != DayOfWeek.SATURDAY && res.getDayOfWeek() != DayOfWeek.SUNDAY
+                    && !res.isEqual(LocalDate.of(2018, Month.APRIL, 30))) {
+                i++;
+            }
         }
+
         return res.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
     }
 
