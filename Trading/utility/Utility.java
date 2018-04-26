@@ -618,9 +618,6 @@ public class Utility {
 
     public static NavigableMap<LocalDateTime, TradeBlock> tradeBlock1mTo5M(NavigableMap<LocalDateTime, TradeBlock> mp) {
         NavigableMap<LocalDateTime, TradeBlock> res = new ConcurrentSkipListMap<>();
-//        Predicate<LocalTime> p =
-//                tradingTimePred(LocalTime.of(9, 30), LocalTime.of(11, 30),
-//                        LocalTime.of(13, 0), LocalTime.of(15, 0));
         mp.forEach((key, value) -> {
             LocalDateTime t = roundTo5Ldt(key);
             TradeBlock tb = new TradeBlock(value);
@@ -636,9 +633,6 @@ public class Utility {
     public static NavigableMap<LocalDateTime, TradeBlock> tradeBlockRoundGen(NavigableMap<LocalDateTime, TradeBlock> mp,
                                                                              UnaryOperator<LocalDateTime> o) {
         NavigableMap<LocalDateTime, TradeBlock> res = new ConcurrentSkipListMap<>();
-//        Predicate<LocalTime> p =
-//                tradingTimePred(LocalTime.of(9, 30), LocalTime.of(11, 30),
-//                        LocalTime.of(13, 0), LocalTime.of(15, 0));
         mp.forEach((key, value) -> {
             LocalDateTime t = o.apply(key);
             TradeBlock tb = new TradeBlock(value);
@@ -648,8 +642,6 @@ public class Utility {
                 res.get(t).merge(tb);
             }
         });
-        //System.out.println(" trade block pre merging: " + mp);
-        //System.out.println(" trade block round gen res:: " + res);
         return res;
     }
 
@@ -660,7 +652,6 @@ public class Utility {
                         LocalTime.of(13, 0), LocalTime.of(15, 0));
 
         mp.forEach((key, value) -> {
-            //if (key.isBefore(LocalTime.of(15, 1))) {
             if (p.test(key)) {
                 res.put(LocalDateTime.of(ld, key), value);
             }
@@ -670,21 +661,12 @@ public class Utility {
 
     public static LocalTime roundTo5(LocalTime t) {
         LocalTime t1 = t.truncatedTo(ChronoUnit.MINUTES);
-        //return (t1.getMinute() % 5 == 0) ? t1 : t1.plusMinutes(5 - t1.getMinute() % 5);
         return (t1.getMinute() % 5 == 0) ? t1 : t1.minusMinutes(t1.getMinute() % 5);
     }
 
-//    private static LocalDateTime roundTo5LDT(LocalDateTime t) {
-//        LocalDateTime t1 = t.truncatedTo(ChronoUnit.MINUTES);
-//        return (t1.getMinute() % 5 == 0) ? t1 : t1.plusMinutes(5 - t1.getMinute() % 5);
-//    }
-
     public static LocalDateTime roundTo5Ldt(LocalDateTime t) {
         LocalDateTime t1 = t.truncatedTo(ChronoUnit.MINUTES);
-        //return (t1.getMinute() % 5 == 0) ? t1 : t1.plusMinutes(5 - t1.getMinute() % 5);
         return (t1.getMinute() % 5 == 0) ? t1 : t1.minusMinutes(t1.getMinute() % 5);
-//        return LocalDateTime.of(t.toLocalDate().plusDays(t.toLocalTime().isAfter(LocalTime.of(23, 55)) ? 1 : 0)
-//                , roundTo5LDT(t.truncatedTo(ChronoUnit.MINUTES).toLocalTime()));
     }
 
     public static LocalTime min(LocalTime... lts) {

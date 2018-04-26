@@ -683,7 +683,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     openTradeSignals.incrementAndGet();
                     lastOpenOrderTime = LocalDateTime.now();
                     openOrderMap.put(now, o);
-                    outputOrderToAutoLog(getStr(now, "OPEN ORDER || BIDDING @ ", o.toString(), "SMA"));
+                    outputOrderToAutoLog(getStr(now, "OPEN ORDER || BIDDING @ ", o.toString(), "SMA",
+                            "Last Open Order T, secToWait", lastOpenOrderTime, secBtwnOpenOrders));
                 }
             }
             if (lastBar.getOpen() > maLast && freshPrice <= maLast) {
@@ -694,7 +695,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     openTradeSignals.incrementAndGet();
                     lastOpenOrderTime = LocalDateTime.now();
                     openOrderMap.put(now, o);
-                    outputOrderToAutoLog(getStr(now, "OPEN ORDER || OFFERING @ ", o.toString(), "SMA"));
+                    outputOrderToAutoLog(getStr(now, "OPEN ORDER || OFFERING @ ", o.toString(), "SMA",
+                            "Last Open Order T, secToWait", lastOpenOrderTime, secBtwnOpenOrders));
                 }
             }
         }
