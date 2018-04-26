@@ -258,7 +258,7 @@ public class XuTraderHelper {
         if (secLastBar.containsZero() || lastBar.containsZero() || sma == 0.0) {
             return false;
         }
-        if (secLastBar.strictIncludes(sma) && secLastBar.getBarReturn() * (lastBar.getOpen() > sma ? 1 : -1) > 0) {
+        if (secLastBar.strictIncludes(sma) && (secLastBar.getBarReturn() * (lastBar.getOpen() > sma ? 1 : -1) > 0)) {
             return true;
         }
         if (sma > secLastBar.getHigh() && lastBar.getOpen() > sma) {

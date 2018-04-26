@@ -74,6 +74,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static LocalDateTime lastOpenTradeTime = LocalDateTime.now();
     private static LocalDateTime lastOpenOrderTime = LocalDateTime.now();
     private static AtomicInteger openTradeSignals = new AtomicInteger(0);
+    private static NavigableMap<LocalDateTime, Order> openOrderMap = new ConcurrentSkipListMap<>();
     private static final long MAX_OPEN_TRADE_ORDERS = 10;
 
     //direction makeup trade
@@ -665,13 +666,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         sma = XuTraderHelper.getMAGen(price5, currentMAPeriod);
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
         double candidatePrice;
-
         long secBtwnOpenOrders = openTradeSignals.get() == 0 ? 0 :
                 Math.max(5, Math.round(5 * Math.pow(2, Math.min(15, openTradeSignals.get() - 1))));
 
+        int timeDiffFactor = openOrderMap.size() == 0 ? 1 :
+                Math.max(1, Math.min(2,
+                        (int) Math.floor(timeDiffInSeconds(openOrderMap.lastEntry().getKey(), LocalDateTime.now()) / 60d)));
+
         if (timeDiffInSeconds(lastOpenOrderTime, now) >= secBtwnOpenOrders &&
                 openTradeSignals.get() <= MAX_OPEN_TRADE_ORDERS) {
-
             if (lastBar.getOpen() < maLast && freshPrice >= maLast) {
                 candidatePrice = roundToXUPricePassive(maLast, Direction.Long);
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
@@ -679,6 +682,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
                     openTradeSignals.incrementAndGet();
                     lastOpenOrderTime = LocalDateTime.now();
+                    openOrderMap.put(now, o);
                     outputOrderToAutoLog(getStr(now, "OPEN ORDER || BIDDING @ ", o.toString(), "SMA"));
                 }
             }
@@ -689,6 +693,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
                     openTradeSignals.incrementAndGet();
                     lastOpenOrderTime = LocalDateTime.now();
+                    openOrderMap.put(now, o);
                     outputOrderToAutoLog(getStr(now, "OPEN ORDER || OFFERING @ ", o.toString(), "SMA"));
                 }
             }
