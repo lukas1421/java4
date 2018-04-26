@@ -630,8 +630,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
         ChinaMain.controller().reqPositions(new FutPositionHandler());
         ChinaMain.controller().reqExecutions(new ExecutionFilter(), new FutPosTradesHandler());
-
-        //this gets close and open
         ChinaMain.controller().getSGXA50Historical2(40000, this);
 
 //        ChinaPosition.xuBotPos = ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.summingInt(e
@@ -658,14 +656,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
             int xuOpenPostion = currentPositionMap.getOrDefault(ticker, 0) - xuBotPos - xuSoldPos;
             openPositionMap.put(ticker, xuOpenPostion);
-//            System.out.println(getStr(" refresh future in chinaposition: ticker, open, bot, sold, current", f.getTicker(), openPositionMap.get(ticker), xuBotPos, xuSoldPos,
-//                    currentPositionMap.getOrDefault(ticker, 0)));
-
         }
-        //ChinaStock.closeMap.put("SGXA50", xuOpenPrice==0.0?defaultOpen:xuOpenPrice);
-        //costMap.put("SGXA50", closeMap.getOrDefault("SGXA50", defaultOpen));
-        //openMap.put("SGXA50", xuOpenPrice==0.0?defaultOpen:xuOpenPrice);
-        //ChinaStock.closeMap.put("SGXA50", priceMapBar.get("SGXA50").firstEntry().getValue().getOpen());
     }
 
     private static int getExpiredFutUnits() {
