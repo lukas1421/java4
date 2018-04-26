@@ -56,8 +56,7 @@ public class ChinaOptionHelper {
     }
 
     static LocalDate getOptionExpiryDate(int year, Month m) {
-        LocalDate res = LocalDate.of(year, m.plus(1), 1);
-
+        LocalDate res = LocalDate.of(year, m, 1).plusMonths(1);
         while (res.getDayOfWeek() != ChinaOptionHelper.OptionExpiryWeekDay) {
             res = res.minusDays(1);
         }

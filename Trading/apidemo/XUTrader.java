@@ -701,7 +701,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
     }
-
     /**
      * Auto trading based on Moving Avg
      */

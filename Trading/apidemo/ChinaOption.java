@@ -55,17 +55,12 @@ import static utility.Utility.*;
 
 public class ChinaOption extends JPanel implements Runnable {
 
-
     private static volatile boolean loadedBeforeSaveGuard = false;
     public static volatile boolean todayVolOnly = false;
-
     public static volatile AtomicInteger intradayGraphStartTimeOffset = new AtomicInteger(0);
-
     private static final int CPStringCol = 1;
     private static final int moneynessCol = 9;
-
     private static volatile String selectedTicker = "";
-
     static ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
     private static volatile JLabel optionNotif = new JLabel(" Option Notif ");
     //private static volatile int runFrequency = 6;
@@ -75,23 +70,15 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private static GraphOptionVol graphTS = new GraphOptionVol();
     private static GraphOptionVolDiff graphVolDiff = new GraphOptionVolDiff();
-
     private static GraphOptionLapse graphLapse = new GraphOptionLapse();
     private static GraphOptionLapse graphATMLapse = new GraphOptionLapse();
-
     private static GraphOptionIntraday graphIntraday = new GraphOptionIntraday();
     private static GraphOptionVol graphTS2 = new GraphOptionVol();
 
-//    public static LocalDate frontExpiry = getOptionExpiryDate(2018, Month.APRIL, OptionExpiryWeekDay);
-//    public static LocalDate backExpiry = getOptionExpiryDate(2018, Month.MAY, OptionExpiryWeekDay);
-//    public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.JUNE, OptionExpiryWeekDay);
-//    public static LocalDate fourthExpiry = getOptionExpiryDate(2018, Month.SEPTEMBER, OptionExpiryWeekDay);
-
     public static LocalDate frontExpiry = getExpiryDateAuto(1);
     public static LocalDate backExpiry = getExpiryDateAuto(2);
-    public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.JUNE);
-    public static LocalDate fourthExpiry = getOptionExpiryDate(2018, Month.SEPTEMBER);
-
+    public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.SEPTEMBER);
+    public static LocalDate fourthExpiry = getOptionExpiryDate(2018, Month.DECEMBER);
 
     private static String frontMonth = frontExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
     private static String backMonth = backExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
@@ -147,7 +134,6 @@ public class ChinaOption extends JPanel implements Runnable {
         };
 
         ChinaOptionHelper.getLastTradingDate();
-        //System.out.println()
         loadOptionTickers();
 
         expiryList.add(frontExpiry);
@@ -204,14 +190,7 @@ public class ChinaOption extends JPanel implements Runnable {
                             graphTS2.setCurrentOption(selectedTicker, callput, strike, selectedExpiry,
                                     todayImpliedVolMap.get(selectedTicker).lastEntry().getValue().getClose());
                         }
-
                         graphTS2.repaint();
-                        //System.out.println(" ticker intraday vol " + selectedTicker + " " + todayImpliedVolMap.get(selectedTicker));
-//                       if (timeLapseVolAllExpiries.containsKey(selectedExpiry)) {
-//                            graphATMLapse.setVolLapse(timeLapseVolAllExpiries.get(selectedExpiry));
-//                            //graphATMLapse.setNameStrikeExp("ATM lapse", 0.0, selectedExpiry, "");
-//                        }
-//                        graphATMLapse.repaint();
                     }
                 } else if (r % 2 == 0) {
                     comp.setBackground(Color.lightGray);
@@ -350,7 +329,6 @@ public class ChinaOption extends JPanel implements Runnable {
 
         //selecting
         p.select("Graph Intraday");
-        //rightPanel.add(graphPanel, BorderLayout.SOUTH);
         rightPanel.add(p, BorderLayout.SOUTH);
 
         JButton saveVolsButton = new JButton(" Save Vols ");
@@ -527,7 +505,6 @@ public class ChinaOption extends JPanel implements Runnable {
         //noinspection unchecked
         sorter = (TableRowSorter<OptionTableModel>) optionTable.getRowSorter();
         sorter.setRowFilter(otmFilter);
-        //sorter.setRowFilter(otmFilter);
     }
 
     private static void updateOptionSystemInfo(String text) {
