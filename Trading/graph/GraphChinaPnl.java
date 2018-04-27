@@ -138,7 +138,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
 
             try {
                 if (lt.equals(tradeMap.lastKey())) {
-                    System.out.println(" Trade map is " + name + " " + tradeMap);
+                    //System.out.println(" Trade map is " + name + " " + tradeMap);
                     g.drawString("Trade: " + Math.round(tradeMap.lastEntry().getValue()), x - 10, close);
                 }
             } catch (Exception ex) {
