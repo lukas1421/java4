@@ -45,6 +45,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //global
     private static volatile MASentiment sentiment = MASentiment.Directionless;
+    public static LocalDateTime lastTradeTime = LocalDateTime.now();
 
     //overnight trades
     private static final int maxOvernightTrades = 10;
@@ -64,7 +65,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final int MAX_MA_SIGNALS_PER_SESSION = 5;
     private static AtomicInteger maSignals = new AtomicInteger(0); //session transient
     private static volatile NavigableMap<LocalDateTime, Order> maOrderMap = new ConcurrentSkipListMap<>();
-    private static volatile TreeSet<MAIdea> maIdeasList = new TreeSet<>(Comparator.comparing(MAIdea::getIdeaTime));
+    private static volatile TreeSet<MAIdea> maIdeasSet = new TreeSet<>(Comparator.comparing(MAIdea::getIdeaTime));
     private static volatile long timeBtwnMAOrders = 5;
     private static final double PD_UP_THRESH = 0.003;
     private static final double PD_DOWN_THRESH = -0.003;
@@ -136,14 +137,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static volatile JLabel connectionLabel = new JLabel();
 
     private static void maTradeAnalysis() {
+        System.out.println(" ma trade analysis ");
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime sessionBeginLDT = XuTraderHelper.getSessionOpenTime();
-        maIdeasList = new TreeSet<>();
+        maIdeasSet = new TreeSet<>(Comparator.comparing(MAIdea::getIdeaTime));
+
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
-        NavigableMap<LocalDateTime, Double> sma = XuTraderHelper.getMAGen(price5, currentMAPeriod);
         if (price5.size() <= 1) {
             return;
         }
+
+        NavigableMap<LocalDateTime, Double> sma = XuTraderHelper.getMAGen(price5, currentMAPeriod);
         double lastPrice = price5.lastEntry().getValue().getClose();
 
         sma.forEach((lt, ma) -> {
@@ -151,23 +155,24 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 SimpleBar sb = price5.get(lt);
                 SimpleBar sbPrevious = price5.lowerEntry(lt).getValue();
                 if (bullishTouchMet(sbPrevious, sb, ma)) {
-                    maIdeasList.add(new MAIdea(lt, ma, +1));
+                    maIdeasSet.add(new MAIdea(lt, ma, +1));
                 } else if (bearishTouchMet(sbPrevious, sb, ma)) {
-                    maIdeasList.add(new MAIdea(lt, ma, -1));
+                    maIdeasSet.add(new MAIdea(lt, ma, -1));
                 }
             }
         });
 
         // make up for the last MA trade wihch was missing due to in restriction period
-        if (maIdeasList.size() > 0) {
+        if (maIdeasSet.size() > 0) {
             System.out.println(" MA analysis: ");
-            maIdeasList.forEach(System.out::println);
+            maIdeasSet.forEach(System.out::println);
             System.out.println(" compute MA profit ");
-            computeMAProfit(maIdeasList, lastPrice);
-            if (maIdeasList.last().getIdeaTime().isAfter(lastMAOrderTime)
-                    && now.isAfter(lastMAOrderTime.plusMinutes(timeBtwnMAOrders))) {
+            computeMAProfit(maIdeasSet, lastPrice);
+            if (maIdeasSet.last().getIdeaTime().isAfter(lastMAOrderTime)
+                    && now.isAfter(lastMAOrderTime.plusMinutes(timeBtwnMAOrders))
+                    && maIdeasSet.last().getIdeaTime().isAfter(lastTradeTime)) {
 
-                MAIdea lastIdea = maIdeasList.last();
+                MAIdea lastIdea = maIdeasSet.last();
                 outputToAutoLog(getStr(now, "MAKE UP TRADE ", lastIdea));
                 if (lastIdea.getIdeaSize() > 0) {
                     Order o = placeBidLimit(roundToXUPricePassive(lastIdea.getIdeaPrice(), Direction.Long), 1);
@@ -187,13 +192,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
             }
             //computed from maAnalysis, persistent through sessions.
-            long maSignalsPersist = maIdeasList.stream().filter(e -> e.getIdeaTime().isAfter(sessionBeginLDT)).count();
+            long maSignalsPersist = maIdeasSet.stream().filter(e -> e.getIdeaTime().isAfter(sessionBeginLDT)).count();
             String maOutput = (getStr("MA signals persist || BeginT: ", sessionBeginLDT,
-                    "||Last Order Time: ", lastMAOrderTime, "||Signal #: ", maSignalsPersist, "||list: ", maIdeasList));
+                    "||Last Order Time: ", lastMAOrderTime, "||Signal #: ", maSignalsPersist, "||list: ", maIdeasSet));
             outputToAutoLog(maOutput);
         }
-
-
     }
 
     public XUTrader getThis() {
@@ -825,7 +828,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     " ||LastBar:", lastBar, "||LastOrder T ", lastMAOrderTime.truncatedTo(ChronoUnit.MINUTES),
                     "|| WaitT Order:", timeBtwnMAOrders, "Tr#", numTrades,
                     "||Curr Direction:", currentDirection, "||MA Last: "
-                    , maIdeasList.size() > 0 ? maIdeasList.last() : ""));
+                    , maIdeasSet.size() > 0 ? maIdeasSet.last() : ""));
         }
     }
 
@@ -1024,6 +1027,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
             currentDirection = XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getValue().getSizeAll() > 0 ?
                     Direction.Long : Direction.Short;
+            lastTradeTime = XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getKey();
         }
     }
 

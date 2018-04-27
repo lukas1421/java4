@@ -231,7 +231,7 @@ public class XuTraderHelper {
             return false;
         }
         if (secLastBar.strictIncludes(sma) && secLastBar.getBarReturn() > 0 && lastBar.getOpen() > sma) {
-            outputToAutoLog(" bullish touch ");
+            outputToAutoLog(" bullish cross ");
             return true;
         }
         if (sma > secLastBar.getHigh() && secLastBar.getBarReturn() > 0 && lastBar.getOpen() > sma) {
@@ -246,7 +246,7 @@ public class XuTraderHelper {
             return false;
         }
         if (secLastBar.strictIncludes(sma) && secLastBar.getBarReturn() < 0 && lastBar.getOpen() < sma) {
-            outputToAutoLog(" bearish cross ");
+            outputToAutoLog(" bearish cross");
             return true;
         }
         if (sma < secLastBar.getLow() && secLastBar.getBarReturn() < 0.0 && lastBar.getOpen() < sma) {

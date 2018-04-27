@@ -6,9 +6,9 @@ import java.time.LocalDateTime;
 
 public class MAIdea {
 
-    private LocalDateTime tradeTime;
-    private double tradePrice;
-    private int size;
+    private final LocalDateTime tradeTime;
+    private final double tradePrice;
+    private final int size;
 
     public MAIdea(LocalDateTime t, double p, int q) {
         tradeTime = t;

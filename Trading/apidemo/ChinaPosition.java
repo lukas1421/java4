@@ -670,9 +670,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     public void handleHist(String name, String date, double open, double high, double low, double close) {
 
         //LocalDate ytd = currentTradingDate.equals(dateMap.get(2)) ? dateMap.get(1) : dateMap.get(2);
-
-
-        System.out.println(getStr(" name date close ", name, date, close));
+        //System.out.println(getStr(" name date close ", name, date, close));
 
         if (!date.startsWith("finished")) {
             Date dt = new Date();
@@ -1491,17 +1489,12 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
         LocalDate d = ldt.toLocalDate();
         LocalTime t = ldt.toLocalTime();
-
-        System.out.println(getStr("china position date name time ", ldt, ticker));
-
+        //System.out.println(getStr("china position date name time ", ldt, ticker));
         //equals current trading day
         if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth() && t.isAfter(LocalTime.of(8, 59))) {
-
             LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
-
             if (ChinaPosition.tradesMap.get(ticker).containsKey(lt)) {
                 System.out.println(" lt is " + lt);
-                //ChinaPosition.tradesMap.get(ticker).get(lt).clear();
                 ChinaPosition.tradesMap.get(ticker).get(lt)
                         .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
             } else {

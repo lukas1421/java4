@@ -74,17 +74,16 @@ public class SinaStock implements Runnable {
             getInfoFromURLConn(ldt, urlconnSZ);
 
             if (STOCK_COLLECTION_TIME.test(LocalDateTime.now())) {
-
                 rtn = weightMapA50.entrySet().stream().mapToDouble(a -> returnMap.getOrDefault(a.getKey(), 0.0) * a.getValue()).sum();
                 double currPrice = OPEN * (1 + (Math.round(rtn) / 10000d));
+
                 double sinaVol = weightMapA50.entrySet().stream()
                         .mapToDouble(a -> sizeMap.getOrDefault(a.getKey(), 0L).doubleValue() * a.getValue() / 100d).sum();
 
                 if (LocalTime.now().isAfter(LocalTime.of(8, 59)) && LocalTime.now().isBefore(LocalTime.of(9, 5))) {
-                    currPrice = OPEN;
+                    currPrice = OPEN; //currprice is unstable in the first 5 minutes
                 }
 
-                //System.out.println(getStr(" time open rtn ",LocalTime.now(), OPEN , rtn));
 
                 if (indexPriceSina.containsKey(ldt.toLocalTime())) {
                     indexPriceSina.get(ldt.toLocalTime()).add(currPrice);
@@ -101,13 +100,11 @@ public class SinaStock implements Runnable {
                 } else {
                     priceMapBar.put(ftseIndex, (ConcurrentSkipListMap) indexPriceSina);
                 }
-                //System.out.println(" price just added " + priceMapBar.get(ftseIndex).get(ldt.toLocalTime()));
 
                 indexVol.put(ldt.toLocalTime(), sinaVol);
                 openMap.put(ftseIndex, OPEN);
                 sizeMap.put(ftseIndex, Math.round(sinaVol));
                 sizeTotalMap.get(ftseIndex).put(ldt.toLocalTime(), sinaVol);
-                //sizeTotalMap.put("FTSEA50", (ConcurrentSkipListMap)indexVol);
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -138,15 +135,11 @@ public class SinaStock implements Runnable {
                         returnMap.put(ticker, 100d * (Utility.pd(datalist, 3) / Utility.pd(datalist, 2) - 1));
                         sizeMap.put(ticker, Math.round(Utility.pd(datalist, 9) / 1000000d));
                         ChinaMain.currentTradingDate = LocalDate.parse(datalist.get(30));
-                        //ChinaData.outputRecentTradingDate();
-                        //System.out.println(" most recent trading day " + mostRecentTradingDay);
-                        //System.out.println(" last data available date " + datalist.get(30) + " " + datalist.get(31));
 
                         if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker)
                                 && STOCK_COLLECTION_TIME.test(ldt)) {
 
                             double last = Utility.pd(datalist, 3);
-                            //priceMapPlain.get(ticker).put(lt,last);
                             sizeTotalMap.get(ticker).put(lt, Utility.pd(datalist, 9) / 1000000d);
 
                             if (priceMapBar.get(ticker).containsKey(lt)) {
