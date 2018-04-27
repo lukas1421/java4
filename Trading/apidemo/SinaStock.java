@@ -74,10 +74,15 @@ public class SinaStock implements Runnable {
             getInfoFromURLConn(ldt, urlconnSZ);
 
             if (STOCK_COLLECTION_TIME.test(LocalDateTime.now())) {
+
                 rtn = weightMapA50.entrySet().stream().mapToDouble(a -> returnMap.getOrDefault(a.getKey(), 0.0) * a.getValue()).sum();
                 double currPrice = OPEN * (1 + (Math.round(rtn) / 10000d));
                 double sinaVol = weightMapA50.entrySet().stream()
                         .mapToDouble(a -> sizeMap.getOrDefault(a.getKey(), 0L).doubleValue() * a.getValue() / 100d).sum();
+
+                if (LocalTime.now().isAfter(LocalTime.of(8, 59)) && LocalTime.now().isBefore(LocalTime.of(9, 5))) {
+                    currPrice = OPEN;
+                }
 
                 //System.out.println(getStr(" time open rtn ",LocalTime.now(), OPEN , rtn));
 
@@ -187,6 +192,9 @@ public class SinaStock implements Runnable {
             }
         } catch (IOException ex) {
             ex.printStackTrace();
+        }
+        if (temp == 0.0) {
+            throw new IllegalStateException(" temp cannot be 0 check morningtask output");
         }
         return temp;
     }

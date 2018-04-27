@@ -207,7 +207,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
     @Override
     protected void paintComponent(Graphics g) {
-
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
@@ -331,6 +330,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             g.drawString(" Fut: "
                             + tm.lastKey().toLocalTime().toString() + " " + Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
                     x, lowY + (mouseYCord < closeY ? -30 : +30));
+
             g.drawOval(x + 2, lowY, 5, 5);
             g.fillOval(x + 2, lowY, 5, 5);
 

@@ -567,7 +567,6 @@ public class ChinaOption extends JPanel implements Runnable {
     private static void fixIntradayVol() {
         for (String s : todayImpliedVolMap.keySet()) {
             for (Map.Entry<LocalDateTime, SimpleBar> e : todayImpliedVolMap.get(s).entrySet()) {
-
                 if (todayImpliedVolMap.get(s).size() > 2) {
                     if (e.getValue().getHigh() - e.getValue().getLow() > 0.1 || e.getValue().getHigh() == 1.0 ||
                             e.getValue().getHigh() < 0.1) {
@@ -592,11 +591,7 @@ public class ChinaOption extends JPanel implements Runnable {
         if (loadedBeforeSaveGuard) {
             LocalTime start = LocalTime.now();
             SessionFactory sessionF = HibernateUtil.getSessionFactory();
-
             Predicate<Map.Entry<LocalDateTime, ?>> p = e -> e.getKey().toLocalDate().isAfter(saveCutoffDate);
-
-            //NavigableMap<LocalDateTime, T> res =
-
             CompletableFuture.runAsync(() -> {
                 try (Session session = sessionF.openSession()) {
                     try {
