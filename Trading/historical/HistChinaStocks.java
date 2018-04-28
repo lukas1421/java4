@@ -981,11 +981,13 @@ public class HistChinaStocks extends JPanel {
                     trimmedTrades.put(dayClose, mergeTradeBlocks(current, v));
                 }
             } else if (k.toLocalTime().isBefore(LocalTime.of(9, 0, 1))) {
-                if (!trimmedTrades.containsKey(dayOpen)) {
-                    trimmedTrades.put(dayOpen, v);
+                LocalDate prevDate = k.toLocalDate().minusDays(1);
+                LocalDateTime dayCloseYtd = LocalDateTime.of(prevDate, dayClose.toLocalTime());
+                if (!trimmedTrades.containsKey(dayCloseYtd)) {
+                    trimmedTrades.put(dayCloseYtd, v);
                 } else {
-                    TradeBlock current = trimmedTrades.get(dayOpen);
-                    trimmedTrades.put(dayOpen, mergeTradeBlocks(current, v));
+                    TradeBlock current = trimmedTrades.get(dayCloseYtd);
+                    trimmedTrades.put(dayCloseYtd, mergeTradeBlocks(current, v));
                 }
             } else {
                 System.out.println(getStr(" SHOULD NOT BE ELSE ", k, v));
@@ -993,14 +995,10 @@ public class HistChinaStocks extends JPanel {
         });
 
         for (LocalDateTime lt : prices.keySet()) {
-
-            boolean includeLast = lt.toLocalTime().equals(LocalTime.of(14, 55));
-            //note that prices start from 9:35 to 15:00, it needs to back-include trade in slot
-            if (trimmedTrades.subMap(lt, true, lt.plusMinutes(5L), includeLast).size() > 0) {
-
-                currPos += trimmedTrades.subMap(lt, true, lt.plusMinutes(5L), includeLast)
+            if (trimmedTrades.subMap(lt, true, lt.plusMinutes(5L), false).size() > 0) {
+                currPos += trimmedTrades.subMap(lt, true, lt.plusMinutes(5L), false)
                         .entrySet().stream().mapToInt(e -> e.getValue().getSizeAll()).sum();
-                costBasis += trimmedTrades.subMap(lt, true, lt.plusMinutes(5L), includeLast)
+                costBasis += trimmedTrades.subMap(lt, true, lt.plusMinutes(5L), false)
                         .entrySet().stream().mapToDouble(e -> e.getValue().getCostBasisAll(ticker)).sum();
             }
             mv = currPos * prices.get(lt).getClose();
