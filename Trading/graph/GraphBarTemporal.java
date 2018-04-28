@@ -56,18 +56,10 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
     private volatile int mouseXCord;
     private volatile int mouseYCord;
 
-    //int wtdP;
-//    public GraphBarTemporal(NavigableMap<T, SimpleBar> tm1) {
-//        this.mainMap = (tm1 != null) ? tm1.entrySet().stream().filter(e -> !e.getValue().containsZero())
-//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-//                (u, v) -> u, ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
-//    }
 
     public GraphBarTemporal() {
         name = "";
         chineseName = "";
-        //maxAMT = LocalTime.of(9, 30);
-        //minAMT = Utility.AMOPENT;
         this.mainMap = new ConcurrentSkipListMap<>();
         addMouseListener(this);
         addMouseMotionListener(this);
@@ -205,7 +197,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                 int q = histTradesMap.get(lt);
                 int qRounded = q;
 
-                if (!name.equals("SGXA50")) {
+                if (!name.startsWith("SGXA50")) {
                     qRounded = (int) Math.round(q / 1000.0);
                 }
 
@@ -224,7 +216,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
                     Polygon p1 = new Polygon(new int[]{x - 10, x, x + 10}, new int[]{highY - 10, highY, highY - 10}, 3);
                     g.drawPolygon(p1);
                     g.fillPolygon(p1);
-                    g.drawString(Integer.toString(qRounded), x, highY - 25);
+                    g.drawString(Integer.toString(qRounded), x, highY - 15);
                 }
             }
 
@@ -319,8 +311,6 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
         g2.drawString(Double.toString(max), getWidth() - 60, 15);
         g2.drawString(Double.toString(min), getWidth() - 60, getHeight() - 33);
-        //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2);
-        //g2.drawString("周" + Integer.toString(wtdP), getWidth() - 40, getHeight() / 2);
 
         if (!Optional.ofNullable(name).orElse("").equals("")) {
             g2.drawString(name, 5, 15);
