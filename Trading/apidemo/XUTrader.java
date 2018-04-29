@@ -377,7 +377,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JToggleButton showGraphButton = new JToggleButton("Show Trades");
         showGraphButton.addActionListener(l -> showTrades = showGraphButton.isSelected());
 
-
         JButton cancelAllOrdersButton = new JButton("Cancel Orders");
         cancelAllOrdersButton.addActionListener(l -> {
             apcon.cancelAllOrders();
@@ -525,10 +524,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     if (e.getClickCount() == 2 && !e.isConsumed()) {
-                        System.out.println(" double clicked buy " + l.getName());
                         double bidPrice = bidPriceList.getOrDefault(l.getName(), 0.0);
-                        System.out.println(" bid price " + bidPrice + " check if order price makes sense "
-                                + checkIfOrderPriceMakeSense(bidPrice));
+                        outputOrderToAutoLog(getStr(" MANUAL BID || bid price ", bidPrice, " Checking order ",
+                                checkIfOrderPriceMakeSense(bidPrice)));
                         if (checkIfOrderPriceMakeSense(bidPrice) && futMarketOpen(LocalTime.now())) {
                             apcon.placeOrModifyOrder(activeFuture, placeBidLimit(bidPrice, 1.0), getThis());
                         } else {
@@ -549,7 +547,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 public void mouseClicked(MouseEvent e) {
                     if (e.getClickCount() == 2 && !e.isConsumed()) {
                         double offerPrice = offerPriceList.get(l.getName());
-                        System.out.println(" offer  price list " + offerPriceList.toString());
+                        outputOrderToAutoLog(getStr(" MANUAL OFFER || offer price ", offerPrice, " Checking order ",
+                                checkIfOrderPriceMakeSense(offerPrice)));
                         if (checkIfOrderPriceMakeSense(offerPrice) && futMarketOpen(LocalTime.now())) {
                             apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(offerPrice, 1.0), getThis());
                         } else {
@@ -575,7 +574,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         add(chartScroll);
     }
 
-    /*
+    /**
      * Determine order size by taking into account the trade time, PD, proposed direction and percentile
      */
     private static int determinePDPercFactor(LocalTime t, double pd, Direction dir, int perc) {
@@ -594,12 +593,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (t.isAfter(LocalTime.of(8, 59)) && t.isBefore(LocalTime.of(9, 40))) {
                 System.out.println(" No sizing in open trading ");
             } else if (futureAMSession().test(t)) {
-                factor = dir == Direction.Long ? 1 : 2;
+                factor = (dir == Direction.Long ? 1 : 2);
             } else if (futurePMSession().test(t)) {
-                factor = dir == Direction.Long ? 2 : 1;
+                factor = (dir == Direction.Long ? 2 : 1);
             }
         }
-        outputToAutoLog(getStr(" Determining Order Size ||T PERC PD DIRECTION -> FACTOR, FINAL SIZE ", t, perc
+        outputToAutoLog(getStr(" Determining Order Size ||T PERC PD DIR -> FACTOR, FINAL SIZE ", t, perc
                 , pd, dir, factor, factor));
 
         return factor;
@@ -617,9 +616,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private void observeMATouch() {
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         LocalTime lastKey = price5.lastEntry().getKey().toLocalTime();
-        if (price5.size() < 2) {
-            return;
-        }
+        if (price5.size() < 2) return;
+
         SimpleBar lastBar = price5.lastEntry().getValue();
         SimpleBar secLastBar = price5.lowerEntry(price5.lastEntry().getKey()).getValue();
         NavigableMap<LocalDateTime, Double> sma;
@@ -631,8 +629,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int percentile = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         soundPlayer.stopIfPlaying();
         if (sma.size() > 0) {
-            String msg = getStr("**Observing MA**",
-                    " ||Time: ", LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
+            String msg = getStr("**Observing MA**"
+                    , "||Time: ", LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
                     , "||SMA60 ", Math.round(100d * sma.lastEntry().getValue()) / 100d
                     , "||Last Key Bar", lastKey, lastBar.toString(), "#: ", maSignals.get()
                     , "||Last Trade T", lastMATradeTime.truncatedTo(ChronoUnit.MINUTES)
@@ -657,7 +655,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     /**
-     * open trading from 9 to 9:40
+     * open trading from 9 to 9:40 /  fast trader
      */
     public static void fastTrader(double freshPrice) {
         LocalDateTime now = LocalDateTime.now();
@@ -665,18 +663,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 now.toLocalTime().isBefore(LocalTime.of(15, 0)))) {
             return;
         }
+        int default_sec_btwn_fast_orders = now.toLocalTime().isBefore(LocalTime.of(9, 40)) ? 5 : 10;
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
-        if (price5.size() <= 1) {
-            return;
-        }
+        if (price5.size() <= 1) return;
+
         SimpleBar lastBar = new SimpleBar(price5.lastEntry().getValue());
         lastBar.add(freshPrice);
         NavigableMap<LocalDateTime, Double> sma;
-        sma = XuTraderHelper.getMAGen(price5, currentMAPeriod);
+        sma = getMAGen(price5, currentMAPeriod);
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
         double candidatePrice;
         long secBtwnOpenOrders = fastTradeSignals.get() == 0 ? 0 :
-                Math.max(5, Math.round(5 * Math.pow(2, Math.min(15, fastTradeSignals.get() - 1))));
+                default_sec_btwn_fast_orders
+                        * Math.max(1, Math.round(Math.pow(2, Math.min(13, fastTradeSignals.get() - 1))));
 
         int timeDiffFactor = fastOrderMap.size() == 0 ? 1 :
                 Math.max(1, Math.min(2,
@@ -694,7 +693,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     fastOrderMap.put(now, o);
                     outputOrderToAutoLog(getStr(now, "FAST ORDER || BIDDING @ ", o.toString(), "SMA",
                             "Last Open Order T, secToWait", lastFastOrderTime, secBtwnOpenOrders,
-                            " # ", fastTradeSignals.get()));
+                            " # ", fastTradeSignals.get(),
+                            "Default Sec Btwn orders ", default_sec_btwn_fast_orders));
                 }
             }
             if (lastBar.getOpen() > maLast && freshPrice <= maLast) {
@@ -720,19 +720,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalDateTime now = LocalDateTime.now();
 
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
-        SimpleBar lastBar = new SimpleBar(0.0);
-        SimpleBar secLastBar = new SimpleBar(0.0);
-        LocalTime lastBarTime = LocalTime.MIN;
-        LocalTime secLastBarTime = LocalTime.MIN;
-        if (price5.size() > 1) {
-            lastBar = new SimpleBar(price5.lastEntry().getValue());
-            lastBarTime = price5.lastEntry().getKey().toLocalTime();
-            secLastBar = new SimpleBar(price5.lowerEntry(price5.lastKey()).getValue());
-            secLastBarTime = price5.lowerEntry(price5.lastKey()).getKey().toLocalTime();
-        }
+        if (price5.size() <= 2) return;
+
+        SimpleBar lastBar = new SimpleBar(price5.lastEntry().getValue());
+        LocalTime lastBarTime = price5.lastEntry().getKey().toLocalTime();
+        SimpleBar secLastBar = new SimpleBar(price5.lowerEntry(price5.lastKey()).getValue());
+        LocalTime secLastBarTime = price5.lowerEntry(price5.lastKey()).getKey().toLocalTime();
+
         lastBar.add(freshPrice);
         NavigableMap<LocalDateTime, Double> sma;
-        sma = XuTraderHelper.getMAGen(price5, currentMAPeriod);
+        sma = getMAGen(price5, currentMAPeriod);
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
         int numTrades = 0;
         double candidatePrice = 0.0;
