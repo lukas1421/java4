@@ -1120,7 +1120,7 @@ public class ApiController implements EWrapper {
                 //if(TickType.get(tickType) == TickType.LAST) {
                 lh.handlePrice(TickType.get(tickType),
                         utility.Utility.ibContractToSymbol(r.getContract()), price,
-                        LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+                        LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
             } catch (Exception ex) {
                 System.out.println(" handling price has issues ");
                 ex.printStackTrace();

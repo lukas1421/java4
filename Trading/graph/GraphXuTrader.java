@@ -460,7 +460,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     }
 
     public double getIndex() {
-        if (ChinaData.priceMapBar.get(ftseIndex).size() > 0) {
+        if (ChinaData.priceMapBar.containsKey(ftseIndex) && ChinaData.priceMapBar.get(ftseIndex).size() > 0) {
             return ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose();
         }
         return SinaStock.FTSE_OPEN;
