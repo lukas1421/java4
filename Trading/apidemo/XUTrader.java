@@ -145,8 +145,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         activeLastMinuteMap.entrySet().removeIf(e -> e.getKey().isBefore(ldt.minusMinutes(1)));
         activeLastMinuteMap.put(ldt, freshPrice);
         if (activeLastMinuteMap.size() > 2) {
+            double lastV = activeLastMinuteMap.lastEntry().getValue();
+            double secLastV = activeLastMinuteMap.lowerEntry(activeLastMinuteMap.lastKey()).getValue();
+            long milliLapsed = ChronoUnit.MILLIS.between(activeLastMinuteMap.lowerKey(activeLastMinuteMap.lastKey()),
+                    activeLastMinuteMap.lastKey());
+
             System.out.println(getStr(" last minute map ", activeLastMinuteMap.lowerEntry(activeLastMinuteMap.lastKey())
-                    , activeLastMinuteMap.lastEntry().toString()));
+                    , activeLastMinuteMap.lastEntry(), lastV == secLastV ? "FLAT" : (lastV < secLastV ? "DOWN" : "UP")
+                    , " Lapsed: ", milliLapsed));
         } else {
             System.out.println(getStr(" last minute map ", activeLastMinuteMap));
         }
@@ -840,10 +846,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         priceType = "pd > " + PD_UP_THRESH + " -> SELL @ BID";
                     } else if (maSignals.get() == 0) {
                         candidatePrice = askMap.get(ibContractToFutType(activeFuture));
-                        priceType = "SELL: maSignals -> SELL @ OFFER";
+                        priceType = "SELL: maSignals =  -> SELL @ OFFER";
                     } else {
                         candidatePrice = roundToXUPricePassive(lastBar.getOpen(), Direction.Short);
-                        priceType = "SELL: maSignals > 0 -> SELL @ LAST FTSE_OPEN";
+                        priceType = "SELL: maSignals > 0 -> SELL @ last Bar OPEN";
                     }
                     Order o = placeOfferLimit(candidatePrice, determinePDPercFactor(now.toLocalTime(), pd, Direction.Short,
                             percentile) * determineTimeDiffFactor());
