@@ -144,7 +144,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         System.out.println(getStr(" update last min map ", ldt, freshPrice));
         activeLastMinuteMap.entrySet().removeIf(e -> e.getKey().isBefore(ldt.minusMinutes(1)));
         activeLastMinuteMap.put(ldt, freshPrice);
-        System.out.println(" last minute map " + activeLastMinuteMap);
+        if (activeLastMinuteMap.size() > 2) {
+            System.out.println(getStr(" last minute map ", activeLastMinuteMap.lowerEntry(activeLastMinuteMap.lastKey())
+                    , activeLastMinuteMap.lastEntry().toString()));
+        } else {
+            System.out.println(getStr(" last minute map ", activeLastMinuteMap));
+        }
     }
 
     private static void maTradeAnalysis() {
@@ -655,8 +660,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     , "||PD: ", Math.round(10000d * pd) / 10000d
                     , "||Curr Dir", currentDirection, "|2ndLastBar ", secLastBar,
                     " || Percentile ", percentile,
-                    "|| Can LONG? ", canLongGlobal.get(),
-                    "|| Can SHORT? ", canShortGlobal.get()
+                    "|| Can LONG? ", canLongGlobal,
+                    "|| Can SHORT? ", canShortGlobal
                     , "||lastMinMap", activeLastMinuteMap);
 
             outputToAutoLog(msg);
@@ -889,14 +894,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    //public static boolean canTrade
-
     /**
      * overnight close trading
      */
     private void overnightTrader() {
+        setLongShortTradability(currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0));
         LocalDateTime now = LocalDateTime.now();
-
         LocalDate TDate = now.toLocalTime().isAfter(LocalTime.of(0, 0))
                 && now.toLocalTime().isBefore(LocalTime.of(5, 0)) ? LocalDate.now().minusDays(1L) : LocalDate.now();
 
@@ -912,7 +915,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double indexPrice = (ChinaData.priceMapBar.containsKey(ftseIndex) &&
                 ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
-                ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : 0.0;
+                ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
         NavigableMap<LocalDateTime, SimpleBar> futPriceMap = futData.get(ibContractToFutType(activeFuture));
         LocalDateTime ytdCloseTime = LocalDateTime.of(TDate, LocalTime.of(15, 0));
         NavigableMap<LocalDateTime, SimpleBar> filteredPriceMap = futPriceMap.entrySet().stream()
@@ -931,7 +934,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (absLotsTraded <= maxOvernightTrades && overnightClosingOrders.get() <= 5) {
             if (now.toLocalTime().isBefore(LocalTime.of(5, 0)) &&
                     now.toLocalTime().isAfter(LocalTime.of(4, 40))) {
-                if (pd > 0.005) {
+                if (pd > 0.005 && canShortGlobal.get()) {
                     double candidatePrice = askMap.getOrDefault(ibContractToFutType((activeFuture)), 0.0);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         outputOrderToAutoLog(getStr(now, "O/N placing sell order @ ", candidatePrice,
@@ -939,7 +942,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(candidatePrice, 1.0), this);
                         overnightClosingOrders.incrementAndGet();
                     }
-                } else if (pd < -0.005) {
+                } else if (pd < -0.005 && canLongGlobal.get()) {
                     double candidatePrice = bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         outputOrderToAutoLog(getStr(now, "O/N placing buy order @ ", candidatePrice,
@@ -962,7 +965,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "||current percentile ", currPercentile, "||PD: ", pd, "||curr P: ",
                 filteredPriceMap.lastEntry().getValue().getClose(), "||index: ", Math.round(100d * indexPrice) / 100d,
                 "||bid ", bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
-                " ||ask ", askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0));
+                " ||ask ", askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
+                "||Can Long? ", canLongGlobal,
+                "|| Can Short? ", canShortGlobal);
 
         outputToAutoLog(outputString);
         requestOvernightExecHistory();
