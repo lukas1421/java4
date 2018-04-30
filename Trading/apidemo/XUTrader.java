@@ -699,7 +699,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         int timeDiffFactor = fastOrderMap.size() == 0 ? 1 :
                 Math.max(1, Math.min(2,
-                        (int) Math.floor(timeDiffInSeconds(fastOrderMap.lastEntry().getKey(), LocalDateTime.now()) / 60d)));
+                        (int) Math.floor(timeDiffInSeconds(fastOrderMap.lastEntry().getKey(), now) / 60d)));
 
         if (timeDiffInSeconds(lastFastOrderTime, now) >= secBtwnOpenOrders &&
                 fastTradeSignals.get() <= MAX_OPEN_TRADE_ORDERS) {
@@ -712,13 +712,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     lastFastOrderTime = LocalDateTime.now();
                     fastOrderMap.put(now, o);
                     outputOrderToAutoLog(getStr(now, "FAST ORDER || BIDDING @ ", o.toString(), "SMA",
-                            "Last Open Order T, secToWait", lastFastOrderTime, secBtwnOpenOrders,
+                            "||Last Open Order T", lastFastOrderTime,
+                            "||secToWait", secBtwnOpenOrders,
                             " # ", fastTradeSignals.get(),
-                            "Default Sec Btwn orders ", default_sec_btwn_fast_orders,
+                            "||Default Sec Btwn orders ", default_sec_btwn_fast_orders,
                             "||This bar: ", lastBar,
-                            "||malast: ", maLast,
+                            "||MA LAST: ", maLast,
                             "||Fresh price: ", freshPrice,
-                            "||Prev price", prevPrice));
+                            "||Prev price", prevPrice,
+                            "||PD: ", pd));
                 }
             }
             if (prevPrice > maLast && freshPrice <= maLast && canShortGlobal.get() && pd > PD_DOWN_THRESH) {
@@ -730,9 +732,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     lastFastOrderTime = LocalDateTime.now();
                     fastOrderMap.put(now, o);
                     outputOrderToAutoLog(getStr(now, "FAST ORDER || OFFERING @ ", o.toString(), "SMA",
-                            "Last Open Order T, secToWait", lastFastOrderTime, secBtwnOpenOrders,
-                            " # ", fastTradeSignals.get(),
-                            "Default Sec Btwn orders ", default_sec_btwn_fast_orders,
+                            "||Last Open Order T", lastFastOrderTime,
+                            "||secToWait ", secBtwnOpenOrders,
+                            "||#: ", fastTradeSignals.get(),
+                            "||Default Sec Btwn orders ", default_sec_btwn_fast_orders,
                             "||This bar: ", lastBar,
                             "||MA Last: ", maLast,
                             "||Fresh Price: ", freshPrice,
