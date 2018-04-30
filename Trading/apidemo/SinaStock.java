@@ -39,7 +39,7 @@ public class SinaStock implements Runnable {
     String line;
     //public static volatile LocalDate mostRecentTradingDay = LocalDate.now();
 
-    public static final double OPEN = getOpen();
+    public static final double FTSE_OPEN = getOpen();
     static volatile double rtn = 0.0;
 
     private SinaStock() {
@@ -75,13 +75,13 @@ public class SinaStock implements Runnable {
 
             if (STOCK_COLLECTION_TIME.test(LocalDateTime.now())) {
                 rtn = weightMapA50.entrySet().stream().mapToDouble(a -> returnMap.getOrDefault(a.getKey(), 0.0) * a.getValue()).sum();
-                double currPrice = OPEN * (1 + (Math.round(rtn) / 10000d));
+                double currPrice = FTSE_OPEN * (1 + (Math.round(rtn) / 10000d));
 
                 double sinaVol = weightMapA50.entrySet().stream()
                         .mapToDouble(a -> sizeMap.getOrDefault(a.getKey(), 0L).doubleValue() * a.getValue() / 100d).sum();
 
                 if (LocalTime.now().isAfter(LocalTime.of(8, 59)) && LocalTime.now().isBefore(LocalTime.of(9, 5))) {
-                    currPrice = OPEN; //currprice is unstable in the first 5 minutes
+                    currPrice = FTSE_OPEN; //currprice is unstable in the first 5 minutes
                 }
 
 
@@ -102,7 +102,7 @@ public class SinaStock implements Runnable {
                 }
 
                 indexVol.put(ldt.toLocalTime(), sinaVol);
-                openMap.put(ftseIndex, OPEN);
+                openMap.put(ftseIndex, FTSE_OPEN);
                 sizeMap.put(ftseIndex, Math.round(sinaVol));
                 sizeTotalMap.get(ftseIndex).put(ldt.toLocalTime(), sinaVol);
             }

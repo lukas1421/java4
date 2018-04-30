@@ -2,10 +2,7 @@ package graph;
 
 import TradeType.MAIdea;
 import TradeType.TradeBlock;
-import apidemo.ChinaData;
-import apidemo.FutType;
-import apidemo.XUTrader;
-import apidemo.XuTraderHelper;
+import apidemo.*;
 import auxiliary.SimpleBar;
 import utility.SharpeUtility;
 
@@ -466,7 +463,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         if (ChinaData.priceMapBar.get(ftseIndex).size() > 0) {
             return ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose();
         }
-        return 0.0;
+        return SinaStock.FTSE_OPEN;
     }
 
     private double getPD() {

@@ -1483,7 +1483,7 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
 
         String ticker = ibContractToSymbol(contract);
-        System.out.println(" in trade report china position " + ticker);
+        //System.out.println(" in trade report china position " + ticker);
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
 
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
@@ -1494,11 +1494,11 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
         if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth() && t.isAfter(LocalTime.of(8, 59))) {
             LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
             if (ChinaPosition.tradesMap.get(ticker).containsKey(lt)) {
-                System.out.println(" lt is " + lt);
+                //System.out.println(" lt is " + lt);
                 ChinaPosition.tradesMap.get(ticker).get(lt)
                         .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
             } else {
-                System.out.println(" else lt " + lt);
+                //System.out.println(" else lt " + lt);
                 ChinaPosition.tradesMap.get(ticker).put(lt,
                         new TradeBlock(new FutureTrade(execution.price(),
                                 (int) Math.round(sign * execution.shares()))));
