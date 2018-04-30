@@ -54,12 +54,12 @@ public class SGXFutureReceiver implements LiveHandler {
                         }
                     }
 
-                    if (FUT_COLLECTION_TIME.test(ldtMin)) {
+                    if (FUT_COLLECTION_TIME.test(ldt)) {
                         if (name.equalsIgnoreCase("SGXA50")) {
                             if (XUTrader.MATraderStatus.get()) {
                                 XUTrader.updateLastMinuteMap(ldt, price);
-                                XUTrader.fastTrader(ldtMin, price);
-                                XUTrader.MATrader(ldtMin, price);
+                                XUTrader.fastTrader(ldt, price);
+                                XUTrader.MATrader(ldt, price);
                             }
                         }
                         if (XUTrader.futData.get(f).containsKey(ldtMin)) {
