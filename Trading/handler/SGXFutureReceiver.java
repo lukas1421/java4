@@ -6,11 +6,11 @@ import client.TickType;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
+import static java.time.temporal.ChronoUnit.MINUTES;
 
 public class SGXFutureReceiver implements LiveHandler {
 
@@ -27,7 +27,7 @@ public class SGXFutureReceiver implements LiveHandler {
     @Override
     public void handlePrice(TickType tt, String name, double price, LocalDateTime ldt) {
         FutType f = FutType.get(name);
-        LocalDateTime ldtMin = ldt.truncatedTo(ChronoUnit.MINUTES);
+        LocalDateTime ldtMin = ldt.truncatedTo(MINUTES);
         LocalTime t = ldtMin.toLocalTime();
 
         switch (tt) {
@@ -62,7 +62,8 @@ public class SGXFutureReceiver implements LiveHandler {
                             XUTrader.futData.get(f).put(ldtMin, new SimpleBar(price));
                         }
 
-                        if (name.equalsIgnoreCase("SGXA50")) {
+                        if (name.equalsIgnoreCase("SGXA50") &&
+                                XUTrader.futData.get(f).lastKey().truncatedTo(MINUTES).equals(ldt.truncatedTo(MINUTES))) {
                             if (XUTrader.MATraderStatus.get()) {
                                 XUTrader.updateLastMinuteMap(ldt, price);
                                 XUTrader.fastTrader(ldt, price);

@@ -644,8 +644,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     private void observeMATouch() {
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
-        LocalTime lastKey = price5.lastEntry().getKey().toLocalTime();
         if (price5.size() < 2) return;
+        LocalTime lastKey = price5.lastEntry().getKey().toLocalTime();
+        LocalTime secLastKey = price5.lowerKey(price5.lastKey()).toLocalTime();
 
         SimpleBar lastBar = price5.lastEntry().getValue();
         SimpleBar secLastBar = price5.lowerEntry(price5.lastEntry().getKey()).getValue();
@@ -658,19 +659,21 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (sma.size() > 0) {
             String msg = getStr("**Observing MA**"
                     , "||Time: ", LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
-                    , "||SMA60 ", r(sma.lastEntry().getValue())
-                    , "||Last Key Bar", lastKey, lastBar, "#: ", maSignals.get()
+                    , "||SMA:", r(sma.lastEntry().getValue())
+                    , "||Last Bar:", lastKey, lastBar
+                    , "||2nd Last Bar:", secLastKey, secLastBar
+                    , "||Index: ", r(getIndexPrice())
+                    , "||PD: ", Math.round(10000d * pd) / 10000d
+                    , "||Curr Dir", currentDirection
+                    , "||P%", percentile
                     , "||Last Trade T", lastMATradeTime.truncatedTo(ChronoUnit.MINUTES)
                     , "||Last Order T ", lastMAOrderTime.truncatedTo(ChronoUnit.MINUTES)
                     , "||WaitT Orders: ", timeBtwnMAOrders
                     , "||Earliest Next Order: ", lastMAOrderTime.plusMinutes(timeBtwnMAOrders)
+                    , "#: ", maSignals.get()
                     , "||Orders: ", maOrderMap.toString()
-                    , "||Index: ", r(getIndexPrice())
-                    , "||PD: ", Math.round(10000d * pd) / 10000d
-                    , "||Curr Dir", currentDirection, "|2ndLastBar ", secLastBar,
-                    " || Percentile ", percentile,
-                    "|| Can LONG? ", canLongGlobal,
-                    "|| Can SHORT? ", canShortGlobal);
+                    , "|| Can LONG? ", canLongGlobal
+                    , "|| Can SHORT? ", canShortGlobal);
 
             outputToAutoLog(msg);
             double lastMA = sma.lastEntry().getValue();
