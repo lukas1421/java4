@@ -144,15 +144,22 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         System.out.println(getStr(" update last min map ", ldt, freshPrice));
         activeLastMinuteMap.entrySet().removeIf(e -> e.getKey().isBefore(ldt.minusMinutes(1)));
         activeLastMinuteMap.put(ldt, freshPrice);
-        if (activeLastMinuteMap.size() > 2) {
+        if (activeLastMinuteMap.size() > 1) {
             double lastV = activeLastMinuteMap.lastEntry().getValue();
             double secLastV = activeLastMinuteMap.lowerEntry(activeLastMinuteMap.lastKey()).getValue();
             long milliLapsed = ChronoUnit.MILLIS.between(activeLastMinuteMap.lowerKey(activeLastMinuteMap.lastKey()),
                     activeLastMinuteMap.lastKey());
 
-            System.out.println(getStr(" last minute map ", activeLastMinuteMap.lowerEntry(activeLastMinuteMap.lastKey())
-                    , activeLastMinuteMap.lastEntry(), lastV == secLastV ? "FLAT" : (lastV < secLastV ? "DOWN" : "UP")
-                    , " Lapsed: ", milliLapsed));
+            System.out.println(getStr(" last minute map "
+                    , activeLastMinuteMap.lowerEntry(activeLastMinuteMap.lastKey()).getKey().toLocalTime()
+                            .truncatedTo(ChronoUnit.SECONDS)
+                    , activeLastMinuteMap.lowerEntry(activeLastMinuteMap.lastKey()).getValue()
+                    , activeLastMinuteMap.lastEntry().getKey().toLocalTime()
+                            .truncatedTo(ChronoUnit.SECONDS)
+                    , activeLastMinuteMap.lastEntry().getValue()
+                    , " Lapsed: ", milliLapsed
+                    , lastV == secLastV ? "FLAT" : (lastV < secLastV ? "DOWN" : "UP")
+                    , (lastV - secLastV)));
         } else {
             System.out.println(getStr(" last minute map ", activeLastMinuteMap));
         }
@@ -621,7 +628,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
         outputToAutoLog(getStr(" Determining Order Size ||T PERC PD DIR -> FACTOR, FINAL SIZE ", t, perc
-                , pd, dir, factor, factor));
+                , Math.round(10000d * pd) / 10000d, dir, factor, factor));
 
         return factor;
     }
@@ -651,20 +658,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (sma.size() > 0) {
             String msg = getStr("**Observing MA**"
                     , "||Time: ", LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
-                    , "||SMA60 ", Math.round(100d * sma.lastEntry().getValue()) / 100d
-                    , "||Last Key Bar", lastKey, lastBar.toString(), "#: ", maSignals.get()
+                    , "||SMA60 ", r(sma.lastEntry().getValue())
+                    , "||Last Key Bar", lastKey, lastBar, "#: ", maSignals.get()
                     , "||Last Trade T", lastMATradeTime.truncatedTo(ChronoUnit.MINUTES)
                     , "||Last Order T ", lastMAOrderTime.truncatedTo(ChronoUnit.MINUTES)
                     , "||WaitT Orders: ", timeBtwnMAOrders
                     , "||Earliest Next Order: ", lastMAOrderTime.plusMinutes(timeBtwnMAOrders)
                     , "||Orders: ", maOrderMap.toString()
-                    , "||Index: ", Math.round(100d * getIndexPrice()) / 100d
+                    , "||Index: ", r(getIndexPrice())
                     , "||PD: ", Math.round(10000d * pd) / 10000d
                     , "||Curr Dir", currentDirection, "|2ndLastBar ", secLastBar,
                     " || Percentile ", percentile,
                     "|| Can LONG? ", canLongGlobal,
-                    "|| Can SHORT? ", canShortGlobal
-                    , "||lastMinMap", activeLastMinuteMap);
+                    "|| Can SHORT? ", canShortGlobal);
 
             outputToAutoLog(msg);
             double lastMA = sma.lastEntry().getValue();
@@ -682,7 +688,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     public static void fastTrader(LocalDateTime nowMilli, double freshPrice) {
         if (!(nowMilli.toLocalTime().isAfter(LocalTime.of(8, 59)) &&
-                nowMilli.toLocalTime().isBefore(LocalTime.of(18, 0)))) { //change this back later
+                nowMilli.toLocalTime().isBefore(LocalTime.of(15, 0)))) {
             return;
         }
         setLongShortTradability(currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0));
@@ -700,12 +706,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (detailedMA.get()) {
             System.out.println(getStr(" Detailed MA ON",
-                    "pd", Math.round(100d * pd) / 100d,
+                    "pd", Math.round(10000d * pd) / 10000d,
                     "freshPrice", freshPrice,
                     "prev Price", prevPrice,
                     "last bar", lastBar,
-                    "SMA", sma.lastEntry().getValue(),
-                    "activeLastMap: ", activeLastMinuteMap));
+                    "SMA", r(sma.lastEntry().getValue()))); //"activeLastMap: ", activeLastMinuteMap)
         }
 
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
@@ -781,7 +786,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * Auto trading based on Moving Avg
      */
     public static void MATrader(LocalDateTime nowMilli, double freshPrice) {
-
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         if (price5.size() <= 2) return;
         setLongShortTradability(currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0));
@@ -871,26 +875,28 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
                 if (candidatePrice != 0.0) {
                     String outputMsg = getStr("MA TRIGGER CONDITION|| ", nowMilli.truncatedTo(ChronoUnit.MINUTES),
-                            "#: ", maSignals.get(), maOrderMap.toString(), "||Last Bar: ", lastBarTime, lastBar.toString(),
-                            "|SMA:", maLast, "|Last Trade Time:", lastMATradeTime.truncatedTo(ChronoUnit.MINUTES),
-                            "|Last Order Time:", lastMAOrderTime.truncatedTo(ChronoUnit.MINUTES),
-                            "|Order Wait T:", timeBtwnMAOrders,
+                            "|SMA:", Math.round(100d * maLast) / 100d,
                             "|PD", Math.round(pd * 10000d) / 10000d,
                             "|Index", Math.round(100d * indexPrice) / 100d,
+                            "||Last Bar: ", lastBarTime, lastBar.toString(),
                             "|Sec last Bar", secLastBarTime, secLastBar,
-                            "|Perc: ", percentile);
+                            "|Perc: ", percentile,
+                            "#: ", maSignals.get(), maOrderMap.toString(),
+                            "|Last Trade Time:", lastMATradeTime.truncatedTo(ChronoUnit.MINUTES),
+                            "|Last Order Time:", lastMAOrderTime.truncatedTo(ChronoUnit.MINUTES),
+                            "|Order Wait T:", timeBtwnMAOrders);
                     outputToAutoLog(outputMsg);
                 }
             }
         }
-        if (detailedMA.get()) {
-            System.out.println(getStr("Detail Fast MA | ", LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
-                    , "||P", freshPrice, " ||SMA ", Math.round(100d * maLast) / 100d,
-                    " ||LastBar:", lastBar, "||LastOrder T ", lastMAOrderTime.truncatedTo(ChronoUnit.MINUTES),
-                    "|| WaitT Order:", timeBtwnMAOrders, "Tr#", numTrades,
-                    "||Curr Direction:", currentDirection, "||MA Last: "
-                    , maIdeasSet.size() > 0 ? maIdeasSet.last() : ""));
-        }
+//        if (detailedMA.get()) {
+//            System.out.println(getStr("Detail Fast MA | ", LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
+//                    , "||P", freshPrice, " ||SMA ", Math.round(100d * maLast) / 100d,
+//                    " ||LastBar:", lastBar, "||LastOrder T ", lastMAOrderTime.truncatedTo(ChronoUnit.MINUTES),
+//                    "|| WaitT Order:", timeBtwnMAOrders, "Tr#", numTrades,
+//                    "||Curr Direction:", currentDirection, "||MA Last: "
+//                    , maIdeasSet.size() > 0 ? maIdeasSet.last() : ""));
+//        }
     }
 
     private static void setLongShortTradability(int currPos) {
