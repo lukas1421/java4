@@ -9,11 +9,20 @@ public class MAIdea {
     private final LocalDateTime tradeTime;
     private final double tradePrice;
     private final int size;
+    private final String comments;
 
     public MAIdea(LocalDateTime t, double p, int q) {
         tradeTime = t;
         tradePrice = p;
         size = q;
+        comments = "";
+    }
+
+    public MAIdea(LocalDateTime t, double p, int q, String c) {
+        tradeTime = t;
+        tradePrice = p;
+        size = q;
+        comments = c;
     }
 
     public LocalDateTime getIdeaTime() {
@@ -32,6 +41,6 @@ public class MAIdea {
     @Override
     public String toString() {
         return Utility.getStr(" MAIdea", tradeTime, size > 0 ? "BUY" : "SELL", size
-                , " @ ", Math.round(100d * tradePrice) / 100d);
+                , " @ ", Math.round(100d * tradePrice) / 100d, "comments ", comments);
     }
 }

@@ -183,9 +183,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 SimpleBar sb = price5.get(lt);
                 SimpleBar sbPrevious = price5.lowerEntry(lt).getValue();
                 if (bullishTouchMet(sbPrevious, sb, ma)) {
-                    maIdeasSet.add(new MAIdea(lt, ma, +1));
+                    maIdeasSet.add(new MAIdea(lt, ma, +1,
+                            getStr("prev, last, ma ", sbPrevious.getOpen(), sbPrevious.getClose(), sb.getOpen(), ma)));
                 } else if (bearishTouchMet(sbPrevious, sb, ma)) {
-                    maIdeasSet.add(new MAIdea(lt, ma, -1));
+                    maIdeasSet.add(new MAIdea(lt, ma, -1,
+                            getStr("prev, last, ma ", sbPrevious.getOpen(), sbPrevious.getClose(), sb.getOpen(), ma)));
                 }
             }
         });
@@ -658,12 +660,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         soundPlayer.stopIfPlaying();
         if (sma.size() > 0) {
             String msg = getStr("**Observing MA**"
-                    , "||Time: ", LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
-                    , "||SMA:", r(sma.lastEntry().getValue())
-                    , "||Last Bar:", lastKey, lastBar
-                    , "||2nd Last Bar:", secLastKey, secLastBar
-                    , "||Index: ", r(getIndexPrice())
-                    , "||PD: ", Math.round(10000d * pd) / 10000d
+                    , "||T:", LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
+                    , "||MA:", r(sma.lastEntry().getValue())
+                    , "||Last:", lastKey, lastBar
+                    , "||2nd:", secLastKey, secLastBar
+                    , "||Index:", r(getIndexPrice())
+                    , "||PD:", Math.round(10000d * pd) / 10000d
                     , "||Curr Dir", currentDirection
                     , "||P%", percentile
                     , "||Last Trade T", lastMATradeTime.truncatedTo(ChronoUnit.MINUTES)
@@ -1050,6 +1052,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (!ld.equals(currDate) && lt.equals(LocalTime.of(14, 59))) {
                 futPrevCloseMap.put(FutType.get(name), close);
             }
+
+            if (name.equalsIgnoreCase("SGXA50")) {
+                System.out.println(getStr(name, ldt, open, high, low, close));
+            }
+
 
             int daysToGoBack = currDate.getDayOfWeek().equals(DayOfWeek.MONDAY) ? 4 : 2;
 
