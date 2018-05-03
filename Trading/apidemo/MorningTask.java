@@ -280,7 +280,7 @@ public final class MorningTask implements HistoricalHandler {
                 while ((line = reader2.readLine()) != null) {
                     Matcher m = p.matcher(line);
                     while (m.find()) {
-                        String res = m.group(1).replace(",","");
+                        String res = m.group(1).replace(",", "");
                         System.out.println(res);
                         System.out.println("XIN0U" + "\t" + res);
                         out.append("XIN0U" + "\t").append(res);

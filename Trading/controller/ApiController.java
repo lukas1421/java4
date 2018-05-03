@@ -2,9 +2,7 @@
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 package controller;
 
-import apidemo.ChinaMain;
-import apidemo.HKData;
-import apidemo.TradingConstants;
+import apidemo.*;
 import client.*;
 import client.Types.*;
 import controller.ApiConnection.ILogger;
@@ -1409,20 +1407,37 @@ public class ApiController implements EWrapper {
 
         void orderState(OrderState orderState);
 
-        void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld);
+        void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
+                         int parentId, double lastFillPrice, int clientId, String whyHeld);
 
         void handle(int errorCode, String errorMsg);
 
         class DefaultOrderHandler implements IOrderHandler {
 
+            int defaultID;
+
+            public DefaultOrderHandler() {
+                defaultID = 0;
+            }
+
+            public DefaultOrderHandler(int i) {
+                defaultID = i;
+            }
+
             @Override
             public void orderState(OrderState orderState) {
+//                System.out.println(getStr("id", defaultID,
+//                        XUTrader.globalIdOrderMap.get(defaultID), orderState.getStatus()
                 //System.out.println(orderState.toString());
             }
 
             @Override
-            public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
-
+            public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
+                                    int parentId, double lastFillPrice, int clientId, String whyHeld) {
+                if (status == OrderStatus.Filled || status == OrderStatus.Cancelled) {
+                    XuTraderHelper.outputToAutoLog(getStr("id", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
+                            status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));
+                }
             }
 
             @Override
@@ -1430,7 +1445,6 @@ public class ApiController implements EWrapper {
                 System.out.println(" handle error code " + errorCode + " message " + errorMsg);
             }
         }
-
     }
 
     public void placeOrModifyOrder(Contract contract, final Order order, final IOrderHandler handler) {

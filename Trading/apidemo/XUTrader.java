@@ -49,6 +49,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final long MAX_FUT_LIMIT = 20;
     private static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
     private static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
+    private static volatile AtomicInteger autoTradeID = new AtomicInteger(0);
+    public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
 
     //overnight trades
     private static final int maxOvernightTrades = 10;
@@ -64,8 +66,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static Direction currentDirection = Direction.Flat;
     private static final int DEFAULT_SIZE = 1;
     private static LocalDateTime lastMATradeTime = LocalDateTime.now();
-    private static LocalDateTime lastMAOrderTime = getSessionOpenTime();
-    private static final int MAX_MA_SIGNALS_PER_SESSION = 5;
+    private static LocalDateTime lastMAOrderTime = sessionOpenT();
+    private static final int MAX_MA_SIGNALS_PER_SESSION = 10;
     private static AtomicInteger maSignals = new AtomicInteger(0); //session transient
     private static volatile NavigableMap<LocalDateTime, Order> maOrderMap = new ConcurrentSkipListMap<>();
     private static volatile TreeSet<MAIdea> maIdeasSet = new TreeSet<>(Comparator.comparing(MAIdea::getIdeaTime));
@@ -168,7 +170,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void maTradeAnalysis() {
         System.out.println(" ma trade analysis ");
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime sessionBeginLDT = XuTraderHelper.getSessionOpenTime();
+        LocalDateTime sessionBeginLDT = sessionOpenT();
         maIdeasSet = new TreeSet<>(Comparator.comparing(MAIdea::getIdeaTime));
 
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
@@ -184,10 +186,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 SimpleBar sbPrevious = price5.lowerEntry(lt).getValue();
                 if (bullishTouchMet(sbPrevious, sb, ma)) {
                     maIdeasSet.add(new MAIdea(lt, ma, +1,
-                            getStr("prev, last, ma ", sbPrevious.getOpen(), sbPrevious.getClose(), sb.getOpen(), ma)));
+                            getStr("prev, last, ma ", sbPrevious.getOpen(), sbPrevious.getClose(), sb.getOpen(), r(ma))));
                 } else if (bearishTouchMet(sbPrevious, sb, ma)) {
                     maIdeasSet.add(new MAIdea(lt, ma, -1,
-                            getStr("prev, last, ma ", sbPrevious.getOpen(), sbPrevious.getClose(), sb.getOpen(), ma)));
+                            getStr("prev, last, ma ", sbPrevious.getOpen(), sbPrevious.getClose(), sb.getOpen(), r(ma))));
                 }
             }
         });
@@ -207,19 +209,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputToAutoLog(getStr(now, "MAKE UP TRADE ", lastIdea));
                 if (lastIdea.getIdeaSize() > 0 && canLongGlobal.get() && pd < PD_UP_THRESH) {
                     Order o = placeBidLimit(roundToXUPricePassive(lastIdea.getIdeaPrice(), Direction.Long), 1);
-                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
-                    outputOrderToAutoLog(getStr(now, " MakeUp BUY || BIDDING @ ", o.toString(), "SMA",
-                            lastIdea));
-                    maOrderMap.put(now, o);
-                    maSignals.incrementAndGet();
-                    lastMAOrderTime = now;
+                    //apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
+//                    outputOrderToAutoLog(getStr(now, " MakeUp BUY || BIDDING @ ", o.toString(), "SMA",
+//                            lastIdea));
+                    //maOrderMap.put(now, o);
+                    //maSignals.incrementAndGet();
+                    //lastMAOrderTime = now;
                 } else if (lastIdea.getIdeaSize() < 0 && canShortGlobal.get() && pd > PD_DOWN_THRESH) {
                     Order o = placeOfferLimit(roundToXUPricePassive(lastIdea.getIdeaPrice(), Direction.Short), 1);
-                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
-                    outputOrderToAutoLog(getStr(now, " MakeUp SELL || OFFERING @ ", o.toString(), "SMA", lastIdea));
-                    maOrderMap.put(now, o);
-                    maSignals.incrementAndGet();
-                    lastMAOrderTime = now;
+                    //apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
+//                    outputOrderToAutoLog(getStr(now, " MakeUp SELL || OFFERING @ ", o.toString(), "SMA", lastIdea));
+                    //maOrderMap.put(now, o);
+                    //maSignals.incrementAndGet();
+                    //lastMAOrderTime = now;
                 }
             }
             //computed from maAnalysis, persistent through sessions.
@@ -318,7 +320,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             xuGraph.refresh();
             apcon.reqPositions(getThis());
             repaint();
-            //xuGraph.computeMAStrategyForAll();
         });
 
         JButton computeButton = new JButton("Compute");
@@ -478,7 +479,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         });
 
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-
         JPanel controlPanel1 = new JPanel();
         JPanel controlPanel2 = new JPanel();
         controlPanel1.add(currTimeLabel);
@@ -637,7 +637,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static int determineTimeDiffFactor() {
         if (maOrderMap.size() == 0) return 1;
-        return Math.max(1, Math.min(2,
+        return Math.max(1, Math.min(1,
                 (int) Math.floor(timeDiffinMinutes(maOrderMap.lastEntry().getKey(), LocalDateTime.now()) / 60d)));
     }
 
@@ -734,57 +734,47 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 candidatePrice = roundToXUPriceVeryPassive(maLast, Direction.Long, fastTradeSignals.get());
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
                     Order o = placeBidLimit(candidatePrice, 1);
-                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
+                    autoTradeID.incrementAndGet();
+                    globalIdOrderMap.put(autoTradeID.get(), new OrderAugmented(nowMilli, o, "Fast Trade Bid"));
+                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(autoTradeID.get()));
                     fastTradeSignals.incrementAndGet();
                     lastFastOrderTime = LocalDateTime.now();
                     fastOrderMap.put(nowMilli, o);
                     outputOrderToAutoLog(getStr(nowMilli, "FAST ORDER || BIDDING @ ", o.toString(), "SMA",
+                            "||Fresh: ", freshPrice,
+                            "||Prev: ", prevPrice,
+                            "||MA LAST: ", r(maLast),
                             "||Last Open Order T", lastFastOrderTime,
                             "||secToWait", secBtwnOpenOrders,
                             " # ", fastTradeSignals.get(),
                             "||Default Sec Btwn orders ", default_sec_btwn_fast_orders,
                             "||This bar: ", lastBar,
-                            "||MA LAST: ", maLast,
-                            "||Fresh price: ", freshPrice,
-                            "||Prev price", prevPrice,
-                            "||PD: ", pd));
+                            "||PD: ", r10000(pd)));
                 }
             }
             if (prevPrice > maLast && freshPrice <= maLast && canShortGlobal.get() && pd > PD_DOWN_THRESH) {
                 candidatePrice = roundToXUPriceVeryPassive(maLast, Direction.Short, fastTradeSignals.get());
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
                     Order o = placeOfferLimit(candidatePrice, 1);
-                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
+                    autoTradeID.incrementAndGet();
+                    globalIdOrderMap.put(autoTradeID.get(), new OrderAugmented(nowMilli, o, "Fast Trade Offer"));
+                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(autoTradeID.get()));
                     fastTradeSignals.incrementAndGet();
                     lastFastOrderTime = LocalDateTime.now();
                     fastOrderMap.put(nowMilli, o);
                     outputOrderToAutoLog(getStr(nowMilli, "FAST ORDER || OFFERING @ ", o.toString(), "SMA",
+                            "||Fresh: ", freshPrice,
+                            "||Prev", prevPrice,
+                            "||MA Last: ", r(maLast),
                             "||Last Open Order T", lastFastOrderTime,
                             "||secToWait ", secBtwnOpenOrders,
                             "||#: ", fastTradeSignals.get(),
                             "||Default Sec Btwn orders ", default_sec_btwn_fast_orders,
                             "||This bar: ", lastBar,
-                            "||MA Last: ", maLast,
-                            "||Fresh Price: ", freshPrice,
-                            "||Prev price", prevPrice,
-                            "||PD: ", pd));
+                            "||PD: ", r10000(pd)));
                 }
             }
         }
-
-    }
-
-    private static double getIndexPrice() {
-        return (ChinaData.priceMapBar.containsKey(ftseIndex) &&
-                ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
-                ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
-    }
-
-    private static double getPD(double freshPrice) {
-        double indexPrice = (ChinaData.priceMapBar.containsKey(ftseIndex) &&
-                ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
-                ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
-        return (indexPrice != 0.0 && freshPrice != 0.0) ? (freshPrice / indexPrice - 1) : 0.0;
     }
 
     /**
@@ -817,12 +807,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
             lastMATradeTime = XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).lastKey();
             numTrades = XUTrader.tradesMap.get(ibContractToFutType(activeFuture))
-                    .entrySet().stream().filter(e -> e.getKey().isAfter(getSessionOpenTime()))
+                    .entrySet().stream().filter(e -> e.getKey().isAfter(sessionOpenT()))
                     .mapToInt(e -> e.getValue().getSizeAllAbs()).sum();
         }
 
-        timeBtwnMAOrders = maOrderMap.size() == 0 ? 0 :
-                Math.max(5, Math.round(5 * Math.pow(2, Math.min(7, maOrderMap.size() - 1))));
+//        timeBtwnMAOrders = maOrderMap.size() == 0 ? 0 :
+//                Math.max(5, Math.round(5 * Math.pow(2, Math.min(7, maOrderMap.size() - 1))));
+        long numOrdersThisSession = maOrderMap.entrySet().stream().filter(e -> e.getKey().isAfter(sessionOpenT())).count();
+
+        timeBtwnMAOrders = numOrdersThisSession == 0 ? 0 : Math.max(5, Math.round(5 * (numOrdersThisSession - 1)));
 
         if (timeDiffinMinutes(lastMAOrderTime, nowMilli) >= timeBtwnMAOrders && maSignals.get() <= MAX_MA_SIGNALS_PER_SESSION) {
             if (touchConditionMet(secLastBar, lastBar, maLast)) {
@@ -838,7 +831,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         priceType = "maSignals = 0 -> BUY BID";
                     } else {
                         candidatePrice = roundToXUPricePassive(lastBar.getOpen(), Direction.Long);
-                        priceType = " maSignals > 0 -> BUY @ LAST FTSE_OPEN";
+                        priceType = " maSignals > 0 -> BUY @ LAST BAR OPEN";
                     }
 
                     Order o = placeBidLimit(candidatePrice, determinePDPercFactor(nowMilli.toLocalTime(), pd, Direction.Long,
@@ -847,7 +840,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.cancelAllOrders();
                         maOrderMap.put(nowMilli, o);
                         maSignals.incrementAndGet();
-                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
+                        autoTradeID.incrementAndGet();
+                        globalIdOrderMap.put(autoTradeID.get(), new OrderAugmented(nowMilli, o, "MA Trade bid"));
+                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(autoTradeID.get()));
                         lastMAOrderTime = LocalDateTime.now();
                         currentDirection = Direction.Long;
                         outputOrderToAutoLog(getStr(nowMilli, "MA ORDER || bidding @ ", o.toString(), "type", priceType));
@@ -866,13 +861,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         candidatePrice = roundToXUPricePassive(lastBar.getOpen(), Direction.Short);
                         priceType = "SELL: maSignals > 0 -> SELL @ last Bar OPEN";
                     }
-                    Order o = placeOfferLimit(candidatePrice, determinePDPercFactor(nowMilli.toLocalTime(), pd, Direction.Short,
-                            percentile) * determineTimeDiffFactor());
+                    Order o = placeOfferLimit(candidatePrice, determinePDPercFactor(nowMilli.toLocalTime(), pd,
+                            Direction.Short, percentile) * determineTimeDiffFactor());
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         maOrderMap.put(nowMilli, o);
                         maSignals.incrementAndGet();
                         apcon.cancelAllOrders();
-                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
+                        autoTradeID.incrementAndGet();
+                        globalIdOrderMap.put(autoTradeID.get(), new OrderAugmented(nowMilli, o, "MA Trade offer"));
+                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(autoTradeID.get()));
                         lastMAOrderTime = LocalDateTime.now();
                         currentDirection = Direction.Short;
                         outputOrderToAutoLog(getStr(nowMilli, "MA ORDER || offering @ ", o.toString(), priceType));
@@ -883,13 +880,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             "|SMA:", Math.round(100d * maLast) / 100d,
                             "|PD", Math.round(pd * 10000d) / 10000d,
                             "|Index", Math.round(100d * indexPrice) / 100d,
-                            "||Last Bar: ", lastBarTime, lastBar.toString(),
+                            "||Last Bar: ", lastBarTime, lastBar,
                             "|Sec last Bar", secLastBarTime, secLastBar,
                             "|Perc: ", percentile,
-                            "#: ", maSignals.get(), maOrderMap.toString(),
+                            "#: ", maSignals.get(),
+                            maOrderMap.entrySet().stream().filter(e -> e.getKey().isAfter(sessionOpenT())).toString(),
                             "|Last Trade Time:", lastMATradeTime.truncatedTo(ChronoUnit.MINUTES),
                             "|Last Order Time:", lastMAOrderTime.truncatedTo(ChronoUnit.MINUTES),
-                            "|Order Wait T:", timeBtwnMAOrders);
+                            "|Order Wait T:", timeBtwnMAOrders,
+                            "|Trade ID ", autoTradeID.get());
                     outputToAutoLog(outputMsg);
                 }
             }
@@ -962,7 +961,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         outputOrderToAutoLog(getStr(now, "O/N placing sell order @ ", candidatePrice,
                                 " curr p% ", currPercentile, "curr PD: ", pd));
-                        apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(candidatePrice, 1.0), this);
+                        autoTradeID.incrementAndGet();
+                        apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(candidatePrice, 1.0),
+                                new DefaultOrderHandler(autoTradeID.get()));
                         overnightClosingOrders.incrementAndGet();
                     }
                 } else if (pd < -0.005 && canLongGlobal.get()) {
@@ -970,7 +971,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         outputOrderToAutoLog(getStr(now, "O/N placing buy order @ ", candidatePrice,
                                 " curr p% ", currPercentile, " curr PD: ", pd));
-                        apcon.placeOrModifyOrder(activeFuture, placeBidLimit(candidatePrice, 1.0), this);
+                        autoTradeID.incrementAndGet();
+                        apcon.placeOrModifyOrder(activeFuture, placeBidLimit(candidatePrice, 1.0),
+                                new DefaultOrderHandler(autoTradeID.get()));
                         overnightClosingOrders.incrementAndGet();
                     }
                 } else {
@@ -985,16 +988,30 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         String outputString = getStr("||O/N||", now.format(DateTimeFormatter.ofPattern("M-d H:mm:ss")),
                 "||O/N trades done", absLotsTraded, "", "||O/N Delta: ", netTradedDelta,
-                "||current percentile ", currPercentile, "||PD: ", pd, "||curr P: ",
-                filteredPriceMap.lastEntry().getValue().getClose(), "||index: ", Math.round(100d * indexPrice) / 100d,
+                "||current percentile ", currPercentile, "||PD: ", pd,
+                "||curr P: ", filteredPriceMap.lastEntry().getValue().getClose(),
+                "||index: ", Math.round(100d * indexPrice) / 100d,
                 "||bid ", bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
-                " ||ask ", askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
+                "||ask ", askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
                 "||Can Long? ", canLongGlobal,
                 "|| Can Short? ", canShortGlobal);
 
         outputToAutoLog(outputString);
         requestOvernightExecHistory();
     }
+
+    private void inventoryTrader() {
+        CountDownLatch c = new CountDownLatch(1);
+
+        try {
+            c.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
 
     private void loadXU() {
         apcon.getSGXA50Historical2(30000, this);
@@ -1053,9 +1070,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 futPrevCloseMap.put(FutType.get(name), close);
             }
 
-            if (name.equalsIgnoreCase("SGXA50")) {
-                System.out.println(getStr(name, ldt, open, high, low, close));
-            }
+//            if (name.equalsIgnoreCase("SGXA50")) {
+//                System.out.println(getStr(name, ldt, open, high, low, close));
+//            }
 
 
             int daysToGoBack = currDate.getDayOfWeek().equals(DayOfWeek.MONDAY) ? 4 : 2;
@@ -1183,8 +1200,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @Override
     public void handle(int orderId, int errorCode, String errorMsg) {
-        System.out.println(" Xutrader handle ");
-        XUTrader.updateLog(" handle error code " + errorCode + " message " + errorMsg);
+
+        if (errorCode != 504 || LocalTime.now().getSecond() < 5) {
+            //System.out.println(" Xutrader handle ");
+            XUTrader.updateLog(" handle error code " + errorCode + " message " + errorMsg);
+        }
     }
 
     // position

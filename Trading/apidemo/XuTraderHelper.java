@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static apidemo.TradingConstants.ftseIndex;
 import static utility.Utility.getStr;
 
 public class XuTraderHelper {
@@ -77,7 +78,7 @@ public class XuTraderHelper {
         return res;
     }
 
-    static void outputToAutoLog(String s) {
+    public static void outputToAutoLog(String s) {
         System.out.println(s);
         File output = new File(TradingConstants.GLOBALPATH + "autoLog.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
@@ -88,7 +89,7 @@ public class XuTraderHelper {
         }
     }
 
-    static void outputOrderToAutoLog(String s) {
+    public static void outputOrderToAutoLog(String s) {
         outputToAutoLog("****************ORDER************************");
         outputToAutoLog(s);
         outputToAutoLog("****************ORDER************************");
@@ -194,10 +195,11 @@ public class XuTraderHelper {
         return t -> t.isAfter(LocalTime.of(15, 0)) || t.isBefore(LocalTime.of(5, 0));
     }
 
-    static LocalDateTime getSessionOpenTime() {
-        LocalTime sessionBeginTime = futureOvernightSession().test(LocalTime.now()) ? OVERNIGHT_BEGIN :
-                (futureAMSession().test(LocalTime.now()) ? AM_BEGIN : PM_BEGIN);
-        LocalDate TDate = LocalTime.now().isAfter(LocalTime.of(0, 0)) && LocalTime.now().isBefore(LocalTime.of(5, 0))
+    static LocalDateTime sessionOpenT() {
+        LocalTime now = LocalTime.now();
+        LocalTime sessionBeginTime = futureOvernightSession().test(now) ? OVERNIGHT_BEGIN :
+                (futureAMSession().test(now) ? AM_BEGIN : PM_BEGIN);
+        LocalDate TDate = now.isAfter(LocalTime.of(0, 0)) && now.isBefore(LocalTime.of(5, 0))
                 ? LocalDate.now().minusDays(1L) : LocalDate.now();
         return LocalDateTime.of(TDate, sessionBeginTime);
     }
@@ -207,7 +209,7 @@ public class XuTraderHelper {
     }
 
     static double roundToXUPriceVeryPassive(double x, Direction dir, int factor) {
-        return (Math.round(x * 10) - Math.round(x * 10) % 25 + ((dir == Direction.Long ? -25 : 25) * factor)) / 10d;
+        return (Math.round(x * 10) - Math.round(x * 10) % 25 + ((dir == Direction.Long ? -25 : 25) * Math.pow(2, factor))) / 10d;
     }
 
     static double roundToXUPriceAggressive(double x, Direction dir) {
@@ -234,12 +236,12 @@ public class XuTraderHelper {
         if (secLastBar.containsZero() || lastBar.containsZero() || sma == 0.0) {
             return false;
         }
-        if (secLastBar.strictIncludes(sma) && secLastBar.getBarReturn() > 0 && lastBar.getOpen() > sma) {
-            outputToAutoLog(" bullish cross ");
+        if (secLastBar.strictIncludes(sma) && secLastBar.getBarReturn() >= 0.0 && lastBar.getOpen() > sma) {
+            //outputToAutoLog(" bullish cross ");
             return true;
         }
-        if (sma > secLastBar.getHigh() && secLastBar.getBarReturn() > 0 && lastBar.getOpen() > sma) {
-            outputToAutoLog(" bullish jump through ");
+        if (sma > secLastBar.getHigh() && secLastBar.getBarReturn() >= 0.0 && lastBar.getOpen() > sma) {
+            //outputToAutoLog(" bullish jump through ");
             return true;
         }
         return false;
@@ -249,12 +251,12 @@ public class XuTraderHelper {
         if (secLastBar.containsZero() || lastBar.containsZero() || sma == 0.0) {
             return false;
         }
-        if (secLastBar.strictIncludes(sma) && secLastBar.getBarReturn() < 0 && lastBar.getOpen() < sma) {
-            outputToAutoLog(" bearish cross");
+        if (secLastBar.strictIncludes(sma) && secLastBar.getBarReturn() <= 0.0 && lastBar.getOpen() < sma) {
+            //outputToAutoLog(" bearish cross");
             return true;
         }
-        if (sma < secLastBar.getLow() && secLastBar.getBarReturn() < 0.0 && lastBar.getOpen() < sma) {
-            outputToAutoLog(" bearish jump through ");
+        if (sma < secLastBar.getLow() && secLastBar.getBarReturn() <= 0.0 && lastBar.getOpen() < sma) {
+            //outputToAutoLog(" bearish jump through ");
             return true;
         }
 
@@ -275,6 +277,19 @@ public class XuTraderHelper {
             return true; //bearish jump
         }
         return false;
+    }
+
+    static double getIndexPrice() {
+        return (ChinaData.priceMapBar.containsKey(ftseIndex) &&
+                ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
+                ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
+    }
+
+    public static double getPD(double freshPrice) {
+        double indexPrice = (ChinaData.priceMapBar.containsKey(ftseIndex) &&
+                ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
+                ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
+        return (indexPrice != 0.0 && freshPrice != 0.0) ? (freshPrice / indexPrice - 1) : 0.0;
     }
 
 
