@@ -1413,7 +1413,6 @@ public class ApiController implements EWrapper {
         void handle(int errorCode, String errorMsg);
 
         class DefaultOrderHandler implements IOrderHandler {
-
             int defaultID;
 
             public DefaultOrderHandler() {
@@ -1429,15 +1428,20 @@ public class ApiController implements EWrapper {
 //                System.out.println(getStr("id", defaultID,
 //                        XUTrader.globalIdOrderMap.get(defaultID), orderState.getStatus()
                 //System.out.println(orderState.toString());
+                //if (orderState.status() == OrderStatus.Filled) {
+                XuTraderHelper.outputToAutoLog(
+                        getStr("|| OrderState ||", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
+                                orderState.status()));
+                //}
             }
 
             @Override
             public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
                                     int parentId, double lastFillPrice, int clientId, String whyHeld) {
-                if (status == OrderStatus.Filled || status == OrderStatus.Cancelled) {
-                    XuTraderHelper.outputToAutoLog(getStr("id", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
-                            status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));
-                }
+                //if (status == OrderStatus.Filled || status == OrderStatus.Cancelled) {
+                XuTraderHelper.outputToAutoLog(getStr("||OrderStatus||", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
+                        status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));
+                //}
             }
 
             @Override

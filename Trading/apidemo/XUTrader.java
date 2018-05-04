@@ -734,9 +734,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 candidatePrice = roundToXUPriceVeryPassive(maLast, Direction.Long, fastTradeSignals.get());
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
                     Order o = placeBidLimit(candidatePrice, 1);
-                    autoTradeID.incrementAndGet();
-                    globalIdOrderMap.put(autoTradeID.get(), new OrderAugmented(nowMilli, o, "Fast Trade Bid"));
-                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(autoTradeID.get()));
+                    int id = autoTradeID.incrementAndGet();
+                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Fast Trade Bid"));
+                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                     fastTradeSignals.incrementAndGet();
                     lastFastOrderTime = LocalDateTime.now();
                     fastOrderMap.put(nowMilli, o);
@@ -756,9 +756,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 candidatePrice = roundToXUPriceVeryPassive(maLast, Direction.Short, fastTradeSignals.get());
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
                     Order o = placeOfferLimit(candidatePrice, 1);
-                    autoTradeID.incrementAndGet();
-                    globalIdOrderMap.put(autoTradeID.get(), new OrderAugmented(nowMilli, o, "Fast Trade Offer"));
-                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(autoTradeID.get()));
+                    int id = autoTradeID.incrementAndGet();
+                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Fast Trade Offer"));
+                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                     fastTradeSignals.incrementAndGet();
                     lastFastOrderTime = LocalDateTime.now();
                     fastOrderMap.put(nowMilli, o);
@@ -840,9 +840,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.cancelAllOrders();
                         maOrderMap.put(nowMilli, o);
                         maSignals.incrementAndGet();
-                        autoTradeID.incrementAndGet();
-                        globalIdOrderMap.put(autoTradeID.get(), new OrderAugmented(nowMilli, o, "MA Trade bid"));
-                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(autoTradeID.get()));
+                        int id = autoTradeID.incrementAndGet();
+                        globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "MA Trade bid"));
+                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         lastMAOrderTime = LocalDateTime.now();
                         currentDirection = Direction.Long;
                         outputOrderToAutoLog(getStr(nowMilli, "MA ORDER || bidding @ ", o.toString(), "type", priceType));
@@ -867,9 +867,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         maOrderMap.put(nowMilli, o);
                         maSignals.incrementAndGet();
                         apcon.cancelAllOrders();
-                        autoTradeID.incrementAndGet();
-                        globalIdOrderMap.put(autoTradeID.get(), new OrderAugmented(nowMilli, o, "MA Trade offer"));
-                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(autoTradeID.get()));
+                        int id = autoTradeID.incrementAndGet();
+                        globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "MA Trade offer"));
+                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         lastMAOrderTime = LocalDateTime.now();
                         currentDirection = Direction.Short;
                         outputOrderToAutoLog(getStr(nowMilli, "MA ORDER || offering @ ", o.toString(), priceType));
@@ -961,9 +961,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         outputOrderToAutoLog(getStr(now, "O/N placing sell order @ ", candidatePrice,
                                 " curr p% ", currPercentile, "curr PD: ", pd));
-                        autoTradeID.incrementAndGet();
+                        int id = autoTradeID.incrementAndGet();
                         apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(candidatePrice, 1.0),
-                                new DefaultOrderHandler(autoTradeID.get()));
+                                new DefaultOrderHandler(id));
                         overnightClosingOrders.incrementAndGet();
                     }
                 } else if (pd < -0.005 && canLongGlobal.get()) {
@@ -971,9 +971,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         outputOrderToAutoLog(getStr(now, "O/N placing buy order @ ", candidatePrice,
                                 " curr p% ", currPercentile, " curr PD: ", pd));
-                        autoTradeID.incrementAndGet();
+                        int id = autoTradeID.incrementAndGet();
                         apcon.placeOrModifyOrder(activeFuture, placeBidLimit(candidatePrice, 1.0),
-                                new DefaultOrderHandler(autoTradeID.get()));
+                                new DefaultOrderHandler(id));
                         overnightClosingOrders.incrementAndGet();
                     }
                 } else {
@@ -1132,6 +1132,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void tradeReportEnd() {
         System.out.println(" trade report end printing");
+        System.out.println(getStr("Trade Report End ", XUTrader.tradesMap));
         if (XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
             currentDirection = XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getValue().getSizeAll() > 0 ?
                     Direction.Long : Direction.Short;

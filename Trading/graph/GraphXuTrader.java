@@ -94,6 +94,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     }
 
     private void setTradesMap(NavigableMap<LocalDateTime, TradeBlock> trade) {
+        //System.out.println(" Graph Xu Trader: set trades map " + trade);
         trademap = trade;
     }
 
@@ -295,12 +296,24 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                         Polygon p = new Polygon(new int[]{x - 4, x, x + 4}, new int[]{yCord + 5, yCord, yCord + 5}, 3);
                         g.drawPolygon(p);
                         g.fillPolygon(p);
-                    } else {
+                    } else if (tb.getSizeAll() < 0) {
                         g.setColor(Color.black);
                         int yCord = getY(tb.getAveragePrice());
                         Polygon p = new Polygon(new int[]{x - 4, x, x + 4}, new int[]{yCord - 5, yCord, yCord - 5}, 3);
                         g.drawPolygon(p);
                         g.fillPolygon(p);
+                    } else {
+                        g.setColor(Color.blue);
+                        int yCordBot = getY(tb.getBotAveragePrice());
+                        Polygon pBot = new Polygon(new int[]{x - 4, x, x + 4}, new int[]{yCordBot + 5, yCordBot, yCordBot + 5}, 3);
+                        g.drawPolygon(pBot);
+                        g.fillPolygon(pBot);
+
+                        g.setColor(Color.black);
+                        int yCordSold = getY(tb.getSoldAveragePrice());
+                        Polygon pSld = new Polygon(new int[]{x - 4, x, x + 4}, new int[]{yCordSold - 5, yCordSold, yCordSold - 5}, 3);
+                        g.drawPolygon(pSld);
+                        g.fillPolygon(pSld);
                     }
                 }
             }

@@ -73,6 +73,16 @@ public final class TradeBlock {
         return getDeltaAll() / getSizeAll();
     }
 
+    public double getBotAveragePrice() {
+        return mergeList.stream().mapToDouble(t -> ((Trade) t).getDelta()).filter(e -> e > 0.0).sum()
+                / mergeList.stream().mapToDouble(t -> ((Trade) t).getDelta()).filter(e -> e > 0.0).count();
+    }
+
+    public double getSoldAveragePrice() {
+        return mergeList.stream().mapToDouble(t -> ((Trade) t).getDelta()).filter(e -> e < 0.0).sum()
+                / mergeList.stream().mapToDouble(t -> ((Trade) t).getDelta()).filter(e -> e < 0.0).count() * (-1);
+    }
+
     public double getDeltaAll() {
         return mergeList.stream().mapToDouble(t -> ((Trade) t).getDelta()).sum();
     }
