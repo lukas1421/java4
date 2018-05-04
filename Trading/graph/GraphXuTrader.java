@@ -303,6 +303,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                         g.drawPolygon(p);
                         g.fillPolygon(p);
                     } else {
+                        // buy and sell cancel
                         g.setColor(Color.blue);
                         int yCordBot = getY(tb.getBotAveragePrice());
                         Polygon pBot = new Polygon(new int[]{x - 4, x, x + 4}, new int[]{yCordBot + 5, yCordBot, yCordBot + 5}, 3);

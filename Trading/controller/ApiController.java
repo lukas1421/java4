@@ -1428,11 +1428,11 @@ public class ApiController implements EWrapper {
 //                System.out.println(getStr("id", defaultID,
 //                        XUTrader.globalIdOrderMap.get(defaultID), orderState.getStatus()
                 //System.out.println(orderState.toString());
-                //if (orderState.status() == OrderStatus.Filled) {
-                XuTraderHelper.outputToAutoLog(
-                        getStr("|| OrderState ||", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
-                                orderState.status()));
-                //}
+                if (orderState.status() == OrderStatus.Filled) {
+                    XuTraderHelper.outputToAutoLog(
+                            getStr("|| OrderState ||", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
+                                    orderState.status()));
+                }
             }
 
             @Override

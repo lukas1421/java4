@@ -49,7 +49,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final long MAX_FUT_LIMIT = 20;
     private static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
     private static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
-    private static volatile AtomicInteger autoTradeID = new AtomicInteger(0);
+    private static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
 
     //overnight trades
@@ -740,7 +740,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     fastTradeSignals.incrementAndGet();
                     lastFastOrderTime = LocalDateTime.now();
                     fastOrderMap.put(nowMilli, o);
-                    outputOrderToAutoLog(getStr(nowMilli, "FAST ORDER || BIDDING @ ", o.toString(), "SMA",
+                    outputOrderToAutoLog(getStr(nowMilli, id, "FAST ORDER || BIDDING @ ", o.toString(), "SMA",
                             "||Fresh: ", freshPrice,
                             "||Prev: ", prevPrice,
                             "||MA LAST: ", r(maLast),
@@ -762,7 +762,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     fastTradeSignals.incrementAndGet();
                     lastFastOrderTime = LocalDateTime.now();
                     fastOrderMap.put(nowMilli, o);
-                    outputOrderToAutoLog(getStr(nowMilli, "FAST ORDER || OFFERING @ ", o.toString(), "SMA",
+                    outputOrderToAutoLog(getStr(nowMilli, id, "FAST ORDER || OFFERING @ ", o.toString(), "SMA",
                             "||Fresh: ", freshPrice,
                             "||Prev", prevPrice,
                             "||MA Last: ", r(maLast),
@@ -845,7 +845,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         lastMAOrderTime = LocalDateTime.now();
                         currentDirection = Direction.Long;
-                        outputOrderToAutoLog(getStr(nowMilli, "MA ORDER || bidding @ ", o.toString(), "type", priceType));
+                        outputOrderToAutoLog(getStr(nowMilli, id, "MA ORDER || bidding @ ", o.toString(), "type", priceType));
                     }
                 } else if (bearishTouchMet(secLastBar, lastBar, maLast) && canShortGlobal.get()) {
                     if (currentDirection == Direction.Short || pd < PD_DOWN_THRESH) {
@@ -872,7 +872,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         lastMAOrderTime = LocalDateTime.now();
                         currentDirection = Direction.Short;
-                        outputOrderToAutoLog(getStr(nowMilli, "MA ORDER || offering @ ", o.toString(), priceType));
+                        outputOrderToAutoLog(getStr(nowMilli, id, "MA ORDER || offering @ ", o.toString(), priceType));
                     }
                 }
                 if (candidatePrice != 0.0) {
@@ -959,9 +959,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 if (pd > 0.005 && canShortGlobal.get()) {
                     double candidatePrice = askMap.getOrDefault(ibContractToFutType((activeFuture)), 0.0);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
-                        outputOrderToAutoLog(getStr(now, "O/N placing sell order @ ", candidatePrice,
-                                " curr p% ", currPercentile, "curr PD: ", pd));
                         int id = autoTradeID.incrementAndGet();
+
+                        outputOrderToAutoLog(getStr(now, id, "O/N placing sell order @ ", candidatePrice,
+                                " curr p% ", currPercentile, "curr PD: ", pd));
                         apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(candidatePrice, 1.0),
                                 new DefaultOrderHandler(id));
                         overnightClosingOrders.incrementAndGet();
@@ -969,9 +970,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 } else if (pd < -0.005 && canLongGlobal.get()) {
                     double candidatePrice = bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
-                        outputOrderToAutoLog(getStr(now, "O/N placing buy order @ ", candidatePrice,
-                                " curr p% ", currPercentile, " curr PD: ", pd));
                         int id = autoTradeID.incrementAndGet();
+                        outputOrderToAutoLog(getStr(now, id, "O/N placing buy order @ ", candidatePrice,
+                                " curr p% ", currPercentile, " curr PD: ", pd));
                         apcon.placeOrModifyOrder(activeFuture, placeBidLimit(candidatePrice, 1.0),
                                 new DefaultOrderHandler(id));
                         overnightClosingOrders.incrementAndGet();

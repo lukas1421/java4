@@ -353,7 +353,6 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
-
     @SuppressWarnings("unused")
     public static void handleHistoricalData(String date, double c) {
         System.out.println(" handling historical data ");
