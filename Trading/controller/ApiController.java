@@ -263,7 +263,7 @@ public class ApiController implements EWrapper {
 
             @Override
             public void accountList(ArrayList<String> list) {
-                show("Received account list");
+                //show("Received account list");
             }
 
             @Override
@@ -299,12 +299,12 @@ public class ApiController implements EWrapper {
 //	}
     public void connect(String host, int port, int clientId, String connectionOpts) {
         System.out.println(" ------------------in connect----------------- " + host + " " + port + " " + clientId);
-        System.out.println(" checking connection BEFORE----" + checkConnection());
+        System.out.println(getStr(" checking connection BEFORE----", checkConnection(), port));
         m_client.eConnect(host, port, clientId);
         startMsgProcessingThread();
-        System.out.println(" checking connection AFTER-----" + checkConnection());
+        System.out.println(getStr(" checking connection AFTER-----" + checkConnection(), port));
         sendEOM();
-        System.out.println(" checking connection AFTER EOM-----" + checkConnection());
+        System.out.println(getStr(" checking connection AFTER EOM-----", checkConnection(), port));
     }
 
     public ApiConnection client() {
@@ -331,12 +331,8 @@ public class ApiController implements EWrapper {
     }
 
     public void disconnect() {
-        //System.out.println(" api controller disconnecting...");
-        System.out.println(" check connected BEFORE disconnecting " + isConnected());
+        //System.out.println(" check connected BEFORE disconnecting " + isConnected());
         System.out.println(" check connection in disconnect BEFORE " + checkConnection());
-//        if (checkConnection()) {
-//            m_client.eDisconnect();
-//        }
 
         m_client.eDisconnect();
         m_connectionHandler.disconnected();
@@ -346,7 +342,6 @@ public class ApiController implements EWrapper {
 
         System.out.println(" check connected AFTER " + isConnected());
         System.out.println(" check connection in disconnect AFTER " + checkConnection());
-
     }
 
     public void setConnectionStatus(boolean s) {
@@ -354,7 +349,7 @@ public class ApiController implements EWrapper {
     }
 
     private boolean isConnected() {
-        System.out.println(" isconnected ? " + m_connected);
+        //System.out.println(" isconnected ? " + m_connected);
         return m_connected;
     }
 
@@ -925,7 +920,7 @@ public class ApiController implements EWrapper {
 
     //xu data
     public void reqXUDataArray() {
-        System.out.println("requesting XU data begins" + LocalTime.now());
+        System.out.println("requesting XU data begins " + LocalTime.now());
         Contract frontCt = getFrontFutContract();
         Contract backCt = getBackFutContract();
 

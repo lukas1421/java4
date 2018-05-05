@@ -28,7 +28,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.*;
 
 import static apidemo.ChinaData.priceMapBar;
@@ -333,21 +332,9 @@ public final class ChinaMain implements IConnectionHandler {
             Utility.fixPriceMap(ChinaData.priceMapBar);
         });
 
-//        JButton getSGXA50HistButton = new JButton("SGXA50 ");
-//
-//        getSGXA50HistButton.addActionListener(l -> {
-//            //System.out.println("in action listening thread"+Thread.currentThread().getName());
-//            long start = System.currentTimeMillis();
-//            CompletableFuture.runAsync(() -> {
-//                System.out.println("in completablefuture thread" + Thread.currentThread().getName());
-//                controller().getSGXA50HistoricalCustom();
-//            });
-//            System.out.println(" time total " + (System.currentTimeMillis() - start));
-//        });
         JButton getPosButton = new JButton("getPos");
         getPosButton.addActionListener(l -> {
             System.out.println(" requesting position ");
-            //controller().client().reqPositions();
             controller().client().reqAccountSummary(5, "All", "NetLiquidation,BuyingPower");
             controller().client().reqExecutions(6, new ExecutionFilter());
         });
@@ -496,12 +483,10 @@ public final class ChinaMain implements IConnectionHandler {
         // m_controller.connect( "127.0.0.1", 7496, 0);
         CompletableFuture.runAsync(() -> {
             try {
-                M_CONTROLLER.connect("127.0.0.1", 7496, 0,
-                        Optional.ofNullable(m_connectionConfiguration).map(IConnectionConfiguration::getDefaultConnectOptions)
-                                .orElse(""));
-            } catch (Exception ex) {
-                System.out.println(" error in controller ");
-                ex.printStackTrace();
+                M_CONTROLLER.connect("127.0.0.1", 7496, 0, "");
+            } catch (IllegalStateException ex) {
+                System.out.println(" error in controller, using 4001 port ");
+                M_CONTROLLER.connect("127.0.0.1", 4001, 0, "");
             }
         });
 
@@ -523,7 +508,7 @@ public final class ChinaMain implements IConnectionHandler {
     @SuppressWarnings("Duplicates")
     @Override
     public void connected() {
-        show("connected");
+        //show("connected");
         System.out.println(" connected from connected ");
         ChinaMain.m_connectionPanel.setConnectionStatus("connected");
         connectionIndicator.setBackground(Color.green);
@@ -537,7 +522,7 @@ public final class ChinaMain implements IConnectionHandler {
 
     @Override
     public void disconnected() {
-        show("disconnected");
+        //show("disconnected");
         System.out.println(" setting panel status disconnected ");
         m_connectionPanel.m_status.setText("disconnected");
         connectionIndicator.setBackground(Color.red);
@@ -546,7 +531,7 @@ public final class ChinaMain implements IConnectionHandler {
 
     @Override
     public void accountList(ArrayList<String> list) {
-        show("Received account list");
+        //show("Received account list");
         m_acctList.clear();
         m_acctList.addAll(list);
     }
@@ -572,7 +557,7 @@ public final class ChinaMain implements IConnectionHandler {
         show(id + " " + errorCode + " " + errorMsg);
     }
 
-    public final class ConnectionPanel extends javax.swing.JPanel {
+    public final class ConnectionPanel extends JPanel {
 
         @SuppressWarnings("ConstantConditions")
         private final JTextField m_host = new JTextField(m_connectionConfiguration.getDefaultHost(), 10);
@@ -580,12 +565,10 @@ public final class ChinaMain implements IConnectionHandler {
         private final JTextField m_port = new JTextField(m_connectionConfiguration.getDefaultPort(), 7);
         @SuppressWarnings("ConstantConditions")
         private final JTextField m_connectOptionsTF = new JTextField(m_connectionConfiguration.getDefaultConnectOptions(), 30);
+
         private final JTextField m_clientId = new JTextField("0", 7);
         private volatile JLabel m_status = new JLabel("Disconnected");
-        private final JLabel m_defaultPortNumberLabel = new JLabel("<html>Live Trading ports:<b> TWS: 7496; IB Gateway: 4001.</b><br>"
-                + "Simulated Trading ports for new installations of "
-                + "version 954.1 or newer: "
-                + "<b>TWS: 7497; IB Gateway: 4002</b></html>");
+        private final JLabel m_defaultPortNumberLabel = new JLabel("<html>Live Trading ports:<b> TWS: 7496; IB Gateway: 4001.</b><br>");
 
         ConnectionPanel() {
             HtmlButton connect7496 = new HtmlButton("Connect7496") {
@@ -601,6 +584,14 @@ public final class ChinaMain implements IConnectionHandler {
                     onConnect("4001");
                 }
             };
+
+            HtmlButton connectGen = new HtmlButton("ConnectGen") {
+                @Override
+                public void actionPerformed() {
+                    onConnectGen();
+                }
+            };
+
 
             HtmlButton disconnect = new HtmlButton("Disconnect") {
                 @Override
@@ -620,6 +611,7 @@ public final class ChinaMain implements IConnectionHandler {
             p1.add("", m_defaultPortNumberLabel);
 
             JPanel p2 = new VerticalPanel();
+            p2.add(connectGen);
             p2.add(connect7496);
             p2.add(connect4001);
             p2.add(disconnect);
@@ -649,6 +641,16 @@ public final class ChinaMain implements IConnectionHandler {
                     + " connect options " + m_connectOptionsTF.getText());
             controller().connect(m_host.getText(), port, clientId, m_connectOptionsTF.getText());
         }
+
+        void onConnectGen() {
+            int clientId = Integer.parseInt(m_clientId.getText());
+            try {
+                controller().connect(m_host.getText(), 7496, clientId, m_connectOptionsTF.getText());
+            } catch (IllegalStateException ex) {
+                controller().connect(m_host.getText(), 4001, clientId, m_connectOptionsTF.getText());
+            }
+        }
+
     }
 
     public static void updateSystemNotif(String text) {
