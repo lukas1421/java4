@@ -18,10 +18,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -397,12 +394,32 @@ public final class MorningTask implements HistoricalHandler {
 
     private void getFromIB() {
         ApiController ap = new ApiController(new DefaultConnectionHandler(), new DefaultLogger(), new DefaultLogger());
+        CountDownLatch l = new CountDownLatch(1);
+        boolean connectionStatus = false;
+
         try {
             //ap.connect( "127.0.0.1", 4001, 2,"" );
             ap.connect("127.0.0.1", 7496, 2, "");
-        } catch (Exception ex) {
-            ex.printStackTrace();
+            connectionStatus = true;
+            System.out.println(" connection status is true ");
+            l.countDown();
+        } catch (IllegalStateException ex) {
+            System.out.println(" illegal state exception caught ");
         }
+
+        if (!connectionStatus) {
+            System.out.println(" using port 4001 ");
+            ap.connect("127.0.0.1", 4001, 2, "");
+            l.countDown();
+            System.out.println(" Latch counted down " + LocalTime.now());
+        }
+
+        try {
+            l.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        System.out.println(" Time after latch released " + LocalTime.now());
         getFXDetailed(ap);
         getUSPricesAfterMarket(ap);
     }

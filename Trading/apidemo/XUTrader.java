@@ -54,6 +54,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
 
     //overnight trades
+    private static final AtomicBoolean overnightTradeOn = new AtomicBoolean(true);
     private static final int maxOvernightTrades = 10;
     private static AtomicInteger overnightClosingOrders = new AtomicInteger(0);
     private static AtomicInteger overnightTradesDone = new AtomicInteger(0);
@@ -304,7 +305,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             musicPlayableButton.setText("Music:" + (musicOn.get() ? "ON" : "OFF"));
         });
 
-
         JButton getPositionButton = new JButton(" get pos ");
         getPositionButton.addActionListener(l -> apcon.reqPositions(this));
 
@@ -343,9 +343,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
 
             ses.scheduleAtFixedRate(() -> {
-                String time = (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).getSecond() != 0)
-                        ? (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString())
-                        : (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + ":00");
+                LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
+                String time = now.toString() + ((now.getSecond() != 0) ? "" : ":00");
 
                 apcon.reqPositions(getThis());
                 activeFutLiveOrder = new HashMap<>();
@@ -390,8 +389,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             XUTrader.processTradeMapActive();
         }, 0, 10, TimeUnit.SECONDS));
 
-        JButton overnightButton = new JButton("Overnight");
-        overnightButton.addActionListener(l -> ses2.scheduleAtFixedRate(this::overnightTrader, 0, 1, TimeUnit.MINUTES));
+        JButton overnightButton = new JButton("Overnight: " + (overnightTradeOn.get() ? "ON" : "OFF"));
+        overnightButton.addActionListener(l -> {
+            overnightTradeOn.set(!overnightTradeOn.get());
+            overnightButton.setText("Overnight: " + (overnightTradeOn.get() ? "ON" : "OFF"));
+            ses2.scheduleAtFixedRate(this::overnightTrader, 0, 1, TimeUnit.MINUTES);
+        });
 
         JButton maAnalysisButton = new JButton(" MA Analysis ");
         maAnalysisButton.addActionListener(l -> maTradeAnalysis());
@@ -498,6 +501,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(toggleMusicButton);
         controlPanel1.add(detailedMAButton);
         controlPanel1.add(maTraderStatusButton);
+        controlPanel1.add(overnightButton);
         controlPanel1.add(musicPlayableButton);
 
         controlPanel2.add(getPositionButton);
@@ -522,7 +526,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel2.add(graphWidthUp);
         controlPanel2.add(graphWidthDown);
         controlPanel2.add(stopComputeButton);
-        controlPanel2.add(overnightButton);
         controlPanel2.add(maAnalysisButton);
 
         JLabel bid1 = new JLabel("1");
@@ -937,6 +940,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * overnight close trading
      */
     private void overnightTrader() {
+        if (!overnightTradeOn.get()) return;
         setLongShortTradability(currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0));
         if (!canShortGlobal.get() || !canLongGlobal.get()) {
             apcon.cancelAllOrders();
@@ -949,10 +953,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int absLotsTraded = 0;
         double netTradedDelta = 0.0;
 
-        if (XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
-            absLotsTraded = XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture))
+        if (overnightTradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
+            absLotsTraded = overnightTradesMap.get(ibContractToFutType(activeFuture))
                     .entrySet().stream().mapToInt(e -> e.getValue().getSizeAllAbs()).sum();
-            netTradedDelta = XUTrader.overnightTradesMap.get(ibContractToFutType(activeFuture))
+            netTradedDelta = overnightTradesMap.get(ibContractToFutType(activeFuture))
                     .entrySet().stream().mapToDouble(e -> e.getValue().getDeltaAll()).sum();
         }
 

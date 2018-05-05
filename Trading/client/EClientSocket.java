@@ -1,10 +1,11 @@
 package client;
 
-import static client.EClient.REDIRECT_COUNT_MAX;
 import java.io.DataInputStream;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.net.Socket;
+
+import static utility.Utility.getStr;
 
 public class EClientSocket extends EClient implements EClientMsgSink {
 
@@ -57,7 +58,8 @@ public class EClientSocket extends EClient implements EClientMsgSink {
         sendConnectRequest();
 
         // start reader thread
-        EReader reader = new EReader(this, m_signal);;
+        EReader reader = new EReader(this, m_signal);
+        ;
 
         if (!m_asyncEConnect) {
             reader.putMessageToQueue();
@@ -82,7 +84,8 @@ public class EClientSocket extends EClient implements EClientMsgSink {
     public synchronized void eConnect(String host, int port, int clientId, boolean extraAuth) {
         // already connected?
         m_host = checkConnected(host);
-        System.out.println(" in e client socket m_host " + m_host);
+        System.out.println(getStr("||EClientSocket eConnect|| host, port, clientID, extraAuthor", host,
+                port, clientId, extraAuth));
 
         m_clientId = clientId;
         m_extraAuth = extraAuth;
@@ -95,9 +98,10 @@ public class EClientSocket extends EClient implements EClientMsgSink {
             Socket socket = new Socket(m_host, port);
             eConnect(socket);
         } catch (Exception e) {
-            e.printStackTrace();
+            //e.printStackTrace();
             eDisconnect();
             connectionError();
+            throw new IllegalStateException(" Eclient socket error ");
         }
     }
 

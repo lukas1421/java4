@@ -190,7 +190,6 @@ public class ApiController implements EWrapper {
         void show(String string);
 
         public static class DefaultConnectionHandler implements IConnectionHandler {
-
             @Override
             public void connected() {
                 m_connected = true;
