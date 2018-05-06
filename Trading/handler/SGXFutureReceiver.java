@@ -70,8 +70,6 @@ public class SGXFutureReceiver implements LiveHandler {
                                 XUTrader.MATrader(ldt, price);
                             }
                         }
-
-
                     }
                 }
                 break;
