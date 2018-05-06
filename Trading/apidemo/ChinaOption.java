@@ -320,14 +320,12 @@ public class ChinaOption extends JPanel implements Runnable {
         graphPanel2.add(scrollLapse);
         graphPanel2.add(scrollATMLapse);
 
-        //graph 3
         JPanel graphPanel3 = new JPanel();
         p.addTab("Graph Intraday", graphPanel3);
         graphPanel3.setLayout(new GridLayout(2, 1));
         graphPanel3.add(scrollIntraday);
         graphPanel3.add(scrollTS2);
 
-        //selecting
         p.select("Graph Intraday");
         rightPanel.add(p, BorderLayout.SOUTH);
 
@@ -802,10 +800,8 @@ public class ChinaOption extends JPanel implements Runnable {
             for (LocalDate d : expiryList) {
                 if (strikeVolMapCall.containsKey(d) && strikeVolMapPut.containsKey(d)
                         && timeLapseVolAllExpiries.containsKey(d)) {
-
                     NavigableMap<Integer, Double> todayMoneynessVol =
                             mergePutCallVolsMoneyness(strikeVolMapCall.get(d), strikeVolMapPut.get(d), currentStockPrice);
-
                     timeLapseVolAllExpiries.get(d).put(pricingDate, getVolByMoneyness(todayMoneynessVol, 100));
                 }
             }
@@ -951,8 +947,6 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private static void loadPreviousOptionsExcel() {
         String line;
-
-        //NavigableMap<LocalDate, TreeMap<Integer, Double>> timeLapseMoneynessVolFront = new TreeMap<>();
         NavigableMap<LocalDate, TreeMap<LocalDate, TreeMap<Integer, Double>>>
                 timeLapseMoneynessVolAllExpiries = new TreeMap<>();
 
@@ -961,8 +955,6 @@ public class ChinaOption extends JPanel implements Runnable {
             timeLapseVolAllExpiries.put(expiry, new TreeMap<>());
         }
 
-        //2018/2/26	C	2.6	2018/2/28	0	88
-        // record date (at close) || CP Flag || strike || expiry date || vol || moneyness
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "volOutput.csv")))) {
             while ((line = reader1.readLine()) != null) {
@@ -1039,7 +1031,6 @@ public class ChinaOption extends JPanel implements Runnable {
                     System.out.println(getStr(c.getVolDate(), c.getCallPut(), c.getStrike(), c.getExpiryDate(),
                             c.getVol(), c.getMoneyness(), c.getOptionTicker()));
 
-                    //System.out.println(c);
                     System.out.println(" counter is " + i.incrementAndGet());
                     LocalDate volDate = c.getVolDate();
                     LocalDate expiry = c.getExpiryDate();
@@ -1389,7 +1380,3 @@ class PutOption extends Option {
 enum CallPutFlag {
     CALL, PUT
 }
-
-//enum Moneyness {
-//    ATM, Call25, Put25
-//}

@@ -32,8 +32,6 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
     private int averagePerc;
     private int deltaWeightedAveragePerc;
 
-    //NavigableMap<T, Double> deltaMap;
-
     double max;
     double min;
     int height;
@@ -55,7 +53,6 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
 
     public void setTrade(NavigableMap<T, Double> input) {
         tradeMap = input;
-        //System.out.println(" print trade map in graph china pnl " + tradeMap);
     }
 
     public void setNet(NavigableMap<T, Double> input) {
@@ -100,7 +97,6 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
             g.drawLine(x, last, x + WIDTH_PNL, close);
             last = close;
 
-            //System.out.println(" mtm map lt " + lt + " first key " + mtmMap.firstKey());
             //noinspection Duplicates
             if (lt.equals(mtmMap.firstKey())) {
                 g.drawString(lt.toString(), x, getHeight() - 10);
@@ -138,7 +134,6 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
 
             try {
                 if (lt.equals(tradeMap.lastKey())) {
-                    //System.out.println(" Trade map is " + name + " " + tradeMap);
                     g.drawString("Trade: " + Math.round(tradeMap.lastEntry().getValue()), x - 10, close);
                 }
             } catch (Exception ex) {
@@ -168,12 +163,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         last = 0;
         g.setColor(new Color(50, 150, 0));
         if (netMap.size() > 0) {
-            //System.out.println(" checked size for  " + name);
-
             for (T lt : netMap.keySet()) {
-                //System.out.println(" name current lt is " + name + " " + lt + " net map size " + netMap.size());
-                //System.out.println(" current lt is " + lt + " " + netMap.floorEntry(lt));
-
                 try {
                     close = getY(netMap.floorEntry(lt).getValue());
                 } catch (Exception ex) {
@@ -190,7 +180,6 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
                     g.drawOval(x - 3, close, 5, 5);
                     g.fillOval(x - 3, close, 5, 5);
                 }
-
 
                 try {
                     if (netMap.get(lt) == Utility.reduceMaps(Math::max, netMap) &&
@@ -223,14 +212,15 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
             g2.drawString(e.getKey().toString() + ": " + Math.round((Double) e.getValue()), getWidth() * 6 / 8, temp);
         }
         g2.drawString("Total:         "
-                + Math.round(mtmByDay.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth() * 6 / 8, temp + 20);
-
+                        + Math.round(mtmByDay.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()),
+                getWidth() * 6 / 8, temp + 20);
         temp = 20;
         for (Map.Entry e : mtmByAm.entrySet()) {
             temp = temp + 20;
             g2.drawString("" + Math.round((Double) e.getValue()), getWidth() * 7 / 8, temp);
         }
-        g2.drawString("" + Math.round(mtmByAm.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()), getWidth() * 7 / 8, temp + 20);
+        g2.drawString("" + Math.round(mtmByAm.entrySet().stream().mapToDouble(Map.Entry::getValue).sum()),
+                getWidth() * 7 / 8, temp + 20);
 
         temp = 20;
         for (Map.Entry e : mtmByPm.entrySet()) {
@@ -265,11 +255,6 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         return Utility.reduceMaps(Math::max, mtmMap, tradeMap, netMap);
     }
 
-//    static public <T> T getEarliestT(NavigableMap<T, Double> mp, ToDoubleFunction<NavigableMap<T, Double>> f) {
-//        double target = f.applyAsDouble(mp);
-//        return mp.entrySet().stream().filter(e -> e.getValue() == target).findFirst().map(Map.Entry::getKey).orElse(mp.firstKey());
-//    }
-
     private static <T> T getEarliestT2(NavigableMap<T, Double> mp, DoubleBinaryOperator b) {
         if (mp.size() > 0) {
             double target = Utility.reduceMaps(b, mp);
@@ -278,17 +263,6 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
             throw new IllegalStateException(" map size wrong in get earliest t2");
         }
     }
-
-//    public void clearGraph() {
-//        SwingUtilities.invokeLater(() -> {
-//            name = "";
-//            chineseName = "";
-//            mtmMap = new ConcurrentSkipListMap<>();
-//            tradeMap = new ConcurrentSkipListMap<>();
-//            netMap = new ConcurrentSkipListMap<>();
-//            this.repaint();
-//        });
-//    }
 
     @Override
     public void fillInGraph(String nam) {
@@ -301,7 +275,6 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
         }
         SwingUtilities.invokeLater(this::repaint);
     }
-
 
     @Override
     public void refresh() {

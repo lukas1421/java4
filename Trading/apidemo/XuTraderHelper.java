@@ -292,6 +292,31 @@ public class XuTraderHelper {
         return (indexPrice != 0.0 && freshPrice != 0.0) ? (freshPrice / indexPrice - 1) : 0.0;
     }
 
+    /**
+     * trim proposed position based on current position
+     *
+     * @param proposedPos proposed position
+     * @param curr        current position
+     * @return trimmed position
+     */
+    static int trimProposedPosition(int proposedPos, int curr) {
+        if (proposedPos * curr == 0) {
+            return proposedPos;
+        } else if (proposedPos * curr < 0) {
+            if (Math.abs(proposedPos) > Math.abs(curr)) {
+                return -1 * curr;
+            }
+            return proposedPos;
+        } else if (proposedPos * curr > 0) {
+            if (Math.abs(proposedPos + curr) <= XUTrader.MAX_FUT_LIMIT) {
+                return proposedPos;
+            } else {
+                return (curr > 0 ? 1 : -1) * XUTrader.MAX_FUT_LIMIT - curr;
+            }
+        }
+        return proposedPos;
+    }
+
 
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
         @Override

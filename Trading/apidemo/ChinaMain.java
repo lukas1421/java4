@@ -40,13 +40,6 @@ import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
 public final class ChinaMain implements IConnectionHandler {
 
     public static volatile LocalDate currentTradingDate;
-    //public static volatile LocalDate yestTradingDate;
-    //public static volatile LocalDate y2TradingDate;
-    //= LocalDate.MIN;
-
-//    public static volatile LocalDate lastTdxDate;
-//    public static volatile LocalDate lastTdxDateMinus1;
-//    public static volatile LocalDate lastTdxDateMinus2;
 
     static {
         NewLookAndFeel.register();
@@ -74,7 +67,6 @@ public final class ChinaMain implements IConnectionHandler {
     private final JFrame m_frame9 = new JFrame();
     private final JFrame m_frame10 = new JFrame();
     private final JFrame m_frame11 = new JFrame();
-    //private final JFrame m_frame12 = new JFrame();
 
     private final NewTabbedPanel m_tabbedPanel = new NewTabbedPanel(true);
     public static ConnectionPanel m_connectionPanel;
@@ -97,8 +89,6 @@ public final class ChinaMain implements IConnectionHandler {
     //private Analysis analysis = new Analysis();
     //private Backtesting backtesting = new Backtesting();
     private final XU xu = new XU();
-    //private Shcomp shcomp = new Shcomp();
-    //private ChinaFut chinafut = new ChinaFut();
 
     private final ChinaStock chinastock = new ChinaStock();
     private final ChinaIndex chinaindex = new ChinaIndex();
@@ -108,20 +98,10 @@ public final class ChinaMain implements IConnectionHandler {
     private final ChinaDataYesterday chinaDataYtd = new ChinaDataYesterday();
     private final ChinaSizeDataYtd csdy = new ChinaSizeDataYtd();
     private final ChinaSizeData chinaSizeData = new ChinaSizeData();
-    //private final ChinaSizeRatio chinasizeratio = new ChinaSizeRatio();
     private final ChinaPosition chinaPos = new ChinaPosition();
 
-    //private ChinaSizeDataDifferenced chinasizedataD= new ChinaSizeDataDifferenced();
-    //private final ChinaBidAskData cbad = new ChinaBidAskData();
-    //private final ChinaStrategyTable cst = new ChinaStrategyTable();
-    //private final IdeaProcessor ip = new IdeaProcessor();
-    //private final IdeaProcessorJolt ipJolt = new IdeaProcessorJolt();
-    //private final IdeaProcessorPM ipPM = new IdeaProcessorPM();
     private final ChinaBigGraph bg = new ChinaBigGraph();
     private final ChinaGraphIndustry gi = new ChinaGraphIndustry();
-    //private final ChinaBidAskGraph gba = new ChinaBidAskGraph();
-    // private ChinaMasterMonitor cmm = new ChinaMasterMonitor();
-    //private final HibernateUtil hib = new HibernateUtil();
 
     public static HKData hkdata = new HKData();
     private static HKStock hkstock = new HKStock();
@@ -557,7 +537,7 @@ public final class ChinaMain implements IConnectionHandler {
         show(id + " " + errorCode + " " + errorMsg);
     }
 
-    public final class ConnectionPanel extends JPanel {
+    public final class ConnectionPanel extends javax.swing.JPanel {
 
         @SuppressWarnings("ConstantConditions")
         private final JTextField m_host = new JTextField(m_connectionConfiguration.getDefaultHost(), 10);
