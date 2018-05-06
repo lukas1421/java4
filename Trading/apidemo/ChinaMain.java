@@ -133,55 +133,27 @@ public final class ChinaMain implements IConnectionHandler {
 
     public ChinaMain(IConnectionConfiguration connectionConfig) {
         m_connectionConfiguration = connectionConfig;
-        m_connectionPanel = new ConnectionPanel(); // must be done after connection config is set
+        m_connectionPanel = new ConnectionPanel();
     }
 
     private void run() {
         m_tabbedPanel.addTab("XU", xu);
         m_tabbedPanel.addTab("Xu trader ", xutrader);
-
-        //m_tabbedPanel.addTab("Shcomp", shcomp);
-        //m_tabbedPanel.addTab("ChinaFut", chinafut);
-        //m_tabbedPanel.addTab("Live", livedata);
-        //m_tabbedPanel.addTab("Analysis", analysis);
         m_tabbedPanel.addTab("Stock ", chinastock);
-        //m_tabbedPanel.addTab("Index ", chinaindex);
-
         m_tabbedPanel.addTab("Ytd", chinaDataYtd);
         m_tabbedPanel.addTab("Data ", chinaData);
         m_tabbedPanel.addTab("Data ytd", chinadatamapytd);
         m_tabbedPanel.addTab("Size", chinaSizeData);
-        //m_tabbedPanel.addTab("Pos", chinapos);
-
         m_tabbedPanel.addTab("Index", chinaindex);
-
-        //m_tabbedPanel.addTab("Size Ratio", chinasizeratio);
-        //m_tabbedPanel.addTab("Size Diff",chinasizedataD);
         m_tabbedPanel.addTab("Size ytd", csdy);
-        //m_tabbedPanel.addTab("Ch Bid Ask", cbad);
-        //m_tabbedPanel.addTab("Strat", cst);
-        //m_tabbedPanel.addTab("China Monitor",cmm);
 
         m_tabbedPanel.addTab("Connection", m_connectionPanel);
-        //m_tabbedPanel.addTab( "Market Data", m_mktDataPanel);
-        //m_tabbedPanel.addTab( "Trading", m_tradingPanel);
-        // m_tabbedPanel.addTab( "Account Info", m_acctInfoPanel);
         m_tabbedPanel.select("Data ");
-        //m_tabbedPanel.addTab( "Options", m_optionsPanel);
-        //m_tabbedPanel.addTab( "Combos", m_comboPanel);
-        // m_tabbedPanel.addTab( "Contract Info", m_contractInfoPanel);
-        //m_tabbedPanel.addTab( "Advisor", m_advisorPanel);
-        // m_tabbedPanel.addTab( "Strategy", m_stratPanel); in progress
-        //m_tabbedPanel.addTab("Hist", histdata);
 
         m_tabbedPanel.addTab(" HK Data", hkdata);
         m_tabbedPanel.addTab(" HK Stock", hkstock);
         m_tabbedPanel.addTab("Hist China", histChina);
 
-        // m_tabbedPanel.addTab("Backtesting", backtesting);
-        //m_tabbedPanel.
-        //m_tabbedPanel.getComponent(15).
-        //m_comboPanel.
         m_msg.setEditable(false);
         m_msg.setLineWrap(true);
         JScrollPane msgScroll = new JScrollPane(m_msg);
@@ -223,7 +195,6 @@ public final class ChinaMain implements IConnectionHandler {
         JButton startXU = new JButton("ON XU");
         JButton startHK = new JButton(" ON HK");
         JButton stopXU = new JButton("Kill XU");
-        //JButton onShcomp = new JButton("ON shcomp/ChinaFut");
         JButton offShcomp = new JButton("Kill Shcomp/ChinaFut");
         JButton saveAll = new JButton("saveAll");
 
@@ -289,16 +260,13 @@ public final class ChinaMain implements IConnectionHandler {
         JButton killAllDiags = new JButton("Kill Diags");
         killAllDiags.addActionListener(l -> ChinaStockHelper.killAllDialogs());
 
-        //JButton tdxButton = new JButton("TDX");
         JButton fillHolesButton = new JButton("FillHoles");
         fillHolesButton.addActionListener(l -> {
-            //ChinaStockHelper.checkZerosAndFix();
             System.out.println(" filling holes for today ");
             ChinaStockHelper.fillHolesInData(priceMapBar, LocalTime.of(9, 24));
             System.out.println(" filling holes for ytd ");
             ChinaStockHelper.fillHolesInData(priceMapBarYtd, LocalTime.of(9, 29));
             ChinaStockHelper.fillHolesInSize();
-//            ChinaStockHelper.deleteAllAfterT(LocalTime.now());
         });
 
         JButton forwardfillButton = new JButton("fwdFill");
@@ -347,38 +315,20 @@ public final class ChinaMain implements IConnectionHandler {
         });
 
         JButton stopAnalysis = new JButton("Stop Analysis");
-
         stopAnalysis.addActionListener((ae) -> pool.shutdownNow());
-
         offShcomp.addActionListener((ae) -> ses.shutdown());
-
         saveAll.addActionListener((al) -> XU.saveXU());
-
         threadManager.add(getSinaData);
-        //threadManager.add(loadChinaBar);
         threadManager.add(loadYesterday);
-
-        //threadManager.add(showIdeaGraphs);
-        //threadManager.add(showPMGraphs);
-        //threadManager.add(vrPageToggle);
-        //threadManager.add(computeVR);
         threadManager.add(showBigGraph);
         threadManager.add(computeIndustry);
-
         threadManager.add(Box.createHorizontalStrut(30));
-        //threadManager.add(showBA);
-        //threadManager.add(suspendIndex);
         threadManager.add(killAllDiags);
-        //threadManager.add(tdxButton);
         threadManager.add(fillHolesButton);
         threadManager.add(forwardfillButton);
-        //threadManager.add(fixMapButton);
-        //threadManager.add(getSGXA50HistButton);
-        //threadManager.add(getPosButton);
         threadManager.add(dividendButton);
         threadManager.add(startXU);
         threadManager.add(startHK);
-        //threadManager.add(roundDataButton);
         threadManager.add(Box.createHorizontalStrut(30));
         threadManager.add(systemTime);
         threadManager.add(Box.createHorizontalStrut(30));
@@ -511,7 +461,6 @@ public final class ChinaMain implements IConnectionHandler {
 
     @Override
     public void accountList(ArrayList<String> list) {
-        //show("Received account list");
         m_acctList.clear();
         m_acctList.addAll(list);
     }
@@ -548,7 +497,8 @@ public final class ChinaMain implements IConnectionHandler {
 
         private final JTextField m_clientId = new JTextField("0", 7);
         private volatile JLabel m_status = new JLabel("Disconnected");
-        private final JLabel m_defaultPortNumberLabel = new JLabel("<html>Live Trading ports:<b> TWS: 7496; IB Gateway: 4001.</b><br>");
+        private final JLabel m_defaultPortNumberLabel = new JLabel(
+                "<html>Live Trading ports:<b> TWS: 7496; IB Gateway: 4001.</b><br>");
 
         ConnectionPanel() {
             HtmlButton connect7496 = new HtmlButton("Connect7496") {
@@ -642,11 +592,9 @@ public final class ChinaMain implements IConnectionHandler {
             systemNotif.setBackground(Color.orange);
         }, 10, TimeUnit.SECONDS);
     }
-
     static void updateSystemTime(String text) {
         systemTime.setText(text);
     }
-
     public static void updateTWSTime(String text) {
         twsTime.setText(text);
     }

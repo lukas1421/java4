@@ -317,7 +317,6 @@ public class XuTraderHelper {
         return proposedPos;
     }
 
-
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
         @Override
         public void connected() {

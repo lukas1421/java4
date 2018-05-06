@@ -326,7 +326,6 @@ public final class ChinaData extends JPanel {
         saveHibYtdButton.addActionListener(al -> hibSaveGenYtd());
         saveHibY2Button.addActionListener(al -> hibSaveGenY2());
 
-//        loadStratButton.addActionListener(al -> hibLoadStrat());
         btnLoadBarYtd.addActionListener(al -> CompletableFuture.runAsync(() -> {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(priceBarYtdSource))) {
                 //noinspection unchecked
