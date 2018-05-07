@@ -176,7 +176,6 @@ public class ApiController implements EWrapper {
 
     // ---------------------------------------- Constructor and Connection handling ----------------------------------------
     public interface IConnectionHandler {
-
         void connected();
 
         void disconnected();
@@ -193,12 +192,12 @@ public class ApiController implements EWrapper {
             @Override
             public void connected() {
                 m_connected = true;
-                System.out.println("we are now connected");
+                System.out.println("Default Conn Handler: connected");
             }
 
             @Override
             public void disconnected() {
-                System.out.println("disconnected");
+                System.out.println("Default Conn Handler: disconnected");
             }
 
             @Override
