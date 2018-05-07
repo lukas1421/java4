@@ -388,10 +388,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 requestExecHistory();
             }, 0, 1, TimeUnit.MINUTES);
 
-            ses.scheduleAtFixedRate(() -> {
-                outputToAutoLog(getStr("CANCELLING ALL ORDERS ", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)));
-                apcon.cancelAllOrders();
-            }, 0, 60, TimeUnit.MINUTES);
+//            ses.scheduleAtFixedRate(() -> {
+//                outputToAutoLog(getStr("CANCELLING ALL ORDERS ", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)));
+//                apcon.cancelAllOrders();
+//            }, 0, 60, TimeUnit.MINUTES);
         });
 
         JButton stopComputeButton = new JButton("Stop Processing");
@@ -884,7 +884,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             trimProposedPosition(determinePDPercFactor(nowMilli.toLocalTime(), pd, Direction.Long,
                                     percentile) * determineTimeDiffFactor(), currPos));
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
-                        apcon.cancelAllOrders();
+                        //apcon.cancelAllOrders();
                         maOrderMap.put(nowMilli, o);
                         maSignals.incrementAndGet();
                         int id = autoTradeID.incrementAndGet();
@@ -916,7 +916,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         maOrderMap.put(nowMilli, o);
                         maSignals.incrementAndGet();
-                        apcon.cancelAllOrders();
+                        //apcon.cancelAllOrders();
                         int id = autoTradeID.incrementAndGet();
                         globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "MA Trade offer",
                                 AutoTradeType.MA));
@@ -974,9 +974,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (!overnightTradeOn.get()) return;
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
         setLongShortTradability(currPos);
-        if (!canShortGlobal.get() || !canLongGlobal.get()) {
-            apcon.cancelAllOrders();
-        }
+//        if (!canShortGlobal.get() || !canLongGlobal.get()) {
+//            apcon.cancelAllOrders();
+//        }
 
         LocalDateTime now = LocalDateTime.now();
         LocalDate TDate = now.toLocalTime().isAfter(LocalTime.of(0, 0))
@@ -1007,7 +1007,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (futPriceMap.size() > 0) {
             currentFut = futPriceMap.lastEntry().getValue().getClose();
-            pd = indexPrice != 0.0 ? Math.round(10000d * (currentFut / indexPrice - 1)) / 10000d : 0.0;
+            pd = indexPrice != 0.0 ? r10000(currentFut / indexPrice - 1) : 0.0;
         }
 
         if (absLotsTraded <= maxOvernightTrades && overnightClosingOrders.get() <= 5) {
@@ -1060,6 +1060,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         requestOvernightExecHistory();
     }
 
+    /**
+     * inventory trader
+     *
+     * @param t
+     * @param freshPrice
+     */
     public static void inventoryTrader(LocalDateTime t, double freshPrice) {
         System.out.println(getStr(" inventory trade is ", inventoryTraderOn.get(), " sentiment is ",
                 sentiment, "inventory barrier waiting # ", inventoryBarrier.getNumberWaiting(),
@@ -1067,6 +1073,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 freshPrice, "fresh - seclastV ",
                 activeLastMinuteMap.size() < 2 ? "No trade last min "
                         : (freshPrice - activeLastMinuteMap.lowerEntry(t).getValue())));
+
+        int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
+        if (Math.abs(currPos) > MAX_FUT_LIMIT + 5) return;
 
         if (inventorySemaphore.availablePermits() == 0) return;
         if (!inventoryTraderOn.get()) return;
