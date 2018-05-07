@@ -10,6 +10,7 @@ import controller.ApiController;
 import graph.DisplayGranularity;
 import graph.GraphXuTrader;
 import handler.HistoricalHandler;
+import handler.InventoryOrderHandler;
 import handler.XUOvernightTradeExecHandler;
 import sound.EmbeddedSoundPlayer;
 import util.AutoTradeType;
@@ -48,11 +49,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static AtomicBoolean musicOn = new AtomicBoolean(true);
     private static volatile MASentiment sentiment = MASentiment.Directionless;
     private static LocalDateTime lastTradeTime = LocalDateTime.now();
-    public static final int MAX_FUT_LIMIT = 20;
+    static final int MAX_FUT_LIMIT = 20;
     private static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
     private static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
     private static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
+
+    //inventory market making
+    private static CyclicBarrier inventoryBarrier = new CyclicBarrier(2);
+    private static final double profit = 5.0;
+    private static final int inv_trade_quantity = 1;
+
 
     //overnight trades
     private static final AtomicBoolean overnightTradeOn = new AtomicBoolean(true);
@@ -735,6 +742,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
+
+        sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
+
         double candidatePrice;
 
         long numOrdersThisSession = fastOrderMap.entrySet().stream().filter(e -> e.getKey().isAfter(sessionOpenT())).count();
@@ -1039,26 +1049,74 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         requestOvernightExecHistory();
     }
 
-    private void inventoryTrader(double freshPrice) {
+    public static void inventoryTrader(LocalDateTime t, double freshPrice) {
 
+        if (!(canShortGlobal.get() && canLongGlobal.get())) return;
+        if (inventoryBarrier.getNumberWaiting() != 0) return;
+        if (activeLastMinuteMap.size() < 2) return;
+        double secLastV = activeLastMinuteMap.lowerEntry(t).getValue();
 
-        long prevNumTrades = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getTradeType() == AutoTradeType.INVENTORY)
-                .count();
-
-        if (prevNumTrades > 0) {
-            Order lastOrder = globalIdOrderMap.entrySet().stream()
-                    .filter(e -> e.getValue().getTradeType() == AutoTradeType.INVENTORY)
-                    .skip(prevNumTrades - 1).findFirst().map(e -> e.getValue().getOrder()).get();
-            if (orderMakingMoney(lastOrder, freshPrice)) {
-                //trade
-            } else {
-                // cut loss or keep trading
+        if (sentiment == MASentiment.Bullish) {
+            if (freshPrice - secLastV <= -5.0) {
+                CountDownLatch latchBuy = new CountDownLatch(1);
+                int idBuy = autoTradeID.incrementAndGet();
+                Order buyO = placeBidLimit(freshPrice, inv_trade_quantity);
+                globalIdOrderMap.put(idBuy, new OrderAugmented(t, buyO, "Inventory Buy Open", AutoTradeType.INVENTORY));
+                apcon.placeOrModifyOrder(activeFuture, buyO, new InventoryOrderHandler(idBuy, latchBuy, inventoryBarrier));
+                outputOrderToAutoLog(getStr(t, idBuy, "Inventory Buy Open ", globalIdOrderMap.get(idBuy)));
+                try {
+                    latchBuy.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                //buying done, now sell
+                CountDownLatch latchSell = new CountDownLatch(1);
+                int idSell = autoTradeID.incrementAndGet();
+                Order sellO = placeOfferLimit(freshPrice + profit, inv_trade_quantity);
+                globalIdOrderMap.put(idSell, new OrderAugmented(t, sellO, "Inventory Sell Close", AutoTradeType.INVENTORY));
+                apcon.placeOrModifyOrder(activeFuture, sellO, new InventoryOrderHandler(idSell, latchSell, inventoryBarrier));
+                outputOrderToAutoLog(getStr(t, idSell, "Inventory Sell Close ", globalIdOrderMap.get(idSell)));
+                try {
+                    latchSell.await();
+                    if (inventoryBarrier.getNumberWaiting() == 2) {
+                        outputToAutoLog(getStr(t, " resetting inventory barrier "));
+                        inventoryBarrier.reset();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-        } else {
+        } else if (sentiment == MASentiment.Bearish) {
+            if (freshPrice - secLastV >= 5.0) {
+                CountDownLatch latchSell = new CountDownLatch(1);
+                int idSell = autoTradeID.incrementAndGet();
+                Order sellO = placeOfferLimit(freshPrice, inv_trade_quantity);
+                globalIdOrderMap.put(idSell, new OrderAugmented(t, sellO, "Inventory Sell Open", AutoTradeType.INVENTORY));
+                apcon.placeOrModifyOrder(activeFuture, sellO, new InventoryOrderHandler(idSell, latchSell, inventoryBarrier));
+                outputOrderToAutoLog(getStr(t, idSell, "Inventory Sell Open", globalIdOrderMap.get(idSell)));
 
+                try {
+                    latchSell.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                CountDownLatch latchBuy = new CountDownLatch(1);
+                int idBuy = autoTradeID.incrementAndGet();
+                Order buyO = placeBidLimit(freshPrice - profit, inv_trade_quantity);
+                globalIdOrderMap.put(idBuy, new OrderAugmented(t, buyO, "Inventory Buy Close",
+                        AutoTradeType.INVENTORY));
+                apcon.placeOrModifyOrder(activeFuture, buyO, new InventoryOrderHandler(idBuy, latchBuy, inventoryBarrier));
+                outputOrderToAutoLog(getStr(t, idBuy, "Inv Buy Close", globalIdOrderMap.get(idBuy)));
+                try {
+                    latchBuy.await();
+                    if (inventoryBarrier.getNumberWaiting() == 2) {
+                        inventoryBarrier.reset();
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
-
 
     }
 
