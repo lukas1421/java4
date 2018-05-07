@@ -7,9 +7,11 @@ import client.OrderStatus;
 import controller.ApiController;
 
 import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 
+import static apidemo.XUTrader.globalIdOrderMap;
 import static utility.Utility.getStr;
 
 public class InventoryOrderHandler implements ApiController.IOrderHandler {
@@ -20,6 +22,7 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
     private CyclicBarrier barrier;
 
     public InventoryOrderHandler(int i, CountDownLatch l, CyclicBarrier cb) {
+        //System.out.println(getStr(" constructing inventory handler ", i, l, cb));
         defaultID = i;
         latch = l;
         barrier = cb;
@@ -27,28 +30,45 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
 
     @Override
     public void orderState(OrderState orderState) {
+//        System.out.println(getStr(" Inventory Order handler " +
+//                "in order state ", "Default ID | status  ", defaultID, orderState.status(), orderState.getStatus()));
+
         if (orderState.status() == OrderStatus.Filled) {
             XuTraderHelper.outputToAutoLog(
-                    getStr("|| OrderState ||", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
+                    getStr("|| OrderState ||", defaultID, globalIdOrderMap.get(defaultID),
                             orderState.status()));
             if (latch.getCount() == 1) {
+                System.out.println(" counting down latch ");
                 latch.countDown();
-                try {
-                    barrier.await();
-                } catch (InterruptedException | BrokenBarrierException e) {
-                    e.printStackTrace();
-                }
+
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        System.out.println(" barrier waiting BEFORE #" + barrier.getNumberWaiting());
+                        barrier.await();
+                        System.out.println(" barrier waiting AFTER #" + barrier.getNumberWaiting());
+                    } catch (InterruptedException | BrokenBarrierException e) {
+                        e.printStackTrace();
+                    }
+                });
             }
+            System.out.println(" order state filled ends");
         }
     }
 
     @Override
     public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
-
+        System.out.println(" in orderStatus Inventory Order handler  ");
+        System.out.println(getStr(" status filled remained avgFillprice permId parentID, lastFill, clientID, whyheld "
+                , status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));
     }
 
     @Override
     public void handle(int errorCode, String errorMsg) {
+        System.out.println(getStr(" handling error in inventoryOrderhandle ", errorCode, errorMsg));
+    }
 
+    @Override
+    public String toString() {
+        return getStr(" inventory handler for ", defaultID, XUTrader.globalIdOrderMap.get(defaultID));
     }
 }

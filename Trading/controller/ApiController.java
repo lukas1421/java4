@@ -1300,7 +1300,7 @@ public class ApiController implements EWrapper {
     }
 
     public void reqExecutions(ExecutionFilter filter, ITradeReportHandler handler) {
-        System.out.println(" requesting execution ");
+        //System.out.println(" requesting execution ");
         m_tradeReportHandler = handler;
         m_client.reqExecutions(m_reqId.getAndIncrement(), filter);
         sendEOM();
@@ -1455,7 +1455,10 @@ public class ApiController implements EWrapper {
         }
 
         if (handler != null) {
+            System.out.println(getStr("place or modify order ", order.orderId(), handler));
             m_orderHandlers.put(order.orderId(), handler);
+        } else {
+            System.out.println(" handler is null");
         }
         m_client.placeOrder(contract, order);
         sendEOM();
@@ -1525,6 +1528,12 @@ public class ApiController implements EWrapper {
         //Order order = new Order( orderIn);
 
         IOrderHandler handler = m_orderHandlers.get(orderId);
+
+//        if (orderId != 0) {
+//            System.out.println(getStr(" order ID ", orderId, contract.symbol(), orderState.status()));
+//            //System.out.println(getStr(" handling open order ", orderId, handler));
+//            System.out.println("handler contained in order handlers " + m_orderHandlers.containsKey(orderId));
+//        }
 
         if (handler != null) {
             handler.orderState(orderState);

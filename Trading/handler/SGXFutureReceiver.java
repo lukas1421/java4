@@ -6,6 +6,7 @@ import client.TickType;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.concurrent.CompletableFuture;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
@@ -68,7 +69,9 @@ public class SGXFutureReceiver implements LiveHandler {
                                 XUTrader.updateLastMinuteMap(ldt, price);
                                 XUTrader.fastTrader(ldt, price);
                                 XUTrader.MATrader(ldt, price);
-                                XUTrader.inventoryTrader(ldt, price);
+                                CompletableFuture.runAsync(() -> {
+                                    XUTrader.inventoryTrader(ldt, price);
+                                });
                             }
                         }
                     }
