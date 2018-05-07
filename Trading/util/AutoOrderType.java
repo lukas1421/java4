@@ -1,5 +1,5 @@
 package util;
 
-public enum AutoTradeType {
+public enum AutoOrderType {
     MA,FAST,INVENTORY,OVERNIGHT
 }
