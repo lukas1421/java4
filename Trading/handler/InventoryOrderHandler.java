@@ -52,6 +52,10 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
                 });
             }
             System.out.println(" order state filled ends");
+        } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
+            XuTraderHelper.outputToAutoLog(getStr(" order cancelled ", defaultID,
+                    XUTrader.globalIdOrderMap.get(defaultID).getOrder().orderId(),
+                    XUTrader.globalIdOrderMap.get(defaultID).getOrder()));
         }
     }
 

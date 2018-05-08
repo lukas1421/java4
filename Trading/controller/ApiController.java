@@ -1465,6 +1465,7 @@ public class ApiController implements EWrapper {
     }
 
     public void cancelOrder(int orderId) {
+        System.out.println(" cancelling order in Apicontroller " + orderId);
         m_client.cancelOrder(orderId);
         sendEOM();
     }

@@ -70,26 +70,12 @@ public final class ChinaMain implements IConnectionHandler {
 
     private final NewTabbedPanel m_tabbedPanel = new NewTabbedPanel(true);
     public static ConnectionPanel m_connectionPanel;
-    //private final ContractInfoPanel m_contractInfoPanel = new ContractInfoPanel();
-    //private final TradingPanel m_tradingPanel = new TradingPanel();
-    //private final AccountInfoPanel m_acctInfoPanel = new AccountInfoPanel();
-    //private final OptionsPanel m_optionsPanel = new OptionsPanel();
-    //private final AdvisorPanel m_advisorPanel = new AdvisorPanel();
-    //private final ComboPanel m_comboPanel = new ComboPanel();
-    //private final StratPanel m_stratPanel = new StratPanel();
     private final JTextArea m_msg = new JTextArea();
     private static volatile JLabel twsTime = new JLabel(Utility.timeNowToString());
     private static volatile JLabel systemTime = new JLabel(Utility.timeNowToString());
     private static volatile JLabel systemNotif = new JLabel("");
     public static volatile JLabel connectionIndicator = new JLabel("CONN");
-
-    //private final Data data = new Data();
-    //private final HistData histdata = new HistData();
-    //private LiveData livedata = new LiveData();
-    //private Analysis analysis = new Analysis();
-    //private Backtesting backtesting = new Backtesting();
     private final XU xu = new XU();
-
     private final ChinaStock chinastock = new ChinaStock();
     private final ChinaIndex chinaindex = new ChinaIndex();
     private final ChinaKeyMonitor keyMon = new ChinaKeyMonitor();

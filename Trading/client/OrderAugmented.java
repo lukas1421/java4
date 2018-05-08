@@ -38,6 +38,7 @@ public class OrderAugmented {
 
     @Override
     public String toString() {
-        return Utility.getStr("T order msg tradeType", orderTime, order, msg, tradeType);
+        return Utility.getStr("T order msg tradeType TWSID",
+                orderTime, order, msg, tradeType, order.orderId() == 0 ? "" : order.orderId());
     }
 }
