@@ -415,14 +415,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             .skip(invOrderCount - 1).map(Map.Entry::getValue).findFirst().get();
 
                     if (o.getStatus() != OrderStatus.Filled &&
-                            timeDiffinMinutes(o.getOrderTime(), LocalDateTime.now()) >= 10) {
+                            timeDiffinMinutes(o.getOrderTime(), LocalDateTime.now()) >= cancelWaitTime(LocalTime.now())) {
                         globalIdOrderMap.entrySet().stream()
                                 .filter(e -> isInventoryTrade().test(e.getValue().getTradeType()))
                                 .skip(invOrderCount - 1).peek(e -> out.println(getStr("last order ", e.getValue())))
                                 .forEach(e -> {
-                                    apcon.cancelOrder(e.getValue().getOrder().orderId());
-                                    e.getValue().setFinalActionTime(LocalDateTime.now());
-                                    e.getValue().setStatus(OrderStatus.Cancelled);
+                                    if (e.getValue().getStatus() != OrderStatus.Cancelled) {
+                                        apcon.cancelOrder(e.getValue().getOrder().orderId());
+                                        e.getValue().setFinalActionTime(LocalDateTime.now());
+                                        e.getValue().setStatus(OrderStatus.Cancelled);
+                                    } else {
+                                        out.println(getStr(e.getValue().getOrder().orderId(), "already cancelled"));
+                                    }
                                 });
                         out.println(getStr(LocalTime.now(), " killing last unfilled orders"));
                         out.println(" releasing inv barrier + semaphore ");
@@ -488,7 +492,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             activeFutLiveOrder = new HashMap<>();
             globalIdOrderMap.entrySet().stream().filter(e -> isInventoryTrade().test(e.getValue().getTradeType()))
                     .filter(e -> e.getValue().getStatus() != OrderStatus.Filled)
-                    .forEach(e->{
+                    .forEach(e -> {
                         e.getValue().setFinalActionTime(LocalDateTime.now());
                         e.getValue().setStatus(OrderStatus.Cancelled);
                     });
@@ -684,6 +688,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         add(deepPanel);
         add(outputPanel);
         add(chartScroll);
+    }
+
+    private static int cancelWaitTime(LocalTime t) {
+        if (futureAMSession().test(t) || futurePMSession().test(t)) {
+            return 10;
+        } else {
+            return 60;
+        }
     }
 
     /**
@@ -1184,7 +1196,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         } else if (sentiment == MASentiment.Bearish) {
             if (freshPrice - secLastV >= 2.5) {
                 out.println(" if bearish and change more than 2.5");
-
                 try {
                     inventorySemaphore.acquire();
                     out.println(" acquired semaphore, now left: " + inventorySemaphore.availablePermits());
