@@ -1,5 +1,5 @@
 package util;
 
 public enum AutoOrderType {
-    MA,FAST,INVENTORY,OVERNIGHT
+    MA, FAST, INVENTORYOPEN, INVENTORYCLOSE, OVERNIGHT
 }

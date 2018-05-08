@@ -30,8 +30,6 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
 
     @Override
     public void orderState(OrderState orderState) {
-//        System.out.println(getStr(" Inventory Order handler " +
-//                "in order state ", "Default ID | status  ", defaultID, orderState.status(), orderState.getStatus()));
 
         if (orderState.status() == OrderStatus.Filled) {
             XuTraderHelper.outputToAutoLog(
@@ -47,6 +45,7 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
                         barrier.await();
                         System.out.println(" barrier waiting AFTER #" + barrier.getNumberWaiting());
                     } catch (InterruptedException | BrokenBarrierException e) {
+                        barrier.reset();
                         e.printStackTrace();
                     }
                 });
@@ -68,7 +67,7 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-        System.out.println(getStr(" handling error in inventoryOrderhandle ", errorCode, errorMsg));
+        //System.out.println(getStr(" handling error in inventoryOrderhandle ", errorCode, errorMsg));
     }
 
     @Override
