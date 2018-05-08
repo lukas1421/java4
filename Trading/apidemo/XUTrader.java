@@ -486,6 +486,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             inventorySemaphore = new Semaphore(1);
             inventoryBarrier.reset();
             activeFutLiveOrder = new HashMap<>();
+            globalIdOrderMap.entrySet().stream().filter(e -> isInventoryTrade().test(e.getValue().getTradeType()))
+                    .filter(e -> e.getValue().getStatus() != OrderStatus.Filled)
+                    .forEach(e->{
+                        e.getValue().setFinalActionTime(LocalDateTime.now());
+                        e.getValue().setStatus(OrderStatus.Cancelled);
+                    });
             SwingUtilities.invokeLater(xuGraph::repaint);
         });
 
@@ -1112,7 +1118,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         out.println(getStr("In inventory trade: ", inventoryTraderOn.get(), " sentiment: ",
                 sentiment, "inventory barrier waiting # ", inventoryBarrier.getNumberWaiting(),
                 " semaphore permits ", inventorySemaphore.availablePermits(),
-                freshPrice, "fresh - seclastV ",
+                freshPrice, " chg: ",
                 activeLastMinuteMap.size() < 2 ? "No trade last min " : (freshPrice -
                         activeLastMinuteMap.lowerEntry(t).getValue())));
 

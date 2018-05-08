@@ -55,6 +55,7 @@ public class OrderAugmented {
     @Override
     public String toString() {
         return Utility.getStr("T order msg tradeType TWSID Status FinalT",
-                orderTime, order, msg, tradeType, order.orderId() == 0 ? "" : order.orderId(), status, finalActionTime);
+                orderTime.toLocalTime(), order, msg, tradeType, order.orderId() == 0 ? "" : order.orderId(),
+                status, finalActionTime.toLocalTime());
     }
 }

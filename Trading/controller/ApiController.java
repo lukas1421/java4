@@ -1417,6 +1417,9 @@ public class ApiController implements EWrapper {
 
             @Override
             public void orderState(OrderState orderState) {
+                XUTrader.globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
+                XUTrader.globalIdOrderMap.get(defaultID).setStatus(orderState.status());
+
                 if (orderState.status() == OrderStatus.Filled) {
                     XuTraderHelper.outputToAutoLog(
                             getStr("|| OrderState ||", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
