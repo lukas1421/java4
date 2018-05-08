@@ -21,11 +21,8 @@ final class ChinaDataMapYtd extends JPanel {
     static BarModel_YTD m_model;
 
     ChinaDataMapYtd() {
-
         m_model = new BarModel_YTD();
-
         JTable tab = new JTable(m_model) {
-
             @Override
             public Component prepareRenderer(TableCellRenderer renderer, int Index_row, int Index_col) {
                 Component comp = super.prepareRenderer(renderer, Index_row, Index_col);

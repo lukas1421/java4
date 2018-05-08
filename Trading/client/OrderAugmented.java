@@ -10,13 +10,17 @@ public class OrderAugmented {
     private final LocalDateTime orderTime;
     private final Order order;
     private final String msg;
-    private AutoOrderType tradeType;
+    private final AutoOrderType tradeType;
+    private OrderStatus status;
+    private LocalDateTime finalActionTime;
 
     public OrderAugmented(LocalDateTime t, Order o, String m, AutoOrderType tt) {
         orderTime = t;
         order = o;
         msg = m;
         tradeType = tt;
+        status = OrderStatus.Unknown;
+        finalActionTime = LocalDateTime.MIN;
     }
 
     public LocalDateTime getOrderTime() {
@@ -35,10 +39,22 @@ public class OrderAugmented {
         return tradeType;
     }
 
+    public void setFinalActionTime(LocalDateTime t) {
+        finalActionTime = t;
+    }
+
+    public void setStatus(OrderStatus s) {
+        status = s;
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
 
     @Override
     public String toString() {
-        return Utility.getStr("T order msg tradeType TWSID",
-                orderTime, order, msg, tradeType, order.orderId() == 0 ? "" : order.orderId());
+        return Utility.getStr("T order msg tradeType TWSID Status FinalT",
+                orderTime, order, msg, tradeType, order.orderId() == 0 ? "" : order.orderId(), status, finalActionTime);
     }
 }

@@ -6,6 +6,7 @@ import client.OrderState;
 import client.OrderStatus;
 import controller.ApiController;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -31,7 +32,11 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
     @Override
     public void orderState(OrderState orderState) {
 
+        globalIdOrderMap.get(defaultID).setStatus(orderState.status());
+        globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
+
         if (orderState.status() == OrderStatus.Filled) {
+            globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
             XuTraderHelper.outputToAutoLog(
                     getStr("|| OrderState ||", defaultID, globalIdOrderMap.get(defaultID),
                             orderState.status()));
@@ -52,6 +57,7 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
             }
             System.out.println(" order state filled ends");
         } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
+            globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
             XuTraderHelper.outputToAutoLog(getStr(" order cancelled ", defaultID,
                     XUTrader.globalIdOrderMap.get(defaultID).getOrder().orderId(),
                     XUTrader.globalIdOrderMap.get(defaultID).getOrder()));
