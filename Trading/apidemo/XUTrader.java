@@ -67,7 +67,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static AtomicBoolean inventoryTraderOn = new AtomicBoolean(true);
 
     //overnight trades
-    private static final AtomicBoolean overnightTradeOn = new AtomicBoolean(true);
+    private static final AtomicBoolean overnightTradeOn = new AtomicBoolean(false);
     private static final int maxOvernightTrades = 10;
     private static AtomicInteger overnightClosingOrders = new AtomicInteger(0);
     private static AtomicInteger overnightTradesDone = new AtomicInteger(0);
@@ -1034,9 +1034,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (!overnightTradeOn.get()) return;
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
         setLongShortTradability(currPos);
-//        if (!canShortGlobal.get() || !canLongGlobal.get()) {
-//            apcon.cancelAllOrders();
-//        }
 
         LocalDateTime now = LocalDateTime.now();
         LocalDate TDate = now.toLocalTime().isAfter(LocalTime.of(0, 0))
@@ -1128,8 +1125,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     public static void inventoryTrader(LocalDateTime t, double freshPrice) {
         out.println(getStr("In inventory trade: ", inventoryTraderOn.get(), " sentiment: ",
-                sentiment, "inventory barrier waiting # ", inventoryBarrier.getNumberWaiting(),
-                " semaphore permits ", inventorySemaphore.availablePermits(),
+                sentiment, "inventory barrier waiting #: ", inventoryBarrier.getNumberWaiting(),
+                " semaphore permits: ", inventorySemaphore.availablePermits(),
                 freshPrice, " chg: ",
                 activeLastMinuteMap.size() < 2 ? "No trade last min " : (freshPrice -
                         activeLastMinuteMap.lowerEntry(t).getValue())));

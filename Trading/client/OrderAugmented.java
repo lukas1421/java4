@@ -51,11 +51,10 @@ public class OrderAugmented {
         return status;
     }
 
-
     @Override
     public String toString() {
-        return Utility.getStr("T order msg tradeType TWSID Status FinalT",
-                orderTime.toLocalTime(), order, msg, tradeType, order.orderId() == 0 ? "" : order.orderId(),
-                status, finalActionTime.toLocalTime());
+        return Utility.getStr("T: ", orderTime.toLocalTime(), "Order:", order, "msg:", msg, "Tradetype", tradeType
+                , order.orderId() == 0 ? "" : order.orderId(),
+                "Status:", status, "FinalT: ", finalActionTime.toLocalTime());
     }
 }

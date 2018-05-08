@@ -30,12 +30,12 @@ public class XUOvernightTradeExecHandler implements ApiController.ITradeReportHa
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
         if (ldt.isAfter(LocalDateTime.of(TDate, LocalTime.of(17, 0)))) {
-            System.out.println(" in XUOvernightTradeExecHandler ");
+            //System.out.println(" in XUOvernightTradeExecHandler ");
 
             FutType f = ibContractToFutType(contract);
-            System.out.println(" exec " + execution.side() + "　" + execution.time() + " " + execution.cumQty()
-                    + " " + execution.price() + " " + execution.orderRef() + " " + execution.orderId() + " " + execution.permId() + " "
-                    + execution.shares());
+//            System.out.println(" exec " + execution.side() + "　" + execution.time() + " " + execution.cumQty()
+//                    + " " + execution.price() + " " + execution.orderRef() + " " + execution.orderId() + " " + execution.permId() + " "
+//                    + execution.shares());
 
             if (overnightTradesMap.get(f).containsKey(ldt)) {
                 overnightTradesMap.get(f).get(ldt)
