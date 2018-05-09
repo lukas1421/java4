@@ -52,7 +52,7 @@ public final class MorningTask implements HistoricalHandler {
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
             writeIndexTDX(out);
             writeETF(out);
-            writeA50(out);
+            writeA50_MW(out);
             writeA50FT(out);
             writeXIN0U(out);
         } catch (IOException ex) {
@@ -217,6 +217,33 @@ public final class MorningTask implements HistoricalHandler {
             ex.printStackTrace();
         }
     }
+
+    private static void writeA50_MW(BufferedWriter out) {
+
+        urlString = "https://www.marketwatch.com/investing/index/xin9?countrycode=xx";
+        String line;
+        Pattern p = Pattern.compile("Close:.*?(\\d{2},\\d{3}(\\.\\d+))");
+        try {
+            URL url = new URL(urlString);
+            URLConnection urlconn = url.openConnection(proxy);
+            urlconn.addRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)");
+
+            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream()))) {
+                while ((line = reader2.readLine()) != null) {
+                    Matcher m = p.matcher(line);
+                    while (m.find()) {
+                        out.write("FTSE A50" + "\t" + m.group(1).replace(",", ""));
+                        out.newLine();
+                    }
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
 
     private static LocalDate getLastBizDate(LocalDate inDate) {
         if (inDate.getDayOfWeek().equals(DayOfWeek.MONDAY)) {
