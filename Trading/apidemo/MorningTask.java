@@ -138,14 +138,8 @@ public final class MorningTask implements HistoricalHandler {
             System.out.println(" etf is " + e);
 
             try {
-
                 URL url = new URL(urlString);
-                //System.out.println(" default port "+url.getDefaultPort());
-                //System.out.println(" path "+url.getPath());
                 URLConnection urlconn = url.openConnection(proxy);
-                //urlconn.
-                //System.out.println(" content is" + urlconn.getContent());
-                //urlconn.addRequestProperty("User-Agent", "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)");
 
                 try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream()))) {
                     StringBuilder sb = new StringBuilder();
@@ -188,14 +182,11 @@ public final class MorningTask implements HistoricalHandler {
         }
     }
 
+    //not stable
     private static void writeA50(BufferedWriter out) {
-
         urlString = "https://www.investing.com/indices/ftse-china-a50";
         String line;
-        //Pattern p = Pattern.compile("(?<=div class=\\\"price\\\">)\\d+\\.\\d+(?=</div>)");
         Pattern p = Pattern.compile("(?<=<td id=\"_last_28930\" class=\"pid-28930-last\">)\\d+,\\d+\\.\\d+");
-        //Pattern p = Pattern.compile("(?<=pid-28930-last\\\">)\\d+");
-        //Pattern p2 = Pattern.compile("(?<=\\\"netAssetValue\\\":)\\d+.\\d+(?=,) ") ;
         try {
             URL url = new URL(urlString);
             URLConnection urlconn = url.openConnection(proxy);
