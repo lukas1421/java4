@@ -58,6 +58,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //perc trader
     private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
+    private static final int MAX_PERC_TRADES = 5;
 
 
     //inventory market making
@@ -328,6 +329,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             inventoryTraderButton.setText("Inventory Trader: " + (inventoryTraderOn.get() ? "ON" : "OFF"));
         });
 
+        JButton percTraderButton = new JButton("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
+        percTraderButton.addActionListener(l -> {
+            percentileTradeOn.set(!percentileTradeOn.get());
+            percTraderButton.setText("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
+        });
+
 
         JButton getPositionButton = new JButton(" get pos ");
         getPositionButton.addActionListener(l -> apcon.reqPositions(this));
@@ -578,6 +585,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(overnightButton);
         controlPanel1.add(musicPlayableButton);
         controlPanel1.add(inventoryTraderButton);
+        controlPanel1.add(percTraderButton);
 
         controlPanel2.add(getPositionButton);
         controlPanel2.add(level2Button);
@@ -795,28 +803,84 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static void percentileTrader(LocalDateTime nowMilli, double freshPrice) {
         // run every 15 minutes
         int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
+        LocalTime now = nowMilli.toLocalTime();
 
+        long accTrades = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTradeType() == AutoOrderType.PERC_ACC)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled).count();
+
+        long deccTrades = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTradeType() == AutoOrderType.PERC_DECC)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled).count();
+
+        long netPercTrades = accTrades - deccTrades;
+
+        LocalDateTime lastPercTradeT = globalIdOrderMap.entrySet().stream()
+                .filter(e -> isPercTrade().test(e.getValue().getTradeType()))
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getOrderTime())
+                .orElse(sessionOpenT());
+
+        LocalDateTime lastPercOrderT = globalIdOrderMap.entrySet().stream()
+                .filter(e -> isPercTrade().test(e.getValue().getTradeType()))
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getOrderTime())
+                .orElse(sessionOpenT());
+
+        double avgAccprice = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTradeType() == AutoOrderType.PERC_ACC)
+                .mapToDouble(e -> e.getValue().getOrder().lmtPrice()).average().orElse(0.0);
+
+        double avgDeccprice = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTradeType() == AutoOrderType.PERC_DECC)
+                .mapToDouble(e -> e.getValue().getOrder().lmtPrice()).average().orElse(0.0);
+
+        System.out.println(getStr(
+                " perc, acctrades, decctrades, netTrades, OrderT, " +
+                        "Trade T, accAvg, DecAvg, next tradeT",
+                perc, accTrades, deccTrades, netPercTrades, lastPercOrderT, lastPercTradeT,
+                avgAccprice, avgDeccprice, lastPercOrderT.plusMinutes(15L)));
+
+
+        //******************************************************************************************//
+        if (!(now.isAfter(LocalTime.of(9, 40)) && now.isBefore(LocalTime.of(15, 0)))) return;
         if (!percentileTradeOn.get()) return;
 
-        if (perc < 20) {
-            int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimit(freshPrice, 1);
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid",
-                    AutoOrderType.PERC_ACC));
-            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            outputOrderToAutoLog(getStr(o.orderId(), "perc bid", globalIdOrderMap.get(id)));
-        } else if (perc > 80) {
-            int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimit(freshPrice, 1);
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer",
-                    AutoOrderType.PERC_DECC));
-            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            outputOrderToAutoLog(getStr(o.orderId(), "perc offer", globalIdOrderMap.get(id)));
+        //*****************************************************************************************//
+        if (timeDiffinMinutes(lastPercOrderT, nowMilli) >= 15) {
+            if (perc < 10) {
+                if (accTrades <= MAX_PERC_TRADES) {
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeBidLimit(freshPrice, 1);
+                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid",
+                            AutoOrderType.PERC_ACC));
+                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                    outputOrderToAutoLog(getStr(o.orderId(), "perc bid", globalIdOrderMap.get(id)));
+                } else {
+                    outputToAutoLog("acc trades limit reached; ");
+                }
+            } else if (perc > 90) {
+                if (deccTrades <= MAX_PERC_TRADES) {
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeOfferLimit(freshPrice, 1);
+                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer",
+                            AutoOrderType.PERC_DECC));
+                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                    outputOrderToAutoLog(getStr(o.orderId(), "perc offer", globalIdOrderMap.get(id)));
+                } else {
+                    outputToAutoLog("decc trades limit reached; ");
+                }
+            } else {
+
+            }
         }
-
-
     }
 
+
+    private static Predicate<AutoOrderType> isPercTrade() {
+        return e -> e == AutoOrderType.PERC_ACC || e == AutoOrderType.PERC_DECC;
+    }
 
     /**
      * open trading from 9 to 9:40 /  fast trader

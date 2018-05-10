@@ -69,6 +69,7 @@ public class SGXFutureReceiver implements LiveHandler {
                                 XUTrader.updateLastMinuteMap(ldt, price);
                                 //XUTrader.fastTrader(ldt, price);
                                 XUTrader.MATrader(ldt, price);
+                                XUTrader.percentileTrader(ldt, price);
                                 CompletableFuture.runAsync(() -> {
                                     XUTrader.inventoryTrader(ldt, price);
                                 });
