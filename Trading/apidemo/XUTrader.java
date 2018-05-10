@@ -805,15 +805,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         LocalTime now = nowMilli.toLocalTime();
 
-        long accTrades = globalIdOrderMap.entrySet().stream()
+
+        long accTradesCount = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTradeType() == AutoOrderType.PERC_ACC)
                 .filter(e -> e.getValue().getStatus() == OrderStatus.Filled).count();
 
-        long deccTrades = globalIdOrderMap.entrySet().stream()
+        long deccTradesCount = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTradeType() == AutoOrderType.PERC_DECC)
                 .filter(e -> e.getValue().getStatus() == OrderStatus.Filled).count();
 
-        long netPercTrades = accTrades - deccTrades;
+        long netPercTrades = accTradesCount - deccTradesCount;
+
+        long percOrdersCount = globalIdOrderMap.entrySet().stream()
+                .filter(e -> isPercTrade().test(e.getValue().getTradeType()))
+                .count();
 
         LocalDateTime lastPercTradeT = globalIdOrderMap.entrySet().stream()
                 .filter(e -> isPercTrade().test(e.getValue().getTradeType()))
@@ -836,21 +841,23 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> e.getValue().getTradeType() == AutoOrderType.PERC_DECC)
                 .mapToDouble(e -> e.getValue().getOrder().lmtPrice()).average().orElse(0.0);
 
-        System.out.println(getStr(
-                " perc, acctrades, decctrades, netTrades, OrderT, " +
-                        "Trade T, accAvg, DecAvg, next tradeT",
-                perc, accTrades, deccTrades, netPercTrades, lastPercOrderT, lastPercTradeT,
-                avgAccprice, avgDeccprice, lastPercOrderT.plusMinutes(15L)));
+        int minBetweenPercOrders = percOrdersCount == 0 ? 0 : 15;
+
+        System.out.println(getStr("perc", perc,
+                "acctrades, decctrades, netTrades", accTradesCount, deccTradesCount, netPercTrades,
+                "OrderT Trade T,next tradeT", lastPercOrderT.toLocalTime(), lastPercTradeT.toLocalTime(),
+                lastPercOrderT.plusMinutes(minBetweenPercOrders), "accAvg, DecAvg,", avgAccprice, avgDeccprice));
 
 
         //******************************************************************************************//
-        if (!(now.isAfter(LocalTime.of(9, 40)) && now.isBefore(LocalTime.of(15, 0)))) return;
+
+        if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
         if (!percentileTradeOn.get()) return;
 
         //*****************************************************************************************//
-        if (timeDiffinMinutes(lastPercOrderT, nowMilli) >= 15) {
+        if (timeDiffinMinutes(lastPercOrderT, nowMilli) >= minBetweenPercOrders) {
             if (perc < 10) {
-                if (accTrades <= MAX_PERC_TRADES) {
+                if (accTradesCount <= MAX_PERC_TRADES) {
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeBidLimit(freshPrice, 1);
                     globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid",
@@ -861,7 +868,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     outputToAutoLog("acc trades limit reached; ");
                 }
             } else if (perc > 90) {
-                if (deccTrades <= MAX_PERC_TRADES) {
+                if (deccTradesCount <= MAX_PERC_TRADES) {
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeOfferLimit(freshPrice, 1);
                     globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer",
@@ -872,7 +879,25 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     outputToAutoLog("decc trades limit reached; ");
                 }
             } else {
-
+                if (accTradesCount > deccTradesCount) {
+                    if (freshPrice > avgAccprice) {
+                        int id = autoTradeID.incrementAndGet();
+                        Order o = placeOfferLimit(freshPrice, 1);
+                        globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer COVER",
+                                AutoOrderType.PERC_DECC));
+                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                        outputOrderToAutoLog(getStr(o.orderId(), "perc offer,COVER", globalIdOrderMap.get(id)));
+                    }
+                } else if (accTradesCount < deccTradesCount) {
+                    if (freshPrice < avgDeccprice) {
+                        int id = autoTradeID.incrementAndGet();
+                        Order o = placeBidLimit(freshPrice, 1);
+                        globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid COVER",
+                                AutoOrderType.PERC_ACC));
+                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                        outputOrderToAutoLog(getStr(o.orderId(), "perc bid, COVER", globalIdOrderMap.get(id)));
+                    }
+                }
             }
         }
     }
@@ -1009,8 +1034,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double pd = (indexPrice != 0.0 && freshPrice != 0.0) ? (freshPrice / indexPrice - 1) : 0.0;
 
         if (tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
-            lastMATradeTime = XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).lastKey();
-            numTrades = XUTrader.tradesMap.get(ibContractToFutType(activeFuture))
+            lastMATradeTime = tradesMap.get(ibContractToFutType(activeFuture)).lastKey();
+            numTrades = tradesMap.get(ibContractToFutType(activeFuture))
                     .entrySet().stream().filter(e -> e.getKey().isAfter(sessionOpenT()))
                     .mapToInt(e -> e.getValue().getSizeAllAbs()).sum();
         }
