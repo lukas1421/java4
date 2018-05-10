@@ -835,10 +835,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double avgAccprice = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTradeType() == AutoOrderType.PERC_ACC)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
                 .mapToDouble(e -> e.getValue().getOrder().lmtPrice()).average().orElse(0.0);
 
         double avgDeccprice = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTradeType() == AutoOrderType.PERC_DECC)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
                 .mapToDouble(e -> e.getValue().getOrder().lmtPrice()).average().orElse(0.0);
 
         int minBetweenPercOrders = percOrdersCount == 0 ? 0 : 15;
@@ -847,7 +849,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "acctrades, decctrades, netTrades", accTradesCount, deccTradesCount, netPercTrades,
                 "OrderT Trade T,next tradeT", lastPercOrderT.toLocalTime(), lastPercTradeT.toLocalTime(),
                 lastPercOrderT.plusMinutes(minBetweenPercOrders), "accAvg, DecAvg,", avgAccprice, avgDeccprice));
-
 
         //******************************************************************************************//
 
@@ -900,11 +901,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
             }
         }
-    }
-
-
-    private static Predicate<AutoOrderType> isPercTrade() {
-        return e -> e == AutoOrderType.PERC_ACC || e == AutoOrderType.PERC_DECC;
     }
 
     /**
@@ -1263,7 +1259,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (activeLastMinuteMap.size() < 2) return;
         double secLastV = activeLastMinuteMap.lowerEntry(t).getValue();
 
-
         if (sentiment == MASentiment.Bullish) {
             try {
                 inventorySemaphore.acquire();
@@ -1423,9 +1418,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //                System.out.println(getStr(name, ldt, open, high, low, close));
 //            }
 
-
             int daysToGoBack = currDate.getDayOfWeek().equals(DayOfWeek.MONDAY) ? 4 : 2;
-
             if (ldt.toLocalDate().isAfter(currDate.minusDays(daysToGoBack)) && FUT_COLLECTION_TIME.test(ldt)) {
                 if (lt.equals(LocalTime.of(9, 0))) {
                     futOpenMap.put(FutType.get(name), open);
@@ -1468,11 +1461,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
         if (ldt.isAfter(LocalDateTime.of(LocalDateTime.now().toLocalDate().minusDays(1L), LocalTime.of(15, 0)))) {
-            if (XUTrader.tradesMap.get(f).containsKey(ldt)) {
-                XUTrader.tradesMap.get(f).get(ldt)
-                        .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
+            if (tradesMap.get(f).containsKey(ldt)) {
+                tradesMap.get(f).get(ldt).addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
             } else {
-                XUTrader.tradesMap.get(f).put(ldt,
+                tradesMap.get(f).put(ldt,
                         new TradeBlock(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
             }
         }
@@ -1482,10 +1474,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public void tradeReportEnd() {
         //out.println(" trade report end printing");
         //System.out.println(getStr("Trade Report End ", XUTrader.tradesMap));
-        if (XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
-            currentDirection = XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getValue().getSizeAll() > 0 ?
+        if (tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
+            currentDirection = tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getValue().getSizeAll() > 0 ?
                     Direction.Long : Direction.Short;
-            lastTradeTime = XUTrader.tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getKey();
+            lastTradeTime = tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getKey();
         }
     }
 
@@ -1501,17 +1493,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
                             int parentId, double lastFillPrice, int clientId, String whyHeld) {
-        XUTrader.updateLog(getStr(" status filled remaining avgFillPrice ",
+        updateLog(getStr(" status filled remaining avgFillPrice ",
                 status, filled, remaining, avgFillPrice));
         if (status.equals(OrderStatus.Filled)) {
-            XuTraderHelper.createDialog(getStr(" status filled remaining avgFillPrice ",
+            createDialog(getStr(" status filled remaining avgFillPrice ",
                     status, filled, remaining, avgFillPrice));
         }
     }
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-        XUTrader.updateLog(" handle error code " + errorCode + " message " + errorMsg);
+        updateLog(" handle error code " + errorCode + " message " + errorMsg);
     }
 
     @Override
@@ -1536,24 +1528,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void orderStatus(int orderId, OrderStatus status, int filled, int remaining,
                             double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
-
         out.println(" in order status ");
-
-        XUTrader.updateLog(Utility.getStr(" status filled remaining avgFillPrice ",
+        updateLog(Utility.getStr(" status filled remaining avgFillPrice ",
                 status, filled, remaining, avgFillPrice));
 
         if (status.equals(OrderStatus.Filled)) {
-            XuTraderHelper.createDialog(Utility.getStr(" status filled remaining avgFillPrice ",
+            createDialog(Utility.getStr(" status filled remaining avgFillPrice ",
                     status, filled, remaining, avgFillPrice));
         }
     }
 
     @Override
     public void handle(int orderId, int errorCode, String errorMsg) {
-
         if (errorCode != 504 || LocalTime.now().getSecond() < 5) {
-            //System.out.println(" Xutrader handle ");
-            XUTrader.updateLog(" handle error code " + errorCode + " message " + errorMsg);
+            updateLog(" handle error code " + errorCode + " message " + errorMsg);
         }
     }
 
@@ -1581,16 +1569,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void connected() {
         out.println("connected in XUconnectionhandler");
-        XUTrader.connectionStatus = true;
-        XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
-        XUTrader.apcon.setConnectionStatus(true);
+        connectionStatus = true;
+        connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
+        apcon.setConnectionStatus(true);
     }
 
     @Override
     public void disconnected() {
         out.println("disconnected in XUConnectionHandler");
-        XUTrader.connectionStatus = false;
-        XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
+        connectionStatus = false;
+        connectionLabel.setText(Boolean.toString(connectionStatus));
     }
 
     @Override
@@ -1667,22 +1655,22 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double netTotalCommissions = Math.round(100d * ((unitsBought - unitsSold) * 1.505d)) / 100d;
         double mtmPnl = (currentPosMap.get(f) - unitsBought - unitsSold) * (futPriceMap.get(f) - futPrevCloseMap.get(f));
         SwingUtilities.invokeLater(() -> {
-            XUTrader.updateLog(" P " + futPriceMap.get(f));
-            XUTrader.updateLog(" Close " + futPrevCloseMap.get(f));
-            XUTrader.updateLog(" Open " + futOpenMap.get(f));
-            XUTrader.updateLog(" Chg " + (Math.round(10000d * (futPriceMap.get(f) / futPrevCloseMap.get(f) - 1)) / 100d) + " %");
-            XUTrader.updateLog(" Open Pos " + (currentPosMap.get(f) - unitsBought - unitsSold));
-            XUTrader.updateLog(" MTM " + mtmPnl);
-            XUTrader.updateLog(" units bot " + unitsBought);
-            XUTrader.updateLog(" avg buy " + avgBuy);
-            XUTrader.updateLog(" units sold " + unitsSold);
-            XUTrader.updateLog(" avg sell " + avgSell);
-            XUTrader.updateLog(" buy pnl " + buyTradePnl);
-            XUTrader.updateLog(" sell pnl " + sellTradePnl);
-            XUTrader.updateLog(" net pnl " + netTradePnl);
-            XUTrader.updateLog(" net commission " + netTotalCommissions);
-            //XUTrader.updateLog(" net pnl after comm " + (netTradePnl - netTotalCommissions));
-            XUTrader.updateLog(" MTM+Trade " + (netTradePnl + mtmPnl));
+            updateLog(" P " + futPriceMap.get(f));
+            updateLog(" Close " + futPrevCloseMap.get(f));
+            updateLog(" Open " + futOpenMap.get(f));
+            updateLog(" Chg " + (Math.round(10000d * (futPriceMap.get(f) / futPrevCloseMap.get(f) - 1)) / 100d) + " %");
+            updateLog(" Open Pos " + (currentPosMap.get(f) - unitsBought - unitsSold));
+            updateLog(" MTM " + mtmPnl);
+            updateLog(" units bot " + unitsBought);
+            updateLog(" avg buy " + avgBuy);
+            updateLog(" units sold " + unitsSold);
+            updateLog(" avg sell " + avgSell);
+            updateLog(" buy pnl " + buyTradePnl);
+            updateLog(" sell pnl " + sellTradePnl);
+            updateLog(" net pnl " + netTradePnl);
+            updateLog(" net commission " + netTotalCommissions);
+            //updateLog(" net pnl after comm " + (netTradePnl - netTotalCommissions));
+            updateLog(" MTM+Trade " + (netTradePnl + mtmPnl));
         });
     }
 

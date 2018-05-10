@@ -6,6 +6,7 @@ import client.Order;
 import client.OrderType;
 import client.Types;
 import controller.ApiController;
+import util.AutoOrderType;
 
 import javax.swing.*;
 import java.awt.*;
@@ -315,6 +316,10 @@ public class XuTraderHelper {
             }
         }
         return proposedPos;
+    }
+
+    static Predicate<AutoOrderType> isPercTrade() {
+        return e -> e == AutoOrderType.PERC_ACC || e == AutoOrderType.PERC_DECC;
     }
 
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
