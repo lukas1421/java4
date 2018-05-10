@@ -4,6 +4,7 @@ import TradeType.MAIdea;
 import TradeType.TradeBlock;
 import apidemo.*;
 import auxiliary.SimpleBar;
+import client.Types;
 import utility.SharpeUtility;
 
 import javax.swing.*;
@@ -218,13 +219,13 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
         XUTrader.activeFutLiveIDOrderMap.forEach((k, v) -> {
             int y = getY(v.lmtPrice());
-            if (v.totalQuantity() > 0.0) {
+            if (v.action().equals(Types.Action.BUY)) {
                 g.setColor(Color.blue);
                 g.drawLine(0, y, getWidth(), y);
                 g.drawString(getStr("Buy: ", v.totalQuantity(), " at ", v.lmtPrice(),
                         XUTrader.findOrderByTWSID(k).getTradeType(), XUTrader.findOrderByTWSID(k).getStatus())
                         , Math.round(getWidth() * 7 / 8), y + 10);
-            } else {
+            } else if (v.action().equals(Types.Action.SELL)) {
                 g.setColor(Color.red);
                 g.drawLine(0, y, getWidth(), y);
                 g.drawString(getStr("Sell: ", v.totalQuantity(), " at ", v.lmtPrice()

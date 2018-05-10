@@ -428,6 +428,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
                     if (o.getStatus() != OrderStatus.Filled &&
                             timeDiffinMinutes(o.getOrderTime(), LocalDateTime.now()) >= cancelWaitTime(LocalTime.now())) {
+
                         globalIdOrderMap.entrySet().stream()
                                 .filter(e -> isInventoryTrade().test(e.getValue().getTradeType()))
                                 .skip(invOrderCount - 1).peek(e -> out.println(getStr("last order ", e.getValue())))
@@ -1260,15 +1261,24 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param freshPrice price
      */
     public static void inventoryTrader(LocalDateTime t, double freshPrice) {
-        out.println(getStr("In inventory trade: ", inventoryTraderOn.get(), " sentiment: ",
-                sentiment, "inventory barrier waiting #: ", inventoryBarrier.getNumberWaiting(),
+
+        int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
+        if (perc == 0) {
+            System.out.println(" perc 0 suspicious " + futData.get(ibContractToFutType(activeFuture)));
+        }
+
+        out.println(getStr("In inventory trade: ", inventoryTraderOn.get(), " " +
+                        "sentiment: ", sentiment, "perc ", perc,
+                "inventory barrier waiting #: ", inventoryBarrier.getNumberWaiting(),
                 " semaphore permits: ", inventorySemaphore.availablePermits(),
                 freshPrice, " chg: ",
                 activeLastMinuteMap.size() < 2 ? "No trade last min " : (freshPrice -
                         activeLastMinuteMap.lowerEntry(t).getValue())));
 
+
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
         if (Math.abs(currPos) > MAX_FUT_LIMIT) return;
+
 
         if (inventorySemaphore.availablePermits() == 0) return;
         if (!inventoryTraderOn.get()) return;
@@ -1276,7 +1286,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (activeLastMinuteMap.size() < 2) return;
         double secLastV = activeLastMinuteMap.lowerEntry(t).getValue();
 
-        if (sentiment == MASentiment.Bullish) {
+        if (perc < 20) {
             try {
                 inventorySemaphore.acquire();
                 out.println(" acquired semaphore now left :" + inventorySemaphore.availablePermits());
@@ -1322,7 +1332,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        } else if (sentiment == MASentiment.Bearish) {
+        } else if (perc > 80) {
             try {
                 inventorySemaphore.acquire();
                 out.println(" acquired semaphore, now left: " + inventorySemaphore.availablePermits());
