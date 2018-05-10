@@ -97,7 +97,7 @@ public class XuTraderHelper {
     }
 
     public static <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> map) {
-        if (map.size() > 0) {
+        if (map.size() > 1) {
             double max = map.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
             double min = map.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
             double last = map.lastEntry().getValue().getClose();

@@ -216,18 +216,35 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         maxRtn = getMaxRtn();
         last = 0;
 
-        XUTrader.activeFutLiveOrder.forEach((k, v) -> {
-            int y = getY(k);
-            if (v > 0.0) {
+        XUTrader.activeFutLiveIDOrderMap.forEach((k, v) -> {
+            int y = getY(v.lmtPrice());
+            if (v.totalQuantity() > 0.0) {
                 g.setColor(Color.blue);
                 g.drawLine(0, y, getWidth(), y);
-                g.drawString("Buy: " + Double.toString(v) + " at " + k, Math.round(getWidth() * 7 / 8), y + 10);
+                g.drawString(getStr("Buy: ", v.totalQuantity(), " at ", v.lmtPrice(),
+                        XUTrader.findOrderByTWSID(k).getTradeType(), XUTrader.findOrderByTWSID(k).getStatus())
+                        , Math.round(getWidth() * 7 / 8), y + 10);
             } else {
                 g.setColor(Color.red);
                 g.drawLine(0, y, getWidth(), y);
-                g.drawString("Sell: " + Double.toString(v) + " at " + k, Math.round(getWidth() * 7 / 8), y + 10);
+                g.drawString(getStr("Sell: ", v.totalQuantity(), " at ", v.lmtPrice()
+                        , XUTrader.findOrderByTWSID(k).getTradeType(), XUTrader.findOrderByTWSID(k).getStatus())
+                        , Math.round(getWidth() * 7 / 8), y + 10);
             }
         });
+
+//        XUTrader.activeFutLiveOrder.forEach((k, v) -> {
+//            int y = getY(k);
+//            if (v > 0.0) {
+//                g.setColor(Color.blue);
+//                g.drawLine(0, y, getWidth(), y);
+//                g.drawString("Buy: " + Double.toString(v) + " at " + k, Math.round(getWidth() * 7 / 8), y + 10);
+//            } else {
+//                g.setColor(Color.red);
+//                g.drawLine(0, y, getWidth(), y);
+//                g.drawString("Sell: " + Double.toString(v) + " at " + k, Math.round(getWidth() * 7 / 8), y + 10);
+//            }
+//        });
 
         int x = 5;
         for (LocalDateTime lt : tm.keySet()) {

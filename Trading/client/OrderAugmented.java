@@ -23,6 +23,15 @@ public class OrderAugmented {
         finalActionTime = LocalDateTime.MIN;
     }
 
+    public OrderAugmented() {
+        orderTime = LocalDateTime.MIN;
+        order = new Order();
+        msg = "";
+        tradeType = AutoOrderType.UNKNOWN;
+        status = OrderStatus.Unknown;
+        finalActionTime = LocalDateTime.MIN;
+    }
+
     public LocalDateTime getOrderTime() {
         return orderTime;
     }
@@ -53,7 +62,8 @@ public class OrderAugmented {
 
     @Override
     public String toString() {
-        return Utility.getStr("T: ", orderTime.toLocalTime(), "Order:", order, "msg:", msg, "Tradetype", tradeType
+        return Utility.getStr("T: ", orderTime.toLocalTime(),
+                "Order:", order, "msg:", msg, "Tradetype", tradeType
                 , order.orderId() == 0 ? "" : order.orderId(),
                 "Status:", status, "FinalT: ", finalActionTime.toLocalTime());
     }
