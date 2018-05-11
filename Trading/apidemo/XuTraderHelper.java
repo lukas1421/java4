@@ -90,7 +90,7 @@ public class XuTraderHelper {
         }
     }
 
-    static void outputOrderToAutoLog(String s) {
+    public static void outputOrderToAutoLog(String s) {
         outputToAutoLog("****************ORDER************************");
         outputToAutoLog(s);
         outputToAutoLog("****************ORDER************************");

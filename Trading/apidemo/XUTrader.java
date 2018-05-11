@@ -806,7 +806,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-
     /**
      * percentileTrader
      */

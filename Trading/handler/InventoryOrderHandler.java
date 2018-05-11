@@ -37,9 +37,10 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
 
         if (orderState.status() == OrderStatus.Filled) {
             globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
-            XuTraderHelper.outputToAutoLog(
-                    getStr("|| OrderState ||", defaultID, globalIdOrderMap.get(defaultID),
-                            orderState.status()));
+            String msg = getStr("|| OrderState ||", defaultID, globalIdOrderMap.get(defaultID),
+                    orderState.status());
+            XuTraderHelper.outputToAutoLog(msg);
+            XuTraderHelper.outputPurelyOrders(msg);
             if (latch.getCount() == 1) {
                 System.out.println(" counting down latch ");
                 latch.countDown();

@@ -244,7 +244,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         autoUpdateButton.addActionListener(l -> {
             if (autoUpdateButton.isSelected()) {
                 ex = Executors.newScheduledThreadPool(20);
-                ex.scheduleAtFixedRate(ChinaPosition::refreshAll, 0, updateFreq.getFreq(), TimeUnit.SECONDS);
+                ex.scheduleAtFixedRate(this::refreshAll, 0, updateFreq.getFreq(), TimeUnit.SECONDS);
             } else {
                 ex.shutdown();
             }
@@ -361,8 +361,12 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
     }
 
-    private static void refreshAll() {
+    private void refreshAll() {
         mtmPnlCompute(GEN_MTM_PRED, "all");
+        //get current get open
+        getOpenPositionsNormal();
+        getOpenPositionsFromMargin();
+        CompletableFuture.runAsync(ChinaPosition::updatePosition).thenRun(this::getOpenTradePositionForFuture);
         SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
     }
 
@@ -637,7 +641,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 if (al1.get(1).equalsIgnoreCase(TradingConstants.A50_LAST_EXPIRY)) {
-                    //futExpiryLevel = Double.parseDouble(al1.get(3));
                     futExpiryUnits = Integer.parseInt(al1.get(2));
                     System.out.println(getStr(" fut expiry level and units ", futExpiryUnits));
                 }
@@ -668,9 +671,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     @Override
     public void handleHist(String name, String date, double open, double high, double low, double close) {
-
-        //LocalDate ytd = currentTradingDate.equals(dateMap.get(2)) ? dateMap.get(1) : dateMap.get(2);
-        //System.out.println(getStr(" name date close ", name, date, close));
 
         if (!date.startsWith("finished")) {
             Date dt = new Date();
@@ -761,7 +761,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     private static void getOpenPositionsFromMargin() {
-
         System.out.println(" get open position from margin ");
 
         int todaySoldCol = 0;
@@ -858,14 +857,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             if (dataList.get(buySellCol).equals("买入")) {
                                 if (tradesMap.get(ticker).containsKey(lt)) {
                                     System.out.println("merging normal ... ");
-                                    //tradesMapFront.get(ticker).get(lt).addTrade(new Trade(p,size));
                                     tradesMap.get(ticker).get(lt).addTrade(new NormalTrade(p, size));
                                 } else {
                                     tradesMap.get(ticker).put(lt, new TradeBlock(new NormalTrade(p, size)));
                                 }
-                                //System.out.println( " name " + ticker + " " + tradesMapFront.get(ticker));
                             } else if (dataList.get(buySellCol).equals("卖出")) {
-                                //System.out.println( " name " + ticker + " " + tradesMapFront.get(ticker));
                                 if (tradesMap.get(ticker).containsKey(lt)) {
                                     tradesMap.get(ticker).get(lt).addTrade(new NormalTrade(p, -1 * size));
                                 } else {
