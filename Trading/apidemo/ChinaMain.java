@@ -413,8 +413,7 @@ public final class ChinaMain implements IConnectionHandler {
                 System.out.println(" ib conn latch finished waiting " + LocalTime.now());
                 M_CONTROLLER.reqXUDataArray();
                 ses.scheduleAtFixedRate(() -> {
-                    AccountSummaryTag[] tags = {AccountSummaryTag.AccountType, AccountSummaryTag.NetLiquidation,
-                            AccountSummaryTag.SettledCash, AccountSummaryTag.TotalCashValue};
+                    AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
                     M_CONTROLLER.reqAccountSummary("All", tags
                             , new ApiController.IAccountSummaryHandler.AccountInfoHandler());
                 }, 0, 1, TimeUnit.MINUTES);

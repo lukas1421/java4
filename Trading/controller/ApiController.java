@@ -496,7 +496,9 @@ public class ApiController implements EWrapper {
 
             @Override
             public void accountSummaryEnd() {
-                System.out.println(" account summary end ");
+                System.out.println(" account summary end, cancelling acct summary ");
+                ChinaMain.controller().cancelAccountSummary(this);
+
             }
         }
     }

@@ -121,6 +121,7 @@ public class XuTraderHelper {
     }
 
     static Order placeOfferLimit(double p, double quantity) {
+        if (quantity <= 0) throw new IllegalStateException(" cannot have negative or 0 quantity");
         System.out.println(" place offer limit " + p);
         Order o = new Order();
         o.action(Types.Action.SELL);
@@ -133,6 +134,7 @@ public class XuTraderHelper {
     }
 
     static Order placeBidLimit(double p, double quantity) {
+        if (quantity <= 0) throw new IllegalStateException(" cannot have 0 quantity ");
         System.out.println(" place bid limit " + p);
         Order o = new Order();
         o.action(Types.Action.BUY);
