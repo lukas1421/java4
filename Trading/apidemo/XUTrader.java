@@ -720,7 +720,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
         return new OrderAugmented();
-        //throw new IllegalStateException(" order not found ");
     }
 
     /**

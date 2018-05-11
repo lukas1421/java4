@@ -90,10 +90,23 @@ public class XuTraderHelper {
         }
     }
 
-    public static void outputOrderToAutoLog(String s) {
+    static void outputOrderToAutoLog(String s) {
         outputToAutoLog("****************ORDER************************");
         outputToAutoLog(s);
         outputToAutoLog("****************ORDER************************");
+        outputPurelyOrders(s);
+    }
+
+    public static void outputPurelyOrders(String s) {
+        System.out.println(s);
+        File output = new File(TradingConstants.GLOBALPATH + "orders.txt");
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
+            out.append(s);
+            out.newLine();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
     }
 
     public static <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> map) {
