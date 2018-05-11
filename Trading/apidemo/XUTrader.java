@@ -50,7 +50,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static AtomicBoolean musicOn = new AtomicBoolean(true);
     private static volatile MASentiment sentiment = MASentiment.Directionless;
     private static LocalDateTime lastTradeTime = LocalDateTime.now();
-    static final int MAX_FUT_LIMIT = 20;
+    static final int MAX_FUT_LIMIT = 15;
     private static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
     private static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
     private static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
@@ -1705,16 +1705,21 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         ApiController ap = new ApiController(new XuTraderHelper.XUConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
 
-        XUTrader xutrader = new XUTrader(ap);
-        jf.add(xutrader);
-        jf.setLayout(new FlowLayout());
-        jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        jf.setVisible(true);
+        ap.connect("127.0.0.1", 4001, 0, "");
 
-        CompletableFuture.runAsync(xutrader::connectToTWS).thenRun(() -> {
-            CompletableFuture.runAsync(() -> getAPICon().client().reqCurrentTime());
-            CompletableFuture.runAsync(xutrader::requestXUData);
-        });
+        ap.client().reqAccountSummary(5, "All", "AccountType, NetLiquidation" +
+                ",TotalCashValue,SettledCash,");
+
+//        XUTrader xutrader = new XUTrader(ap);
+//        jf.add(xutrader);
+//        jf.setLayout(new FlowLayout());
+//        jf.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+//        jf.setVisible(true);
+//
+//        CompletableFuture.runAsync(xutrader::connectToTWS).thenRun(() -> {
+//            CompletableFuture.runAsync(() -> getAPICon().client().reqCurrentTime());
+//            CompletableFuture.runAsync(xutrader::requestXUData);
+//        });
     }
 }
 

@@ -328,7 +328,7 @@ public class XuTraderHelper {
             System.out.println("connected in XUconnectionhandler");
             XUTrader.connectionStatus = true;
             XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
-            XUTrader.apcon.setConnectionStatus(true);
+            //XUTrader.apcon.setConnectionStatus(true);
         }
 
         @Override

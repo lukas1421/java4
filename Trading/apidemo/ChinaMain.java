@@ -6,6 +6,7 @@ import auxiliary.Dividends;
 import auxiliary.StratCompute;
 import client.ExecutionFilter;
 import client.Types.NewsType;
+import controller.AccountSummaryTag;
 import controller.ApiConnection.ILogger;
 import controller.ApiConnection.ILogger.DefaultLogger;
 import controller.ApiController;
@@ -411,6 +412,13 @@ public final class ChinaMain implements IConnectionHandler {
                 ibConnLatch.await();
                 System.out.println(" ib conn latch finished waiting " + LocalTime.now());
                 M_CONTROLLER.reqXUDataArray();
+                ses.scheduleAtFixedRate(() -> {
+                    AccountSummaryTag[] tags = {AccountSummaryTag.AccountType, AccountSummaryTag.NetLiquidation,
+                            AccountSummaryTag.SettledCash, AccountSummaryTag.TotalCashValue};
+                    M_CONTROLLER.reqAccountSummary("All", tags
+                            , new ApiController.IAccountSummaryHandler.AccountInfoHandler());
+                }, 0, 1, TimeUnit.MINUTES);
+                ;
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
             }
@@ -578,9 +586,11 @@ public final class ChinaMain implements IConnectionHandler {
             systemNotif.setBackground(Color.orange);
         }, 10, TimeUnit.SECONDS);
     }
+
     static void updateSystemTime(String text) {
         systemTime.setText(text);
     }
+
     public static void updateTWSTime(String text) {
         twsTime.setText(text);
     }

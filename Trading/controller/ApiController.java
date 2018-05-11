@@ -330,7 +330,6 @@ public class ApiController implements EWrapper {
     }
 
     public void disconnect() {
-        //System.out.println(" check connected BEFORE disconnecting " + isConnected());
         System.out.println(" check connection in disconnect BEFORE " + checkConnection());
 
         m_client.eDisconnect();
@@ -348,7 +347,6 @@ public class ApiController implements EWrapper {
     }
 
     private boolean isConnected() {
-        //System.out.println(" isconnected ? " + m_connected);
         return m_connected;
     }
 
@@ -466,12 +464,14 @@ public class ApiController implements EWrapper {
         recEOM();
     }
 
-    public void updatePortfolio(Contract contractIn, int positionIn, double marketPrice, double marketValue, double averageCost, double unrealizedPNL, double realizedPNL, String account)
+    public void updatePortfolio(Contract contractIn, int positionIn, double marketPrice, double marketValue,
+                                double averageCost, double unrealizedPNL, double realizedPNL, String account)
             throws CloneNotSupportedException {
         Contract contract = contractIn.clone();
         contract.exchange(contractIn.exchange());
 
-        Position position = new Position(contract, account, positionIn, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL);
+        Position position = new Position(contract, account,
+                positionIn, marketPrice, marketValue, averageCost, unrealizedPNL, realizedPNL);
         m_accountHandlers.forEach((handler) -> handler.updatePortfolio(position));
         recEOM();
     }
@@ -482,6 +482,23 @@ public class ApiController implements EWrapper {
         void accountSummary(String account, AccountSummaryTag tag, String value, String currency);
 
         void accountSummaryEnd();
+
+        class AccountInfoHandler implements IAccountSummaryHandler {
+
+            @Override
+            public void accountSummary(String account, AccountSummaryTag tag, String value, String currency) {
+                String output = getStrCheckNull(LocalDateTime.now(), account, tag, value, currency);
+                System.out.println(output);
+                if (LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).getMinute() <= 1) {
+                    XuTraderHelper.outputToAutoLog(output);
+                }
+            }
+
+            @Override
+            public void accountSummaryEnd() {
+                System.out.println(" account summary end ");
+            }
+        }
     }
 
     public interface IMarketValueSummaryHandler {
@@ -535,8 +552,10 @@ public class ApiController implements EWrapper {
     @Override
     public void accountSummary(int reqId, String account, String tag, String value, String currency) {
 
-        System.out.print(Utility.getStrCheckNull("", reqId, Optional.ofNullable(account).orElse("accountnull"), Optional.ofNullable(tag).orElse("tagnull"),
-                Optional.ofNullable(value).orElse("valuenull"), Optional.ofNullable(currency).orElse("currencynull")));
+//        System.out.print(Utility.getStrCheckNull("", reqId, Optional.ofNullable(account).orElse("accountnull"),
+//                Optional.ofNullable(tag).orElse("tagnull"),
+//                Optional.ofNullable(value).orElse("valuenull"),
+//                Optional.ofNullable(currency).orElse("currencynull")));
 
         if (tag.equals("Currency")) { // ignore this, it is useless
             return;
