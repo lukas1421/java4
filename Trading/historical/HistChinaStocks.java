@@ -517,8 +517,8 @@ public class HistChinaStocks extends JPanel {
         });
 
         sgxTradesButton.addActionListener(al -> {
-            getSGXPosition();
-            getSGXTrades();
+            //getSGXPosition();
+            //getSGXTrades();
         });
 
         sgxDataButton.addActionListener(l ->
@@ -670,8 +670,8 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(computeButton);
         controlPanel.add(updatePriceButton);
 
-        controlPanel.add(sgxDataButton);
-        controlPanel.add(sgxTradesButton);
+        //controlPanel.add(sgxDataButton);
+        //controlPanel.add(sgxTradesButton);
         controlPanel.add(noFutButton);
         controlPanel.add(futOnlyButton);
         controlPanel.add(outputWtdButton);
@@ -864,15 +864,19 @@ public class HistChinaStocks extends JPanel {
     private static void computePosition() {
         for (String s : chinaTradeMap.keySet()) {
             if (tickerNotFuture(s)) {
-                int openPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONDAY_OF_WEEK))
+                int openPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate()
+                        .isBefore(MONDAY_OF_WEEK))
                         .mapToInt(e -> e.getValue().getSizeAll()).sum();
-                int thisWeekPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
+                int thisWeekPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate()
+                        .isAfter(MONDAY_OF_WEEK.minusDays(1L)))
                         .mapToInt(e -> e.getValue().getSizeAll()).sum();
 
-                int botPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
+                int botPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate()
+                        .isAfter(MONDAY_OF_WEEK.minusDays(1L)))
                         .mapToInt(e -> e.getValue().getSizeBot()).sum();
 
-                int soldPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
+                int soldPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate()
+                        .isAfter(MONDAY_OF_WEEK.minusDays(1L)))
                         .mapToInt(e -> e.getValue().getSizeSold()).sum();
 
                 int currentPos = chinaTradeMap.get(s).entrySet().stream().mapToInt(e -> e.getValue().getSizeAll()).sum();

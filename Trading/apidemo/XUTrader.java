@@ -1471,7 +1471,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
-        if (ldt.isAfter(LocalDateTime.of(LocalDateTime.now().toLocalDate().minusDays(1L), LocalTime.of(15, 0)))) {
+        int daysToGoBack = LocalDate.now().getDayOfWeek().equals(DayOfWeek.MONDAY) ? 4 : 2;
+        if (ldt.toLocalDate().isAfter(LocalDate.now().minusDays(daysToGoBack))) {
             if (tradesMap.get(f).containsKey(ldt)) {
                 tradesMap.get(f).get(ldt).addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
             } else {
@@ -1479,10 +1480,22 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         new TradeBlock(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
             }
         }
+
+//        // needs to be changed.
+//        if (ldt.isAfter(LocalDateTime.of(LocalDateTime.now().toLocalDate().minusDays(1L), LocalTime.of(15, 0)))) {
+//            if (tradesMap.get(f).containsKey(ldt)) {
+//                tradesMap.get(f).get(ldt).addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
+//            } else {
+//                tradesMap.get(f).put(ldt,
+//                        new TradeBlock(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
+//            }
+//        }
     }
 
     @Override
     public void tradeReportEnd() {
+        System.out.println(" printing trades map " + tradesMap.get(ibContractToFutType(activeFuture)));
+
         if (tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
             currentDirection = tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getValue().getSizeAll() > 0 ?
                     Direction.Long : Direction.Short;
