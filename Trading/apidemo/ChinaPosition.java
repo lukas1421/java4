@@ -326,8 +326,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = getHeight() / 2;
-                d.width = TradingConstants.GLOBALWIDTH;
+                d.height = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 2;
+                d.width = getWidth();
                 return d;
             }
         };

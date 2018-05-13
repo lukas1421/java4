@@ -365,7 +365,8 @@ public final class ChinaStock extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.width = getWidth() / 2;
+                Dimension d1 = Toolkit.getDefaultToolkit().getScreenSize();
+                d.width = d1.width / 2;
                 return d;
             }
         };
