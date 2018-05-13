@@ -52,7 +52,7 @@ public class HistChinaStocks extends JPanel {
     public static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now());
     private static final LocalDate MONTH_FIRST_DAY = Utility.getFirstDayofMonth(LocalDateTime.now());
 
-    public static final String GLOBALPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";
+    //public static final String GLOBALPATH = "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";
 
     public static Map<String, String> nameMap = new HashMap<>();
 
@@ -62,7 +62,7 @@ public class HistChinaStocks extends JPanel {
     private static volatile GraphBarTemporal<LocalDateTime> graphWtd = new GraphBarTemporal<>();
     private static volatile GraphChinaPnl<LocalDateTime> graphWtdPnl = new GraphChinaPnl<>();
 
-    private File sgxOutput = new File(GLOBALPATH + "sgxWtdOutput.txt");
+    private File sgxOutput = new File(TradingConstants.GLOBALPATH + "sgxWtdOutput.txt");
 
     private static List<String> stockList = new LinkedList<>();
     private static volatile Map<String, NavigableMap<LocalDate, SimpleBar>> chinaYtd = new HashMap<>();
@@ -203,7 +203,7 @@ public class HistChinaStocks extends JPanel {
         }
 
 
-        File chinaInput = new File(GLOBALPATH + "ChinaAll.txt");
+        File chinaInput = new File(TradingConstants.GLOBALPATH + "ChinaAll.txt");
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(chinaInput), "GBK"))) {
             while ((line = reader.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
