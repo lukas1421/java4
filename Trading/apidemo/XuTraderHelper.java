@@ -337,6 +337,19 @@ public class XuTraderHelper {
         return e -> e == AutoOrderType.PERC_ACC || e == AutoOrderType.PERC_DECC;
     }
 
+    static void setLongShortTradability(int currPos) {
+        if (currPos > 0) {
+            XUTrader.canLongGlobal.set(currPos < XUTrader.MAX_FUT_LIMIT);
+            XUTrader.canShortGlobal.set(true);
+        } else if (currPos < 0) {
+            XUTrader.canLongGlobal.set(true);
+            XUTrader.canShortGlobal.set(Math.abs(currPos) < XUTrader.MAX_FUT_LIMIT);
+        } else {
+            XUTrader.canLongGlobal.set(true);
+            XUTrader.canShortGlobal.set(true);
+        }
+    }
+
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
         @Override
         public void connected() {

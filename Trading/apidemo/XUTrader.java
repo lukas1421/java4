@@ -51,10 +51,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static volatile MASentiment sentiment = MASentiment.Directionless;
     private static LocalDateTime lastTradeTime = LocalDateTime.now();
     static final int MAX_FUT_LIMIT = 20;
-    private static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
-    private static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
+    static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
+    static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
     private static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
+
+    //flatten drift trader
+    private static final double FLATTEN_THRESH = 200000.0;
 
     //perc trader
     private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
@@ -1148,19 +1151,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //        }
     }
 
-    private static void setLongShortTradability(int currPos) {
-        if (currPos > 0) {
-            canLongGlobal.set(currPos < MAX_FUT_LIMIT);
-            canShortGlobal.set(true);
-        } else if (currPos < 0) {
-            canLongGlobal.set(true);
-            canShortGlobal.set(Math.abs(currPos) < MAX_FUT_LIMIT);
-        } else {
-            canLongGlobal.set(true);
-            canShortGlobal.set(true);
-        }
-    }
-
     /**
      * overnight close trading
      */
@@ -1375,6 +1365,45 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
         out.println(" exiting inventory order checking not stuck ");
+    }
+
+    public static double getCurrentMA() {
+        NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
+        if (price5.size() <= 2) return 0.0;
+
+        NavigableMap<LocalDateTime, Double> sma = getMAGen(price5, currentMAPeriod);
+        return sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
+    }
+
+    public static void flattenDriftTrader(LocalDateTime t, double freshPrice) {
+        double currentDelta = ChinaPosition.getNetPtfDelta();
+        double malast = getCurrentMA();
+        double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 0.0);
+        System.out.println("FLATTENDRIFTTRADER current delta is " + currentDelta);
+        if (currentDelta == 0.0 || malast == 0.0 || fx == 0.0) return;
+
+        if (sentiment == MASentiment.Bullish) {
+            if (currentDelta < 0.0 && Math.abs(currentDelta) > FLATTEN_THRESH) {
+                int size = (int) Math.ceil(Math.abs(currentDelta / (fx * freshPrice)));
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(roundToXUPricePassive(malast, Direction.Long), size);
+                globalIdOrderMap.put(id, new OrderAugmented(t, o, "Bullish Flatten BUY", AutoOrderType.FLATTEN));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(getStr(t, id, " buy to flatten short delta"));
+            }
+
+        } else if (sentiment == MASentiment.Bearish) {
+            if (currentDelta > 0.0 && Math.abs(currentDelta) > FLATTEN_THRESH) {
+                int size = (int) Math.ceil(Math.abs(currentDelta / (fx * freshPrice)));
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(roundToXUPricePassive(malast, Direction.Short), size);
+                globalIdOrderMap.put(id, new OrderAugmented(t, o, "Bearish Flatten SELL ", AutoOrderType.FLATTEN));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(getStr(t, id, "sell to flatten long delta"));
+            }
+        }
+
+
     }
 
     public static boolean orderMakingMoney(Order o, double currPrice) {

@@ -313,9 +313,11 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
 //                    mult = -1 * mult;
 //                }
                 if (ChinaPosition.tradesMap.containsKey(name)
-                        && ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).entrySet().stream().anyMatch(e -> e.getValue().getSizeAll() != 0)) {
+                        && ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false)
+                        .entrySet().stream().anyMatch(e -> e.getValue().getSizeAll() != 0)) {
 
-                    double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).values().stream()
+                    double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false)
+                            .values().stream()
                             .mapToInt(TradeBlock::getSizeAll).filter(n -> n != 0).sum();
                     g.drawString(Utility.getStr(pos), x - 20, close - (mult * 50));
                     g.drawLine(x, close - (mult * 40), x, close);
@@ -324,7 +326,8 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
                 }
             }
             if (tradeMap.size() > 0) {
-                g.drawString("Trade: " + Math.round(100d * Optional.ofNullable(tradeMap.lastEntry()).map(Entry::getValue).orElse(0.0)) / 100d, x + WIDTH_PNL, last + 10);
+                g.drawString("Trade: " + Math.round(100d * Optional.ofNullable(tradeMap.lastEntry())
+                        .map(Entry::getValue).orElse(0.0)) / 100d, x + WIDTH_PNL, last + 10);
             }
 
         } else {
@@ -483,13 +486,17 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
                         + Double.toString(round(100d * benchMap.getOrDefault("主板", 0.0) / currentDelta)) + " % ",
                 getWidth() / 7 * 5, getHeight() / 7 + 30);
 
-        g2.drawString("沪深: " + Long.toString(round(benchMap.getOrDefault("沪深", 0.0) / 1000d)) + " k     " + Double.toString(round(100d * benchMap.getOrDefault("沪深", 0.0) / currentDelta)) + " % ",
+        g2.drawString("沪深: " + Long.toString(round(benchMap.getOrDefault("沪深", 0.0) / 1000d)) + " k   " +
+                        "  " + Double.toString(round(100d * benchMap.getOrDefault("沪深", 0.0) / currentDelta)) + " % ",
                 getWidth() / 7 * 5, getHeight() / 7 + 50);
-        g2.drawString("创: " + Long.toString(round(benchMap.getOrDefault("创", 0.0) / 1000d)) + " k     " + Double.toString(round(100d * benchMap.getOrDefault("创", 0.0) / currentDelta)) + " % ",
+        g2.drawString("创: " + Long.toString(round(benchMap.getOrDefault("创", 0.0) / 1000d)) + " k     "
+                        + Double.toString(round(100d * benchMap.getOrDefault("创", 0.0) / currentDelta)) + " % ",
                 getWidth() / 7 * 5, getHeight() / 7 + 70);
-        g2.drawString("小: " + Long.toString(round((benchMap.getOrDefault("小", 0.0)) / 1000d)) + " k     " + Double.toString(round(100d * benchMap.getOrDefault("小", 0.0) / currentDelta)) + " % ",
+        g2.drawString("小: " + Long.toString(round((benchMap.getOrDefault("小", 0.0)) / 1000d)) + " k     "
+                        + Double.toString(round(100d * benchMap.getOrDefault("小", 0.0) / currentDelta)) + " % ",
                 getWidth() / 7 * 5, getHeight() / 7 + 90);
-        g2.drawString("中证: " + Long.toString(round(benchMap.getOrDefault("中证", 0.0) / 1000d)) + " k     " + Double.toString(round(100d * benchMap.getOrDefault("中证", 0.0) / currentDelta)) + " % ",
+        g2.drawString("中证: " + Long.toString(round(benchMap.getOrDefault("中证", 0.0) / 1000d)) + " k     "
+                        + Double.toString(round(100d * benchMap.getOrDefault("中证", 0.0) / currentDelta)) + " % ",
                 getWidth() / 7 * 5, getHeight() / 7 + 110);
 
 //        Map<Integer, String> res = getPtfCompoString(benchMap, currentDelta, benchMtmMap);

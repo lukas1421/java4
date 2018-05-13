@@ -103,12 +103,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     private static TableRowSorter<BarModel_POS> sorter;
     static ScheduledExecutorService ex = Executors.newScheduledThreadPool(10);
 
-    //public static volatile int xuCurrentPositionFront;
-    //public static volatile int xuCurrentPositionBack;
-    //private static volatile double xuOpenPrice;
-    //private static volatile double xuPreviousClose;
-    //static volatile Predicate<? super Map.Entry<String, ?>> NO_FUT_PRED = m -> !m.getKey().equals("SGXA50");
-
     private static volatile Predicate<? super Map.Entry<String, ?>> GEN_MTM_PRED = m -> true;
     private static volatile UpdateFrequency updateFreq = UpdateFrequency.oneSec;
 
@@ -461,10 +455,12 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     netDelta = openPositionMap.entrySet().stream().filter(p)
                             .mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
                                     * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum()
-                            + tradesMap.entrySet().stream().filter(p).mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
-                            * priceMap.getOrDefault(e.getKey(), 0.0)
-                            * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum()
+                            + tradesMap.entrySet().stream().filter(p).mapToDouble(
+                            e -> fxMap.getOrDefault(e.getKey(), 1.0)
+                                    * priceMap.getOrDefault(e.getKey(), 0.0)
+                                    * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum()
             ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setCurrentDelta(a)));
+
 
             CompletableFuture.supplyAsync(() ->
                     netDeltaMap = Stream.of(openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p)
@@ -569,6 +565,19 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 .thenRunAsync(() -> SwingUtilities.invokeLater(gPnl::repaint));
         CompletableFuture.runAsync(() -> gPnl.setPnlChgMap(getPnl5mChg()))
                 .thenRunAsync(() -> SwingUtilities.invokeLater(gPnl::repaint));
+    }
+
+    static double getNetPtfDelta() {
+        double openDelta = openPositionMap.entrySet().stream()
+                .mapToDouble(e -> fxMap.getOrDefault(e.getKey(), 1.0)
+                        * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum();
+        double tradedDelta = tradesMap.entrySet().stream().mapToDouble(
+                e -> fxMap.getOrDefault(e.getKey(), 1.0)
+                        * priceMap.getOrDefault(e.getKey(), 0.0)
+                        * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum();
+        System.out.println(getStr(" ChinaPosition getNetptfDelta ", "open delta ", " traded delta, net delta "
+                , openDelta, tradedDelta, openDelta + tradedDelta));
+        return openDelta + tradedDelta;
     }
 
 
