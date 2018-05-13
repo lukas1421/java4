@@ -39,8 +39,7 @@ import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.lang.System.out;
 import static java.util.stream.Collectors.toCollection;
-import static utility.Utility.r;
-import static utility.Utility.reduceMapToDouble;
+import static utility.Utility.*;
 
 public final class ChinaStockHelper {
 
@@ -76,13 +75,13 @@ public final class ChinaStockHelper {
 
             Predicate<? super Entry<String, ?>> sectorFilter = e -> industryNameMap.getOrDefault(e.getKey(), "").equals(sector);
             Predicate<? super Entry<String, ? extends NavigableMap<LocalTime, SimpleBar>>> normalBar = e -> e.getValue().size() > 2 && !e.getValue().lastEntry().getValue().containsZero();
-            Comparator<? super NavigableMap<LocalTime, SimpleBar>> compLastRange = Comparator.comparingDouble(v->v.lastEntry().getValue().getHLRange());
-                    //(v1, v2) -> v1.lastEntry().getValue().getHLRange() >= v2.lastEntry().getValue().getHLRange() ? -1 : 1;
-            Comparator<? super NavigableMap<LocalTime, SimpleBar>> compBarRtn = Comparator.comparingDouble(v->v.lastEntry().getValue().getBarReturn());
-                    //(v1, v2) -> v1.lastEntry().getValue().getBarReturn() >= v2.lastEntry().getValue().getBarReturn() ? -1 : 1;
+            Comparator<? super NavigableMap<LocalTime, SimpleBar>> compLastRange = Comparator.comparingDouble(v -> v.lastEntry().getValue().getHLRange());
+            //(v1, v2) -> v1.lastEntry().getValue().getHLRange() >= v2.lastEntry().getValue().getHLRange() ? -1 : 1;
+            Comparator<? super NavigableMap<LocalTime, SimpleBar>> compBarRtn = Comparator.comparingDouble(v -> v.lastEntry().getValue().getBarReturn());
+            //(v1, v2) -> v1.lastEntry().getValue().getBarReturn() >= v2.lastEntry().getValue().getBarReturn() ? -1 : 1;
             Comparator<? super NavigableMap<LocalTime, SimpleBar>> compDayRtn =
                     Comparator.comparingDouble(ChinaStockHelper::computeReturn);
-                    //(v1, v2) -> computeReturn(v1) >= computeReturn(v2) ? -1 : 1;
+            //(v1, v2) -> computeReturn(v1) >= computeReturn(v2) ? -1 : 1;
             Comparator<? super String> compVR = Comparator.comparingDouble(ChinaSizeRatio::computeSizeRatioLast).reversed();
 
             LinkedList<String> maxLastRangeList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compLastRange)).limit(3)
@@ -285,7 +284,7 @@ public final class ChinaStockHelper {
 
                     } else {
                         System.out.println(" for " + e + " filling done");
-                        SimpleBar sb = new SimpleBar(priceMap.getOrDefault(e,0.0));
+                        SimpleBar sb = new SimpleBar(priceMap.getOrDefault(e, 0.0));
 
                         ChinaData.tradeTimePure.forEach(ti -> ChinaData.priceMapBar.get(e).put(ti, sb));
                         System.out.println("last key " + e + " " + ChinaData.priceMapBar.get(e).lastEntry());
@@ -502,6 +501,8 @@ public final class ChinaStockHelper {
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
                 d.height = 300;
+                d.width = getWidth() / 2;
+                System.out.println(getStr(" height width ", getHeight(), getWidth()));
                 return d;
             }
 
@@ -586,9 +587,9 @@ public final class ChinaStockHelper {
 
         priceMap.put(ftseIndex, priceMapBar.get(ftseIndex).lastEntry().getValue().getClose());
         double max = reduceMapToDouble(priceMapBar.get(ftseIndex), SimpleBar::getHigh, Math::max);
-                //.entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
-        double min = reduceMapToDouble(priceMapBar.get(ftseIndex),SimpleBar::getLow,Math::min);
-                //.entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
+        //.entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
+        double min = reduceMapToDouble(priceMapBar.get(ftseIndex), SimpleBar::getLow, Math::min);
+        //.entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
 
 
         //        LocalTime maxT = priceMapBar.get(ftseIndex).entrySet().stream().max(Utility.BAR_HIGH)
@@ -716,13 +717,13 @@ public final class ChinaStockHelper {
     }
 
     static double computePMPercentChg(String name) {
-        if(priceMapBar.containsKey(name) && priceMapBar.get(name).size()>0) {
-            double max = Utility.reduceMapToDouble(priceMapBar.get(name),SimpleBar::getHigh,Double::max);
-            double min = Utility.reduceMapToDouble(priceMapBar.get(name),SimpleBar::getLow,Double::min);
+        if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
+            double max = Utility.reduceMapToDouble(priceMapBar.get(name), SimpleBar::getHigh, Double::max);
+            double min = Utility.reduceMapToDouble(priceMapBar.get(name), SimpleBar::getLow, Double::min);
             double last = priceMapBar.get(name).lastEntry().getValue().getClose();
             double amClose = priceMapBar.get(name).floorEntry(Utility.AMCLOSET).getValue().getClose();
-            if(max!=min && max !=0.0 && min!=0.0) {
-                return r((last-amClose)/(max-min));
+            if (max != min && max != 0.0 && min != 0.0) {
+                return r((last - amClose) / (max - min));
             }
         }
         return 0.0;
@@ -730,30 +731,30 @@ public final class ChinaStockHelper {
 
 
     static void fixYtdSuspendedStocks() {
-        priceMapBarYtd.keySet().forEach(k->{
-            if(priceMapBarYtd.get(k).size()==0) {
+        priceMapBarYtd.keySet().forEach(k -> {
+            if (priceMapBarYtd.get(k).size() == 0) {
                 System.out.println(" fixYtdSuspendedStocks size 0 " + k);
             } else {
                 //size not zero
-                if(priceMapBarYtd.get(k).lastEntry().getValue().containsZero()) {
-                    System.out.println(" fixYtd + last entry contains zero " + k + " " + nameMap.get(k) );
-                    if(priceMapBar.get(k).size()>0) {
+                if (priceMapBarYtd.get(k).lastEntry().getValue().containsZero()) {
+                    System.out.println(" fixYtd + last entry contains zero " + k + " " + nameMap.get(k));
+                    if (priceMapBar.get(k).size() > 0) {
                         double fillValue = priceMapBar.get(k).firstEntry().getValue().getOpen();
-                        priceMapBarYtd.get(k).replaceAll((ytdK,ytdV)->new SimpleBar(fillValue));
+                        priceMapBarYtd.get(k).replaceAll((ytdK, ytdV) -> new SimpleBar(fillValue));
                         System.out.println(" fill value " + fillValue);
                     }
                 }
             }
         });
-        priceMapBarY2.keySet().forEach(k->{
-            if(priceMapBarY2.get(k).size()==0) {
+        priceMapBarY2.keySet().forEach(k -> {
+            if (priceMapBarY2.get(k).size() == 0) {
                 System.out.println(" fixYtdSuspendedStocks Y2 size 0 " + k);
             } else {
-                if(priceMapBarY2.get(k).lastEntry().getValue().containsZero()) {
-                    System.out.println(" fixY2 + last entry contains zero " + k + " " + nameMap.get(k) );
-                    if(priceMapBar.get(k).size()>0) {
+                if (priceMapBarY2.get(k).lastEntry().getValue().containsZero()) {
+                    System.out.println(" fixY2 + last entry contains zero " + k + " " + nameMap.get(k));
+                    if (priceMapBar.get(k).size() > 0) {
                         double fillValue = priceMapBar.get(k).firstEntry().getValue().getOpen();
-                        priceMapBarY2.get(k).replaceAll((ytdK,ytdV)->new SimpleBar(fillValue));
+                        priceMapBarY2.get(k).replaceAll((ytdK, ytdV) -> new SimpleBar(fillValue));
                         System.out.println(" fill value " + fillValue);
                     }
                 }

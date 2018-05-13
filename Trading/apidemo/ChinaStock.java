@@ -182,7 +182,7 @@ public final class ChinaStock extends JPanel {
     private static final int VRCOL = 21;
     private static final int VRPCOL = 22;
     private static final int PMFIRST10COL = 27;
-    private  static final int VRPM10COL = 34;
+    private static final int VRPM10COL = 34;
     private static final int VRMINTCOL = 36;
     private static final int VRMAXTCOL = 37;
     private static final int VR925COL = 39;
@@ -507,7 +507,14 @@ public final class ChinaStock extends JPanel {
         tf29.setPreferredSize(new Dimension(32, 25));
 
         JButton graphButton = new JButton("Graph");
-        graphPanel = new JPanel();
+        graphPanel = new JPanel() {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.width = getWidth() / 2;
+                return super.getPreferredSize();
+            }
+        };
         graphPanel.setLayout(new GridLayout(6, 1));
 
         graph1.addMouseListener(new MouseAdapter() {
@@ -746,7 +753,7 @@ public final class ChinaStock extends JPanel {
         JToggleButton ratioBreakToggle = new JToggleButton("ratioBreakT");
         JToggleButton rangeBreakToggle = new JToggleButton("rngBreakT");
 
-        a50OnlyButton.addActionListener(l->{
+        a50OnlyButton.addActionListener(l -> {
             if (filterOn) {
                 sorter.setRowFilter(null);
                 filterOn = false;
@@ -755,7 +762,7 @@ public final class ChinaStock extends JPanel {
                 filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, 0.0, A50_WEIGHT_COL));
 
                 List<RowSorter.SortKey> keys = new ArrayList<>();
-                RowSorter.SortKey sortkey = new RowSorter.SortKey(A50_WEIGHT_COL,SortOrder.DESCENDING);
+                RowSorter.SortKey sortkey = new RowSorter.SortKey(A50_WEIGHT_COL, SortOrder.DESCENDING);
                 keys.add(sortkey);
                 sorter.setSortKeys(keys);
                 sorter.setRowFilter(RowFilter.orFilter(filters));
@@ -2177,7 +2184,7 @@ public final class ChinaStock extends JPanel {
                 //rtn  
                 case 6:
                     return Utility.noZeroArrayGen(name, priceMap, openMap, closeMap) && NORMAL_STOCK.test(name) ? round(1000d * (priceMap.get(name) /
-                            closeMap.getOrDefault(name,openMap.getOrDefault(name,0.0))- 1)) / 10d : 0.0;
+                            closeMap.getOrDefault(name, openMap.getOrDefault(name, 0.0)) - 1)) / 10d : 0.0;
 
                 //AM
                 case 7:
