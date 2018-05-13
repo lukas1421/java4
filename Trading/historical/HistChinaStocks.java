@@ -339,8 +339,8 @@ public class HistChinaStocks extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
+                d.height = (int)Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 5;
                 d.width = 1900;
-                d.height = 300;
                 return d;
             }
         };
@@ -351,7 +351,7 @@ public class HistChinaStocks extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = 200;
+                d.height = (int)Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 5;;
                 d.width = 1900;
                 return d;
             }
@@ -361,7 +361,7 @@ public class HistChinaStocks extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = 200;
+                d.height = (int)Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 5;;
                 d.width = 1900;
                 return d;
             }
@@ -371,7 +371,7 @@ public class HistChinaStocks extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = 200;
+                d.height = (int)Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 5;
                 d.width = 1900;
                 return d;
             }

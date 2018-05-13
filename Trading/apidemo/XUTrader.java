@@ -145,7 +145,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         public Dimension getPreferredSize() {
             Dimension d = super.getPreferredSize();
             d.height = 250;
-            d.width = 1900;
+            d.width = (int) Toolkit.getDefaultToolkit().getScreenSize().getWidth();
             return d;
         }
     };
