@@ -73,6 +73,7 @@ public class SGXFutureReceiver implements LiveHandler {
                                 CompletableFuture.runAsync(() -> {
                                     XUTrader.inventoryTrader(ldt, price);
                                 });
+                                XUTrader.flattenDriftTrader(ldt, price);
                             }
                         }
                     }

@@ -58,6 +58,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //flatten drift trader
     private static final double FLATTEN_THRESH = 200000.0;
+    private static final double BULLISH_DELTA_TARGET = 100000.0;
+    private static final double BEARISH_DELTA_TARGET = -100000.0;
 
     //perc trader
     private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
@@ -1288,7 +1290,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     , buyO, "Inventory Buy Open", AutoOrderType.INVENTORY_OPEN));
             apcon.placeOrModifyOrder(activeFuture, buyO, new InventoryOrderHandler(idBuy, latchBuy, inventoryBarrier));
             outputOrderToAutoLog(getStr(LocalDateTime.now()
-                    , idBuy, "Inventory Buy Open ", globalIdOrderMap.get(idBuy)));
+                    , idBuy, buyO.orderId(), "Inventory Buy Open ", globalIdOrderMap.get(idBuy)));
 
             try {
                 out.println(" waiting before latchBuy.await ");
@@ -1306,7 +1308,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     , sellO, "Inventory Sell Close", AutoOrderType.INVENTORY_CLOSE));
             apcon.placeOrModifyOrder(activeFuture, sellO, new InventoryOrderHandler(idSell, latchSell, inventoryBarrier));
             outputOrderToAutoLog(getStr(LocalDateTime.now()
-                    , idSell, "Inventory Sell Close ", globalIdOrderMap.get(idSell)));
+                    , idSell, sellO.orderId(), "Inventory Sell Close ", globalIdOrderMap.get(idSell)));
 
             try {
                 latchSell.await();
@@ -1333,7 +1335,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             globalIdOrderMap.put(idSell,
                     new OrderAugmented(LocalDateTime.now(), sellO, "Inventory Sell Open", AutoOrderType.INVENTORY_OPEN));
             apcon.placeOrModifyOrder(activeFuture, sellO, new InventoryOrderHandler(idSell, latchSell, inventoryBarrier));
-            outputOrderToAutoLog(getStr(LocalDateTime.now(), idSell, "Inventory Sell Open", globalIdOrderMap.get(idSell)));
+            outputOrderToAutoLog(getStr(LocalDateTime.now(), idSell, sellO.orderId()
+                    , "Inventory Sell Open", globalIdOrderMap.get(idSell)));
 
             try {
                 out.println(" waiting before latchSell.await ");
@@ -1349,7 +1352,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             globalIdOrderMap.put(idBuy, new OrderAugmented(LocalDateTime.now(), buyO, "Inventory Buy Close",
                     AutoOrderType.INVENTORY_CLOSE));
             apcon.placeOrModifyOrder(activeFuture, buyO, new InventoryOrderHandler(idBuy, latchBuy, inventoryBarrier));
-            outputOrderToAutoLog(getStr(LocalDateTime.now(), idBuy, "Inv Buy Close", globalIdOrderMap.get(idBuy)));
+            outputOrderToAutoLog(getStr(LocalDateTime.now(), idBuy, buyO.orderId()
+                    , "Inv Buy Close", globalIdOrderMap.get(idBuy)));
 
             try {
                 latchBuy.await();
@@ -1379,7 +1383,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double currentDelta = ChinaPosition.getNetPtfDelta();
         double malast = getCurrentMA();
         double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 0.0);
-        System.out.println("FLATTENDRIFTTRADER current delta is " + currentDelta);
+        System.out.println(getStr("FLATTEN DRIFT TRADER current delta is ", currentDelta,
+                " ma fx fresh", malast, fx, freshPrice, "sentiment ", sentiment));
         if (currentDelta == 0.0 || malast == 0.0 || fx == 0.0) return;
 
         if (sentiment == MASentiment.Bullish) {
@@ -1387,19 +1392,35 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 int size = (int) Math.ceil(Math.abs(currentDelta / (fx * freshPrice)));
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(roundToXUPricePassive(malast, Direction.Long), size);
-                globalIdOrderMap.put(id, new OrderAugmented(t, o, "Bullish Flatten BUY", AutoOrderType.FLATTEN));
+                globalIdOrderMap.put(id, new OrderAugmented(t, o, "Bull: Buy to Flatten ", AutoOrderType.FLATTEN));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(getStr(t, id, " buy to flatten short delta"));
+                outputOrderToAutoLog(getStr(t, id, o.orderId(), "Bull: Buy to Flatten "));
+            } else {
+                if (currentDelta < BULLISH_DELTA_TARGET) {
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeBidLimit(roundToXUPricePassive(freshPrice, Direction.Long), 1.0);
+                    globalIdOrderMap.put(id, new OrderAugmented(t, o, "Bullish: DRIFT BUY 1", AutoOrderType.DRIFT));
+                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                    outputOrderToAutoLog(getStr(t, id, o.orderId(), "Bullish: DRIFT BUY 1"));
+                }
             }
-
         } else if (sentiment == MASentiment.Bearish) {
             if (currentDelta > 0.0 && Math.abs(currentDelta) > FLATTEN_THRESH) {
                 int size = (int) Math.ceil(Math.abs(currentDelta / (fx * freshPrice)));
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(roundToXUPricePassive(malast, Direction.Short), size);
-                globalIdOrderMap.put(id, new OrderAugmented(t, o, "Bearish Flatten SELL ", AutoOrderType.FLATTEN));
+                globalIdOrderMap.put(id, new OrderAugmented(t, o, "Bearish: Sell to Flatten", AutoOrderType.FLATTEN));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(getStr(t, id, "sell to flatten long delta"));
+                outputOrderToAutoLog(getStr(t, id, o.orderId(), "Bearish: Sell to Flatten"));
+            } else { //drift
+                if (currentDelta > BEARISH_DELTA_TARGET) {
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeOfferLimit(roundToXUPricePassive(freshPrice, Direction.Short), 1.0);
+                    globalIdOrderMap.put(id, new OrderAugmented(t, o, "Bearish: DRIFT SELL", AutoOrderType.DRIFT));
+                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                    outputOrderToAutoLog(getStr(t, id, o.orderId(), "Bearish: DRIFT SELL"));
+                }
+
             }
         }
 
