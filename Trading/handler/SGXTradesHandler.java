@@ -19,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
 import static historical.HistChinaStocks.chinaTradeMap;
+import static java.util.stream.Collectors.summingInt;
 import static utility.Utility.getStr;
 import static utility.Utility.ibContractToSymbol;
 
@@ -26,22 +27,17 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
         String ticker = ibContractToSymbol(contract);
-
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
-
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
         LocalDateTime ldtRoundTo5 = Utility.roundTo5Ldt(ldt);
-
         if (contract.symbol().equals("XINA50")) {
             if (ldt.toLocalDate().isAfter(Utility.getMondayOfWeek(ldt).minusDays(1L))) {
-
                 if (ldt.toLocalDate().equals(LocalDate.of(2018, Month.MAY, 11))) {
                     System.out.println(" ******************************************* ");
                     System.out.println(" SGXTradesHandler " + ticker);
                     System.out.println(getStr(" exec ", execution.side(), execution.time(), execution.cumQty()
                             , execution.price(), execution.shares()));
                 }
-
                 try {
                     if (chinaTradeMap.containsKey(ticker)) {
                         if (chinaTradeMap.get(ticker).containsKey(ldtRoundTo5)) {
@@ -58,7 +54,6 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
                         if (ldtRoundTo5.toLocalDate().equals(LocalDate.of(2018, Month.MAY, 11))) {
                             System.out.println(getStr(LocalTime.now(), chinaTradeMap.get(ticker).get(ldtRoundTo5)));
                         }
-
                     } else {
                         System.out.println(" sgx trade handler does not contain ticker for " + ticker);
                     }
@@ -92,24 +87,22 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
 
             System.out.println(" sgx trades handler trade map " + chinaTradeMap.get(ticker));
-
             System.out.println(" abs trades by day " + chinaTradeMap.get(ticker).entrySet().stream()
-                    .collect(Collectors.groupingBy(
-                            e -> e.getKey().toLocalDate(), Collectors.summingInt(e -> e.getValue().getSizeAllAbs()))));
+                    .collect(Collectors.groupingBy(e -> e.getKey().toLocalDate(),
+                            summingInt(e -> e.getValue().getSizeAllAbs()))));
 
             System.out.println(" buy trades by day " + chinaTradeMap.get(ticker).entrySet().stream()
                     .collect(Collectors.groupingBy(
-                            e -> e.getKey().toLocalDate(), Collectors.summingInt(e -> e.getValue().getSizeBot()))));
+                            e -> e.getKey().toLocalDate(), summingInt(e -> e.getValue().getSizeBot()))));
 
             System.out.println(" sell trades by day " + chinaTradeMap.get(ticker).entrySet().stream()
                     .collect(Collectors.groupingBy(
-                            e -> e.getKey().toLocalDate(), Collectors.summingInt(e -> e.getValue().getSizeSold()))));
+                            e -> e.getKey().toLocalDate(), summingInt(e -> e.getValue().getSizeSold()))));
 
             System.out.println(" printing may 11 check trades ");
             chinaTradeMap.get(ticker).entrySet().stream()
                     .filter(e -> e.getKey().toLocalDate().equals(LocalDate.of(2018, Month.MAY, 11)))
                     .forEach(System.out::println);
-
 
             int sgxLotsBot = chinaTradeMap.get(ticker).entrySet().stream()
                     .filter(e -> e.getKey().toLocalDate()
@@ -117,8 +110,7 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
                     .mapToInt(e -> e.getValue().getSizeBot()).sum();
 
             int sgxLotsSold = chinaTradeMap.get(ticker).entrySet().stream()
-                    .filter(e -> e.getKey().toLocalDate()
-                            .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
+                    .filter(e -> e.getKey().toLocalDate().isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
                     .mapToInt(e -> e.getValue().getSizeSold()).sum();
 
             HistChinaStocks.wtdChgInPosition.put(ticker, sgxLotsTraded);
@@ -127,11 +119,8 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
 
             System.out.println(" sgx trades handler " + chinaTradeMap.get(ticker));
 
-            System.out.println(" sgx trades map size "
-                    + chinaTradeMap.get(ticker).entrySet().stream()
+            System.out.println(" sgx trades map size " + chinaTradeMap.get(ticker).entrySet().stream()
                     .mapToInt(e -> Math.abs(e.getValue().getSizeAll())).sum());
-
-
         }
     }
 

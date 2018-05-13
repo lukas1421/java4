@@ -750,7 +750,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static int determineTimeDiffFactor() {
         if (maOrderMap.size() == 0) return 1;
         return Math.max(1, Math.min(1,
-                (int) Math.floor(timeDiffinMinutes(maOrderMap.lastEntry().getKey(), LocalDateTime.now()) / 60d)));
+                (int) Math.floor(timeDiffinMinutes(maOrderMap.lastEntry().getKey(),
+                        LocalDateTime.now()) / 60d)));
     }
 
     private static Predicate<AutoOrderType> isInventoryTrade() {
@@ -988,8 +989,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     fastTradeSignals.incrementAndGet();
                     lastFastOrderTime = LocalDateTime.now();
                     fastOrderMap.put(nowMilli, o);
-                    outputOrderToAutoLog(getStr(nowMilli, id, o.orderId()
-                            , "FAST ORDER || OFFERING @ ", o.toString(), "SMA",
+                    outputOrderToAutoLog(getStr(nowMilli, id, o.orderId(),
+                            "FAST ORDER || OFFERING @ ", o.toString(), "SMA",
                             "||Fresh: ", freshPrice,
                             "||Prev", prevPrice,
                             "||MA Last: ", r(maLast),

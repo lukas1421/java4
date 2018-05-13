@@ -47,7 +47,6 @@ public final class ChinaMain implements IConnectionHandler {
     }
 
     private final IConnectionConfiguration m_connectionConfiguration;
-
     public static volatile Map<Integer, Request> globalRequestMap = new ConcurrentHashMap<>();
     public static ChinaMain INSTANCE;
     private final JTextArea m_inLog = new JTextArea();
@@ -185,7 +184,6 @@ public final class ChinaMain implements IConnectionHandler {
         JButton offShcomp = new JButton("Kill Shcomp/ChinaFut");
         JButton saveAll = new JButton("saveAll");
 
-        // quick buttons for loading
         JButton getSinaData = new JButton("get Index");
 
         getSinaData.addActionListener((ae) -> {
