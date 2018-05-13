@@ -121,7 +121,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static volatile Contract activeFuture = frontFut;
     public static volatile DisplayGranularity gran = DisplayGranularity._5MDATA;
     public static volatile Map<Double, Double> activeFutLiveOrder = new HashMap<>();
-    //public static volatile Map<Double, Double> activeFutLiveOrder = new HashMap<>();
     public static volatile Map<Integer, Order> activeFutLiveIDOrderMap = new HashMap<>();
     public static volatile EnumMap<FutType, Double> bidMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Double> askMap = new EnumMap<>(FutType.class);
@@ -149,11 +148,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return d;
         }
     };
-
     public static AtomicInteger graphWidth = new AtomicInteger(3);
-
     public static volatile EnumMap<FutType, NavigableMap<LocalDateTime, SimpleBar>> futData = new EnumMap<>(FutType.class);
-
     public static volatile EnumMap<FutType, Integer> currentPosMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Integer> botMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Integer> soldMap = new EnumMap<>(FutType.class);
@@ -277,30 +273,42 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         bidLimitButton.addActionListener(l -> {
             out.println(" buying limit ");
-            apcon.placeOrModifyOrder(activeFuture,
-                    placeBidLimit(bidMap.get(ibContractToFutType(activeFuture)), 1.0), this);
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeBidLimit(bidMap.get(ibContractToFutType(activeFuture)), 1.0);
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(getStr(LocalDateTime.now().toLocalTime(), o.orderId(), " Bidding Limit ",
+                    globalIdOrderMap.get(id)));
         });
 
         JButton offerLimitButton = new JButton("Sell Limit");
 
         offerLimitButton.addActionListener(l -> {
             out.println(" selling limit ");
-            apcon.placeOrModifyOrder(activeFuture,
-                    placeOfferLimit(askMap.get(ibContractToFutType(activeFuture)), 1.0), this);
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimit(askMap.get(ibContractToFutType(activeFuture)), 1.0);
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(getStr(LocalDateTime.now().toLocalTime(), o.orderId(), " Offer Limit ",
+                    globalIdOrderMap.get(id)));
         });
 
         JButton buyOfferButton = new JButton(" Buy Now");
         buyOfferButton.addActionListener(l -> {
             out.println(" buy offer ");
-            apcon.placeOrModifyOrder(activeFuture,
-                    buyAtOffer(askMap.get(ibContractToFutType(activeFuture)), 1.0), this);
+            int id = autoTradeID.incrementAndGet();
+            Order o = buyAtOffer(askMap.get(ibContractToFutType(activeFuture)), 1.0);
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(getStr(LocalDateTime.now().toLocalTime(), o.orderId(), " Lift Offer ",
+                    globalIdOrderMap.get(id)));
         });
 
         JButton sellBidButton = new JButton(" Sell Now");
         sellBidButton.addActionListener(l -> {
             out.println(" sell bid ");
-            apcon.placeOrModifyOrder(activeFuture,
-                    sellAtBid(bidMap.get(ibContractToFutType(activeFuture)), 1.0), this);
+            int id = autoTradeID.incrementAndGet();
+            Order o = sellAtBid(bidMap.get(ibContractToFutType(activeFuture)), 1.0);
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(getStr(LocalDateTime.now().toLocalTime(), o.orderId(), " Hitting bid ",
+                    globalIdOrderMap.get(id)));
         });
 
         JButton toggleMusicButton = new JButton("停乐");
@@ -1519,6 +1527,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         updateLog(getStr(" status filled remaining avgFillPrice ",
                 status, filled, remaining, avgFillPrice));
         if (status.equals(OrderStatus.Filled)) {
+
             createDialog(getStr(" status filled remaining avgFillPrice ",
                     status, filled, remaining, avgFillPrice));
         }
@@ -1535,7 +1544,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //globalIdOrderMap.put(autoTradeID.incrementAndGet(),)
 
         if (ibContractToSymbol(contract).equals(ibContractToSymbol(activeFuture))) {
-            //out.println(getStr(" open order ", order.orderId(), orderState.getStatus()));
             double sign = order.action().equals(Types.Action.BUY) ? 1 : -1;
             if (!activeFutLiveOrder.containsKey(order.lmtPrice())) {
                 activeFutLiveOrder.put(order.lmtPrice(), sign * order.totalQuantity());
