@@ -1357,7 +1357,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (perc < 20) {
             try {
                 inventorySemaphore.acquire();
-                pr(" acquired semaphore now left :" + inventorySemaphore.availablePermits());
+                pr(" acquired semaphore now left:" + inventorySemaphore.availablePermits());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
