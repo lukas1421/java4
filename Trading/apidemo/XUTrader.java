@@ -63,7 +63,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double ABS_DELTA_TARGET = 100000.0;
     private static final double BULLISH_DELTA_TARGET = 100000.0;
     private static final double BEARISH_DELTA_TARGET = -100000.0;
-    private static final int MAX_UNFILLED_DELTA_TRADES = 5;
 
 
     //perc trader
@@ -1055,6 +1054,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * Auto trading based on Moving Avg
      */
     public static void MATrader(LocalDateTime nowMilli, double freshPrice) {
+
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         if (price5.size() <= 2) return;
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
@@ -1071,6 +1071,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
 
         sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
+
+        double currDelta = ChinaPosition.getNetPtfDelta();
+        if (currDelta > DELTA_HIGH_LIMIT || currDelta < DELTA_LOW_LIMIT) {
+            pr(" MATrader: delta exceeded limit, exit ");
+            return;
+        }
 
         int numTrades = 0;
         double candidatePrice = 0.0;
@@ -1284,6 +1290,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     public static void inventoryTrader(LocalDateTime t, double freshPrice) {
 
+        double currDelta = ChinaPosition.getNetPtfDelta();
         int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         if (perc == 0) {
             pr(" perc 0 suspicious ", futData.get(ibContractToFutType(activeFuture)));
@@ -1299,10 +1306,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
+
         if (Math.abs(currPos) > MAX_FUT_LIMIT) {
             pr(" quitting inventory trade: exceeding fut limit ");
             return;
         }
+
+        if (currDelta > DELTA_HIGH_LIMIT || currDelta < DELTA_LOW_LIMIT) {
+            pr(" quitting inventory trade: exceeding Delta limit ");
+            return;
+        }
+
         if (inventorySemaphore.availablePermits() == 0) {
             pr(" quitting inventory trade: semaphore #:", inventorySemaphore.availablePermits());
             return;
