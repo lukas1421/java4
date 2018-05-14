@@ -62,6 +62,6 @@ public abstract class Trade {
 
     @Override
     public String toString() {
-        return Utility.getStr("price ", price, "vol ", size);
+        return Utility.str("price ", price, "vol ", size);
     }
 }

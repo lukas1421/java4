@@ -3,7 +3,7 @@ package auxiliary;
 import java.io.Serializable;
 import java.util.function.BinaryOperator;
 
-import static utility.Utility.getStr;
+import static utility.Utility.str;
 
 public class SimpleBar implements Serializable, Comparable<SimpleBar> {
 
@@ -52,12 +52,12 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
     }
 
     void adjustByFactor(double f) {
-        //System.out.println ( ChinaStockHelper.getStr("BEFORE open high low close ",open, high, low, close ));
+        //System.out.println ( ChinaStockHelper.str("BEFORE open high low close ",open, high, low, close ));
         open = open * f;
         high = high * f;
         low = low * f;
         close = close * f;
-        //System.out.println ( ChinaStockHelper.getStr("AFTER open high low close ",open, high, low, close ));
+        //System.out.println ( ChinaStockHelper.str("AFTER open high low close ",open, high, low, close ));
     }
 
     public void updateOpen(double o) {
@@ -181,7 +181,7 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
 
     @Override
     public String toString() {
-        return getStr("O: ", open, "H: ", high, "L: ", low, "C: ", close);
+        return str("O: ", open, "H: ", high, "L: ", low, "C: ", close);
     }
 
     @Override

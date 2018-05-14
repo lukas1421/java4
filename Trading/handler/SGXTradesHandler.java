@@ -20,8 +20,8 @@ import java.util.stream.Collectors;
 
 import static historical.HistChinaStocks.chinaTradeMap;
 import static java.util.stream.Collectors.summingInt;
-import static utility.Utility.getStr;
 import static utility.Utility.ibContractToSymbol;
+import static utility.Utility.str;
 
 public class SGXTradesHandler implements ApiController.ITradeReportHandler {
     @Override
@@ -35,24 +35,24 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
                 if (ldt.toLocalDate().equals(LocalDate.of(2018, Month.MAY, 11))) {
                     System.out.println(" ******************************************* ");
                     System.out.println(" SGXTradesHandler " + ticker);
-                    System.out.println(getStr(" exec ", execution.side(), execution.time(), execution.cumQty()
+                    System.out.println(str(" exec ", execution.side(), execution.time(), execution.cumQty()
                             , execution.price(), execution.shares()));
                 }
                 try {
                     if (chinaTradeMap.containsKey(ticker)) {
                         if (chinaTradeMap.get(ticker).containsKey(ldtRoundTo5)) {
-                            System.out.println(getStr(" Existing Trade: ", ldtRoundTo5,
+                            System.out.println(str(" Existing Trade: ", ldtRoundTo5,
                                     sign * (int) Math.round(execution.shares())));
                             chinaTradeMap.get(ticker).get(ldtRoundTo5).addTrade(new FutureTrade(execution.price(),
                                     sign * (int) Math.round(execution.shares())));
                         } else {
-                            System.out.println(getStr(" new tradeBlock ", ldtRoundTo5,
+                            System.out.println(str(" new tradeBlock ", ldtRoundTo5,
                                     sign * (int) Math.round(execution.shares())));
                             chinaTradeMap.get(ticker).put(ldtRoundTo5, new TradeBlock(new FutureTrade(execution.price(),
                                     sign * (int) Math.round(execution.shares()))));
                         }
                         if (ldtRoundTo5.toLocalDate().equals(LocalDate.of(2018, Month.MAY, 11))) {
-                            System.out.println(getStr(LocalTime.now(), chinaTradeMap.get(ticker).get(ldtRoundTo5)));
+                            System.out.println(str(LocalTime.now(), chinaTradeMap.get(ticker).get(ldtRoundTo5)));
                         }
                     } else {
                         System.out.println(" sgx trade handler does not contain ticker for " + ticker);

@@ -49,7 +49,7 @@ public final class MarginTrade extends Trade {
 
     @Override
     public String toString() {
-        return Utility.getStr(" margin trade ", " price ", price, "vol ", size);
+        return Utility.str(" margin trade ", " price ", price, "vol ", size);
     }
 
 }

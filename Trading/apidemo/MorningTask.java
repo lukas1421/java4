@@ -23,8 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static utility.Utility.getStr;
 import static utility.Utility.pd;
+import static utility.Utility.str;
 
 //import java.net.InetSocketAddress;
 
@@ -654,7 +654,7 @@ public final class MorningTask implements HistoricalHandler {
 
             usAfterClose.get(name).put(nyTime, close);
             if (nyTime.toLocalTime().equals(LocalTime.of(15, 55))) {
-                System.out.println(getStr(" US data 15 55 ", name, nyTime, chinadt, open, high, low, close));
+                System.out.println(str(" US data 15 55 ", name, nyTime, chinadt, open, high, low, close));
             }
         }
     }
@@ -662,8 +662,8 @@ public final class MorningTask implements HistoricalHandler {
     @Override
     public void actionUponFinish(String name) {
         if (!name.equals("USD")) {
-            System.out.println(getStr(name, "is finished "));
-            usAfterClose.forEach((key, value) -> System.out.println(getStr(key, value.lastEntry())));
+            System.out.println(str(name, "is finished "));
+            usAfterClose.forEach((key, value) -> System.out.println(str(key, value.lastEntry())));
         }
         System.out.println(" data is finished ");
     }

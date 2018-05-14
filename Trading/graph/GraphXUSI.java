@@ -168,7 +168,7 @@ public class GraphXUSI extends JComponent {
             g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.3F));
 
             try {
-                g.drawString(getStr("FUT:", xu.lastEntry().getValue()), getWidth() / 2 - 120, 20);
+                g.drawString(str("FUT:", xu.lastEntry().getValue()), getWidth() / 2 - 120, 20);
                 //g.drawString("XU%  " + (Math.round(10000d * (xu.lastEntry().getValue() / openXU - 1)) / 100d) + "    ", getWidth() / 2 + 300, 20);
                 g.drawString("XU%  " + (Math.round(10000d * (xu.lastEntry().getValue() / (prevCloseXU != 0.0 ? prevCloseXU : openXU) - 1)) / 100d) + "    ", getWidth() / 2 + 300, 20);
                 g.drawString("P/D: " + (Math.round(10000d * (xu.lastEntry().getValue() / (sina.lastEntry().getValue()) - 1)) / 100d), getWidth() / 2 + 190, 20);

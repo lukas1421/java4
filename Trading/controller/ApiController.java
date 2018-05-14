@@ -148,7 +148,7 @@ public class ApiController implements EWrapper {
 
     //    @Override
 //    public void position(String account, Contract contract, double pos, double avgCost) {
-//        System.out.println(ChinaStockHelper.getStr("account contract pos avgcost", account, contract, pos, avgCost));
+//        System.out.println(ChinaStockHelper.str("account contract pos avgcost", account, contract, pos, avgCost));
 //    }
     @Override
     public void verifyAndAuthMessageAPI(String apiData, String xyzChallange) {
@@ -298,12 +298,12 @@ public class ApiController implements EWrapper {
 //	}
     public void connect(String host, int port, int clientId, String connectionOpts) {
         System.out.println(" ------------------in connect----------------- " + host + " " + port + " " + clientId);
-        System.out.println(getStr(" checking connection BEFORE----", checkConnection(), port));
+        System.out.println(str(" checking connection BEFORE----", checkConnection(), port));
         m_client.eConnect(host, port, clientId);
         startMsgProcessingThread();
-        System.out.println(getStr(" checking connection AFTER-----" + checkConnection(), port));
+        System.out.println(str(" checking connection AFTER-----" + checkConnection(), port));
         sendEOM();
-        System.out.println(getStr(" checking connection AFTER EOM-----", checkConnection(), port));
+        System.out.println(str(" checking connection AFTER EOM-----", checkConnection(), port));
     }
 
     public ApiConnection client() {
@@ -603,7 +603,7 @@ public class ApiController implements EWrapper {
             @Override
             public void position(String account, Contract contract, double position, double avgCost) {
 
-                System.out.println(" in default position handler " + Utility.getStr(account, contract.toString(), position, avgCost));
+                System.out.println(" in default position handler " + Utility.str(account, contract.toString(), position, avgCost));
             }
 
             @Override
@@ -1440,7 +1440,7 @@ public class ApiController implements EWrapper {
                 XUTrader.globalIdOrderMap.get(defaultID).setStatus(orderState.status());
 
                 if (orderState.status() == OrderStatus.Filled) {
-                    String msg = getStr("|| OrderState ||", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
+                    String msg = str("|| OrderState ||", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
                             orderState.status());
                     XuTraderHelper.outputToAutoLog(msg);
                     XuTraderHelper.outputPurelyOrders(msg);
@@ -1450,7 +1450,7 @@ public class ApiController implements EWrapper {
             @Override
             public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
                                     int parentId, double lastFillPrice, int clientId, String whyHeld) {
-                XuTraderHelper.outputToAutoLog(getStr("||OrderStatus||", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
+                XuTraderHelper.outputToAutoLog(str("||OrderStatus||", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
                         status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));
             }
 
@@ -1472,7 +1472,7 @@ public class ApiController implements EWrapper {
         }
 
         if (handler != null) {
-            System.out.println(getStr("place or modify order ", order.orderId(), handler));
+            System.out.println(str("place or modify order ", order.orderId(), handler));
             m_orderHandlers.put(order.orderId(), handler);
         } else {
             System.out.println(" handler is null");
@@ -1547,8 +1547,8 @@ public class ApiController implements EWrapper {
         IOrderHandler handler = m_orderHandlers.get(orderId);
 
 //        if (orderId != 0) {
-//            System.out.println(getStr(" order ID ", orderId, contract.symbol(), orderState.status()));
-//            //System.out.println(getStr(" handling open order ", orderId, handler));
+//            System.out.println(str(" order ID ", orderId, contract.symbol(), orderState.status()));
+//            //System.out.println(str(" handling open order ", orderId, handler));
 //            System.out.println("handler contained in order handlers " + m_orderHandlers.containsKey(orderId));
 //        }
 
@@ -1688,7 +1688,7 @@ public class ApiController implements EWrapper {
         System.out.println(" contract " + contract);
 
 
-        System.out.println(getStr("stock reqid ", contract.symbol(), reqId));
+        System.out.println(str("stock reqid ", contract.symbol(), reqId));
         ChinaMain.globalRequestMap.put(reqId, new Request(contract, hh));
 
         System.out.println(" req id is" + reqId);
@@ -1710,7 +1710,7 @@ public class ApiController implements EWrapper {
     public void historicalData(int reqId, String date, double open, double high, double low,
                                double close, int volume, int count, double wap, boolean hasGaps) {
 
-        //System.out.println(getStr("historical data in apicontroller/reqid / date / close ", reqId, date, close));
+        //System.out.println(str("historical data in apicontroller/reqid / date / close ", reqId, date, close));
 
 
         if (ChinaMain.globalRequestMap.containsKey(reqId)) {

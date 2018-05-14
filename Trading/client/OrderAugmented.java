@@ -1,9 +1,10 @@
 package client;
 
 import util.AutoOrderType;
-import utility.Utility;
 
 import java.time.LocalDateTime;
+
+import static utility.Utility.str;
 
 public class OrderAugmented {
 
@@ -62,7 +63,7 @@ public class OrderAugmented {
 
     @Override
     public String toString() {
-        return Utility.getStr("T: ", orderTime.toLocalTime(),
+        return str("T: ", orderTime.toLocalTime(),
                 "Order:", order, "msg:", msg, "Tradetype", tradeType
                 , order.orderId() == 0 ? "" : order.orderId(),
                 "Status:", status, "FinalT: ", finalActionTime.toLocalTime());

@@ -69,7 +69,7 @@ public class Hibtask {
             System.out.println(" load finished " + " size is " + ChinaData.priceMapBar.size());
         }).thenAccept(
                 v -> {
-                    ChinaMain.updateSystemNotif(Utility.getStr(" LOAD HIB T DONE ",
+                    ChinaMain.updateSystemNotif(Utility.str(" LOAD HIB T DONE ",
                             LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
                             SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
                     ));
@@ -94,13 +94,13 @@ public class Hibtask {
                 }
                 session.getTransaction().commit();
             }
-        }).thenAccept(v -> ChinaMain.updateSystemNotif(Utility.getStr(
+        }).thenAccept(v -> ChinaMain.updateSystemNotif(Utility.str(
                 " HIB Today -> YTD DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)))
         ).thenAccept(v -> {
             CompletableFuture.runAsync(Hibtask::loadHibGenPrice);
             CompletableFuture.runAsync(ChinaData::loadHibernateYesterday);
         }).thenAccept(v -> {
-            ChinaMain.updateSystemNotif(Utility.getStr(" Loading done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+            ChinaMain.updateSystemNotif(Utility.str(" Loading done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
         });
     }
 

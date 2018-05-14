@@ -3,7 +3,7 @@ package auxiliary;
 import java.io.Serializable;
 import java.time.LocalTime;
 
-import static utility.Utility.getStr;
+import static utility.Utility.str;
 
 public class Strategy implements Serializable {
 
@@ -51,7 +51,7 @@ public class Strategy implements Serializable {
 
     @Override
     public String toString() {
-        return getStr(entranceTime, entrancePrice, strattype);
+        return str(entranceTime, entrancePrice, strattype);
     }
 
 }

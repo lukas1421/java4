@@ -575,7 +575,7 @@ public class ChinaOption extends JPanel implements Runnable {
                             newBar = new SimpleBar(todayImpliedVolMap.get(s).lowerEntry(e.getKey()).getValue().getClose());
                         }
                         todayImpliedVolMap.get(s).put(e.getKey(), newBar);
-                        System.out.println(getStr("replacing option vol ", s, e.getKey(), e.getValue(), newBar));
+                        System.out.println(str("replacing option vol ", s, e.getKey(), e.getValue(), newBar));
                     }
                 }
             }
@@ -620,10 +620,10 @@ public class ChinaOption extends JPanel implements Runnable {
                 }
             }).thenAccept(
                     v -> {
-                        updateOptionSystemInfo(Utility.getStr("存", saveclass.getSimpleName(),
+                        updateOptionSystemInfo(Utility.str("存", saveclass.getSimpleName(),
                                 LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
                                 ChronoUnit.SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
-                        System.out.println(getStr(" done saving ", LocalTime.now()));
+                        System.out.println(str(" done saving ", LocalTime.now()));
                     }
             );
         } else {
@@ -651,11 +651,11 @@ public class ChinaOption extends JPanel implements Runnable {
                     }
                 }
             } catch (Exception ex) {
-                System.out.println(getStr(" ticker has problem " + problemKey));
+                System.out.println(str(" ticker has problem " + problemKey));
                 ex.printStackTrace();
             }
         }).thenAccept(
-                v -> updateOptionSystemInfo(Utility.getStr(" LOAD INTRADAY VOLS DONE ",
+                v -> updateOptionSystemInfo(Utility.str(" LOAD INTRADAY VOLS DONE ",
                         ChronoUnit.SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
                 ))
         );
@@ -702,7 +702,7 @@ public class ChinaOption extends JPanel implements Runnable {
                             String ticker = getOptionTicker(tickerOptionsMap, f, strike, exp);
                             int moneyness = (int) Math.round((strike / currentStockPrice) * 100d);
                             ChinaVolSave v = new ChinaVolSave(savingDate, callput, strike, exp, vol, moneyness, ticker);
-                            System.out.println(getStr(" pricingdate callput exp vol moneyness ticker counter "
+                            System.out.println(str(" pricingdate callput exp vol moneyness ticker counter "
                                     , pricingDate, callput, strike, exp, vol, moneyness, ticker, i.get()));
                             session.saveOrUpdate(v);
                             i.incrementAndGet();
@@ -1028,7 +1028,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
                 for (Object o : list) {
                     ChinaVolSave c = (ChinaVolSave) o;
-                    System.out.println(getStr(c.getVolDate(), c.getCallPut(), c.getStrike(), c.getExpiryDate(),
+                    System.out.println(str(c.getVolDate(), c.getCallPut(), c.getStrike(), c.getExpiryDate(),
                             c.getVol(), c.getMoneyness(), c.getOptionTicker()));
 
                     System.out.println(" counter is " + i.incrementAndGet());
@@ -1360,7 +1360,7 @@ abstract class Option {
 
     @Override
     public String toString() {
-        return Utility.getStr(" strike expiry ", strike, expiryDate);
+        return Utility.str(" strike expiry ", strike, expiryDate);
     }
 }
 

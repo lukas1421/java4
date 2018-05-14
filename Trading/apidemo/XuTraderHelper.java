@@ -27,7 +27,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static apidemo.TradingConstants.ftseIndex;
-import static utility.Utility.getStr;
+import static utility.Utility.str;
 
 public class XuTraderHelper {
 
@@ -114,7 +114,7 @@ public class XuTraderHelper {
             double max = map.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
             double min = map.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
             double last = map.lastEntry().getValue().getClose();
-            //System.out.println(getStr(" getPercentileForLast max min last ", max, min, last));
+            //System.out.println(str(" getPercentileForLast max min last ", max, min, last));
             return (int) Math.round(100d * ((last - min) / (max - min)));
         }
         return 50;
@@ -244,7 +244,7 @@ public class XuTraderHelper {
         double totalProfit = l.stream().mapToDouble(t -> t.getIdeaSize() * (lastPrice - t.getIdeaPrice())).sum();
         outputToAutoLog(" computeMAProfit total " + Math.round(100d * totalProfit) / 100d);
         for (MAIdea t : l) {
-            outputToAutoLog(getStr(t, " PnL: ", Math.round(100d * t.getIdeaSize() * (lastPrice - t.getIdeaPrice())) / 100d));
+            outputToAutoLog(str(t, " PnL: ", Math.round(100d * t.getIdeaSize() * (lastPrice - t.getIdeaPrice())) / 100d));
         }
     }
 
@@ -379,7 +379,7 @@ public class XuTraderHelper {
 
         @Override
         public void message(int id, int errorCode, String errorMsg) {
-            System.out.println(getStr(" error ID ", id, " error code ", errorCode, " errormsg ", errorMsg));
+            System.out.println(str(" error ID ", id, " error code ", errorCode, " errormsg ", errorMsg));
         }
 
         @Override

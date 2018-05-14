@@ -213,7 +213,7 @@ public class Utility {
         return getStrGen(",", cs);
     }
 
-    public static String getStr(Object... cs) {
+    public static String str(Object... cs) {
         return getStrGen(" ", cs);
     }
 
@@ -767,8 +767,8 @@ public class Utility {
         ct.lastTradeDateOrContractMonth(TradingConstants.A50_LAST_EXPIRY);
         ct.includeExpired(true);
         ct.secType(Types.SecType.FUT);
-        System.out.println(" get expired fut contract " + " expiry date " + TradingConstants.A50_LAST_EXPIRY + " "
-                + ct.lastTradeDateOrContractMonth());
+//        System.out.println(" get expired fut contract " + " expiry date " + TradingConstants.A50_LAST_EXPIRY + " "
+//                + ct.lastTradeDateOrContractMonth());
         return ct;
     }
 
@@ -816,7 +816,7 @@ public class Utility {
 
     public static FutType ibContractToFutType(Contract ct) {
         if (ct.symbol().equals("XINA50")) {
-//            System.out.println(getStr("ct last trade date ", ct.lastTradeDateOrContractMonth()
+//            System.out.println(str("ct last trade date ", ct.lastTradeDateOrContractMonth()
 //                    , " front expiry ", TradingConstants.getFutFrontExpiry()
 //                    , " back expiry ", TradingConstants.getFutBackExpiry()
 //                    , "previous fut ", TradingConstants.getFutLastExpiry()));
@@ -849,6 +849,6 @@ public class Utility {
     }
 
     public static void pr(Object... os) {
-        System.out.println(getStr(os));
+        System.out.println(str(os));
     }
 }

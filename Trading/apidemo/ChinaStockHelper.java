@@ -85,20 +85,20 @@ public final class ChinaStockHelper {
             Comparator<? super String> compVR = Comparator.comparingDouble(ChinaSizeRatio::computeSizeRatioLast).reversed();
 
             LinkedList<String> maxLastRangeList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByValue(compLastRange)).limit(3)
-                    .map(e -> (Utility.getStr("", e.getKey(), nameMap.get(e.getKey()), HLRANGE.applyAsDouble(e.getValue())))).collect(toCollection(LinkedList::new));
+                    .map(e -> (Utility.str("", e.getKey(), nameMap.get(e.getKey()), HLRANGE.applyAsDouble(e.getValue())))).collect(toCollection(LinkedList::new));
 
             LinkedList<String> maxLastBarRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar)
                     .sorted(Entry.comparingByValue(compBarRtn)).limit(3)
-                    .map(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), BARRTN.applyAsDouble(e.getValue())))).collect(toCollection(LinkedList::new));
+                    .map(e -> (Utility.str(" ", e.getKey(), nameMap.get(e.getKey()), BARRTN.applyAsDouble(e.getValue())))).collect(toCollection(LinkedList::new));
 
             LinkedList<String> maxDayRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar)
                     .sorted(reverseThis(Entry.comparingByValue(compDayRtn))).limit(3)
-                    .map(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()),
+                    .map(e -> (Utility.str(" ", e.getKey(), nameMap.get(e.getKey()),
                             round(computeReturn(e.getValue()) * 1000d) / 10d, "%")))
                     .collect(toCollection(LinkedList::new));
 
             LinkedList<String> maxVRList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar).sorted(Entry.comparingByKey(compVR)).limit(3)
-                    .map(e -> (Utility.getStr(" ", e.getKey(), nameMap.get(e.getKey()), round(10d * computeSizeRatioLast(e.getKey())) / 10d,
+                    .map(e -> (Utility.str(" ", e.getKey(), nameMap.get(e.getKey()), round(10d * computeSizeRatioLast(e.getKey())) / 10d,
                             getCurrentSize(e.getKey())))).collect(toCollection(LinkedList::new));
 
             String t;
@@ -417,7 +417,7 @@ public final class ChinaStockHelper {
                 }, 1L, TimeUnit.MINUTES);
             }
             jd.setVisible(true);
-            System.out.println(Utility.getStr(" dialog ", nam, " created at ", entryTime));
+            System.out.println(Utility.str(" dialog ", nam, " created at ", entryTime));
         }
     }
 
@@ -502,7 +502,7 @@ public final class ChinaStockHelper {
                 Dimension d = super.getPreferredSize();
                 d.height = 300;
                 d.width = getWidth() / 2;
-                System.out.println(getStr(" height width ", getHeight(), getWidth()));
+                System.out.println(str(" height width ", getHeight(), getWidth()));
                 return d;
             }
 

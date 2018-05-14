@@ -32,6 +32,6 @@ public final class FutureTrade extends Trade {
 
     @Override
     public String toString() {
-        return Utility.getStr(" future trade::price size ", price, size);
+        return Utility.str(" future trade::price size ", price, size);
     }
 }

@@ -125,7 +125,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
                 for (Map.Entry e : trades.subMap(lt, true, lt.plusMinutes(dispGran.getMinuteDiff()),
                         false).entrySet()) {
                     TradeBlock t = (TradeBlock) e.getValue();
-                    //System.out.println(getStr(" trades in graph monitor margin%" +"", name, t, t.hasMargin()));
+                    //System.out.println(str(" trades in graph monitor margin%" +"", name, t, t.hasMargin()));
 
                     if (t.getSizeAll() > 0) {
                         g.setColor(Color.blue);
@@ -312,7 +312,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
                 initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
             }
             double finalP = tm.lastEntry().getValue().getClose();
-            //System.out.println(getStr(" chinese initial final ", chineseName,initialP,finalP));
+            //System.out.println(str(" chinese initial final ", chineseName,initialP,finalP));
             return (double) round((finalP / initialP - 1) * 1000d) / 10d;
         }
         return 0.0;
@@ -353,7 +353,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         trades = priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
                 ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate);
 
-        //System.out.println(getStr("graph monitor name trade ", name, trades));
+        //System.out.println(str("graph monitor name trade ", name, trades));
 
         if (HistChinaStocks.chinaTradeMap.containsKey(name) && HistChinaStocks.chinaTradeMap.get(name).size() > 0) {
             //LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
@@ -456,7 +456,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
             wtdP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name,
                     Double.MAX_VALUE))) / (Utility.reduceDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
                     - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, Double.MAX_VALUE))));
-//            System.out.println(" name " + name + " current max min wtd wtdMax wtdMin "+ getStr(current,maxT,minT,wtdP,
+//            System.out.println(" name " + name + " current max min wtd wtdMax wtdMin "+ str(current,maxT,minT,wtdP,
 //                    ChinaPosition.wtdMinMap.getOrDefault(name,Double.MAX_VALUE), ChinaPosition.wtdMinMap.getOrDefault(name, Double.MAX_VALUE)));
         }
     }

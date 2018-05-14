@@ -87,7 +87,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                         .count();
                 double val = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey()))
                         .skip(n - 60).mapToDouble(e2 -> e2.getValue().getAverage()).sum() / size;
-                System.out.println(getStr(" n, size, val ", n, size, val));
+                System.out.println(str(" n, size, val ", n, size, val));
                 sma60.put(e.getKey(), val);
             }
         }
@@ -167,7 +167,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             sma.forEach((lt, ma) -> {
                 if (tm.containsKey(lt) && tm.get(lt).includes(ma)) {
                     SimpleBar sb = tm.get(lt);
-                    System.out.println(getStr(" crossed @ ", lt, ma));
+                    System.out.println(str(" crossed @ ", lt, ma));
                     if (ma > sb.getOpen()) {
                         if (!currentLong.get()) {
                             System.out.println(" Minutes since last trade is " +
@@ -199,8 +199,8 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             System.out.println(" trade is " + t);
             runningPosition += t.getIdeaSize();
             unrealizedPnl += t.getIdeaSize() * (currentPrice - t.getIdeaPrice());
-            System.out.println(getStr(" unrealized pnl on trade ", t.getIdeaSize() * (currentPrice - t.getIdeaPrice())));
-            System.out.println(getStr(" running position after ", runningPosition, " cumu pnl ", Math.round(unrealizedPnl)));
+            System.out.println(str(" unrealized pnl on trade ", t.getIdeaSize() * (currentPrice - t.getIdeaPrice())));
+            System.out.println(str(" running position after ", runningPosition, " cumu pnl ", Math.round(unrealizedPnl)));
         }
     }
 
@@ -222,13 +222,13 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             if (v.action().equals(Types.Action.BUY)) {
                 g.setColor(Color.blue);
                 g.drawLine(0, y, getWidth(), y);
-                g.drawString(getStr("Buy: ", v.totalQuantity(), " at ", v.lmtPrice(),
+                g.drawString(str("Buy: ", v.totalQuantity(), " at ", v.lmtPrice(),
                         XUTrader.findOrderByTWSID(k).getTradeType(), XUTrader.findOrderByTWSID(k).getStatus())
                         , Math.round(getWidth() * 7 / 8), y + 10);
             } else if (v.action().equals(Types.Action.SELL)) {
                 g.setColor(Color.red);
                 g.drawLine(0, y, getWidth(), y);
-                g.drawString(getStr("Sell: ", v.totalQuantity(), " at ", v.lmtPrice()
+                g.drawString(str("Sell: ", v.totalQuantity(), " at ", v.lmtPrice()
                         , XUTrader.findOrderByTWSID(k).getTradeType(), XUTrader.findOrderByTWSID(k).getStatus())
                         , Math.round(getWidth() * 7 / 8), y + 10);
             }

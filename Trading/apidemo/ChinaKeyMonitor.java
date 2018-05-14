@@ -976,7 +976,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, false))) {
             ChinaData.priceMapBar.get("sh000905").forEach((key, value) -> {
                 try {
-                    out.write(Utility.getStr(key, value.toString()));
+                    out.write(Utility.str(key, value.toString()));
                     out.newLine();
                 } catch (IOException ex) {
                     System.out.println(" io exception in sampling");

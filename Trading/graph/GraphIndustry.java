@@ -108,7 +108,7 @@ public class GraphIndustry extends JComponent {
                         g2.setFont(g.getFont().deriveFont((selectedNameIndus.equals(key) || quickestRiser.equals(key)) ? Font.BOLD : Font.PLAIN,
                                 (selectedNameIndus.equals(key) || quickestRiser.equals(key)) ? 54F : 18F));
                         g.drawString(key, x + 30 + (int) (Math.random() * (Math.min(400, getWidth() - x - 200))), last);
-                        g.drawString(getStr(thisLast), getWidth() - 70 - (int) (50 * Math.random()), last);
+                        g.drawString(str(thisLast), getWidth() - 70 - (int) (50 * Math.random()), last);
                     }
                     x += X_WIDTH;
                 }
@@ -263,7 +263,7 @@ public class GraphIndustry extends JComponent {
 
             String topRiser = getTopStockForRiser(indusName);
 
-            String msg = getStr(" break high ", indusName, lastKey, "top riser:", topRiser, ChinaStock.nameMap.get(topRiser));
+            String msg = str(" break high ", indusName, lastKey, "top riser:", topRiser, ChinaStock.nameMap.get(topRiser));
 
             if (lastHigh > prevHigh) {
                 ChinaStockHelper.createDialogJD(indusName, msg, lastKey);

@@ -4,7 +4,7 @@ package saving;
 import javax.persistence.*;
 import java.time.LocalDate;
 
-import static utility.Utility.getStr;
+import static utility.Utility.str;
 
 @javax.persistence.Entity
 
@@ -94,7 +94,7 @@ public class ChinaVolSave {
 
     @Override
     public String toString() {
-        return getStr("inputDate, cp, k, exp, vol, mness, ticker "
+        return str("inputDate, cp, k, exp, vol, mness, ticker "
                 , volDate, callPut, strike, expiryDate, vol, moneyness, optionTicker);
     }
 }

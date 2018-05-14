@@ -40,7 +40,7 @@ public class MAIdea {
 
     @Override
     public String toString() {
-        return Utility.getStr(" MAIdea", tradeTime, size > 0 ? "BUY" : "SELL", size
+        return Utility.str(" MAIdea", tradeTime, size > 0 ? "BUY" : "SELL", size
                 , " @ ", Math.round(100d * tradePrice) / 100d, "comments ", comments);
     }
 }

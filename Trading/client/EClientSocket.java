@@ -5,7 +5,7 @@ import java.io.FilterInputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-import static utility.Utility.getStr;
+import static utility.Utility.str;
 
 public class EClientSocket extends EClient implements EClientMsgSink {
 
@@ -84,7 +84,7 @@ public class EClientSocket extends EClient implements EClientMsgSink {
     public synchronized void eConnect(String host, int port, int clientId, boolean extraAuth) {
         // already connected?
         m_host = checkConnected(host);
-        System.out.println(getStr("||EClientSocket eConnect|| host, port, clientID, extraAuthor", host,
+        System.out.println(str("||EClientSocket eConnect|| host, port, clientID, extraAuthor", host,
                 port, clientId, extraAuth));
 
         m_clientId = clientId;

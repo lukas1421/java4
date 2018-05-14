@@ -13,7 +13,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 
 import static apidemo.XUTrader.globalIdOrderMap;
-import static utility.Utility.getStr;
+import static utility.Utility.str;
 
 public class InventoryOrderHandler implements ApiController.IOrderHandler {
 
@@ -23,7 +23,7 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
     private CyclicBarrier barrier;
 
     public InventoryOrderHandler(int i, CountDownLatch l, CyclicBarrier cb) {
-        //System.out.println(getStr(" constructing inventory handler ", i, l, cb));
+        //System.out.println(str(" constructing inventory handler ", i, l, cb));
         defaultID = i;
         latch = l;
         barrier = cb;
@@ -37,7 +37,7 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
 
         if (orderState.status() == OrderStatus.Filled) {
             globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
-            String msg = getStr("|| OrderState ||", defaultID, globalIdOrderMap.get(defaultID),
+            String msg = str("|| OrderState ||", defaultID, globalIdOrderMap.get(defaultID),
                     orderState.status());
             XuTraderHelper.outputToAutoLog(msg);
             XuTraderHelper.outputPurelyOrders(msg);
@@ -59,7 +59,7 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
             System.out.println(" order state filled ends");
         } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
             globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
-            String msg = getStr(" order cancelled ", defaultID,
+            String msg = str(" order cancelled ", defaultID,
                     XUTrader.globalIdOrderMap.get(defaultID).getOrder().orderId(),
                     XUTrader.globalIdOrderMap.get(defaultID).getOrder());
             XuTraderHelper.outputToAutoLog(msg);
@@ -70,17 +70,17 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
     @Override
     public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
         System.out.println(" in orderStatus Inventory Order handler  ");
-        System.out.println(getStr(" status filled remained avgFillprice permId parentID, lastFill, clientID, whyheld "
+        System.out.println(str(" status filled remained avgFillprice permId parentID, lastFill, clientID, whyheld "
                 , status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));
     }
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-        //System.out.println(getStr(" handling error in inventoryOrderhandle ", errorCode, errorMsg));
+        //System.out.println(str(" handling error in inventoryOrderhandle ", errorCode, errorMsg));
     }
 
     @Override
     public String toString() {
-        return getStr(" inventory handler for ", defaultID, XUTrader.globalIdOrderMap.get(defaultID));
+        return str(" inventory handler for ", defaultID, XUTrader.globalIdOrderMap.get(defaultID));
     }
 }

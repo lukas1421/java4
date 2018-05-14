@@ -308,7 +308,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
                 last = close;
                 x += WIDTH_PNL;
 //                if (ChinaPosition.tradesMapFront.containsKey(name) && ChinaPosition.tradesMapFront.get(name).containsKey(lt)) {
-//                    g.drawString(ChinaStockHelper.getStr(((Trade) ChinaPosition.tradesMapFront.get(name).get(lt)).getSize()), x - 20, close - (mult * 50));
+//                    g.drawString(ChinaStockHelper.str(((Trade) ChinaPosition.tradesMapFront.get(name).get(lt)).getSize()), x - 20, close - (mult * 50));
 //                    g.drawLine(x, close - (mult * 40), x, close);
 //                    mult = -1 * mult;
 //                }
@@ -319,7 +319,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
                     double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false)
                             .values().stream()
                             .mapToInt(TradeBlock::getSizeAll).filter(n -> n != 0).sum();
-                    g.drawString(Utility.getStr(pos), x - 20, close - (mult * 50));
+                    g.drawString(Utility.str(pos), x - 20, close - (mult * 50));
                     g.drawLine(x, close - (mult * 40), x, close);
                     mult = -1 * mult;
 
@@ -346,7 +346,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
 
                     double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false).values().stream()
                             .mapToInt(TradeBlock::getSizeAll).filter(n -> n > 0).sum();
-                    g.drawString(Utility.getStr(pos), x - 20, close - (mult * 50));
+                    g.drawString(Utility.str(pos), x - 20, close - (mult * 50));
                     g.drawLine(x, close - (mult * 40), x, close);
                     mult = -1 * mult;
 
@@ -371,7 +371,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
                         .entrySet().stream().anyMatch(e -> e.getValue().getSizeAll() < 0)) {
                     double pos = ChinaPosition.tradesMap.get(name).subMap(lt, true, lt.plusMinutes(1), false)
                             .values().stream().mapToInt(TradeBlock::getSizeAll).filter(n -> n < 0).sum();
-                    g.drawString(Utility.getStr(pos), x - 20, close - (mult * 50));
+                    g.drawString(Utility.str(pos), x - 20, close - (mult * 50));
                     g.drawLine(x, close - (mult * 40), x, close);
                     mult = -1 * mult;
                 }
@@ -408,9 +408,9 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
             }
 
             if (lt.equals(netMinT)) {
-                g.drawString(getStr("低", lt, r(netMap.getOrDefault(lt, 0.0))), x - 10, last + 8);
+                g.drawString(str("低", lt, r(netMap.getOrDefault(lt, 0.0))), x - 10, last + 8);
             } else if (lt.equals(netMaxT)) {
-                g.drawString(getStr("高", lt, r(netMap.getOrDefault(lt, 0.0))), x - 10, last - 30);
+                g.drawString(str("高", lt, r(netMap.getOrDefault(lt, 0.0))), x - 10, last - 30);
             }
         }
 

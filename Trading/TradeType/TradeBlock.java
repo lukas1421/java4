@@ -5,7 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static utility.Utility.getStr;
+import static utility.Utility.str;
 
 //trade block contains various trades
 public final class TradeBlock {
@@ -37,7 +37,7 @@ public final class TradeBlock {
         //int total = getSizeAll();
         int margin = mergeList.stream().filter(e -> e instanceof MarginTrade)
                 .mapToInt(t -> ((Trade) t).getSize()).sum();
-        //System.out.println(getStr("TRADEBLOCK count margin %", total, margin));
+        //System.out.println(str("TRADEBLOCK count margin %", total, margin));
         return margin > 0;
     }
 
@@ -102,7 +102,7 @@ public final class TradeBlock {
 
     @Override
     public String toString() {
-        return getStr(" trade block size: ", mergeList.size(),
+        return str(" trade block size: ", mergeList.size(),
                 mergeList.stream().map(Object::toString).collect(Collectors.joining(",")));
     }
 }

@@ -174,7 +174,7 @@ public class HistChinaStocks extends JPanel {
                 if (al1.get(1).equalsIgnoreCase(TradingConstants.A50_LAST_EXPIRY)) {
                     futExpiryLevel = Double.parseDouble(al1.get(3));
                     futExpiryUnits = Integer.parseInt(al1.get(2));
-                    System.out.println(getStr(" fut expiry level and units ", futExpiryLevel, futExpiryUnits));
+                    System.out.println(str(" fut expiry level and units ", futExpiryLevel, futExpiryUnits));
                 }
             }
         } catch (IOException x) {
@@ -786,7 +786,7 @@ public class HistChinaStocks extends JPanel {
                 HistChinaStocks.lastWeekCloseMap.put(ticker, close);
             }
         } else {
-            System.out.println(" last line for  " + ticker + " " + getStr(date, open, high, low, close));
+            System.out.println(" last line for  " + ticker + " " + str(date, open, high, low, close));
 
             if (ticker.equalsIgnoreCase("SGXA50PR")) {
                 chinaWtd.get(ticker).lastEntry().getValue().updateClose(futExpiryLevel);
@@ -983,7 +983,7 @@ public class HistChinaStocks extends JPanel {
                     trimmedTrades.put(dayCloseYtd, mergeTradeBlocks(current, v));
                 }
             } else {
-                System.out.println(getStr(" SHOULD NOT BE ELSE ", k, v));
+                System.out.println(str(" SHOULD NOT BE ELSE ", k, v));
             }
         });
         return trimmedTrades;
@@ -1022,7 +1022,7 @@ public class HistChinaStocks extends JPanel {
 //                    trimmedTrades.put(dayCloseYtd, mergeTradeBlocks(current, v));
 //                }
 //            } else {
-//                System.out.println(getStr(" SHOULD NOT BE ELSE ", k, v));
+//                System.out.println(str(" SHOULD NOT BE ELSE ", k, v));
 //            }
 //        });
 

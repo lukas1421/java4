@@ -270,7 +270,7 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
             int nextOpenY = getY(tmYtd.firstEntry().getValue().getOpen());
             if (retOPC > 0.0) {
                 g.setColor(new Color(0, 180, 0));
-                g.drawString(getStr("+", retOPC), x + 5, (nextOpenY + lowY) / 2);
+                g.drawString(str("+", retOPC), x + 5, (nextOpenY + lowY) / 2);
             } else if (retOPC < 0.0) {
                 g.setColor(Color.red);
                 g.drawString(Double.toString(retOPC), x + 5, (nextOpenY + lowY) / 2);
@@ -282,7 +282,7 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
                 int open925Y = getY(tmYtd.floorEntry(AM925T).getValue().getClose());
                 if (ret924925Chg > 0.0) {
                     g.setColor(new Color(0, 180, 0));
-                    g.drawString(getStr("+", ret924925Chg), x + 30, (open924Y + open925Y) / 2);
+                    g.drawString(str("+", ret924925Chg), x + 30, (open924Y + open925Y) / 2);
                 } else if (ret924925Chg < 0.0) {
                     g.setColor(Color.red);
                     g.drawString(Double.toString(ret924925Chg), x + 30, (open924Y + open925Y) / 2);
@@ -344,7 +344,7 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
             int nextOpenY = getY(tm.firstEntry().getValue().getOpen());
             if (retOPC > 0.0) {
                 g.setColor(new Color(0, 180, 0));
-                g.drawString(getStr("+", retOPC), x + 5, (nextOpenY + lowY) / 2);
+                g.drawString(str("+", retOPC), x + 5, (nextOpenY + lowY) / 2);
             } else if (retOPC < 0.0) {
                 g.setColor(Color.red);
                 g.drawString(Double.toString(retOPC), x + 5, (nextOpenY + lowY) / 2);
@@ -357,7 +357,7 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
                 int open925Y = getY(tm.floorEntry(AM925T).getValue().getClose());
                 if (ret924925Chg > 0.0) {
                     g.setColor(new Color(0, 180, 0));
-                    g.drawString(getStr("+", ret924925Chg), x + 30, (open924Y + open925Y) / 2);
+                    g.drawString(str("+", ret924925Chg), x + 30, (open924Y + open925Y) / 2);
                 } else if (ret924925Chg < 0.0) {
                     g.setColor(Color.red);
                     g.drawString(Double.toString(ret924925Chg), x + 30, (open924Y + open925Y) / 2);

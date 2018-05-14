@@ -257,22 +257,22 @@ public final class ChinaDataYesterday extends JPanel {
                         sizeY.put(name, ChinaStock.sizeMap.getOrDefault(name, 0L));
                     });
                 }).thenRun(() -> {
-                    ChinaMain.updateSystemNotif(Utility.getStr("Fetching done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                    ChinaMain.updateSystemNotif(Utility.str("Fetching done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
                     SwingUtilities.invokeLater(this::repaint);
                 }).thenRun(() -> {
                     compute();
-                    ChinaMain.updateSystemNotif(Utility.getStr("Computing ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                    ChinaMain.updateSystemNotif(Utility.str("Computing ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
                     SwingUtilities.invokeLater(this::repaint);
                 });
             }
-            //ChinaMain.updateSystemNotif(ChinaStockHelper.getStr(" LOAD HIB T DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+            //ChinaMain.updateSystemNotif(ChinaStockHelper.str(" LOAD HIB T DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
         });
 
         btnCompute.addActionListener(al -> {
             CompletableFuture.runAsync(() -> {
                 compute();
             }).thenAccept(v -> {
-                ChinaMain.updateSystemNotif(Utility.getStr("Computing ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                ChinaMain.updateSystemNotif(Utility.str("Computing ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
             });
 
         });
@@ -329,7 +329,7 @@ public final class ChinaDataYesterday extends JPanel {
                 e.printStackTrace();
             }
         }).thenAccept(v -> {
-            ChinaMain.updateSystemNotif(Utility.getStr("Saving Ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+            ChinaMain.updateSystemNotif(Utility.str("Saving Ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
         }));
 
         JButton filterGenButton = new JButton("Filter Activity");
@@ -666,7 +666,7 @@ public final class ChinaDataYesterday extends JPanel {
             compute();
         }).thenAccept(
                 v -> {
-                    ChinaMain.updateSystemNotif(Utility.getStr(" Loading Ytd Done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                    ChinaMain.updateSystemNotif(Utility.str(" Loading Ytd Done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
                 }
         );
         ;

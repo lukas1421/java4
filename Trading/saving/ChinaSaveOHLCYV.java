@@ -1,11 +1,8 @@
 package saving;
 
-import static utility.Utility.getStr;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
+
+import static utility.Utility.str;
 
 
 
@@ -78,5 +75,5 @@ public class ChinaSaveOHLCYV {
     
     public String s(double d) {return Double.toString(d);}
     
-    @Override public String toString() { return getStr(" ","saving.ChinaSaveOHLCYV[ id=",stockName," O H L C V",s(open),s(high),s(low),s(close),s(closeY),s(volume)," ]"); }
+    @Override public String toString() { return str(" ","saving.ChinaSaveOHLCYV[ id=",stockName," O H L C V",s(open),s(high),s(low),s(close),s(closeY),s(volume)," ]"); }
 }

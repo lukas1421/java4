@@ -138,7 +138,7 @@ public final class ChinaData extends JPanel {
                 ftseOpenMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(1)));
                 ftseCloseMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(2)));
                 currentTradingDate = LocalDate.parse(al1.get(0));
-                System.out.println(getStr(" date ", lineNo, dateMap.getOrDefault(lineNo, LocalDate.MIN)));
+                System.out.println(str(" date ", lineNo, dateMap.getOrDefault(lineNo, LocalDate.MIN)));
                 lineNo++;
             }
         } catch (IOException ex) {
@@ -508,10 +508,10 @@ public final class ChinaData extends JPanel {
             }
         }).thenAccept(
                 v -> {
-                    ChinaMain.updateSystemNotif(Utility.getStr("存", saveclass.getSimpleName(),
+                    ChinaMain.updateSystemNotif(Utility.str("存", saveclass.getSimpleName(),
                             LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
                             SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
-                    System.out.println(getStr(" done saving ", LocalTime.now()));
+                    System.out.println(str(" done saving ", LocalTime.now()));
                 }
         );
     }
@@ -522,13 +522,13 @@ public final class ChinaData extends JPanel {
             CompletableFuture.runAsync(() -> GraphIndustry.getIndustryPriceYtd(priceMapBarYtd));
             CompletableFuture.runAsync(() -> Utility.getIndustryVolYtd(sizeTotalMapYtd));
         }).thenAccept(
-                v -> ChinaMain.updateSystemNotif(Utility.getStr(" Loading HIB-Y done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)))
+                v -> ChinaMain.updateSystemNotif(Utility.str(" Loading HIB-Y done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)))
         );
 
         CompletableFuture.runAsync(() -> Hibtask.loadHibGen(ChinaSaveY2.getInstance())).thenRun(() -> {
             CompletableFuture.runAsync(() -> GraphIndustry.getIndustryPriceYtd(priceMapBarY2));
             CompletableFuture.runAsync(() -> Utility.getIndustryVolYtd(sizeTotalMapY2));
-        }).thenAccept(v -> ChinaMain.updateSystemNotif(Utility.getStr(" Loading HIB-Y2 done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
+        }).thenAccept(v -> ChinaMain.updateSystemNotif(Utility.str(" Loading HIB-Y2 done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
     }
 
     static void saveChinaOHLC() {
@@ -562,8 +562,8 @@ public final class ChinaData extends JPanel {
             }
         }).thenAccept(
                 v -> {
-                    ChinaMain.updateSystemNotif(Utility.getStr(" 存 OHLC ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
-                    System.out.println(getStr(" done saving ", LocalTime.now()));
+                    ChinaMain.updateSystemNotif(Utility.str(" 存 OHLC ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                    System.out.println(str(" done saving ", LocalTime.now()));
                 }
         );
     }
@@ -604,7 +604,7 @@ public final class ChinaData extends JPanel {
                 }
             }
         }).thenAccept(
-                v -> ChinaMain.updateSystemNotif(Utility.getStr(" Write SHCOMP ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)))
+                v -> ChinaMain.updateSystemNotif(Utility.str(" Write SHCOMP ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)))
         );
 
     }
@@ -681,7 +681,7 @@ public final class ChinaData extends JPanel {
                 ChinaData.sizeTotalMapY2.get(ticker).put(lt, volume * 1d + previousVol);
             }
         } else {
-            System.out.println(getStr(date, open, high, low, close));
+            System.out.println(str(date, open, high, low, close));
         }
     }
 
@@ -698,14 +698,14 @@ public final class ChinaData extends JPanel {
             if (ld.equals(currentTradingDate) && ((lt.isAfter(LocalTime.of(8, 59))
                     && lt.isBefore(LocalTime.of(11, 31))) || lt.isAfter(LocalTime.of(12, 59)))) {
 
-                System.out.println(getStr(dt, open, high, low, close));
+                System.out.println(str(dt, open, high, low, close));
                 double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get(ticker).lowerEntry(lt))
                         .map(Entry::getValue).orElse(0.0);
                 ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(open, high, low, close));
                 ChinaData.sizeTotalMap.get(ticker).put(lt, volume * 1d + previousVol);
             }
         } else {
-            System.out.println(getStr(date, open, high, low, close));
+            System.out.println(str(date, open, high, low, close));
         }
     }
 

@@ -97,7 +97,7 @@ public final class NormalTrade extends Trade {
 
     @Override
     public String toString() {
-        return Utility.getStr(" normal trade ", " price ", price, "vol ", size);
+        return Utility.str(" normal trade ", " price ", price, "vol ", size);
     }
 
 }
