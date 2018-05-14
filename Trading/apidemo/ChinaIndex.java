@@ -464,17 +464,17 @@ final class ChinaIndex extends JPanel {
                 case 1:
                     return industryLongShortMap.get(name);
                 case 2:
-                    return pr(opcMap.getOrDefault(name, 0.0));
+                    return prRound(opcMap.getOrDefault(name, 0.0));
                 case 3:
-                    return pr(f1Map.getOrDefault(name, 0.0));
+                    return prRound(f1Map.getOrDefault(name, 0.0));
                 case 4:
-                    return pr(f10Map.getOrDefault(name, 0.0));
+                    return prRound(f10Map.getOrDefault(name, 0.0));
                 case 5:
-                    return pr(rangeMap.getOrDefault(name, 0.0));
+                    return prRound(rangeMap.getOrDefault(name, 0.0));
                 case 6:
-                    return pr(hoMap.getOrDefault(name, 0.0));
+                    return prRound(hoMap.getOrDefault(name, 0.0));
                 case 7:
-                    return pr(ddMap.getOrDefault(name, 0.0));
+                    return prRound(ddMap.getOrDefault(name, 0.0));
                 case 8:
                     return pr2(hoddrMap.getOrDefault(name, 0.0));
                 case 9:
@@ -487,11 +487,11 @@ final class ChinaIndex extends JPanel {
                     return Math.round(100d * (amcoMap.getOrDefault(name, 0.0) - pmcoMap.getOrDefault(name, 0.0)) / rangeMap.getOrDefault(name, 0.0)) / 100d;
 
                 case 13:
-                    return pr(coMap.getOrDefault(name, 0.0));
+                    return prRound(coMap.getOrDefault(name, 0.0));
                 case 14:
-                    return pr(ccMap.getOrDefault(name, 0.0));
+                    return prRound(ccMap.getOrDefault(name, 0.0));
                 case 15:
-                    return pr(clMap.getOrDefault(name, 0.0));
+                    return prRound(clMap.getOrDefault(name, 0.0));
                 case 16:
                     return r(clMap.getOrDefault(name, 0.0) / rangeMap.getOrDefault(name, 0.0));
                 case 17:
@@ -516,23 +516,23 @@ final class ChinaIndex extends JPanel {
                     return pmMinTMap.getOrDefault(name, LocalTime.MAX).truncatedTo(ChronoUnit.MINUTES);
 
                 case 27:
-                    return pr(retAMCOY.getOrDefault(name, 0.0));
+                    return prRound(retAMCOY.getOrDefault(name, 0.0));
                 case 28:
-                    return pr(retPMCOY.getOrDefault(name, 0.0));
+                    return prRound(retPMCOY.getOrDefault(name, 0.0));
                 case 29:
                     return ChinaDataYesterday.getAMPMRatio(name);
                 case 30:
-                    return pr(retHOY.getOrDefault(name, 0.0));
+                    return prRound(retHOY.getOrDefault(name, 0.0));
                 case 31:
-                    return pr(retCHY.getOrDefault(name, 0.0));
+                    return prRound(retCHY.getOrDefault(name, 0.0));
                 case 32:
                     return ChinaDataYesterday.getHOCHYRatio(name);
                 case 33:
-                    return pr(retCLY.getOrDefault(name, 0.0));
+                    return prRound(retCLY.getOrDefault(name, 0.0));
                 case 34:
                     return noZeroArrayGen(name, minMapY, closeMapY, maxMapY) ? min(100.0, round(100d * (closeMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0.0;
                 case 35:
-                    return pr(retLOY.getOrDefault(name, 0.0));
+                    return prRound(retLOY.getOrDefault(name, 0.0));
                 case 36:
                     return noZeroArrayGen(name, amMaxY, openMapY) ? round(1000d * (amMaxY.get(name) / openMapY.get(name) - 1)) / 10d : 0.0;
 

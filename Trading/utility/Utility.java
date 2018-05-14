@@ -743,7 +743,7 @@ public class Utility {
         return Integer.toString(t.getHour() * 100 + t.getMinute());
     }
 
-    public static double pr(double d) {
+    public static double prRound(double d) {
         return Math.round(d * 1000d) / 10d;
     }
 
@@ -848,4 +848,7 @@ public class Utility {
         return ChronoUnit.SECONDS.between(t1, t2);
     }
 
+    public static void pr(Object... os) {
+        System.out.println(getStr(os));
+    }
 }

@@ -2723,7 +2723,7 @@ public final class ChinaStock extends JPanel {
                     return 0.0;
                 //return round(100d * ofNullable(sizeRatioStandardizedMap.get(name)).orElse(0.0) * ofNullable(pmF10VRChgStandardizedMap.get(name)).orElse(0.0)) / 100d;
 
-                //pr   
+                //prRound
                 case 97:
                     return round(1000d * priceMap.getOrDefault(name, 0.0)) / 1000d;
 

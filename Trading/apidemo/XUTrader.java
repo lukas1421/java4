@@ -58,9 +58,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //flatten drift trader
     private static final double FLATTEN_THRESH = 200000.0;
+    private static final double DELTA_HIGH_LIMIT = 300000.0;
+    private static final double DELTA_LOW_LIMIT = -300000.0;
+    private static final double ABS_DELTA_TARGET = 100000.0;
     private static final double BULLISH_DELTA_TARGET = 100000.0;
     private static final double BEARISH_DELTA_TARGET = -100000.0;
     private static final int MAX_UNFILLED_DELTA_TRADES = 5;
+
 
     //perc trader
     private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
@@ -820,12 +824,33 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    static int getPercTraderSize(double price, double fx, MASentiment senti, Direction d, double currDelta,
+                                 double absTargetDelta) {
+        int candidate = 1;
+        if (senti == MASentiment.Directionless || d == Direction.Flat) return 1;
+        double target = (senti == MASentiment.Bullish ? 1 : -1) * absTargetDelta;
+
+        if (d == Direction.Long) {
+            if (currDelta < target) {
+                candidate = (int) Math.floor((target - currDelta) / (price * fx));
+            }
+        } else if (d == Direction.Short) {
+            if (currDelta > target) {
+                candidate = (int) Math.floor(Math.abs((target - currDelta) / (price * fx)));
+            }
+        }
+        pr("price", price, "fx", fx, "senti", senti, "dir", d, "currDel", currDelta,
+                "target", absTargetDelta, "candidate ", candidate);
+        return Math.max(1, Math.min(candidate, 3));
+    }
+
     /**
      * percentileTrader
      */
     public static void percentileTrader(LocalDateTime nowMilli, double freshPrice) {
         // run every 15 minutes
         int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
+        double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 0.0);
         if (perc == 0) {
             System.out.println(" perc 0 suspicious " + futData.get(ibContractToFutType(activeFuture)));
         }
@@ -867,10 +892,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         int minBetweenPercOrders = percOrdersCount == 0 ? 0 : 10;
 
-        System.out.println(getStr("perc Trader on: ", percentileTradeOn.get(), "perc", perc,
+        double currDelta = ChinaPosition.getNetPtfDelta();
+
+        System.out.println(getStr("perc Trader status?", percentileTradeOn.get() ? "ON" : "OFF",
+                "perc", perc,
                 "acctrades, decctrades, netTrades", accTradesCount, deccTradesCount, netPercTrades,
                 "OrderT Trade T,next tradeT", lastPercOrderT.toLocalTime(), lastPercTradeT.toLocalTime(),
-                lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime(), "accAvg, DecAvg,", avgAccprice, avgDeccprice));
+                lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime(), "accAvg, DecAvg,", avgAccprice, avgDeccprice,
+                "CurrDelta: ", currDelta));
 
         //******************************************************************************************//
         if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
@@ -878,20 +907,27 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //*****************************************************************************************//
         if (timeDiffinMinutes(lastPercOrderT, nowMilli) >= minBetweenPercOrders) {
             if (perc < 30) {
-                if (accTradesCount <= MAX_PERC_TRADES) {
+                if (accTradesCount <= MAX_PERC_TRADES && currDelta < DELTA_HIGH_LIMIT) {
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeBidLimit(freshPrice, 1);
+
+                    int size = getPercTraderSize(freshPrice, fx, sentiment, Direction.Long, currDelta,
+                            ABS_DELTA_TARGET);
+
+                    Order o = placeBidLimit(freshPrice, size);
                     globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid",
                             AutoOrderType.PERC_ACC));
+
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                     outputOrderToAutoLog(getStr(o.orderId(), "perc bid", globalIdOrderMap.get(id), " perc ", perc));
                 } else {
                     outputToAutoLog("acc trades limit reached; ");
                 }
             } else if (perc > 70) {
-                if (deccTradesCount <= MAX_PERC_TRADES) {
+                if (deccTradesCount <= MAX_PERC_TRADES && currDelta > DELTA_LOW_LIMIT) {
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeOfferLimit(freshPrice, 1);
+                    int sellSize = getPercTraderSize(freshPrice, fx, sentiment, Direction.Short, currDelta,
+                            ABS_DELTA_TARGET);
+                    Order o = placeOfferLimit(freshPrice, sellSize);
                     globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer",
                             AutoOrderType.PERC_DECC));
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
@@ -1266,12 +1302,22 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
-        if (Math.abs(currPos) > MAX_FUT_LIMIT) return;
-
-
-        if (inventorySemaphore.availablePermits() == 0) return;
-        if (!inventoryTraderOn.get()) return;
-        if (inventoryBarrier.getNumberWaiting() != 0) return;
+        if (Math.abs(currPos) > MAX_FUT_LIMIT) {
+            pr(" quitting inventory trade: exceeding fut limit ");
+            return;
+        }
+        if (inventorySemaphore.availablePermits() == 0) {
+            pr(" quitting inventory trade: semaphore #:", inventorySemaphore.availablePermits());
+            return;
+        }
+        if (!inventoryTraderOn.get()) {
+            pr(" quitting inventory trade: inventory off ");
+            return;
+        }
+        if (inventoryBarrier.getNumberWaiting() != 0) {
+            pr(" quitting inventory trade: barrier# " + inventoryBarrier.getNumberWaiting());
+            return;
+        }
         if (activeLastMinuteMap.size() < 2) return;
         double secLastV = activeLastMinuteMap.lowerEntry(t).getValue();
 
