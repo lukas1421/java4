@@ -60,6 +60,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double FLATTEN_THRESH = 200000.0;
     private static final double DELTA_HIGH_LIMIT = 300000.0;
     private static final double DELTA_LOW_LIMIT = -300000.0;
+
     private static final double ABS_DELTA_TARGET = 100000.0;
     private static final double BULLISH_DELTA_TARGET = 100000.0;
     private static final double BEARISH_DELTA_TARGET = -100000.0;
@@ -823,8 +824,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    static int getPercTraderSize(double price, double fx, MASentiment senti, Direction d, double currDelta,
-                                 double absTargetDelta) {
+    private static int getPercTraderSize(double price, double fx, MASentiment senti, Direction d, double currDelta,
+                                         double absTargetDelta) {
         int candidate = 1;
         if (senti == MASentiment.Directionless || d == Direction.Flat) return 1;
         double target = (senti == MASentiment.Bullish ? 1 : -1) * absTargetDelta;
@@ -871,7 +872,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         long percOrdersTotal = globalIdOrderMap.entrySet().stream()
                 .filter(e -> isPercTrade().test(e.getValue().getTradeType()))
-                .mapToInt(e -> e.getValue().getOrder().getTotalSize()).sum();
+                .count();
 
         LocalDateTime lastPercTradeT = globalIdOrderMap.entrySet().stream()
                 .filter(e -> isPercTrade().test(e.getValue().getTradeType()))
@@ -919,7 +920,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "acctrades, decctrades, netTrades", accTradesTotal, deccTradesTotal, netPercTrades,
                 "OrderT Trade T,next tradeT", lastPercOrderT.toLocalTime(), lastPercTradeT.toLocalTime(),
                 lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime(), "accAvg, DecAvg,", avgAccprice, avgDeccprice,
-                "CurrDelta: ", currDelta));
+                "CurrDelta: ", r(currDelta)));
 
         //******************************************************************************************//
         if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
@@ -1217,6 +1218,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     private void overnightTrader() {
         if (!overnightTradeOn.get()) return;
+        double currDelta = ChinaPosition.getNetPtfDelta();
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
         setLongShortTradability(currPos);
 
@@ -1255,7 +1257,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (absLotsTraded <= maxOvernightTrades && overnightClosingOrders.get() <= 5) {
             if (now.toLocalTime().isBefore(LocalTime.of(5, 0)) &&
                     now.toLocalTime().isAfter(LocalTime.of(4, 40))) {
-                if (pd > 0.005 && canShortGlobal.get()) {
+                if (pd > 0.005 && canShortGlobal.get() && currDelta > DELTA_LOW_LIMIT) {
                     double candidatePrice = askMap.getOrDefault(ibContractToFutType((activeFuture)), 0.0);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         int id = autoTradeID.incrementAndGet();
@@ -1267,7 +1269,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         overnightClosingOrders.incrementAndGet();
                     }
-                } else if (pd < -0.005 && canLongGlobal.get()) {
+                } else if (pd < -0.005 && canLongGlobal.get() && currDelta < DELTA_HIGH_LIMIT) {
                     double candidatePrice = bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         int id = autoTradeID.incrementAndGet();

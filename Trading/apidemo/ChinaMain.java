@@ -99,15 +99,12 @@ public final class ChinaMain implements IConnectionHandler {
     private volatile AnaCompute anacompute = new AnaCompute();
     private volatile StratCompute stratcompute = new StratCompute();
     private final ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
-
     public ArrayList<String> accountList() {
         return m_acctList;
     }
-
     public static ApiController controller() {
         return M_CONTROLLER;
     }
-
     public static void main(String[] args) {
         start(new ChinaMain(new DefaultConnectionConfiguration()));
     }

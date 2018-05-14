@@ -16,14 +16,11 @@ import static apidemo.XUTrader.globalIdOrderMap;
 import static utility.Utility.str;
 
 public class InventoryOrderHandler implements ApiController.IOrderHandler {
-
-
     private int defaultID;
     private CountDownLatch latch;
     private CyclicBarrier barrier;
 
     public InventoryOrderHandler(int i, CountDownLatch l, CyclicBarrier cb) {
-        //System.out.println(str(" constructing inventory handler ", i, l, cb));
         defaultID = i;
         latch = l;
         barrier = cb;
@@ -31,7 +28,6 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
 
     @Override
     public void orderState(OrderState orderState) {
-
         globalIdOrderMap.get(defaultID).setStatus(orderState.status());
         globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
 
