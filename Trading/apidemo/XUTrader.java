@@ -60,6 +60,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double FLATTEN_THRESH = 200000.0;
     private static final double BULLISH_DELTA_TARGET = 100000.0;
     private static final double BEARISH_DELTA_TARGET = -100000.0;
+    private static final int MAX_UNFILLED_DELTA_TRADES = 5;
 
     //perc trader
     private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
@@ -351,7 +352,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             percentileTradeOn.set(!percentileTradeOn.get());
             percTraderButton.setText("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
         });
-
 
         JButton getPositionButton = new JButton(" get pos ");
         getPositionButton.addActionListener(l -> apcon.reqPositions(this));
@@ -867,10 +867,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         int minBetweenPercOrders = percOrdersCount == 0 ? 0 : 10;
 
-        System.out.println(getStr("perc Trader on", percentileTradeOn.get(), "perc", perc,
+        System.out.println(getStr("perc Trader on: ", percentileTradeOn.get(), "perc", perc,
                 "acctrades, decctrades, netTrades", accTradesCount, deccTradesCount, netPercTrades,
                 "OrderT Trade T,next tradeT", lastPercOrderT.toLocalTime(), lastPercTradeT.toLocalTime(),
-                lastPercOrderT.plusMinutes(minBetweenPercOrders), "accAvg, DecAvg,", avgAccprice, avgDeccprice));
+                lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime(), "accAvg, DecAvg,", avgAccprice, avgDeccprice));
 
         //******************************************************************************************//
         if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
@@ -1371,7 +1371,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         out.println(" exiting inventory order checking not stuck ");
     }
 
-    public static double getCurrentMA() {
+    private static double getCurrentMA() {
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         if (price5.size() <= 2) return 0.0;
 
@@ -1383,11 +1383,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double currentDelta = ChinaPosition.getNetPtfDelta();
         double malast = getCurrentMA();
         double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 0.0);
+        double pd = getPD(freshPrice);
+        int unfilled_trades = (int) globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getTradeType() ==
+                AutoOrderType.FLATTEN || e.getValue().getTradeType() == AutoOrderType.DRIFT)
+                .filter(e -> e.getValue().getStatus() != OrderStatus.Filled).count();
+
         System.out.println(getStr("FLATTEN DRIFT TRADER current delta is ", currentDelta,
-                " ma fx fresh", malast, fx, freshPrice, "sentiment ", sentiment));
+                " ma fx fresh", malast, fx, freshPrice, "sentiment ", sentiment, "unfilled ", unfilled_trades));
+
         if (currentDelta == 0.0 || malast == 0.0 || fx == 0.0) return;
 
-        if (sentiment == MASentiment.Bullish) {
+        if (sentiment == MASentiment.Bullish && pd <= 0.0) {
             if (currentDelta < 0.0 && Math.abs(currentDelta) > FLATTEN_THRESH) {
                 int size = (int) Math.ceil(Math.abs(currentDelta / (fx * freshPrice)));
                 int id = autoTradeID.incrementAndGet();
@@ -1398,13 +1404,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             } else {
                 if (currentDelta < BULLISH_DELTA_TARGET) {
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeBidLimit(roundToXUPricePassive(freshPrice, Direction.Long), 1.0);
+                    Order o = placeBidLimit(roundToXUPricePassive(malast, Direction.Long), 1.0);
                     globalIdOrderMap.put(id, new OrderAugmented(t, o, "Bullish: DRIFT BUY 1", AutoOrderType.DRIFT));
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                     outputOrderToAutoLog(getStr(t, id, o.orderId(), "Bullish: DRIFT BUY 1"));
                 }
             }
-        } else if (sentiment == MASentiment.Bearish) {
+        } else if (sentiment == MASentiment.Bearish && pd >= 0.0) {
             if (currentDelta > 0.0 && Math.abs(currentDelta) > FLATTEN_THRESH) {
                 int size = (int) Math.ceil(Math.abs(currentDelta / (fx * freshPrice)));
                 int id = autoTradeID.incrementAndGet();
@@ -1415,16 +1421,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             } else { //drift
                 if (currentDelta > BEARISH_DELTA_TARGET) {
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeOfferLimit(roundToXUPricePassive(freshPrice, Direction.Short), 1.0);
+                    Order o = placeOfferLimit(roundToXUPricePassive(malast, Direction.Short), 1.0);
                     globalIdOrderMap.put(id, new OrderAugmented(t, o, "Bearish: DRIFT SELL", AutoOrderType.DRIFT));
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                     outputOrderToAutoLog(getStr(t, id, o.orderId(), "Bearish: DRIFT SELL"));
                 }
-
             }
         }
-
-
     }
 
     public static boolean orderMakingMoney(Order o, double currPrice) {

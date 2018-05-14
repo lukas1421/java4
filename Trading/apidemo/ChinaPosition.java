@@ -235,10 +235,12 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         JRadioButton rb2 = new JRadioButton("Buy Sell", false);
 
         JToggleButton autoUpdateButton = new JToggleButton("Auto Update");
+
         autoUpdateButton.addActionListener(l -> {
             if (autoUpdateButton.isSelected()) {
                 ex = Executors.newScheduledThreadPool(20);
                 ex.scheduleAtFixedRate(this::refreshAll, 0, updateFreq.getFreq(), TimeUnit.SECONDS);
+                ex.scheduleAtFixedRate(this::refreshPositions, 0, 30, TimeUnit.SECONDS);
             } else {
                 ex.shutdown();
             }
@@ -357,11 +359,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     private void refreshAll() {
         mtmPnlCompute(GEN_MTM_PRED, "all");
-        //get current get open
-        getOpenPositionsNormal();
-        getOpenPositionsFromMargin();
-        CompletableFuture.runAsync(ChinaPosition::updatePosition).thenRun(this::getOpenTradePositionForFuture);
         SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
+    }
+
+    private void refreshPositions() {
+        CompletableFuture.runAsync(ChinaPosition::updatePosition).thenRun(this::getOpenTradePositionForFuture);
     }
 
     @SuppressWarnings("unused")
@@ -702,8 +704,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
             if (lt.equals(LocalTime.of(14, 59)) && !ld.equals(currentTradingDate)) {
                 ChinaStock.closeMap.put(name, close);
-                System.out.println(" Trading date " + currentTradingDate
-                        + " checking close " + lt + " " + name + " " + close);
+//                System.out.println(" Trading date " + currentTradingDate
+//                        + " checking close " + lt + " " + name + " " + close);
             }
 
             if (((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
@@ -720,8 +722,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     @Override
     public void actionUponFinish(String name) {
         costMap.put(name, closeMap.getOrDefault(name, 0.0));
-        System.out.println(getStr(" finished in china pos + costmap just updated is ", name, costMap.get(name)
-                , closeMap.getOrDefault(name, 0.0)));
+//        System.out.println(getStr(" finished in china pos + costmap just updated is ", name, costMap.get(name)
+//                , closeMap.getOrDefault(name, 0.0)));
     }
 
     private static void getOpenPositionsNormal() {
@@ -741,8 +743,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             while ((line = reader1.readLine()) != null) {
                 dataList = Arrays.asList(line.split("\\s+"));
                 //System.out.println(Arrays.asList(line.split("\\s+")));
-
-                System.out.println(" datalist " + dataList);
+                //System.out.println(" datalist " + dataList);
                 if (dataList.size() > 0 && dataList.get(0).equals("证券名称")) {
                     chineseNameCol = dataList.indexOf("证券名称");
                     currentPosCol = dataList.indexOf("证券数量");
@@ -783,7 +784,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 (new FileInputStream(TradingConstants.GLOBALPATH + "openPositionMargin.txt"), "gbk"))) {
             while ((line = reader1.readLine()) != null) {
                 dataList = Arrays.asList(line.split("\\s{2,}"));
-                System.out.println(Arrays.asList(line.split("\\s{2,}")));
+                //System.out.println(Arrays.asList(line.split("\\s{2,}")));
 
                 if (dataList.size() > 0 && dataList.get(0).equals("证券名称")) {
                     chineseNameCol = dataList.indexOf("证券名称"); //0
@@ -795,14 +796,14 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     System.out.println(" today sold col " + todaySoldCol);
                 }
 
-                if (dataList.size() > stockCodeCol) {
-                    System.out.println(getStr(" ticker ", dataList.get(stockCodeCol), " add sh sz ",
-                            Utility.addSHSZ(dataList.get(stockCodeCol)), " name map ",
-                            nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), ""),
-                            " replaced ", nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "")
-                                    .replace(" ", ""), " chin name in list  ",
-                            dataList.get(chineseNameCol)));
-                }
+//                if (dataList.size() > stockCodeCol) {
+//                    System.out.println(getStr(" ticker ", dataList.get(stockCodeCol), " add sh sz ",
+//                            Utility.addSHSZ(dataList.get(stockCodeCol)), " name map ",
+//                            nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), ""),
+//                            " replaced ", nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "")
+//                                    .replace(" ", ""), " chin name in list  ",
+//                            dataList.get(chineseNameCol)));
+//                }
 
                 if (dataList.size() > stockCodeCol && (
                         nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "")
@@ -810,7 +811,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                                 || dataList.get(chineseNameCol).startsWith("XD"))) {
 
                     String nam = Utility.addSHSZ(dataList.get(stockCodeCol));
-                    System.out.println(" nam " + nam);
+                    //System.out.println(" nam " + nam);
                     openPositionMap.put(nam, Integer.parseInt(dataList.get(openPosCol))
                             + Integer.parseInt(dataList.get(todaySoldCol))
                             - Integer.parseInt(dataList.get(todayBoughtCol)));
@@ -1513,14 +1514,13 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReportEnd() {
-
-        System.out.println(" trade report ended for fut pos handler in china pos ");
+        //System.out.println(" trade report ended for fut pos handler in china pos ");
 
         for (FutType ft : FutType.values()) {
             if (ChinaPosition.tradesMap.containsKey(ft.getTicker()) &&
                     ChinaPosition.tradesMap.get(ft.getTicker()).size() > 0) {
-                System.out.println(getStr(" tradeReportEnd :: printing trades map ", ft.getTicker(),
-                        ChinaPosition.tradesMap.get(ft.getTicker())));
+//                System.out.println(getStr(" tradeReportEnd :: printing trades map ", ft.getTicker(),
+//                        ChinaPosition.tradesMap.get(ft.getTicker())));
             }
         }
     }
