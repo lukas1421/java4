@@ -344,15 +344,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         JButton inventoryTraderButton = new JButton("Inventory Trader: " + (inventoryTraderOn.get() ? "ON" : "OFF"));
         inventoryTraderButton.addActionListener(l -> {
-            outputToAutoLog(" inventory trader set to " + inventoryTraderOn.get());
             inventoryTraderOn.set(!inventoryTraderOn.get());
+            outputToAutoLog(" inventory trader set to " + inventoryTraderOn.get());
             inventoryTraderButton.setText("Inventory Trader: " + (inventoryTraderOn.get() ? "ON" : "OFF"));
         });
 
         JButton percTraderButton = new JButton("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
         percTraderButton.addActionListener(l -> {
-            outputToAutoLog(" percentile trader set to " + percentileTradeOn.get());
             percentileTradeOn.set(!percentileTradeOn.get());
+            outputToAutoLog(" percentile trader set to " + percentileTradeOn.get());
             percTraderButton.setText("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
         });
 
