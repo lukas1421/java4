@@ -578,7 +578,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                         * priceMap.getOrDefault(e.getKey(), 0.0)
                         * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum();
         System.out.println(str(" ChinaPosition getNetptfDelta ", "open delta ", " traded delta, net delta "
-                , openDelta, tradedDelta, openDelta + tradedDelta));
+                , r(openDelta), r(tradedDelta), r(openDelta + tradedDelta)));
         return openDelta + tradedDelta;
     }
 

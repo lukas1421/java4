@@ -857,17 +857,21 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         LocalTime now = nowMilli.toLocalTime();
 
-        long accTradesCount = globalIdOrderMap.entrySet().stream()
+        long accTradesTotal = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTradeType() == AutoOrderType.PERC_ACC)
-                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled).count();
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled).mapToInt(e -> e.getValue().getOrder().getTotalSize())
+                .sum();
 
-        long deccTradesCount = globalIdOrderMap.entrySet().stream()
+        long deccTradesTotal = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTradeType() == AutoOrderType.PERC_DECC)
-                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled).count();
-        long netPercTrades = accTradesCount - deccTradesCount;
-        long percOrdersCount = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled).mapToInt(e -> e.getValue().getOrder().getTotalSize())
+                .sum();
+
+        long netPercTrades = accTradesTotal - deccTradesTotal;
+
+        long percOrdersTotal = globalIdOrderMap.entrySet().stream()
                 .filter(e -> isPercTrade().test(e.getValue().getTradeType()))
-                .count();
+                .mapToInt(e -> e.getValue().getOrder().getTotalSize()).sum();
 
         LocalDateTime lastPercTradeT = globalIdOrderMap.entrySet().stream()
                 .filter(e -> isPercTrade().test(e.getValue().getTradeType()))
@@ -906,13 +910,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        int minBetweenPercOrders = percOrdersCount == 0 ? 0 : 10;
+        int minBetweenPercOrders = percOrdersTotal == 0 ? 0 : 10;
 
         double currDelta = ChinaPosition.getNetPtfDelta();
 
         System.out.println(str("perc Trader status?", percentileTradeOn.get() ? "ON" : "OFF",
                 "perc", perc,
-                "acctrades, decctrades, netTrades", accTradesCount, deccTradesCount, netPercTrades,
+                "acctrades, decctrades, netTrades", accTradesTotal, deccTradesTotal, netPercTrades,
                 "OrderT Trade T,next tradeT", lastPercOrderT.toLocalTime(), lastPercTradeT.toLocalTime(),
                 lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime(), "accAvg, DecAvg,", avgAccprice, avgDeccprice,
                 "CurrDelta: ", currDelta));
@@ -923,7 +927,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //*****************************************************************************************//
         if (timeDiffinMinutes(lastPercOrderT, nowMilli) >= minBetweenPercOrders) {
             if (perc < 30) {
-                if (accTradesCount <= MAX_PERC_TRADES && currDelta < DELTA_HIGH_LIMIT) {
+                if (accTradesTotal <= MAX_PERC_TRADES && currDelta < DELTA_HIGH_LIMIT) {
                     int id = autoTradeID.incrementAndGet();
                     int size = getPercTraderSize(freshPrice, fx, sentiment, Direction.Long, currDelta,
                             ABS_DELTA_TARGET);
@@ -937,7 +941,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             : " delta above LIMIT");
                 }
             } else if (perc > 70) {
-                if (deccTradesCount <= MAX_PERC_TRADES && currDelta > DELTA_LOW_LIMIT) {
+                if (deccTradesTotal <= MAX_PERC_TRADES && currDelta > DELTA_LOW_LIMIT) {
                     int id = autoTradeID.incrementAndGet();
                     int sellSize = getPercTraderSize(freshPrice, fx, sentiment, Direction.Short, currDelta,
                             ABS_DELTA_TARGET);
@@ -1091,10 +1095,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
 
         double currDelta = ChinaPosition.getNetPtfDelta();
-        if (currDelta > DELTA_HIGH_LIMIT || currDelta < DELTA_LOW_LIMIT) {
-            pr(" MATrader: delta exceeded limit, exit ");
-            return;
-        }
 
         int numTrades = 0;
         double candidatePrice = 0.0;
@@ -1121,7 +1121,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (timeDiffinMinutes(lastMAOrderTime, nowMilli) >= timeBtwnMAOrders && maSignals.get() <= MAX_MA_SIGNALS_PER_SESSION) {
             if (touchConditionMet(secLastBar, lastBar, maLast)) {
-                if (bullishTouchMet(secLastBar, lastBar, maLast) && canLongGlobal.get()) {
+                if (bullishTouchMet(secLastBar, lastBar, maLast) && canLongGlobal.get()
+                        && currDelta < DELTA_HIGH_LIMIT) {
                     if (currentDirection == Direction.Long || pd > PD_UP_THRESH) {
                         candidatePrice = roundToXUPricePassive(maLast, Direction.Long);
                         priceType = (pd > PD_UP_THRESH ? "pd > " + PD_UP_THRESH : "already Long") + " BUY @ MA";
@@ -1151,7 +1152,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         outputOrderToAutoLog(str(nowMilli, id, "MA ORDER || bidding @ ",
                                 o.toString(), "type", priceType));
                     }
-                } else if (bearishTouchMet(secLastBar, lastBar, maLast) && canShortGlobal.get()) {
+                } else if (bearishTouchMet(secLastBar, lastBar, maLast) && canShortGlobal.get()
+                        && currDelta > DELTA_LOW_LIMIT) {
                     if (currentDirection == Direction.Short || pd < PD_DOWN_THRESH) {
                         candidatePrice = roundToXUPricePassive(maLast, Direction.Short);
                         priceType = (pd < PD_DOWN_THRESH ? "pd < " + PD_DOWN_THRESH : "currDir is short(same)") + " SELL @ MA";

@@ -1182,6 +1182,10 @@ public class Order {
         m_softDollarTier = v;
     }
 
+    public int getTotalSize() {
+        return (int) (((this.action() == Action.BUY) ? 1 : -1) * totalQuantity());
+    }
+
     public Order() {
         m_activeStartTime = EMPTY_STR;
         m_activeStopTime = EMPTY_STR;
