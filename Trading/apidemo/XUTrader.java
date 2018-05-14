@@ -909,14 +909,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (perc < 30) {
                 if (accTradesCount <= MAX_PERC_TRADES && currDelta < DELTA_HIGH_LIMIT) {
                     int id = autoTradeID.incrementAndGet();
-
                     int size = getPercTraderSize(freshPrice, fx, sentiment, Direction.Long, currDelta,
                             ABS_DELTA_TARGET);
-
                     Order o = placeBidLimit(freshPrice, size);
                     globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid",
                             AutoOrderType.PERC_ACC));
-
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                     outputOrderToAutoLog(getStr(o.orderId(), "perc bid", globalIdOrderMap.get(id), " perc ", perc));
                 } else {
@@ -936,19 +933,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     outputToAutoLog("decc trades limit reached; ");
                 }
             } else {
-                if (accTradesCount > deccTradesCount) {
+                if (currDelta > DELTA_HIGH_LIMIT) {
                     if (freshPrice > avgAccprice) {
                         int id = autoTradeID.incrementAndGet();
-                        Order o = placeOfferLimit(freshPrice, accTradesCount - deccTradesCount);
+                        Order o = placeOfferLimit(freshPrice, 1);
                         globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer COVER",
                                 AutoOrderType.PERC_DECC));
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         outputOrderToAutoLog(getStr(o.orderId(), "perc offer,COVER", globalIdOrderMap.get(id)));
                     }
-                } else if (accTradesCount < deccTradesCount) {
+                } else if (currDelta < DELTA_LOW_LIMIT) {
                     if (freshPrice < avgDeccprice) {
                         int id = autoTradeID.incrementAndGet();
-                        Order o = placeBidLimit(freshPrice, deccTradesCount - accTradesCount);
+                        Order o = placeBidLimit(freshPrice, 1);
                         globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid COVER",
                                 AutoOrderType.PERC_ACC));
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
@@ -1289,16 +1286,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         if (perc == 0) {
-            System.out.println(" perc 0 suspicious " + futData.get(ibContractToFutType(activeFuture)));
+            pr(" perc 0 suspicious ", futData.get(ibContractToFutType(activeFuture)));
         }
 
-        out.println(getStr("In inventory trade: ", inventoryTraderOn.get(), " " +
-                        "sentiment: ", sentiment, "perc ", perc,
+        pr("Inventory trade: ", inventoryTraderOn.get() ? "ON" : "OFF",
+                "sentiment: ", sentiment, "perc ", perc,
                 "inventory barrier waiting #: ", inventoryBarrier.getNumberWaiting(),
                 " semaphore permits: ", inventorySemaphore.availablePermits(),
                 freshPrice, " chg: ",
                 activeLastMinuteMap.size() < 2 ? "No trade last min " : (freshPrice -
-                        activeLastMinuteMap.lowerEntry(t).getValue())));
+                        activeLastMinuteMap.lowerEntry(t).getValue()));
 
 
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
@@ -1324,7 +1321,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (perc < 20) {
             try {
                 inventorySemaphore.acquire();
-                out.println(" acquired semaphore now left :" + inventorySemaphore.availablePermits());
+                pr(" acquired semaphore now left :" + inventorySemaphore.availablePermits());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
@@ -1339,9 +1336,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     , idBuy, buyO.orderId(), "Inventory Buy Open ", globalIdOrderMap.get(idBuy)));
 
             try {
-                out.println(" waiting before latchBuy.await ");
+                pr(" waiting before latchBuy.await ");
                 latchBuy.await();
-                out.println(" waiting after latchBuy.await  ");
+                pr(" waiting after latchBuy.await  ");
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
