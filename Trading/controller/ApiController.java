@@ -1028,12 +1028,11 @@ public class ApiController implements EWrapper {
             if (ChronoUnit.DAYS.between(LocalDate.parse(previousFut.lastTradeDateOrContractMonth(),
                     DateTimeFormatter.ofPattern("yyyyMMdd")), LocalDate.now()) < 7) {
                 ChinaMain.globalRequestMap.put(reqID + 2, new Request(previousFut, hh));
-                m_client.reqHistoricalData(reqID + 2, previousFut, "", durationStr, barSize.toString(),
-                        whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList());
+                m_client.reqHistoricalData(reqID + 2, previousFut, "", durationStr,
+                        barSize.toString(), whatToShow.toString(), 0, 2,
+                        Collections.<TagValue>emptyList());
             }
-
         });
-        //System.out.println("getSGXA50HistoricalCustom END thread " + Thread.currentThread().getName());
     }
 
     public void reHistDataArray(IHistoricalDataHandler handler) {
@@ -1061,9 +1060,7 @@ public class ApiController implements EWrapper {
     }
 
     public void reqTopMktData(Contract contract, String genericTickList, boolean snapshot, ITopMktDataHandler handler) {
-        //int reqId = m_reqId++;
         int reqId = m_reqId.incrementAndGet();
-        //associate contract symobl with request ID
         m_symReqMap.put(reqId, contract.symbol()); //potential issue
         System.out.println("req id is " + reqId + "contract symbol is " + contract.symbol());
         m_topMktDataMap.put(reqId, handler);
@@ -1077,7 +1074,6 @@ public class ApiController implements EWrapper {
     }
 
     public void reqOptionMktData(Contract contract, String genericTickList, boolean snapshot, IOptHandler handler) {
-        //int reqId = m_reqId++;
         int reqId = m_reqId.getAndIncrement();
         m_topMktDataMap.put(reqId, handler);
         m_optionCompMap.put(reqId, handler);
@@ -1122,18 +1118,10 @@ public class ApiController implements EWrapper {
     // key method. This method is called when market data changes.
     @Override
     public void tickPrice(int reqId, int tickType, double price, int canAutoExecute) {
-        //ITopMktDataHandler handler;
-        //ITopMktDataHandler1 handler1;
-        //TickType.get(tickType).equals(TickType.LAST) &&
-        //System.out.println(" req id " + reqId + " price " + price);
         if (ChinaMain.globalRequestMap.containsKey(reqId)) {
-            //System.out.println(" in tick price " + TickType.getField(tickType));
-
             Request r = ChinaMain.globalRequestMap.get(reqId);
             LiveHandler lh = (LiveHandler) ChinaMain.globalRequestMap.get(reqId).getHandler();
-            //System.out.println(" in tick price "+ r.getContract().symbol()+ TickType.get(tickType) + price);
             try {
-                //if(TickType.get(tickType) == TickType.LAST) {
                 lh.handlePrice(TickType.get(tickType),
                         utility.Utility.ibContractToSymbol(r.getContract()), price,
                         LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
@@ -1142,22 +1130,6 @@ public class ApiController implements EWrapper {
                 ex.printStackTrace();
             }
         }
-
-//        handler = m_topMktDataMap.getOrDefault(reqId, null);
-//        handler1 = m_topMktDataMap1.getOrDefault(reqId, null);
-//
-//        if (handler != null) {
-//
-//            handler.tickPrice(TickType.get(tickType), price, canAutoExecute);
-//            //System.out.println(map1.get(Integer.parseInt(symb)).get(9.5));
-//            //HashMap<Double,Double> val = new HashMap<Double, Double>();
-//            //results2.put(m_symReqMap.get(reqId), reqId,val);
-//        }
-//        if (handler1 != null) {
-//            symb = Integer.parseInt(m_symReqMap.get(reqId));
-//            handler1.tickPrice(symb, TickType.get(tickType), price, canAutoExecute);
-//            // System.out.println(" in IB handler reqId " + reqId + " symbol is " + symb + " price " + price );
-//        }
         recEOM();
     }
 
@@ -1182,7 +1154,6 @@ public class ApiController implements EWrapper {
         if (handler1 != null) {
             symb = Integer.parseInt(m_symReqMap.get(reqId));
             handler1.tickSize(symb, TickType.get(tickType), size);
-            // System.out.println(" in IB handler reqId " + reqId + " symbol is " + symb + " price " + price );
         }
 
         recEOM();

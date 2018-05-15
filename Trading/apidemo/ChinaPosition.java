@@ -793,7 +793,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     stockCodeCol = dataList.indexOf("证券代码"); //10
                     todayBoughtCol = dataList.indexOf("今买数量"); //8
                     todaySoldCol = dataList.indexOf("今卖数量");   //9
-                    System.out.println(" today sold col " + todaySoldCol);
+                    //System.out.println(" today sold col " + todaySoldCol);
                 }
 
 //                if (dataList.size() > stockCodeCol) {
