@@ -910,17 +910,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" unfilled perc orders count: ", unfilledPercOrdersCount, " manual cancel required ");
             return;
         }
-
         int minBetweenPercOrders = percOrdersTotal == 0 ? 0 : 10;
-
         double currDelta = ChinaPosition.getNetPtfDelta();
 
         System.out.println(str("perc Trader status?", percentileTradeOn.get() ? "ON" : "OFF",
                 "perc: ", perc,
                 "accSize, deccSize, netSize", accSize, deccSize, netPercTrades,
                 "OrderT Trade T,next tradeT", lastPercOrderT.toLocalTime(), lastPercTradeT.toLocalTime(),
-                lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime(), "accAvg, DecAvg,", avgAccprice, avgDeccprice,
-                "CurrDelta: ", r(currDelta)));
+                lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime(), "accAvg, DecAvg,",
+                avgAccprice, avgDeccprice, "CurrDelta: ", r(currDelta)));
 
         //******************************************************************************************//
         if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
@@ -956,7 +954,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
             } else {
                 if (currDelta > DELTA_HIGH_LIMIT) {
-                    if (freshPrice > avgAccprice && avgAccprice != 0.0) {
+                    if (freshPrice > avgAccprice || accSize == 0) {
                         int id = autoTradeID.incrementAndGet();
                         Order o = placeOfferLimit(freshPrice, 1);
                         globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer COVER",
@@ -965,7 +963,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         outputOrderToAutoLog(str(o.orderId(), "perc offer,COVER", globalIdOrderMap.get(id)));
                     }
                 } else if (currDelta < DELTA_LOW_LIMIT) {
-                    if (freshPrice < avgDeccprice && avgDeccprice != 0.0) {
+                    if (freshPrice < avgDeccprice || deccSize == 0) {
                         int id = autoTradeID.incrementAndGet();
                         Order o = placeBidLimit(freshPrice, 1);
                         globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid COVER",

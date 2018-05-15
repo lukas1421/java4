@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -1015,7 +1016,7 @@ public class ApiController implements EWrapper {
 //        if(!globalRequestMap.containsKey(reqID) && !globalRequestMap.containsKey(reqID+1)) {
         ChinaMain.globalRequestMap.put(reqID, new Request(frontFut, hh));
         ChinaMain.globalRequestMap.put(reqID + 1, new Request(backFut, hh));
-        ChinaMain.globalRequestMap.put(reqID + 2, new Request(previousFut, hh));
+
 
         CompletableFuture.runAsync(() -> {
 
@@ -1023,8 +1024,13 @@ public class ApiController implements EWrapper {
                     whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList());
             m_client.reqHistoricalData(reqID + 1, backFut, "", durationStr, barSize.toString(),
                     whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList());
-            m_client.reqHistoricalData(reqID + 2, previousFut, "", durationStr, barSize.toString(),
-                    whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList());
+
+            if (ChronoUnit.DAYS.between(LocalDate.parse(previousFut.lastTradeDateOrContractMonth(),
+                    DateTimeFormatter.ofPattern("yyyyMMdd")), LocalDate.now()) < 7) {
+                ChinaMain.globalRequestMap.put(reqID + 2, new Request(previousFut, hh));
+                m_client.reqHistoricalData(reqID + 2, previousFut, "", durationStr, barSize.toString(),
+                        whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList());
+            }
 
         });
         //System.out.println("getSGXA50HistoricalCustom END thread " + Thread.currentThread().getName());
