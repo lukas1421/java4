@@ -34,6 +34,7 @@ import java.util.concurrent.*;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
+import static utility.Utility.pr;
 
 //import java.time.temporal.ChronoUnit;
 //import java.time.temporal.TemporalUnit;
@@ -244,9 +245,9 @@ public final class ChinaMain implements IConnectionHandler {
 
         JButton fillHolesButton = new JButton("FillHoles");
         fillHolesButton.addActionListener(l -> {
-            System.out.println(" filling holes for today ");
+            pr(" filling holes for today ");
             ChinaStockHelper.fillHolesInData(priceMapBar, LocalTime.of(9, 24));
-            System.out.println(" filling holes for ytd ");
+            pr(" filling holes for ytd ");
             ChinaStockHelper.fillHolesInData(priceMapBarYtd, LocalTime.of(9, 29));
             ChinaStockHelper.fillHolesInSize();
         });
@@ -264,7 +265,7 @@ public final class ChinaMain implements IConnectionHandler {
 
         JButton getPosButton = new JButton("getPos");
         getPosButton.addActionListener(l -> {
-            System.out.println(" requesting position ");
+            pr(" requesting position ");
             controller().client().reqAccountSummary(5, "All", "NetLiquidation,BuyingPower");
             controller().client().reqExecutions(6, new ExecutionFilter());
         });
@@ -343,17 +344,17 @@ public final class ChinaMain implements IConnectionHandler {
         m_frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                System.out.println(" closing main frame ");
+                pr(" closing main frame ");
                 int ans = JOptionPane.showConfirmDialog(null, "are you sure", "", JOptionPane.YES_NO_OPTION);
                 if (ans == JOptionPane.YES_OPTION) {
-                    System.out.println(" yes pressed");
+                    pr(" yes pressed");
                     m_frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                     CompletableFuture.runAsync(XU::saveHibXU).thenRun(() -> {
-                        System.out.println(" disposing ");
+                        pr(" disposing ");
                         m_frame.dispose();
                     });
                 } else {
-                    System.out.println(" no pressed");
+                    pr(" no pressed");
                 }
             }
         });
@@ -397,7 +398,7 @@ public final class ChinaMain implements IConnectionHandler {
             try {
                 M_CONTROLLER.connect("127.0.0.1", 7496, 0, "");
             } catch (IllegalStateException ex) {
-                System.out.println(" error in controller, using 4001 port ");
+                pr(" error in controller, using 4001 port ");
                 M_CONTROLLER.connect("127.0.0.1", 4001, 0, "");
             }
         });
@@ -405,7 +406,7 @@ public final class ChinaMain implements IConnectionHandler {
         CompletableFuture.runAsync(() -> {
             try {
                 ibConnLatch.await();
-                System.out.println(" ib conn latch finished waiting " + LocalTime.now());
+                pr(" ib conn latch finished waiting " + LocalTime.now());
                 M_CONTROLLER.reqXUDataArray();
                 ses.scheduleAtFixedRate(() -> {
                     AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
@@ -427,7 +428,7 @@ public final class ChinaMain implements IConnectionHandler {
     @Override
     public void connected() {
         //show("connected");
-        System.out.println(" connected from connected ");
+        pr(" connected from connected ");
         ChinaMain.m_connectionPanel.setConnectionStatus("connected");
         connectionIndicator.setBackground(Color.green);
         controller().reqCurrentTime((long time) -> show("Server date/time is " + Formats.fmtDate(time * 1000)));
@@ -441,7 +442,7 @@ public final class ChinaMain implements IConnectionHandler {
     @Override
     public void disconnected() {
         //show("disconnected");
-        System.out.println(" setting panel status disconnected ");
+        pr(" setting panel status disconnected ");
         m_connectionPanel.m_status.setText("disconnected");
         connectionIndicator.setBackground(Color.red);
         connectionIndicator.setText("DisConn");
@@ -514,7 +515,7 @@ public final class ChinaMain implements IConnectionHandler {
             HtmlButton disconnect = new HtmlButton("Disconnect") {
                 @Override
                 public void actionPerformed() {
-                    System.out.println(" disconnect button clicked ");
+                    pr(" disconnect button clicked ");
                     controller().disconnect();
                 }
             };
@@ -555,7 +556,7 @@ public final class ChinaMain implements IConnectionHandler {
         void onConnect(String portNum) {
             int port = Integer.parseInt(portNum);
             int clientId = Integer.parseInt(m_clientId.getText());
-            System.out.println(" port " + portNum + " client id " + clientId
+            pr(" port " + portNum + " client id " + clientId
                     + " connect options " + m_connectOptionsTF.getText());
             controller().connect(m_host.getText(), port, clientId, m_connectOptionsTF.getText());
         }

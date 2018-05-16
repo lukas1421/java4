@@ -115,7 +115,7 @@ public final class ChinaStockHelper {
             vr2 = ((t = maxVRList.poll()) != null) ? t : "";
             vr3 = ((t = maxVRList.poll()) != null) ? t : "";
         } catch (Exception ex) {
-            System.out.println(" something wrong in sector " + sector);
+            pr(" something wrong in sector " + sector);
             ex.printStackTrace();
         }
     }
@@ -154,7 +154,7 @@ public final class ChinaStockHelper {
 
             tradeTime.forEach(t -> {
                 if (!ChinaData.priceMapBar.get(name).containsKey(t)) {
-                    System.out.println(" missing value " + name + " " + t.toString());
+                    pr(" missing value " + name + " " + t.toString());
                     ChinaData.priceMapBar.get(name).put(t,
                             ChinaData.priceMapBar.get(name).ceilingEntry(t.plusMinutes(1)).getValue());
                 }
@@ -176,7 +176,7 @@ public final class ChinaStockHelper {
                                 tm.remove(t);
                             }
                         } else if (!tm.containsKey(t) || tm.get(t).containsZero()) {
-                            System.out.println("name has issue in filling holes " + name + " " + t);
+                            pr("name has issue in filling holes " + name + " " + t);
                             SimpleBar sb = new SimpleBar(tm.higherEntry(t).getValue());
                             tm.put(t, sb);
                         }
@@ -185,14 +185,14 @@ public final class ChinaStockHelper {
                     }
                 }
             } catch (Exception x) {
-                System.out.println(" cannot fill holes " + name);
+                pr(" cannot fill holes " + name);
             }
 
         });
     }
 
     static void fwdFillHolesInData() {
-        System.out.println(" forward filling ");
+        pr(" forward filling ");
         symbolNames.forEach(name -> {
             NavigableMap<LocalTime, SimpleBar> tm = ChinaData.priceMapBar.get(name);
             NavigableMap<LocalTime, Double> tmVol = ChinaData.sizeTotalMap.get(name);
@@ -242,11 +242,11 @@ public final class ChinaStockHelper {
         final String tdxPath = "J:\\TDX\\T0002\\export_1m\\";
 
         LocalDate today = LocalDate.now();
-        System.out.println(" localdate is " + today);
+        pr(" localdate is " + today);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
         final String dateString = today.format(formatter);
-        System.out.println(" date is " + dateString);
+        pr(" date is " + dateString);
 
         symbolNames.forEach(e -> {
             boolean found = false;
@@ -283,16 +283,16 @@ public final class ChinaStockHelper {
                         ChinaData.sizeTotalMap.get(e).put(LocalTime.of(15, 0), ChinaData.sizeTotalMap.get(e).get(LocalTime.of(14, 59)));
 
                     } else {
-                        System.out.println(" for " + e + " filling done");
+                        pr(" for " + e + " filling done");
                         SimpleBar sb = new SimpleBar(priceMap.getOrDefault(e, 0.0));
 
                         ChinaData.tradeTimePure.forEach(ti -> ChinaData.priceMapBar.get(e).put(ti, sb));
-                        System.out.println("last key " + e + " " + ChinaData.priceMapBar.get(e).lastEntry());
-                        System.out.println("noon last key " + e + " " + ChinaData.priceMapBar.get(e).ceilingEntry(LocalTime.of(11, 30)).toString());
+                        pr("last key " + e + " " + ChinaData.priceMapBar.get(e).lastEntry());
+                        pr("noon last key " + e + " " + ChinaData.priceMapBar.get(e).ceilingEntry(LocalTime.of(11, 30)).toString());
                     }
 
                 } catch (IOException | NumberFormatException ex) {
-                    System.out.println(" does not contain" + e);
+                    pr(" does not contain" + e);
                     ex.printStackTrace();
                 }
             }
@@ -308,11 +308,11 @@ public final class ChinaStockHelper {
         t = LocalDate.of(2017, Month.MAY, 26);
         //boolean found = false;
 
-        System.out.println(" localdate is " + t);
+        pr(" localdate is " + t);
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
         final String dateString = t.format(formatter);
-        System.out.println(" date is " + dateString);
+        pr(" date is " + dateString);
 
         symbolNames.forEach(e -> {
             if (e.substring(0, 2).toUpperCase().equals("SH") || e.substring(0, 2).toUpperCase().equals("SZ")) {
@@ -346,14 +346,14 @@ public final class ChinaStockHelper {
                     }
 
                     if (!found) {
-                        System.out.println(" for " + e + " filling done");
+                        pr(" for " + e + " filling done");
                         SimpleBar sb = new SimpleBar(priceMap.get(e));
                         ChinaData.tradeTime.forEach(ti -> ChinaData.priceMapBarYtd.get(e).put(ti, sb));
-                        System.out.println("last key " + e + " " + ChinaData.priceMapBarYtd.get(e).lastEntry());
-                        System.out.println("noon last key " + e + " " + ChinaData.priceMapBarYtd.get(e).ceilingEntry(LocalTime.of(11, 30)).toString());
+                        pr("last key " + e + " " + ChinaData.priceMapBarYtd.get(e).lastEntry());
+                        pr("noon last key " + e + " " + ChinaData.priceMapBarYtd.get(e).ceilingEntry(LocalTime.of(11, 30)).toString());
                     }
                 } catch (IOException | NumberFormatException ex) {
-                    System.out.println(" has issues " + e);
+                    pr(" has issues " + e);
                     ex.printStackTrace();
                 }
             }
@@ -401,9 +401,9 @@ public final class ChinaStockHelper {
                     setGraphGen(nam, graph6);
                     //ChinaBigGraph.setGraph(nam);
 
-                    System.out.println(" nam is " + nam);
-                    System.out.println(" selected Name industry " + GraphIndustry.selectedNameIndus);
-                    System.out.println(" short industry is " + ChinaStock.shortIndustryMap.getOrDefault(nam, ""));
+                    pr(" nam is " + nam);
+                    pr(" selected Name industry " + GraphIndustry.selectedNameIndus);
+                    pr(" short industry is " + ChinaStock.shortIndustryMap.getOrDefault(nam, ""));
                 }
             });
 
@@ -417,7 +417,7 @@ public final class ChinaStockHelper {
                 }, 1L, TimeUnit.MINUTES);
             }
             jd.setVisible(true);
-            System.out.println(Utility.str(" dialog ", nam, " created at ", entryTime));
+            pr(Utility.str(" dialog ", nam, " created at ", entryTime));
         }
     }
 
@@ -459,7 +459,7 @@ public final class ChinaStockHelper {
         dialogTracker.forEach(d -> {
             d.setVisible(false);
             d.dispose();
-            System.out.println(d.getName() + " disposed ");
+            pr(d.getName() + " disposed ");
         });
     }
 
@@ -502,7 +502,7 @@ public final class ChinaStockHelper {
                 Dimension d = super.getPreferredSize();
                 d.height = 300;
                 d.width = getWidth() / 2;
-                System.out.println(str(" height width ", getHeight(), getWidth()));
+                pr(str(" height width ", getHeight(), getWidth()));
                 return d;
             }
 
@@ -555,7 +555,7 @@ public final class ChinaStockHelper {
         buildA50Gen(open, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
 
         ChinaData.tradeTimePure.forEach(t -> {
-            System.out.println(" t " + t);
+            pr(" t " + t);
             double rtn = weightMapA50.entrySet().stream().mapToDouble(e
                     -> (priceMapBar.get(e.getKey()).ceilingEntry(t).getValue().getClose()
                     / closeMap.getOrDefault(e.getKey(), priceMapBar.get(e.getKey()).firstEntry().getValue().getOpen()) - 1) * e.getValue() / 100).sum();
@@ -571,7 +571,7 @@ public final class ChinaStockHelper {
                 priceMapBar.get(ftseIndex).put(t, new SimpleBar(open * (1 + rtn)));
             }
 
-            System.out.println(" value " + priceMapBar.get(ftseIndex).get(t).toString());
+            pr(" value " + priceMapBar.get(ftseIndex).get(t).toString());
 
             double vol = weightMapA50.entrySet().stream().mapToDouble(a -> (ChinaData.sizeTotalMap
                     .containsKey(a.getKey()) && ChinaData.sizeTotalMap.get(a.getKey()).size() > 0)
@@ -582,8 +582,8 @@ public final class ChinaStockHelper {
         closeMap.put(ftseIndex, open);
         openMap.put(ftseIndex, open);
 
-        //System.out.println( "last key a50" +priceMapBar.get(ftseIndex).lastKey());
-        //System.out.println( " last entry a50 "+priceMapBar.get(ftseIndex).lastEntry().getValue());
+        //pr( "last key a50" +priceMapBar.get(ftseIndex).lastKey());
+        //pr( " last entry a50 "+priceMapBar.get(ftseIndex).lastEntry().getValue());
 
         priceMap.put(ftseIndex, priceMapBar.get(ftseIndex).lastEntry().getValue().getClose());
         double max = reduceMapToDouble(priceMapBar.get(ftseIndex), SimpleBar::getHigh, Math::max);
@@ -596,8 +596,8 @@ public final class ChinaStockHelper {
 //                .map(Entry::getKey).orElse(LocalTime.MAX);
 //        LocalTime minT = priceMapBar.get(ftseIndex).entrySet().stream().min(Utility.BAR_LOW)
 //                .map(Entry::getKey).orElse(LocalTime.MAX);
-        //System.out.println("a50 max" + max + " " + maxT);
-        //System.out.println("a50 min" + min + " " + minT);
+        //pr("a50 max" + max + " " + maxT);
+        //pr("a50 min" + min + " " + minT);
 
         maxMap.put(ftseIndex, max);
         minMap.put(ftseIndex, min);
@@ -620,20 +620,20 @@ public final class ChinaStockHelper {
         }
 
         ChinaData.tradeTimePure.forEach(t -> {
-            System.out.println(" t " + t);
+            pr(" t " + t);
             double rtn = weightMapA50.entrySet().stream().mapToDouble(e -> {
                 double res = 0.0;
                 if (mp.containsKey(e.getKey()) && mp.get(e.getKey()).size() > 0 && mp.get(e.getKey()).lastKey().isAfter(t.minusMinutes(1L))) {
                     res = (mp.get(e.getKey()).ceilingEntry(t).getValue().getClose()
                             / mp.get(e.getKey()).firstEntry().getValue().getOpen() - 1) * e.getValue() / 100;
                 } else {
-                    System.out.println(" error in building A50 gen " + e.getKey() + " " + t);
+                    pr(" error in building A50 gen " + e.getKey() + " " + t);
                 }
                 return res;
                 //return mp.get(e.getKey()).ceilingEntry(t).getValue().getClose()/closeMp.getOrDefault(e.getKey(),0.0)-1)*e.getValue()/100;
             }).sum();
 
-            //System.out.println(" RETURN " + t.toString() + " " + rtn);
+            //pr(" RETURN " + t.toString() + " " + rtn);
             if (t.isBefore(LocalTime.of(9, 30))) {
                 mp.get(ftseIndex).put(t, new SimpleBar(open));
             } else if (t.equals(LocalTime.of(9, 30))) {
@@ -645,13 +645,13 @@ public final class ChinaStockHelper {
                 mp.get(ftseIndex).put(t, new SimpleBar(open * (1 + rtn)));
             }
 
-            //System.out.println( "FTSE A50 value " + t.toString() + " " + mp.get(ftseIndex).get(t).toString());
+            //pr( "FTSE A50 value " + t.toString() + " " + mp.get(ftseIndex).get(t).toString());
             //if(volmp.containsKey(a.getKey()) && volmp.get(a.getKey()).size()>0)
             double vol = weightMapA50.entrySet().stream().mapToDouble(a -> {
                 if (volmp.containsKey(a.getKey()) && volmp.get(a.getKey()).size() > 0 && volmp.get(a.getKey()).lastKey().isAfter(t.minusMinutes(1L))) {
                     return volmp.get(a.getKey()).ceilingEntry(t).getValue() * a.getValue() / 100d;
                 } else if (volmp.containsKey(a.getKey()) && volmp.get(a.getKey()).size() > 0) {
-                    System.out.println(" fixing data for " + a.getKey() + " for t " + t);
+                    pr(" fixing data for " + a.getKey() + " for t " + t);
                     return volmp.get(a.getKey()).floorEntry(t).getValue() * a.getValue() / 100d;
                 } else {
                     return 0.0;
@@ -665,7 +665,7 @@ public final class ChinaStockHelper {
     static void buildGenForYtd(String... tickers) {
         for (String ticker : tickers) {
             if (ChinaStock.NORMAL_STOCK.test(ticker)) {
-                System.out.println("building " + ticker);
+                pr("building " + ticker);
                 double open = priceMapBar.get(ticker).firstEntry().getValue().getOpen();
                 closeMap.put(ticker, open);
                 openMap.put(ticker, open);
@@ -685,7 +685,7 @@ public final class ChinaStockHelper {
     static void computeMinuteSharpeAll() {
         ChinaData.priceMapBar.forEach((key, value) -> {
             double minSharp = SharpeUtility.computeMinuteSharpe(value.tailMap(LocalTime.of(9, 30), true));
-            //System.out.println(e.getKey() + " minsharp " + minSharp);
+            //pr(e.getKey() + " minsharp " + minSharp);
 //            if (e.getKey().equals("sh601398")) {
 //                e.getValue().tailMap(LocalTime.of(9, 30), true).entrySet().forEach(System.out::println);
 //            }
@@ -733,29 +733,29 @@ public final class ChinaStockHelper {
     static void fixYtdSuspendedStocks() {
         priceMapBarYtd.keySet().forEach(k -> {
             if (priceMapBarYtd.get(k).size() == 0) {
-                System.out.println(" fixYtdSuspendedStocks size 0 " + k);
+                pr(" fixYtdSuspendedStocks size 0 " + k);
             } else {
                 //size not zero
                 if (priceMapBarYtd.get(k).lastEntry().getValue().containsZero()) {
-                    System.out.println(" fixYtd + last entry contains zero " + k + " " + nameMap.get(k));
+                    pr(" fixYtd + last entry contains zero " + k + " " + nameMap.get(k));
                     if (priceMapBar.get(k).size() > 0) {
                         double fillValue = priceMapBar.get(k).firstEntry().getValue().getOpen();
                         priceMapBarYtd.get(k).replaceAll((ytdK, ytdV) -> new SimpleBar(fillValue));
-                        System.out.println(" fill value " + fillValue);
+                        pr(" fill value " + fillValue);
                     }
                 }
             }
         });
         priceMapBarY2.keySet().forEach(k -> {
             if (priceMapBarY2.get(k).size() == 0) {
-                System.out.println(" fixYtdSuspendedStocks Y2 size 0 " + k);
+                pr(" fixYtdSuspendedStocks Y2 size 0 " + k);
             } else {
                 if (priceMapBarY2.get(k).lastEntry().getValue().containsZero()) {
-                    System.out.println(" fixY2 + last entry contains zero " + k + " " + nameMap.get(k));
+                    pr(" fixY2 + last entry contains zero " + k + " " + nameMap.get(k));
                     if (priceMapBar.get(k).size() > 0) {
                         double fillValue = priceMapBar.get(k).firstEntry().getValue().getOpen();
                         priceMapBarY2.get(k).replaceAll((ytdK, ytdV) -> new SimpleBar(fillValue));
-                        System.out.println(" fill value " + fillValue);
+                        pr(" fill value " + fillValue);
                     }
                 }
             }

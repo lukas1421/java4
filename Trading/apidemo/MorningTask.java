@@ -23,8 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static utility.Utility.pd;
-import static utility.Utility.str;
+import static utility.Utility.*;
 
 //import java.net.InetSocketAddress;
 
@@ -61,9 +60,9 @@ public final class MorningTask implements HistoricalHandler {
         getBOCFX2();
         processShcomp();
 
-        System.out.println("done and starting exiting sequence in 5");
+        pr("done and starting exiting sequence in 5");
         ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
-        es.scheduleAtFixedRate(() -> System.out.println(" countDown ... "), 0, 1, TimeUnit.SECONDS);
+        es.scheduleAtFixedRate(() -> pr(" countDown ... "), 0, 1, TimeUnit.SECONDS);
 
         es.schedule(() -> System.exit(0), 5, TimeUnit.SECONDS);
     }
@@ -72,7 +71,7 @@ public final class MorningTask implements HistoricalHandler {
     private static void writeIndexTDX(BufferedWriter out) {
         String line;
         List<String> ind = Arrays.asList(indices.split(","));
-        System.out.println(ind);
+        pr(ind);
         String currentLine;
         String previousLine;
         for (String s : ind) {
@@ -89,7 +88,7 @@ public final class MorningTask implements HistoricalHandler {
 
                 String output = Utility.getStrTabbed(s, pd(todayList, 4), pd(ytdList, 4),
                         Double.toString(Math.round(10000d * (pd(todayList, 4) / pd(ytdList, 4) - 1)) / 100d) + "%");
-                System.out.println(" stock return " + s + " " + output);
+                pr(" stock return " + s + " " + output);
 
                 out.write(output);
                 out.newLine();
@@ -135,7 +134,7 @@ public final class MorningTask implements HistoricalHandler {
         //Proxy proxy = new Proxy(Proxy.Type.HTTP,new InetSocketAddress("127.0.0.1",1080));
         for (String e : etfs) {
             urlString = "https://www.bloomberg.com/quote/" + e;
-            System.out.println(" etf is " + e);
+            pr(" etf is " + e);
 
             try {
                 URL url = new URL(urlString);
@@ -173,7 +172,7 @@ public final class MorningTask implements HistoricalHandler {
                             + "\t" + usAfterClose.get(etfTicker).lastEntry().getValue()) : "");
                     out.append(sb);
                     out.newLine();
-                    System.out.println(" sb " + sb);
+                    pr(" sb " + sb);
                 }
 
             } catch (IOException ex) {
@@ -198,7 +197,7 @@ public final class MorningTask implements HistoricalHandler {
                     while (m.find()) {
                         out.write("FTSE A50" + "\t" + m.group().replace(",", ""));
                         out.newLine();
-                        System.out.println(m.group());
+                        pr(m.group());
                     }
                 }
             } catch (Exception ex) {
@@ -253,7 +252,7 @@ public final class MorningTask implements HistoricalHandler {
         LocalDate dt = getLastBizDate(LocalDate.now());
         DateTimeFormatter f = DateTimeFormatter.ofPattern("EEE, MMM dd, yyyy", Locale.US);
         String ds = dt.format(f);
-        System.out.println(ds);
+        pr(ds);
 
         p = Pattern.compile("(?<=" + ds + "</span>)(.*?)(?:<span class)");
 
@@ -265,10 +264,10 @@ public final class MorningTask implements HistoricalHandler {
                 while ((line = reader2.readLine()) != null) {
                     Matcher m = p.matcher(line);
                     while (m.find()) {
-                        System.out.println(m.group());
+                        pr(m.group());
                         List<String> sp = Arrays.asList(m.group(1).replace(",", "")
                                 .split("</td><td>")); //m.group()
-                        System.out.println(Double.parseDouble(sp.get(4)));
+                        pr(Double.parseDouble(sp.get(4)));
                         out.append("FTSEA50 2" + "\t").append(sp.get(4));
                         out.newLine();
                     }
@@ -282,7 +281,7 @@ public final class MorningTask implements HistoricalHandler {
     }
 
     private static void writeXIN0U(BufferedWriter out) {
-        System.out.println((" getting XIN0U"));
+        pr((" getting XIN0U"));
         String line;
         urlString = "https://www.marketwatch.com/investing/index/xin0u?countrycode=xx";
         Pattern p = Pattern.compile("Close:.*?(\\d{2},\\d{3}(\\.\\d+))");
@@ -296,8 +295,8 @@ public final class MorningTask implements HistoricalHandler {
                     Matcher m = p.matcher(line);
                     while (m.find()) {
                         String res = m.group(1).replace(",", "");
-                        System.out.println(res);
-                        System.out.println("XIN0U" + "\t" + res);
+                        pr(res);
+                        pr("XIN0U" + "\t" + res);
                         out.append("XIN0U" + "\t").append(res);
                         out.newLine();
                     }
@@ -340,7 +339,7 @@ public final class MorningTask implements HistoricalHandler {
                         }
                     }
                 }
-                System.out.println("l " + l);
+                pr("l " + l);
 
                 if (l.size() > 0) {
                     Utility.clearFile(bocOutput);
@@ -360,7 +359,7 @@ public final class MorningTask implements HistoricalHandler {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(bocOutput), "GBK"))) {
             while ((line = reader1.readLine()) != null) {
-                System.out.println(" outputting BOCFX " + line);
+                pr(" outputting BOCFX " + line);
                 Utility.simpleWrite(line, true);
             }
         } catch (IOException io) {
@@ -370,23 +369,23 @@ public final class MorningTask implements HistoricalHandler {
 
     @SuppressWarnings("unused")
     public static void handleHistoricalData(String date, double c) {
-        System.out.println(" handling historical data ");
+        pr(" handling historical data ");
 
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);
             Calendar cal = Calendar.getInstance();
             cal.setTime(dt);
-            System.out.println(" hour is " + cal.get(Calendar.HOUR_OF_DAY));
-            System.out.println(" Date " + dt.toString() + " close " + c);
+            pr(" hour is " + cal.get(Calendar.HOUR_OF_DAY));
+            pr(" Date " + dt.toString() + " close " + c);
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
-            System.out.println(sdf.format(dt));
-            System.out.println(" adding print line here ");
-            System.out.println(" zone ids " + ZoneId.getAvailableZoneIds());
+            pr(sdf.format(dt));
+            pr(" adding print line here ");
+            pr(" zone ids " + ZoneId.getAvailableZoneIds());
             ZoneId chinaZone = ZoneId.systemDefault();
-            System.out.println(" china zone " + chinaZone);
+            pr(" china zone " + chinaZone);
             LocalDateTime ldt = LocalDateTime.ofInstant(cal.toInstant(), chinaZone);
-            System.out.println(" ldt is " + ldt);
-            System.out.println(" time in ny " + ldt.atZone(ZoneId.of("EST")));
+            pr(" ldt is " + ldt);
+            pr(" time in ny " + ldt.atZone(ZoneId.of("EST")));
             //ZonedDateTime zdt =
 
             switch (cal.get(Calendar.HOUR_OF_DAY)) {
@@ -419,17 +418,17 @@ public final class MorningTask implements HistoricalHandler {
             //ap.connect( "127.0.0.1", 4001, 2,"" );
             ap.connect("127.0.0.1", 7496, 2, "");
             connectionStatus = true;
-            System.out.println(" connection status is true ");
+            pr(" connection status is true ");
             l.countDown();
         } catch (IllegalStateException ex) {
-            System.out.println(" illegal state exception caught ");
+            pr(" illegal state exception caught ");
         }
 
         if (!connectionStatus) {
-            System.out.println(" using port 4001 ");
+            pr(" using port 4001 ");
             ap.connect("127.0.0.1", 4001, 2, "");
             l.countDown();
-            System.out.println(" Latch counted down " + LocalTime.now());
+            pr(" Latch counted down " + LocalTime.now());
         }
 
         try {
@@ -437,7 +436,7 @@ public final class MorningTask implements HistoricalHandler {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        System.out.println(" Time after latch released " + LocalTime.now());
+        pr(" Time after latch released " + LocalTime.now());
         getFXDetailed(ap);
         getUSPricesAfterMarket(ap);
     }
@@ -456,7 +455,7 @@ public final class MorningTask implements HistoricalHandler {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
         String formatTime = lt.format(dtf);
 
-        System.out.println(" format time " + formatTime);
+        pr(" format time " + formatTime);
 
         ap.reqHistoricalDataSimple(generateReqId(c), this, c, formatTime, 2, Types.DurationUnit.DAY,
                 Types.BarSize._1_hour, Types.WhatToShow.MIDPOINT, false);
@@ -475,7 +474,7 @@ public final class MorningTask implements HistoricalHandler {
             c.exchange("SMART");
             c.currency("USD");
 
-            System.out.println(" etf is " + ticker);
+            pr(" etf is " + ticker);
 
             LocalDateTime lt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
@@ -514,14 +513,14 @@ public final class MorningTask implements HistoricalHandler {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 t = LocalDate.parse(al1.get(0));
-                System.out.println(" current t is " + t);
+                pr(" current t is " + t);
             }
         } catch (IOException ex) {
             ex.printStackTrace();
         }
 
         final String dateString = t.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-        System.out.println(" date is " + dateString);
+        pr(" date is " + dateString);
 
         String name = "SH#000001.txt";
         String line;
@@ -594,9 +593,9 @@ public final class MorningTask implements HistoricalHandler {
 
     @Override
     public void handleHist(String name, String date, double open, double high, double low, double close) {
-        //System.out.println(" FX ");
+        //pr(" FX ");
 
-        //System.out.println(" handle hist name " + name);
+        //pr(" handle hist name " + name);
 
         if (name.equals("USD")) {
 
@@ -607,19 +606,19 @@ public final class MorningTask implements HistoricalHandler {
                 ZoneId nyZone = ZoneId.of("America/New_York");
                 LocalDateTime ldt = LocalDateTime.ofInstant(dt.toInstant(), chinaZone);
                 ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
-                //System.out.println(" zdt " + zdt);
+                //pr(" zdt " + zdt);
 
                 switch (zdt.getHour()) {
                     // hk time 14:00 (13:59)
                     case 13:
-                        System.out.println(" Date " + ldt.toString() + " HK noon " + close);
+                        pr(" Date " + ldt.toString() + " HK noon " + close);
                         Utility.simpleWrite("HK NOON" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                                 + "\t" + zdt.getHour(), false);
                         break;
 
                     // hk time 17:00 (16:59)
                     case 16:
-                        System.out.println(" Date " + ldt.toString() + " HK close " + close);
+                        pr(" Date " + ldt.toString() + " HK close " + close);
                         Utility.simpleWrite("HK CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                                 + "\t" + zdt.getHour(), true);
                         break;
@@ -628,7 +627,7 @@ public final class MorningTask implements HistoricalHandler {
                 switch (zdt.withZoneSameInstant(nyZone).getHour()) {
                     // NY time 15:59 (could be HK time 4:59 (winter) or 3:59 (summer)
                     case 15:
-                        System.out.println(" Date " + ldt.toString() + " US close " + close);
+                        pr(" Date " + ldt.toString() + " US close " + close);
                         Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                                 + "\t" + zdt.getHour(), true);
 
@@ -654,7 +653,7 @@ public final class MorningTask implements HistoricalHandler {
 
             usAfterClose.get(name).put(nyTime, close);
             if (nyTime.toLocalTime().equals(LocalTime.of(15, 55))) {
-                System.out.println(str(" US data 15 55 ", name, nyTime, chinadt, open, high, low, close));
+                pr(str(" US data 15 55 ", name, nyTime, chinadt, open, high, low, close));
             }
         }
     }
@@ -662,9 +661,9 @@ public final class MorningTask implements HistoricalHandler {
     @Override
     public void actionUponFinish(String name) {
         if (!name.equals("USD")) {
-            System.out.println(str(name, "is finished "));
-            usAfterClose.forEach((key, value) -> System.out.println(str(key, value.lastEntry())));
+            pr(str(name, "is finished "));
+            usAfterClose.forEach((key, value) -> pr(str(key, value.lastEntry())));
         }
-        System.out.println(" data is finished ");
+        pr(" data is finished ");
     }
 }

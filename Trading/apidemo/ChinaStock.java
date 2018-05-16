@@ -44,8 +44,7 @@ import static java.lang.System.out;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static utility.Utility.maxGen;
-import static utility.Utility.minGen;
+import static utility.Utility.*;
 
 public final class ChinaStock extends JPanel {
 
@@ -247,8 +246,8 @@ public final class ChinaStock extends JPanel {
             listNameSZ = weightMap.entrySet().stream().filter(s -> !s.getKey().startsWith("sh"))
                     .map(Map.Entry::getKey).collect(joining(","));
 
-            //System.out.println( " sh size " + listNameSH.si)
-            //System.out.println( " listnames in Chinastock " + listNames);
+            //pr( " sh size " + listNameSH.si)
+            //pr( " listnames in Chinastock " + listNames);
             symbolNames = weightMap.keySet().stream().collect(toList());
             List<Double> weights = weightMap.values().stream().collect(toList());
         } catch (IOException ex) {
@@ -535,7 +534,7 @@ public final class ChinaStock extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (SwingUtilities.isRightMouseButton(e)) {
-                    System.out.println(" setting sectors ");
+                    pr(" setting sectors ");
                     setIndustryFilter("板块");
                 }
             }
@@ -581,7 +580,7 @@ public final class ChinaStock extends JPanel {
         computeButton.addActionListener((ActionEvent al) -> {
 
             if (computeButton.isSelected()) {
-                //System.out.println(" begin T ");
+                //pr(" begin T ");
                 ftes = Executors.newScheduledThreadPool(10);
                 //ftes.scheduleAtFixedRate(ChinaCompute.getChinaCompute(), 0, 5, TimeUnit.SECONDS);
 
@@ -589,20 +588,20 @@ public final class ChinaStock extends JPanel {
                 ftes.scheduleAtFixedRate(ChinaStock::pureRefreshTable, 5, 30, TimeUnit.SECONDS);
 
 
-                //System.out.println(" computeing graph industry ");
+                //pr(" computeing graph industry ");
                 ftes.scheduleAtFixedRate(GraphIndustry::compute, 0, 1000, TimeUnit.MILLISECONDS);
 
                 //above is tested
 
 
-                //System.out.println(" refreshing chinagraphindistry ");
+                //pr(" refreshing chinagraphindistry ");
                 ftes.scheduleAtFixedRate(ChinaGraphIndustry::refresh, 0, 3000, TimeUnit.MILLISECONDS);
 
-                //System.out.println(" ChinaSizeRatio.computeSizeRatio ");
+                //pr(" ChinaSizeRatio.computeSizeRatio ");
                 ftes.scheduleAtFixedRate(ChinaSizeRatio::computeSizeRatio, 0, 1, TimeUnit.SECONDS);
 
 
-                //System.out.println(" ChinaIndex.computeAll ");
+                //pr(" ChinaIndex.computeAll ");
 
                 ftes.scheduleAtFixedRate(ChinaIndex::computeAll, 0, 5, TimeUnit.SECONDS);
 
@@ -623,7 +622,7 @@ public final class ChinaStock extends JPanel {
                 }, 0, 500, TimeUnit.MILLISECONDS);
 
 
-                //System.out.println(" end computeT ");
+                //pr(" end computeT ");
             } else {
                 ftes.shutdown();
                 out.println("computing stopped" + LocalTime.now());
@@ -941,7 +940,7 @@ public final class ChinaStock extends JPanel {
                     filters.add(RowFilter.regexFilter(industryNameMap.get(selectedNameStock), INDUSTRYCOL));
                 }
 
-                System.out.println(" filters are " + filters.toString());
+                pr(" filters are " + filters.toString());
                 sorter.setRowFilter(RowFilter.andFilter(filters));
                 filterOn = true;
             } else {
@@ -1129,14 +1128,14 @@ public final class ChinaStock extends JPanel {
             if (sector != null && !sector.equals("")) {
                 SwingUtilities.invokeLater(() -> {
                     if (benchFilterOn) {
-                        //System.out.println( " bench filter on BENCH is " + selectedBench);
+                        //pr( " bench filter on BENCH is " + selectedBench);
                         List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
                         filters.add(RowFilter.regexFilter(sector, INDUSTRYCOL));
                         filters.add(RowFilter.regexFilter(selectedBench, BENCHCOL));
                         sorter.setRowFilter(RowFilter.andFilter(filters));
                         //benchFilterOn=true;
                     } else {
-                        //System.out.println( " bench filter OFF ");
+                        //pr( " bench filter OFF ");
                         sorter.setRowFilter(RowFilter.regexFilter(sector, INDUSTRYCOL));
                     }
                     filterOn = true;
@@ -1144,10 +1143,10 @@ public final class ChinaStock extends JPanel {
                 });
             }
         } catch (Exception ex) {
-            System.out.println(" RESTORING SORTER ");
+            pr(" RESTORING SORTER ");
             //noinspection unchecked
             sorter = (TableRowSorter<BarModel_STOCK>) tab.getRowSorter();
-            System.out.println(" sector WRONG is " + Optional.of(sector).orElse(""));
+            pr(" sector WRONG is " + Optional.of(sector).orElse(""));
             filterOn = false;
             ex.printStackTrace();
         }

@@ -25,7 +25,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> hkPriceBar
             = new ConcurrentHashMap<>();
 
-    public static volatile ConcurrentHashMap<String, Double> hkPreviousCloseMap = new ConcurrentHashMap<>();
+    static volatile ConcurrentHashMap<String, Double> hkPreviousCloseMap = new ConcurrentHashMap<>();
 
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection")
     private static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> hkVolMap
@@ -123,7 +123,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
     @Override
     public void handlePrice(TickType tt, String name, double price, LocalDateTime ldt) {
         LocalTime t = ldt.toLocalTime();
-        if(tt == TickType.LAST) {
+        if (tt == TickType.LAST) {
             HKStock.hkCurrPrice.put(name, price);
 
             if (hkPriceBar.containsKey(name)) {
@@ -133,15 +133,15 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
                     hkPriceBar.get(name).put(t, new SimpleBar(price));
                 }
             }
-        } else if(tt == TickType.CLOSE) {
-            hkPreviousCloseMap.put(name,price);
+        } else if (tt == TickType.CLOSE) {
+            hkPreviousCloseMap.put(name, price);
         }
     }
 
     @Override
     public void handleVol(String name, double vol, LocalDateTime ldt) {
         LocalTime t = ldt.toLocalTime();
-        HKStock.hkVol.put(name,vol);
+        HKStock.hkVol.put(name, vol);
         if (hkVolMap.containsKey(name)) {
             hkVolMap.get(name).put(t, vol);
         }
@@ -158,7 +158,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
         if (ld.equals(LocalDate.now())) {
             //System.out.println(" CORRECT name ld lt open " + name + " " + ld + " " + lt + " " + open);
             hkPriceBar.get(name).put(lt, new SimpleBar(open, high, low, close));
-            if(name.equals("700")) {
+            if (name.equals("700")) {
                 System.out.println(" outputting tencent");
                 Utility.simpleWriteToFile(Utility.getStrTabbed(lt, open, high, low, close), true,
                         testOutput);

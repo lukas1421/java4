@@ -16,8 +16,8 @@ import java.util.*;
 import java.util.List;
 
 public class HKStock extends JPanel {
-    public static volatile Map<String, Double> hkCurrPrice = new HashMap<>();
-    public static volatile Map<String, Double> hkVol = new HashMap<>();
+    static volatile Map<String, Double> hkCurrPrice = new HashMap<>();
+    static volatile Map<String, Double> hkVol = new HashMap<>();
 
     private static GraphBar graph1 = new GraphBar();
     private static GraphBar graph2 = new GraphBar();
