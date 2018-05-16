@@ -30,6 +30,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
@@ -47,6 +48,7 @@ public final class ChinaMain implements IConnectionHandler {
         NewLookAndFeel.register();
     }
 
+    public static AtomicInteger GLOBAL_REQ_ID = new AtomicInteger(30000);
     private final IConnectionConfiguration m_connectionConfiguration;
     public static volatile Map<Integer, Request> globalRequestMap = new ConcurrentHashMap<>();
     public static ChinaMain INSTANCE;
@@ -100,12 +102,15 @@ public final class ChinaMain implements IConnectionHandler {
     private volatile AnaCompute anacompute = new AnaCompute();
     private volatile StratCompute stratcompute = new StratCompute();
     private final ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
+
     public ArrayList<String> accountList() {
         return m_acctList;
     }
+
     public static ApiController controller() {
         return M_CONTROLLER;
     }
+
     public static void main(String[] args) {
         start(new ChinaMain(new DefaultConnectionConfiguration()));
     }

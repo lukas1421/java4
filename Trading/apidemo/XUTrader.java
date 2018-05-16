@@ -32,7 +32,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
 import static apidemo.TradingConstants.ftseIndex;
@@ -1326,11 +1325,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
         NavigableMap<LocalDateTime, SimpleBar> futPriceMap = futData.get(ibContractToFutType(activeFuture));
         LocalDateTime ytdCloseTime = LocalDateTime.of(TDate, LocalTime.of(15, 0));
-        NavigableMap<LocalDateTime, SimpleBar> filteredPriceMap = futPriceMap.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ytdCloseTime))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                        (a, b) -> a, ConcurrentSkipListMap::new));
-        int currPercentile = getPercentileForLast(filteredPriceMap);
+
+//        NavigableMap<LocalDateTime, SimpleBar> filteredPriceMap = futPriceMap.entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ytdCloseTime))
+//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+//                        (a, b) -> a, ConcurrentSkipListMap::new));
+
+        int currPercentile = getPercentileForLast(futPriceMap);
         double currentFut;
         double pd = 0.0;
 
@@ -1342,7 +1343,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (absLotsTraded <= maxOvernightTrades && overnightClosingOrders.get() <= 5) {
             if (now.toLocalTime().isBefore(LocalTime.of(5, 0)) &&
                     now.toLocalTime().isAfter(LocalTime.of(4, 40))) {
-                if (pd > PD_UP_THRESH && canShortGlobal.get() && currDelta > DELTA_LOW_LIMIT) {
+                if (pd > PD_UP_THRESH && canShortGlobal.get() && currDelta > DELTA_LOW_LIMIT
+                        && currPercentile > 70) {
                     double candidatePrice = askMap.getOrDefault(ibContractToFutType((activeFuture)), 0.0);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         int id = autoTradeID.incrementAndGet();
@@ -1355,7 +1357,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         overnightClosingOrders.incrementAndGet();
                     }
-                } else if (pd < PD_DOWN_THRESH && canLongGlobal.get() && currDelta < DELTA_HIGH_LIMIT) {
+                } else if (pd < PD_DOWN_THRESH && canLongGlobal.get() && currDelta < DELTA_HIGH_LIMIT
+                        && currPercentile < 30) {
                     double candidatePrice = bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         int id = autoTradeID.incrementAndGet();
@@ -1379,7 +1382,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         String outputString = str("||O/N||", now.format(DateTimeFormatter.ofPattern("M-d H:mm:ss")),
                 "||O/N trades done", absLotsTraded, "", "||O/N Delta: ", netTradedDelta,
                 "||current percentile ", currPercentile, "||PD: ", pd,
-                "||curr P: ", filteredPriceMap.lastEntry().getValue().getClose(),
+                "||curr P: ", futPriceMap.lastEntry().getValue().getClose(),
                 "||index: ", Math.round(100d * indexPrice) / 100d,
                 "||BID ASK ", bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
                 askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
@@ -1598,7 +1601,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private void loadXU() {
-        apcon.getSGXA50Historical2(30000, this);
+        pr("in loadXU");
+        ChinaMain.GLOBAL_REQ_ID.addAndGet(5);
+        apcon.getSGXA50Historical2(ChinaMain.GLOBAL_REQ_ID.get(), this);
+        //apcon.getSGXA50Historical2(30000, this);
     }
 
     private static boolean checkIfOrderPriceMakeSense(double p) {
@@ -1632,6 +1638,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @Override
     public void handleHist(String name, String date, double open, double high, double low, double close) {
+        //pr("handle hist ", name, date, open, close);
         LocalDate currDate = LocalDate.now();
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);

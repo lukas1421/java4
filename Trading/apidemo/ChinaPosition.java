@@ -634,7 +634,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
         ChinaMain.controller().reqPositions(new FutPositionHandler());
         ChinaMain.controller().reqExecutions(new ExecutionFilter(), new FutPosTradesHandler());
-        ChinaMain.controller().getSGXA50Historical2(40000, this);
+        ChinaMain.GLOBAL_REQ_ID.addAndGet(5);
+        ChinaMain.controller().getSGXA50Historical2(ChinaMain.GLOBAL_REQ_ID.get(), this);
 
 //        ChinaPosition.xuBotPos = ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.summingInt(e
 //                -> ((Trade) e.getValue()).getSize()));
