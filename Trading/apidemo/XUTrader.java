@@ -1030,7 +1030,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 1.0);
 
         SimpleBar lastBar = new SimpleBar(price5.lastEntry().getValue());
-        double prevPrice = activeLastMinuteMap.size() <= 2 ? freshPrice : activeLastMinuteMap.lowerEntry(nowMilli).getValue();
+        double prevPrice = activeLastMinuteMap.size() <= 2 ? freshPrice : activeLastMinuteMap
+                .lowerEntry(nowMilli).getValue();
         lastBar.add(freshPrice);
         NavigableMap<LocalDateTime, Double> sma = getMAGen(price5, currentMAPeriod);
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
