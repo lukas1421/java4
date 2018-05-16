@@ -50,7 +50,7 @@ public class XUOvernightTradeExecHandler implements ApiController.ITradeReportHa
 
     @Override
     public void tradeReportEnd() {
-        System.out.println(" OVERNIGHT trade report ended ");
+        //System.out.println(" OVERNIGHT trade report ended ");
     }
 
     @Override

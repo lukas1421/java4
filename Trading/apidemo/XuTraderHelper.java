@@ -27,6 +27,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static apidemo.TradingConstants.ftseIndex;
+import static java.lang.System.out;
 import static utility.Utility.str;
 
 public class XuTraderHelper {
@@ -347,6 +348,16 @@ public class XuTraderHelper {
             XUTrader.canLongGlobal.set(true);
             XUTrader.canShortGlobal.set(true);
         }
+    }
+
+    public static void connectToTWS() {
+        out.println(" trying to connect");
+        try {
+            XUTrader.apcon.connect("127.0.0.1", 7496, 101, "");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        XUTrader.apcon.client().reqIds(-1);
     }
 
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
