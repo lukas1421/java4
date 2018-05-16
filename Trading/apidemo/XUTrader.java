@@ -843,7 +843,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (currDelta > BULLISH_DELTA_TARGET) {
             candidate = (int) Math.floor((currDelta - BULLISH_DELTA_TARGET) / (price * fx));
         } else if (currDelta < BEARISH_DELTA_TARGET) {
-            candidate = (int) Math.floor((BULLISH_DELTA_TARGET - currDelta) / (price * fx));
+            candidate = (int) Math.floor((BEARISH_DELTA_TARGET - currDelta) / (price * fx));
         }
         return Math.max(1, Math.min(candidate, 3));
     }
