@@ -339,7 +339,7 @@ public class HistChinaStocks extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = (int)Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 5;
+                d.height = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 5;
                 d.width = 1900;
                 return d;
             }
@@ -351,7 +351,8 @@ public class HistChinaStocks extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = (int)Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 5;;
+                d.height = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 5;
+                ;
                 d.width = 1900;
                 return d;
             }
@@ -361,7 +362,8 @@ public class HistChinaStocks extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = (int)Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 5;;
+                d.height = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 5;
+                ;
                 d.width = 1900;
                 return d;
             }
@@ -371,7 +373,7 @@ public class HistChinaStocks extends JPanel {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = (int)Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 5;
+                d.height = (int) Toolkit.getDefaultToolkit().getScreenSize().getHeight() / 5;
                 d.width = 1900;
                 return d;
             }
@@ -1617,7 +1619,6 @@ public class HistChinaStocks extends JPanel {
                 totalTradingCostMap.put(name, fx * thisWeekTradingCost);
             }
 
-
             switch (col) {
                 case 0:
                     return name;
@@ -1777,6 +1778,5 @@ public class HistChinaStocks extends JPanel {
             }
         }
     }
-
 }
 

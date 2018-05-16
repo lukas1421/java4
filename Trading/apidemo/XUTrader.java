@@ -838,6 +838,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    // used for flatten long or short
     private static int sizeToFlatten(double price, double fx, double currDelta) {
         int candidate = 1;
         if (currDelta > BULLISH_DELTA_TARGET) {
@@ -848,6 +849,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return Math.max(1, Math.min(candidate, 3));
     }
 
+    //adjust delta here.
     private static int getPercTraderSize(double price, double fx, MASentiment senti, Direction d, double currDelta) {
         int candidate = 1;
         if (senti == MASentiment.Directionless || d == Direction.Flat) return 1;
