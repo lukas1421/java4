@@ -1036,17 +1036,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
 
         pr(nowMilli, " Flatten Trader Delta: "
-                , r(currDelta), "prev Price ", prevPrice, " price ", freshPrice, " ma ", maLast);
+                , r(currDelta), "prev Price ", prevPrice, " price ", freshPrice, " ma ", r(maLast));
 
         if (currDelta > BULLISH_DELTA_TARGET && prevPrice > maLast && freshPrice <= maLast
-                && perc > 30 && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
+                && perc > 70 && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FLATTEN_LONG));
             outputOrderToAutoLog(str(o.orderId(), "Flatten Long ", globalIdOrderMap.get(id)));
         } else if (currDelta < BEARISH_DELTA_TARGET && prevPrice < maLast && freshPrice >= maLast
-                && perc < 70 && pd < PD_UP_THRESH) { // no buy at premium or at top
+                && perc < 30 && pd < PD_UP_THRESH) { // no buy at premium or at top
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
@@ -1892,9 +1892,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             updateLog(" avg sell " + avgSell);
             updateLog(" buy pnl " + buyTradePnl);
             updateLog(" sell pnl " + sellTradePnl);
-            updateLog(" net pnl " + netTradePnl);
+            updateLog(" net pnl " + r(netTradePnl));
             updateLog(" net commission " + netTotalCommissions);
             updateLog(" MTM+Trade " + (netTradePnl + mtmPnl));
+            updateLog(" Delta " + r(ChinaPosition.getNetPtfDelta()));
         });
     }
 
