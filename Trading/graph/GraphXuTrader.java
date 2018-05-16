@@ -308,31 +308,38 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             if (XUTrader.showTrades) {
                 if (trademap.containsKey(lt)) {
                     TradeBlock tb = trademap.get(lt);
-                    if (tb.getSizeAll() > 0) {
+                    if (tb.allBuys()) { //tb.getSizeAll() > 0
                         g.setColor(Color.blue);
                         int yCord = getY(tb.getAveragePrice());
                         Polygon p = new Polygon(new int[]{x - 4, x, x + 4}, new int[]{yCord + 5, yCord, yCord + 5}, 3);
                         g.drawPolygon(p);
                         g.fillPolygon(p);
-                    } else if (tb.getSizeAll() < 0) {
+                        //g.drawString(tb.getSizeAll() + "", x + 1, yCord + 10);
+                    } else if (tb.allSells()) { //tb.getSizeAll() < 0
                         g.setColor(Color.black);
                         int yCord = getY(tb.getAveragePrice());
                         Polygon p = new Polygon(new int[]{x - 4, x, x + 4}, new int[]{yCord - 5, yCord, yCord - 5}, 3);
                         g.drawPolygon(p);
                         g.fillPolygon(p);
+                        //g.drawString(tb.getSizeAll() + "", x + 1, yCord - 10);
                     } else {
                         // buy and sell cancel
                         g.setColor(Color.blue);
                         int yCordBot = getY(tb.getBotAveragePrice());
-                        Polygon pBot = new Polygon(new int[]{x - 4, x, x + 4}, new int[]{yCordBot + 5, yCordBot, yCordBot + 5}, 3);
+                        Polygon pBot = new Polygon(new int[]{x - 4, x, x + 4},
+                                new int[]{yCordBot + 5, yCordBot, yCordBot + 5}, 3);
                         g.drawPolygon(pBot);
                         g.fillPolygon(pBot);
+                        //g.drawString(tb.getSizeBot() + "", x + 1, yCordBot + 10);
+
 
                         g.setColor(Color.black);
                         int yCordSold = getY(tb.getSoldAveragePrice());
-                        Polygon pSld = new Polygon(new int[]{x - 4, x, x + 4}, new int[]{yCordSold - 5, yCordSold, yCordSold - 5}, 3);
+                        Polygon pSld = new Polygon(new int[]{x - 4, x, x + 4},
+                                new int[]{yCordSold - 5, yCordSold, yCordSold - 5}, 3);
                         g.drawPolygon(pSld);
                         g.fillPolygon(pSld);
+                        //g.drawString(tb.getSizeSold() + "", x + 1, yCordBot - 10);
                     }
                 }
             }

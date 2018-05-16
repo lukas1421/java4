@@ -464,12 +464,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
             }, 0, 1, TimeUnit.MINUTES);
 
-            ses.scheduleAtFixedRate(() -> {
-                ChinaPosition.getNetPtfDelta();
-                ChinaPosition.getStockPtfDelta();
-                pr("fut delta ", getFutDelta());
-
-            }, 0, 10, TimeUnit.SECONDS);
+//            ses.scheduleAtFixedRate(() -> {
+//                ChinaPosition.getNetPtfDelta();
+//                ChinaPosition.getStockPtfDelta();
+//                //pr("fut delta ", getFutDelta());
+//            }, 0, 10, TimeUnit.SECONDS);
         });
 
         JButton stopComputeButton = new JButton("Stop Processing");
@@ -728,10 +727,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     static double getFutDelta() {
-        return currentPosMap.entrySet().stream().peek(Utility::pr)
+        return currentPosMap.entrySet().stream()
                 .mapToDouble(e -> e.getValue() * futPriceMap.getOrDefault(e.getKey(), SinaStock.FTSE_OPEN)
                         * ChinaPosition.fxMap.getOrDefault(e.getKey().getTicker(), 1.0))
-                .peek(e -> pr(" get fut delta peek ", e))
                 .sum();
     }
 
@@ -840,6 +838,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    private static int sizeToFlatten(double price, double fx, double currDelta) {
+        int candidate = 1;
+        if (currDelta > BULLISH_DELTA_TARGET) {
+            candidate = (int) Math.floor((currDelta - BULLISH_DELTA_TARGET) / (price * fx));
+        } else if (currDelta < BEARISH_DELTA_TARGET) {
+            candidate = (int) Math.floor((BULLISH_DELTA_TARGET - currDelta) / (price * fx));
+        }
+        return Math.max(1, Math.min(candidate, 3));
+    }
+
     private static int getPercTraderSize(double price, double fx, MASentiment senti, Direction d, double currDelta) {
         int candidate = 1;
         if (senti == MASentiment.Directionless || d == Direction.Flat) return 1;
@@ -928,10 +936,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int minBetweenPercOrders = percOrdersTotal == 0 ? 0 : 10;
         double currDelta = ChinaPosition.getNetPtfDelta();
         double currStockDelta = ChinaPosition.getStockPtfDelta();
-        if (currStockDelta == 0) {
-            pr(" stock delta 0 , returning ");
-            return;
-        }
+
 
         System.out.println(str("perc Trader status?", percentileTradeOn.get() ? "ON" : "OFF",
                 "T: ", nowMilli.toLocalTime().truncatedTo(ChronoUnit.SECONDS),
@@ -939,11 +944,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "accSize, deccSize, netSize", accSize, deccSize, netPercTrades,
                 "OrderT Trade T,next tradeT", lastPercOrderT.toLocalTime(), lastPercTradeT.toLocalTime(),
                 lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime(), "accAvg, DecAvg,",
-                avgAccprice, avgDeccprice, "CurrDelta: ", r(currDelta)));
+                avgAccprice, avgDeccprice, "CurrDelta: ", r(currDelta), "pd", r10000(pd)));
 
         //******************************************************************************************//
         if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
         if (!percentileTradeOn.get()) return;
+        if (currStockDelta == 0) {
+            pr(" stock delta 0 , returning ");
+            return;
+        }
         //*****************************************************************************************//
         if (timeDiffinMinutes(lastPercOrderT, nowMilli) >= minBetweenPercOrders) {
             if (perc < 30) {
@@ -958,7 +967,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     outputOrderToAutoLog(str(o.orderId(), "perc bid", globalIdOrderMap.get(id), " perc ", perc));
                 } else {
                     outputToAutoLog(currDelta < BULLISH_DELTA_TARGET ? "acc trades limit reached;"
-                            : " delta above LIMIT");
+                            : " perc: delta above LIMIT");
                 }
             } else if (perc > 70) {
                 if (currDelta > BEARISH_DELTA_TARGET) {
@@ -971,7 +980,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                     outputOrderToAutoLog(str(o.orderId(), "perc offer", globalIdOrderMap.get(id), "perc", perc));
                 } else {
-                    outputToAutoLog(currDelta > BEARISH_DELTA_TARGET ? "decc trades limit reached" : " delta below limit ");
+                    outputToAutoLog(currDelta > BEARISH_DELTA_TARGET ? "decc trades limit reached" : " " +
+                            "perc: delta below limit ");
                 }
             } else {
                 if (currDelta > DELTA_HIGH_LIMIT && pd > PD_DOWN_THRESH) {
@@ -995,6 +1005,39 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
             }
         }
+    }
+
+    /**
+     * Once touch the MA, flatten position into bull bear range
+     *
+     * @param nowMilli
+     * @param freshPrice
+     */
+    public static void flattenTrader(LocalDateTime nowMilli, double freshPrice) {
+        NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
+        if (price5.size() <= 1 || activeLastMinuteMap.size() <= 1) return;
+        double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 1.0);
+
+        SimpleBar lastBar = new SimpleBar(price5.lastEntry().getValue());
+        double prevPrice = activeLastMinuteMap.size() <= 2 ? freshPrice : activeLastMinuteMap.lowerEntry(nowMilli).getValue();
+        lastBar.add(freshPrice);
+        NavigableMap<LocalDateTime, Double> sma;
+        sma = getMAGen(price5, currentMAPeriod);
+        double currDelta = ChinaPosition.getNetPtfDelta();
+        double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
+
+        if (currDelta > BULLISH_DELTA_TARGET && prevPrice > maLast && freshPrice <= maLast) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FLATTEN_LONG));
+        } else if (currDelta < BEARISH_DELTA_TARGET && prevPrice < maLast && freshPrice >= maLast) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeBidLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FLATTEN_SHORT));
+        }
+
     }
 
     /**
@@ -1189,8 +1232,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     }
                     Order o = placeOfferLimit(candidatePrice,
                             trimProposedPosition(determinePDPercFactor(nowMilli.toLocalTime(), pd,
-                                    Direction.Short, percentile) * determineTimeDiffFactor(),
-                                    currPos));
+                                    Direction.Short, percentile) * determineTimeDiffFactor(), currPos));
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         maOrderMap.put(nowMilli, o);
                         maSignals.incrementAndGet();
@@ -1206,7 +1248,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     }
                 }
                 if (candidatePrice != 0.0) {
-                    String outputMsg = str("MA TRIGGER CONDITION|| ", nowMilli.truncatedTo(ChronoUnit.MINUTES),
+                    String outputMsg = str("MA TRIGGER CONDITION|| ",
+                            nowMilli.truncatedTo(ChronoUnit.MINUTES),
                             "|SMA:", Math.round(100d * maLast) / 100d,
                             "|PD", Math.round(pd * 10000d) / 10000d,
                             "|Index", Math.round(100d * indexPrice) / 100d,

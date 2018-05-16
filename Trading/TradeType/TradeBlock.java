@@ -53,6 +53,23 @@ public final class TradeBlock {
         return mergeList.stream().mapToInt(t -> ((Trade) t).getSize()).sum();
     }
 
+//    public int getSizeBot() {
+//        return mergeList.stream().filter(t -> ((Trade) t).getSize() > 0).mapToInt(t->((Trade)t).getSize()).sum();
+//    }
+//    public int getSizeSold() {
+//        return mergeList.stream().filter(t -> ((Trade) t).getSize() < 0).mapToInt(t->((Trade)t).getSize()).sum();
+//    }
+
+    public boolean allBuys() {
+        return (int) mergeList.stream().filter(t -> ((Trade) t).getSize() > 0).count() ==
+                mergeList.size();
+    }
+
+    public boolean allSells() {
+        return (int) mergeList.stream().filter(t -> ((Trade) t).getSize() < 0).count() ==
+                mergeList.size();
+    }
+
     public void clear() {
         mergeList = Collections.synchronizedList(new LinkedList<>());
     }

@@ -9,6 +9,8 @@ public enum AutoOrderType {
     PERC_ACC,
     PERC_DECC,
     FLATTEN,
+    FLATTEN_LONG,
+    FLATTEN_SHORT,
     DRIFT,
     UNKNOWN
 }

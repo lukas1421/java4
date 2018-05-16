@@ -24,6 +24,15 @@ public class OrderAugmented {
         finalActionTime = LocalDateTime.MIN;
     }
 
+    public OrderAugmented(LocalDateTime t, Order o, AutoOrderType tt) {
+        orderTime = t;
+        order = o;
+        msg = "";
+        tradeType = tt;
+        status = OrderStatus.Unknown;
+        finalActionTime = LocalDateTime.MIN;
+    }
+
     public OrderAugmented() {
         orderTime = LocalDateTime.MIN;
         order = new Order();
