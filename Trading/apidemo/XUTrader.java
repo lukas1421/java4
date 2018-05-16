@@ -1015,6 +1015,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     public static void flattenTrader(LocalDateTime nowMilli, double freshPrice) {
         double currDelta = ChinaPosition.getNetPtfDelta();
+        int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
+        double pd = getPD(freshPrice);
         if (currDelta < BULLISH_DELTA_TARGET && currDelta > BEARISH_DELTA_TARGET) {
             pr(" Flatten trader: no need to flatten", r(currDelta));
             return;
@@ -1036,13 +1038,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         pr(nowMilli, " Flatten Trader Delta: "
                 , r(currDelta), "prev Price ", prevPrice, " price ", freshPrice, " ma ", maLast);
 
-        if (currDelta > BULLISH_DELTA_TARGET && prevPrice > maLast && freshPrice <= maLast) {
+        if (currDelta > BULLISH_DELTA_TARGET && prevPrice > maLast && freshPrice <= maLast
+                && perc > 30 && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FLATTEN_LONG));
             outputOrderToAutoLog(str(o.orderId(), "Flatten Long ", globalIdOrderMap.get(id)));
-        } else if (currDelta < BEARISH_DELTA_TARGET && prevPrice < maLast && freshPrice >= maLast) {
+        } else if (currDelta < BEARISH_DELTA_TARGET && prevPrice < maLast && freshPrice >= maLast
+                && perc < 70 && pd < PD_UP_THRESH) { // no buy at premium or at top
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
