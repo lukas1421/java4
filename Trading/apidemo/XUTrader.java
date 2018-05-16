@@ -1014,28 +1014,40 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param freshPrice
      */
     public static void flattenTrader(LocalDateTime nowMilli, double freshPrice) {
+        double currDelta = ChinaPosition.getNetPtfDelta();
+        if (currDelta < BULLISH_DELTA_TARGET && currDelta > BEARISH_DELTA_TARGET) {
+            pr(" Flatten trader: no need to flatten");
+            return;
+        }
+
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
-        if (price5.size() <= 1 || activeLastMinuteMap.size() <= 1) return;
+        if (price5.size() <= 1 || activeLastMinuteMap.size() <= 1) {
+            pr(" Flattentrader: active map size < 1, return");
+            return;
+        }
         double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 1.0);
 
         SimpleBar lastBar = new SimpleBar(price5.lastEntry().getValue());
         double prevPrice = activeLastMinuteMap.size() <= 2 ? freshPrice : activeLastMinuteMap.lowerEntry(nowMilli).getValue();
         lastBar.add(freshPrice);
-        NavigableMap<LocalDateTime, Double> sma;
-        sma = getMAGen(price5, currentMAPeriod);
-        double currDelta = ChinaPosition.getNetPtfDelta();
+        NavigableMap<LocalDateTime, Double> sma = getMAGen(price5, currentMAPeriod);
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
+
+        pr(nowMilli, " Flatten Trader Delta: "
+                , currDelta, "prev Price ", prevPrice, " price ", freshPrice, " ma ", maLast);
 
         if (currDelta > BULLISH_DELTA_TARGET && prevPrice > maLast && freshPrice <= maLast) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FLATTEN_LONG));
+            outputOrderToAutoLog(str(o.orderId(), "Flatten Long ", globalIdOrderMap.get(id)));
         } else if (currDelta < BEARISH_DELTA_TARGET && prevPrice < maLast && freshPrice >= maLast) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FLATTEN_SHORT));
+            outputOrderToAutoLog(str(o.orderId(), "Flatten Short ", globalIdOrderMap.get(id)));
         }
 
     }
