@@ -1044,15 +1044,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FLATTEN_LONG));
-            outputOrderToAutoLog(str(o.orderId(), "Flatten Long ", globalIdOrderMap.get(id)));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.SELL_FLATTEN));
+            outputOrderToAutoLog(str(o.orderId(), " Sell Flatten ", globalIdOrderMap.get(id)));
         } else if (currDelta < BEARISH_DELTA_TARGET && prevPrice < maLast && freshPrice >= maLast
                 && perc < 30 && pd < PD_UP_THRESH) { // no buy at premium or at top
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FLATTEN_SHORT));
-            outputOrderToAutoLog(str(o.orderId(), "Flatten Short ", globalIdOrderMap.get(id)));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.BUY_FLATTEN));
+            outputOrderToAutoLog(str(o.orderId(), " Buy Flatten ", globalIdOrderMap.get(id)));
         }
     }
 
