@@ -128,8 +128,9 @@ public class XuTraderHelper {
         o.lmtPrice(p);
         o.orderType(OrderType.LMT);
         o.totalQuantity(quantity);
-        o.tif(Types.TimeInForce.GTC);
+        o.tif(Types.TimeInForce.DAY);
         o.outsideRth(true);
+        o.allOrNone(true);
         return o;
     }
 
@@ -142,7 +143,8 @@ public class XuTraderHelper {
         o.orderType(OrderType.LMT);
         o.totalQuantity(quantity);
         o.outsideRth(true);
-        o.tif(Types.TimeInForce.GTC);
+        o.tif(Types.TimeInForce.DAY);
+        o.allOrNone(true);
         return o;
     }
 

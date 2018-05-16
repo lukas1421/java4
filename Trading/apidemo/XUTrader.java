@@ -76,7 +76,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "Trading Cycle Ends"));
     });
     private static final double margin = 2.5;
-    private static final int inv_trade_quantity = 1;
+    private static final int inv_trade_quantity = 2;
     private static AtomicBoolean inventoryTraderOn = new AtomicBoolean(false);
 
     //overnight trades
@@ -948,7 +948,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 avgAccprice, avgDeccprice, "CurrDelta: ", r(currDelta), "pd", r10000(pd)));
 
         //******************************************************************************************//
-        if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
+        //if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
         if (!percentileTradeOn.get()) return;
         if (currStockDelta == 0) {
             pr(" stock delta 0 , returning ");
