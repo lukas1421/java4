@@ -1430,14 +1430,12 @@ public class ApiController implements EWrapper {
                 } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
                     if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getTradeType())) {
                         pr(" flatten trade IOC cancelled, re-submit ");
-                        Order o = globalIdOrderMap.get(defaultID).getOrder();
 
-                        //XUTrader.flattenAggressively(o);
+                        XUTrader.flattenAggressively();
 
                         if (XUTrader.flattenEagerness == Eagerness.Passive) {
+                            pr(" in flatten order handler change to aggressive");
                             XUTrader.flattenEagerness = Eagerness.Aggressive;
-                        } else if (XUTrader.flattenEagerness == Eagerness.Aggressive) {
-                            XUTrader.flattenEagerness = Eagerness.VeryAggressive;
                         }
                     }
                 }

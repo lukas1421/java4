@@ -1019,7 +1019,32 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
 
-    public static void flattenAggressively(Order o) {
+    public static void flattenAggressively() {
+        //flatten immediately
+        LocalDateTime nowMilli = LocalDateTime.now();
+        double fx = ChinaPosition.fxMap.get("SGXA50");
+        double currDelta = ChinaPosition.getNetPtfDelta();
+        pr(" In Flattening aggressively ");
+        if (currDelta < BULLISH_DELTA_TARGET && currDelta > BEARISH_DELTA_TARGET) {
+            pr(" flatten aggressively no need, delta in line");
+            return;
+        }
+
+        if (currDelta > BULLISH_DELTA_TARGET) { //no sell at discount or at bottom
+            int id = autoTradeID.incrementAndGet();
+            double candidatePrice = bidMap.get(ibContractToFutType(activeFuture));
+            Order o = placeOfferLimitTIF(candidatePrice, sizeToFlatten(candidatePrice, fx, currDelta), Types.TimeInForce.IOC);
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FLATTEN_AGGRESSIVE));
+            outputOrderToAutoLog(str(o.orderId(), " AGGRESSIVE Sell Flatten ", globalIdOrderMap.get(id)));
+        } else if (currDelta < BEARISH_DELTA_TARGET) { // no buy at premium or at top
+            int id = autoTradeID.incrementAndGet();
+            double candidatePrice = askMap.get(ibContractToFutType(activeFuture));
+            Order o = placeBidLimitTIF(candidatePrice, sizeToFlatten(candidatePrice, fx, currDelta), Types.TimeInForce.IOC);
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FLATTEN_AGGRESSIVE));
+            outputOrderToAutoLog(str(o.orderId(), " AGGRESSIVE Buy Flatten ", globalIdOrderMap.get(id)));
+        }
 
     }
 
@@ -1062,29 +1087,25 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 && perc > 30 && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
             int id = autoTradeID.incrementAndGet();
 
-//            double candidatePrice = flattenEagerness == Eagerness.Aggressive ?
-//                    freshPrice : roundToXUPricePassive(maLast, Direction.Short);
-
-            double candidatePrice = (flattenEagerness == Eagerness.Passive) ? roundToXUPricePassive(maLast, Direction.Short) :
-                    (flattenEagerness == Eagerness.Aggressive ? freshPrice : bidMap.get(ibContractToFutType(activeFuture)));
+            double candidatePrice = (flattenEagerness == Eagerness.Passive) ? freshPrice :
+                    bidMap.get(ibContractToFutType(activeFuture));
 
             Order o = placeOfferLimitTIF(candidatePrice, sizeToFlatten(freshPrice, fx, currDelta), Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.SELL_FLATTEN));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Sell", AutoOrderType.FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Sell Flatten ", globalIdOrderMap.get(id)));
         } else if (currDelta < BEARISH_DELTA_TARGET && prevPrice < maLast && freshPrice >= maLast
                 && perc < 70 && pd < PD_UP_THRESH) { // no buy at premium or at top
             int id = autoTradeID.incrementAndGet();
 
-            double candidatePrice = (flattenEagerness == Eagerness.Passive) ? roundToXUPricePassive(maLast, Direction.Long) :
-                    (flattenEagerness == Eagerness.Aggressive ? freshPrice : askMap.get(ibContractToFutType(activeFuture)));
+            double candidatePrice = (flattenEagerness == Eagerness.Passive) ? freshPrice :
+                    askMap.get(ibContractToFutType(activeFuture));
 
             Order o = placeBidLimitTIF(candidatePrice, sizeToFlatten(freshPrice, fx, currDelta), Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.BUY_FLATTEN));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "BUY", AutoOrderType.FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Buy Flatten ", globalIdOrderMap.get(id)));
         }
-        //flattenEagerness = Eagerness.Passive;
     }
 
 
