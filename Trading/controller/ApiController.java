@@ -1423,12 +1423,22 @@ public class ApiController implements EWrapper {
                             orderState.status());
                     XuTraderHelper.outputToAutoLog(msg);
                     XuTraderHelper.outputPurelyOrders(msg);
+
+                    if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getTradeType())) {
+                        XUTrader.flattenEagerness = Eagerness.Passive;
+                    }
                 } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
                     if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getTradeType())) {
                         pr(" flatten trade IOC cancelled, re-submit ");
                         Order o = globalIdOrderMap.get(defaultID).getOrder();
-                        XUTrader.flattenAggressively(o);
-                        XUTrader.flattenEagerness = Eagerness.Aggressive;
+
+                        //XUTrader.flattenAggressively(o);
+
+                        if (XUTrader.flattenEagerness == Eagerness.Passive) {
+                            XUTrader.flattenEagerness = Eagerness.Aggressive;
+                        } else if (XUTrader.flattenEagerness == Eagerness.Aggressive) {
+                            XUTrader.flattenEagerness = Eagerness.VeryAggressive;
+                        }
                     }
                 }
             }

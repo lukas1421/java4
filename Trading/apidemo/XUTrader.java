@@ -1062,8 +1062,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 && perc > 30 && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
             int id = autoTradeID.incrementAndGet();
 
-            double candidatePrice = flattenEagerness == Eagerness.Aggressive ?
-                    freshPrice : roundToXUPricePassive(maLast, Direction.Short);
+//            double candidatePrice = flattenEagerness == Eagerness.Aggressive ?
+//                    freshPrice : roundToXUPricePassive(maLast, Direction.Short);
+
+            double candidatePrice = (flattenEagerness == Eagerness.Passive) ? roundToXUPricePassive(maLast, Direction.Short) :
+                    (flattenEagerness == Eagerness.Aggressive ? freshPrice : bidMap.get(ibContractToFutType(activeFuture)));
 
             Order o = placeOfferLimitTIF(candidatePrice, sizeToFlatten(freshPrice, fx, currDelta), Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
@@ -1073,15 +1076,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 && perc < 70 && pd < PD_UP_THRESH) { // no buy at premium or at top
             int id = autoTradeID.incrementAndGet();
 
-            double candidatePrice = flattenEagerness == Eagerness.Aggressive ?
-                    freshPrice : roundToXUPricePassive(maLast, Direction.Long);
+            double candidatePrice = (flattenEagerness == Eagerness.Passive) ? roundToXUPricePassive(maLast, Direction.Long) :
+                    (flattenEagerness == Eagerness.Aggressive ? freshPrice : askMap.get(ibContractToFutType(activeFuture)));
 
             Order o = placeBidLimitTIF(candidatePrice, sizeToFlatten(freshPrice, fx, currDelta), Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.BUY_FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Buy Flatten ", globalIdOrderMap.get(id)));
         }
-        flattenEagerness = Eagerness.Passive;
+        //flattenEagerness = Eagerness.Passive;
     }
 
 
