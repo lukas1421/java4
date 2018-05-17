@@ -80,7 +80,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static AtomicBoolean inventoryTraderOn = new AtomicBoolean(false);
 
     //overnight trades
-    private static final AtomicBoolean overnightTradeOn = new AtomicBoolean(false);
+    private static final AtomicBoolean overnightTradeOn = new AtomicBoolean(true);
     private static final int maxOvernightTrades = 10;
     private static AtomicInteger overnightClosingOrders = new AtomicInteger(0);
     private static AtomicInteger overnightTradesDone = new AtomicInteger(0);
@@ -89,7 +89,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double OVERNIGHT_MIN_DELTA = -500000.0;
 
     //ma
-    public static AtomicBoolean MATraderStatus = new AtomicBoolean(true);
+    private static AtomicBoolean MATraderStatus = new AtomicBoolean(true);
     private static volatile int currentMAPeriod = 60;
     private static Direction currentDirection = Direction.Flat;
     private static final int DEFAULT_SIZE = 1;
@@ -527,6 +527,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             globalIdOrderMap.entrySet().stream().filter(e -> isInventoryTrade().test(e.getValue().getTradeType()))
                     .filter(e -> e.getValue().getStatus() != OrderStatus.Filled)
                     .forEach(e -> {
+                        pr("cancelling ", e.getValue());
                         e.getValue().setFinalActionTime(LocalDateTime.now());
                         e.getValue().setStatus(OrderStatus.Cancelled);
                     });
@@ -926,6 +927,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int unfilledPercOrdersCount = (int) globalIdOrderMap.entrySet().stream()
                 .filter(e -> isPercTrade().test(e.getValue().getTradeType()))
                 .filter(e -> e.getValue().getStatus() != OrderStatus.Filled &&
+                        e.getValue().getStatus() != OrderStatus.Inactive &&
                         e.getValue().getStatus() != OrderStatus.Cancelled &&
                         e.getValue().getStatus() != OrderStatus.ApiCancelled)
                 .peek(e -> pr(e.getValue())).count();
@@ -938,14 +940,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double currDelta = ChinaPosition.getNetPtfDelta();
         double currStockDelta = ChinaPosition.getStockPtfDelta();
 
-
         System.out.println(str("perc Trader status?", percentileTradeOn.get() ? "ON" : "OFF",
                 "T: ", nowMilli.toLocalTime().truncatedTo(ChronoUnit.SECONDS),
                 "perc: ", perc,
                 "accSize, deccSize, netSize", accSize, deccSize, netPercTrades,
-                "OrderT Trade T,next tradeT", lastPercOrderT.toLocalTime(), lastPercTradeT.toLocalTime(),
-                lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime(), "accAvg, DecAvg,",
-                avgAccprice, avgDeccprice, "CurrDelta: ", r(currDelta), "pd", r10000(pd)));
+                "OrderT Trade T,next tradeT",
+                lastPercOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES),
+                lastPercTradeT.toLocalTime().truncatedTo(ChronoUnit.MINUTES),
+                lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime().truncatedTo(ChronoUnit.MINUTES)
+                , "accAvg, DecAvg,", avgAccprice, avgDeccprice, "CurrDelta: ", r(currDelta), "pd", r10000(pd)));
 
         //******************************************************************************************//
         //if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
@@ -1302,6 +1305,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     private void overnightTrader() {
         if (!overnightTradeOn.get()) return;
+        if (futureAMSession().test(LocalTime.now()) || futurePMSession().test(LocalTime.now())) return;
         double currDelta = ChinaPosition.getNetPtfDelta();
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
         setLongShortTradability(currPos);

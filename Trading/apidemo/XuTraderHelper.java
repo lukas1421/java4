@@ -107,7 +107,6 @@ public class XuTraderHelper {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-
     }
 
     public static <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> map) {
@@ -130,7 +129,6 @@ public class XuTraderHelper {
         o.totalQuantity(quantity);
         o.tif(Types.TimeInForce.DAY);
         o.outsideRth(true);
-        o.allOrNone(true);
         return o;
     }
 
@@ -144,7 +142,6 @@ public class XuTraderHelper {
         o.totalQuantity(quantity);
         o.outsideRth(true);
         o.tif(Types.TimeInForce.DAY);
-        o.allOrNone(true);
         return o;
     }
 
