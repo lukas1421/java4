@@ -38,6 +38,7 @@ import java.util.stream.Stream;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.wtdSharpe;
+import static apidemo.ChinaMain.GLOBAL_REQ_ID;
 import static apidemo.ChinaPosition.tradesMap;
 import static utility.Utility.*;
 
@@ -525,11 +526,11 @@ public class HistChinaStocks extends JPanel {
 
         sgxDataButton.addActionListener(l ->
                 CompletableFuture.runAsync(() -> {
-                            ChinaMain.controller().getSGXA50HistoricalCustom(20000,
+                            ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                                     getExpiredFutContract(), HistChinaStocks::handleSGXA50WtdData, 7);
-                            ChinaMain.controller().getSGXA50HistoricalCustom(20001,
+                            ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                                     getFrontFutContract(), HistChinaStocks::handleSGXA50WtdData, 7);
-                            ChinaMain.controller().getSGXA50HistoricalCustom(20002,
+                            ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                                     getBackFutContract(), HistChinaStocks::handleSGXA50WtdData, 7);
                         }
                 ));
@@ -585,13 +586,12 @@ public class HistChinaStocks extends JPanel {
                 });
             });
             CompletableFuture.runAsync(() -> {
-                ChinaMain.controller().getSGXA50HistoricalCustom(20000, getExpiredFutContract()
+                ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), getExpiredFutContract()
                         , HistChinaStocks::handleSGXA50WtdData, 7);
-                ChinaMain.controller().getSGXA50HistoricalCustom(20001, getFrontFutContract()
+                ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), getFrontFutContract()
                         , HistChinaStocks::handleSGXA50WtdData, 7);
-                ChinaMain.controller().getSGXA50HistoricalCustom(20002, getBackFutContract(),
+                ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), getBackFutContract(),
                         HistChinaStocks::handleSGXA50WtdData, 7);
-
             });
         });
 

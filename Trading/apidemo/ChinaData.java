@@ -32,8 +32,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static apidemo.ChinaDataYesterday.convertTimeToInt;
-import static apidemo.ChinaMain.controller;
-import static apidemo.ChinaMain.currentTradingDate;
+import static apidemo.ChinaMain.*;
 import static apidemo.ChinaStock.*;
 import static apidemo.ChinaStockHelper.fixYtdSuspendedStocks;
 import static historical.HistChinaStocks.chinaWtd;
@@ -355,13 +354,17 @@ public final class ChinaData extends JPanel {
         });
 
         getSGXA50HistButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
-            controller().getSGXA50HistoricalCustom(20000, getFrontFutContract(), ChinaData::handleSGX50HistData, 7);
-            controller().getSGXA50HistoricalCustom(20001, getBackFutContract(), ChinaData::handleSGX50HistData, 7);
+            controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+                    getFrontFutContract(), ChinaData::handleSGX50HistData, 7);
+            controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+                    getBackFutContract(), ChinaData::handleSGX50HistData, 7);
         }));
 
         getSGXA50TodayButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
-            controller().getSGXA50HistoricalCustom(50000, getFrontFutContract(), ChinaData::handleSGXDataToday, 2);
-            controller().getSGXA50HistoricalCustom(50001, getBackFutContract(), ChinaData::handleSGXDataToday, 2);
+            controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+                    getFrontFutContract(), ChinaData::handleSGXDataToday, 2);
+            controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+                    getBackFutContract(), ChinaData::handleSGXDataToday, 2);
         }));
 
         tdxButton.addActionListener(l -> getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0)));
@@ -413,10 +416,12 @@ public final class ChinaData extends JPanel {
     }
 
     private static void retrieveDataAll() {
-        CompletableFuture.runAsync(() -> controller().getSGXA50HistoricalCustom(20000, getFrontFutContract()
+        CompletableFuture.runAsync(() -> controller().getSGXA50HistoricalCustom(
+                GLOBAL_REQ_ID.addAndGet(5), getFrontFutContract()
                 , ChinaData::handleSGX50HistData, 7));
 
-        CompletableFuture.runAsync(() -> controller().getSGXA50HistoricalCustom(20001, getBackFutContract()
+        CompletableFuture.runAsync(() -> controller().getSGXA50HistoricalCustom(
+                GLOBAL_REQ_ID.addAndGet(5), getBackFutContract()
                 , ChinaData::handleSGX50HistData, 7));
 
         getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0));

@@ -633,21 +633,13 @@ public class ApiController implements EWrapper {
 
     @Override
     public void position(String account, Contract contract, double pos, double avgCost) {
-        //@Override public void position(String account, Contract contract, int pos, double avgCost) {
-        //Contract contract = contract.clone();
-        //pr (" handler count " + m_positionHandlers.size());
-        m_positionHandlers.forEach((handler) -> {
-            //pr ( " handling in handler " + handler.toString());
-            handler.position(account, contract, pos, avgCost);
-        });
+        m_positionHandlers.forEach((handler) -> handler.position(account, contract, pos, avgCost));
         recEOM();
     }
 
     @Override
     public void positionEnd() {
-        m_positionHandlers.forEach((handler) -> {
-            handler.positionEnd();
-        });
+        m_positionHandlers.forEach(IPositionHandler::positionEnd);
         recEOM();
     }
 
@@ -1683,7 +1675,6 @@ public class ApiController implements EWrapper {
 
         pr(" getting historical data simple ");
         pr(" contract " + contract);
-
 
         pr(str("stock reqid ", contract.symbol(), reqId));
         ChinaMain.globalRequestMap.put(reqId, new Request(contract, hh));
