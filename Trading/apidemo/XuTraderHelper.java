@@ -120,6 +120,10 @@ public class XuTraderHelper {
     }
 
     static Order placeOfferLimit(double p, double quantity) {
+        return placeOfferLimitTIF(p, quantity, Types.TimeInForce.DAY);
+    }
+
+    static Order placeOfferLimitTIF(double p, double quantity, Types.TimeInForce tif) {
         if (quantity <= 0) throw new IllegalStateException(" cannot have negative or 0 quantity");
         System.out.println(" place offer limit " + p);
         Order o = new Order();
@@ -127,12 +131,16 @@ public class XuTraderHelper {
         o.lmtPrice(p);
         o.orderType(OrderType.LMT);
         o.totalQuantity(quantity);
-        o.tif(Types.TimeInForce.DAY);
+        o.tif(tif);
         o.outsideRth(true);
         return o;
     }
 
     static Order placeBidLimit(double p, double quantity) {
+        return placeBidLimitTIF(p, quantity, Types.TimeInForce.DAY);
+    }
+
+    static Order placeBidLimitTIF(double p, double quantity, Types.TimeInForce tif) {
         if (quantity <= 0) throw new IllegalStateException(" cannot have 0 quantity ");
         System.out.println(" place bid limit " + p);
         Order o = new Order();
@@ -141,7 +149,7 @@ public class XuTraderHelper {
         o.orderType(OrderType.LMT);
         o.totalQuantity(quantity);
         o.outsideRth(true);
-        o.tif(Types.TimeInForce.DAY);
+        o.tif(tif);
         return o;
     }
 
@@ -165,6 +173,11 @@ public class XuTraderHelper {
         o.totalQuantity(quantity);
         o.outsideRth(true);
         return o;
+    }
+
+
+    public static Predicate<AutoOrderType> isFlattenTrade() {
+        return e -> e.equals(AutoOrderType.BUY_FLATTEN) || e.equals(AutoOrderType.SELL_FLATTEN);
     }
 
     static void createDialog(String msg) {

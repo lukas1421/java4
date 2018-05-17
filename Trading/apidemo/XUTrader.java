@@ -59,10 +59,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double FLATTEN_THRESH = 200000.0;
     private static final double DELTA_HIGH_LIMIT = 300000.0;
     private static final double DELTA_LOW_LIMIT = -300000.0;
-
     private static final double ABS_DELTA_TARGET = 100000.0;
     private static final double BULLISH_DELTA_TARGET = 100000.0;
     private static final double BEARISH_DELTA_TARGET = -100000.0;
+    public static Eagerness flattenEagerness = Eagerness.Passive;
 
 
     //perc trader
@@ -426,7 +426,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
                 globalIdOrderMap.entrySet().stream()
                         .filter(e -> isInventoryTrade().test(e.getValue().getTradeType()))
-                        .forEach(e -> out.println(str("real order ID"
+                        .forEach(e -> pr(str("real order ID"
                                 , e.getValue().getOrder().orderId(), e.getValue())));
 
                 long invOrderCount = globalIdOrderMap.entrySet().stream()
@@ -437,7 +437,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 if (invOrderCount >= 1) {
                     OrderAugmented o = globalIdOrderMap.entrySet().stream()
                             .filter(e -> isInventoryTrade().test(e.getValue().getTradeType()))
-                            .max(Comparator.comparing(e -> e.getValue().getOrderTime())).map(Map.Entry::getValue).get();
+                            .max(Comparator.comparing(e -> e.getValue().getOrderTime())).map(Map.Entry::getValue)
+                            .orElseThrow(() -> new IllegalStateException(" nothing in last inventory order "));
+
+                    pr("invOrderCount >=1 : last order ", o);
+                    pr("last order T ", o.getOrderTime(), "status", o.getStatus()
+                            , " Cancel wait time ", cancelWaitTime(LocalTime.now()));
 
                     if (o.getStatus() != OrderStatus.Filled &&
                             timeDiffinMinutes(o.getOrderTime(), LocalDateTime.now())
@@ -455,8 +460,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                                         out.println(str(e.getValue().getOrder().orderId(), "already cancelled"));
                                     }
                                 });
-                        out.println(str(LocalTime.now(), " killing last unfilled orders"));
-                        out.println(" releasing inv barrier + semaphore ");
+                        pr(str(LocalTime.now(), " killing last unfilled orders"));
+                        pr(" releasing inv barrier + semaphore ");
                         inventoryBarrier.reset(); //resetting inventory barrier
                         inventorySemaphore = new Semaphore(1); // release inv semaphore
                     }
@@ -1013,6 +1018,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+
+    public static void flattenAggressively(Order o) {
+
+    }
+
     /**
      * Once touch the MA, flatten position into bull bear range
      *
@@ -1051,19 +1061,29 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (currDelta > BULLISH_DELTA_TARGET && prevPrice > maLast && freshPrice <= maLast
                 && perc > 30 && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
             int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
+
+            double candidatePrice = flattenEagerness == Eagerness.Aggressive ?
+                    freshPrice : roundToXUPricePassive(maLast, Direction.Short);
+
+            Order o = placeOfferLimitTIF(candidatePrice, sizeToFlatten(freshPrice, fx, currDelta), Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.SELL_FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Sell Flatten ", globalIdOrderMap.get(id)));
         } else if (currDelta < BEARISH_DELTA_TARGET && prevPrice < maLast && freshPrice >= maLast
                 && perc < 70 && pd < PD_UP_THRESH) { // no buy at premium or at top
             int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
+
+            double candidatePrice = flattenEagerness == Eagerness.Aggressive ?
+                    freshPrice : roundToXUPricePassive(maLast, Direction.Long);
+
+            Order o = placeBidLimitTIF(candidatePrice, sizeToFlatten(freshPrice, fx, currDelta), Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.BUY_FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Buy Flatten ", globalIdOrderMap.get(id)));
         }
+        flattenEagerness = Eagerness.Passive;
     }
+
 
     /**
      * open trading from 9 to 9:40 /  fast trader

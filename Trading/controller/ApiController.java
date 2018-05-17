@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaMain.*;
+import static apidemo.XUTrader.globalIdOrderMap;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
 
@@ -1386,6 +1387,7 @@ public class ApiController implements EWrapper {
         recEOM();
     }
 
+
     // ---------------------------------------- Trading and Option Exercise ----------------------------------------
 
     /**
@@ -1413,22 +1415,30 @@ public class ApiController implements EWrapper {
 
             @Override
             public void orderState(OrderState orderState) {
-                XUTrader.globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
-                XUTrader.globalIdOrderMap.get(defaultID).setStatus(orderState.status());
+                globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
+                globalIdOrderMap.get(defaultID).setStatus(orderState.status());
 
                 if (orderState.status() == OrderStatus.Filled) {
-                    String msg = str("|| OrderState ||", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
+                    String msg = str("|| OrderState ||", defaultID, globalIdOrderMap.get(defaultID),
                             orderState.status());
                     XuTraderHelper.outputToAutoLog(msg);
                     XuTraderHelper.outputPurelyOrders(msg);
+                } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
+                    if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getTradeType())) {
+                        pr(" flatten trade IOC cancelled, re-submit ");
+                        Order o = globalIdOrderMap.get(defaultID).getOrder();
+                        XUTrader.flattenAggressively(o);
+                        XUTrader.flattenEagerness = Eagerness.Aggressive;
+                    }
                 }
             }
 
             @Override
             public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
                                     int parentId, double lastFillPrice, int clientId, String whyHeld) {
-                XuTraderHelper.outputToAutoLog(str("||OrderStatus||", defaultID, XUTrader.globalIdOrderMap.get(defaultID),
-                        status, filled, remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));
+                XuTraderHelper.outputToAutoLog(str("||OrderStatus||", defaultID,
+                        globalIdOrderMap.get(defaultID), status, filled,
+                        remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));
             }
 
             @Override
