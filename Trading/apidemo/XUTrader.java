@@ -995,7 +995,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer COVER",
                                 AutoOrderType.PERC_DECC));
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                        outputOrderToAutoLog(str(o.orderId(), "perc offer,COVER", globalIdOrderMap.get(id)));
+                        outputOrderToAutoLog(str(o.orderId(), "perc offer,COVER", globalIdOrderMap.get(id)
+                                , "perc: ", perc));
                     }
                 } else if (currDelta < DELTA_LOW_LIMIT && pd < PD_UP_THRESH) {
                     if (freshPrice < avgDeccprice || deccSize == 0) {
@@ -1004,7 +1005,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid COVER",
                                 AutoOrderType.PERC_ACC));
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                        outputOrderToAutoLog(str(o.orderId(), "perc bid, COVER", globalIdOrderMap.get(id)));
+                        outputOrderToAutoLog(str(o.orderId(), "perc bid, COVER", globalIdOrderMap.get(id),
+                                "perc: ", perc));
                     }
                 }
             }
@@ -1046,14 +1048,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (currDelta > BULLISH_DELTA_TARGET && prevPrice > maLast && freshPrice <= maLast
                 && perc > 70 && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
             int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
+            Order o = placeOfferLimit(roundToXUPricePassive(maLast, Direction.Short), sizeToFlatten(freshPrice, fx, currDelta));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.SELL_FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Sell Flatten ", globalIdOrderMap.get(id)));
         } else if (currDelta < BEARISH_DELTA_TARGET && prevPrice < maLast && freshPrice >= maLast
                 && perc < 30 && pd < PD_UP_THRESH) { // no buy at premium or at top
             int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimit(freshPrice, sizeToFlatten(freshPrice, fx, currDelta));
+            Order o = placeBidLimit(roundToXUPricePassive(maLast, Direction.Long), sizeToFlatten(freshPrice, fx, currDelta));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.BUY_FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Buy Flatten ", globalIdOrderMap.get(id)));

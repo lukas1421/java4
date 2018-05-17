@@ -544,7 +544,7 @@ public final class ChinaData extends JPanel {
 
                             session.saveOrUpdate(c);
                         } else if (Utility.NO_ZERO.test(closeMap, name)) {
-                            System.out.println("only close available " + name);
+                            //System.out.println("only close available " + name);
                             ChinaSaveOHLCYV c = new ChinaSaveOHLCYV(name, closeMap.get(name));
                             session.saveOrUpdate(c);
                         } else {
