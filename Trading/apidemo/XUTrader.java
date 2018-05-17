@@ -62,7 +62,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double ABS_DELTA_TARGET = 100000.0;
     private static final double BULLISH_DELTA_TARGET = 100000.0;
     private static final double BEARISH_DELTA_TARGET = -100000.0;
-    public static Eagerness flattenEagerness = Eagerness.Passive;
+    public static volatile Eagerness flattenEagerness = Eagerness.Passive;
 
 
     //perc trader
@@ -941,6 +941,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" unfilled perc orders count: ", unfilledPercOrdersCount, " manual cancel required ");
             return;
         }
+
         int minBetweenPercOrders = percOrdersTotal == 0 ? 0 : 10;
         double currDelta = ChinaPosition.getNetPtfDelta();
         double currStockDelta = ChinaPosition.getStockPtfDelta();
@@ -1020,7 +1021,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     public static void flattenAggressively() {
-        //flatten immediately
         LocalDateTime nowMilli = LocalDateTime.now();
         double fx = ChinaPosition.fxMap.get("SGXA50");
         double currDelta = ChinaPosition.getNetPtfDelta();
@@ -1033,7 +1033,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (currDelta > BULLISH_DELTA_TARGET) { //no sell at discount or at bottom
             int id = autoTradeID.incrementAndGet();
             double candidatePrice = bidMap.get(ibContractToFutType(activeFuture));
-            Order o = placeOfferLimitTIF(candidatePrice, sizeToFlatten(candidatePrice, fx, currDelta), Types.TimeInForce.IOC);
+            Order o = placeOfferLimitTIF(candidatePrice, sizeToFlatten(candidatePrice, fx, currDelta),
+                    Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FLATTEN_AGGRESSIVE));
             outputOrderToAutoLog(str(o.orderId(), " AGGRESSIVE Sell Flatten ", globalIdOrderMap.get(id)));
@@ -1090,7 +1091,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             double candidatePrice = (flattenEagerness == Eagerness.Passive) ? freshPrice :
                     bidMap.get(ibContractToFutType(activeFuture));
 
-            Order o = placeOfferLimitTIF(candidatePrice, sizeToFlatten(freshPrice, fx, currDelta), Types.TimeInForce.IOC);
+            Order o = placeOfferLimitTIF(candidatePrice, sizeToFlatten(freshPrice, fx, currDelta),
+                    Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Sell", AutoOrderType.FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Sell Flatten ", globalIdOrderMap.get(id)));

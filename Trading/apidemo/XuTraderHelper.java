@@ -177,7 +177,7 @@ public class XuTraderHelper {
 
 
     public static Predicate<AutoOrderType> isFlattenTrade() {
-        return e -> e.equals(AutoOrderType.BUY_FLATTEN) || e.equals(AutoOrderType.SELL_FLATTEN);
+        return e -> e.equals(AutoOrderType.FLATTEN);
     }
 
     static void createDialog(String msg) {

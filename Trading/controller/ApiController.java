@@ -1429,8 +1429,7 @@ public class ApiController implements EWrapper {
                     }
                 } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
                     if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getTradeType())) {
-                        pr(" flatten trade IOC cancelled, re-submit ");
-
+                        pr(" flatten trade IOC cancelled, flatten aggressively ");
                         XUTrader.flattenAggressively();
 
                         if (XUTrader.flattenEagerness == Eagerness.Passive) {
@@ -1438,6 +1437,9 @@ public class ApiController implements EWrapper {
                             XUTrader.flattenEagerness = Eagerness.Aggressive;
                         }
                     }
+                } else {
+                    pr(" default order state ELSE: ", orderState.status(),
+                            globalIdOrderMap.get(defaultID));
                 }
             }
 
