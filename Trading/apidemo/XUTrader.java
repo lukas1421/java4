@@ -1087,7 +1087,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         (prevPrice < maLast && freshPrice >= maLast));
 
         if (currDelta > BULLISH_DELTA_TARGET && prevPrice > maLast && freshPrice <= maLast
-                && perc > 30 && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
+                && perc > 70 && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
             int id = autoTradeID.incrementAndGet();
 
             double candidatePrice = (flattenEagerness == Eagerness.Passive) ? freshPrice :
@@ -1099,7 +1099,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Sell", FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Sell Flatten ", globalIdOrderMap.get(id)));
         } else if (currDelta < BEARISH_DELTA_TARGET && prevPrice < maLast && freshPrice >= maLast
-                && perc < 70 && pd < PD_UP_THRESH) { // no buy at premium or at top
+                && perc < 30 && pd < PD_UP_THRESH) { // no buy at premium or at top
             int id = autoTradeID.incrementAndGet();
 
             double candidatePrice = (flattenEagerness == Eagerness.Passive) ? freshPrice :
