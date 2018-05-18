@@ -904,7 +904,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
         pr("price", price, "fx", fx, "senti", senti, "dir", d, "currDel", currDelta,
                 "bull bear targets", getBullishTarget(), getBearishTarget(), "candidate ", candidate);
-        return Math.max(1, Math.min(candidate, 3));
+        return Math.max(0, Math.min(candidate, 3));
     }
 
     /**
@@ -1003,28 +1003,33 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     int id = autoTradeID.incrementAndGet();
                     int buySize = getPercTraderSize(freshPrice, fx, sentiment, Direction.Long, currDelta
                     );
-                    Order o = placeBidLimit(freshPrice, buySize);
-                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid",
-                            PERC_ACC));
-                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                    outputOrderToAutoLog(str(o.orderId(), "perc bid", globalIdOrderMap.get(id), " perc ", perc));
+                    if (buySize > 0) {
+                        Order o = placeBidLimit(freshPrice, buySize);
+                        globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid",
+                                PERC_ACC));
+                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                        outputOrderToAutoLog(str(o.orderId(), "perc bid", globalIdOrderMap.get(id), " perc ", perc));
+                    } else {
+                        throw new IllegalStateException(" perc buy size < 0 ");
+                    }
                 } else {
-                    outputToAutoLog(currDelta < getBullishTarget() ? "acc trades limit reached;"
-                            : " perc: delta above LIMIT");
+                    outputToAutoLog(" perc: delta above bullish target ");
                 }
             } else if (perc > 70) {
                 if (currDelta > getBearishTarget()) {
                     int id = autoTradeID.incrementAndGet();
-                    int sellSize = getPercTraderSize(freshPrice, fx, sentiment, Direction.Short, currDelta
-                    );
-                    Order o = placeOfferLimit(freshPrice, sellSize);
-                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer",
-                            AutoOrderType.PERC_DECC));
-                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                    outputOrderToAutoLog(str(o.orderId(), "perc offer", globalIdOrderMap.get(id), "perc", perc));
+                    int sellSize = getPercTraderSize(freshPrice, fx, sentiment, Direction.Short, currDelta);
+                    if (sellSize > 0) {
+                        Order o = placeOfferLimit(freshPrice, sellSize);
+                        globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer",
+                                AutoOrderType.PERC_DECC));
+                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                        outputOrderToAutoLog(str(o.orderId(), "perc offer", globalIdOrderMap.get(id), "perc", perc));
+                    } else {
+                        throw new IllegalStateException(" perc sell size < 0 ");
+                    }
                 } else {
-                    outputToAutoLog(currDelta > getBearishTarget() ? "decc trades limit reached" : " " +
-                            "perc: delta below limit ");
+                    outputToAutoLog("perc: delta below bearish target ");
                 }
             } else {
                 if (currDelta > getDeltaHighLimit() && pd > PD_DOWN_THRESH && perc > 50) {
@@ -1080,7 +1085,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FLATTEN_AGGRESSIVE));
             outputOrderToAutoLog(str(o.orderId(), " AGGRESSIVE Buy Flatten ", globalIdOrderMap.get(id)));
         }
-
     }
 
     /**
@@ -1498,7 +1502,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        if (currDelta > getDeltaHighLimit() || currDelta < getDeltaLowLimit()) {
+        if (currDelta > getBullishTarget() || currDelta < getBearishTarget()) {
             pr(" quitting inventory trade", r(currDelta), ": exceeding Delta limit ");
             return;
         }
