@@ -204,13 +204,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static double getBearishTarget() {
         if (LocalTime.now().isAfter(LocalTime.of(13, 0)) && LocalTime.now().isBefore(LocalTime.of(15, 1))) {
-            return 50000.0;
+            return 0.0;
         }
         return sentiment == MASentiment.Bearish ? BEARISH_DELTA_TARGET : 0.0;
     }
 
     private static double getDeltaHighLimit() {
-        if (LocalTime.now().isAfter(LocalTime.of(8, 59)) && LocalTime.now().isBefore(LocalTime.of(12, 0))) {
+        if (LocalTime.now().isAfter(LocalTime.of(8, 59))
+                && LocalTime.now().isBefore(LocalTime.of(12, 0))) {
             return DELTA_HIGH_LIMIT / 2;
         }
         return sentiment == MASentiment.Bullish ? DELTA_HIGH_LIMIT : 0.0;
@@ -222,7 +223,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
         return sentiment == MASentiment.Bearish ? DELTA_LOW_LIMIT : 0.0;
     }
-
 
     private static void maTradeAnalysis() {
         //System.out.println(" ma trade analysis ");
