@@ -878,7 +878,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * percentileTrader
      */
-    public static void percentileTrader(LocalDateTime nowMilli, double freshPrice) {
+    public static synchronized void percentileTrader(LocalDateTime nowMilli, double freshPrice) {
         // run every 15 minutes
         int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         double pd = getPD(freshPrice);
@@ -995,22 +995,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             "perc: delta below limit ");
                 }
             } else {
-                if (currDelta > DELTA_HIGH_LIMIT && pd > PD_DOWN_THRESH) {
+                if (currDelta > DELTA_HIGH_LIMIT && pd > PD_DOWN_THRESH && perc > 50) {
                     if (freshPrice > avgAccprice || accSize == 0) {
                         int id = autoTradeID.incrementAndGet();
                         Order o = placeOfferLimit(freshPrice, 1);
-                        globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer COVER",
-                                PERC_DECC));
+                        globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer COVER", PERC_DECC));
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         outputOrderToAutoLog(str(o.orderId(), "perc offer,COVER", globalIdOrderMap.get(id)
                                 , "perc: ", perc));
                     }
-                } else if (currDelta < DELTA_LOW_LIMIT && pd < PD_UP_THRESH) {
+                } else if (currDelta < DELTA_LOW_LIMIT && pd < PD_UP_THRESH && perc < 50) {
                     if (freshPrice < avgDeccprice || deccSize == 0) {
                         int id = autoTradeID.incrementAndGet();
                         Order o = placeBidLimit(freshPrice, 1);
-                        globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid COVER",
-                                PERC_ACC));
+                        globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid COVER", PERC_ACC));
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         outputOrderToAutoLog(str(o.orderId(), "perc bid, COVER", globalIdOrderMap.get(id),
                                 "perc: ", perc));
@@ -1024,7 +1022,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * flatten delta aggressively at bid/offer
      */
-    public static void flattenAggressively() {
+    public static synchronized void flattenAggressively() {
         LocalDateTime nowMilli = LocalDateTime.now();
         double fx = ChinaPosition.fxMap.get("SGXA50");
         double currDelta = ChinaPosition.getNetPtfDelta();
@@ -1059,7 +1057,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param nowMilli   time in millisecs
      * @param freshPrice most recent price
      */
-    public static void flattenTrader(LocalDateTime nowMilli, double freshPrice) {
+    public static synchronized void flattenTrader(LocalDateTime nowMilli, double freshPrice) {
         double currDelta = ChinaPosition.getNetPtfDelta();
         int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         double pd = getPD(freshPrice);
@@ -1212,7 +1210,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * Auto trading based on Moving Avg
      */
-    public static void MATrader(LocalDateTime nowMilli, double freshPrice) {
+    public static synchronized void MATrader(LocalDateTime nowMilli, double freshPrice) {
         if (!MATraderStatus.get()) {
             pr("MA trader off");
             return;
@@ -1732,9 +1730,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
         FutType f = ibContractToFutType(contract);
+
         if (contract.symbol().equalsIgnoreCase("SGXA50")) {
-            out.println(str(" exec ", execution.side(), execution.time(), execution.cumQty()
-                    , execution.price(), execution.orderRef(), execution.orderId(), execution.permId(), execution.shares()));
+            pr(str(" exec ", execution.side(), execution.time(), execution.cumQty()
+                    , execution.price(), execution.orderRef(), execution.orderId(),
+                    execution.permId(), execution.shares()));
         }
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
@@ -1919,17 +1919,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static void processTradeMapActive() {
         FutType f = ibContractToFutType(activeFuture);
-        int unitsBought = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
-                .mapToInt(e -> e.getValue().getSizeAll()).sum();
-        int unitsSold = tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
-                .mapToInt(e -> e.getValue().getSizeAll()).sum();
+        int unitsBought = tradesMap.get(f).entrySet().stream().mapToInt(e -> e.getValue().getSizeBot()).sum();
+        int unitsSold = tradesMap.get(f).entrySet().stream().mapToInt(e -> e.getValue().getSizeSold()).sum();
+
         botMap.put(f, unitsBought);
         soldMap.put(f, unitsSold);
 
-        double avgBuy = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
-                .mapToDouble(e -> e.getValue().getCostBasisAll("")).sum() / unitsBought)) / 100d);
-        double avgSell = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
-                .mapToDouble(e -> e.getValue().getCostBasisAll("")).sum() / unitsSold)) / 100d);
+        double avgBuy = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream()
+                .mapToDouble(e -> e.getValue().getCostBasisAllPositive("")).sum() / unitsBought)) / 100d);
+        double avgSell = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream()
+                .mapToDouble(e -> e.getValue().getCostBasisAllNegative("")).sum() / unitsSold)) / 100d);
         double buyTradePnl = Math.round(100d * (futPriceMap.get(f) - avgBuy) * unitsBought) / 100d;
         double sellTradePnl = Math.round(100d * (futPriceMap.get(f) - avgSell) * unitsSold) / 100d;
         double netTradePnl = buyTradePnl + sellTradePnl;
@@ -1950,8 +1949,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             updateLog(" sell pnl " + sellTradePnl);
             updateLog(" net pnl " + r(netTradePnl));
             updateLog(" net commission " + netTotalCommissions);
-            updateLog(" MTM+Trade " + (netTradePnl + mtmPnl));
-            updateLog(" Delta " + r(ChinaPosition.getNetPtfDelta()));
+            updateLog(" MTM+Trade " + r(netTradePnl + mtmPnl));
+            updateLog("pos " + currentPosMap.getOrDefault(f, 0) + " Delta " + r(ChinaPosition.getNetPtfDelta()));
         });
     }
 
@@ -1962,7 +1961,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         ApiController ap = new ApiController(new XuTraderHelper.XUConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
 
-        ap.connect("127.0.0.1", 4001, 0, "");
+        ap.connect("127.0.0.1", TradingConstants.PORT_IBAPI, 0, "");
 
         ap.client().reqAccountSummary(5, "All", "AccountType, NetLiquidation" +
                 ",TotalCashValue,SettledCash,");

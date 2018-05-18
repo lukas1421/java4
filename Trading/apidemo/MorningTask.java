@@ -25,8 +25,6 @@ import java.util.regex.Pattern;
 
 import static utility.Utility.*;
 
-//import java.net.InetSocketAddress;
-
 public final class MorningTask implements HistoricalHandler {
 
     public static File output = new File(TradingConstants.GLOBALPATH + "morningOutput.txt");
@@ -78,7 +76,8 @@ public final class MorningTask implements HistoricalHandler {
             String name = s.substring(0, 2).toUpperCase() + "#" + s.substring(2) + ".txt";
             currentLine = "";
             previousLine = "";
-            try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(tdxPath + name), "GBK"))) {
+            try (BufferedReader reader1 = new BufferedReader(new InputStreamReader
+                    (new FileInputStream(tdxPath + name), "GBK"))) {
                 while ((line = reader1.readLine()) != null && !line.startsWith("数据来源")) {
                     previousLine = currentLine;
                     currentLine = line;
@@ -386,7 +385,6 @@ public final class MorningTask implements HistoricalHandler {
             LocalDateTime ldt = LocalDateTime.ofInstant(cal.toInstant(), chinaZone);
             pr(" ldt is " + ldt);
             pr(" time in ny " + ldt.atZone(ZoneId.of("EST")));
-            //ZonedDateTime zdt =
 
             switch (cal.get(Calendar.HOUR_OF_DAY)) {
                 case 13:
@@ -400,12 +398,6 @@ public final class MorningTask implements HistoricalHandler {
                     Utility.simpleWriteToFile("SGXA50" + "\t" + c, false, fxOutput);
                     break;
             }
-
-//            if(cal.get(Calendar.HOUR_OF_DAY)==4 || cal.get(Calendar.HOUR_OF_DAY)==13
-//                    || cal.get(Calendar.HOUR_OF_DAY)==16) {
-//                simpleWrite(dt+"\t"+c);
-//            }
-            //simpleWrite(l);
         }
     }
 
@@ -415,7 +407,6 @@ public final class MorningTask implements HistoricalHandler {
         boolean connectionStatus = false;
 
         try {
-            //ap.connect( "127.0.0.1", 4001, 2,"" );
             ap.connect("127.0.0.1", 7496, 2, "");
             connectionStatus = true;
             pr(" connection status is true ");
@@ -463,17 +454,14 @@ public final class MorningTask implements HistoricalHandler {
     }
 
     private void getUSPricesAfterMarket(ApiController ap) {
-
         List<String> etfs = Arrays.asList("FXI:US", "CNXT:US", "ASHR:US", "ASHS:US");
         for (String e : etfs) {
-
             String ticker = e.substring(0, e.length() - 3);
             Contract c = new Contract();
             c.symbol(ticker);
             c.secType(Types.SecType.STK);
             c.exchange("SMART");
             c.currency("USD");
-
             pr(" etf is " + ticker);
 
             LocalDateTime lt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
@@ -483,7 +471,6 @@ public final class MorningTask implements HistoricalHandler {
             ap.reqHistoricalDataSimple(generateReqId(c), this, c, formatTime, 1, Types.DurationUnit.DAY,
                     Types.BarSize._5_mins, Types.WhatToShow.TRADES, false);
         }
-
     }
 
     private int generateReqId(Contract contract) {

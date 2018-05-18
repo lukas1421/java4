@@ -75,8 +75,8 @@ public final class TradingConstants {
 
     public static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export_1m\\" : "J:\\TDX\\T0002\\export_1m\\";
-    //public final static int PORT_IBAPI = 4001;
-    //public final static int PORT_NORMAL = 7496;
+    public final static int PORT_IBAPI = 4001;
+    public final static int PORT_NORMAL = 7496;
     public static final int GLOBALWIDTH = 1900;
 
     public static final Predicate<? super Map.Entry<LocalTime, ?>> TRADING_HOURS =

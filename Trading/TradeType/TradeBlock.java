@@ -20,7 +20,6 @@ public final class TradeBlock {
         mergeList = Collections.synchronizedList(new LinkedList<>());
     }
 
-
     public TradeBlock(Trade t) {
         mergeList.add(t);
     }
@@ -112,6 +111,17 @@ public final class TradeBlock {
     public double getCostBasisAll(String name) {
         return mergeList.stream().mapToDouble(t -> ((Trade) t).getCostBasisWithFees(name)).sum();
     }
+
+    public double getCostBasisAllPositive(String name) {
+        return mergeList.stream().filter(t -> ((Trade) t).getSize() > 0)
+                .mapToDouble(t -> ((Trade) t).getCostBasisWithFees(name)).sum();
+    }
+
+    public double getCostBasisAllNegative(String name) {
+        return mergeList.stream().filter(t -> ((Trade) t).getSize() < 0)
+                .mapToDouble(t -> ((Trade) t).getCostBasisWithFees(name)).sum();
+    }
+
 
     public double getMtmPnlAll(String name) {
         return mergeList.stream().mapToDouble(t -> ((Trade) t).getMtmPnl(name)).sum();

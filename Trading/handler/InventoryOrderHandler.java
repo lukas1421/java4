@@ -33,7 +33,7 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
 
         if (orderState.status() == OrderStatus.Filled) {
             globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
-            String msg = str("|| OrderState ||", defaultID, globalIdOrderMap.get(defaultID),
+            String msg = str("||Order||", defaultID, globalIdOrderMap.get(defaultID),
                     orderState.status());
             XuTraderHelper.outputToAutoLog(msg);
             XuTraderHelper.outputPurelyOrders(msg);
