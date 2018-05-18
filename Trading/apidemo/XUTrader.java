@@ -688,10 +688,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 public void mouseClicked(MouseEvent e) {
                     if (e.getClickCount() == 2 && !e.isConsumed()) {
                         double bidPrice = bidPriceList.getOrDefault(l.getName(), 0.0);
-                        outputOrderToAutoLog(str(" MANUAL BID || bid price ", bidPrice, " Checking order ",
-                                checkIfOrderPriceMakeSense(bidPrice)));
+
                         if (checkIfOrderPriceMakeSense(bidPrice) && futMarketOpen(LocalTime.now())) {
-                            apcon.placeOrModifyOrder(activeFuture, placeBidLimit(bidPrice, 1.0), getThis());
+                            Order o = placeBidLimit(bidPrice, 1.0);
+                            apcon.placeOrModifyOrder(activeFuture, o, getThis());
+                            outputOrderToAutoLog(str(o.orderId(), " MANUAL BID || bid price ", bidPrice,
+                                    " Checking order ", checkIfOrderPriceMakeSense(bidPrice)));
                         } else {
                             throw new IllegalArgumentException("price out of bound");
                         }
@@ -710,10 +712,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 public void mouseClicked(MouseEvent e) {
                     if (e.getClickCount() == 2 && !e.isConsumed()) {
                         double offerPrice = offerPriceList.get(l.getName());
-                        outputOrderToAutoLog(str(" MANUAL OFFER || offer price ", offerPrice, " Checking order ",
-                                checkIfOrderPriceMakeSense(offerPrice)));
+
                         if (checkIfOrderPriceMakeSense(offerPrice) && futMarketOpen(LocalTime.now())) {
-                            apcon.placeOrModifyOrder(activeFuture, placeOfferLimit(offerPrice, 1.0), getThis());
+                            Order o = placeOfferLimit(offerPrice, 1.0);
+                            apcon.placeOrModifyOrder(activeFuture, o, getThis());
+                            outputOrderToAutoLog(str(o.orderId(), " MANUAL OFFER||offer price "
+                                    , offerPrice, " Checking order ", checkIfOrderPriceMakeSense(offerPrice)));
                         } else {
                             throw new IllegalArgumentException("price out of bound");
                         }
@@ -1174,7 +1178,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     fastTradeSignals.incrementAndGet();
                     lastFastOrderTime = LocalDateTime.now();
                     fastOrderMap.put(nowMilli, o);
-                    outputOrderToAutoLog(str(nowMilli.truncatedTo(ChronoUnit.MINUTES), id, o.orderId(),
+                    outputOrderToAutoLog(str(nowMilli.truncatedTo(ChronoUnit.MINUTES), o.orderId(),
                             "FAST ORDER || BIDDING @ ", o.toString(), "SMA",
                             "||Fresh: ", freshPrice,
                             "||Prev: ", prevPrice,
@@ -1198,7 +1202,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     fastTradeSignals.incrementAndGet();
                     lastFastOrderTime = LocalDateTime.now();
                     fastOrderMap.put(nowMilli, o);
-                    outputOrderToAutoLog(str(nowMilli.truncatedTo(ChronoUnit.MINUTES), id, o.orderId(),
+                    outputOrderToAutoLog(str(nowMilli.truncatedTo(ChronoUnit.MINUTES), o.orderId(),
                             "FAST ORDER || OFFERING @ ", o.toString(), "SMA",
                             "||Fresh: ", freshPrice, "||Prev", prevPrice,
                             "||MA Last: ", r(maLast),
