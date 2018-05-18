@@ -438,10 +438,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             ses.scheduleAtFixedRate(() -> {
                 out.println(" printing all inventory orders ");
 
-                globalIdOrderMap.entrySet().stream()
-                        .filter(e -> isInventoryTrade().test(e.getValue().getTradeType()))
-                        .forEach(e -> pr(str("real order ID"
-                                , e.getValue().getOrder().orderId(), e.getValue())));
+                globalIdOrderMap.entrySet().stream().filter(e -> isInventoryTrade().test(e.getValue().getTradeType()))
+                        .forEach(e -> pr(str("real order ID", e.getValue().getOrder().orderId(), e.getValue())));
 
                 long invOrderCount = globalIdOrderMap.entrySet().stream()
                         .filter(e -> isInventoryTrade().test(e.getValue().getTradeType())).count();
@@ -459,8 +457,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             , " Cancel wait time ", cancelWaitTime(LocalTime.now()));
 
                     if (o.getStatus() != OrderStatus.Filled &&
-                            timeDiffinMinutes(o.getOrderTime(), LocalDateTime.now())
-                                    >= cancelWaitTime(LocalTime.now())) {
+                            timeDiffinMinutes(o.getOrderTime(), LocalDateTime.now()) >= cancelWaitTime(LocalTime.now())) {
 
                         globalIdOrderMap.entrySet().stream()
                                 .filter(e -> isInventoryTrade().test(e.getValue().getTradeType()))
@@ -1295,8 +1292,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         lastMAOrderTime = LocalDateTime.now();
                         currentDirection = Direction.Long;
-                        outputOrderToAutoLog(str(nowMilli.truncatedTo(ChronoUnit.MINUTES)
-                                , id, "MA ORDER || bidding @ ", o.toString(), "type", priceType));
+                        outputOrderToAutoLog(str(
+                                o.orderId(), "MA ORDER || bidding @ ", o.toString(), priceType,
+                                globalIdOrderMap.get(id)));
                     }
                 } else if (bearishTouchMet(secLastBar, lastBar, maLast) && canShortGlobal.get()
                         && currDelta > getDeltaLowLimit() && percentile > 70) {
@@ -1325,8 +1323,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         lastMAOrderTime = LocalDateTime.now();
                         currentDirection = Direction.Short;
-                        outputOrderToAutoLog(str(nowMilli.truncatedTo(ChronoUnit.MINUTES)
-                                , id, "MA ORDER || offering @ ", o.toString(), priceType));
+                        outputOrderToAutoLog(str(o.orderId(), "MA ORDER || offering @ ", o.toString(), priceType
+                                , globalIdOrderMap.get(id)));
                     }
                 }
                 if (candidatePrice != 0.0) {
@@ -1378,11 +1376,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
         NavigableMap<LocalDateTime, SimpleBar> futPriceMap = futData.get(ibContractToFutType(activeFuture));
         LocalDateTime ytdCloseTime = LocalDateTime.of(TDate, LocalTime.of(15, 0));
-
-//        NavigableMap<LocalDateTime, SimpleBar> filteredPriceMap = futPriceMap.entrySet().stream()
-//                .filter(e -> e.getKey().isAfter(ytdCloseTime))
-//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-//                        (a, b) -> a, ConcurrentSkipListMap::new));
 
         int currPercentile = getPercentileForLast(futPriceMap);
         double currentFut;
@@ -1464,8 +1457,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "inventory barrier waiting #: ", inventoryBarrier.getNumberWaiting(),
                 " semaphore permits: ", inventorySemaphore.availablePermits(),
                 freshPrice, " chg: ",
-                activeLastMinuteMap.size() < 2 ? "No trade last min " : (freshPrice -
-                        activeLastMinuteMap.lowerEntry(t).getValue()),
+                activeLastMinuteMap.size() < 2 ? "No trade last min " :
+                        (freshPrice - activeLastMinuteMap.lowerEntry(t).getValue()),
                 "Delta: ", r(currDelta));
 
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
@@ -1484,10 +1477,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" quitting inventory trade: semaphore #:", inventorySemaphore.availablePermits());
             return;
         }
+
         if (!inventoryTraderOn.get()) {
             pr(" quitting inventory trade: inventory off ");
             return;
         }
+
         if (inventoryBarrier.getNumberWaiting() != 0) {
             pr(" quitting inventory trade: barrier# waiting: ", inventoryBarrier.getNumberWaiting());
             return;
@@ -1505,10 +1500,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             int idBuy = autoTradeID.incrementAndGet();
             Order buyO = placeBidLimit(freshPrice - margin, inv_trade_quantity);
             globalIdOrderMap.put(idBuy, new OrderAugmented(LocalDateTime.now()
-                    , buyO, "Inventory Buy Open", INVENTORY_OPEN));
+                    , buyO, "Inv Buy Open", INVENTORY_OPEN));
             apcon.placeOrModifyOrder(activeFuture, buyO, new InventoryOrderHandler(idBuy, latchBuy, inventoryBarrier));
-            outputOrderToAutoLog(str(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
-                    , idBuy, buyO.orderId(), "Inventory Buy Open ", globalIdOrderMap.get(idBuy)));
+            outputOrderToAutoLog(str(buyO.orderId(), "Inv Buy Open ", globalIdOrderMap.get(idBuy)));
 
             try {
                 pr(" BEFORE latchBuy.await ");
@@ -1525,9 +1519,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             globalIdOrderMap.put(idSell, new OrderAugmented(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
                     , sellO, "Inventory Sell Close", INVENTORY_CLOSE));
             apcon.placeOrModifyOrder(activeFuture, sellO, new InventoryOrderHandler(idSell, latchSell, inventoryBarrier));
-            outputOrderToAutoLog(str(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
-                    , idSell, sellO.orderId(), "Inventory Sell Close ", globalIdOrderMap.get(idSell)));
-
+            outputOrderToAutoLog(str(sellO.orderId(), "Inventory Sell Close ", globalIdOrderMap.get(idSell)));
             try {
                 latchSell.await();
                 if (inventoryBarrier.getNumberWaiting() == 2) {
@@ -1552,7 +1544,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             int idSell = autoTradeID.incrementAndGet();
             Order sellO = placeOfferLimit(freshPrice + margin, inv_trade_quantity);
             globalIdOrderMap.put(idSell,
-                    new OrderAugmented(LocalDateTime.now(), sellO, "Inventory Sell Open", INVENTORY_OPEN));
+                    new OrderAugmented(LocalDateTime.now(), sellO, " Sell Open", INVENTORY_OPEN));
             apcon.placeOrModifyOrder(activeFuture, sellO, new InventoryOrderHandler(idSell, latchSell, inventoryBarrier));
             outputOrderToAutoLog(str(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), idSell, sellO.orderId()
                     , "Inventory Sell Open", globalIdOrderMap.get(idSell)));
@@ -1568,8 +1560,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             CountDownLatch latchBuy = new CountDownLatch(1);
             int idBuy = autoTradeID.incrementAndGet();
             Order buyO = placeBidLimit(freshPrice - margin, inv_trade_quantity);
-            globalIdOrderMap.put(idBuy, new OrderAugmented(LocalDateTime.now(), buyO, "Inventory Buy Close",
-                    INVENTORY_CLOSE));
+            globalIdOrderMap.put(idBuy, new OrderAugmented(LocalDateTime.now(), buyO, " Buy Close", INVENTORY_CLOSE));
             apcon.placeOrModifyOrder(activeFuture, buyO, new InventoryOrderHandler(idBuy, latchBuy, inventoryBarrier));
             outputOrderToAutoLog(str(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), idBuy, buyO.orderId()
                     , "Inv Buy Close", globalIdOrderMap.get(idBuy)));
@@ -1581,13 +1572,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     out.println(" reset inventory barrier ");
                 }
                 inventorySemaphore.release();
-                out.println(" released inventory semaphore, now "
-                        + inventorySemaphore.availablePermits());
+                pr(" released inventory semaphore, now ", inventorySemaphore.availablePermits());
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        out.println(" exiting inventory order checking not stuck ");
+        pr(" exiting inventory order checking not stuck ");
     }
 
     private static double getCurrentMA() {
@@ -1653,7 +1643,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         pr("in loadXU");
         ChinaMain.GLOBAL_REQ_ID.addAndGet(5);
         apcon.getSGXA50Historical2(ChinaMain.GLOBAL_REQ_ID.get(), this);
-        //apcon.getSGXA50Historical2(30000, this);
     }
 
     private static boolean checkIfOrderPriceMakeSense(double p) {
@@ -1816,7 +1805,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void orderStatus(int orderId, OrderStatus status, int filled, int remaining,
                             double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
-        out.println(" in order status ");
+        pr(" in order status ");
         updateLog(Utility.str(" status filled remaining avgFillPrice ",
                 status, filled, remaining, avgFillPrice));
 

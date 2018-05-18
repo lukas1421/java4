@@ -1411,8 +1411,8 @@ public class ApiController implements EWrapper {
                 globalIdOrderMap.get(defaultID).setStatus(orderState.status());
 
                 if (orderState.status() == OrderStatus.Filled) {
-                    String msg = str("||Order||", defaultID, globalIdOrderMap.get(defaultID),
-                            orderState.status());
+                    String msg = str("||Order||", globalIdOrderMap.get(defaultID).getOrder().orderId(),
+                            defaultID, globalIdOrderMap.get(defaultID), orderState.status());
                     XuTraderHelper.outputToAutoLog(msg);
                     XuTraderHelper.outputPurelyOrders(msg);
 
