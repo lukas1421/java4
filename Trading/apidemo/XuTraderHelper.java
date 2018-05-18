@@ -372,6 +372,10 @@ public class XuTraderHelper {
         XUTrader.apcon.client().reqIds(-1);
     }
 
+    public static boolean orderMakingMoney(Order o, double currPrice) {
+        return o.lmtPrice() > currPrice && (o.totalQuantity() > 0);
+    }
+
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
         @Override
         public void connected() {
