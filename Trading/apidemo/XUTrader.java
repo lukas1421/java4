@@ -195,34 +195,32 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    public static double getBullishTarget() {
+    private static double getBullishTarget() {
         if (LocalTime.now().isAfter(LocalTime.of(8, 59)) && LocalTime.now().isBefore(LocalTime.of(12, 0))) {
             return BULLISH_DELTA_TARGET / 2;
         }
-        return BULLISH_DELTA_TARGET;
-
+        return sentiment == MASentiment.Bullish ? BULLISH_DELTA_TARGET : 0.0;
     }
 
-    public static double getBearishTarget() {
+    private static double getBearishTarget() {
         if (LocalTime.now().isAfter(LocalTime.of(13, 0)) && LocalTime.now().isBefore(LocalTime.of(15, 1))) {
-            return 0;
+            return 50000.0;
         }
-        return BEARISH_DELTA_TARGET;
-
+        return sentiment == MASentiment.Bearish ? BEARISH_DELTA_TARGET : 0.0;
     }
 
-    public static double getDeltaHighLimit() {
+    private static double getDeltaHighLimit() {
         if (LocalTime.now().isAfter(LocalTime.of(8, 59)) && LocalTime.now().isBefore(LocalTime.of(12, 0))) {
             return DELTA_HIGH_LIMIT / 2;
         }
-        return DELTA_HIGH_LIMIT;
+        return sentiment == MASentiment.Bullish ? DELTA_HIGH_LIMIT : 0.0;
     }
 
-    public static double getDeltaLowLimit() {
+    private static double getDeltaLowLimit() {
         if (LocalTime.now().isAfter(LocalTime.of(13, 0)) && LocalTime.now().isBefore(LocalTime.of(15, 1))) {
             return 0;
         }
-        return DELTA_LOW_LIMIT;
+        return sentiment == MASentiment.Bearish ? DELTA_LOW_LIMIT : 0.0;
     }
 
 
@@ -1098,7 +1096,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         double pd = getPD(freshPrice);
 
-        if (currDelta < BULLISH_DELTA_TARGET && currDelta > BEARISH_DELTA_TARGET) {
+        if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
             pr(" Flatten trader: no need to flatten", r(currDelta));
             return;
         }
@@ -1122,7 +1120,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 , "Crossed?: ", (prevPrice > maLast && freshPrice <= maLast) ||
                         (prevPrice < maLast && freshPrice >= maLast));
 
-        if (currDelta > BULLISH_DELTA_TARGET && prevPrice > maLast && freshPrice <= maLast
+        if (currDelta > getBullishTarget() && prevPrice > maLast && freshPrice <= maLast
                 && perc > 70 && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
             int id = autoTradeID.incrementAndGet();
 
@@ -1134,7 +1132,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Sell", FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Sell Flatten ", globalIdOrderMap.get(id)));
-        } else if (currDelta < BEARISH_DELTA_TARGET && prevPrice < maLast && freshPrice >= maLast
+        } else if (currDelta < getBearishTarget() && prevPrice < maLast && freshPrice >= maLast
                 && perc < 30 && pd < PD_UP_THRESH) { // no buy at premium or at top
             int id = autoTradeID.incrementAndGet();
 
