@@ -3,6 +3,7 @@ package apidemo;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
+import controller.AccountSummaryTag;
 import controller.ApiConnection.ILogger.DefaultLogger;
 import controller.ApiController;
 import controller.ApiController.IConnectionHandler.DefaultConnectionHandler;
@@ -430,6 +431,11 @@ public final class MorningTask implements HistoricalHandler {
         pr(" Time after latch released " + LocalTime.now());
         getFXDetailed(ap);
         getUSPricesAfterMarket(ap);
+
+        pr(" requesting position ");
+
+        AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
+        ap.reqAccountSummary("All", tags, new ApiController.IAccountSummaryHandler.AccountInfoHandler());
     }
 
     private void getFXDetailed(ApiController ap) {

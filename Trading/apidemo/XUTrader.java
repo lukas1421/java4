@@ -55,7 +55,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
     private static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
-
+    public static final int UP_PERC = 90;
+    public static final int DOWN_PERC = 10;
     //flatten drift trader
     private static final double FLATTEN_THRESH = 200000.0;
     private static final double DELTA_HIGH_LIMIT = 300000.0;
@@ -515,7 +516,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JToggleButton showTodayOnly = new JToggleButton(" Today Only ");
         showTodayOnly.addActionListener(l -> {
             if (showTodayOnly.isSelected()) {
-                displayPred = e -> e.toLocalDate().equals(LocalDate.now()) && e.toLocalTime().isAfter(LocalTime.of(8, 59));
+                displayPred = e -> e.toLocalDate().equals(LocalDate.now())
+                        && e.toLocalTime().isAfter(LocalTime.of(8, 59));
             } else {
                 displayPred = e -> true;
             }
@@ -765,15 +767,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     private static int determinePDPercFactor(LocalTime t, double pd, Direction dir, int perc) {
         int factor = 1;
-        if (perc > 80 && dir == Direction.Long) {
+        if (perc > UP_PERC && dir == Direction.Long) {
             return 0;
-        } else if (perc < 20 && dir == Direction.Short) {
+        } else if (perc < DOWN_PERC && dir == Direction.Short) {
             return 0;
         }
 
-        if (pd > PD_UP_THRESH || perc > 80) {
+        if (pd > PD_UP_THRESH || perc > UP_PERC) {
             factor = dir == Direction.Long ? 1 : 2;
-        } else if (pd < PD_DOWN_THRESH || perc < 20) {
+        } else if (pd < PD_DOWN_THRESH || perc < DOWN_PERC) {
             factor = dir == Direction.Long ? 2 : 1;
         } else {
             if (futureAMSession().test(t)) {
@@ -968,7 +970,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
         //*****************************************************************************************//
         if (timeDiffinMinutes(lastPercOrderT, nowMilli) >= minBetweenPercOrders) {
-            if (perc < 20) {
+            if (perc < DOWN_PERC) {
                 if (currDelta < getBullishTarget()) {
                     int id = autoTradeID.incrementAndGet();
                     int buySize = getPercTraderSize(freshPrice, fx, Direction.Long, currDelta);
@@ -983,7 +985,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 } else {
                     outputToAutoLog(" perc: delta above bullish target ");
                 }
-            } else if (perc > 80) {
+            } else if (perc > UP_PERC) {
                 if (currDelta > getBearishTarget()) {
                     int id = autoTradeID.incrementAndGet();
                     int sellSize = getPercTraderSize(freshPrice, fx, Direction.Short, currDelta);
@@ -1092,7 +1094,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         (prevPrice < maLast && freshPrice >= maLast));
 
         if (currDelta > getBullishTarget() && prevPrice > maLast && freshPrice <= maLast
-                && perc > 90 && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
+                && perc > UP_PERC && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
             int id = autoTradeID.incrementAndGet();
 
             double candidatePrice = (flattenEagerness == Eagerness.Passive) ? freshPrice :
@@ -1104,7 +1106,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Sell", FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Sell Flatten ", globalIdOrderMap.get(id)));
         } else if (currDelta < getBearishTarget() && prevPrice < maLast && freshPrice >= maLast
-                && perc < 10 && pd < PD_UP_THRESH) { // no buy at premium or at top
+                && perc < DOWN_PERC && pd < PD_UP_THRESH) { // no buy at premium or at top
             int id = autoTradeID.incrementAndGet();
 
             double candidatePrice = (flattenEagerness == Eagerness.Passive) ? freshPrice :
@@ -1262,7 +1264,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 && maSignals.get() <= MAX_MA_SIGNALS_PER_SESSION) {
             if (touchConditionMet(secLastBar, lastBar, maLast)) {
                 if (bullishTouchMet(secLastBar, lastBar, maLast) && canLongGlobal.get()
-                        && currDelta < getDeltaHighLimit() && percentile < 20) {
+                        && currDelta < getDeltaHighLimit() && percentile < DOWN_PERC) {
                     if (currentDirection == Direction.Long || pd > PD_UP_THRESH) {
                         candidatePrice = roundToXUPricePassive(maLast, Direction.Long);
                         priceType = (pd > PD_UP_THRESH ? "pd > " + PD_UP_THRESH : "already Long") + " BUY @ MA";
@@ -1293,7 +1295,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                                 globalIdOrderMap.get(id)));
                     }
                 } else if (bearishTouchMet(secLastBar, lastBar, maLast) && canShortGlobal.get()
-                        && currDelta > getDeltaLowLimit() && percentile > 80) {
+                        && currDelta > getDeltaLowLimit() && percentile > UP_PERC) {
                     if (currentDirection == Direction.Short || pd < PD_DOWN_THRESH) {
                         candidatePrice = roundToXUPricePassive(maLast, Direction.Short);
                         priceType = (pd < PD_DOWN_THRESH ? "pd < " + PD_DOWN_THRESH : "currDir is short(same)") + " SELL @ MA";
@@ -1386,14 +1388,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (now.toLocalTime().isBefore(LocalTime.of(5, 0)) &&
                     now.toLocalTime().isAfter(LocalTime.of(4, 40))) {
                 if (pd > PD_UP_THRESH && canShortGlobal.get() && currDelta > getDeltaLowLimit()
-                        && currPercentile > 80) {
+                        && currPercentile > UP_PERC) {
                     double candidatePrice = askMap.getOrDefault(ibContractToFutType((activeFuture)), 0.0);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         int id = autoTradeID.incrementAndGet();
                         Order o = placeOfferLimit(candidatePrice, trimProposedPosition(
                                 1, currPos));
-                        globalIdOrderMap.put(id, new OrderAugmented(now, o,
-                                "Overnight Short", OVERNIGHT));
+                        globalIdOrderMap.put(id, new OrderAugmented(now, o, "Overnight Short", OVERNIGHT));
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         outputOrderToAutoLog(str(o.orderId(), "O/N placing sell order @ ", candidatePrice,
                                 " curr p% ", currPercentile, "curr PD: ", pd));
@@ -1401,7 +1402,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         overnightClosingOrders.incrementAndGet();
                     }
                 } else if (pd < PD_DOWN_THRESH && canLongGlobal.get() && currDelta < getDeltaHighLimit()
-                        && currPercentile < 20) {
+                        && currPercentile < DOWN_PERC) {
                     double candidatePrice = bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         int id = autoTradeID.incrementAndGet();
@@ -1485,7 +1486,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        if (perc < 20) {
+        if (perc < DOWN_PERC) {
             try {
                 inventorySemaphore.acquire();
                 pr(" acquired semaphore now left:" + inventorySemaphore.availablePermits());
@@ -1529,7 +1530,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        } else if (perc > 80) {
+        } else if (perc > UP_PERC) {
             try {
                 inventorySemaphore.acquire();
                 out.println(" acquired semaphore, now left: " + inventorySemaphore.availablePermits());
@@ -1761,10 +1762,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
                             int parentId, double lastFillPrice, int clientId, String whyHeld) {
-        updateLog(str(" status filled remaining avgFillPrice ",
-                status, filled, remaining, avgFillPrice));
+        updateLog(str(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
         if (status.equals(OrderStatus.Filled)) {
-
             createDialog(str(" status filled remaining avgFillPrice ",
                     status, filled, remaining, avgFillPrice));
         }
