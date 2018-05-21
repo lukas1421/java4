@@ -186,32 +186,45 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static double getBullishTarget() {
+
+        double target;
         if (LocalTime.now().isAfter(LocalTime.of(8, 59)) && LocalTime.now().isBefore(LocalTime.of(12, 0))) {
-            return BULLISH_DELTA_TARGET / 2;
+            target = BULLISH_DELTA_TARGET / 2;
+        } else {
+            target = sentiment == MASentiment.Bullish ? BULLISH_DELTA_TARGET : 0.0;
         }
-        return sentiment == MASentiment.Bullish ? BULLISH_DELTA_TARGET : 0.0;
+        return (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) ? target / 2 : target;
     }
 
     private static double getBearishTarget() {
+        double target;
         if (LocalTime.now().isAfter(LocalTime.of(13, 0)) && LocalTime.now().isBefore(LocalTime.of(15, 1))) {
-            return 0.0;
+            target = 0.0;
+        } else {
+            target = sentiment == MASentiment.Bearish ? BEARISH_DELTA_TARGET : 0.0;
         }
-        return sentiment == MASentiment.Bearish ? BEARISH_DELTA_TARGET : 0.0;
+        return (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) ? target / 2 : target;
     }
 
     private static double getDeltaHighLimit() {
+        double limit;
         if (LocalTime.now().isAfter(LocalTime.of(8, 59))
                 && LocalTime.now().isBefore(LocalTime.of(12, 0))) {
-            return DELTA_HIGH_LIMIT / 2;
+            limit = DELTA_HIGH_LIMIT / 2;
+        } else {
+            limit = sentiment == MASentiment.Bullish ? DELTA_HIGH_LIMIT : 0.0;
         }
-        return sentiment == MASentiment.Bullish ? DELTA_HIGH_LIMIT : 0.0;
+        return (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) ? limit / 2 : limit;
     }
 
     private static double getDeltaLowLimit() {
+        double limit;
         if (LocalTime.now().isAfter(LocalTime.of(13, 0)) && LocalTime.now().isBefore(LocalTime.of(15, 1))) {
-            return 0;
+            limit = 0;
+        } else {
+            limit = sentiment == MASentiment.Bearish ? DELTA_LOW_LIMIT : 0.0;
         }
-        return sentiment == MASentiment.Bearish ? DELTA_LOW_LIMIT : 0.0;
+        return (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) ? limit / 2 : limit;
     }
 
     private static void maTradeAnalysis() {
@@ -1143,8 +1156,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         sma = getMAGen(price5, currentMAPeriod);
 
         if (detailedMA.get()) {
-            out.println(str(" Detailed MA ON",
-                    "pd", Math.round(10000d * pd) / 10000d,
+            pr(str(" Detailed MA ON", "pd", r10000(pd),
                     "freshPrice", freshPrice,
                     "prev Price", prevPrice,
                     "last bar", lastBar,
