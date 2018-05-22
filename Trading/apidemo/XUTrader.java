@@ -63,7 +63,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double DELTA_LOW_LIMIT = -300000.0;
 
     private static final double ABS_DELTA_TARGET = 100000.0;
-    private static final double BULLISH_DELTA_TARGET = 100000.0;
+    private static final double BULLISH_DELTA_TARGET = 200000.0;
     private static final double BEARISH_DELTA_TARGET = -100000.0;
     public static volatile Eagerness flattenEagerness = Eagerness.Passive;
 
@@ -187,18 +187,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static double getBullishTarget() {
         double target;
-        if (LocalTime.now().isAfter(LocalTime.of(8, 59)) && LocalTime.now().isBefore(LocalTime.of(12, 0))) {
+        if (futureAMSession().test(LocalTime.now())) {
             target = BULLISH_DELTA_TARGET / 2;
         } else {
-            target = sentiment == MASentiment.Bullish ? BULLISH_DELTA_TARGET : 0.0;
+            target = sentiment == MASentiment.Bullish ? BULLISH_DELTA_TARGET : BULLISH_DELTA_TARGET / 2;
         }
         return (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) ? target / 2 : target;
     }
 
     private static double getBearishTarget() {
         double target;
-        if (LocalTime.now().isAfter(LocalTime.of(13, 0)) && LocalTime.now().isBefore(LocalTime.of(15, 1))) {
-            target = 0.0;
+        if (futurePMSession().test(LocalTime.now())) {
+            target = BULLISH_DELTA_TARGET / 4;
         } else {
             target = sentiment == MASentiment.Bearish ? BEARISH_DELTA_TARGET : 0.0;
         }
@@ -207,8 +207,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static double getDeltaHighLimit() {
         double limit;
-        if (LocalTime.now().isAfter(LocalTime.of(8, 59))
-                && LocalTime.now().isBefore(LocalTime.of(12, 0))) {
+        if (futureAMSession().test(LocalTime.now())){
             limit = DELTA_HIGH_LIMIT / 2;
         } else {
             limit = sentiment == MASentiment.Bullish ? DELTA_HIGH_LIMIT : 0.0;
@@ -218,7 +217,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static double getDeltaLowLimit() {
         double limit;
-        if (LocalTime.now().isAfter(LocalTime.of(13, 0)) && LocalTime.now().isBefore(LocalTime.of(15, 1))) {
+        if (futurePMSession().test(LocalTime.now())) {
             limit = 0;
         } else {
             limit = sentiment == MASentiment.Bearish ? DELTA_LOW_LIMIT : 0.0;
@@ -893,8 +892,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime now = LocalTime.now();
         //am trade size is forced to be 1
         //pm trade size can be 3 at a time.
-        int maxSize = futurePMSession().test(now) ? (d == Direction.Long ? 3 : 1) :
-                futureAMSession().test(now) ? (d == Direction.Long ? 1 : 3) : 1;
+        int maxSize = futurePMSession().test(now) ? (d == Direction.Long ? 2 : 1) :
+                futureAMSession().test(now) ? (d == Direction.Long ? 1 : 2) : 1;
         return Math.max(0, Math.min(candidate, maxSize));
     }
 
