@@ -993,7 +993,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         outputOrderToAutoLog(str(o.orderId(), "perc bid", globalIdOrderMap.get(id), " perc ", perc));
                     } else {
-                        throw new IllegalStateException(" perc buy size < 0 ");
+                        pr("perc buy size not tradable " + buySize);
+                        //throw new IllegalStateException(" perc buy size <= 0 "+ buySize);
                     }
                 } else {
                     outputToAutoLog(" perc: delta above bullish target ");
@@ -1009,7 +1010,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                         outputOrderToAutoLog(str(o.orderId(), "perc offer", globalIdOrderMap.get(id), "perc", perc));
                     } else {
-                        throw new IllegalStateException(" perc sell size < 0 ");
+                        pr("perc sell size not tradable " + sellSize);
+                        //throw new IllegalStateException(" perc sell size < 0 ");
                     }
                 } else {
                     outputToAutoLog("perc: delta below bearish target ");
