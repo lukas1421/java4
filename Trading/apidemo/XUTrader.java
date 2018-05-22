@@ -186,7 +186,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static double getBullishTarget() {
-
         double target;
         if (LocalTime.now().isAfter(LocalTime.of(8, 59)) && LocalTime.now().isBefore(LocalTime.of(12, 0))) {
             target = BULLISH_DELTA_TARGET / 2;
@@ -891,7 +890,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
         pr("price", price, "fx", fx, "senti", sentiment, "dir", d, "currDel", currDelta,
                 "bull bear targets", getBullishTarget(), getBearishTarget(), "candidate ", candidate);
-        return Math.max(0, Math.min(candidate, 3));
+        LocalTime now = LocalTime.now();
+        //am trade size is forced to be 1
+        //pm trade size can be 3 at a time.
+        int maxSize = futurePMSession().test(now) ? (d == Direction.Long ? 3 : 1) :
+                futureAMSession().test(now) ? (d == Direction.Long ? 1 : 3) : 1;
+        return Math.max(0, Math.min(candidate, maxSize));
     }
 
     /**
@@ -972,7 +976,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 lastPercOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES),
                 lastPercTradeT.toLocalTime().truncatedTo(ChronoUnit.MINUTES),
                 lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime().truncatedTo(ChronoUnit.MINUTES)
-                , "accAvg, DecAvg,", avgAccprice, avgDeccprice, "CurrDelta: ", r(currDelta), "pd", r10000(pd));
+                , "accAvg, DecAvg,", avgAccprice, avgDeccprice, "CurrDelta: ", r(currDelta), "pd", r10000(pd),
+                "bullish bearish target : ", getBullishTarget(), getBearishTarget());
 
         //******************************************************************************************//
         //if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
