@@ -1,6 +1,9 @@
 import apidemo.TradingConstants;
 
 import javax.swing.*;
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -11,6 +14,8 @@ import java.util.NavigableMap;
 import java.util.TreeMap;
 
 import static utility.Utility.pr;
+
+//And then put this snippet of code wherever you'd like to alter the clipboard:
 
 public class IBCode extends JPanel {
 
@@ -35,38 +40,46 @@ public class IBCode extends JPanel {
         pr(keyList);
     }
 
+    public static void mainSequence() {
+
+    }
+
     public static void main(String[] args) {
         loadList();
-//        JFrame jf = new JFrame();
-//        jf.setSize(new Dimension(300, 300));
-//        IBCode ib = new IBCode();
-//        jf.add(ib);
-//        jf.setLayout(new FlowLayout());
-//        jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//        jf.setVisible(true);
 
         String firstInt = JOptionPane.showInputDialog("Please input number ");
         List<String> al1 = Arrays.asList(firstInt.split("\\s+"));
+
         StringBuilder sb = new StringBuilder();
         for (String s : al1) {
             int input = Integer.parseInt(s);
-            sb.append(keyList.getOrDefault(input, ""));
-            sb.append(" ");
+            if (input > 0 && input <= 224) {
+                sb.append(keyList.getOrDefault(input, ""));
+                sb.append(" ");
+            } else {
+                throw new IllegalStateException(" numbers incorrect ");
+            }
         }
 
-        JTextArea ta = new JTextArea(10, 10);
+        JTextArea ta = new JTextArea(10, 2);
         ta.setText(sb.toString());
         ta.setWrapStyleWord(true);
         ta.setLineWrap(true);
         ta.setCaretPosition(0);
         ta.setSelectionStart(0);
-        ta.setSelectionEnd(6);
+        ta.setSelectionEnd(5);
         ta.setEditable(false);
 
-        JOptionPane.showMessageDialog(null, new JScrollPane(ta), "RESULT", JOptionPane.INFORMATION_MESSAGE);
+        JScrollPane pa = new JScrollPane(ta);
+        pa.setPreferredSize(new Dimension(100, 100));
+
+        String myString = sb.toString();
+        StringSelection stringSelection = new StringSelection(myString);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(stringSelection, null);
+
+        //JOptionPane.showMessageDialog(null, pa, "RESULT", JOptionPane.INFORMATION_MESSAGE);
         //JOptionPane.showMessageDialog(null, sb);
-
-
     }
 
 }
