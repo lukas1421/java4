@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Collectors;
 
 import static utility.Utility.*;
 
@@ -31,7 +32,9 @@ public class GraphOptionLapse extends JComponent implements MouseMotionListener,
     }
 
     public void setVolLapse(NavigableMap<LocalDate, Double> m) {
-        volLapse = m;
+        volLapse = m.entrySet().stream().filter(e -> e.getKey().isAfter(LocalDate.now().minusDays(90)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
     }
 
     public void setGraphTitle(String s) {
