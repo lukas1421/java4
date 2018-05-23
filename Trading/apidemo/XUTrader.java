@@ -69,7 +69,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     //perc trader
-    private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(true);
+    private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
     private static final int MAX_PERC_TRADES = 5;
 
     //inventory market making
