@@ -276,11 +276,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     //lastMAOrderTime = now;
                 }
             }
-            //computed from maAnalysis, persistent through sessions.
-//            long maSignalsPersist = maIdeasSet.stream().filter(e -> e.getIdeaTime().isAfter(sessionBeginLDT)).count();
-//            String maOutput = (str("MA signals persist || BeginT: ", sessionBeginLDT,
-//                    "||Last Order Time: ", lastMAOrderTime, "||Signal #: ", maSignalsPersist, "||list: ", maIdeasSet));
-//            outputToAutoLog(maOutput);
         }
     }
 
@@ -486,7 +481,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     }
                 }
             }, 0, 1, TimeUnit.MINUTES);
-
         });
 
         JButton stopComputeButton = new JButton("Stop Processing");
