@@ -19,14 +19,12 @@ import static utility.Utility.pr;
 
 public class IBCode extends JPanel {
 
-    public static NavigableMap<Integer, String> keyList = new TreeMap<>();
+    private static NavigableMap<Integer, String> keyList = new TreeMap<>();
 
     IBCode() {
-
-
     }
 
-    public static void loadList() {
+    private static void loadList() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(
                 new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "IBCodes.txt")))) {
@@ -46,10 +44,8 @@ public class IBCode extends JPanel {
 
     public static void main(String[] args) {
         loadList();
-
         String firstInt = JOptionPane.showInputDialog("Please input number ");
         List<String> al1 = Arrays.asList(firstInt.split("\\s+"));
-
         StringBuilder sb = new StringBuilder();
         for (String s : al1) {
             int input = Integer.parseInt(s);
@@ -77,9 +73,5 @@ public class IBCode extends JPanel {
         StringSelection stringSelection = new StringSelection(myString);
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(stringSelection, null);
-
-        //JOptionPane.showMessageDialog(null, pa, "RESULT", JOptionPane.INFORMATION_MESSAGE);
-        //JOptionPane.showMessageDialog(null, sb);
     }
-
 }
