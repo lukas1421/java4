@@ -207,7 +207,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static double getDeltaHighLimit() {
         double limit;
-        if (futureAMSession().test(LocalTime.now())){
+        if (futureAMSession().test(LocalTime.now())) {
             limit = DELTA_HIGH_LIMIT / 2;
         } else {
             limit = sentiment == MASentiment.Bullish ? DELTA_HIGH_LIMIT : 0.0;
@@ -874,7 +874,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //adjust delta here.
     private static int getPercTraderSize(double price, double fx, Direction d, double currDelta) {
-        int candidate = 1;
+        int candidate = 0;
         if (sentiment == MASentiment.Directionless || d == Direction.Flat) return 1;
         double target = (sentiment == MASentiment.Bullish ? getBullishTarget() : getBearishTarget());
 
@@ -887,7 +887,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 candidate = (int) Math.floor((currDelta - target) / (price * fx));
             }
         }
-        pr("price", price, "fx", fx, "senti", sentiment, "dir", d, "currDel", currDelta,
+        pr("GET PERC SIZE: price", price, "fx", fx, "senti", sentiment, "dir", d, "currDel", currDelta,
                 "bull bear targets", getBullishTarget(), getBearishTarget(), "candidate ", candidate);
         LocalTime now = LocalTime.now();
         //am trade size is forced to be 1

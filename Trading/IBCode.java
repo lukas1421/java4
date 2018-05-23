@@ -15,14 +15,9 @@ import java.util.TreeMap;
 
 import static utility.Utility.pr;
 
-//And then put this snippet of code wherever you'd like to alter the clipboard:
-
 public class IBCode extends JPanel {
 
     private static NavigableMap<Integer, String> keyList = new TreeMap<>();
-
-    IBCode() {
-    }
 
     private static void loadList() {
         String line;
@@ -36,10 +31,6 @@ public class IBCode extends JPanel {
             ex.printStackTrace();
         }
         pr(keyList);
-    }
-
-    public static void mainSequence() {
-
     }
 
     public static void main(String[] args) {
@@ -56,18 +47,6 @@ public class IBCode extends JPanel {
                 throw new IllegalStateException(" numbers incorrect ");
             }
         }
-
-        JTextArea ta = new JTextArea(10, 2);
-        ta.setText(sb.toString());
-        ta.setWrapStyleWord(true);
-        ta.setLineWrap(true);
-        ta.setCaretPosition(0);
-        ta.setSelectionStart(0);
-        ta.setSelectionEnd(5);
-        ta.setEditable(false);
-
-        JScrollPane pa = new JScrollPane(ta);
-        pa.setPreferredSize(new Dimension(100, 100));
 
         String myString = sb.toString();
         StringSelection stringSelection = new StringSelection(myString);
