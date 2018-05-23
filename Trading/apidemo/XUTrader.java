@@ -989,7 +989,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         Order o = placeBidLimit(freshPrice, buySize);
                         globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid", PERC_ACC));
                         apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                        outputOrderToAutoLog(str(o.orderId(), "perc bid", globalIdOrderMap.get(id), " perc ", perc));
+                        outputOrderToAutoLog(str(o.orderId(), "perc bid",
+                                globalIdOrderMap.get(id), " perc ", perc));
                     } else {
                         pr("perc buy size not tradable " + buySize);
                         //throw new IllegalStateException(" perc buy size <= 0 "+ buySize);
@@ -1260,6 +1261,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
                 ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
         double pd = (indexPrice != 0.0 && freshPrice != 0.0) ? (freshPrice / indexPrice - 1) : 0.0;
+        double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 1.0);
 
         if (tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
             lastMATradeTime = tradesMap.get(ibContractToFutType(activeFuture)).lastKey();
@@ -1276,7 +1278,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 && maSignals.get() <= MAX_MA_SIGNALS_PER_SESSION) {
             if (touchConditionMet(secLastBar, lastBar, maLast)) {
                 if (bullishTouchMet(secLastBar, lastBar, maLast) && canLongGlobal.get()
-                        && currDelta < getDeltaHighLimit() && percentile < DOWN_PERC) {
+                        && currDelta + fx * freshPrice < getBullishTarget() && percentile < DOWN_PERC) {
                     if (currentDirection == Direction.Long || pd > PD_UP_THRESH) {
                         candidatePrice = roundToXUPricePassive(maLast, Direction.Long);
                         priceType = (pd > PD_UP_THRESH ? "pd > " + PD_UP_THRESH : "already Long") + " BUY @ MA";
@@ -1291,9 +1293,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         priceType = " maSignals > 0 -> BUY @ LAST BAR OPEN";
                     }
 
-                    Order o = placeBidLimit(candidatePrice, trimProposedPosition(
-                            determinePDPercFactor(nowMilli.toLocalTime(), pd, Direction.Long,
-                                    percentile) * determineTimeDiffFactor(), currPos));
+//                    trimProposedPosition(
+//                            determinePDPercFactor(nowMilli.toLocalTime(), pd, Direction.Long,
+//                                    percentile) * determineTimeDiffFactor(), currPos)
+                    Order o = placeBidLimit(candidatePrice, 1);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         //apcon.cancelAllOrders();
                         maOrderMap.put(nowMilli, o);
@@ -1307,10 +1310,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                                 globalIdOrderMap.get(id)));
                     }
                 } else if (bearishTouchMet(secLastBar, lastBar, maLast) && canShortGlobal.get()
-                        && currDelta > getDeltaLowLimit() && percentile > UP_PERC) {
+                        && currDelta - fx * freshPrice > getBearishTarget() && percentile > UP_PERC) {
                     if (currentDirection == Direction.Short || pd < PD_DOWN_THRESH) {
                         candidatePrice = roundToXUPricePassive(maLast, Direction.Short);
-                        priceType = (pd < PD_DOWN_THRESH ? "pd < " + PD_DOWN_THRESH : "currDir is short(same)") + " SELL @ MA";
+                        priceType = (pd < PD_DOWN_THRESH ? "pd < " + PD_DOWN_THRESH : "currDir is short(same)")
+                                + " SELL @ MA";
                     } else if (pd > PD_UP_THRESH) {
                         candidatePrice = bidMap.get(ibContractToFutType(activeFuture));
                         priceType = "pd > " + PD_UP_THRESH + " -> SELL @ BID";
@@ -1321,9 +1325,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         candidatePrice = roundToXUPricePassive(lastBar.getOpen(), Direction.Short);
                         priceType = "SELL: maSignals > 0 -> SELL @ last Bar OPEN";
                     }
-                    Order o = placeOfferLimit(candidatePrice,
-                            trimProposedPosition(determinePDPercFactor(nowMilli.toLocalTime(), pd,
-                                    Direction.Short, percentile) * determineTimeDiffFactor(), currPos));
+//                    trimProposedPosition(determinePDPercFactor(nowMilli.toLocalTime(), pd,
+//                            Direction.Short, percentile) * determineTimeDiffFactor(), currPos)
+                    Order o = placeOfferLimit(candidatePrice, 1);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
                         maOrderMap.put(nowMilli, o);
                         maSignals.incrementAndGet();
