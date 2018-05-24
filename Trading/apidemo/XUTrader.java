@@ -87,7 +87,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static volatile CyclicBarrier pdBarrier = new CyclicBarrier(2, () -> {
         outputToAutoLog(str(LocalTime.now(), " PD barrier reached 2, Trading cycle ends"));
     });
-    private static final int PD_TRADE_QUANTITY = 1;
+    private static final int PD_ORDER_QUANTITY = 1;
     private static AtomicBoolean pdTraderOn = new AtomicBoolean(false);
 
     //overnight trades
@@ -1088,12 +1088,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
-                    int id = autoTradeID.incrementAndGet();
-                    Order o = placeOfferLimit(freshPrice, 1);
-                    apcon.placeOrModifyOrder(activeFuture, o, new InventoryOrderHandler(id, pdBarrier));
-                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PD_CLOSE));
-                    outputOrderToAutoLog(str(o.orderId(), LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
-                            , " PD sell Close ", globalIdOrderMap.get(id)));
+                    int idSellClose = autoTradeID.incrementAndGet();
+                    Order sellO = placeOfferLimit(freshPrice, 1);
+                    apcon.placeOrModifyOrder(activeFuture, sellO, new InventoryOrderHandler(idSellClose, pdBarrier));
+                    globalIdOrderMap.put(idSellClose, new OrderAugmented(nowMilli, sellO, PD_CLOSE));
+                    outputOrderToAutoLog(str(sellO.orderId(), LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+                            , " PD sell Close ", globalIdOrderMap.get(idSellClose)));
 
                 } else if (q < 0 && pdPercentile < 30 && freshPrice < limit && pd < 0.0) {
                     try {
@@ -1101,16 +1101,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     } catch (InterruptedException e1) {
                         e1.printStackTrace();
                     }
-                    int idSell = autoTradeID.incrementAndGet();
-                    Order sellO = placeBidLimit(freshPrice, PD_TRADE_QUANTITY);
-                    globalIdOrderMap.put(idSell, new OrderAugmented(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
-                            , sellO, "PD Buy close", PD_CLOSE));
-                    apcon.placeOrModifyOrder(activeFuture, sellO, new InventoryOrderHandler(idSell, pdBarrier));
-                    outputOrderToAutoLog(str(sellO.orderId(), " PD Buy Close ", globalIdOrderMap.get(idSell)));
+                    int idBuyClose = autoTradeID.incrementAndGet();
+                    Order buyO = placeBidLimit(freshPrice, PD_ORDER_QUANTITY);
+                    globalIdOrderMap.put(idBuyClose, new OrderAugmented(LocalDateTime.now()
+                            .truncatedTo(ChronoUnit.MINUTES), buyO, "PD Buy close", PD_CLOSE));
+                    apcon.placeOrModifyOrder(activeFuture, buyO, new InventoryOrderHandler(idBuyClose, pdBarrier));
+                    outputOrderToAutoLog(str(buyO.orderId(), " PD Buy Close ", globalIdOrderMap.get(idBuyClose)));
                 }
             });
         } else if (pdBarrier.getNumberWaiting() == 0 && pdSemaphore.availablePermits() == 2) {
-
             if (perc < DOWN_PERC && pdPercentile < DOWN_PERC && pd < 0.0) {
                 try {
                     pdSemaphore.acquire();
@@ -1119,7 +1118,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
 
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, PD_TRADE_QUANTITY);
+                Order o = placeBidLimit(freshPrice, PD_ORDER_QUANTITY);
                 apcon.placeOrModifyOrder(activeFuture, o, new InventoryOrderHandler(id, pdBarrier));
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PD_OPEN));
                 outputOrderToAutoLog(str(o.orderId(), LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
@@ -1138,7 +1137,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PD_OPEN));
                 outputOrderToAutoLog(str(o.orderId(), LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
                         , " PD sell open ", globalIdOrderMap.get(id)));
-
             }
         }
     }
