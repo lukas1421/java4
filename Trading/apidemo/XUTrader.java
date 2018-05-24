@@ -962,8 +962,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double currStockDelta = ChinaPosition.getStockPtfDelta();
 
         pr("perc Trader status?", percentileTradeOn.get() ? "ON" : "OFF",
-                "T: ", nowMilli.toLocalTime().truncatedTo(ChronoUnit.SECONDS),
-                "p%: ", perc, "CurrDelta: ", r(currDelta), "pd", r10000(pd),
+                nowMilli.toLocalTime().truncatedTo(ChronoUnit.SECONDS),
+                "p%:", perc, "CurrDelta: ", r(currDelta), "pd", r10000(pd),
                 "BullBear target : ", getBullishTarget(), getBearishTarget(),
                 "acc#, decc#, net#", accSize, deccSize, netPercTrades
                 , "accAvg, DecAvg,", avgAccprice, avgDeccprice,

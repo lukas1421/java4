@@ -36,11 +36,11 @@ public class GraphXUSI extends JComponent {
     private boolean detailed = false;
     //private boolean drawable = true;
     private double openXU = 0.0;
-    private double openSI = 0.0;
-    private double prevCloseSI = 0.0;
+    public static double openSI = 0.0;
+    public static double prevCloseSI = 0.0;
     private double prevCloseXU = 0.0;
     public static final LocalTime AM900 = LocalTime.of(9, 0);
-    private NavigableMap<LocalTime, Double> sina = new ConcurrentSkipListMap<>();
+    public static NavigableMap<LocalTime, Double> sina = new ConcurrentSkipListMap<>();
 
     public GraphXUSI() {
         name = "";
@@ -176,7 +176,7 @@ public class GraphXUSI extends JComponent {
                 g.setColor(Color.RED);
 
                 g.drawString("Index: " + Double.toString(Math.round(sina.lastEntry().getValue())), getWidth() / 2 + 30, 20);
-                g.drawString("Index%  " + (Math.round(10000d * (sina.lastEntry().getValue() / (prevCloseSI != 0.0 ? prevCloseSI : openSI) - 1)) / 100d) + "   ", getWidth() / 2 + 420, 20);
+                g.drawString("Index%  " + getXUIndexReturn() + "   ", getWidth() / 2 + 420, 20);
                 g.setColor(Color.black);
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -192,6 +192,13 @@ public class GraphXUSI extends JComponent {
             g.drawString(Double.toString(Math.round(minSI)), getWidth() - 60, getHeight() - 50);
             g.drawString(Double.toString(Math.round((maxSI + minSI) / 2d)), getWidth() - 60, (getHeight() - 35) / 2);
         }
+    }
+
+    static double getXUIndexReturn() {
+        if (prevCloseSI != 0.0 && openSI != 0.0 && sina.size() > 0) {
+            return Math.round(10000d * (sina.lastEntry().getValue() / (prevCloseSI != 0.0 ? prevCloseSI : openSI) - 1)) / 100d;
+        }
+        return 0.0;
     }
 
     /**

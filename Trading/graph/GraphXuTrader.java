@@ -408,7 +408,8 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         g2.drawString("开: " + Integer.toString((int) Math.round(getOpen())), getWidth() * 2 / 8, 15);
         g2.drawString(" P: " + Double.toString(getLast()), getWidth() * 6 / 16, 15);
         g2.drawString(" Perc%: " + getPercentileForLast(tm), getWidth() * 7 / 16, 15);
-        g2.drawString(" Index: " + Math.round(getIndex()), getWidth() * 8 / 16, 15);
+        g2.drawString(" Index: " + Math.round(getIndex()) + " (" + GraphXUSI.getXUIndexReturn() + "%) "
+                , getWidth() * 8 / 16, 15);
         g2.drawString("PD: " + getPD() + "%", getWidth() * 10 / 16, 15);
         g2.drawString("Pos: " + XUTrader.currentPosMap.getOrDefault(fut, 0), getWidth() * 11 / 16, 15);
         g2.drawString("Pnl: " + getTradePnl(), getWidth() * 12 / 16, 15);
