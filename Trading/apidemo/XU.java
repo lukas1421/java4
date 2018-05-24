@@ -78,7 +78,7 @@ public final class XU extends JPanel {
     //public static NavigableMap<LocalTime, Double> indexSinaDiscount = new ConcurrentSkipListMap<>();
     private static NavigableMap<LocalTime, Integer> pricePercentile = new ConcurrentSkipListMap<>();
     private static volatile NavigableMap<LocalTime, Double> discPremSina = new ConcurrentSkipListMap<>();
-    private static NavigableMap<LocalTime, Double> discPremPercentile = new ConcurrentSkipListMap<>();
+    public static NavigableMap<LocalTime, Double> discPremPercentile = new ConcurrentSkipListMap<>();
 
     static JPanel graphPanel = new JPanel();
     private static ConcurrentHashMap<Integer, NavigableMap<LocalTime, ?>> xusave = new ConcurrentHashMap<>();
@@ -675,7 +675,7 @@ public final class XU extends JPanel {
 
                 case 4:
                     //return frontFutVol.getOrDefault(lt,0);
-                    return (int)Math.round(ChinaData.sizeTotalMap.get(ticker).getOrDefault(lt, 0.0));
+                    return (int) Math.round(ChinaData.sizeTotalMap.get(ticker).getOrDefault(lt, 0.0));
 
                 case 5:
                     if (ChinaData.sizeTotalMap.get(ticker).size() < 2) {

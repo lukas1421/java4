@@ -26,6 +26,12 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
         barrier = cb;
     }
 
+    public InventoryOrderHandler(int i, CyclicBarrier cb) {
+        defaultID = i;
+        latch = new CountDownLatch(1);
+        barrier = cb;
+    }
+
     @Override
     public void orderState(OrderState orderState) {
         globalIdOrderMap.get(defaultID).setStatus(orderState.status());
@@ -37,8 +43,9 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
                     orderState.status());
             XuTraderHelper.outputToAutoLog(msg);
             XuTraderHelper.outputPurelyOrders(msg);
+
             if (latch.getCount() == 1) {
-                System.out.println(" counting down latch ");
+                System.out.println(" counting down latch Inv handler ");
                 latch.countDown();
 
                 CompletableFuture.runAsync(() -> {
