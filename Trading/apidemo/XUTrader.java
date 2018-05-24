@@ -963,14 +963,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         pr("perc Trader status?", percentileTradeOn.get() ? "ON" : "OFF",
                 "T: ", nowMilli.toLocalTime().truncatedTo(ChronoUnit.SECONDS),
-                "perc: ", perc,
-                "accSize, deccSize, netSize", accSize, deccSize, netPercTrades,
-                "OrderT Trade T,next tradeT",
+                "p%: ", perc, "CurrDelta: ", r(currDelta), "pd", r10000(pd),
+                "BullBear target : ", getBullishTarget(), getBearishTarget(),
+                "acc#, decc#, net#", accSize, deccSize, netPercTrades
+                , "accAvg, DecAvg,", avgAccprice, avgDeccprice,
+                "OrderT TradeT,next tradeT",
                 lastPercOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES),
                 lastPercTradeT.toLocalTime().truncatedTo(ChronoUnit.MINUTES),
                 lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime().truncatedTo(ChronoUnit.MINUTES)
-                , "accAvg, DecAvg,", avgAccprice, avgDeccprice, "CurrDelta: ", r(currDelta), "pd", r10000(pd),
-                "bullish bearish target : ", getBullishTarget(), getBearishTarget());
+        );
 
         //******************************************************************************************//
         //if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
