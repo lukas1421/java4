@@ -79,8 +79,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "Trading Cycle Ends"));
     });
     private static final double margin = 2.5;
-    private static final int inv_trade_quantity = 1;
+    private static final int INV_TRADE_QUANTITY = 1;
     private static AtomicBoolean inventoryTraderOn = new AtomicBoolean(false);
+
+    //pd market making
+    private static volatile Semaphore pdSemaphore = new Semaphore(1);
+    private static volatile CyclicBarrier pdBarrier = new CyclicBarrier(2, () -> {
+        outputToAutoLog(str(LocalTime.now(), " PD barrier reached 2, Trading cycle ends"));
+    });
+    private static final int PD_TRADE_QUANTITY = 1;
+    private static AtomicBoolean pdTraderOn = new AtomicBoolean(false);
 
     //overnight trades
     private static final AtomicBoolean overnightTradeOn = new AtomicBoolean(true);
@@ -536,6 +544,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             apcon.cancelAllOrders();
             inventorySemaphore = new Semaphore(1);
             inventoryBarrier.reset();
+            pdSemaphore = new Semaphore(1);
+            pdBarrier.reset();
             activeFutLiveOrder = new HashMap<>();
             activeFutLiveIDOrderMap = new HashMap<>();
             globalIdOrderMap.entrySet().stream().filter(e -> isInventoryTrade().test(e.getValue().getTradeType()))
@@ -1041,6 +1051,121 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    /**
+     * PD trader
+     */
+
+    public static synchronized void pdTrader(LocalDateTime nowMilli, double freshPrice) {
+        int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
+        double pd = getPD(freshPrice);
+        int pdPercentile = getPDPercentile();
+        double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 0.0);
+        double currDelta = ChinaPosition.getNetPtfDelta();
+
+        if (pdSemaphore.availablePermits() == 0) {
+            pr(" quitting PD trade: semaphore #:", pdSemaphore.availablePermits());
+            return;
+        }
+
+        if (currDelta > getDeltaHighLimit() || currDelta < getDeltaLowLimit()) {
+            pr("PD Trader: outside delta limit ");
+            return;
+        }
+
+        if (perc < DOWN_PERC && pdPercentile < DOWN_PERC) {
+            try {
+                pdSemaphore.acquire();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            CountDownLatch latchBuyOpen = new CountDownLatch(1);
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeBidLimit(freshPrice, PD_TRADE_QUANTITY);
+            apcon.placeOrModifyOrder(activeFuture, o, new InventoryOrderHandler(id, latchBuyOpen, pdBarrier));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PD_OPEN));
+            outputOrderToAutoLog(str(o.orderId(), LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+                    , " PD buy open ", globalIdOrderMap.get(id)));
+
+            try {
+                latchBuyOpen.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            //buying done, now sell
+            pr(" Bot, now putting in sell signal ");
+            CountDownLatch latchSellClose = new CountDownLatch(1);
+            int idSell = autoTradeID.incrementAndGet();
+            Order sellO = placeOfferLimit(freshPrice, PD_TRADE_QUANTITY);
+            globalIdOrderMap.put(idSell, new OrderAugmented(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+                    , sellO, "Inv Sell Close", INVENTORY_CLOSE));
+            apcon.placeOrModifyOrder(activeFuture, sellO, new InventoryOrderHandler(idSell, latchSellClose, pdBarrier));
+            outputOrderToAutoLog(str(sellO.orderId(), " PD Sell Close ", globalIdOrderMap.get(idSell)));
+            try {
+                latchSellClose.await();
+                if (pdBarrier.getNumberWaiting() == 2) {
+                    outputToAutoLog(str(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+                            , " resetting PD barrier "));
+                    pdBarrier.reset();
+                    pr(" reset inventory barrier ");
+                }
+                pdSemaphore.release();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        } else if (perc > UP_PERC && pdPercentile > UP_PERC) {
+            try {
+                pdSemaphore.acquire();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            CountDownLatch latchSellOpen = new CountDownLatch(1);
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimit(freshPrice, 1);
+            apcon.placeOrModifyOrder(activeFuture, o, new InventoryOrderHandler(id, latchSellOpen, pdBarrier));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PD_OPEN));
+            outputOrderToAutoLog(str(o.orderId(), LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+                    , " PD sell open ", globalIdOrderMap.get(id)));
+
+            try {
+                latchSellOpen.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            //buying done, now sell
+            pr(" Sold, now putting in buy signal ");
+            CountDownLatch latchBuyClose = new CountDownLatch(1);
+            int idSell = autoTradeID.incrementAndGet();
+            Order sellO = placeBidLimit(freshPrice, PD_TRADE_QUANTITY);
+            globalIdOrderMap.put(idSell, new OrderAugmented(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+                    , sellO, "PD Buy close", PD_CLOSE));
+            apcon.placeOrModifyOrder(activeFuture, sellO, new InventoryOrderHandler(idSell, latchBuyClose, pdBarrier));
+            outputOrderToAutoLog(str(sellO.orderId(), " PD Buy Close ", globalIdOrderMap.get(idSell)));
+            try {
+                latchBuyClose.await();
+                if (pdBarrier.getNumberWaiting() == 2) {
+                    outputToAutoLog(str(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+                            , " resetting PD barrier "));
+                    pdBarrier.reset();
+                    pr(" reset PD barrier ");
+                }
+                pdSemaphore.release();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+    }
+
+    public static int getPDPercentile() {
+
+        return 50;
+
+    }
 
     /**
      * flatten delta aggressively at bid/offer
@@ -1513,7 +1638,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             CountDownLatch latchBuy = new CountDownLatch(1);
             int idBuy = autoTradeID.incrementAndGet();
-            Order buyO = placeBidLimit(freshPrice - margin, inv_trade_quantity);
+            Order buyO = placeBidLimit(freshPrice - margin, INV_TRADE_QUANTITY);
             globalIdOrderMap.put(idBuy, new OrderAugmented(LocalDateTime.now()
                     , buyO, "Inv Buy Open", INVENTORY_OPEN));
             apcon.placeOrModifyOrder(activeFuture, buyO, new InventoryOrderHandler(idBuy, latchBuy, inventoryBarrier));
@@ -1530,7 +1655,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" Bot, now putting in sell signal ");
             CountDownLatch latchSell = new CountDownLatch(1);
             int idSell = autoTradeID.incrementAndGet();
-            Order sellO = placeOfferLimit(freshPrice + margin, inv_trade_quantity);
+            Order sellO = placeOfferLimit(freshPrice + margin, INV_TRADE_QUANTITY);
             globalIdOrderMap.put(idSell, new OrderAugmented(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
                     , sellO, "Inv Sell Close", INVENTORY_CLOSE));
             apcon.placeOrModifyOrder(activeFuture, sellO, new InventoryOrderHandler(idSell, latchSell, inventoryBarrier));
@@ -1557,7 +1682,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             CountDownLatch latchSell = new CountDownLatch(1);
             int idSell = autoTradeID.incrementAndGet();
-            Order sellO = placeOfferLimit(freshPrice + margin, inv_trade_quantity);
+            Order sellO = placeOfferLimit(freshPrice + margin, INV_TRADE_QUANTITY);
             globalIdOrderMap.put(idSell,
                     new OrderAugmented(LocalDateTime.now(), sellO, " Sell Open", INVENTORY_OPEN));
             apcon.placeOrModifyOrder(activeFuture, sellO, new InventoryOrderHandler(idSell, latchSell, inventoryBarrier));
@@ -1573,7 +1698,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             out.println(" Sold, now putting in buy signal ");
             CountDownLatch latchBuy = new CountDownLatch(1);
             int idBuy = autoTradeID.incrementAndGet();
-            Order buyO = placeBidLimit(freshPrice - margin, inv_trade_quantity);
+            Order buyO = placeBidLimit(freshPrice - margin, INV_TRADE_QUANTITY);
             globalIdOrderMap.put(idBuy, new OrderAugmented(LocalDateTime.now(), buyO, " Buy Close", INVENTORY_CLOSE));
             apcon.placeOrModifyOrder(activeFuture, buyO, new InventoryOrderHandler(idBuy, latchBuy, inventoryBarrier));
             outputOrderToAutoLog(str(buyO.orderId(), "Inv Buy Close", globalIdOrderMap.get(idBuy)));
