@@ -1054,12 +1054,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * PD trader
      */
-
     public static synchronized void pdTrader(LocalDateTime nowMilli, double freshPrice) {
         int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         double pd = getPD(freshPrice);
-        int pdPercentile = getPDPercentile();
-        double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 0.0);
+        int pdPerc = getPDPercentile();
+        //double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 0.0);
         double currDelta = ChinaPosition.getNetPtfDelta();
 
         if (currDelta > getDeltaHighLimit() || currDelta < getDeltaLowLimit()) {
@@ -1067,11 +1066,21 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
+        pr(nowMilli.toLocalTime().truncatedTo(ChronoUnit.MINUTES),
+                " pd trader ", " barrier# ", pdBarrier.getNumberWaiting(), " PD sem#: ",
+                pdSemaphore.availablePermits(), "pd", pd, "pd P%", pdPerc);
+
+        // print all pd trades
+        globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getTradeType() == AutoOrderType.PD_OPEN ||
+                e.getValue().getTradeType() == AutoOrderType.PD_CLOSE)
+                .forEach(Utility::pr);
+        //.max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+        //.ifPresent(e -> pr("last pd trade ", e.getValue()));
+
         if (pdBarrier.getNumberWaiting() == 2) {
             outputToAutoLog(str(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), " resetting PD barrier" +
-                    ": barrier waiting: 2 "));
+                    ": barrier waiting: 2 ", "resetting semaphore "));
             pdBarrier.reset();
-            pr(" reset PD barrier ");
             pdSemaphore = new Semaphore(2);
         }
 
@@ -1082,7 +1091,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 double q = e.getValue().getOrder().totalQuantity();
                 double limit = e.getValue().getOrder().lmtPrice();
 
-                if (q > 0 && pdPercentile > 70 && freshPrice > limit && pd > 0.0) {
+                if (q > 0 && pdPerc > 70 && freshPrice > limit && pd > 0.0) {
                     try {
                         pdSemaphore.acquire();
                     } catch (InterruptedException e1) {
@@ -1095,7 +1104,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     outputOrderToAutoLog(str(sellO.orderId(), LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
                             , " PD sell Close ", globalIdOrderMap.get(idSellClose)));
 
-                } else if (q < 0 && pdPercentile < 30 && freshPrice < limit && pd < 0.0) {
+                } else if (q < 0 && pdPerc < 30 && freshPrice < limit && pd < 0.0) {
                     try {
                         pdSemaphore.acquire();
                     } catch (InterruptedException e1) {
@@ -1110,7 +1119,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
             });
         } else if (pdBarrier.getNumberWaiting() == 0 && pdSemaphore.availablePermits() == 2) {
-            if (perc < DOWN_PERC && pdPercentile < DOWN_PERC && pd < 0.0) {
+            if (perc < DOWN_PERC && pdPerc < DOWN_PERC && pd < 0.0) {
                 try {
                     pdSemaphore.acquire();
                 } catch (InterruptedException e) {
@@ -1124,7 +1133,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
                         , " PD buy open ", globalIdOrderMap.get(id)));
 
-            } else if (perc > UP_PERC && pdPercentile > UP_PERC && pd > 0.0) {
+            } else if (perc > UP_PERC && pdPerc > UP_PERC && pd > 0.0) {
                 try {
                     pdSemaphore.acquire();
                 } catch (InterruptedException e) {
