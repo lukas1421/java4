@@ -1170,11 +1170,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         });
 
         if (detailedPrint.get()) {
-            pr("max PD", dpMap.entrySet().stream().mapToDouble(Map.Entry::getValue).max().orElse(0.0),
-                    "min PD", dpMap.entrySet().stream().mapToDouble(Map.Entry::getValue).min().orElse(0.0),
-                    " dp map ", dpMap);
+            if (dpMap.size() > 0) {
+                pr("PD LAST: ", dpMap.lastEntry(),
+                        "MAX PD", dpMap.entrySet().stream().mapToDouble(Map.Entry::getValue).max().orElse(0.0),
+                        "MIN PD", dpMap.entrySet().stream().mapToDouble(Map.Entry::getValue).min().orElse(0.0),
+                        " map: ", dpMap);
+            }
         }
-
         candidate = XuTraderHelper.getPercentileForDouble(dpMap);
         return candidate;
     }
