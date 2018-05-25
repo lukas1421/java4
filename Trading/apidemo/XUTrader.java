@@ -1060,6 +1060,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int pdPerc = getPDPercentile();
         double currDelta = ChinaPosition.getNetPtfDelta();
 
+        pr(nowMilli.toLocalTime().truncatedTo(ChronoUnit.MINUTES),
+                " pd trader ", " barrier# ", pdBarrier.getNumberWaiting(), " PD sem#: ",
+                pdSemaphore.availablePermits(), "pd", pd, "pd P%", pdPerc);
+
         if (nowMilli.toLocalTime().isBefore(LocalTime.of(9, 30))) {
             pr(" QUITTING PD, local time before 9 30 ");
             return;
@@ -1069,10 +1073,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr("PD Trader: outside delta limit ");
             return;
         }
-
-        pr(nowMilli.toLocalTime().truncatedTo(ChronoUnit.MINUTES),
-                " pd trader ", " barrier# ", pdBarrier.getNumberWaiting(), " PD sem#: ",
-                pdSemaphore.availablePermits(), "pd", pd, "pd P%", pdPerc);
 
         // print all pd trades
         globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getTradeType() == AutoOrderType.PD_OPEN ||
@@ -1161,10 +1161,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, Double> dpMap = new ConcurrentSkipListMap<>();
         futData.get(ibContractToFutType(activeFuture)).entrySet().stream().filter(e -> e.getKey()
                 .isAfter(LocalDateTime.of(d, LocalTime.of(9, 29)))).forEach(e -> {
-            if (ChinaData.priceMapBar.get(ftseIndex).size() > 0) {
+            if (ChinaData.priceMapBar.get(ftseIndex).size() > 0 && ChinaData.priceMapBar.get(ftseIndex).
+                    firstKey().isBefore(e.getKey().toLocalTime())) {
                 double index = ChinaData.priceMapBar.get(ftseIndex).floorEntry(e.getKey().toLocalTime())
                         .getValue().getClose();
-                dpMap.put(e.getKey(), e.getValue().getClose() / index - 1);
+                dpMap.put(e.getKey(), Math.round(10000d * (e.getValue().getClose() / index - 1)) / 10000d);
             }
         });
 
