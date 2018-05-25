@@ -1007,7 +1007,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         //throw new IllegalStateException(" perc buy size <= 0 "+ buySize);
                     }
                 } else {
-                    outputToAutoLog(" perc: delta above bullish target ");
+                    pr(" perc: delta above bullish target ");
                 }
             } else if (perc > UP_PERC) {
                 if (currDelta > getBearishTarget()) {
@@ -1024,7 +1024,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         //throw new IllegalStateException(" perc sell size < 0 ");
                     }
                 } else {
-                    outputToAutoLog("perc: delta below bearish target ");
+                    pr("perc: delta below bearish target ");
                 }
             }
 //            else {
