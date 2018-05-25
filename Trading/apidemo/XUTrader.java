@@ -128,7 +128,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private EmbeddedSoundPlayer soundPlayer = new EmbeddedSoundPlayer();
 
     //detailed MA
-    private static AtomicBoolean detailedMA = new AtomicBoolean(false);
+    private static AtomicBoolean detailedPrint = new AtomicBoolean(false);
 
     //display
     public static volatile Predicate<LocalDateTime> displayPred = e -> true;
@@ -348,10 +348,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JButton toggleMusicButton = new JButton("停乐");
         toggleMusicButton.addActionListener(l -> soundPlayer.stopIfPlaying());
 
-        JButton detailedMAButton = new JButton("Detailed MA: False");
-        detailedMAButton.addActionListener(l -> {
-            detailedMA.set(!detailedMA.get());
-            detailedMAButton.setText(" Detailed MA: " + detailedMA.get());
+        JButton detailedButton = new JButton("Detailed:" + detailedPrint.get());
+        detailedButton.addActionListener(l -> {
+            detailedPrint.set(!detailedPrint.get());
+            detailedButton.setText(" Detailed: " + detailedPrint.get());
         });
 
         JButton maTraderStatusButton = new JButton("MA Trader: " + (MATraderStatus.get() ? "ON" : "OFF"));
@@ -629,7 +629,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(buyOfferButton);
         controlPanel1.add(sellBidButton);
         controlPanel1.add(toggleMusicButton);
-        controlPanel1.add(detailedMAButton);
+        controlPanel1.add(detailedButton);
         controlPanel1.add(maTraderStatusButton);
         controlPanel1.add(overnightButton);
         controlPanel1.add(musicPlayableButton);
@@ -1058,8 +1058,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         double pd = getPD(freshPrice);
         int pdPerc = getPDPercentile();
-        //double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 0.0);
         double currDelta = ChinaPosition.getNetPtfDelta();
+
+        if (nowMilli.toLocalTime().isBefore(LocalTime.of(9, 30))) {
+            pr(" QUITTING PD, local time before 9 30 ");
+            return;
+        }
 
         if (currDelta > getDeltaHighLimit() || currDelta < getDeltaLowLimit()) {
             pr("PD Trader: outside delta limit ");
@@ -1152,7 +1156,23 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static int getPDPercentile() {
         // one day only so far
-        int candidate = XuTraderHelper.getPercentileForDouble(XU.discPremPercentile);
+        LocalDate d = (LocalTime.now().isBefore(LocalTime.of(5, 0))) ? LocalDate.now().minusDays(1) : LocalDate.now();
+        int candidate = 50;
+        NavigableMap<LocalDateTime, Double> dpMap = new ConcurrentSkipListMap<>();
+        futData.get(ibContractToFutType(activeFuture)).entrySet().stream().filter(e -> e.getKey()
+                .isAfter(LocalDateTime.of(d, LocalTime.of(9, 29)))).forEach(e -> {
+            if (ChinaData.priceMapBar.get(ftseIndex).size() > 0) {
+                double index = ChinaData.priceMapBar.get(ftseIndex).floorEntry(e.getKey().toLocalTime())
+                        .getValue().getClose();
+                dpMap.put(e.getKey(), e.getValue().getClose() / index - 1);
+            }
+        });
+
+        if (detailedPrint.get()) {
+            pr(" dp map ", dpMap);
+        }
+
+        candidate = XuTraderHelper.getPercentileForDouble(dpMap);
         return candidate;
     }
 
@@ -1271,7 +1291,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, Double> sma;
         sma = getMAGen(price5, currentMAPeriod);
 
-        if (detailedMA.get()) {
+        if (detailedPrint.get()) {
             pr(str(" Detailed MA ON", "pd", r10000(pd),
                     "freshPrice", freshPrice,
                     "prev Price", prevPrice,
