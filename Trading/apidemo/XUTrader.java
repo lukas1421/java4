@@ -47,7 +47,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static ApiController apcon;
 
     //global
-    private static AtomicBoolean musicOn = new AtomicBoolean(true);
+    private static AtomicBoolean musicOn = new AtomicBoolean(false);
     private static volatile MASentiment sentiment = MASentiment.Directionless;
     private static LocalDateTime lastTradeTime = LocalDateTime.now();
     static final int MAX_FUT_LIMIT = 20;
@@ -1123,7 +1123,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
             });
         } else if (pdBarrier.getNumberWaiting() == 0 && pdSemaphore.availablePermits() == 2) {
-            if (perc < DOWN_PERC && pdPerc < DOWN_PERC && pd < 0.0) {
+            if (perc < DOWN_PERC && pdPerc < DOWN_PERC && pd < PD_DOWN_THRESH) {
                 try {
                     pdSemaphore.acquire();
                 } catch (InterruptedException e) {
@@ -1137,7 +1137,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
                         , " PD buy open ", globalIdOrderMap.get(id)));
 
-            } else if (perc > UP_PERC && pdPerc > UP_PERC && pd > 0.0) {
+            } else if (perc > UP_PERC && pdPerc > UP_PERC && pd > PD_UP_THRESH) {
                 try {
                     pdSemaphore.acquire();
                 } catch (InterruptedException e) {
@@ -1165,15 +1165,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     firstKey().isBefore(e.getKey().toLocalTime())) {
                 double index = ChinaData.priceMapBar.get(ftseIndex).floorEntry(e.getKey().toLocalTime())
                         .getValue().getClose();
-                dpMap.put(e.getKey(), Math.round(10000d * (e.getValue().getClose() / index - 1)) / 10000d);
+                dpMap.put(e.getKey(), r10000((e.getValue().getClose() / index - 1)));
             }
         });
 
         if (detailedPrint.get()) {
             if (dpMap.size() > 0) {
-                pr("PD LAST: ", dpMap.lastEntry(),
-                        "MAX PD", dpMap.entrySet().stream().mapToDouble(Map.Entry::getValue).max().orElse(0.0),
-                        "MIN PD", dpMap.entrySet().stream().mapToDouble(Map.Entry::getValue).min().orElse(0.0),
+                pr("PD last: ", dpMap.lastEntry(),
+                        "max: ", dpMap.entrySet().stream().mapToDouble(Map.Entry::getValue).max().orElse(0.0),
+                        "min: ", dpMap.entrySet().stream().mapToDouble(Map.Entry::getValue).min().orElse(0.0),
                         " map: ", dpMap);
             }
         }
