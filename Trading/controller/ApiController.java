@@ -928,10 +928,8 @@ public class ApiController implements EWrapper {
     public void reqA50Live() {
         for (String s : SinaStock.weightMapA50.keySet()) {
             String ticker = s.substring(2);
-            String exch = s.substring(0, 2).toUpperCase().equalsIgnoreCase("SH") ?
-                    "SEHKNTL" : "SEHKSZSE";
-            req1StockLive(s, exch, "CNH", new LiveHandler.DefaultLiveHandler());
-
+            String exch = s.substring(0, 2).toUpperCase().equalsIgnoreCase("SH") ? "SEHKNTL" : "SEHKSZSE";
+            req1StockLive(ticker, exch, "CNH", new LiveHandler.DefaultLiveHandler());
         }
     }
 
@@ -940,9 +938,8 @@ public class ApiController implements EWrapper {
             String ticker = s.substring(2);
             String exch = s.substring(0, 2).toUpperCase().equalsIgnoreCase("SH") ?
                     "SEHKNTL" : "SEHKSZSE";
-            req1StockHistToday(s, exch, "CNH", new HistoricalHandler.DefaultHistHandler());
+            req1StockHistToday(ticker, exch, "CNH", new HistoricalHandler.DefaultHistHandler());
         }
-
     }
 
     private Contract generateStockContract(String stock, String ex, String curr) {

@@ -230,6 +230,7 @@ public final class ChinaData extends JPanel {
         JButton saveHibY2Button = new JButton("Save Hib Y2");
 
         JButton fixYtdZeroButton = new JButton(" fix ytd 0");
+        JButton getIBChinaButton = new JButton(" IB A50 Today ");
 
         //buttonUpPanel.add(btnSave);            buttonUpPanel.add(Box.createHorizontalStrut(10));
         //buttonUpPanel.add(btnSaveBar);         buttonUpPanel.add(Box.createHorizontalStrut(10));
@@ -278,6 +279,7 @@ public final class ChinaData extends JPanel {
         buttonDownPanel.add(outputPricesButton);
         buttonDownPanel.add(Box.createHorizontalStrut(10));
         buttonDownPanel.add(fixYtdZeroButton);
+        buttonDownPanel.add(getIBChinaButton);
 
         add(jp, BorderLayout.NORTH);
 
@@ -376,6 +378,10 @@ public final class ChinaData extends JPanel {
         outputPricesButton.addActionListener(l -> outputPrices());
 
         fixYtdZeroButton.addActionListener(l -> fixYtdSuspendedStocks());
+
+        getIBChinaButton.addActionListener(l -> {
+            controller().reqA50TodayHist();
+        });
     }
 
     static void outputPrices() {

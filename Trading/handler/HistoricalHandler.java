@@ -16,7 +16,6 @@ public interface HistoricalHandler extends GeneralHandler {
 
         @Override
         public void actionUponFinish(String name) {
-
         }
     }
 }
