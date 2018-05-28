@@ -182,7 +182,7 @@ public final class ChinaMain implements IConnectionHandler {
         JButton startPool = new JButton("start Analysis");
         JButton startPool2 = new JButton("start Backtesting");
         JButton startXU = new JButton("ON XU");
-        JButton startHK = new JButton(" ON HK");
+        JButton startHK = new JButton("ON HK");
         JButton stopXU = new JButton("Kill XU");
         JButton offShcomp = new JButton("Kill Shcomp/ChinaFut");
         JButton saveAll = new JButton("saveAll");

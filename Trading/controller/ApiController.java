@@ -877,7 +877,8 @@ public class ApiController implements EWrapper {
         HKData.es.shutdown();
         HKData.es = Executors.newScheduledThreadPool(10);
         HKData.es.scheduleAtFixedRate(() -> {
-            HKData.hkPriceBar.keySet().forEach(k -> req1HKStockLive(k));
+            HKData.hkPriceBar.keySet().forEach(k -> req1StockLive(k, "SEHK", "HKD",
+                    apidemo.ChinaMain.hkdata));
         }, 5L, 10L, TimeUnit.SECONDS);
 
     }
@@ -885,40 +886,38 @@ public class ApiController implements EWrapper {
     public void reqHKTodayData() {
         //HKData.historyDataSem.drainPermits();
         HKData.historyDataSem = new Semaphore(50);
-        HKData.hkPriceBar.keySet().forEach(k -> req1HKStockToday(k));
-    }
-
-    public void req1HKStockToday(String stock) {
-        CompletableFuture.runAsync(() -> {
+        HKData.hkPriceBar.keySet().forEach(k -> {
             try {
                 HKData.historyDataSem.acquire();
-                int reqId = m_reqId.incrementAndGet();
-                Contract ct = generateHKContract(stock);
-                ChinaMain.globalRequestMap.put(reqId, new Request(ct, apidemo.ChinaMain.hkdata));
-                String formatTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
-
-                //pr(" format time " + formatTime);
-                String durationStr = 1 + " " + DurationUnit.DAY.toString().charAt(0);
-                m_client.reqHistoricalData(reqId, ct, formatTime, durationStr,
-                        Types.BarSize._1_min.toString(), Types.WhatToShow.TRADES.toString(),
-                        0, 2, Collections.<TagValue>emptyList());
-            } catch (InterruptedException ex) {
-                ex.printStackTrace();
+                req1StockHistToday(k, "SEHK", "HKD", ChinaMain.hkdata);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         });
     }
 
-    public void req1HKStockLive(String stock) {
+
+    public void req1StockHistToday(String stock, String exch, String curr, HistoricalHandler h) {
+        CompletableFuture.runAsync(() -> {
+            int reqId = m_reqId.incrementAndGet();
+            Contract ct = generateStockContract(stock, exch, curr);
+            ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
+            String formatTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
+            String durationStr = 1 + " " + DurationUnit.DAY.toString().charAt(0);
+            m_client.reqHistoricalData(reqId, ct, formatTime, durationStr,
+                    BarSize._1_min.toString(), WhatToShow.TRADES.toString(),
+                    0, 2, Collections.<TagValue>emptyList());
+        });
+    }
+
+    public void req1StockLive(String stock, String exch, String curr, LiveHandler h) {
         try {
-            //HKData.dataSemaphore.acquire();
             int reqId = m_reqId.incrementAndGet();
             if (reqId % 90 == 0) {
-                //pr(" sleeping " + Thread.currentThread());
                 Thread.sleep(1000);
             }
-            Contract ct = generateHKContract(stock);
-            //pr(" requesting for hk stock " + stock + " id " + reqId);
-            ChinaMain.globalRequestMap.put(reqId, new Request(ct, apidemo.ChinaMain.hkdata));
+            Contract ct = generateStockContract(stock, exch, curr);
+            ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
 
             m_client.reqMktData(reqId, ct, "", true, Collections.<TagValue>emptyList());
         } catch (InterruptedException ex) {
@@ -926,14 +925,43 @@ public class ApiController implements EWrapper {
         }
     }
 
-    private Contract generateHKContract(String stock) {
+    public void reqA50Live() {
+        for (String s : SinaStock.weightMapA50.keySet()) {
+            String ticker = s.substring(2);
+            String exch = s.substring(0, 2).toUpperCase().equalsIgnoreCase("SH") ?
+                    "SEHKNTL" : "SEHKSZSE";
+            req1StockLive(s, exch, "CNH", new LiveHandler.DefaultLiveHandler());
+
+        }
+    }
+
+    public void reqA50TodayHist() {
+        for (String s : SinaStock.weightMapA50.keySet()) {
+            String ticker = s.substring(2);
+            String exch = s.substring(0, 2).toUpperCase().equalsIgnoreCase("SH") ?
+                    "SEHKNTL" : "SEHKSZSE";
+            req1StockHistToday(s, exch, "CNH", new HistoricalHandler.DefaultHistHandler());
+        }
+
+    }
+
+    private Contract generateStockContract(String stock, String ex, String curr) {
         Contract ct = new Contract();
         ct.symbol(stock);
-        ct.exchange("SEHK");
-        ct.currency("HKD");
+        ct.exchange(ex);
+        ct.currency(curr);
         ct.secType(SecType.STK);
         return ct;
     }
+
+//    private Contract generateHKContract(String stock) {
+//        Contract ct = new Contract();
+//        ct.symbol(stock);
+//        ct.exchange("SEHK");
+//        ct.currency("HKD");
+//        ct.secType(SecType.STK);
+//        return ct;
+//    }
 
     //xu data
     public void reqXUDataArray() {
