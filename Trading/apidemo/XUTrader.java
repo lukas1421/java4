@@ -201,7 +201,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         } else {
             target = (sentiment == MASentiment.Bullish ? BULLISH_DELTA_TARGET : BULLISH_DELTA_TARGET / 2);
         }
-        return (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) ? target / 2 : target;
+        if ((LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY)) {
+            return target / 2;
+        } else if (LocalDate.now().getDayOfWeek() == DayOfWeek.TUESDAY) {
+            return target * 2;
+        }
+        return target;
+
     }
 
     private static double getBearishTarget() {
@@ -211,7 +217,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         } else {
             target = sentiment == MASentiment.Bearish ? BEARISH_DELTA_TARGET : 0.0;
         }
-        return (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) ? target / 2 : target;
+        if (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) {
+            return target / 2;
+        } else if (LocalDate.now().getDayOfWeek() == DayOfWeek.TUESDAY) {
+            return Math.max(0.0, target * 2);
+        }
+        return target;
     }
 
     private static double getDeltaHighLimit() {
@@ -221,7 +232,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         } else {
             limit = sentiment == MASentiment.Bullish ? DELTA_HIGH_LIMIT : 0.0;
         }
-        return (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) ? limit / 2 : limit;
+        if (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) {
+            return limit / 2;
+        } else if (LocalDate.now().getDayOfWeek() == DayOfWeek.TUESDAY) {
+            return limit * 2;
+        }
+        return limit;
     }
 
     private static double getDeltaLowLimit() {
@@ -231,7 +247,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         } else {
             limit = sentiment == MASentiment.Bearish ? DELTA_LOW_LIMIT : 0.0;
         }
-        return (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) ? limit / 2 : limit;
+        if (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) {
+            return limit / 2;
+        } else if (LocalDate.now().getDayOfWeek() == DayOfWeek.TUESDAY) {
+            return limit * 2;
+        }
+        return limit;
     }
 
     private static void maTradeAnalysis() {
