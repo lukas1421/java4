@@ -34,35 +34,33 @@ public class HKStock extends JPanel {
 
     String line;
     private static List<String> symbolNamesHK = new LinkedList<>();
-    private static Map<String, String> haMap  = new HashMap<>();
+    private static Map<String, String> haMap = new HashMap<>();
     public static Map<String, String> hkNameMap = new HashMap<>();
 
 
     @SuppressWarnings("unchecked")
     HKStock() {
-
-        System.out.println(" initializing hk stock ");
+        //System.out.println(" initializing hk stock ");
         File hkstockFile = new File(TradingConstants.GLOBALPATH + "hkMainList.txt");
-        try(BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(hkstockFile),"GBK"))){
-            while((line=reader1.readLine())!=null) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(hkstockFile), "GBK"))) {
+            while ((line = reader1.readLine()) != null) {
                 //System.out.println(" hk line is " + line);
                 List<String> l = Arrays.asList(line.split("\t"));
                 symbolNamesHK.add(l.get(0));
-                hkNameMap.put(l.get(0),l.get(1));
+                hkNameMap.put(l.get(0), l.get(1));
             }
-            System.out.println(" hk size " + symbolNamesHK.size());
-
-        } catch(IOException e) {
+            //System.out.println(" hk size " + symbolNamesHK.size());
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
         File ahFile = new File(TradingConstants.GLOBALPATH + "AHList.txt");
-        try(BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ahFile),"GBK"))) {
-            while((line=reader1.readLine())!=null) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(ahFile), "GBK"))) {
+            while ((line = reader1.readLine()) != null) {
                 List<String> l = Arrays.asList(line.split("\t"));
-                haMap.put(l.get(0),l.get(1));
+                haMap.put(l.get(0), l.get(1));
             }
-        } catch(IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -70,7 +68,7 @@ public class HKStock extends JPanel {
 
         m_model = new BarModel_HKStock();
         graphPanel = new JPanel();
-        graphPanel.setLayout(new GridLayout(6,1));
+        graphPanel.setLayout(new GridLayout(6, 1));
 
         String hkstock1 = "700";
         graph1.fillInGraphHK(hkstock1);
@@ -102,7 +100,7 @@ public class HKStock extends JPanel {
         JPanel controlPanel = new JPanel();
 
         JButton refreshButton = new JButton("Refresh");
-        refreshButton.addActionListener(al-> SwingUtilities.invokeLater(()->{
+        refreshButton.addActionListener(al -> SwingUtilities.invokeLater(() -> {
             graphPanel.repaint();
             tab.repaint();
             graph1.refresh(graph1::fillInGraphHK);
@@ -115,18 +113,18 @@ public class HKStock extends JPanel {
 
         controlPanel.add(refreshButton);
 
-        tab = new JTable(m_model){
+        tab = new JTable(m_model) {
             @Override
             public Component prepareRenderer(TableCellRenderer tableCellRenderer, int row, int col) {
                 Component comp = super.prepareRenderer(tableCellRenderer, row, col);
-                if(isCellSelected(row,col)){
+                if (isCellSelected(row, col)) {
                     modelRow = this.convertRowIndexToModel(row);
                     indexRow = row;
                     graph1.fillInGraphHK(symbolNamesHK.get(modelRow));
                     refreshAll();
                     comp.setBackground(Color.green);
                 } else {
-                    comp.setBackground((row%2==0)?Color.lightGray:Color.white);
+                    comp.setBackground((row % 2 == 0) ? Color.lightGray : Color.white);
                 }
 
 
@@ -224,7 +222,7 @@ public class HKStock extends JPanel {
                     return name;
 
                 case 1:
-                    return haMap.getOrDefault(name,"");
+                    return haMap.getOrDefault(name, "");
 
                 case 2:
                     return hkNameMap.get(name);
@@ -239,7 +237,7 @@ public class HKStock extends JPanel {
 //                    }
 
                 case 4:
-                    return Math.round((hkCurrPrice.getOrDefault(name,0.0)*hkVol.getOrDefault(name,0.0))/1000000d);
+                    return Math.round((hkCurrPrice.getOrDefault(name, 0.0) * hkVol.getOrDefault(name, 0.0)) / 1000000d);
                 case 5:
                     return computeTodayReturn(name);
                 case 6:
@@ -276,7 +274,7 @@ public class HKStock extends JPanel {
 
     private static void refreshAll() {
         //System.out.print(" refreshing all ");
-        SwingUtilities.invokeLater(()->{
+        SwingUtilities.invokeLater(() -> {
             graphPanel.repaint();
             tab.repaint();
         });
@@ -284,39 +282,39 @@ public class HKStock extends JPanel {
 
     private static double getHPremiumOverA(String name) {
         double currentHKPrice = hkCurrPrice.getOrDefault(name, 0.0);
-        double currentAPrice = getASharePrice(name)* TradingConstants.CNHHKD;
+        double currentAPrice = getASharePrice(name) * TradingConstants.CNHHKD;
 
-        if(currentHKPrice != 0.0 && currentAPrice!= 0.0) {
-            return Math.round(1000d * (currentHKPrice / currentAPrice-1)) / 10d;
+        if (currentHKPrice != 0.0 && currentAPrice != 0.0) {
+            return Math.round(1000d * (currentHKPrice / currentAPrice - 1)) / 10d;
         }
         return 0.0;
     }
 
     private static double getASharePrice(String hkTicker) {
-        String aShare = haMap.getOrDefault(hkTicker,"");
-        if(!aShare.equals("")) {
+        String aShare = haMap.getOrDefault(hkTicker, "");
+        if (!aShare.equals("")) {
             String aShareTicker = Utility.addSHSZ(aShare);
-            return ChinaStock.priceMap.getOrDefault(aShareTicker,0.0);
+            return ChinaStock.priceMap.getOrDefault(aShareTicker, 0.0);
         }
         return 0.0;
     }
 
     private static double computeTodayHKSharpe(String name) {
-        if(HKData.hkPriceBar.containsKey(name)) {
+        if (HKData.hkPriceBar.containsKey(name)) {
             return SharpeUtility.computeMinuteSharpeHK(HKData.hkPriceBar.get(name)
-                    .subMap(LocalTime.of(9,30),true, LocalTime.of(16,0),true), name);
+                    .subMap(LocalTime.of(9, 30), true, LocalTime.of(16, 0), true), name);
         }
         return 0.0;
     }
 
     private static double computeTodayReturn(String name) {
 
-        if(HKData.hkPriceBar.containsKey(name) && HKData.hkPriceBar.get(name).size()>0) {
+        if (HKData.hkPriceBar.containsKey(name) && HKData.hkPriceBar.get(name).size() > 0) {
             //double open = HKData.hkPriceBar.get(name).firstEntry().getValue().getOpen();
-            double prevClose = HKData.hkPreviousCloseMap.getOrDefault(name,0.0);
+            double prevClose = HKData.hkPreviousCloseMap.getOrDefault(name, 0.0);
             //double last = HKData.hkPriceBar.get(name).lastEntry().getValue().getClose();
-            double priceNow = hkCurrPrice.getOrDefault(name,0.0);
-            return Math.round(1000d*(priceNow/prevClose-1))/10d;
+            double priceNow = hkCurrPrice.getOrDefault(name, 0.0);
+            return Math.round(1000d * (priceNow / prevClose - 1)) / 10d;
         }
         return 0.0;
     }
@@ -324,7 +322,7 @@ public class HKStock extends JPanel {
 
     public static void main(String[] args) {
         JFrame jf = new JFrame();
-        jf.setSize(1900,1500);
+        jf.setSize(1900, 1500);
         HKStock hks = new HKStock();
         jf.add(hks);
         jf.setVisible(true);

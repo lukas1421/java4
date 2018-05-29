@@ -44,7 +44,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         ApiController.ITradeReportHandler, ApiController.IOrderHandler, ApiController.ILiveOrderHandler
         , ApiController.IPositionHandler, ApiController.IConnectionHandler {
 
-    public static ApiController apcon;
+    static ApiController apcon;
 
     //global
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
@@ -55,8 +55,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
     private static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
-    public static final int UP_PERC = 90;
-    public static final int DOWN_PERC = 10;
+    private static final int UP_PERC = 90;
+    private static final int DOWN_PERC = 10;
     //flatten drift trader
     private static final double FLATTEN_THRESH = 200000.0;
     private static final double DELTA_HIGH_LIMIT = 300000.0;
@@ -138,9 +138,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @SuppressWarnings("unused")
     private static Predicate<? super Map.Entry<FutType, ?>> graphPred = e -> true;
-    static volatile Contract activeFuture = frontFut;
+    static volatile Contract activeFuture = gettingActiveContract();
+
     public static volatile DisplayGranularity gran = DisplayGranularity._5MDATA;
-    public static volatile Map<Double, Double> activeFutLiveOrder = new HashMap<>();
+    private static volatile Map<Double, Double> activeFutLiveOrder = new HashMap<>();
     public static volatile Map<Integer, Order> activeFutLiveIDOrderMap = new HashMap<>();
     public static volatile EnumMap<FutType, Double> bidMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Double> askMap = new EnumMap<>(FutType.class);
@@ -292,8 +293,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     XUTrader(ApiController ap) {
-        out.println(str(" front fut ", frontFut));
-        out.println(str(" back fut ", backFut));
+        out.println(str(" ****** front fut ******* ", frontFut));
+        out.println(str(" ****** back fut ******* ", backFut));
 
         for (FutType f : FutType.values()) {
             futData.put(f, new ConcurrentSkipListMap<>());
@@ -588,12 +589,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             graphPred = e -> e.getKey().equals(FutType.FrontFut);
             activeFuture = frontFut;
         });
-        frontFutButton.setSelected(true);
+        frontFutButton.setSelected(activeFuture.lastTradeDateOrContractMonth().equalsIgnoreCase(
+                TradingConstants.A50_FRONT_EXPIRY));
+
         JRadioButton backFutButton = new JRadioButton("Back");
         backFutButton.addActionListener(l -> {
             graphPred = e -> e.getKey().equals(FutType.BackFut);
             activeFuture = backFut;
         });
+
+        backFutButton.setSelected(activeFuture.lastTradeDateOrContractMonth().equalsIgnoreCase(
+                TradingConstants.A50_BACK_EXPIRY));
 
         JRadioButton _1mButton = new JRadioButton("1m");
         _1mButton.addActionListener(l -> gran = DisplayGranularity._1MDATA);
@@ -760,6 +766,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         add(deepPanel);
         add(outputPanel);
         add(chartScroll);
+    }
+
+    private static Contract gettingActiveContract() {
+        long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(),
+                LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd")));
+
+        pr(" **********  days until expiry **********", daysUntilFrontExp);
+        if (daysUntilFrontExp <= 1) {
+            pr(" using back fut ");
+            return backFut;
+        } else {
+            pr(" using front fut ");
+            return frontFut;
+        }
     }
 
     static double getFutDelta() {

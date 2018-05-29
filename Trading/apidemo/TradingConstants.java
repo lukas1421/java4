@@ -20,6 +20,8 @@ public final class TradingConstants {
     public static final String A50_FRONT_EXPIRY = getFutFrontExpiry();
     public static final String A50_BACK_EXPIRY = getFutBackExpiry();
 
+    //public static final LocalDate A50_FRONT_EXP_DATE =;
+
     public static final String ftseIndex = "FTSEA50";
 
     public static String getFutLastExpiry() {
@@ -35,6 +37,7 @@ public final class TradingConstants {
         }
         //return A50_LAST_EXPIRY;
     }
+
 
     public static String getFutFrontExpiry() {
         LocalDateTime now = LocalDateTime.now();

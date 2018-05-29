@@ -92,6 +92,9 @@ public class XuTraderHelper {
     }
 
     static void outputOrderToAutoLog(String s) {
+        if (XUTrader.globalIdOrderMap.size() == 1) {
+            outputPurelyOrders(str("***", LocalDate.now(), "***"));
+        }
         outputToAutoLog("****************ORDER************************");
         outputToAutoLog(s);
         outputToAutoLog("****************ORDER************************");

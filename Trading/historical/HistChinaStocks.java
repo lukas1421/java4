@@ -175,7 +175,8 @@ public class HistChinaStocks extends JPanel {
                 if (al1.get(1).equalsIgnoreCase(TradingConstants.A50_LAST_EXPIRY)) {
                     futExpiryLevel = Double.parseDouble(al1.get(3));
                     futExpiryUnits = Integer.parseInt(al1.get(2));
-                    System.out.println(str(" fut expiry level and units ", futExpiryLevel, futExpiryUnits));
+                    pr(str(" prevfut expiry date+level+units ", TradingConstants.A50_LAST_EXPIRY,
+                            futExpiryLevel, futExpiryUnits));
                 }
             }
         } catch (IOException x) {
