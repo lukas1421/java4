@@ -650,6 +650,32 @@ public class ApiController implements EWrapper {
     public interface IContractDetailsHandler {
 
         void contractDetails(ArrayList<ContractDetails> list);
+
+        class DefaultContractDetailsHandler implements IContractDetailsHandler {
+            @Override
+            public void contractDetails(ArrayList<ContractDetails> list) {
+                for (ContractDetails cd : list) {
+                    Contract ct = cd.contract();
+                    pr("In Default Details Handler: "
+                            , cd.contract().symbol(), cd.contract().getSecType(), cd.contract().lastTradeDateOrContractMonth()
+                            , cd.contract().exchange(), cd.contract().conid());
+                    if (ct.symbol().equalsIgnoreCase("XINA50")) {
+                        if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutFrontExpiry())) {
+                            XUTraderRoll.contractID.put(FutType.FrontFut, ct.conid());
+                            XUTraderRoll.latch.countDown();
+                            pr(" latch counting down ", XUTraderRoll.latch.getCount(), LocalTime.now());
+                        } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutBackExpiry())) {
+                            XUTraderRoll.contractID.put(FutType.BackFut, ct.conid());
+                            XUTraderRoll.latch.countDown();
+                            pr(" latch counting down ", XUTraderRoll.latch.getCount(), LocalTime.now());
+                        } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutLastExpiry())) {
+                            XUTraderRoll.contractID.put(FutType.PreviousFut, ct.conid());
+                        }
+                    }
+                }
+                pr("xu id map is ", XUTraderRoll.contractID);
+            }
+        }
     }
 
     public void reqContractDetails(Contract contract, final IContractDetailsHandler processor) {
@@ -1480,7 +1506,7 @@ public class ApiController implements EWrapper {
 
     public void placeOrModifyOrder(Contract contract, final Order order, final IOrderHandler handler) {
         // when placing new order, assign new order id
-        if (order.lmtPrice() == 0.0 || order.totalQuantity() == 0.0) {
+        if (order.totalQuantity() == 0.0) {
             return;
         }
 

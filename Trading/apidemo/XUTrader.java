@@ -45,6 +45,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         , ApiController.IPositionHandler, ApiController.IConnectionHandler {
 
     static ApiController apcon;
+    static XUTraderRoll traderRoll;
 
     //global
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
@@ -53,7 +54,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static final int MAX_FUT_LIMIT = 20;
     static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
     static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
-    private static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
+    public static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
     private static final int UP_PERC = 90;
     private static final int DOWN_PERC = 10;
@@ -129,6 +130,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //detailed MA
     private static AtomicBoolean detailedPrint = new AtomicBoolean(false);
+
 
     //display
     public static volatile Predicate<LocalDateTime> displayPred = e -> true;
@@ -250,7 +252,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) {
             return limit / 2;
         } else if (LocalDate.now().getDayOfWeek() == DayOfWeek.TUESDAY) {
-            return limit * 2;
+            return Math.max(0.0, limit * 2);
         }
         return limit;
     }
@@ -317,6 +319,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         out.println(str(" ****** front fut ******* ", frontFut));
         out.println(str(" ****** back fut ******* ", backFut));
 
+
         for (FutType f : FutType.values()) {
             futData.put(f, new ConcurrentSkipListMap<>());
             tradesMap.put(f, new ConcurrentSkipListMap<>());
@@ -326,6 +329,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         apcon = ap;
+        traderRoll = new XUTraderRoll(ap);
+
         JLabel currTimeLabel = new JLabel(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
         currTimeLabel.setFont(currTimeLabel.getFont().deriveFont(30F));
 
@@ -335,6 +340,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             out.println(" buying limit ");
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(bidMap.get(ibContractToFutType(activeFuture)), 1.0);
+
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), " Bidding Limit ", globalIdOrderMap.get(id)));
         });
@@ -408,6 +414,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pdTraderOn.set(!pdTraderOn.get());
             outputToAutoLog(" PD Trader set to " + pdTraderOn.get());
             pdTraderButton.setText("PD Trader: " + (pdTraderOn.get() ? "ON" : "OFF"));
+        });
+
+        JButton rollButton = new JButton("Roll");
+        rollButton.addActionListener(l -> {
+            XUTraderRoll.getContractDetails();
+            try {
+                XUTraderRoll.latch.await();
+                pr("xu trader roll wait finished, short rolling ", LocalTime.now());
+                traderRoll.shortRoll(0);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+
         });
 
         JButton getPositionButton = new JButton(" get pos ");
@@ -670,6 +690,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(inventoryTraderButton);
         controlPanel1.add(percTraderButton);
         controlPanel1.add(pdTraderButton);
+        controlPanel1.add(rollButton);
 
         controlPanel2.add(getPositionButton);
         controlPanel2.add(level2Button);
@@ -1986,6 +2007,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @Override
     public void openOrder(Contract contract, Order order, OrderState orderState) {
+        pr(" open order ", contract, order, orderState);
+
         activeFutLiveIDOrderMap.put(order.orderId(), order);
         //globalIdOrderMap.put(autoTradeID.incrementAndGet(),)
 
@@ -2004,6 +2027,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @Override
     public void openOrderEnd() {
+        pr(" open order eneded");
     }
 
     @Override

@@ -13,5 +13,7 @@ public enum AutoOrderType {
     FLATTEN,
     FLATTEN_AGGRESSIVE,
     DRIFT,
+    SHORT_ROLL,
+    LONG_ROLL,
     UNKNOWN
 }

@@ -149,7 +149,7 @@ public class XuTraderHelper {
         return o;
     }
 
-    static Order placeBidLimit(double p, double quantity) {
+    public static Order placeBidLimit(double p, double quantity) {
         return placeBidLimitTIF(p, quantity, Types.TimeInForce.DAY);
     }
 
