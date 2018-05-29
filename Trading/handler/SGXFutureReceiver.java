@@ -3,6 +3,7 @@ package handler;
 import apidemo.*;
 import auxiliary.SimpleBar;
 import client.TickType;
+import utility.Utility;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -62,7 +63,9 @@ public class SGXFutureReceiver implements LiveHandler {
                             XUTrader.futData.get(f).put(ldtMin, new SimpleBar(price));
                         }
 
-                        if (name.equalsIgnoreCase("SGXA50") &&
+                        String activeFut = Utility.ibContractToFutType(XUTrader.activeFuture).getTicker();
+                        //pr("activeFut ", activeFut);
+                        if (name.equalsIgnoreCase(activeFut) &&
                                 XUTrader.futData.get(f).lastKey().truncatedTo(MINUTES).equals(ldt.truncatedTo(MINUTES))) {
                             XUTrader.updateLastMinuteMap(ldt, price);
                             XUTrader.MATrader(ldt, price);

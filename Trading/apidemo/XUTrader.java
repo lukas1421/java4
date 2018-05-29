@@ -138,7 +138,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @SuppressWarnings("unused")
     private static Predicate<? super Map.Entry<FutType, ?>> graphPred = e -> true;
-    static volatile Contract activeFuture = gettingActiveContract();
+    public static volatile Contract activeFuture = gettingActiveContract();
 
     public static volatile DisplayGranularity gran = DisplayGranularity._5MDATA;
     private static volatile Map<Double, Double> activeFutLiveOrder = new HashMap<>();
@@ -199,7 +199,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (futureAMSession().test(LocalTime.now())) {
             target = BULLISH_DELTA_TARGET / 2;
         } else {
-            target = sentiment == MASentiment.Bullish ? BULLISH_DELTA_TARGET : BULLISH_DELTA_TARGET / 2;
+            target = (sentiment == MASentiment.Bullish ? BULLISH_DELTA_TARGET : BULLISH_DELTA_TARGET / 2);
         }
         return (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) ? target / 2 : target;
     }
@@ -1090,7 +1090,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         pr(nowMilli.toLocalTime().truncatedTo(ChronoUnit.MINUTES),
                 " pd trader ", " barrier# ", pdBarrier.getNumberWaiting(), " PD sem#: ",
-                pdSemaphore.availablePermits(), "pd", pd, "pd P%", pdPerc);
+                pdSemaphore.availablePermits(), "pd", r10000(pd), "pd P%", pdPerc);
 
         if (nowMilli.toLocalTime().isBefore(LocalTime.of(9, 30))) {
             pr(" QUITTING PD, local time before 9 30 ");
@@ -1335,7 +1335,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
-        sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
+        //sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
         double candidatePrice;
         long numOrdersThisSession = fastOrderMap.entrySet().stream().filter(e -> e.getKey().isAfter(sessionOpenT())).count();
         long secBtwnOpenOrders = numOrdersThisSession == 0 ? 0 :
@@ -1420,6 +1420,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         sma = getMAGen(price5, currentMAPeriod);
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
         sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
+
+        pr("sentiment/fresh /malast ", sentiment, freshPrice, r(maLast));
+
         double currDelta = ChinaPosition.getNetPtfDelta();
 
         int numTrades = 0;
@@ -1779,7 +1782,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 FLATTEN || e.getValue().getTradeType() == DRIFT)
                 .filter(e -> e.getValue().getStatus() != OrderStatus.Filled).count();
 
-        System.out.println(str("FLATTEN DRIFT TRADER current delta is ", currentDelta,
+        pr(str("FLATTEN DRIFT TRADER current delta is ", currentDelta,
                 " ma fx fresh", malast, fx, freshPrice, "sentiment ", sentiment, "unfilled ", unfilled_trades));
 
         if (currentDelta == 0.0 || malast == 0.0 || fx == 0.0) return;
