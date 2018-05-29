@@ -803,6 +803,7 @@ public class Utility {
 //                case TradingConstants.A50_LAST_EXPIRY:
 //                    return "SGXA50PR";
 //            }
+            //pr(" checking null in ibcontractosymbol ", ct.symbol(),ct.lastTradeDateOrContractMonth());
             if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutFrontExpiry())) {
                 return "SGXA50";
             } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutBackExpiry())) {

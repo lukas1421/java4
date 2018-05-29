@@ -2027,7 +2027,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @Override
     public void openOrderEnd() {
-        pr(" open order eneded");
+        //pr(" open order eneded");
     }
 
     @Override

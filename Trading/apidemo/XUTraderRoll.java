@@ -61,44 +61,11 @@ public class XUTraderRoll extends JPanel {
         apcon.reqContractDetails(backContract, new ApiController.IContractDetailsHandler.DefaultContractDetailsHandler());
     }
 
-
-//    private static Contract shortRollContract() {
-//
-//        Contract ct = new Contract();
-//        ct.symbol("XINA50");
-//        ct.secType(Types.SecType.BAG);
-//        ct.exchange("SGX");
-//        ct.currency("USD");
-//
-//        ArrayList<ComboLeg> l = new ArrayList<>();
-//        ComboLeg leg1 = new ComboLeg();
-//        ComboLeg leg2 = new ComboLeg();
-//
-//        leg1.ratio(1);
-//        leg1.conid(getFrontFutContract().conid());
-//        leg1.action(Types.Action.BUY);
-//        leg1.exchange("SGX");
-//
-//        leg2.ratio(1);
-//        leg2.conid(getBackFutContract().conid());
-//        leg2.action(Types.Action.SELL);
-//        leg2.exchange("SGX");
-//
-//        l.add(leg1);
-//        l.add(leg2);
-//
-//        pr(" front back conID ", getFrontFutContract().conid(), getBackFutContract().conid());
-//
-//        ct.comboLegs(l);
-//        pr(ct);
-//        return ct;
-//    }
-
     void shortRoll(double p) {
         int id = XUTrader.autoTradeID.incrementAndGet();
         Order o = XuTraderHelper.placeOfferLimit(p, 1);
         XUTrader.globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o, AutoOrderType.SHORT_ROLL));
-        apcon.placeOrModifyOrder(longRollContract(), o, new ApiController.IOrderHandler.DefaultOrderHandler());
+        apcon.placeOrModifyOrder(longRollContract(), o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
         outputOrderToAutoLog(str(o.orderId(), " Short Roll ", XUTrader.globalIdOrderMap.get(id)));
     }
 
@@ -106,7 +73,7 @@ public class XUTraderRoll extends JPanel {
         int id = XUTrader.autoTradeID.incrementAndGet();
         Order o = XuTraderHelper.placeBidLimit(p, 1);
         XUTrader.globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o, AutoOrderType.LONG_ROLL));
-        apcon.placeOrModifyOrder(longRollContract(), o, new ApiController.IOrderHandler.DefaultOrderHandler());
+        apcon.placeOrModifyOrder(longRollContract(), o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
         outputOrderToAutoLog(str(o.orderId(), " Long Roll ", XUTrader.globalIdOrderMap.get(id)));
     }
 
