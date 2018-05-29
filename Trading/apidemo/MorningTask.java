@@ -467,6 +467,9 @@ public final class MorningTask implements HistoricalHandler {
             c.symbol(ticker);
             c.secType(Types.SecType.STK);
             c.exchange("SMART");
+            if (e.equalsIgnoreCase("ASHR:US")) {
+                c.primaryExch("ARCA");
+            }
             c.currency("USD");
             pr(" etf is " + ticker);
 
