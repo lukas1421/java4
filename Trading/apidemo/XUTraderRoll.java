@@ -77,5 +77,9 @@ public class XUTraderRoll extends JPanel {
         outputOrderToAutoLog(str(o.orderId(), " Long Roll ", XUTrader.globalIdOrderMap.get(id)));
     }
 
+    public static void resetLatch() {
+        latch = new CountDownLatch(2);
+    }
+
 
 }

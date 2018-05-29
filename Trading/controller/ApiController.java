@@ -1515,7 +1515,6 @@ public class ApiController implements EWrapper {
         }
 
         if (handler != null) {
-            pr(str("place or modify order ", order.orderId(), handler));
             m_orderHandlers.put(order.orderId(), handler);
         } else {
             pr(" handler is null");

@@ -418,16 +418,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         JButton rollButton = new JButton("Roll");
         rollButton.addActionListener(l -> {
-            XUTraderRoll.getContractDetails();
-            try {
-                XUTraderRoll.latch.await();
-                pr("xu trader roll wait finished, short rolling ", LocalTime.now());
-                traderRoll.shortRoll(0);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-
+            CompletableFuture.runAsync(() -> {
+                XUTraderRoll.resetLatch();
+                XUTraderRoll.getContractDetails();
+                try {
+                    XUTraderRoll.latch.await();
+                    pr("xu trader roll wait finished, short rolling ", LocalTime.now());
+                    traderRoll.shortRoll(0);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
         });
 
         JButton getPositionButton = new JButton(" get pos ");
