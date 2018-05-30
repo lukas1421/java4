@@ -54,6 +54,7 @@ import static utility.Utility.*;
 
 public class ChinaPosition extends JPanel implements HistoricalHandler {
 
+    static volatile Set<String> uniqueKeySet = new HashSet<>();
     static String line;
     private static AtomicBoolean includeExpired = new AtomicBoolean(true);
     volatile static Map<String, Integer> openPositionMap = new HashMap<>();
@@ -629,9 +630,16 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     private void getOpenTradePositionForFuture() {
         pr(" get open trade position for future " + LocalTime.now());
-        if (ChinaPosition.tradesMap.containsKey("SGXA50")) {
-            ChinaPosition.tradesMap.put("SGXA50", new ConcurrentSkipListMap<>());
+        uniqueKeySet = new HashSet<>();
+
+        for (FutType f : FutType.values()) {
+            if (ChinaPosition.tradesMap.containsKey(f.getTicker())) {
+                ChinaPosition.tradesMap.put(f.getTicker(), new ConcurrentSkipListMap<>());
+            }
         }
+//        ChinaPosition.tradesMap.put("SGXA50", new ConcurrentSkipListMap<>());
+//        ChinaPosition.tradesMap.put("SGXA50BM", new ConcurrentSkipListMap<>());
+
         ChinaMain.controller().reqPositions(new FutPositionHandler());
         ChinaMain.controller().reqExecutions(new ExecutionFilter(), new FutPosTradesHandler());
         ChinaMain.GLOBAL_REQ_ID.addAndGet(5);
@@ -1507,6 +1515,14 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
+
+        if (ChinaPosition.uniqueKeySet.contains(tradeKey)) {
+            //pr(" duplicate key in china pos trade report ");
+            return;
+        } else {
+            ChinaPosition.uniqueKeySet.add(tradeKey);
+        }
+
         String ticker = ibContractToSymbol(contract);
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
 

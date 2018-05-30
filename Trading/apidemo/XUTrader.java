@@ -44,6 +44,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         ApiController.ITradeReportHandler, ApiController.IOrderHandler, ApiController.ILiveOrderHandler
         , ApiController.IPositionHandler, ApiController.IConnectionHandler {
 
+    static volatile Set<String> uniqueTradeKeySet = new HashSet<>();
     static ApiController apcon;
     static XUTraderRoll traderRoll;
 
@@ -1953,18 +1954,32 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
         FutType f = ibContractToFutType(contract);
 
-        if (contract.symbol().equalsIgnoreCase("SGXA50")) {
-            pr(str(" exec ", execution.side(), execution.time(), execution.cumQty()
-                    , execution.price(), execution.orderRef(), execution.orderId(),
-                    execution.permId(), execution.shares()));
+        if (uniqueTradeKeySet.contains(tradeKey)) {
+            pr(" duplicate trade key ", tradeKey);
+            return;
+        } else {
+            pr("adding trade key ", tradeKey);
+            uniqueTradeKeySet.add(tradeKey);
         }
+
+        pr(" trade report tradekey contract , exec ", tradeKey, contract.symbol(),
+                contract.lastTradeDateOrContractMonth(), execution.side(), execution.time(), execution.shares(),
+                execution.price(), execution.orderId());
+
+//        if (contract.symbol().equalsIgnoreCase("XINA50")) {
+//            pr(str(" exec ", execution.side(), execution.time(), execution.cumQty()
+//                    , execution.price(), execution.orderRef(), execution.orderId(),
+//                    execution.permId(), execution.shares()));
+//        }
+
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
         int daysToGoBack = LocalDate.now().getDayOfWeek().equals(DayOfWeek.MONDAY) ? 4 : 2;
         if (ldt.toLocalDate().isAfter(LocalDate.now().minusDays(daysToGoBack))) {
             if (tradesMap.get(f).containsKey(ldt)) {
-                tradesMap.get(f).get(ldt).addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
+                tradesMap.get(f).get(ldt).addTrade(new FutureTrade(execution.price(),
+                        (int) Math.round(sign * execution.shares())));
             } else {
                 tradesMap.get(f).put(ldt,
                         new TradeBlock(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
@@ -1974,7 +1989,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @Override
     public void tradeReportEnd() {
-        System.out.println(" printing trades map " + tradesMap.get(ibContractToFutType(activeFuture)));
+        pr("printing all tradesmap all ", tradesMap);
+        //System.out.println(" printing trades map " + tradesMap.get(ibContractToFutType(activeFuture)));
         if (tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
             currentDirection = tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getValue().getSizeAll() > 0 ?
                     Direction.Long : Direction.Short;
@@ -2113,6 +2129,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private void requestExecHistory() {
+        uniqueTradeKeySet = new HashSet<>();
         tradesMap.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
         apcon.reqExecutions(new ExecutionFilter(), this);
     }
@@ -2143,6 +2160,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void processTradeMapActive() {
         FutType f = ibContractToFutType(activeFuture);
         int unitsBought = tradesMap.get(f).entrySet().stream().mapToInt(e -> e.getValue().getSizeBot()).sum();
+
+        //pr(" units bot  ", unitsBought);
+        //pr(" printing trade for active fut ");
+        tradesMap.get(f).entrySet().forEach(Utility::pr);
+
         int unitsSold = tradesMap.get(f).entrySet().stream().mapToInt(e -> e.getValue().getSizeSold()).sum();
 
         botMap.put(f, unitsBought);
