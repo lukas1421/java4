@@ -1461,8 +1461,13 @@ public class ApiController implements EWrapper {
 
             @Override
             public void orderState(OrderState orderState) {
-                globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
-                globalIdOrderMap.get(defaultID).setStatus(orderState.status());
+                if (globalIdOrderMap.containsKey(defaultID)) {
+                    globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
+                    globalIdOrderMap.get(defaultID).setStatus(orderState.status());
+                } else {
+                    throw new IllegalStateException(" global id order map doesn't " +
+                            "contain default ID " + defaultID);
+                }
 
                 if (orderState.status() == OrderStatus.Filled) {
                     String msg = str("||Order||", globalIdOrderMap.get(defaultID).getOrder().orderId(),

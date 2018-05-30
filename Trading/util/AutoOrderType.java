@@ -15,5 +15,9 @@ public enum AutoOrderType {
     DRIFT,
     SHORT_ROLL,
     LONG_ROLL,
+    HIT_BID,
+    LIFT_OFFER,
+    ON_OFFER,
+    ON_BID,
     UNKNOWN
 }
