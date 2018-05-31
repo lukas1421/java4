@@ -32,6 +32,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
 import static apidemo.TradingConstants.ftseIndex;
@@ -44,6 +45,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         ApiController.ITradeReportHandler, ApiController.IOrderHandler, ApiController.ILiveOrderHandler
         , ApiController.IPositionHandler, ApiController.IConnectionHandler {
 
+    static final LocalDateTime ENGINE_START_TIME = XuTraderHelper.getEngineStartTime();
     static volatile Set<String> uniqueTradeKeySet = new HashSet<>();
     static ApiController apcon;
     static XUTraderRoll traderRoll;
@@ -173,7 +175,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     };
     public static AtomicInteger graphWidth = new AtomicInteger(3);
-    public static volatile EnumMap<FutType, NavigableMap<LocalDateTime, SimpleBar>> futData = new EnumMap<>(FutType.class);
+    public static volatile EnumMap<FutType, NavigableMap<LocalDateTime, SimpleBar>> futData
+            = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Integer> currentPosMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Integer> botMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Integer> soldMap = new EnumMap<>(FutType.class);
@@ -1004,6 +1007,50 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 futureAMSession().test(now) ? (d == Direction.Long ? 1 : 2) : 1;
         return Math.max(0, Math.min(candidate, maxSize));
     }
+
+    public static synchronized void dayCoverTrader(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        double currDelta = ChinaPosition.getNetPtfDelta();
+        NavigableMap<LocalDateTime, SimpleBar> todayPrices =
+                futData.get(ibContractToFutType(activeFuture)).entrySet().stream()
+                        .filter(e -> e.getKey().isAfter(LocalDateTime.of(LocalDate.now(), LocalTime.of(8, 59))))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
+                                ConcurrentSkipListMap::new));
+
+        LocalDateTime lastOrderTime = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTradeType() == AutoOrderType.DAY_COVER)
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getOrderTime()).orElse(sessionOpenT());
+
+        if (todayPrices.size() < 2) {
+            pr(" today prices < 2");
+            return;
+        }
+
+        if (!(lt.isAfter(LocalTime.of(9, 30)) && lt.isBefore(LocalTime.of(15, 0)))) {
+            pr(" day cover trade not in time range ", nowMilli.toLocalTime());
+            return;
+        }
+
+        if (ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) < 10) {
+            pr(" last order time too close ", lastOrderTime);
+            return;
+        }
+
+        int todayPerc = getPercentileForLast(todayPrices);
+        int openPerc = getPercentileForX(todayPrices, todayPrices.firstEntry().getValue().getOpen());
+
+        if (openPerc < 50 && todayPerc < 10 && currDelta < getDeltaHighLimit()) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeBidLimit(freshPrice, 1);
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_COVER));
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(str(o.orderId(), "day cover",
+                    globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc));
+
+        }
+    }
+
 
     /**
      * percentileTrader

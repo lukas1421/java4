@@ -122,6 +122,15 @@ public class XuTraderHelper {
         return 50;
     }
 
+    public static <T extends Temporal> int getPercentileForX(NavigableMap<T, SimpleBar> map, double x) {
+        if (map.size() > 1) {
+            double max = map.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
+            double min = map.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
+            return (int) Math.round(100d * ((x - min) / (max - min)));
+        }
+        return 50;
+    }
+
     public static <T extends Temporal> int getPercentileForDouble(NavigableMap<T, Double> map) {
         if (map.size() > 1) {
             double max = map.entrySet().stream().mapToDouble(Map.Entry::getValue).max().orElse(0.0);
@@ -234,6 +243,10 @@ public class XuTraderHelper {
 
     private static Predicate<LocalTime> futureOvernightSession() {
         return t -> t.isAfter(LocalTime.of(15, 0)) || t.isBefore(LocalTime.of(5, 0));
+    }
+
+    public static LocalDateTime getEngineStartTime() {
+        return LocalDateTime.now();
     }
 
     static LocalDateTime sessionOpenT() {

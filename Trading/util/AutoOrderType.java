@@ -20,6 +20,6 @@ public enum AutoOrderType {
     ON_OFFER,
     ON_BID,
     DAY_COVER,
-    DAY_CLOSE,
+    DAY_SELLBACK,
     UNKNOWN
 }
