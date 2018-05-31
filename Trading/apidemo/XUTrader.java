@@ -63,13 +63,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final int DOWN_PERC = 10;
     //flatten drift trader
     private static final double FLATTEN_THRESH = 200000.0;
-    private static final double DELTA_HIGH_LIMIT = 300000.0;
-    private static final double DELTA_LOW_LIMIT = -300000.0;
+    private static final double DELTA_HIGH_LIMIT = 600000.0;
+    private static final double DELTA_LOW_LIMIT = -200000.0;
 
     private static final double ABS_DELTA_TARGET = 100000.0;
-    private static final double BULLISH_DELTA_TARGET = 200000.0;
+    private static final double BULLISH_DELTA_TARGET = 300000.0;
     private static final double BEARISH_DELTA_TARGET = -100000.0;
     public static volatile Eagerness flattenEagerness = Eagerness.Passive;
+
+
+    //day cover trader
+    private static volatile AtomicBoolean dayCoverTraderOn = new AtomicBoolean(false);
 
 
     //perc trader
@@ -417,6 +421,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             percTraderButton.setText("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
         });
 
+        JButton dayCoverButton = new JButton(" Day Cover " + (dayCoverTraderOn.get() ? "ON" : "OFF"));
+        dayCoverButton.addActionListener(l -> {
+            dayCoverTraderOn.set(!dayCoverTraderOn.get());
+            outputToAutoLog("day cover trader set to " + dayCoverTraderOn.get());
+            dayCoverButton.setText(" day cover trader: " + (dayCoverTraderOn.get() ? "ON" : "OFF"));
+        });
+
+
         JButton pdTraderButton = new JButton("PD Trader: " + (pdTraderOn.get() ? "ON" : "OFF"));
         pdTraderButton.addActionListener(l -> {
             pdTraderOn.set(!pdTraderOn.get());
@@ -698,6 +710,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(musicPlayableButton);
         controlPanel1.add(inventoryTraderButton);
         controlPanel1.add(percTraderButton);
+        controlPanel1.add(dayCoverButton);
         controlPanel1.add(pdTraderButton);
         controlPanel1.add(rollButton);
 
@@ -1020,15 +1033,27 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalDateTime lastOrderTime = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTradeType() == AutoOrderType.DAY_COVER)
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .map(e -> e.getValue().getOrderTime()).orElse(sessionOpenT());
+                .map(e -> e.getValue().getOrderTime())
+                .orElse(LocalDateTime.of(LocalDate.now(), LocalTime.of(0, 0)));
+
+        int todayPerc = getPercentileForLast(todayPrices);
+        int openPerc = getPercentileForX(todayPrices, todayPrices.firstEntry().getValue().getOpen());
+
+        pr(" Day cover trader: ", dayCoverTraderOn.get(), "last order time ", lastOrderTime,
+                " today p%: ", todayPerc, " open p% ", openPerc);
+
+        if (!dayCoverTraderOn.get()) {
+            pr(" day cover trader off quitting ");
+            return;
+        }
 
         if (todayPrices.size() < 2) {
-            pr(" today prices < 2");
+            pr("day cover trader: today prices < 2, return ");
             return;
         }
 
         if (!(lt.isAfter(LocalTime.of(9, 30)) && lt.isBefore(LocalTime.of(15, 0)))) {
-            pr(" day cover trade not in time range ", nowMilli.toLocalTime());
+            pr(" day cover trade: not in time range, return ", nowMilli.toLocalTime());
             return;
         }
 
@@ -1037,10 +1062,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        int todayPerc = getPercentileForLast(todayPrices);
-        int openPerc = getPercentileForX(todayPrices, todayPrices.firstEntry().getValue().getOpen());
 
-        if (openPerc < 50 && todayPerc < 10 && currDelta < getDeltaHighLimit()) {
+        if (openPerc < 50 && todayPerc < 10 && currDelta < getDeltaHighLimit()
+                && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= 10) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_COVER));

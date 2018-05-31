@@ -45,7 +45,7 @@ public final class MorningTask implements HistoricalHandler {
         MorningTask mt = new MorningTask();
 
         Utility.clearFile(output);
-        //processShcomp();
+        processShcomp();
         mt.getFromIB();
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
             writeIndexTDX(out);
