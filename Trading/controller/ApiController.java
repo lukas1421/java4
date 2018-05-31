@@ -490,7 +490,9 @@ public class ApiController implements EWrapper {
             @Override
             public void accountSummary(String account, AccountSummaryTag tag, String value, String currency) {
                 String output = getStrCheckNull(LocalDateTime.now(), account, tag, value, currency);
-                pr(output);
+                pr("**********************");
+                pr("Account Pnl: ", output);
+                pr("**********************");
                 if (LocalTime.now().getMinute() < 2) {
                     XuTraderHelper.outputToAutoLog(output);
                 }

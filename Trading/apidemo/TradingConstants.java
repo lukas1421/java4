@@ -40,10 +40,12 @@ public final class TradingConstants {
 
 
     public static String getFutFrontExpiry() {
-        LocalDateTime now = LocalDateTime.now();
         LocalDate today = LocalDate.now();
         LocalTime time = LocalTime.now();
         LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
+
+        //pr(" getting fut front expiry this month exp date ", thisMonthExpiryDate);
+
         if (today.isAfter(thisMonthExpiryDate) ||
                 (today.equals(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
             return getFutureExpiryDateString(today.plusMonths(1L));
@@ -114,9 +116,17 @@ public final class TradingConstants {
 
     private static LocalDate getFutureExpiryDate(int year, Month m) {
         LocalDate res = LocalDate.of(year, m.plus(1), 1);
-        while (res.getDayOfWeek() != TradingConstants.futExpiryWeekDay) {
+//        while (res.getDayOfWeek() != TradingConstants.futExpiryWeekDay) {
+//            res = res.minusDays(1);
+//        }
+        int count = 0;
+        while (count < 2) {
             res = res.minusDays(1);
+            if (res.getDayOfWeek() != DayOfWeek.SATURDAY && res.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                count++;
+            }
         }
+
         return res;
     }
 

@@ -756,7 +756,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
     private static void getOpenPositionsNormal() {
 
-        pr(" get open position from normal ");
+        //pr(" get open position from normal ");
 
         int todaySoldCol = 0;
         int todayBoughtCol = 0;
@@ -788,7 +788,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                         || dataList.get(chineseNameCol).startsWith("XD"))) {
                     String nam = Utility.addSHSZ(dataList.get(stockCodeCol));
 
-                    openPositionMap.put(nam, Integer.parseInt(dataList.get(currentPosCol)) + Integer.parseInt(dataList.get(todaySoldCol))
+                    openPositionMap.put(nam, Integer.parseInt(dataList.get(currentPosCol))
+                            + Integer.parseInt(dataList.get(todaySoldCol))
                             - Integer.parseInt(dataList.get(todayBoughtCol)));
                     costMap.put(nam, Double.parseDouble(dataList.get(costCol)));
                 }
@@ -839,7 +840,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                                 || dataList.get(chineseNameCol).startsWith("XD"))) {
 
                     String nam = Utility.addSHSZ(dataList.get(stockCodeCol));
-                    //pr(" nam " + nam);
                     openPositionMap.put(nam, Integer.parseInt(dataList.get(openPosCol))
                             + Integer.parseInt(dataList.get(todaySoldCol))
                             - Integer.parseInt(dataList.get(todayBoughtCol)));
@@ -1473,8 +1473,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     return r(minGen(wtdMinMap.getOrDefault(name, 0.0), ChinaStock.minMap.getOrDefault(name,
                             wtdMinMap.getOrDefault(name, 0.0)), wkMinHist));
                 case 30:
-                    return (currPrice != 0.0) ? Math.round((((maxGen(wtdMaxMap.getOrDefault(name, 0.0), ChinaStock.maxMap.getOrDefault(name,
-                            wtdMaxMap.getOrDefault(name, 0.0)), wkMaxHist)
+                    return (currPrice != 0.0) ? Math.round((((maxGen(wtdMaxMap.getOrDefault(name, 0.0),
+                            ChinaStock.maxMap.getOrDefault(name,
+                                    wtdMaxMap.getOrDefault(name, 0.0)), wkMaxHist)
                             + minGen(wtdMinMap.getOrDefault(name, 0.0), ChinaStock.minMap.getOrDefault(name,
                             wtdMinMap.getOrDefault(name, 0.0)), wkMinHist)) / 2) / currPrice - 1) * 1000d) / 10d : 0.0;
                 case 31:
@@ -1499,7 +1500,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         int updateSec;
     }
-
 }
 
 

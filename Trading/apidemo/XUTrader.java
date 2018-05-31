@@ -857,7 +857,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd"))
                                     .equals(LocalDate.now())
                             && LocalTime.now().isAfter(LocalTime.of(15, 0))) {
-                        pr(" front fut expired ");
                         return 0.0;
                     }
                     return e.getValue() * futPriceMap.getOrDefault(e.getKey(), SinaStock.FTSE_OPEN)
@@ -1991,7 +1990,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" duplicate trade key ", tradeKey);
             return;
         } else {
-            pr("adding trade key ", tradeKey);
+            //pr("adding trade key ", tradeKey);
             uniqueTradeKeySet.add(tradeKey);
         }
 
@@ -2038,6 +2037,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //ApiController.IOrderHandler
     @Override
     public void orderState(OrderState orderState) {
+
     }
 
     @Override
@@ -2193,11 +2193,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void processTradeMapActive() {
         FutType f = ibContractToFutType(activeFuture);
         int unitsBought = tradesMap.get(f).entrySet().stream().mapToInt(e -> e.getValue().getSizeBot()).sum();
-
-        //pr(" units bot  ", unitsBought);
-        //pr(" printing trade for active fut ");
-        tradesMap.get(f).entrySet().forEach(Utility::pr);
-
         int unitsSold = tradesMap.get(f).entrySet().stream().mapToInt(e -> e.getValue().getSizeSold()).sum();
 
         botMap.put(f, unitsBought);
