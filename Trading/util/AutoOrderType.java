@@ -19,5 +19,7 @@ public enum AutoOrderType {
     LIFT_OFFER,
     ON_OFFER,
     ON_BID,
+    DAY_COVER,
+    DAY_CLOSE,
     UNKNOWN
 }
