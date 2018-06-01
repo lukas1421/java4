@@ -321,8 +321,6 @@ public final class ChinaData extends JPanel {
             int ans = JOptionPane.showConfirmDialog(null, "are you sure", "", JOptionPane.YES_NO_OPTION);
             if (ans == JOptionPane.YES_OPTION) {
                 Hibtask.hibernateMorningTask();
-            } else {
-                System.out.println(" nothing done ");
             }
         });
         saveBidAsk.addActionListener(al -> hibSaveGenBidAsk());
