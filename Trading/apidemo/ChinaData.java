@@ -213,6 +213,7 @@ public final class ChinaData extends JPanel {
         //JButton loadStratButton = new JButton("Load Strat");
         JButton loadHibGenPriceButton = new JButton("Load hib");
         JButton loadHibernateY = new JButton("Load hib Y");
+        JButton unloadHibAllButton = new JButton("Unload T");
         JButton btnLoadBarYtd = new JButton("Load Bar YTD");
         JButton btnLoadBar = new JButton("Load Bar");
         JButton shcompToText = new JButton("上证");
@@ -252,6 +253,8 @@ public final class ChinaData extends JPanel {
         buttonDownPanel.add(loadHibGenPriceButton);
         buttonDownPanel.add(Box.createHorizontalStrut(10));
         buttonDownPanel.add(loadHibernateY);
+        buttonDownPanel.add(Box.createHorizontalStrut(20));
+        buttonDownPanel.add(unloadHibAllButton);
         buttonDownPanel.add(Box.createHorizontalStrut(20));
         //buttonDownPanel.add(loadHibBidAsk);
         //buttonDownPanel.add(Box.createHorizontalStrut(10));
@@ -313,6 +316,7 @@ public final class ChinaData extends JPanel {
         saveHibernate.addActionListener(al -> withHibernate());
         saveOHLCButton.addActionListener(al -> saveChinaOHLC());
         loadHibGenPriceButton.addActionListener(al -> Hibtask.loadHibGenPrice());
+        unloadHibAllButton.addActionListener(al -> priceMapBar.replaceAll((k, v) -> new ConcurrentSkipListMap<>()));
         hibMorning.addActionListener(al -> {
             int ans = JOptionPane.showConfirmDialog(null, "are you sure", "", JOptionPane.YES_NO_OPTION);
             if (ans == JOptionPane.YES_OPTION) {
