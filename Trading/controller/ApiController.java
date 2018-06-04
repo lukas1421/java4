@@ -962,12 +962,27 @@ public class ApiController implements EWrapper {
     }
 
     public void reqA50TodayHist() {
-        for (String s : SinaStock.weightMapA50.keySet()) {
-            String ticker = s.substring(2);
-            String exch = s.substring(0, 2).toUpperCase().equalsIgnoreCase("SH") ?
-                    "SEHKNTL" : "SEHKSZSE";
-            req1StockHistToday(ticker, exch, "CNH", new HistoricalHandler.DefaultHistHandler());
-        }
+        CompletableFuture.runAsync(() -> {
+            AtomicInteger i = new AtomicInteger(0);
+            //Semaphore a50Semaphore = new Semaphore(50);
+            for (String s : ChinaData.priceMapBar.keySet()) {
+                if (ChinaPosition.openPositionMap.getOrDefault(s, 0) != 0 ||
+                        ChinaPosition.tradesMap.containsKey(s) && ChinaPosition.tradesMap.get(s).size() > 0) {
+                    i.incrementAndGet();
+                    pr(" IB hist counter is ", i);
+                    String ticker = s.substring(2);
+                    String exch = s.substring(0, 2).toUpperCase().equalsIgnoreCase("SH") ? "SEHKNTL" : "SEHKSZSE";
+                    if (i.get() % 30 == 0) {
+                        try {
+                            Thread.sleep(2000L);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    req1StockHistToday(ticker, exch, "CNH", new HistoricalHandler.DefaultHistHandle());
+                }
+            }
+        });
     }
 
     private Contract generateStockContract(String stock, String ex, String curr) {

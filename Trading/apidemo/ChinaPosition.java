@@ -57,7 +57,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     static volatile Set<String> uniqueKeySet = new HashSet<>();
     static String line;
     private static AtomicBoolean includeExpired = new AtomicBoolean(true);
-    volatile static Map<String, Integer> openPositionMap = new HashMap<>();
+    public volatile static Map<String, Integer> openPositionMap = new HashMap<>();
     public volatile static Map<String, Integer> currentPositionMap = new HashMap<>();
     private static Map<String, Double> costMap = new HashMap<>();
     public volatile static Map<String, ConcurrentSkipListMap<LocalTime, TradeBlock>> tradesMap = new ConcurrentHashMap<>();
