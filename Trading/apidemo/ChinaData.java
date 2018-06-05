@@ -381,9 +381,7 @@ public final class ChinaData extends JPanel {
 
         fixYtdZeroButton.addActionListener(l -> fixYtdSuspendedStocks());
 
-        getIBChinaButton.addActionListener(l -> {
-            controller().reqA50TodayHist();
-        });
+        getIBChinaButton.addActionListener(l -> controller().reqHoldingsTodayHist());
     }
 
     static void outputPrices() {

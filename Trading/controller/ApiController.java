@@ -961,7 +961,7 @@ public class ApiController implements EWrapper {
         }
     }
 
-    public void reqA50TodayHist() {
+    public void reqHoldingsTodayHist() {
         CompletableFuture.runAsync(() -> {
             AtomicInteger i = new AtomicInteger(0);
             //Semaphore a50Semaphore = new Semaphore(50);
