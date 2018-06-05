@@ -176,7 +176,7 @@ public final class ChinaStockHelper {
                                 tm.remove(t);
                             }
                         } else if (!tm.containsKey(t) || tm.get(t).containsZero()) {
-                            pr("name has issue in filling holes " + name + " " + t);
+                            //pr("name has issue in filling holes " + name + " " + t);
                             SimpleBar sb = new SimpleBar(tm.higherEntry(t).getValue());
                             tm.put(t, sb);
                         }

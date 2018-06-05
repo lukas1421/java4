@@ -1009,8 +1009,10 @@ public class ApiController implements EWrapper {
         Contract frontCt = getFrontFutContract();
         Contract backCt = getBackFutContract();
 
-        int reqIdFront = m_reqId.incrementAndGet();
-        int reqIdBack = m_reqId.incrementAndGet();
+        m_reqId.getAndIncrement();
+        int reqIdFront = m_reqId.getAndIncrement();
+        int reqIdBack = m_reqId.getAndIncrement();
+        //m_reqId.
 
         if (!globalRequestMap.containsKey(reqIdFront) && !globalRequestMap.containsKey(reqIdBack)) {
             ChinaMain.globalRequestMap.put(reqIdFront, new Request(frontCt, SGXFutureReceiver.getReceiver()));
@@ -1022,8 +1024,14 @@ public class ApiController implements EWrapper {
                 pr(" reqXUDataArray but not connected ");
             }
         } else {
-            m_reqId.incrementAndGet();
-            pr(" req used " + reqIdFront + " " + globalRequestMap.get(reqIdFront).getContract());
+            m_reqId.set(m_reqId.addAndGet(10000));
+            reqIdFront = m_reqId.getAndIncrement();
+            reqIdBack = m_reqId.getAndIncrement();
+            if (m_client.isConnected()) {
+                m_client.reqMktData(reqIdFront, frontCt, "", false, Collections.<TagValue>emptyList());
+                m_client.reqMktData(reqIdBack, backCt, "", false, Collections.<TagValue>emptyList());
+            }
+            //pr(" req used " + reqIdFront + " " + globalRequestMap.get(reqIdFront).getContract());
             throw new IllegalArgumentException(" req ID used ");
         }
         pr("requesting XU data ends");
