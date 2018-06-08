@@ -63,11 +63,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final int DOWN_PERC = 10;
     //flatten drift trader
     private static final double FLATTEN_THRESH = 200000.0;
-    private static final double DELTA_HIGH_LIMIT = 600000.0;
+    private static final double DELTA_HIGH_LIMIT = 1000000.0;
     private static final double DELTA_LOW_LIMIT = -200000.0;
 
-    private static final double ABS_DELTA_TARGET = 100000.0;
-    private static final double BULLISH_DELTA_TARGET = 300000.0;
+    private static final double BULLISH_DELTA_TARGET = 500000.0;
     private static final double BEARISH_DELTA_TARGET = -100000.0;
     public static volatile Eagerness flattenEagerness = Eagerness.Passive;
 
@@ -217,7 +216,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return target * 2;
         }
         return target;
-
     }
 
     private static double getBearishTarget() {
@@ -324,8 +322,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     XUTrader(ApiController ap) {
-        out.println(str(" ****** front fut ******* ", frontFut));
-        out.println(str(" ****** back fut ******* ", backFut));
+        pr(str(" ****** front fut ******* ", frontFut));
+        pr(str(" ****** back fut ******* ", backFut));
 
 
         for (FutType f : FutType.values()) {
@@ -517,7 +515,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }, 0, 1, TimeUnit.MINUTES);
 
             ses.scheduleAtFixedRate(() -> {
-                out.println(" printing all inventory orders ");
+                pr(" printing all inventory orders ");
 
                 globalIdOrderMap.entrySet().stream().filter(e -> isInventoryTrade().test(e.getValue().getTradeType()))
                         .forEach(e -> pr(str("real order ID", e.getValue().getOrder().orderId(), e.getValue())));
@@ -1037,7 +1035,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .orElse(LocalDateTime.of(LocalDate.now(), LocalTime.of(0, 0)));
 
         int todayPerc = getPercentileForLast(todayPrices);
-        int openPerc = getPercentileForX(todayPrices, todayPrices.firstEntry().getValue().getOpen());
+        int openPerc = getPercentileForX(todayPrices, todayPrices.firstEntry().getValue().getHigh());
 
         pr(" Day cover trader: ", dayCoverTraderOn.get(), "last order time ", lastOrderTime,
                 " today p%: ", todayPerc, " open p% ", openPerc);
@@ -1052,7 +1050,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        if (!(lt.isAfter(LocalTime.of(9, 30)) && lt.isBefore(LocalTime.of(15, 0)))) {
+        if (!(lt.isAfter(LocalTime.of(9, 25)) && lt.isBefore(LocalTime.of(15, 0)))) {
             pr(" day cover trade: not in time range, return ", nowMilli.toLocalTime());
             return;
         }
@@ -1063,7 +1061,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
 
-        if (openPerc < 50 && todayPerc < 5 && currDelta < getDeltaHighLimit()
+        if (openPerc < 20 && todayPerc < 5 && currDelta < getBullishTarget()
                 && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= 10) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 1);
