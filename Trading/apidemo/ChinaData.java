@@ -375,7 +375,7 @@ public final class ChinaData extends JPanel {
 
         retrieveAllButton.addActionListener(l -> retrieveDataAll());
 
-        retrieveTodayButton.addActionListener(l -> getTodayTDX(LocalDate.now()));
+        retrieveTodayButton.addActionListener(l -> getTodayTDX(ChinaMain.currentTradingDate));
 
         outputPricesButton.addActionListener(l -> outputPrices());
 

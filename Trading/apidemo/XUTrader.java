@@ -1063,7 +1063,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
 
-        if (openPerc < 50 && todayPerc < 10 && currDelta < getDeltaHighLimit()
+        if (openPerc < 50 && todayPerc < 5 && currDelta < getDeltaHighLimit()
                 && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= 10) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 1);

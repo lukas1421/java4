@@ -165,7 +165,15 @@ public final class ChinaStockHelper {
     static void fillHolesInData(Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp, LocalTime startTime) {
         symbolNames.forEach(name -> {
             try {
+
                 NavigableMap<LocalTime, SimpleBar> tm = mp.get(name);
+                if (LocalTime.now().isAfter(LocalTime.of(15, 0))) {
+                    if (!tm.containsKey(LocalTime.of(15, 0)) || tm.get(LocalTime.of(15, 0)).containsZero()) {
+                        pr(" filling closing price ", name, priceMap.getOrDefault(name, 0.0));
+                        tm.put(LocalTime.of(15, 0), new SimpleBar(priceMap.getOrDefault(name, 0.0)));
+                    }
+                }
+
                 LocalTime lastKey = tm.lastKey();
                 //LocalTime AM919T = LocalTime.of(9, 19);
                 LocalTime t = lastKey.minusMinutes(1);
@@ -177,17 +185,19 @@ public final class ChinaStockHelper {
                             }
                         } else if (!tm.containsKey(t) || tm.get(t).containsZero()) {
                             //pr("name has issue in filling holes " + name + " " + t);
-                            SimpleBar sb = new SimpleBar(tm.higherEntry(t).getValue());
-                            tm.put(t, sb);
+                            if (tm.lastKey().isBefore(t)) {
+                                tm.put(t, new SimpleBar(priceMap.getOrDefault(name, 0.0)));
+                            } else {
+                                SimpleBar sb = new SimpleBar(tm.higherEntry(t).getValue());
+                                tm.put(t, sb);
+                            }
                         }
-
                         t = t.minusMinutes(1L);
                     }
                 }
             } catch (Exception x) {
                 pr(" cannot fill holes " + name);
             }
-
         });
     }
 
@@ -213,7 +223,9 @@ public final class ChinaStockHelper {
                         if (t.isAfter(LocalTime.of(11, 30)) && t.isBefore(LocalTime.of(13, 0))) {
                             tm.remove(t);
                         } else if (!tm.containsKey(t)) {
-                            tm.put(t, tm.get(t.plusMinutes(1L)));
+                            if (tm.containsKey(t.plusMinutes(1L))) {
+                                tm.put(t, tm.get(t.plusMinutes(1L)));
+                            }
                         }
                         t = t.minusMinutes(1L);
                     }
