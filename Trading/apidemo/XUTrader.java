@@ -72,11 +72,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     //day cover trader
-    private static volatile AtomicBoolean dayCoverTraderOn = new AtomicBoolean(false);
+    private static volatile AtomicBoolean dayCoverTraderOn = new AtomicBoolean(true);
 
 
     //perc trader
-    private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
+    private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(true);
     private static final int MAX_PERC_TRADES = 5;
 
     //inventory market making
@@ -1022,11 +1022,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static synchronized void dayCoverTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         double currDelta = ChinaPosition.getNetPtfDelta();
-        NavigableMap<LocalDateTime, SimpleBar> todayPrices =
-                futData.get(ibContractToFutType(activeFuture)).entrySet().stream()
+        NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
+        NavigableMap<LocalDateTime, SimpleBar> todayPriceMap =
+                futdata.entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LocalDateTime.of(LocalDate.now(), LocalTime.of(8, 59))))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
                                 ConcurrentSkipListMap::new));
+
+        LocalDate prevDate = futdata.firstEntry().getKey().toLocalDate();
+        double ytdClose = futdata.lowerEntry(LocalDateTime.of(prevDate, LocalTime.of(15, 0))).getValue().getHigh();
+        int ytdClosePerc = getPercentileForX(
+                futdata.headMap(LocalDateTime.of(prevDate, LocalTime.of(15, 0)), true), ytdClose);
+        pr("day cover *** ytd close ", ytdClose, " ytd close p% ", ytdClosePerc);
+
 
         LocalDateTime lastOrderTime = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTradeType() == AutoOrderType.DAY_COVER)
@@ -1034,8 +1042,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .map(e -> e.getValue().getOrderTime())
                 .orElse(LocalDateTime.of(LocalDate.now(), LocalTime.of(0, 0)));
 
-        int todayPerc = getPercentileForLast(todayPrices);
-        int openPerc = getPercentileForX(todayPrices, todayPrices.firstEntry().getValue().getHigh());
+        int todayPerc = getPercentileForLast(todayPriceMap);
+        int openPerc = getPercentileForX(todayPriceMap, todayPriceMap.firstEntry().getValue().getHigh());
+
+        if (ytdClosePerc > 20) {
+            pr(" ytd close perc > 20 , quitting no day cover");
+            return;
+        }
 
         pr(" Day cover trader: ", dayCoverTraderOn.get(), "last order time ", lastOrderTime,
                 " today p%: ", todayPerc, " open p% ", openPerc);
@@ -1045,7 +1058,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        if (todayPrices.size() < 2) {
+        if (todayPriceMap.size() < 2) {
             pr("day cover trader: today prices < 2, return ");
             return;
         }
@@ -1061,15 +1074,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
 
-        if (openPerc < 20 && todayPerc < 5 && currDelta < getBullishTarget()
-                && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= 10) {
+        if (todayPerc < 5 && currDelta < getBullishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= 10) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_COVER));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "day cover",
                     globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc));
-
         }
     }
 
@@ -1811,7 +1822,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (!inventoryTraderOn.get()) {
-            pr(" quitting inventory trade: inventory off ");
+            //pr(" quitting inventory trade: inventory off ");
             return;
         }
 
