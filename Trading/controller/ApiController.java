@@ -492,6 +492,8 @@ public class ApiController implements EWrapper {
                 String output = getStrCheckNull(LocalDateTime.now(), account, tag, value, currency);
                 pr("**********************");
                 pr("Account Pnl: ", output);
+                XUTrader.updateLog(str("Account pnl", output));
+                XUTrader.currentIBNAV = Double.parseDouble(value);
                 pr("**********************");
                 if (LocalTime.now().getMinute() < 2) {
                     XuTraderHelper.outputToAutoLog(output);

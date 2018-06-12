@@ -45,6 +45,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         ApiController.ITradeReportHandler, ApiController.IOrderHandler, ApiController.ILiveOrderHandler
         , ApiController.IPositionHandler, ApiController.IConnectionHandler {
 
+    public static volatile double currentIBNAV = 0.0;
+
     static final LocalDateTime ENGINE_START_TIME = XuTraderHelper.getEngineStartTime();
     static volatile Set<String> uniqueTradeKeySet = new HashSet<>();
     static ApiController apcon;
@@ -1009,8 +1011,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 candidate = (int) Math.floor((currDelta - target) / (price * fx));
             }
         }
-        pr("GET PERC SIZE: price", price, "fx", fx, "senti", sentiment, "dir", d, "currDel", currDelta,
-                "bull bear targets", getBullishTarget(), getBearishTarget(), "candidate ", candidate);
+        pr("GET PERC SIZE: price", price, "*fx", fx, "*senti", sentiment, "*dir", d, "*currDel", currDelta,
+                "*bull bear targets", getBullishTarget(), getBearishTarget(), "*candidate ", candidate);
         LocalTime now = LocalTime.now();
         //am trade size is forced to be 1
         //pm trade size can be 3 at a time.
@@ -2005,7 +2007,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return apcon;
     }
 
-    private static void updateLog(String s) {
+    public static void updateLog(String s) {
         outputArea.append(s);
         outputArea.append("\n");
         SwingUtilities.invokeLater(() -> outputArea.repaint());
@@ -2288,6 +2290,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double netTotalCommissions = Math.round(100d * ((unitsBought - unitsSold) * 1.505d)) / 100d;
         double mtmPnl = (currentPosMap.get(f) - unitsBought - unitsSold) * (futPriceMap.get(f) - futPrevCloseMap.get(f));
         SwingUtilities.invokeLater(() -> {
+            updateLog(" NAV: " + currentIBNAV);
             updateLog(" P " + futPriceMap.get(f));
             updateLog(" Close " + futPrevCloseMap.get(f));
             updateLog(" Open " + futOpenMap.get(f));
@@ -2307,6 +2310,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     + currentPosMap.getOrDefault(f, 0) + " Delta " + r(ChinaPosition.getNetPtfDelta()) +
                     " Stock Delta " + r(ChinaPosition.getStockPtfDelta()) + " Fut Delta " + r(XUTrader.getFutDelta()));
             updateLog(" expiring delta " + getExpiringDelta());
+
         });
     }
 
