@@ -27,7 +27,7 @@ public interface HistoricalHandler extends GeneralHandler {
         @Override
         public void handleHist(String name, String date, double open, double high, double low, double close) {
             pr("handle hist ", name, date, open, close);
-            String ticker = Utility.addSHSZ(name);
+            String ticker = Utility.addSHSZHK(name);
             if (ChinaData.priceMapBar.containsKey(ticker)) {
                 if (!date.startsWith("finished")) {
                     Date dt = new Date(Long.parseLong(date) * 1000);

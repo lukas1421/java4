@@ -481,14 +481,14 @@ public class Utility {
         }
     }
 
-    public static String addSHSZ(String s) {
+    public static String addSHSZHK(String s) {
         if (s.length() == 6) {
             if (s.equals("204001") || s.equals("000905") || s.equals("510050")) {
                 return "sh" + s;
             }
             return ((s.startsWith("6")) ? "sh" : "sz") + s;
         }
-        return s;
+        return "hk" + s;
     }
 
     @SafeVarargs

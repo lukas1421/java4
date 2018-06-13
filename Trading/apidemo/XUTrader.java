@@ -1076,8 +1076,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-
-
         if (todayPriceMap.size() < 2) {
             pr("day cover trader: today prices < 2, return ");
             return;

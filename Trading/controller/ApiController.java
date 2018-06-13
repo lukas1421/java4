@@ -986,9 +986,8 @@ public class ApiController implements EWrapper {
                         }
                         req1StockHistToday(ticker, exch, "CNH", new HistoricalHandler.DefaultHistHandle());
                     } else {
-                        //String ticker = s.substring(2);
-                        //String ticker = s;
-                        req1StockHistToday(s, "SEHK", "HKD", new HistoricalHandler.DefaultHistHandle());
+                        String ticker = s.substring(2);
+                        req1StockHistToday(ticker, "SEHK", "HKD", new HistoricalHandler.DefaultHistHandle());
                     }
                 }
             }

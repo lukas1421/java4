@@ -99,9 +99,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     static ScheduledExecutorService ex = Executors.newScheduledThreadPool(10);
 
 
-    private static Predicate<Map.Entry<String, ?>> CHINA_STOCK_PRED = m -> m.getKey().startsWith("sh")
+    private static final Predicate<Map.Entry<String, ?>> CHINA_STOCK_PRED = m -> m.getKey().startsWith("sh")
             || m.getKey().startsWith("sz");
-    private static volatile Predicate<Map.Entry<String, ?>> FUT_PRED = m -> m.getKey().startsWith("SGXA50");
+    private static final Predicate<Map.Entry<String, ?>> FUT_PRED = m -> m.getKey().startsWith("SGXA50");
+    //private static volatile Predicate<Map.Entry<String, ?>> HK_PRED = m -> m.getKey().startsWith("SGXA50");
+
     private static volatile Predicate<Map.Entry<String, ?>> GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
     private static volatile UpdateFrequency updateFreq = UpdateFrequency.oneSec;
 
@@ -785,10 +787,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     //pr(" today sold col " + todaySoldCol);
                 }
 
-                if (dataList.size() > 1 && (nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "")
+                if (dataList.size() > 1 && (nameMap.getOrDefault(Utility.addSHSZHK(dataList.get(stockCodeCol)), "")
                         .replace(" ", "").equals(dataList.get(chineseNameCol))
                         || dataList.get(chineseNameCol).startsWith("XD"))) {
-                    String nam = Utility.addSHSZ(dataList.get(stockCodeCol));
+                    String nam = Utility.addSHSZHK(dataList.get(stockCodeCol));
 
                     openPositionMap.put(nam, Integer.parseInt(dataList.get(currentPosCol))
                             + Integer.parseInt(dataList.get(todaySoldCol))
@@ -829,19 +831,19 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
 //                if (dataList.size() > stockCodeCol) {
 //                    pr(str(" ticker ", dataList.get(stockCodeCol), " add sh sz ",
-//                            Utility.addSHSZ(dataList.get(stockCodeCol)), " name map ",
-//                            nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), ""),
-//                            " replaced ", nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "")
+//                            Utility.addSHSZHK(dataList.get(stockCodeCol)), " name map ",
+//                            nameMap.getOrDefault(Utility.addSHSZHK(dataList.get(stockCodeCol)), ""),
+//                            " replaced ", nameMap.getOrDefault(Utility.addSHSZHK(dataList.get(stockCodeCol)), "")
 //                                    .replace(" ", ""), " chin name in list  ",
 //                            dataList.get(chineseNameCol)));
 //                }
 
                 if (dataList.size() > stockCodeCol && (
-                        nameMap.getOrDefault(Utility.addSHSZ(dataList.get(stockCodeCol)), "")
+                        nameMap.getOrDefault(Utility.addSHSZHK(dataList.get(stockCodeCol)), "")
                                 .equals(dataList.get(chineseNameCol))
                                 || dataList.get(chineseNameCol).startsWith("XD"))) {
 
-                    String nam = Utility.addSHSZ(dataList.get(stockCodeCol));
+                    String nam = Utility.addSHSZHK(dataList.get(stockCodeCol));
                     openPositionMap.put(nam, Integer.parseInt(dataList.get(openPosCol))
                             + Integer.parseInt(dataList.get(todaySoldCol))
                             - Integer.parseInt(dataList.get(todayBoughtCol)));
@@ -883,7 +885,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 if (dataList.size() > 10 && !dataList.get(stockCodeCol).startsWith("2") && (dataList.get(statusCol).equals("已成交") || dataList.get(statusCol).equals("部分成交"))
                         && (dataList.get(buySellCol).equals("买入") || dataList.get(buySellCol).equals("卖出"))) {
 
-                    String ticker = Utility.addSHSZ(dataList.get(stockCodeCol));
+                    String ticker = Utility.addSHSZHK(dataList.get(stockCodeCol));
                     LocalTime lt = LocalTime.parse(dataList.get(fillTimeCol)).truncatedTo(ChronoUnit.SECONDS);
 
                     if (lt.isAfter(LocalTime.of(11, 30, 0)) && lt.isBefore(LocalTime.of(13, 0, 0))) {
@@ -969,7 +971,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                         || dataList.get(statusCol).equals("部成"))
                         && (dataList.get(buySellCol).equals("证券买入") || dataList.get(buySellCol).equals("证券卖出"))) {
 
-                    String ticker = Utility.addSHSZ(dataList.get(stockCodeCol));
+                    String ticker = Utility.addSHSZHK(dataList.get(stockCodeCol));
                     LocalTime lt = LocalTime.parse(dataList.get(fillTimeCol)).truncatedTo(ChronoUnit.SECONDS);
 
                     if (lt.isAfter(LocalTime.of(11, 30, 0)) && lt.isBefore(LocalTime.of(13, 0, 0))) {
@@ -1519,8 +1521,8 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
 
-        pr(" trade report trade key, contract exec ", tradeKey, contract.symbol(), execution.price(),
-                execution.shares());
+//        pr(" trade report trade key, contract exec ", tradeKey, contract.symbol(), execution.price(),
+//                execution.shares());
 
         if (ChinaPosition.uniqueKeySet.contains(tradeKey)) {
             //pr(" duplicate key in china pos trade report ");
@@ -1529,10 +1531,12 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
             ChinaPosition.uniqueKeySet.add(tradeKey);
         }
 
-        String ticker = ibContractToSymbol(contract);
+        String ticker = Utility.addSHSZHK(ibContractToSymbol(contract));
         if (!ChinaPosition.tradesMap.containsKey(ticker)) {
             pr(" inputting new entry for ticker ", ticker);
             ChinaPosition.tradesMap.put(ticker, new ConcurrentSkipListMap<>());
+            //symbolNames.add(ticker);
+            //symbolNamesFull.add(ticker);
         }
 
         int sign = (execution.side().equals("BOT")) ? 1 : -1;

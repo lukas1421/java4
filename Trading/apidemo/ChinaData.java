@@ -725,7 +725,7 @@ public final class ChinaData extends JPanel {
         @Override
         public int getRowCount() {
             //return priceMapBar.size();
-            return symbolNames.size();
+            return symbolNamesFull.size();
         }
 
         @Override

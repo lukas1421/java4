@@ -293,7 +293,7 @@ public class HKStock extends JPanel {
     private static double getASharePrice(String hkTicker) {
         String aShare = haMap.getOrDefault(hkTicker, "");
         if (!aShare.equals("")) {
-            String aShareTicker = Utility.addSHSZ(aShare);
+            String aShareTicker = Utility.addSHSZHK(aShare);
             return ChinaStock.priceMap.getOrDefault(aShareTicker, 0.0);
         }
         return 0.0;
