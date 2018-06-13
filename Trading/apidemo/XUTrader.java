@@ -1047,6 +1047,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int todayPerc = getPercentileForLast(todayPriceMap);
         int openPerc = getPercentileForX(todayPriceMap, todayPriceMap.firstEntry().getValue().getHigh());
 
+        if (todayPriceMap.size() < 2) {
+            pr(" today price map < 2");
+            return;
+        }
+
         if (ytdClosePerc > 20) {
             pr(" ytd close perc > 20 , quitting no day cover");
             return;
@@ -2066,15 +2071,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
-        FutType f = ibContractToFutType(contract);
 
-        if (uniqueTradeKeySet.contains(tradeKey)) {
-            pr(" duplicate trade key ", tradeKey);
-            return;
-        } else {
-            //pr("adding trade key ", tradeKey);
-            uniqueTradeKeySet.add(tradeKey);
-        }
+        if (contract.symbol().equals("XINA50")) {
+            FutType f = ibContractToFutType(contract);
+
+            if (uniqueTradeKeySet.contains(tradeKey)) {
+                pr(" duplicate trade key ", tradeKey);
+                return;
+            } else {
+                //pr("adding trade key ", tradeKey);
+                uniqueTradeKeySet.add(tradeKey);
+            }
 
 //        pr(" trade report tradekey contract , exec ", tradeKey, contract.symbol(),
 //                contract.lastTradeDateOrContractMonth(), execution.side(), execution.time(), execution.shares(),
@@ -2086,17 +2093,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //                    execution.permId(), execution.shares()));
 //        }
 
-        int sign = (execution.side().equals("BOT")) ? 1 : -1;
-        LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
+            int sign = (execution.side().equals("BOT")) ? 1 : -1;
+            LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
-        int daysToGoBack = LocalDate.now().getDayOfWeek().equals(DayOfWeek.MONDAY) ? 4 : 2;
-        if (ldt.toLocalDate().isAfter(LocalDate.now().minusDays(daysToGoBack))) {
-            if (tradesMap.get(f).containsKey(ldt)) {
-                tradesMap.get(f).get(ldt).addTrade(new FutureTrade(execution.price(),
-                        (int) Math.round(sign * execution.shares())));
-            } else {
-                tradesMap.get(f).put(ldt,
-                        new TradeBlock(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
+            int daysToGoBack = LocalDate.now().getDayOfWeek().equals(DayOfWeek.MONDAY) ? 4 : 2;
+            if (ldt.toLocalDate().isAfter(LocalDate.now().minusDays(daysToGoBack))) {
+                if (tradesMap.get(f).containsKey(ldt)) {
+                    tradesMap.get(f).get(ldt).addTrade(new FutureTrade(execution.price(),
+                            (int) Math.round(sign * execution.shares())));
+                } else {
+                    tradesMap.get(f).put(ldt,
+                            new TradeBlock(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
+                }
             }
         }
     }

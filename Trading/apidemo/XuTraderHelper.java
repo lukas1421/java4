@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 import static apidemo.TradingConstants.ftseIndex;
 import static java.lang.System.out;
-import static utility.Utility.pr;
 import static utility.Utility.str;
 
 public class XuTraderHelper {
@@ -128,7 +127,7 @@ public class XuTraderHelper {
                     e.getValue().getHigh())).get();
             Map.Entry<T, SimpleBar> minEntry = map.entrySet().stream().min(Comparator.comparingDouble(e ->
                     e.getValue().getLow())).get();
-            pr(" max min x ** maxT, minT", max, min, x, maxEntry.getKey(), minEntry.getKey());
+            //pr(" max min x ** maxT, minT", max, min, x, maxEntry.getKey(), minEntry.getKey());
 
             return (int) Math.round(100d * ((x - min) / (max - min)));
         }

@@ -56,6 +56,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
                 new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "hkMainList.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
+                ChinaData.priceMapBar.put(al1.get(0), new ConcurrentSkipListMap<>());
                 hkPriceBar.put(al1.get(0), new ConcurrentSkipListMap<>());
                 hkNames.add(al1.get(0));
             }

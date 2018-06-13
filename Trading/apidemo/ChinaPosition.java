@@ -104,7 +104,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     private static TableRowSorter<BarModel_POS> sorter;
     static ScheduledExecutorService ex = Executors.newScheduledThreadPool(10);
 
-    private static volatile Predicate<? super Map.Entry<String, ?>> GEN_MTM_PRED = m -> true;
+
+    private static Predicate<Map.Entry<String, ?>> CHINA_STOCK_PRED = m -> m.getKey().startsWith("sh")
+            || m.getKey().startsWith("sz");
+    private static volatile Predicate<Map.Entry<String, ?>> FUT_PRED = m -> m.getKey().startsWith("SGXA50");
+    private static volatile Predicate<Map.Entry<String, ?>> GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
     private static volatile UpdateFrequency updateFreq = UpdateFrequency.oneSec;
 
     @Override
@@ -262,21 +266,25 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         bg.add(rb1);
         bg.add(rb2);
 
-        JToggleButton includeFutToggle = new JToggleButton("NO Fut");
-        includeFutToggle.addActionListener(l -> {
-            if (includeFutToggle.isSelected()) {
-                GEN_MTM_PRED = m -> !m.getKey().startsWith("SGXA50");
+        JToggleButton noFutToggle = new JToggleButton("NO Fut");
+        noFutToggle.addActionListener(l -> {
+            if (noFutToggle.isSelected()) {
+                GEN_MTM_PRED = CHINA_STOCK_PRED;
+                //GEN_MTM_PRED = m -> !m.getKey().startsWith("SGXA50");
             } else {
-                GEN_MTM_PRED = m -> true;
+                GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
+                //GEN_MTM_PRED = m -> true;
             }
         });
 
         JToggleButton onlyFutToggle = new JToggleButton("Fut Only");
         onlyFutToggle.addActionListener(l -> {
             if (onlyFutToggle.isSelected()) {
-                GEN_MTM_PRED = m -> m.getKey().startsWith("SGXA50");
+                GEN_MTM_PRED = FUT_PRED;
+                //GEN_MTM_PRED = m -> m.getKey().startsWith("SGXA50");
             } else {
-                GEN_MTM_PRED = m -> true;
+                GEN_MTM_PRED = FUT_PRED.or(CHINA_STOCK_PRED);
+                //GEN_MTM_PRED = m -> true;
             }
         });
 
@@ -310,7 +318,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         controlPanel.add(rb1);
         controlPanel.add(rb2);
         controlPanel.add(autoUpdateButton);
-        controlPanel.add(includeFutToggle);
+        controlPanel.add(noFutToggle);
         controlPanel.add(onlyFutToggle);
         controlPanel.add(includeExpiredButton);
         controlPanel.add(updateFreqLabel);
@@ -1092,6 +1100,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     private static double getBuyTradePnl(String name) {
+        //if(priceMapBar.)
         double fx = fxMap.getOrDefault(name, 1.0);
         double defaultPrice = Optional.ofNullable(priceMapBar.get(name).lastEntry())
                 .map(Entry::getValue).map(SimpleBar::getClose).orElse(0.0);
@@ -1524,6 +1533,11 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
         }
 
         String ticker = ibContractToSymbol(contract);
+        if (!ChinaPosition.tradesMap.containsKey(ticker)) {
+            pr(" inputting new entry for ticker ", ticker);
+            ChinaPosition.tradesMap.put(ticker, new ConcurrentSkipListMap<LocalTime, TradeBlock>());
+        }
+
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
 
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
