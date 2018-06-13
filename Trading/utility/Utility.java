@@ -491,6 +491,7 @@ public class Utility {
         return "hk" + s;
     }
 
+
     @SafeVarargs
     public static <T> double reduceMaps(DoubleBinaryOperator o, NavigableMap<T, Double>... mps) {
         return Arrays.stream(mps).flatMap(e -> e.entrySet().stream()).mapToDouble(Map.Entry::getValue).reduce(o).orElse(0.0);
@@ -798,15 +799,6 @@ public class Utility {
     @SuppressWarnings("SpellCheckingInspection")
     public static String ibContractToSymbol(Contract ct) {
         if (ct.symbol().equals("XINA50")) {
-//            switch (ct.lastTradeDateOrContractMonth()) {
-//                case TradingConstants.A50_FRONT_EXPIRY:
-//                    return "SGXA50";
-//                case TradingConstants.A50_BACK_EXPIRY:
-//                    return "SGXA50BM";
-//                case TradingConstants.A50_LAST_EXPIRY:
-//                    return "SGXA50PR";
-//            }
-            //pr(" checking null in ibcontractosymbol ", ct.symbol(),ct.lastTradeDateOrContractMonth());
             if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutFrontExpiry())) {
                 return "SGXA50";
             } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutBackExpiry())) {
@@ -814,6 +806,8 @@ public class Utility {
             } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutLastExpiry())) {
                 return "SGXA50PR";
             }
+        } else if (ct.secType() == Types.SecType.STK && ct.exchange().equals("SEHK") && ct.currency().equals("HKD")) {
+            return "hk" + ct.symbol();
         }
         return ct.symbol();
     }

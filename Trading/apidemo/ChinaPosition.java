@@ -5,8 +5,8 @@ import auxiliary.SimpleBar;
 import client.*;
 import controller.ApiController;
 import graph.GraphPnl;
-import handler.FutPositionHandler;
 import handler.HistoricalHandler;
+import handler.IBPositionHandler;
 import historical.HistChinaStocks;
 import utility.SharpeUtility;
 import utility.Utility;
@@ -656,8 +656,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //        ChinaPosition.tradesMap.put("SGXA50", new ConcurrentSkipListMap<>());
 //        ChinaPosition.tradesMap.put("SGXA50BM", new ConcurrentSkipListMap<>());
 
-        ChinaMain.controller().reqPositions(new FutPositionHandler());
-        ChinaMain.controller().reqExecutions(new ExecutionFilter(), new FutPosTradesHandler());
+        ChinaMain.controller().reqPositions(new IBPositionHandler());
+        ChinaMain.controller().reqExecutions(new ExecutionFilter(), new IBPosTradesHandler());
         ChinaMain.GLOBAL_REQ_ID.addAndGet(5);
         ChinaMain.controller().getSGXA50Historical2(ChinaMain.GLOBAL_REQ_ID.get(), this);
 
@@ -684,9 +684,22 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
             int xuSoldPos = ChinaPosition.tradesMap.get(ticker).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
-            int xuOpenPostion = currentPositionMap.getOrDefault(ticker, 0) - xuBotPos - xuSoldPos;
-            openPositionMap.put(ticker, xuOpenPostion);
+            int xuOpenPosition = currentPositionMap.getOrDefault(ticker, 0) - xuBotPos - xuSoldPos;
+            openPositionMap.put(ticker, xuOpenPosition);
         }
+
+
+        currentPositionMap.forEach((k, v) -> {
+            if (k.startsWith("hk")) {
+                int bot = ChinaPosition.tradesMap.get(k).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
+                        .mapToInt(e -> e.getValue().getSizeAll()).sum();
+                int sold = ChinaPosition.tradesMap.get(k).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
+                        .mapToInt(e -> e.getValue().getSizeAll()).sum();
+                int hkOpenPos = currentPositionMap.getOrDefault(k, 0) - bot - sold;
+                openPositionMap.put(k, hkOpenPos);
+            }
+        });
+
     }
 
     private static int getExpiredFutUnits() {
@@ -933,7 +946,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                             "O", (dataList.get(buySellCol).equals("买入") ? "" : "-") + dataList.get(fillAmtCol), "1", dataList.get(fillPriceCol));
                     simpleWriteToFile(outputString, true, output);
 
-                    //hkTestOutput here to currentPositionProcessed
                 }
             }
         } catch (IOException ex1) {
@@ -1522,7 +1534,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 }
 
 
-class FutPosTradesHandler implements ApiController.ITradeReportHandler {
+class IBPosTradesHandler implements ApiController.ITradeReportHandler {
 
     private static LocalTime roundUpLocalTime(LocalTime t) {
         if (t.isAfter(LocalTime.of(11, 30)) && t.isBefore(LocalTime.of(13, 0))) {
@@ -1545,7 +1557,7 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
             ChinaPosition.uniqueKeySet.add(tradeKey);
         }
 
-        String ticker = Utility.addSHSZHK(ibContractToSymbol(contract));
+        String ticker = ibContractToSymbol(contract);
         if (!ChinaPosition.tradesMap.containsKey(ticker)) {
             pr(" inputting new entry for ticker ", ticker);
             ChinaPosition.tradesMap.put(ticker, new ConcurrentSkipListMap<>());

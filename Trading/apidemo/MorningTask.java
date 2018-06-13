@@ -603,7 +603,7 @@ public final class MorningTask implements HistoricalHandler {
                 Utility.convertLTtoString(ammint), pmopen, pm1310, pmclose, pmmax, pmmin,
                 Utility.convertLTtoString(pmmaxt), Utility.convertLTtoString(pmmint));
 
-        Utility.clearFile(output);
+        //Utility.clearFile(output);
         Utility.simpleWriteToFile(headers, true, output);
         Utility.simpleWriteToFile(data, true, output);
 
