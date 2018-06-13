@@ -853,7 +853,6 @@ public class ApiController implements EWrapper {
         pr("requesting mkt data begins");
         Contract ct = new Contract();
         //int reqId=m_reqId++;
-
         //int reqId = m_reqId.getAndIncrement();
         //int reqId = m_reqId.get() + 1000;
 
@@ -946,7 +945,6 @@ public class ApiController implements EWrapper {
             }
             Contract ct = generateStockContract(stock, exch, curr);
             ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
-
             m_client.reqMktData(reqId, ct, "", true, Collections.<TagValue>emptyList());
         } catch (InterruptedException ex) {
             ex.printStackTrace();
@@ -959,6 +957,15 @@ public class ApiController implements EWrapper {
             String exch = s.substring(0, 2).toUpperCase().equalsIgnoreCase("SH") ? "SEHKNTL" : "SEHKSZSE";
             req1StockLive(ticker, exch, "CNH", new LiveHandler.DefaultLiveHandler());
         }
+    }
+
+    public void reqHKInPosLive() {
+        ChinaData.priceMapBar.keySet().forEach(k -> {
+            if (k.startsWith("hk")) {
+                String ticker = k.substring(2);
+                req1StockLive(ticker, "SEHK", "HKD", new LiveHandler.DefaultLiveHandler());
+            }
+        });
     }
 
     public void reqHoldingsTodayHist() {

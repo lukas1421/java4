@@ -195,7 +195,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             //updatePosition();
             //getCurrentPositionNormal();
             //getCurrentPositionMargin();
-            refreshFuture();
+            refreshIBPosition();
             mtmPnlCompute(GEN_MTM_PRED, "all");
         }).thenRun(() -> SwingUtilities.invokeLater(() -> {
             m_model.fireTableDataChanged();
@@ -670,15 +670,13 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //        openPositionMap.put("SGXA50", xuOpenPostion);
     }
 
-    private static void refreshFuture() {
+    private static void refreshIBPosition() {
         pr(" refreshing future ");
         for (FutType f : FutType.values()) {
-
             if (f == FutType.PreviousFut && currentTradingDate.equals(getExpiredFutDate())) {
                 currentPositionMap.put(f.getTicker(), getExpiredFutUnits());
                 pr(str(" fut expiry units date", getExpiredFutUnits(), getExpiredFutDate()));
             }
-
             String ticker = f.getTicker();
             int xuBotPos = ChinaPosition.tradesMap.get(ticker).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
@@ -687,7 +685,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             int xuOpenPosition = currentPositionMap.getOrDefault(ticker, 0) - xuBotPos - xuSoldPos;
             openPositionMap.put(ticker, xuOpenPosition);
         }
-
 
         currentPositionMap.forEach((k, v) -> {
             if (k.startsWith("hk")) {
@@ -699,7 +696,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 openPositionMap.put(k, hkOpenPos);
             }
         });
-
     }
 
     private static int getExpiredFutUnits() {

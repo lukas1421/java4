@@ -184,6 +184,7 @@ public final class ChinaMain implements IConnectionHandler {
         JButton startXU = new JButton("ON XU");
         JButton startHK = new JButton("ON HK");
         JButton startIBChina = new JButton(" ON IB China");
+        JButton startIBHK = new JButton(" ON IB HK");
 
         JButton stopXU = new JButton("Kill XU");
         JButton offShcomp = new JButton("Kill Shcomp/ChinaFut");
@@ -299,6 +300,9 @@ public final class ChinaMain implements IConnectionHandler {
 
         startIBChina.addActionListener(al -> M_CONTROLLER.reqA50Live());
 
+        startIBHK.addActionListener(al -> M_CONTROLLER.reqHKInPosLive());
+
+
         stopXU.addActionListener((ae) -> {
 
 //            M_CONTROLLER.cancelTopMktData(SGXFutureReceiver.getReceiver());
@@ -322,6 +326,8 @@ public final class ChinaMain implements IConnectionHandler {
         threadManager.add(startXU);
         threadManager.add(startHK);
         threadManager.add(startIBChina);
+        threadManager.add(startIBHK);
+
         threadManager.add(Box.createHorizontalStrut(30));
         threadManager.add(systemTime);
         threadManager.add(Box.createHorizontalStrut(30));
