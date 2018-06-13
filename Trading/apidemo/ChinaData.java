@@ -724,6 +724,7 @@ public final class ChinaData extends JPanel {
 
         @Override
         public int getRowCount() {
+            //return priceMapBar.size();
             return symbolNames.size();
         }
 
@@ -761,6 +762,7 @@ public final class ChinaData extends JPanel {
         @Override
         public Object getValueAt(int rowIn, int col) {
             String name = (rowIn < symbolNamesFull.size()) ? symbolNamesFull.get(rowIn) : "";
+            //String name = (rowIn < priceMapBar.size()) ? priceMapBar.get(rowIn) : "";
             switch (col) {
                 case 0:
                     return name;

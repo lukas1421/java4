@@ -74,11 +74,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     //day cover trader
-    private static volatile AtomicBoolean dayCoverTraderOn = new AtomicBoolean(true);
+    private static volatile AtomicBoolean dayCoverTraderOn = new AtomicBoolean(false);
 
 
     //perc trader
-    private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(true);
+    private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
     private static final int MAX_PERC_TRADES = 5;
 
     //inventory market making
@@ -1024,19 +1024,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static synchronized void dayCoverTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         double currDelta = ChinaPosition.getNetPtfDelta();
+
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
+
         NavigableMap<LocalDateTime, SimpleBar> todayPriceMap =
                 futdata.entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LocalDateTime.of(LocalDate.now(), LocalTime.of(8, 59))))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
                                 ConcurrentSkipListMap::new));
-
-        LocalDate prevDate = futdata.firstEntry().getKey().toLocalDate();
-        double ytdClose = futdata.lowerEntry(LocalDateTime.of(prevDate, LocalTime.of(15, 0))).getValue().getHigh();
-        int ytdClosePerc = getPercentileForX(
-                futdata.headMap(LocalDateTime.of(prevDate, LocalTime.of(15, 0)), true), ytdClose);
-        pr("day cover *** ytd close ", ytdClose, " ytd close p% ", ytdClosePerc);
-
 
         LocalDateTime lastOrderTime = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTradeType() == AutoOrderType.DAY_COVER)
@@ -1047,16 +1042,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int todayPerc = getPercentileForLast(todayPriceMap);
         int openPerc = getPercentileForX(todayPriceMap, todayPriceMap.firstEntry().getValue().getHigh());
 
-        if (todayPriceMap.size() < 2) {
-            pr(" today price map < 2");
-            return;
-        }
-
-        if (ytdClosePerc > 20) {
-            pr(" ytd close perc > 20 , quitting no day cover");
-            return;
-        }
-
         pr(" Day cover trader: ", dayCoverTraderOn.get(), "last order time ", lastOrderTime,
                 " today p%: ", todayPerc, " open p% ", openPerc);
 
@@ -1064,6 +1049,34 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" day cover trader off quitting ");
             return;
         }
+
+        if (futdata.size() < 2) {
+            pr(" fut data less than 2");
+            return;
+        }
+        LocalDate prevDate = futdata.firstEntry().getKey().toLocalDate();
+
+
+        if (futdata.size() < 2 || futdata.firstKey().isBefore(LocalDateTime.of(prevDate, LocalTime.of(15, 0)))) {
+            pr(" first key less than ytd close ");
+            return;
+        }
+
+        pr(" fut data is ", futdata);
+        double ytdClose = futdata.lowerEntry(LocalDateTime.of(prevDate, LocalTime.of(15, 0))).getValue().getHigh();
+
+        int ytdClosePerc = getPercentileForX(futdata.headMap(LocalDateTime.of(prevDate,
+                LocalTime.of(15, 0)), true), ytdClose);
+
+        pr("day cover *** ytd close ", ytdClose, " ytd close p% ", ytdClosePerc);
+
+
+        if (ytdClosePerc > 20) {
+            pr(" ytd close perc > 20 , quitting no day cover");
+            return;
+        }
+
+
 
         if (todayPriceMap.size() < 2) {
             pr("day cover trader: today prices < 2, return ");
@@ -1103,6 +1116,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (perc == 0) {
             pr(" perc 0 suspicious ", futData.get(ibContractToFutType(activeFuture)));
         }
+        pr("futdata in perc trader ", futData.get(ibContractToFutType(activeFuture)));
+
         if (futData.get(ibContractToFutType(activeFuture)).size() == 0) return;
 
         long accSize = globalIdOrderMap.entrySet().stream()

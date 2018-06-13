@@ -28,10 +28,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaMain.*;
@@ -928,6 +925,7 @@ public class ApiController implements EWrapper {
 
 
     public void req1StockHistToday(String stock, String exch, String curr, HistoricalHandler h) {
+        pr(" requesting stock hist ", stock, exch, curr);
         CompletableFuture.runAsync(() -> {
             int reqId = m_reqId.incrementAndGet();
             Contract ct = generateStockContract(stock, exch, curr);
@@ -970,18 +968,28 @@ public class ApiController implements EWrapper {
             for (String s : ChinaData.priceMapBar.keySet()) {
                 if (ChinaPosition.openPositionMap.getOrDefault(s, 0) != 0 ||
                         ChinaPosition.tradesMap.containsKey(s) && ChinaPosition.tradesMap.get(s).size() > 0) {
+                    pr(" req holding today ", s, " open ", ChinaPosition.openPositionMap.getOrDefault(s, 0),
+                            " traded ", ChinaPosition.tradesMap.getOrDefault(s, new ConcurrentSkipListMap<>()));
                     i.incrementAndGet();
                     pr(" IB hist counter is ", i);
-                    String ticker = s.substring(2);
-                    String exch = s.substring(0, 2).toUpperCase().equalsIgnoreCase("SH") ? "SEHKNTL" : "SEHKSZSE";
-                    if (i.get() % 30 == 0) {
-                        try {
-                            Thread.sleep(2000L);
-                        } catch (InterruptedException e) {
-                            e.printStackTrace();
+
+                    if (s.substring(0, 2).equals("sh") || s.substring(0, 2).equals("sz")) {
+
+                        String ticker = s.substring(2);
+                        String exch = s.substring(0, 2).toUpperCase().equalsIgnoreCase("SH") ? "SEHKNTL" : "SEHKSZSE";
+                        if (i.get() % 30 == 0) {
+                            try {
+                                Thread.sleep(2000L);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
+                        req1StockHistToday(ticker, exch, "CNH", new HistoricalHandler.DefaultHistHandle());
+                    } else {
+                        //String ticker = s.substring(2);
+                        //String ticker = s;
+                        req1StockHistToday(s, "SEHK", "HKD", new HistoricalHandler.DefaultHistHandle());
                     }
-                    req1StockHistToday(ticker, exch, "CNH", new HistoricalHandler.DefaultHistHandle());
                 }
             }
         });

@@ -1,14 +1,8 @@
 package apidemo;
 
-import TradeType.FutureTrade;
-import TradeType.MarginTrade;
-import TradeType.NormalTrade;
-import TradeType.TradeBlock;
+import TradeType.*;
 import auxiliary.SimpleBar;
-import client.CommissionReport;
-import client.Contract;
-import client.Execution;
-import client.ExecutionFilter;
+import client.*;
 import controller.ApiController;
 import graph.GraphPnl;
 import handler.FutPositionHandler;
@@ -1041,7 +1035,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     private static void updatePosition() {
-        symbolNames.forEach((String name) -> tradesMap.put(name, new ConcurrentSkipListMap<>()));
+        ChinaData.priceMapBar.keySet().forEach((String name) -> tradesMap.put(name, new ConcurrentSkipListMap<>()));
         getOpenPositionsNormal();
         getCurrentPositionNormal();
         getCurrentPositionMargin();
@@ -1525,6 +1519,9 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
 
+        pr(" trade report trade key, contract exec ", tradeKey, contract.symbol(), execution.price(),
+                execution.shares());
+
         if (ChinaPosition.uniqueKeySet.contains(tradeKey)) {
             //pr(" duplicate key in china pos trade report ");
             return;
@@ -1535,7 +1532,7 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
         String ticker = ibContractToSymbol(contract);
         if (!ChinaPosition.tradesMap.containsKey(ticker)) {
             pr(" inputting new entry for ticker ", ticker);
-            ChinaPosition.tradesMap.put(ticker, new ConcurrentSkipListMap<LocalTime, TradeBlock>());
+            ChinaPosition.tradesMap.put(ticker, new ConcurrentSkipListMap<>());
         }
 
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
@@ -1543,21 +1540,41 @@ class FutPosTradesHandler implements ApiController.ITradeReportHandler {
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
         LocalDate d = ldt.toLocalDate();
         LocalTime t = ldt.toLocalTime();
-        if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth() && t.isAfter(LocalTime.of(8, 59))) {
-            LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
+        LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
+
+        if (ticker.startsWith("SGXA50")) {
+            if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth() && t.isAfter(LocalTime.of(8, 59))) {
+
+                if (ChinaPosition.tradesMap.get(ticker).containsKey(lt)) {
+                    ChinaPosition.tradesMap.get(ticker).get(lt)
+                            .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
+                } else {
+                    ChinaPosition.tradesMap.get(ticker).put(lt,
+                            new TradeBlock(new FutureTrade(execution.price(),
+                                    (int) Math.round(sign * execution.shares()))));
+                }
+            }
+        } else if (contract.secType() == Types.SecType.STK && contract.exchange().equals("SEHK")) {
             if (ChinaPosition.tradesMap.get(ticker).containsKey(lt)) {
                 ChinaPosition.tradesMap.get(ticker).get(lt)
-                        .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
+                        .addTrade(new HKStockTrade(execution.price(), (int) Math.round(sign * execution.shares())));
             } else {
                 ChinaPosition.tradesMap.get(ticker).put(lt,
-                        new TradeBlock(new FutureTrade(execution.price(),
-                                (int) Math.round(sign * execution.shares()))));
+                        new TradeBlock(new HKStockTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
             }
+
         }
     }
 
     @Override
     public void tradeReportEnd() {
+
+        pr("trade report end: printing trades ");
+        ChinaPosition.tradesMap.forEach((k, v) -> {
+            if (v.size() > 0) {
+                pr("trade report ", k, v);
+            }
+        });
 
         for (FutType ft : FutType.values()) {
             if (ChinaPosition.tradesMap.containsKey(ft.getTicker()) &&
