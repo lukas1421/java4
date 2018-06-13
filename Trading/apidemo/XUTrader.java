@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static apidemo.ChinaStock.currencyMap;
 import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
 import static apidemo.TradingConstants.ftseIndex;
 import static apidemo.XuTraderHelper.*;
@@ -859,7 +860,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd"))
                                     .equals(LocalDate.now())) {
                         return e.getValue() * futPriceMap.getOrDefault(e.getKey(), SinaStock.FTSE_OPEN)
-                                * ChinaPosition.fxMap.getOrDefault(e.getKey().getTicker(), 1.0);
+                                * ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getTicker(),
+                                "CNY"), 1.0);
                     } else {
                         return 0.0;
                     }
@@ -876,7 +878,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         return 0.0;
                     }
                     return e.getValue() * futPriceMap.getOrDefault(e.getKey(), SinaStock.FTSE_OPEN)
-                            * ChinaPosition.fxMap.getOrDefault(e.getKey().getTicker(), 1.0);
+                            * ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getTicker()
+                            , "CNY"), 1.0);
                 }).sum();
     }
 
@@ -1110,7 +1113,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         // run every 15 minutes
         int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         double pd = getPD(freshPrice);
-        double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 0.0);
+        double fx = ChinaPosition.fxMap.getOrDefault("USD", 0.0);
         if (perc == 0) {
             pr(" perc 0 suspicious ", futData.get(ibContractToFutType(activeFuture)));
         }
@@ -1392,7 +1395,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     public static synchronized void flattenAggressively() {
         LocalDateTime nowMilli = LocalDateTime.now();
-        double fx = ChinaPosition.fxMap.get("SGXA50");
+        double fx = ChinaPosition.fxMap.get("USD");
         double currDelta = ChinaPosition.getNetPtfDelta();
         pr(" In Flattening aggressively ");
         if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
@@ -1439,7 +1442,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" Flatten Trader: active map size < 1, return");
             return;
         }
-        double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 1.0);
+        double fx = ChinaPosition.fxMap.getOrDefault("USD", 1.0);
 
         SimpleBar lastBar = new SimpleBar(price5.lastEntry().getValue());
         double prevPrice = activeLastMinuteMap.size() <= 2 ? freshPrice : activeLastMinuteMap
@@ -1610,7 +1613,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
                 ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
         double pd = (indexPrice != 0.0 && freshPrice != 0.0) ? (freshPrice / indexPrice - 1) : 0.0;
-        double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 1.0);
+        double fx = ChinaPosition.fxMap.getOrDefault("USD", 1.0);
 
         if (tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
             lastMATradeTime = tradesMap.get(ibContractToFutType(activeFuture)).lastKey();
@@ -1952,7 +1955,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static void flattenDriftTrader(LocalDateTime t, double freshPrice) {
         double currentDelta = ChinaPosition.getNetPtfDelta();
         double malast = getCurrentMA();
-        double fx = ChinaPosition.fxMap.getOrDefault("SGXA50", 0.0);
+        double fx = ChinaPosition.fxMap.getOrDefault("USD", 0.0);
         double pd = getPD(freshPrice);
         int unfilled_trades = (int) globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getTradeType() ==
                 FLATTEN || e.getValue().getTradeType() == DRIFT)

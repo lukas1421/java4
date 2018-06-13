@@ -25,8 +25,7 @@ import java.util.stream.Collectors;
 
 import static apidemo.ChinaPosition.fxMap;
 import static apidemo.ChinaPosition.getCurrentDelta;
-import static apidemo.ChinaStock.industryNameMap;
-import static apidemo.ChinaStock.sharpeMap;
+import static apidemo.ChinaStock.*;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
@@ -57,7 +56,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
     public static volatile DisplayGranularity dispGran = DisplayGranularity._1MDATA;
 
     private static volatile ToDoubleFunction<Entry<String, Integer>> positionComparingFunc =
-            e -> Math.abs(fxMap.getOrDefault(e.getKey(), 1.0)
+            e -> Math.abs(fxMap.getOrDefault(currencyMap.get(e.getKey()), 1.0)
                     * e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0));
 
     private static volatile ToDoubleFunction<String> sharpeComparingFunc =
