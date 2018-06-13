@@ -40,12 +40,15 @@ public final class MorningTask implements HistoricalHandler {
     private static Proxy proxy = Proxy.NO_PROXY;
     private static Map<String, NavigableMap<LocalDateTime, Double>> usAfterClose = new HashMap<>();
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
+    private static volatile double USDCNY = 0.0;
+    private static volatile double HKDCNH = 0.0;
 
     private static void runThis() {
         MorningTask mt = new MorningTask();
 
         Utility.clearFile(output);
         processShcomp();
+
         mt.getFromIB();
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
             writeIndexTDX(out);
@@ -403,6 +406,8 @@ public final class MorningTask implements HistoricalHandler {
     }
 
     private void getFromIB() {
+        clearFile(fxOutput);
+
         ApiController ap = new ApiController(new DefaultConnectionHandler(), new DefaultLogger(), new DefaultLogger());
         CountDownLatch l = new CountDownLatch(1);
         boolean connectionStatus = false;
@@ -429,7 +434,10 @@ public final class MorningTask implements HistoricalHandler {
             e.printStackTrace();
         }
         pr(" Time after latch released " + LocalTime.now());
-        getFXDetailed(ap);
+
+        getUSDDetailed(ap);
+        getHKDDetailed(ap);
+
         getUSPricesAfterMarket(ap);
 
         pr(" requesting position ");
@@ -438,7 +446,7 @@ public final class MorningTask implements HistoricalHandler {
         ap.reqAccountSummary("All", tags, new ApiController.IAccountSummaryHandler.AccountInfoHandler());
     }
 
-    private void getFXDetailed(ApiController ap) {
+    private void getUSDDetailed(ApiController ap) {
         Contract c = new Contract();
         c.symbol("USD");
         c.secType(Types.SecType.CASH);
@@ -456,8 +464,28 @@ public final class MorningTask implements HistoricalHandler {
 
         ap.reqHistoricalDataSimple(generateReqId(c), this, c, formatTime, 2, Types.DurationUnit.DAY,
                 Types.BarSize._1_hour, Types.WhatToShow.MIDPOINT, false);
-
     }
+
+    private void getHKDDetailed(ApiController ap) {
+        Contract c = new Contract();
+        c.symbol("CNH");
+        c.secType(Types.SecType.CASH);
+        c.exchange("IDEALPRO");
+        c.currency("HKD");
+        c.strike(0.0);
+        c.right(Types.Right.None);
+        c.secIdType(Types.SecIdType.None);
+
+        LocalDateTime lt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
+        String formatTime = lt.format(dtf);
+
+        pr(" format time " + formatTime);
+
+        ap.reqHistoricalDataSimple(generateReqId(c), this, c, formatTime, 2, Types.DurationUnit.DAY,
+                Types.BarSize._1_hour, Types.WhatToShow.MIDPOINT, false);
+    }
+
 
     private void getUSPricesAfterMarket(ApiController ap) {
         List<String> etfs = Arrays.asList("FXI:US", "CNXT:US", "ASHR:US", "ASHS:US");
@@ -591,8 +619,9 @@ public final class MorningTask implements HistoricalHandler {
     @Override
     public void handleHist(String name, String date, double open, double high, double low, double close) {
 
-        if (name.equals("USD")) {
 
+        if (name.equals("USD")) {
+            USDCNY = close;
             if (!date.startsWith("finished")) {
                 Date dt = new Date(Long.parseLong(date) * 1000);
 
@@ -621,11 +650,25 @@ public final class MorningTask implements HistoricalHandler {
                         Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                                 + "\t" + zdt.getHour(), true);
 
-                        Utility.simpleWriteToFile("SGXA50PR" + "\t" + close, false, fxOutput);
-                        Utility.simpleWriteToFile("SGXA50" + "\t" + close, true, fxOutput);
-                        Utility.simpleWriteToFile("SGXA50BM" + "\t" + close, true, fxOutput);
+                        //Utility.simpleWriteToFile("USD" + "\t" + close, false, fxOutput);
+                        //Utility.simpleWriteToFile("SGXA50" + "\t" + close, true, fxOutput);
+                        //Utility.simpleWriteToFile("SGXA50BM" + "\t" + close, true, fxOutput);
                         break;
                 }
+            }
+        } else if (name.equals("CNH")) {
+            pr(name, date, open, close);
+
+            if (!date.startsWith("finished")) {
+                Date dt = new Date(Long.parseLong(date) * 1000);
+
+                ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
+                ZoneId nyZone = ZoneId.of("America/New_York");
+                LocalDateTime ldt = LocalDateTime.ofInstant(dt.toInstant(), chinaZone);
+                ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
+                HKDCNH = 1 / close;
+                //Utility.simpleWriteToFile("USD" + "\t" + close, true, fxOutput);
+
             }
         } else {
             Date dt = new Date(Long.parseLong(date) * 1000);
@@ -647,7 +690,13 @@ public final class MorningTask implements HistoricalHandler {
 
     @Override
     public void actionUponFinish(String name) {
-        if (!name.equals("USD")) {
+
+        if (name.equals("USD")) {
+            Utility.simpleWriteToFile("USD" + "\t" + USDCNY, true, fxOutput);
+        } else if (name.equals("CNH")) {
+            Utility.simpleWriteToFile("HKD" + "\t" +
+                    Math.round(1000000d * HKDCNH) / 1000000d, true, fxOutput);
+        } else if (!name.equals("USD")) {
             pr(str(name, "is finished "));
             usAfterClose.forEach((key, value) -> pr(str(key, value.lastEntry())));
         }
