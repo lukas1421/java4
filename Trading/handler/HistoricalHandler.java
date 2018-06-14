@@ -8,8 +8,6 @@ import java.time.LocalTime;
 import java.util.Calendar;
 import java.util.Date;
 
-import static utility.Utility.pr;
-
 public interface HistoricalHandler extends GeneralHandler {
     void handleHist(String name, String date, double open,
                     double high, double low, double close);
@@ -25,7 +23,7 @@ public interface HistoricalHandler extends GeneralHandler {
 
         @Override
         public void handleHist(String name, String date, double open, double high, double low, double close) {
-            pr("handle hist ", name, date, open, close);
+            //pr("handle hist ", name, date, open, close);
             if (ChinaData.priceMapBar.containsKey(name)) {
                 if (!date.startsWith("finished")) {
                     Date dt = new Date(Long.parseLong(date) * 1000);

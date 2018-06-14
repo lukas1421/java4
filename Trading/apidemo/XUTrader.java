@@ -457,7 +457,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             });
         });
 
-        JButton trimDeltaButton = new JButton("Trim");
+        JButton trimDeltaButton = new JButton("Trim: " + (trimTraderOn.get() ? "ON" : "OFF"));
         trimDeltaButton.addActionListener(l -> {
             trimTraderOn.set(!trimTraderOn.get());
             trimDeltaButton.setText("Trim Trader:" + (trimTraderOn.get() ? "ON" : "OFF"));
@@ -1271,7 +1271,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .map(e -> e.getValue().getOrderTime())
                 .orElse(sessionOpenT());
 
-        pr("trim trader delta/target", netDelta, getBullishTarget(), getBearishTarget());
+        pr("trim trader delta/target", netDelta, getBullishTarget(), getBearishTarget(), "last order T ",
+                lastOrderT, "next order T", lastOrderT.plusMinutes(10L));
 
         if (ChronoUnit.MINUTES.between(lastOrderT, nowMilli) >= 10) {
             if (netDelta > getBullishTarget()) {
