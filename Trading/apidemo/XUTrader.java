@@ -54,7 +54,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static ApiController apcon;
     static XUTraderRoll traderRoll;
 
-    public static final int ORDER_WAIT_TIME = 15;
+    public static final int ORDER_WAIT_TIME = 10;
 
     //global
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
@@ -78,7 +78,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     //day cover trader
-    private static volatile AtomicBoolean dayCoverTraderOn = new AtomicBoolean(false);
+    private static volatile AtomicBoolean dayTraderOn = new AtomicBoolean(false);
 
 
     //perc trader
@@ -429,11 +429,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             percTraderButton.setText("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
         });
 
-        JButton dayCoverButton = new JButton(" Day Cover " + (dayCoverTraderOn.get() ? "ON" : "OFF"));
+        JButton dayCoverButton = new JButton(" Day Cover " + (dayTraderOn.get() ? "ON" : "OFF"));
         dayCoverButton.addActionListener(l -> {
-            dayCoverTraderOn.set(!dayCoverTraderOn.get());
-            outputToAutoLog("day cover trader set to " + dayCoverTraderOn.get());
-            dayCoverButton.setText(" day cover trader: " + (dayCoverTraderOn.get() ? "ON" : "OFF"));
+            dayTraderOn.set(!dayTraderOn.get());
+            outputToAutoLog("day cover trader set to " + dayTraderOn.get());
+            dayCoverButton.setText(" day cover trader: " + (dayTraderOn.get() ? "ON" : "OFF"));
         });
 
 
@@ -1038,10 +1038,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return Math.max(0, Math.min(candidate, maxSize));
     }
 
-    public static synchronized void dayCoverTrader(LocalDateTime nowMilli, double freshPrice) {
+    public static synchronized void dayTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         double currDelta = getNetPtfDelta();
-
 
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
 
@@ -1064,10 +1063,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int todayPerc = getPercentileForLast(todayPriceMap);
         int openPerc = getPercentileForX(todayPriceMap, todayPriceMap.firstEntry().getValue().getHigh());
 
-        pr(" Day cover trader: ", dayCoverTraderOn.get(), "last order time ", lastOrderTime,
+        pr(" Day cover trader: ", dayTraderOn.get(), "last order time ", lastOrderTime,
                 " today p%: ", todayPerc, " open p% ", openPerc);
 
-        if (!dayCoverTraderOn.get()) {
+        if (!dayTraderOn.get()) {
             pr(" day cover trader off quitting ");
             return;
         }
@@ -1093,35 +1092,37 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         pr("day cover *** ytd close ", ytdClose, " ytd close p% ", ytdClosePerc);
 
 
-        if (ytdClosePerc > 20) {
-            pr(" ytd close perc > 20 , quitting no day cover");
-            return;
-        }
+//        if (ytdClosePerc > 20) {
+//            pr(" ytd close perc > 20 , quitting no day cover");
+//            return;
+//        }
 
         if (todayPriceMap.size() < 2) {
             pr("day cover trader: today prices < 2, return ");
             return;
         }
 
-        if (!(lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(15, 0)))) {
-            pr(" day cover trade: not in time range, return ", nowMilli.toLocalTime());
+        if (!(lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(15, 0)))) {
+            pr(" day trader: not in time range, return ", nowMilli.toLocalTime());
             return;
         }
 
-        if (ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) < 10) {
+        if (ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) < ORDER_WAIT_TIME) {
             pr(" last order time too close ", lastOrderTime);
             return;
         }
 
 
-        if (todayPerc < 5 && currDelta < getBullishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= 15) {
+        if (todayPerc < 5 && currDelta < getBullishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >=
+                ORDER_WAIT_TIME) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_BUY));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "day cover",
                     globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc));
-        } else if (todayPerc > 95 && currDelta > getBearishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= 15) {
+        } else if (todayPerc > 95 && currDelta > getBearishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli)
+                >= ORDER_WAIT_TIME) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_SELL));
