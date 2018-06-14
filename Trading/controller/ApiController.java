@@ -904,7 +904,7 @@ public class ApiController implements EWrapper {
         HKData.es = Executors.newScheduledThreadPool(10);
         HKData.es.scheduleAtFixedRate(() -> {
             HKData.hkPriceBar.keySet().forEach(k -> req1StockLive(k, "SEHK", "HKD",
-                    apidemo.ChinaMain.hkdata));
+                    apidemo.ChinaMain.hkdata, true));
         }, 5L, 10L, TimeUnit.SECONDS);
 
     }
@@ -937,7 +937,7 @@ public class ApiController implements EWrapper {
         });
     }
 
-    public void req1StockLive(String stock, String exch, String curr, LiveHandler h) {
+    public void req1StockLive(String stock, String exch, String curr, LiveHandler h, boolean snapshot) {
         try {
             int reqId = m_reqId.incrementAndGet();
             if (reqId % 90 == 0) {
@@ -945,7 +945,7 @@ public class ApiController implements EWrapper {
             }
             Contract ct = generateStockContract(stock, exch, curr);
             ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
-            m_client.reqMktData(reqId, ct, "", true, Collections.<TagValue>emptyList());
+            m_client.reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
         } catch (InterruptedException ex) {
             ex.printStackTrace();
         }
@@ -955,14 +955,14 @@ public class ApiController implements EWrapper {
         for (String s : SinaStock.weightMapA50.keySet()) {
             String ticker = s.substring(2);
             String exch = s.substring(0, 2).toUpperCase().equalsIgnoreCase("SH") ? "SEHKNTL" : "SEHKSZSE";
-            req1StockLive(ticker, exch, "CNH", new LiveHandler.DefaultLiveHandler());
+            req1StockLive(ticker, exch, "CNH", new LiveHandler.DefaultLiveHandler(), false);
         }
     }
 
     public void reqHKInPosLive() {
         ChinaData.priceMapBar.keySet().stream().filter(e -> e.startsWith("hk")).forEach(k -> {
             String ticker = k.substring(2);
-            req1StockLive(ticker, "SEHK", "HKD", new LiveHandler.DefaultLiveHandler());
+            req1StockLive(ticker, "SEHK", "HKD", new LiveHandler.DefaultLiveHandler(), false);
         });
     }
 
