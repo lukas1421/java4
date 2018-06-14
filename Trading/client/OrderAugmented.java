@@ -11,7 +11,7 @@ public class OrderAugmented {
     private final LocalDateTime orderTime;
     private final Order order;
     private final String msg;
-    private final AutoOrderType tradeType;
+    private final AutoOrderType orderType;
     private OrderStatus status;
     private LocalDateTime finalActionTime;
 
@@ -19,7 +19,7 @@ public class OrderAugmented {
         orderTime = t;
         order = o;
         msg = m;
-        tradeType = tt;
+        orderType = tt;
         status = OrderStatus.Unknown;
         finalActionTime = LocalDateTime.MIN;
     }
@@ -28,7 +28,7 @@ public class OrderAugmented {
         orderTime = t;
         order = o;
         msg = "";
-        tradeType = tt;
+        orderType = tt;
         status = OrderStatus.Unknown;
         finalActionTime = LocalDateTime.MIN;
     }
@@ -37,7 +37,7 @@ public class OrderAugmented {
         orderTime = LocalDateTime.MIN;
         order = new Order();
         msg = "";
-        tradeType = AutoOrderType.UNKNOWN;
+        orderType = AutoOrderType.UNKNOWN;
         status = OrderStatus.Unknown;
         finalActionTime = LocalDateTime.MIN;
     }
@@ -54,8 +54,8 @@ public class OrderAugmented {
         return msg;
     }
 
-    public AutoOrderType getTradeType() {
-        return tradeType;
+    public AutoOrderType getOrderType() {
+        return orderType;
     }
 
     public void setFinalActionTime(LocalDateTime t) {
@@ -73,7 +73,7 @@ public class OrderAugmented {
     @Override
     public String toString() {
         return str("T: ", orderTime.toLocalTime(),
-                "Order:", order, "msg:", msg, "Tradetype", tradeType
+                "Order:", order, "msg:", msg, "Tradetype", orderType
                 , order.orderId() == 0 ? "" : order.orderId(),
                 "Status:", status, "FinalT: ", finalActionTime.toLocalTime());
     }

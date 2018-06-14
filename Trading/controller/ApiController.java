@@ -1514,11 +1514,11 @@ public class ApiController implements EWrapper {
                     XuTraderHelper.outputToAutoLog(msg);
                     XuTraderHelper.outputPurelyOrders(msg);
 
-                    if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getTradeType())) {
+                    if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getOrderType())) {
                         XUTrader.flattenEagerness = Eagerness.Passive;
                     }
                 } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
-                    if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getTradeType())) {
+                    if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getOrderType())) {
                         pr(" flatten trade IOC cancelled, flatten aggressively ");
                         XUTrader.flattenAggressively();
 
