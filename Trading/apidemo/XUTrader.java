@@ -34,6 +34,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static apidemo.ChinaPosition.isChinaStock;
+import static apidemo.ChinaPosition.isHKStock;
 import static apidemo.ChinaStock.currencyMap;
 import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
 import static apidemo.TradingConstants.ftseIndex;
@@ -2332,7 +2334,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             updateLog(" MTM + Trade " + r(netTradePnl + mtmPnl));
             updateLog("pos "
                     + currentPosMap.getOrDefault(f, 0) + " Delta " + r(ChinaPosition.getNetPtfDelta()) +
-                    " Stock Delta " + r(ChinaPosition.getStockPtfDelta()) + " Fut Delta " + r(XUTrader.getFutDelta()));
+                    " Stock Delta " + r(ChinaPosition.getStockPtfDelta()) + " Fut Delta " + r(XUTrader.getFutDelta())
+                    + "HK Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isHKStock(e.getKey())))
+                    + " China Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isChinaStock(e.getKey()))));
             updateLog(" expiring delta " + getExpiringDelta());
 
         });

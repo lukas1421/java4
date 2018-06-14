@@ -282,7 +282,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             }
         });
 
-
         JToggleButton onlyFutToggle = new JToggleButton("Fut Only");
         onlyFutToggle.addActionListener(l -> {
             if (onlyFutToggle.isSelected()) {
@@ -614,6 +613,14 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return openDelta + tradedDelta;
     }
 
+    public static boolean isChinaStock(String s) {
+        return s.startsWith("sz") || s.startsWith("sh");
+    }
+
+    public static boolean isHKStock(String s) {
+        return s.startsWith("hk");
+    }
+
     static double getStockPtfDelta() {
         double openDelta = openPositionMap.entrySet().stream()
                 .filter(e -> !e.getKey().startsWith("SGXA50"))
@@ -623,6 +630,20 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         double tradedDelta = tradesMap.entrySet().stream()
                 .filter(e -> !e.getKey().startsWith("SGXA50"))
                 .mapToDouble(e ->
+                        fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                                * priceMap.getOrDefault(e.getKey(), 0.0)
+                                * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum();
+
+        return openDelta + tradedDelta;
+    }
+
+    static double getStockPtfDeltaCustom(Predicate<? super Map.Entry<String, ?>> p) {
+        double openDelta = openPositionMap.entrySet().stream()
+                .filter(p).mapToDouble(e ->
+                        fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                                * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum();
+        double tradedDelta = tradesMap.entrySet().stream()
+                .filter(p).mapToDouble(e ->
                         fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
                                 * priceMap.getOrDefault(e.getKey(), 0.0)
                                 * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum();
