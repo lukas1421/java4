@@ -99,10 +99,9 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     static ScheduledExecutorService ex = Executors.newScheduledThreadPool(10);
 
 
-    private static final Predicate<Map.Entry<String, ?>> CHINA_STOCK_PRED = m -> m.getKey().startsWith("sh")
-            || m.getKey().startsWith("sz");
+    private static final Predicate<Map.Entry<String, ?>> CHINA_STOCK_PRED = m -> isChinaStock(m.getKey());
     private static final Predicate<Map.Entry<String, ?>> FUT_PRED = m -> m.getKey().startsWith("SGXA50");
-    //private static volatile Predicate<Map.Entry<String, ?>> HK_PRED = m -> m.getKey().startsWith("SGXA50");
+    private static final Predicate<Map.Entry<String, ?>> HK_PRED = e -> isHKStock(e.getKey());
 
     private static volatile Predicate<Map.Entry<String, ?>> GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
     private static volatile UpdateFrequency updateFreq = UpdateFrequency.oneSec;
@@ -142,7 +141,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     modelRow = this.convertRowIndexToModel(Index_row);
                     selectedNameStock = ChinaStock.symbolNames.get(modelRow);
                     mtmPnlCompute(e -> e.getKey().equals(selectedNameStock), selectedNameStock);
-
                     CompletableFuture.runAsync(() -> ChinaBigGraph.setGraph(selectedNameStock));
                 }
                 return comp;
@@ -171,7 +169,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             }
         });
 
-        JScrollPane scroll = new JScrollPane(tab, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS) {
+        JScrollPane scroll = new JScrollPane(tab, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -686,6 +685,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 ChinaPosition.tradesMap.put(f.getTicker(), new ConcurrentSkipListMap<>());
             }
         }
+
 //        ChinaPosition.tradesMap.put("SGXA50", new ConcurrentSkipListMap<>());
 //        ChinaPosition.tradesMap.put("SGXA50BM", new ConcurrentSkipListMap<>());
 
