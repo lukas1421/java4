@@ -54,6 +54,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static ApiController apcon;
     static XUTraderRoll traderRoll;
 
+    public static final int ORDER_WAIT_TIME = 15;
+
     //global
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
     private static volatile MASentiment sentiment = MASentiment.Directionless;
@@ -1040,11 +1042,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime lt = nowMilli.toLocalTime();
         double currDelta = getNetPtfDelta();
 
+
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
+
+        LocalDate currentDate = (nowMilli.toLocalTime().isAfter(LocalTime.of(23, 59, 59))
+                && nowMilli.toLocalTime().isBefore(LocalTime.of(5, 0, 0))) ? LocalDate.now().minusDays(1L) :
+                LocalDate.now();
 
         NavigableMap<LocalDateTime, SimpleBar> todayPriceMap =
                 futdata.entrySet().stream()
-                        .filter(e -> e.getKey().isAfter(LocalDateTime.of(LocalDate.now(), LocalTime.of(8, 59))))
+                        .filter(e -> e.getKey().isAfter(LocalDateTime.of(currentDate, LocalTime.of(8, 59))))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
                                 ConcurrentSkipListMap::new));
 
@@ -1107,14 +1114,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
 
-        if (todayPerc < 5 && currDelta < getBullishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= 10) {
+        if (todayPerc < 5 && currDelta < getBullishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= 15) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_BUY));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "day cover",
                     globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc));
-        } else if (todayPerc > 95 && currDelta > getBearishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= 10) {
+        } else if (todayPerc > 95 && currDelta > getBearishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= 15) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_SELL));
@@ -1284,33 +1291,33 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (lastOrderStatus != OrderStatus.Filled && lastOrderStatus != OrderStatus.Cancelled
                     && lastOrderStatus != OrderStatus.ApiCancelled) {
 
-                if (ChronoUnit.MINUTES.between(lastOrderT, nowMilli) > 10) {
+                if (ChronoUnit.MINUTES.between(lastOrderT, nowMilli) > ORDER_WAIT_TIME) {
                     apcon.cancelAllOrders();
+                    outputOrderToAutoLog(nowMilli + " cancelling orders from trim trader ");
                 }
                 return;
             }
         }
 
-
         pr("trim trader delta/target", netDelta, getBullishTarget(), getBearishTarget(), "last order T ",
                 lastOrderT, "next order T", lastOrderT.plusMinutes(10L));
 
-        if (ChronoUnit.MINUTES.between(lastOrderT, nowMilli) >= 10) {
+        if (ChronoUnit.MINUTES.between(lastOrderT, nowMilli) >= ORDER_WAIT_TIME) {
             if (netDelta > getBullishTarget()) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.TRIM));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "trim sell", globalIdOrderMap.get(id),
-                        "target range", getBullishTarget(), getBearishTarget()));
+                        "target range", getBullishTarget(), getBearishTarget(), "currDel: ", netDelta));
             } else if (netDelta < getBearishTarget()) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.TRIM));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "trim buy", globalIdOrderMap.get(id),
-                        "target range ", getBullishTarget(), getBearishTarget()));
-
+                        "target range ", getBullishTarget(), getBearishTarget(),
+                        "currDel", netDelta));
             }
         }
     }

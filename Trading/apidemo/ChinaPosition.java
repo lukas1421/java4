@@ -677,7 +677,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     private void getOpenTradePositionForFuture() {
-        pr(" get open trade position for future " + LocalTime.now());
+        //pr(" get open trade position for future " + LocalTime.now());
         uniqueKeySet = new HashSet<>();
 
         for (FutType f : FutType.values()) {
@@ -1628,10 +1628,10 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
     @Override
     public void tradeReportEnd() {
 
-        pr("trade report end: printing trades ");
+        //pr("trade report end: printing trades ");
         ChinaPosition.tradesMap.forEach((k, v) -> {
             if (v.size() > 0) {
-                pr("trade report ", k, v);
+                //pr("trade report ", k, v);
             }
         });
 
