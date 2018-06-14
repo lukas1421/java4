@@ -7,6 +7,7 @@ import client.TickType;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
 import static utility.Utility.pr;
 
@@ -19,17 +20,21 @@ public interface LiveHandler extends GeneralHandler {
 
         @Override
         public void handlePrice(TickType tt, String name, double price, LocalDateTime t) {
-            LocalTime lt = t.toLocalTime();
+            LocalTime lt = t.toLocalTime().truncatedTo(ChronoUnit.MINUTES);
             if (tt == TickType.LAST) {
-
                 ChinaStock.priceMap.put(name, price);
-
                 if (ChinaData.priceMapBar.get(name).containsKey(lt)) {
                     ChinaData.priceMapBar.get(name).get(lt).add(price);
                 } else {
                     ChinaData.priceMapBar.get(name).put(lt, new SimpleBar(price));
                 }
                 pr(name, tt, price, t);
+            } else if (tt == TickType.CLOSE) {
+                pr(" close ", tt, name, price);
+                ChinaStock.closeMap.put(name, price);
+            } else if (tt == TickType.OPEN) {
+                pr(" open ", tt, name, price);
+                ChinaStock.openMap.put(name, price);
             }
         }
 

@@ -2,7 +2,6 @@ package handler;
 
 import apidemo.ChinaData;
 import auxiliary.SimpleBar;
-import utility.Utility;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -27,7 +26,7 @@ public interface HistoricalHandler extends GeneralHandler {
         @Override
         public void handleHist(String name, String date, double open, double high, double low, double close) {
             pr("handle hist ", name, date, open, close);
-            String ticker = Utility.addSHSZHK(name);
+            String ticker = name;
             if (ChinaData.priceMapBar.containsKey(ticker)) {
                 if (!date.startsWith("finished")) {
                     Date dt = new Date(Long.parseLong(date) * 1000);
