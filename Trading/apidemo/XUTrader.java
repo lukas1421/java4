@@ -1062,12 +1062,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalDate prevDate = futdata.firstEntry().getKey().toLocalDate();
 
 
-        if (futdata.size() < 2 || futdata.firstKey().isBefore(LocalDateTime.of(prevDate, LocalTime.of(15, 0)))) {
-            pr(" first key less than ytd close ");
+        if (futdata.size() < 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
+            pr(" prev day data not available ");
             return;
         }
 
-        pr(" fut data is ", futdata);
+        //pr(" fut data is ", futdata);
         double ytdClose = futdata.lowerEntry(LocalDateTime.of(prevDate, LocalTime.of(15, 0))).getValue().getHigh();
 
         int ytdClosePerc = getPercentileForX(futdata.headMap(LocalDateTime.of(prevDate,
@@ -1086,7 +1086,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        if (!(lt.isAfter(LocalTime.of(9, 25)) && lt.isBefore(LocalTime.of(15, 0)))) {
+        if (!(lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(15, 0)))) {
             pr(" day cover trade: not in time range, return ", nowMilli.toLocalTime());
             return;
         }
@@ -1100,9 +1100,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (todayPerc < 5 && currDelta < getBullishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= 10) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 1);
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_COVER));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_BUY));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "day cover",
+                    globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc));
+        } else if (todayPerc > 95 && currDelta > getBearishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= 10) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimit(freshPrice, 1);
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_SELL));
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(str(o.orderId(), "day sell",
                     globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc));
         }
     }
@@ -1116,12 +1123,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         double pd = getPD(freshPrice);
         double fx = ChinaPosition.fxMap.getOrDefault("USD", 0.0);
-        if (perc == 0) {
-            pr(" perc 0 suspicious ", futData.get(ibContractToFutType(activeFuture)));
-        }
-        pr("futdata in perc trader ", futData.get(ibContractToFutType(activeFuture)));
 
-        if (futData.get(ibContractToFutType(activeFuture)).size() == 0) return;
+        NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
+
+        if (futdata.size() < 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
+            pr(" perc trader first last date equal ");
+            return;
+        }
+
+        pr("futdata in perc trader ", futdata);
 
         long accSize = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTradeType() == PERC_ACC)

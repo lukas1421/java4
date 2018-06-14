@@ -586,7 +586,6 @@ public final class ChinaMain implements IConnectionHandler {
                 controller().connect(m_host.getText(), 4001, clientId, m_connectOptionsTF.getText());
             }
         }
-
     }
 
     public static void updateSystemNotif(String text) {
@@ -598,11 +597,9 @@ public final class ChinaMain implements IConnectionHandler {
             systemNotif.setBackground(Color.orange);
         }, 10, TimeUnit.SECONDS);
     }
-
     static void updateSystemTime(String text) {
         systemTime.setText(text);
     }
-
     public static void updateTWSTime(String text) {
         twsTime.setText(text);
     }
