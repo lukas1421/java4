@@ -27,7 +27,6 @@ import static utility.Utility.*;
 public final class GraphPnl extends JComponent implements MouseMotionListener, MouseListener {
 
     private final static int WIDTH_PNL = 5;
-
     static NavigableMap<LocalTime, Double> tm;
     private static NavigableMap<LocalTime, Double> mtmMap = new ConcurrentSkipListMap<>();
     private static NavigableMap<LocalTime, Double> tradeMap = new ConcurrentSkipListMap<>();

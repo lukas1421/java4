@@ -26,12 +26,9 @@ public interface LiveHandler extends GeneralHandler {
                 } else {
                     ChinaData.priceMapBar.get(name).put(lt, new SimpleBar(price));
                 }
-                //pr(name, tt, price, t);
             } else if (tt == TickType.CLOSE) {
-                //pr(" close ", tt, name, price);
                 ChinaStock.closeMap.put(name, price);
             } else if (tt == TickType.OPEN) {
-                //pr(" open ", tt, name, price);
                 ChinaStock.openMap.put(name, price);
             }
         }

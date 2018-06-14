@@ -254,7 +254,7 @@ public final class ChinaMain implements IConnectionHandler {
         JButton fillHolesButton = new JButton("FillHoles");
         fillHolesButton.addActionListener(l -> {
             pr(" filling holes for today ");
-            ChinaStockHelper.fillHolesInData(priceMapBar, LocalTime.of(9, 24));
+            ChinaStockHelper.fillHolesInData(priceMapBar, LocalTime.of(9, 19));
             pr(" filling holes for ytd ");
             ChinaStockHelper.fillHolesInData(priceMapBarYtd, LocalTime.of(9, 29));
             ChinaStockHelper.fillHolesInSize();
