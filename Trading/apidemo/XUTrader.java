@@ -1271,12 +1271,32 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .map(e -> e.getValue().getOrderTime())
                 .orElse(sessionOpenT());
 
+        long trimTrades = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == AutoOrderType.TRIM)
+                .count();
+
+        if (trimTrades != 0) {
+            OrderStatus lastOrderStatus = globalIdOrderMap.entrySet().stream()
+                    .filter(e -> e.getValue().getOrderType() == AutoOrderType.TRIM)
+                    .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                    .map(e -> e.getValue().getStatus()).orElse(OrderStatus.Unknown);
+
+            if (lastOrderStatus != OrderStatus.Filled && lastOrderStatus != OrderStatus.Cancelled
+                    && lastOrderStatus != OrderStatus.ApiCancelled) {
+
+                if (ChronoUnit.MINUTES.between(lastOrderT, nowMilli) > 10) {
+                    apcon.cancelAllOrders();
+                }
+                return;
+            }
+        }
+
+
         pr("trim trader delta/target", netDelta, getBullishTarget(), getBearishTarget(), "last order T ",
                 lastOrderT, "next order T", lastOrderT.plusMinutes(10L));
 
         if (ChronoUnit.MINUTES.between(lastOrderT, nowMilli) >= 10) {
             if (netDelta > getBullishTarget()) {
-
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.TRIM));

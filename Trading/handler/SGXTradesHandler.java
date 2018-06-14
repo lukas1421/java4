@@ -70,7 +70,7 @@ public class SGXTradesHandler implements ApiController.ITradeReportHandler {
     @SuppressWarnings("SpellCheckingInspection")
     @Override
     public void tradeReportEnd() {
-        System.out.println("SGXTradeshandler :: trade report end ");
+        //System.out.println("SGXTradeshandler :: trade report end ");
 
         for (FutType f : FutType.values()) {
             System.out.println(" type is " + f + " ticker is " + f.getTicker());
