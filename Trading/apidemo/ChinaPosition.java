@@ -273,6 +273,16 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             }
         });
 
+        JToggleButton includeHKToggle = new JToggleButton(" Include HK");
+        includeHKToggle.addActionListener(l -> {
+            if (includeHKToggle.isSelected()) {
+                GEN_MTM_PRED = m -> true;
+            } else {
+                GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
+            }
+        });
+
+
         JToggleButton onlyFutToggle = new JToggleButton("Fut Only");
         onlyFutToggle.addActionListener(l -> {
             if (onlyFutToggle.isSelected()) {
@@ -283,6 +293,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                 //GEN_MTM_PRED = m -> true;
             }
         });
+
 
         JButton includeExpiredButton = new JButton("Include expired");
         includeExpiredButton.addActionListener(l -> {
@@ -316,6 +327,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         controlPanel.add(autoUpdateButton);
         controlPanel.add(noFutToggle);
         controlPanel.add(onlyFutToggle);
+        controlPanel.add(includeHKToggle);
         controlPanel.add(includeExpiredButton);
         controlPanel.add(updateFreqLabel);
         controlPanel.add(_1secButton);

@@ -960,11 +960,9 @@ public class ApiController implements EWrapper {
     }
 
     public void reqHKInPosLive() {
-        ChinaData.priceMapBar.keySet().forEach(k -> {
-            if (k.startsWith("hk")) {
-                String ticker = k.substring(2);
-                req1StockLive(ticker, "SEHK", "HKD", new LiveHandler.DefaultLiveHandler());
-            }
+        ChinaData.priceMapBar.keySet().stream().filter(e -> e.startsWith("hk")).forEach(k -> {
+            String ticker = k.substring(2);
+            req1StockLive(ticker, "SEHK", "HKD", new LiveHandler.DefaultLiveHandler());
         });
     }
 
