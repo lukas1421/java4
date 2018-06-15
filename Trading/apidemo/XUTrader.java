@@ -2192,7 +2192,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void tradeReportEnd() {
         //pr("printing all tradesmap all ", tradesMap);
-        //System.out.println(" printing trades map " + tradesMap.get(ibContractToFutType(activeFuture)));
         if (tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
             currentDirection = tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getValue().getSizeAll() > 0 ?
                     Direction.Long : Direction.Short;
@@ -2252,7 +2251,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @Override
     public void orderStatus(int orderId, OrderStatus status, int filled, int remaining,
-                            double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
+                            double avgFillPrice, long permId, int parentId,
+                            double lastFillPrice, int clientId, String whyHeld) {
         pr(" in order status ");
         updateLog(Utility.str(" status filled remaining avgFillPrice ",
                 status, filled, remaining, avgFillPrice));
@@ -2274,7 +2274,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
         String ticker = utility.Utility.ibContractToSymbol(contract);
-        if (contract.symbol().equals("XINA50") && position != 0.0) {
+        if (ticker.startsWith("SGXA50") && position != 0.0) {
             FutType f = ibContractToFutType(contract);
             currentPosMap.put(f, (int) position);
         }

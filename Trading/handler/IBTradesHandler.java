@@ -22,26 +22,18 @@ import static java.util.stream.Collectors.summingInt;
 import static utility.Utility.*;
 
 public class IBTradesHandler implements ApiController.ITradeReportHandler {
+    @SuppressWarnings("unchecked")
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
         String ticker = ibContractToSymbol(contract);
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
         LocalDateTime ldtRoundTo5 = Utility.roundTo5Ldt(ldt);
-        //String ticker = ibContractToSymbol(contract);
-        //if (contract.symbol().equals("XINA50")) {
         if (ldt.toLocalDate().isAfter(Utility.getMondayOfWeek(ldt).minusDays(1L))) {
-//            if (ldt.toLocalDate().equals(LocalDate.of(2018, Month.MAY, 11))) {
-//                System.out.println(" ******************************************* ");
-//                System.out.println(" IBTradesHandler " + ticker);
-//                System.out.println(str(" exec ", execution.side(), execution.time(), execution.cumQty()
-//                        , execution.price(), execution.shares()));
-//            }
             Class c = ticker.startsWith("hk") ? HKStockTrade.class : ticker.startsWith("SGXA50") ?
                     FutureTrade.class : NormalTrade.class;
 
             pr(ticker, execution.time(), execution.shares(), c.getName());
-
 
             try {
                 if (chinaTradeMap.containsKey(ticker)) {
@@ -59,9 +51,6 @@ public class IBTradesHandler implements ApiController.ITradeReportHandler {
                                         .newInstance(execution.price(),
                                                 sign * (int) Math.round(execution.shares()))));
                     }
-//                    if (ldtRoundTo5.toLocalDate().equals(LocalDate.of(2018, Month.MAY, 11))) {
-//                        System.out.println(str(LocalTime.now(), chinaTradeMap.get(ticker).get(ldtRoundTo5)));
-//                    }
                 } else {
                     System.out.println(" sgx trade handler does not contain ticker for " + ticker);
                 }
@@ -71,18 +60,11 @@ public class IBTradesHandler implements ApiController.ITradeReportHandler {
                         contract.symbol(), contract.currency());
             }
         }
-//        } else {
-//            System.out.println(" do not recognize this ticker " + contract.symbol());
-//        }
     }
 
     @SuppressWarnings("SpellCheckingInspection")
     @Override
     public void tradeReportEnd() {
-        //System.out.println("SGXTradeshandler :: trade report end ");
-
-        //pr(" trade report end printing ");
-        //chinaTradeMap.forEach(Utility::pr);
 
         for (FutType f : FutType.values()) {
             System.out.println(" type is " + f + " ticker is " + f.getTicker());
