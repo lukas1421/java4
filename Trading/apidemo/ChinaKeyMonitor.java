@@ -512,7 +512,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
             displaySharp = !posButton.isSelected();
             displayInterest = !posButton.isSelected();
             displayCorrel = !posButton.isSelected();
-            positionComparingFunc = e -> Math.abs(fxMap.getOrDefault(e.getKey(), 1.0)
+            positionComparingFunc = e -> Math.abs(fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
                     * e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0));
             refresh();
             System.out.println(" display pos is " + displayPos);

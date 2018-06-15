@@ -1120,7 +1120,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_BUY));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "day cover",
-                    globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc));
+                    globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc
+                    , getBullishTarget(), getBearishTarget()));
         } else if (todayPerc > 95 && currDelta > getBearishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli)
                 >= ORDER_WAIT_TIME) {
             int id = autoTradeID.incrementAndGet();
@@ -1128,7 +1129,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_SELL));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "day sell",
-                    globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc));
+                    globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc,
+                    getBullishTarget(), getBearishTarget()));
         }
     }
 
@@ -1149,7 +1151,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        pr("futdata in perc trader ", futdata);
+        //pr("futdata in perc trader ", futdata);
 
         long accSize = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == PERC_ACC)
