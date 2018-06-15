@@ -1614,14 +1614,15 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
                 }
             }
         } else if (contract.secType() == Types.SecType.STK && contract.exchange().equals("SEHK")) {
-            if (ChinaPosition.tradesMap.get(ticker).containsKey(lt)) {
-                ChinaPosition.tradesMap.get(ticker).get(lt)
-                        .addTrade(new HKStockTrade(execution.price(), (int) Math.round(sign * execution.shares())));
-            } else {
-                ChinaPosition.tradesMap.get(ticker).put(lt,
-                        new TradeBlock(new HKStockTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
+            if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth()) {
+                if (ChinaPosition.tradesMap.get(ticker).containsKey(lt)) {
+                    ChinaPosition.tradesMap.get(ticker).get(lt)
+                            .addTrade(new HKStockTrade(execution.price(), (int) Math.round(sign * execution.shares())));
+                } else {
+                    ChinaPosition.tradesMap.get(ticker).put(lt,
+                            new TradeBlock(new HKStockTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
+                }
             }
-
         }
     }
 
