@@ -51,13 +51,13 @@ public class Hibtask {
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
         try (Session session = sessionF.openSession()) {
             symbolNames.forEach((key) -> {
-                if (!key.startsWith("hk")) {
-                    ChinaSaveInterface2Blob cs = session.load(saveclass.getClass(), key);
-                    Blob blob1 = cs.getFirstBlob();
-                    Blob blob2 = cs.getSecondBlob();
-                    saveclass.updateFirstMap(key, unblob(blob1));
-                    saveclass.updateSecondMap(key, unblob(blob2));
-                }
+                //if (!key.startsWith("hk")) {
+                ChinaSaveInterface2Blob cs = session.load(saveclass.getClass(), key);
+                Blob blob1 = cs.getFirstBlob();
+                Blob blob2 = cs.getSecondBlob();
+                saveclass.updateFirstMap(key, unblob(blob1));
+                saveclass.updateSecondMap(key, unblob(blob2));
+                //}
             });
         } catch (Exception ex) {
             ex.printStackTrace();

@@ -1089,7 +1089,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int ytdClosePerc = getPercentileForX(futdata.headMap(LocalDateTime.of(prevDate,
                 LocalTime.of(15, 0)), true), ytdClose);
 
-        pr("day cover *** ytd close ", ytdClose, " ytd close p% ", ytdClosePerc);
+        pr("day trader *** ytd close ", ytdClose, " ytd close p% ", ytdClosePerc,
+                "today p% ", todayPerc, "currDel", r(currDelta), "Del Range", getBullishTarget(), getBearishTarget());
 
 
 //        if (ytdClosePerc > 20) {
@@ -1269,8 +1270,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     public static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice) {
 
+        LocalTime lt = nowMilli.toLocalTime();
+
         if (!trimTraderOn.get()) {
-            pr(" trim trader off ");
+            //pr(" trim trader off ");
             return;
         }
         double netDelta = getNetPtfDelta();
@@ -1302,7 +1305,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
 
-        pr("trim trader delta/target", netDelta, getBullishTarget(), getBearishTarget(), "last order T ",
+        pr("trim trader delta/target", r(netDelta), getBullishTarget(), getBearishTarget(), "last order T ",
                 lastOrderT, "next order T", lastOrderT.plusMinutes(10L));
 
         if (ChronoUnit.MINUTES.between(lastOrderT, nowMilli) >= ORDER_WAIT_TIME) {
@@ -1518,10 +1521,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, Double> sma = getMAGen(price5, currentMAPeriod);
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
 
-        pr(nowMilli, " Flatten Trader Delta: "
-                , r(currDelta), "prev Price ", prevPrice, " price ", freshPrice, " ma ", r(maLast)
-                , "Crossed?: ", (prevPrice > maLast && freshPrice <= maLast) ||
-                        (prevPrice < maLast && freshPrice >= maLast));
+//        pr(nowMilli, " Flatten Trader Delta: "
+//                , r(currDelta), "prev Price ", prevPrice, " price ", freshPrice, " ma ", r(maLast)
+//                , "Crossed?: ", (prevPrice > maLast && freshPrice <= maLast) ||
+//                        (prevPrice < maLast && freshPrice >= maLast));
 
         if (currDelta > getBullishTarget() && prevPrice > maLast && freshPrice <= maLast
                 && perc > UP_PERC && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
@@ -1884,15 +1887,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" perc 0 suspicious ", futData.get(ibContractToFutType(activeFuture)));
         }
         double currDelta = getNetPtfDelta();
-        pr("Inventory trade: ", inventoryTraderOn.get() ? "ON" : "OFF",
-                t.truncatedTo(ChronoUnit.SECONDS),
-                "senti: ", sentiment, "perc ", perc,
-                "inventory barrier waiting #: ", inventoryBarrier.getNumberWaiting(),
-                " semaphore permits: ", inventorySemaphore.availablePermits(),
-                freshPrice, " chg: ",
-                activeLastMinuteMap.size() < 2 ? "No trade last min " :
-                        (freshPrice - activeLastMinuteMap.lowerEntry(t).getValue()),
-                "Delta: ", r(currDelta));
+//        pr("Inventory trade: ", inventoryTraderOn.get() ? "ON" : "OFF",
+//                t.truncatedTo(ChronoUnit.SECONDS),
+//                "senti: ", sentiment, "perc ", perc,
+//                "inventory barrier waiting #: ", inventoryBarrier.getNumberWaiting(),
+//                " semaphore permits: ", inventorySemaphore.availablePermits(),
+//                freshPrice, " chg: ",
+//                activeLastMinuteMap.size() < 2 ? "No trade last min " :
+//                        (freshPrice - activeLastMinuteMap.lowerEntry(t).getValue()),
+//                "Delta: ", r(currDelta));
 
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
 
