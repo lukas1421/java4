@@ -1,7 +1,6 @@
 package handler;
 
-import TradeType.FutureTrade;
-import TradeType.TradeBlock;
+import TradeType.*;
 import apidemo.FutType;
 import apidemo.TradingConstants;
 import client.CommissionReport;
@@ -20,57 +19,70 @@ import java.util.stream.Collectors;
 
 import static historical.HistChinaStocks.chinaTradeMap;
 import static java.util.stream.Collectors.summingInt;
-import static utility.Utility.ibContractToSymbol;
-import static utility.Utility.str;
+import static utility.Utility.*;
 
-public class SGXTradesHandler implements ApiController.ITradeReportHandler {
+public class IBTradesHandler implements ApiController.ITradeReportHandler {
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
         String ticker = ibContractToSymbol(contract);
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
         LocalDateTime ldtRoundTo5 = Utility.roundTo5Ldt(ldt);
-        if (contract.symbol().equals("XINA50")) {
-            if (ldt.toLocalDate().isAfter(Utility.getMondayOfWeek(ldt).minusDays(1L))) {
-                if (ldt.toLocalDate().equals(LocalDate.of(2018, Month.MAY, 11))) {
-                    System.out.println(" ******************************************* ");
-                    System.out.println(" SGXTradesHandler " + ticker);
-                    System.out.println(str(" exec ", execution.side(), execution.time(), execution.cumQty()
-                            , execution.price(), execution.shares()));
-                }
-                try {
-                    if (chinaTradeMap.containsKey(ticker)) {
-                        if (chinaTradeMap.get(ticker).containsKey(ldtRoundTo5)) {
-                            System.out.println(str(" Existing Trade: ", ldtRoundTo5,
-                                    sign * (int) Math.round(execution.shares())));
-                            chinaTradeMap.get(ticker).get(ldtRoundTo5).addTrade(new FutureTrade(execution.price(),
-                                    sign * (int) Math.round(execution.shares())));
-                        } else {
-                            System.out.println(str(" new tradeBlock ", ldtRoundTo5,
-                                    sign * (int) Math.round(execution.shares())));
-                            chinaTradeMap.get(ticker).put(ldtRoundTo5, new TradeBlock(new FutureTrade(execution.price(),
-                                    sign * (int) Math.round(execution.shares()))));
-                        }
-                        if (ldtRoundTo5.toLocalDate().equals(LocalDate.of(2018, Month.MAY, 11))) {
-                            System.out.println(str(LocalTime.now(), chinaTradeMap.get(ticker).get(ldtRoundTo5)));
-                        }
+        //String ticker = ibContractToSymbol(contract);
+        //if (contract.symbol().equals("XINA50")) {
+        if (ldt.toLocalDate().isAfter(Utility.getMondayOfWeek(ldt).minusDays(1L))) {
+//            if (ldt.toLocalDate().equals(LocalDate.of(2018, Month.MAY, 11))) {
+//                System.out.println(" ******************************************* ");
+//                System.out.println(" IBTradesHandler " + ticker);
+//                System.out.println(str(" exec ", execution.side(), execution.time(), execution.cumQty()
+//                        , execution.price(), execution.shares()));
+//            }
+            Class c = ticker.startsWith("hk") ? HKStockTrade.class : ticker.startsWith("SGXA50") ?
+                    FutureTrade.class : NormalTrade.class;
+
+            pr(ticker, execution.time(), execution.shares(), c.getName());
+
+
+            try {
+                if (chinaTradeMap.containsKey(ticker)) {
+                    if (chinaTradeMap.get(ticker).containsKey(ldtRoundTo5)) {
+                        System.out.println(str(" Existing Trade: ", ldtRoundTo5,
+                                sign * (int) Math.round(execution.shares())));
+                        chinaTradeMap.get(ticker).get(ldtRoundTo5).addTrade((Trade)
+                                c.getDeclaredConstructor(Double.TYPE, Integer.TYPE)
+                                        .newInstance(execution.price(), sign * (int) Math.round(execution.shares())));
                     } else {
-                        System.out.println(" sgx trade handler does not contain ticker for " + ticker);
+                        System.out.println(str(" new tradeBlock ", ldtRoundTo5,
+                                sign * (int) Math.round(execution.shares())));
+                        chinaTradeMap.get(ticker).put(ldtRoundTo5,
+                                new TradeBlock((Trade) c.getDeclaredConstructor(Double.TYPE, Integer.TYPE)
+                                        .newInstance(execution.price(),
+                                                sign * (int) Math.round(execution.shares()))));
                     }
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    System.out.println(" ticker wrong in sgx report handler " + ticker + " wrong contract is " + contract.toString());
+//                    if (ldtRoundTo5.toLocalDate().equals(LocalDate.of(2018, Month.MAY, 11))) {
+//                        System.out.println(str(LocalTime.now(), chinaTradeMap.get(ticker).get(ldtRoundTo5)));
+//                    }
+                } else {
+                    System.out.println(" sgx trade handler does not contain ticker for " + ticker);
                 }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                pr(" ticker wrong in sgx report handler " + ticker + " wrong contract is " +
+                        contract.symbol(), contract.currency());
             }
-        } else {
-            System.out.println(" do not recognize this ticker " + contract.symbol());
         }
+//        } else {
+//            System.out.println(" do not recognize this ticker " + contract.symbol());
+//        }
     }
 
     @SuppressWarnings("SpellCheckingInspection")
     @Override
     public void tradeReportEnd() {
         //System.out.println("SGXTradeshandler :: trade report end ");
+
+        //pr(" trade report end printing ");
+        //chinaTradeMap.forEach(Utility::pr);
 
         for (FutType f : FutType.values()) {
             System.out.println(" type is " + f + " ticker is " + f.getTicker());

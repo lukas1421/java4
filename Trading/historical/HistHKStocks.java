@@ -263,7 +263,7 @@ public class HistHKStocks extends JPanel {
     }
 
 
-    private Contract generateHKContract(String stock) {
+    public static Contract generateHKContract(String stock) {
         Contract ct = new Contract();
         ct.symbol(stock);
         ct.exchange("SEHK");

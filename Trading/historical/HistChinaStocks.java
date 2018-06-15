@@ -10,8 +10,8 @@ import client.Contract;
 import client.ExecutionFilter;
 import graph.GraphBarTemporal;
 import graph.GraphChinaPnl;
+import handler.IBTradesHandler;
 import handler.SGXPositionHandler;
-import handler.SGXTradesHandler;
 import utility.SharpeUtility;
 import utility.Utility;
 
@@ -212,7 +212,7 @@ public class HistChinaStocks extends JPanel {
                 List<String> al1 = Arrays.asList(line.split("\t"));
 
                 if (!al1.get(0).equals("sh204001") && (al1.get(0).startsWith("sh") || al1.get(0).startsWith("sz")
-                        || al1.get(0).startsWith("SGX"))) {
+                        || al1.get(0).startsWith("SGX") || al1.get(0).startsWith("hk"))) {
                     String ticker = al1.get(0);
                     chinaYtd.put(al1.get(0), new ConcurrentSkipListMap<>());
                     ytdVolTraded.put(al1.get(0), new ConcurrentSkipListMap<>());
@@ -251,12 +251,17 @@ public class HistChinaStocks extends JPanel {
                         selectedStock = stockList.get(modelRow);
                         comp.setBackground(Color.GREEN);
 
-                        if (selectedStock.equals("SGXA50")) {
-                            System.out.println(" printing A 50 prices ");
-                            chinaTradeMap.entrySet().stream().filter(e -> e.getKey().equals("SGXA50")).forEach(System.out::println);
-                            System.out.println(" price is " + priceMapForHist.getOrDefault(selectedStock, 0.0));
-                            System.out.println(" last wtd price " + chinaWtd.get("SGXA50").lastEntry());
+                        if (chinaTradeMap.containsKey(selectedStock)) {
+                            chinaTradeMap.get(selectedStock).forEach((k, v) ->
+                                    pr(" printing selected ", k, v));
                         }
+
+//                        if (selectedStock.equals("SGXA50")) {
+//                            //System.out.println(" printing A 50 prices ");
+//                            chinaTradeMap.entrySet().stream().filter(e -> e.getKey().equals("SGXA50")).forEach(System.out::println);
+//                            //System.out.println(" price is " + priceMapForHist.getOrDefault(selectedStock, 0.0));
+//                            //System.out.println(" last wtd price " + chinaWtd.get("SGXA50").lastEntry());
+//                        }
 
                         CompletableFuture.runAsync(() -> {
                             SwingUtilities.invokeLater(() -> {
@@ -407,6 +412,7 @@ public class HistChinaStocks extends JPanel {
         JButton allTradedButton = new JButton("All Traded");
         JToggleButton autoComputeButton = new JToggleButton("Auto On");
         JButton fillExpiredButton = new JButton("Fill Expired");
+        JButton fillMissingButton = new JButton("Fill missing ");
         JButton a50onlyButton = new JButton(" A50 Only ");
         JButton aboveMA60Button = new JButton(" >MA60 ");
 
@@ -464,7 +470,25 @@ public class HistChinaStocks extends JPanel {
                 if (chinaWtd.containsKey(s) && !chinaWtd.get(s).containsKey(k) && k.isBefore(chinaWtd.get(s).firstKey())) {
                     chinaWtd.get(s).put(k, new SimpleBar(lastWeekCloseMap.getOrDefault(s, 0.0)));
                 }
+
             }));
+        });
+
+        fillMissingButton.addActionListener(l -> {
+            chinaWtd.forEach((k, v) -> {
+                if (v.size() > 0) {
+                    if (!v.firstKey().toLocalDate().equals(MONDAY_OF_WEEK)) {
+                        pr(" missing for " + k);
+                        chinaWtd.get("sh600519").forEach((k1, v1) -> {
+                            if (!v.containsKey(k1)) {
+                                v.put(k1, new SimpleBar(v.higherEntry(k1).getValue().getOpen()));
+                            }
+                        });
+                    }
+                } else {
+                    pr(" filling missing button empty ", k);
+                }
+            });
 
         });
 
@@ -529,11 +553,11 @@ public class HistChinaStocks extends JPanel {
         sgxDataButton.addActionListener(l ->
                 CompletableFuture.runAsync(() -> {
                             ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                                    getExpiredFutContract(), HistChinaStocks::handleSGXA50WtdData, 7);
+                                    getExpiredFutContract(), HistChinaStocks::handleIBWtdData, 7);
                             ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                                    getFrontFutContract(), HistChinaStocks::handleSGXA50WtdData, 7);
+                                    getFrontFutContract(), HistChinaStocks::handleIBWtdData, 7);
                             ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                                    getBackFutContract(), HistChinaStocks::handleSGXA50WtdData, 7);
+                                    getBackFutContract(), HistChinaStocks::handleIBWtdData, 7);
                         }
                 ));
 
@@ -589,12 +613,22 @@ public class HistChinaStocks extends JPanel {
             });
             CompletableFuture.runAsync(() -> {
                 ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), getExpiredFutContract()
-                        , HistChinaStocks::handleSGXA50WtdData, 7);
+                        , HistChinaStocks::handleIBWtdData, 7);
                 ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), getFrontFutContract()
-                        , HistChinaStocks::handleSGXA50WtdData, 7);
+                        , HistChinaStocks::handleIBWtdData, 7);
                 ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), getBackFutContract(),
-                        HistChinaStocks::handleSGXA50WtdData, 7);
+                        HistChinaStocks::handleIBWtdData, 7);
+                stockList.forEach(s -> {
+                    if (s.startsWith("hk")) {
+                        pr("requesting hk ", s.substring(2));
+                        ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+                                HistHKStocks.generateHKContract(s.substring(2)),
+                                HistChinaStocks::handleIBWtdData, 7);
+                    }
+                });
             });
+
+
         });
 
         loadTradesButton.addActionListener(al -> {
@@ -684,6 +718,7 @@ public class HistChinaStocks extends JPanel {
         controlPanel.add(allTradedButton);
         controlPanel.add(autoComputeButton);
         controlPanel.add(fillExpiredButton);
+        controlPanel.add(fillMissingButton);
         controlPanel.add(a50onlyButton);
         controlPanel.add(aboveMA60Button);
 
@@ -761,8 +796,8 @@ public class HistChinaStocks extends JPanel {
     }
 
 
-    private static void handleSGXA50WtdData(Contract c, String date,
-                                            double open, double high, double low, double close, @SuppressWarnings("unused") int volume) {
+    private static void handleIBWtdData(Contract c, String date,
+                                        double open, double high, double low, double close, @SuppressWarnings("unused") int volume) {
 
         String ticker = ibContractToSymbol(c);
 
@@ -814,7 +849,7 @@ public class HistChinaStocks extends JPanel {
         chinaTradeMap.put("SGXA50PR", new ConcurrentSkipListMap<>());
         chinaTradeMap.put("SGXA50", new ConcurrentSkipListMap<>());
         chinaTradeMap.put("SGXA50BM", new ConcurrentSkipListMap<>());
-        ChinaMain.controller().reqExecutions(new ExecutionFilter(), new SGXTradesHandler());
+        ChinaMain.controller().reqExecutions(new ExecutionFilter(), new IBTradesHandler());
     }
 
 
