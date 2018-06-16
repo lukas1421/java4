@@ -56,7 +56,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
     public static volatile DisplayGranularity dispGran = DisplayGranularity._1MDATA;
 
     private static volatile ToDoubleFunction<Entry<String, Integer>> positionComparingFunc =
-            e -> Math.abs(fxMap.getOrDefault(currencyMap.get(e.getKey()), 1.0)
+            e -> Math.abs(fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
                     * e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0));
 
     private static volatile ToDoubleFunction<String> sharpeComparingFunc =
