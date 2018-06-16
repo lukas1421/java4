@@ -122,7 +122,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static TableRowSorter<OptionTableModel> sorter;
     private static RowFilter<OptionTableModel, Integer> otmFilter;
 
-    public ChinaOption() {
+    ChinaOption() {
         otmFilter = new RowFilter<OptionTableModel, Integer>() {
             @Override
             public boolean include(Entry<? extends OptionTableModel, ? extends Integer> entry) {
@@ -584,9 +584,8 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
     // load intraday vols
-    public static <T> void saveIntradayVolsHib(Map<String, ? extends NavigableMap<LocalDateTime, T>> mp,
-                                               ChinaSaveInterface1Blob saveclass) {
-
+    private static <T> void saveIntradayVolsHib(Map<String, ? extends NavigableMap<LocalDateTime, T>> mp,
+                                                ChinaSaveInterface1Blob saveclass) {
         if (loadedBeforeSaveGuard) {
             LocalTime start = LocalTime.now();
             SessionFactory sessionF = HibernateUtil.getSessionFactory();
@@ -599,13 +598,10 @@ public class ChinaOption extends JPanel implements Runnable {
                         AtomicLong i = new AtomicLong(0L);
                         optionListLoaded.forEach(name -> {
                             ChinaSaveInterface1Blob cs = saveclass.createInstance(name);
-
                             NavigableMap<LocalDateTime, T> res = mp.get(name).entrySet().stream().filter(p)
                                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                                             (a, b) -> a, ConcurrentSkipListMap::new));
-
                             cs.setFirstBlob(blobify(res, session));
-
                             session.save(cs);
                             if (i.get() % 100 == 0) {
                                 session.flush();
@@ -1132,8 +1128,8 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private static NavigableMap<Double, Double> mergePutCallVols(NavigableMap<Double, Double> callMap
             , NavigableMap<Double, Double> putMap, double spot) {
-        NavigableMap<Double, Double> res = new TreeMap<>();
 
+        NavigableMap<Double, Double> res = new TreeMap<>();
         callMap.forEach((k, v) -> {
             if (k > spot) {
                 res.put(k, v);
@@ -1189,7 +1185,6 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
     public static void main(String[] args) {
-
         JFrame jf = new JFrame();
         jf.setSize(new Dimension(1500, 1900));
         ChinaOption co = new ChinaOption();

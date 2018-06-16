@@ -116,6 +116,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double OVERNIGHT_MAX_DELTA = 500000.0;
     private static final double OVERNIGHT_MIN_DELTA = -500000.0;
 
+    //index ma
+    private static AtomicBoolean indexMAStatus = new AtomicBoolean(false);
+
     //ma
     private static AtomicBoolean MATraderStatus = new AtomicBoolean(true);
     private static volatile int currentMAPeriod = 60;
@@ -408,6 +411,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             outputToAutoLog(" MA Trade set to " + MATraderStatus.get());
             maTraderStatusButton.setText("MA Trader " + (MATraderStatus.get() ? "ON" : "OFF"));
         });
+
+        JButton indexMAStatusButton = new JButton("IndexMA " + (indexMAStatus.get() ? "ON" : "OFF"));
+        indexMAStatusButton.addActionListener(l -> {
+            indexMAStatus.set(!indexMAStatus.get());
+            outputToAutoLog(" Index MA set to " + indexMAStatus.get());
+            indexMAStatusButton.setText(" Index MA " + (indexMAStatus.get() ? "ON" : "OFF"));
+        });
+
 
         JButton musicPlayableButton = new JButton("Music: " + (musicOn.get() ? "ON" : "OFF"));
         musicPlayableButton.addActionListener(l -> {
@@ -720,6 +731,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(toggleMusicButton);
         controlPanel1.add(detailedButton);
         controlPanel1.add(maTraderStatusButton);
+        controlPanel1.add(indexMAStatusButton);
         controlPanel1.add(overnightButton);
         controlPanel1.add(musicPlayableButton);
         controlPanel1.add(inventoryTraderButton);
@@ -1276,19 +1288,21 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * trading based on MA index
      *
-     * @param nowMilli
-     * @param freshPrice
+     * @param nowMilli   time in milliseconds
+     * @param freshPrice last price
      */
     public static synchronized void indexMATrader(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        if (!(lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(15, 0)))) {
+            return;
+        }
 
         if (ChinaData.priceMapBar.get(ftseIndex).size() < 5) {
             pr(" index data not enough ");
             return;
         }
 
-
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(ChinaData.priceMapBar.get(ftseIndex), nowMilli.toLocalDate());
-        NavigableMap<LocalDateTime, Double> ma5 = getMAGen(index, 5);
 
         SimpleBar lastBar = new SimpleBar(index.lastEntry().getValue());
         LocalTime lastBarTime = index.lastEntry().getKey().toLocalTime();
@@ -1296,7 +1310,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime secLastBarTime = index.lowerEntry(index.lastKey()).getKey().toLocalTime();
 
         lastBar.add(freshPrice);
-        NavigableMap<LocalDateTime, Double> sma = getMAGen(index, currentMAPeriod);
+        NavigableMap<LocalDateTime, Double> sma = getMAGen(index, 5);
 
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
         sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;

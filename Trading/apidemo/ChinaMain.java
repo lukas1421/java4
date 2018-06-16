@@ -42,7 +42,6 @@ import static utility.Utility.pr;
 //import java.time.temporal.TemporalUnit;
 
 public final class ChinaMain implements IConnectionHandler {
-
     public static volatile LocalDate currentTradingDate;
 
     static {
@@ -210,7 +209,7 @@ public final class ChinaMain implements IConnectionHandler {
             }, 10, 5, TimeUnit.MINUTES);
 
             ses.scheduleAtFixedRate(chinaOption, 0, 5, SECONDS);
-
+            ChinaOption.refresh();
 
         });
 
