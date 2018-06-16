@@ -87,7 +87,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private static volatile boolean filterOn = false;
 
-    static ScheduledExecutorService sesOption = Executors.newScheduledThreadPool(10);
+    private static ScheduledExecutorService sesOption = Executors.newScheduledThreadPool(10);
 
     //private static double stockPrice = 0.0;
     static double interestRate = 0.04;
@@ -753,7 +753,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        pr(" running @ " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
+        //pr(" running @ " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
         priceLabel.setText(currentStockPrice + "");
         priceChgLabel.setText(Math.round(1000d * (currentStockPrice / previousClose - 1)) / 10d + "%");
         timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
@@ -770,6 +770,8 @@ public class ChinaOption extends JPanel implements Runnable {
                 URLConnection urlconnPutFront = urlPutFront.openConnection();
 
                 String callStringBack = "http://hq.sinajs.cn/list=OP_UP_510050" + backMonth;
+                pr(" front back month ", frontMonth, backMonth, thirdMonth, fourthMonth);
+                pr(" expiry ", frontExpiry, backExpiry, thirdExpiry, fourthExpiry);
                 URL urlCallBack = new URL(callStringBack);
                 URLConnection urlconnCallBack = urlCallBack.openConnection();
 
@@ -1084,7 +1086,7 @@ public class ChinaOption extends JPanel implements Runnable {
             timeLapseMoneynessVolAllExpiries.get(expiry).forEach((k, v) ->
                     timeLapseVolAllExpiries.get(expiry).put(k, ChinaOptionHelper.getVolByMoneyness(v, 100)));
             pr(" expiry is " + expiry);
-            timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(System.out::println);
+            timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(Utility::pr);
         }
     }
 

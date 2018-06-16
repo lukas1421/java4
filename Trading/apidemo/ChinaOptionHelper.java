@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 
 import static apidemo.ChinaOption.tickerOptionsMap;
 import static java.lang.Math.*;
+import static utility.Utility.pr;
 
 public class ChinaOptionHelper {
 
@@ -44,9 +45,12 @@ public class ChinaOptionHelper {
     static LocalDate getExpiryDateAuto(int lag) {
         LocalDate today = LocalDate.now();
         LocalDate expiryThisMonth = getOptionExpiryDate(today);
+        pr(" lag ", lag, "expirythisMonth", getOptionExpiryDate(today));
         if (today.isAfter(expiryThisMonth)) {
+            pr("1 lag ", lag, getOptionExpiryDate(today.plusMonths(lag - 1)));
             return getOptionExpiryDate(today.plusMonths(lag));
         } else {
+            pr("2 lag ", lag, getOptionExpiryDate(today.plusMonths(lag - 1)));
             return getOptionExpiryDate(today.plusMonths(lag - 1));
         }
     }
@@ -57,6 +61,7 @@ public class ChinaOptionHelper {
 
     static LocalDate getOptionExpiryDate(int year, Month m) {
         LocalDate res = LocalDate.of(year, m, 1).plusMonths(1);
+        res = res.minusDays(1);
         while (res.getDayOfWeek() != ChinaOptionHelper.OptionExpiryWeekDay) {
             res = res.minusDays(1);
         }
