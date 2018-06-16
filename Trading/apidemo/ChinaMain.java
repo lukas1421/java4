@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static utility.Utility.pr;
 
 //import java.time.temporal.ChronoUnit;
@@ -94,6 +95,7 @@ public final class ChinaMain implements IConnectionHandler {
 
     public static HKData hkdata = new HKData();
     private static HKStock hkstock = new HKStock();
+    private static ChinaOption chinaOption = new ChinaOption();
     private static HistChinaStocks histChina = new HistChinaStocks();
     private static XUTrader xutrader = new XUTrader(M_CONTROLLER);
 
@@ -141,6 +143,7 @@ public final class ChinaMain implements IConnectionHandler {
 
         m_tabbedPanel.addTab(" HK Data", hkdata);
         m_tabbedPanel.addTab(" HK Stock", hkstock);
+        m_tabbedPanel.addTab("Option", chinaOption);
         m_tabbedPanel.addTab("Hist China", histChina);
 
         m_msg.setEditable(false);
@@ -205,6 +208,10 @@ public final class ChinaMain implements IConnectionHandler {
                     ChinaData.outputRecentTradingDate();
                 }
             }, 10, 5, TimeUnit.MINUTES);
+
+            ses.scheduleAtFixedRate(chinaOption, 0, 5, SECONDS);
+
+
         });
 
         JButton loadYesterday = new JButton("Load Yest");
@@ -597,9 +604,11 @@ public final class ChinaMain implements IConnectionHandler {
             systemNotif.setBackground(Color.orange);
         }, 10, TimeUnit.SECONDS);
     }
+
     static void updateSystemTime(String text) {
         systemTime.setText(text);
     }
+
     public static void updateTWSTime(String text) {
         twsTime.setText(text);
     }

@@ -406,6 +406,12 @@ public class XuTraderHelper {
         return o.lmtPrice() > currPrice && (o.totalQuantity() > 0);
     }
 
+    static <S> NavigableMap<LocalDateTime, S> convertToLDT(NavigableMap<LocalTime, S> mp, LocalDate d) {
+        NavigableMap<LocalDateTime, S> res = new ConcurrentSkipListMap<>();
+        mp.forEach((k, v) -> res.put(LocalDateTime.of(d, k), v));
+        return res;
+    }
+
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
         @Override
         public void connected() {

@@ -87,6 +87,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private static volatile boolean filterOn = false;
 
+    static ScheduledExecutorService sesOption = Executors.newScheduledThreadPool(10);
 
     //private static double stockPrice = 0.0;
     static double interestRate = 0.04;
@@ -121,7 +122,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static TableRowSorter<OptionTableModel> sorter;
     private static RowFilter<OptionTableModel, Integer> otmFilter;
 
-    private ChinaOption() {
+    public ChinaOption() {
         otmFilter = new RowFilter<OptionTableModel, Integer>() {
             @Override
             public boolean include(Entry<? extends OptionTableModel, ? extends Integer> entry) {
@@ -532,7 +533,7 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
     private void outputOptions() {
-        System.out.println(" outputting options");
+        pr(" outputting options");
         File output = new File(TradingConstants.GLOBALPATH + "optionList.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, false))) {
             optionListLive.forEach(s -> {
@@ -575,7 +576,7 @@ public class ChinaOption extends JPanel implements Runnable {
                             newBar = new SimpleBar(todayImpliedVolMap.get(s).lowerEntry(e.getKey()).getValue().getClose());
                         }
                         todayImpliedVolMap.get(s).put(e.getKey(), newBar);
-                        System.out.println(str("replacing option vol ", s, e.getKey(), e.getValue(), newBar));
+                        pr(str("replacing option vol ", s, e.getKey(), e.getValue(), newBar));
                     }
                 }
             }
@@ -583,8 +584,8 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
     // load intraday vols
-    private static <T> void saveIntradayVolsHib(Map<String, ? extends NavigableMap<LocalDateTime, T>> mp,
-                                                ChinaSaveInterface1Blob saveclass) {
+    public static <T> void saveIntradayVolsHib(Map<String, ? extends NavigableMap<LocalDateTime, T>> mp,
+                                               ChinaSaveInterface1Blob saveclass) {
 
         if (loadedBeforeSaveGuard) {
             LocalTime start = LocalTime.now();
@@ -623,7 +624,7 @@ public class ChinaOption extends JPanel implements Runnable {
                         updateOptionSystemInfo(Utility.str("存", saveclass.getSimpleName(),
                                 LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
                                 ChronoUnit.SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
-                        System.out.println(str(" done saving ", LocalTime.now()));
+                        pr(str(" done saving ", LocalTime.now()));
                     }
             );
         } else {
@@ -647,11 +648,11 @@ public class ChinaOption extends JPanel implements Runnable {
                         saveclass.updateFirstMap(key, unblob(blob1));
                     } catch (Exception ex) {
                         ex.printStackTrace();
-                        System.out.println(" error message " + key + " " + ex.getMessage());
+                        pr(" error message " + key + " " + ex.getMessage());
                     }
                 }
             } catch (Exception ex) {
-                System.out.println(str(" ticker has problem " + problemKey));
+                pr(str(" ticker has problem " + problemKey));
                 ex.printStackTrace();
             }
         }).thenAccept(
@@ -702,7 +703,7 @@ public class ChinaOption extends JPanel implements Runnable {
                             String ticker = getOptionTicker(tickerOptionsMap, f, strike, exp);
                             int moneyness = (int) Math.round((strike / currentStockPrice) * 100d);
                             ChinaVolSave v = new ChinaVolSave(savingDate, callput, strike, exp, vol, moneyness, ticker);
-                            System.out.println(str(" pricingdate callput exp vol moneyness ticker counter "
+                            pr(str(" pricingdate callput exp vol moneyness ticker counter "
                                     , pricingDate, callput, strike, exp, vol, moneyness, ticker, i.get()));
                             session.saveOrUpdate(v);
                             i.incrementAndGet();
@@ -739,9 +740,24 @@ public class ChinaOption extends JPanel implements Runnable {
         }
     }
 
+    public static void refresh() {
+        sesOption.scheduleAtFixedRate(() -> {
+            if (LocalTime.now().isAfter(LocalTime.of(9, 20)) && LocalTime.now().isBefore(LocalTime.of(15, 30))) {
+                pr(" saving vols hib ");
+                saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance());
+            }
+        }, 3, 1, TimeUnit.MINUTES);
+
+        sesOption.scheduleAtFixedRate(() -> {
+            timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
+                    + (LocalTime.now().getSecond() == 0 ? ":00" : ""));
+        }, 0, 1, TimeUnit.SECONDS);
+
+    }
+
     @Override
     public void run() {
-        System.out.println(" running @ " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
+        pr(" running @ " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
         priceLabel.setText(currentStockPrice + "");
         priceChgLabel.setText(Math.round(1000d * (currentStockPrice / previousClose - 1)) / 10d + "%");
         timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
@@ -1001,7 +1017,7 @@ public class ChinaOption extends JPanel implements Runnable {
         for (LocalDate expiry : expiryList) {
             timeLapseMoneynessVolAllExpiries.get(expiry).forEach((k, v) ->
                     timeLapseVolAllExpiries.get(expiry).put(k, ChinaOptionHelper.getVolByMoneyness(v, 100)));
-            //System.out.println(" expiry is " + expiry);
+            //pr(" expiry is " + expiry);
             //timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(System.out::println);
         }
     }
@@ -1015,7 +1031,7 @@ public class ChinaOption extends JPanel implements Runnable {
             timeLapseVolAllExpiries.put(expiry, new TreeMap<>());
         }
 
-        System.out.println(" loading previous vols from hib ");
+        pr(" loading previous vols from hib ");
 
         AtomicInteger i = new AtomicInteger(0);
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
@@ -1028,10 +1044,10 @@ public class ChinaOption extends JPanel implements Runnable {
 
                 for (Object o : list) {
                     ChinaVolSave c = (ChinaVolSave) o;
-                    System.out.println(str(c.getVolDate(), c.getCallPut(), c.getStrike(), c.getExpiryDate(),
+                    pr(str(c.getVolDate(), c.getCallPut(), c.getStrike(), c.getExpiryDate(),
                             c.getVol(), c.getMoneyness(), c.getOptionTicker()));
 
-                    System.out.println(" counter is " + i.incrementAndGet());
+                    pr(" counter is " + i.incrementAndGet());
                     LocalDate volDate = c.getVolDate();
                     LocalDate expiry = c.getExpiryDate();
                     CallPutFlag f = c.getCallPut().equalsIgnoreCase("C") ? CALL : PUT;
@@ -1071,7 +1087,7 @@ public class ChinaOption extends JPanel implements Runnable {
         for (LocalDate expiry : expiryList) {
             timeLapseMoneynessVolAllExpiries.get(expiry).forEach((k, v) ->
                     timeLapseVolAllExpiries.get(expiry).put(k, ChinaOptionHelper.getVolByMoneyness(v, 100)));
-            System.out.println(" expiry is " + expiry);
+            pr(" expiry is " + expiry);
             timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(System.out::println);
         }
     }
@@ -1187,7 +1203,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
         ses.scheduleAtFixedRate(() -> {
             if (LocalTime.now().isAfter(LocalTime.of(9, 20)) && LocalTime.now().isBefore(LocalTime.of(15, 30))) {
-                System.out.println(" saving vols hib ");
+                pr(" saving vols hib ");
                 saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance());
             }
         }, 3, 1, TimeUnit.MINUTES);

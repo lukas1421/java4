@@ -1273,12 +1273,61 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    /**
+     * trading based on MA index
+     *
+     * @param nowMilli
+     * @param freshPrice
+     */
+    public static synchronized void indexMATrader(LocalDateTime nowMilli, double freshPrice) {
+
+        if (ChinaData.priceMapBar.get(ftseIndex).size() < 5) {
+            pr(" index data not enough ");
+            return;
+        }
+
+
+        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(ChinaData.priceMapBar.get(ftseIndex), nowMilli.toLocalDate());
+        NavigableMap<LocalDateTime, Double> ma5 = getMAGen(index, 5);
+
+        SimpleBar lastBar = new SimpleBar(index.lastEntry().getValue());
+        LocalTime lastBarTime = index.lastEntry().getKey().toLocalTime();
+        SimpleBar secLastBar = new SimpleBar(index.lowerEntry(index.lastKey()).getValue());
+        LocalTime secLastBarTime = index.lowerEntry(index.lastKey()).getKey().toLocalTime();
+
+        lastBar.add(freshPrice);
+        NavigableMap<LocalDateTime, Double> sma = getMAGen(index, currentMAPeriod);
+
+        double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
+        sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
+        int todayPerc = getPercentileForLast(index);
+        double delta = getNetPtfDelta();
+
+        if (touchConditionMet(secLastBar, lastBar, maLast) && delta > getBearishTarget() && delta < getBullishTarget()) {
+            if (bullishTouchMet(secLastBar, lastBar, maLast) && todayPerc < DOWN_PERC) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(freshPrice, 1);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.INDEX_MA));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "index MA buy", globalIdOrderMap.get(id),
+                        "target range ", getBullishTarget(), getBearishTarget()));
+
+            } else if (bearishTouchMet(secLastBar, lastBar, maLast) && todayPerc > UP_PERC) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(freshPrice, 1);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.INDEX_MA));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "index MA sell", globalIdOrderMap.get(id),
+                        "target range ", getBullishTarget(), getBearishTarget()));
+            }
+        }
+    }
+
     public static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice) {
 
         LocalTime lt = nowMilli.toLocalTime();
 
         if (!trimTraderOn.get()) {
-            //pr(" trim trader off ");
             return;
         }
         double netDelta = getNetPtfDelta();
@@ -1522,6 +1571,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         SimpleBar lastBar = new SimpleBar(price5.lastEntry().getValue());
         double prevPrice = activeLastMinuteMap.size() <= 2 ? freshPrice : activeLastMinuteMap
                 .lowerEntry(nowMilli).getValue();
+
         lastBar.add(freshPrice);
         NavigableMap<LocalDateTime, Double> sma = getMAGen(price5, currentMAPeriod);
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
@@ -1672,6 +1722,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         lastBar.add(freshPrice);
         NavigableMap<LocalDateTime, Double> sma;
         sma = getMAGen(price5, currentMAPeriod);
+
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
         sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
 
