@@ -1287,8 +1287,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     /**
-     * @param nowMilli
-     * @param freshPrice
+     * only cover if first 10 maxT> first 10 minT
+     *
+     * @param nowMilli   time now in milli
+     * @param freshPrice price
      */
     public static synchronized void openCoverTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
@@ -1313,13 +1315,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                 .map(Map.Entry::getKey).orElse(LocalTime.of(9, 40));
 
+        double delta = getFutDelta();
+
         if (first11maxT.isAfter(first11minT)) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.OPEN_COVER));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            outputOrderToAutoLog(str(o.orderId(), "open cover", globalIdOrderMap.get(id),
-                    "target range ", getBullishTarget(), getBearishTarget()));
+            outputOrderToAutoLog(str(o.orderId(), "open cover", globalIdOrderMap.get(id)));
+
 
         }
 

@@ -593,6 +593,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
 
+
     static double getNetPtfDelta() {
         return getStockPtfDelta() + XUTrader.getFutDelta();
     }
