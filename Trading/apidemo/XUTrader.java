@@ -1016,7 +1016,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     private static int getSizeForDelta(double price, double fx, double delta) {
-        return (int) Math.round(Math.abs(delta) / (fx * price));
+        return (int) Math.floor(Math.abs(delta) / (fx * price));
     }
 
     // used for flatten long or short
@@ -1325,15 +1325,27 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                 .map(Map.Entry::getKey).orElse(LocalTime.of(9, 40));
 
+        LocalDateTime lastOpenCoverOrderT = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == AutoOrderType.OPEN_COVER)
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getOrderTime())
+                .orElse(sessionOpenT());
+
+
+        // add previous close
+
         double delta = getFutDelta();
 
-        if (first11maxT.isAfter(first11minT) && todayPerc < DOWN_PERC) {
+        if (first11maxT.isAfter(first11minT) && nowMilli.toLocalTime().isBefore(LocalTime.of(10, 0))
+                && todayPerc < DOWN_PERC && ChronoUnit.MINUTES.between(lastOpenCoverOrderT, nowMilli) > 5) {
+
             int id = autoTradeID.incrementAndGet();
             int size = getSizeForDelta(freshPrice, fxMap.get("USD"), delta / 3);
             Order o = placeBidLimit(freshPrice, Math.min(size, MAX_FUT_LIMIT));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.OPEN_COVER));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "open cover", globalIdOrderMap.get(id)));
+
         }
     }
 
