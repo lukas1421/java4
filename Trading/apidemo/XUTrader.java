@@ -1050,6 +1050,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return Math.max(0, Math.min(candidate, maxSize));
     }
 
+
     public static synchronized void dayTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         double currDelta = getNetPtfDelta();
@@ -1283,6 +1284,46 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
             }
         }
+    }
+
+    /**
+     * @param nowMilli
+     * @param freshPrice
+     */
+    public static synchronized void openCoverTrader(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        if (!(lt.isAfter(LocalTime.of(9, 40)) && lt.isBefore(LocalTime.of(15, 0)))) {
+            return;
+        }
+
+        if (ChinaData.priceMapBar.get(ftseIndex).size() < 5) {
+            pr(" index data not enough ");
+            return;
+        }
+
+        LocalTime first11maxT = ChinaData.priceMapBar.get(ftseIndex)
+                .entrySet().stream().filter(e -> e.getKey().isAfter(LocalTime.of(9, 29))
+                        && e.getKey().isBefore(LocalTime.of(9, 42)))
+                .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
+                .map(Map.Entry::getKey).orElse(LocalTime.of(9, 30));
+
+        LocalTime first11minT = ChinaData.priceMapBar.get(ftseIndex)
+                .entrySet().stream().filter(e -> e.getKey().isAfter(LocalTime.of(9, 29))
+                        && e.getKey().isBefore(LocalTime.of(9, 42)))
+                .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
+                .map(Map.Entry::getKey).orElse(LocalTime.of(9, 40));
+
+        if (first11maxT.isAfter(first11minT)) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeBidLimit(freshPrice, 1);
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.OPEN_COVER));
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(str(o.orderId(), "open cover", globalIdOrderMap.get(id),
+                    "target range ", getBullishTarget(), getBearishTarget()));
+
+        }
+
+
     }
 
     /**
