@@ -63,7 +63,7 @@ public class GraphXUSI extends JComponent {
             prevCloseXU = XUTrader.futPrevCloseMap.get(ibContractToFutType(getFrontFutContract()));
             openSI = SinaStock.FTSE_OPEN;
             prevCloseSI = ftseCloseMap.lastEntry().getValue();
-            ChinaStock.closeMap.put(TradingConstants.ftseIndex, prevCloseSI);
+            ChinaStock.closeMap.put(TradingConstants.FTSE_INDEX, prevCloseSI);
         }
         repaint();
     }

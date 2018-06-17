@@ -34,10 +34,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaPosition.*;
+import static apidemo.ChinaStock.closeMap;
 import static apidemo.ChinaStock.currencyMap;
+import static apidemo.TradingConstants.FTSE_INDEX;
 import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
-import static apidemo.TradingConstants.ftseIndex;
 import static apidemo.XuTraderHelper.*;
 import static java.lang.System.out;
 import static util.AutoOrderType.*;
@@ -734,6 +736,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     public static void processTradeStrategyMain(LocalDateTime ldt, double price) {
+
+
         XUTrader.updateLastMinuteMap(ldt, price);
         XUTrader.MATrader(ldt, price);
         XUTrader.percentileTrader(ldt, price);
@@ -741,13 +745,76 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //XUTrader.pdTrader(ldt, price);
         XUTrader.indexMATrader(ldt, price);
         XUTrader.dayTrader(ldt, price);
-        CompletableFuture.runAsync(() -> XUTrader.inventoryTrader(ldt, price));
-        CompletableFuture.runAsync(() -> XUTrader.flattenTrader(ldt, price));
+        XUTrader.openCoverTrader(ldt, price);
+        //CompletableFuture.runAsync(() -> XUTrader.inventoryTrader(ldt, price));
+        //CompletableFuture.runAsync(() -> XUTrader.flattenTrader(ldt, price));
 
     }
 
+    public boolean checkf10maxAftermint(String name) {
+        if (!priceMapBar.containsKey(name) || priceMapBar.get(name).size() < 2) {
+            return false;
+        } else if (priceMapBar.get(name).lastKey().isBefore(LocalTime.of(9, 40))) {
+            return false;
+        } else {
+            LocalTime maxT = priceMapBar.get(name).entrySet().stream()
+                    .filter(e -> e.getKey().isBefore(LocalTime.of(9, 41)))
+                    .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
+                    .map(Map.Entry::getKey).orElse(LocalTime.MIN);
 
-    public static void updateLastMinuteMap(LocalDateTime ldt, double freshPrice) {
+            LocalTime minT = priceMapBar.get(name).entrySet().stream()
+                    .filter(e -> e.getKey().isBefore(LocalTime.of(9, 41)))
+                    .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
+                    .map(Map.Entry::getKey).orElse(LocalTime.MAX);
+            return maxT.isAfter(minT);
+        }
+    }
+
+    public boolean checkf10MaxAbovePrev(String name) {
+        if (!closeMap.containsKey(name) || closeMap.get(name) == 0.0) {
+            return false;
+        } else {
+            double f10max = priceMapBar.get(name).entrySet().stream()
+                    .filter(e -> e.getKey().isBefore(LocalTime.of(9, 41)))
+                    .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
+                    .map(e -> e.getValue().getHigh()).orElse(0.0);
+            return f10max > closeMap.get(name);
+        }
+    }
+
+    public int getPercentileChgYFut() {
+        NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
+        if (futdata.size() <= 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
+            throw new IllegalStateException(" ytd not enough data (get perc chg y fut ) ");
+        } else {
+            LocalDate prevDate = futdata.firstKey().toLocalDate();
+
+            double prevMax = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(prevDate))
+                    .filter(e -> e.getKey().toLocalTime().isAfter(LocalTime.of(9, 29))
+                            && e.getKey().toLocalTime().isBefore(LocalTime.of(15, 0)))
+                    .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
+                    .map(e -> e.getValue().getHigh()).orElse(0.0);
+            double prevMin = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(prevDate))
+                    .filter(e -> e.getKey().toLocalTime().isAfter(LocalTime.of(9, 29))
+                            && e.getKey().toLocalTime().isBefore(LocalTime.of(15, 0)))
+                    .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
+                    .map(e -> e.getValue().getLow()).orElse(0.0);
+            double prevClose = futdata.floorEntry(LocalDateTime.of(prevDate, LocalTime.of(15, 0)))
+                    .getValue().getClose();
+            double pmOpen = futdata.floorEntry(LocalDateTime.of(prevDate, LocalTime.of(13, 0)))
+                    .getValue().getOpen();
+
+            if (prevMax == 0.0 || prevMin == 0.0 || prevClose == 0.0 || pmOpen == 0.0) {
+                throw new IllegalStateException(" ytd data corrupt ");
+                //return 0;
+            } else {
+                return (int) Math.round(100d * (prevClose - pmOpen) / (prevMax - prevMin));
+            }
+        }
+    }
+
+
+    private static void updateLastMinuteMap(LocalDateTime ldt, double freshPrice) {
         activeLastMinuteMap.entrySet().removeIf(e -> e.getKey().isBefore(ldt.minusMinutes(3)));
         activeLastMinuteMap.put(ldt, freshPrice);
 
@@ -1029,7 +1096,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-
     private static int getSizeForDelta(double price, double fx, double delta) {
         return (int) Math.floor(Math.abs(delta) / (fx * price));
     }
@@ -1071,7 +1137,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
 
-    public static synchronized void dayTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static synchronized void dayTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         double currDelta = getNetPtfDelta();
 
@@ -1177,7 +1243,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * percentileTrader
      */
-    public static synchronized void percentileTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static synchronized void percentileTrader(LocalDateTime nowMilli, double freshPrice) {
         // run every 15 minutes
         int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         double pd = getPD(freshPrice);
@@ -1189,8 +1255,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" perc trader first last date equal ");
             return;
         }
-
-        //pr("futdata in perc trader ", futdata);
 
         long accSize = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == PERC_ACC)
@@ -1318,23 +1382,23 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        if (ChinaData.priceMapBar.get(ftseIndex).size() < 5) {
+        if (priceMapBar.get(FTSE_INDEX).size() < 5) {
             pr(" index data not enough ");
             return;
         }
 
         NavigableMap<LocalDateTime, SimpleBar> index =
-                convertToLDT(ChinaData.priceMapBar.get(ftseIndex), nowMilli.toLocalDate());
+                convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate());
         int todayPerc = getPercentileForLast(index);
 
 
-        LocalTime first11maxT = ChinaData.priceMapBar.get(ftseIndex)
+        LocalTime first11maxT = priceMapBar.get(FTSE_INDEX)
                 .entrySet().stream().filter(e -> e.getKey().isAfter(LocalTime.of(9, 29))
                         && e.getKey().isBefore(LocalTime.of(9, 42)))
                 .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                 .map(Map.Entry::getKey).orElse(LocalTime.of(9, 30));
 
-        LocalTime first11minT = ChinaData.priceMapBar.get(ftseIndex)
+        LocalTime first11minT = priceMapBar.get(FTSE_INDEX)
                 .entrySet().stream().filter(e -> e.getKey().isAfter(LocalTime.of(9, 29))
                         && e.getKey().isBefore(LocalTime.of(9, 42)))
                 .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
@@ -1376,12 +1440,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        if (ChinaData.priceMapBar.get(ftseIndex).size() < 5) {
+        if (priceMapBar.get(FTSE_INDEX).size() < 5) {
             pr(" index data not enough ");
             return;
         }
 
-        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(ChinaData.priceMapBar.get(ftseIndex), nowMilli.toLocalDate());
+        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate());
 
         SimpleBar lastBar = new SimpleBar(index.lastEntry().getValue());
         LocalTime lastBarTime = index.lastEntry().getKey().toLocalTime();
@@ -1587,9 +1651,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, Double> dpMap = new ConcurrentSkipListMap<>();
         futData.get(ibContractToFutType(activeFuture)).entrySet().stream().filter(e -> e.getKey()
                 .isAfter(LocalDateTime.of(d, LocalTime.of(9, 29)))).forEach(e -> {
-            if (ChinaData.priceMapBar.get(ftseIndex).size() > 0 && ChinaData.priceMapBar.get(ftseIndex).
+            if (priceMapBar.get(FTSE_INDEX).size() > 0 && priceMapBar.get(FTSE_INDEX).
                     firstKey().isBefore(e.getKey().toLocalTime())) {
-                double index = ChinaData.priceMapBar.get(ftseIndex).floorEntry(e.getKey().toLocalTime())
+                double index = priceMapBar.get(FTSE_INDEX).floorEntry(e.getKey().toLocalTime())
                         .getValue().getClose();
                 dpMap.put(e.getKey(), r10000((e.getValue().getClose() / index - 1)));
             }
@@ -1828,9 +1892,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         String priceType;
         int percentile = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
 
-        double indexPrice = (ChinaData.priceMapBar.containsKey(ftseIndex) &&
-                ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
-                ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
+        double indexPrice = (priceMapBar.containsKey(FTSE_INDEX) &&
+                priceMapBar.get(FTSE_INDEX).size() > 0) ?
+                priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
         double pd = (indexPrice != 0.0 && freshPrice != 0.0) ? (freshPrice / indexPrice - 1) : 0.0;
         double fx = ChinaPosition.fxMap.getOrDefault("USD", 1.0);
 
@@ -1956,9 +2020,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     .entrySet().stream().mapToDouble(e -> e.getValue().getDeltaAll()).sum();
         }
 
-        double indexPrice = (ChinaData.priceMapBar.containsKey(ftseIndex) &&
-                ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
-                ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
+        double indexPrice = (priceMapBar.containsKey(FTSE_INDEX) &&
+                priceMapBar.get(FTSE_INDEX).size() > 0) ?
+                priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
         NavigableMap<LocalDateTime, SimpleBar> futPriceMap = futData.get(ibContractToFutType(activeFuture));
         LocalDateTime ytdCloseTime = LocalDateTime.of(TDate, LocalTime.of(15, 0));
 

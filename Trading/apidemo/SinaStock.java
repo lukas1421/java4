@@ -22,8 +22,8 @@ import java.util.regex.Pattern;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.sizeTotalMap;
 import static apidemo.ChinaStock.*;
+import static apidemo.TradingConstants.FTSE_INDEX;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
-import static apidemo.TradingConstants.ftseIndex;
 import static apidemo.XU.indexPriceSina;
 import static apidemo.XU.indexVol;
 
@@ -91,20 +91,20 @@ public class SinaStock implements Runnable {
                     indexPriceSina.put(ldt.toLocalTime(), new SimpleBar(currPrice));
                 }
 
-                if (priceMapBar.containsKey(ftseIndex)) {
-                    if (priceMapBar.get(ftseIndex).containsKey(ldt.toLocalTime())) {
-                        priceMapBar.get(ftseIndex).get(ldt.toLocalTime()).add(currPrice);
+                if (priceMapBar.containsKey(FTSE_INDEX)) {
+                    if (priceMapBar.get(FTSE_INDEX).containsKey(ldt.toLocalTime())) {
+                        priceMapBar.get(FTSE_INDEX).get(ldt.toLocalTime()).add(currPrice);
                     } else {
-                        priceMapBar.get(ftseIndex).put(ldt.toLocalTime(), new SimpleBar(currPrice));
+                        priceMapBar.get(FTSE_INDEX).put(ldt.toLocalTime(), new SimpleBar(currPrice));
                     }
                 } else {
-                    priceMapBar.put(ftseIndex, (ConcurrentSkipListMap) indexPriceSina);
+                    priceMapBar.put(FTSE_INDEX, (ConcurrentSkipListMap) indexPriceSina);
                 }
 
                 indexVol.put(ldt.toLocalTime(), sinaVol);
-                openMap.put(ftseIndex, FTSE_OPEN);
-                sizeMap.put(ftseIndex, Math.round(sinaVol));
-                sizeTotalMap.get(ftseIndex).put(ldt.toLocalTime(), sinaVol);
+                openMap.put(FTSE_INDEX, FTSE_OPEN);
+                sizeMap.put(FTSE_INDEX, Math.round(sinaVol));
+                sizeTotalMap.get(FTSE_INDEX).put(ldt.toLocalTime(), sinaVol);
             }
         } catch (IOException ex) {
             ex.printStackTrace();

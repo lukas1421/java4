@@ -136,6 +136,7 @@ public final class ChinaData extends JPanel {
                 dateMap.put(lineNo, LocalDate.parse(al1.get(0)));
                 ftseOpenMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(1)));
                 ftseCloseMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(2)));
+                closeMap.put(TradingConstants.FTSE_INDEX, Double.parseDouble(al1.get(2)));
                 currentTradingDate = LocalDate.parse(al1.get(0));
                 System.out.println(str(" date ", lineNo, dateMap.getOrDefault(lineNo, LocalDate.MIN)));
                 lineNo++;

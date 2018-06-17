@@ -22,7 +22,7 @@ public final class TradingConstants {
 
     //public static final LocalDate A50_FRONT_EXP_DATE =;
 
-    public static final String ftseIndex = "FTSEA50";
+    public static final String FTSE_INDEX = "FTSEA50";
 
     public static String getFutLastExpiry() {
         LocalDate today = LocalDate.now();

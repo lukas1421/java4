@@ -26,7 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static apidemo.TradingConstants.ftseIndex;
+import static apidemo.TradingConstants.FTSE_INDEX;
 import static apidemo.XUTrader.displayPred;
 import static apidemo.XuTraderHelper.getPercentileForLast;
 import static java.lang.Math.*;
@@ -500,8 +500,8 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     }
 
     public double getIndex() {
-        if (ChinaData.priceMapBar.containsKey(ftseIndex) && ChinaData.priceMapBar.get(ftseIndex).size() > 0) {
-            return ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose();
+        if (ChinaData.priceMapBar.containsKey(FTSE_INDEX) && ChinaData.priceMapBar.get(FTSE_INDEX).size() > 0) {
+            return ChinaData.priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose();
         }
         return SinaStock.FTSE_OPEN;
     }

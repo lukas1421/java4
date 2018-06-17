@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static apidemo.TradingConstants.ftseIndex;
+import static apidemo.TradingConstants.FTSE_INDEX;
 import static java.lang.System.out;
 import static utility.Utility.str;
 
@@ -338,15 +338,15 @@ public class XuTraderHelper {
     }
 
     static double getIndexPrice() {
-        return (ChinaData.priceMapBar.containsKey(ftseIndex) &&
-                ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
-                ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
+        return (ChinaData.priceMapBar.containsKey(FTSE_INDEX) &&
+                ChinaData.priceMapBar.get(FTSE_INDEX).size() > 0) ?
+                ChinaData.priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
     }
 
     public static double getPD(double freshPrice) {
-        double indexPrice = (ChinaData.priceMapBar.containsKey(ftseIndex) &&
-                ChinaData.priceMapBar.get(ftseIndex).size() > 0) ?
-                ChinaData.priceMapBar.get(ftseIndex).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
+        double indexPrice = (ChinaData.priceMapBar.containsKey(FTSE_INDEX) &&
+                ChinaData.priceMapBar.get(FTSE_INDEX).size() > 0) ?
+                ChinaData.priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
         return (indexPrice != 0.0 && freshPrice != 0.0) ? (freshPrice / indexPrice - 1) : 0.0;
     }
 

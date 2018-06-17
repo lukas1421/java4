@@ -27,7 +27,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import static apidemo.ChinaStock.*;
-import static apidemo.TradingConstants.ftseIndex;
+import static apidemo.TradingConstants.FTSE_INDEX;
 import static java.lang.Double.min;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
@@ -246,7 +246,7 @@ public final class ChinaDataYesterday extends JPanel {
                     priceMapCopy = (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>>) ChinaData.priceMapBar;
                     getOHLCFromDatabase();
                     //ChinaStockHelper.buildA50FromSS();
-                    ChinaStockHelper.buildGenForYtd("SGXA50", ftseIndex);
+                    ChinaStockHelper.buildGenForYtd("SGXA50", FTSE_INDEX);
 
                     symbolNamesFull.forEach(name -> {
                         openMapY.put(name, ChinaStock.openMap.getOrDefault(name, 0.0));
