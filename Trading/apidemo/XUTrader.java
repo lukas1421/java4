@@ -738,20 +738,37 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static void processTradeStrategyMain(LocalDateTime ldt, double price) {
 
 
-        XUTrader.updateLastMinuteMap(ldt, price);
-        XUTrader.MATrader(ldt, price);
-        XUTrader.percentileTrader(ldt, price);
-        XUTrader.trimTrader(ldt, price);
-        //XUTrader.pdTrader(ldt, price);
-        XUTrader.indexMATrader(ldt, price);
-        XUTrader.dayTrader(ldt, price);
-        XUTrader.openCoverTrader(ldt, price);
-        //CompletableFuture.runAsync(() -> XUTrader.inventoryTrader(ldt, price));
-        //CompletableFuture.runAsync(() -> XUTrader.flattenTrader(ldt, price));
+        //sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
 
+        double currDelta = getNetPtfDelta();
+        boolean maxAfterMin = checkf10maxAftermint(FTSE_INDEX);
+        boolean maxAbovePrev = checkf10MaxAbovePrev(FTSE_INDEX);
+        int pmChgY = getPercentileChgYFut();
+
+
+        if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
+            XUTrader.updateLastMinuteMap(ldt, price);
+            XUTrader.MATrader(ldt, price);
+            XUTrader.indexMATrader(ldt, price);
+
+            XUTrader.trimTrader(ldt, price);
+
+
+            if (maxAfterMin && maxAbovePrev && pmChgY < 0) {
+                XUTrader.percentileTrader(ldt, price);
+                XUTrader.dayTrader(ldt, price);
+                XUTrader.openCoverTrader(ldt, price);
+            }
+
+            //XUTrader.pdTrader(ldt, price);
+            //CompletableFuture.runAsync(() -> XUTrader.inventoryTrader(ldt, price));
+            //CompletableFuture.runAsync(() -> XUTrader.flattenTrader(ldt, price));
+        } else {
+            pr(" delta out of bound ", r(currDelta), " range ", getBullishTarget(), getBearishTarget());
+        }
     }
 
-    public boolean checkf10maxAftermint(String name) {
+    public static boolean checkf10maxAftermint(String name) {
         if (!priceMapBar.containsKey(name) || priceMapBar.get(name).size() < 2) {
             return false;
         } else if (priceMapBar.get(name).lastKey().isBefore(LocalTime.of(9, 40))) {
@@ -770,7 +787,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    public boolean checkf10MaxAbovePrev(String name) {
+    public static boolean checkf10MaxAbovePrev(String name) {
         if (!closeMap.containsKey(name) || closeMap.get(name) == 0.0) {
             return false;
         } else {
@@ -782,7 +799,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    public int getPercentileChgYFut() {
+    public static int getPercentileChgYFut() {
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
         if (futdata.size() <= 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
             throw new IllegalStateException(" ytd not enough data (get perc chg y fut ) ");
@@ -1138,6 +1155,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     private static synchronized void dayTrader(LocalDateTime nowMilli, double freshPrice) {
+
         LocalTime lt = nowMilli.toLocalTime();
         double currDelta = getNetPtfDelta();
 
@@ -1376,7 +1394,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param nowMilli   time now in milli
      * @param freshPrice price
      */
-    public static synchronized void openCoverTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static synchronized void openCoverTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         if (!(lt.isAfter(LocalTime.of(9, 40)) && lt.isBefore(LocalTime.of(15, 0)))) {
             return;
