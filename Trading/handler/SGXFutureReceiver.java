@@ -7,7 +7,6 @@ import utility.Utility;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.concurrent.CompletableFuture;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
@@ -67,15 +66,9 @@ public class SGXFutureReceiver implements LiveHandler {
                         //pr("activeFut ", activeFut);
                         if (name.equalsIgnoreCase(activeFut) &&
                                 XUTrader.futData.get(f).lastKey().truncatedTo(MINUTES).equals(ldt.truncatedTo(MINUTES))) {
-                            XUTrader.updateLastMinuteMap(ldt, price);
-                            XUTrader.MATrader(ldt, price);
-                            XUTrader.percentileTrader(ldt, price);
-                            XUTrader.trimTrader(ldt, price);
-                            //XUTrader.pdTrader(ldt, price);
-                            XUTrader.indexMATrader(ldt, price);
-                            XUTrader.dayTrader(ldt, price);
-                            CompletableFuture.runAsync(() -> XUTrader.inventoryTrader(ldt, price));
-                            CompletableFuture.runAsync(() -> XUTrader.flattenTrader(ldt, price));
+
+                            XUTrader.processTradeStrategyMain(ldt, price);
+
                         }
                     }
                 }
