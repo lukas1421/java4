@@ -729,7 +729,8 @@ public final class ChinaStockHelper {
     }
 
     static double computePMPercentChg(String name) {
-        if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
+        if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0
+                && priceMapBar.get(name).firstKey().isBefore(Utility.AMCLOSET)) {
             double max = Utility.reduceMapToDouble(priceMapBar.get(name), SimpleBar::getHigh, Double::max);
             double min = Utility.reduceMapToDouble(priceMapBar.get(name), SimpleBar::getLow, Double::min);
             double last = priceMapBar.get(name).lastEntry().getValue().getClose();

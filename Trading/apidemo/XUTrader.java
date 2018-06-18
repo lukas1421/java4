@@ -1236,9 +1236,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-
-        if ((todayPerc < 5 || pmPerc <= 1) && currDelta < getBullishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >=
-                ORDER_WAIT_TIME) {
+        if ((todayPerc < 5 || pmPerc <= 1) && currDelta < getBullishTarget()
+                && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= ORDER_WAIT_TIME) {
 
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 1);
@@ -1247,8 +1246,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             outputOrderToAutoLog(str(o.orderId(), "day cover",
                     globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc, "pm p%", pmPerc
                     , getBullishTarget(), getBearishTarget()));
-        } else if ((todayPerc > 95 || pmPerc >= 99) && currDelta > getBearishTarget() && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli)
-                >= ORDER_WAIT_TIME) {
+
+        } else if ((todayPerc > 95 || pmPerc >= 99) && currDelta > getBearishTarget()
+                && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= ORDER_WAIT_TIME
+                && nowMilli.toLocalTime().isBefore(LocalTime.of(13, 0))) {
+
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_SELL));
@@ -1272,7 +1274,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
 
         if (futdata.size() < 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
-            pr(" perc trader first last date equal ");
+            pr(" perc trader doesnt contain 2 days ");
             return;
         }
 
@@ -1335,8 +1337,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         pr("perc Trader status?", percentileTradeOn.get() ? "ON" : "OFF",
                 nowMilli.toLocalTime().truncatedTo(ChronoUnit.SECONDS),
-                "p%:", perc, "CurrDelta: ", r(currDelta), "pd", r10000(pd),
-                "BullBear target : ", getBullishTarget(), getBearishTarget(),
+                "p%:", perc, "pd", r10000(pd), "BullBear target : ", getBullishTarget(), getBearishTarget(),
                 "acc#, decc#, net#", accSize, deccSize, netPercTrades
                 , "accAvg, DecAvg,", avgAccprice, avgDeccprice,
                 "OrderT TradeT,next tradeT",
@@ -1352,7 +1353,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" stock delta 0 , returning ");
             return;
         }
-        //*****************************************************************************************//
+        //********************************************z*********************************************//
         if (timeDiffinMinutes(lastPercOrderT, nowMilli) >= minBetweenPercOrders) {
             if (perc < DOWN_PERC) {
                 if (currDelta < getBullishTarget()) {
@@ -1389,6 +1390,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
     }
+
 
     /**
      * only cover if first 10 maxT> first 10 minT

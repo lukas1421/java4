@@ -9,6 +9,9 @@ import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -26,7 +29,7 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 import static java.util.stream.Collectors.toMap;
 import static utility.Utility.*;
 
-public class GraphBigYtd extends JComponent implements GraphFillable {
+public class GraphBigYtd extends JComponent implements GraphFillable, MouseListener, MouseMotionListener {
 
     private static final int WIDTH_YTD = 2;
     private int height;
@@ -49,9 +52,14 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
     LocalTime maxAMT;
     LocalTime minAMT;
     volatile int size;
+    private static final int INITIAL_OFFSET = 10;
 
     private static final Predicate<? super Entry<LocalTime, SimpleBar>> CONTAINS_NO_ZERO = e -> !e.getValue().containsZero();
     private static final BasicStroke BS3 = new BasicStroke(3);
+
+    private volatile int mouseXCord = Integer.MAX_VALUE;
+    private volatile int mouseYCord = Integer.MAX_VALUE;
+
 
     public GraphBigYtd() {
         name = "";
@@ -65,6 +73,8 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
         tmVolYtd = new ConcurrentSkipListMap<>();
         tmY2 = new ConcurrentSkipListMap<>();
         tmVolY2 = new ConcurrentSkipListMap<>();
+        addMouseListener(this);
+        addMouseMotionListener(this);
     }
 
     public void setNavigableMap(NavigableMap<LocalTime, SimpleBar> tmIn) {
@@ -217,7 +227,7 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
         double minRtn = getMinRtn();
         double maxRtn = getMaxRtn();
 
-        int x = 10;
+        int x = INITIAL_OFFSET;
 
         int openY;
         int volumeY;
@@ -260,6 +270,15 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
                     g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x - 10, getHeight() - 25);
                 }
             }
+
+            if (roundDownToN(mouseXCord, WIDTH_YTD) == x - INITIAL_OFFSET) {
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+                g.drawString(lt.toString() + " " + Math.round(100d * tmY2.floorEntry(lt).getValue().getClose()) / 100d,
+                        x, lowY + (mouseYCord < closeY ? -20 : +20));
+                g.drawOval(x + 2, lowY, 5, 5);
+                g.fillOval(x + 2, lowY, 5, 5);
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
+            }
             x += WIDTH_YTD;
         }
 
@@ -290,7 +309,7 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
             }
         }
 
-        x += 30;
+        //x += 30;
 
         for (LocalTime lt : tmYtd.keySet()) {
 
@@ -325,6 +344,14 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
                     g.setColor(Color.black);
                     g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x - 10, getHeight() - 25);
                 }
+            }
+            if (roundDownToN(mouseXCord, WIDTH_YTD) == x - INITIAL_OFFSET) {
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+                g.drawString(lt.toString() + " " + Math.round(100d * tmYtd.floorEntry(lt).getValue().getClose()) / 100d,
+                        x, lowY + (mouseYCord < closeY ? -20 : +20));
+                g.drawOval(x + 2, lowY, 5, 5);
+                g.fillOval(x + 2, lowY, 5, 5);
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
             }
             x += WIDTH_YTD;
         }
@@ -364,7 +391,7 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
                 }
             }
         }
-        x += 30;
+        //x += 30;
         //today
         for (LocalTime lt : tm.keySet()) {
 
@@ -402,7 +429,27 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
                     g.drawString(Integer.toString(lt.getHour()) + ":" + Integer.toString(lt.getMinute()), x + 10, getHeight() - 25);
                 }
             }
+            if (roundDownToN(mouseXCord, WIDTH_YTD) == x - INITIAL_OFFSET) {
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+                g.drawString(lt.toString() + " " + Math.round(100d * tm.floorEntry(lt).getValue().getClose()) / 100d,
+                        x, lowY + (mouseYCord < closeY ? -20 : +20));
+                g.drawOval(x + 2, lowY, 5, 5);
+                g.fillOval(x + 2, lowY, 5, 5);
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
+            }
             x += WIDTH_YTD;
+        }
+
+        if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0) {
+            int lowY = getY(tm.lastEntry().getValue().getLow());
+            int closeY = getY(tm.lastEntry().getValue().getClose());
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+            g.drawString(tm.lastKey().toString() + " " +
+                            Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
+                    x, lowY + (mouseYCord < closeY ? -20 : +20));
+            g.drawOval(x + 2, lowY, 5, 5);
+            g.fillOval(x + 2, lowY, 5, 5);
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
         }
 
         g2.setColor(Color.red);
@@ -590,5 +637,45 @@ public class GraphBigYtd extends JComponent implements GraphFillable {
         } else {
             return 0.0;
         }
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mousePressed(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent mouseEvent) {
+        mouseXCord = Integer.MAX_VALUE;
+        mouseYCord = Integer.MAX_VALUE;
+        this.repaint();
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        mouseXCord = e.getX();
+        mouseYCord = e.getY();
+        //System.out.println(" graph bar x mouse x is " + mouseXCord);
+        this.repaint();
     }
 }
