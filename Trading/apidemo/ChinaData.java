@@ -35,6 +35,7 @@ import static apidemo.ChinaDataYesterday.convertTimeToInt;
 import static apidemo.ChinaMain.*;
 import static apidemo.ChinaStock.*;
 import static apidemo.ChinaStockHelper.fixYtdSuspendedStocks;
+import static apidemo.TradingConstants.FTSE_INDEX;
 import static historical.HistChinaStocks.chinaWtd;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Optional.ofNullable;
@@ -136,7 +137,7 @@ public final class ChinaData extends JPanel {
                 dateMap.put(lineNo, LocalDate.parse(al1.get(0)));
                 ftseOpenMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(1)));
                 ftseCloseMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(2)));
-                closeMap.put(TradingConstants.FTSE_INDEX, Double.parseDouble(al1.get(2)));
+                closeMap.put(FTSE_INDEX, Double.parseDouble(al1.get(2)));
                 currentTradingDate = LocalDate.parse(al1.get(0));
                 System.out.println(str(" date ", lineNo, dateMap.getOrDefault(lineNo, LocalDate.MIN)));
                 lineNo++;

@@ -74,8 +74,17 @@ public class SinaStock implements Runnable {
             getInfoFromURLConn(ldt, urlconnSZ);
 
             if (STOCK_COLLECTION_TIME.test(LocalDateTime.now())) {
-                rtn = weightMapA50.entrySet().stream().mapToDouble(a -> returnMap.getOrDefault(a.getKey(), 0.0) * a.getValue()).sum();
+                rtn = weightMapA50.entrySet().stream().mapToDouble(a -> {
+//                            pr(" key return ", a.getKey(), nameMap.get(a.getKey()), "weight", a.getValue(),
+//                                    "return", returnMap.getOrDefault(a.getKey(), 0.0),
+//                                    "product ", returnMap.getOrDefault(a.getKey(), 0.0) * a.getValue());
+                            return returnMap.getOrDefault(a.getKey(), 0.0) * a.getValue();
+                        }
+                ).sum();
+
+
                 double currPrice = FTSE_OPEN * (1 + (Math.round(rtn) / 10000d));
+                //pr("curr price ", currPrice, "FTSE OPEN ", FTSE_OPEN, "rtn ", rtn);
 
                 double sinaVol = weightMapA50.entrySet().stream()
                         .mapToDouble(a -> sizeMap.getOrDefault(a.getKey(), 0L).doubleValue() * a.getValue() / 100d).sum();

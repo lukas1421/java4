@@ -63,12 +63,10 @@ public class SGXFutureReceiver implements LiveHandler {
                         }
 
                         String activeFut = Utility.ibContractToFutType(XUTrader.activeFuture).getTicker();
-                        //pr("activeFut ", activeFut);
+
                         if (name.equalsIgnoreCase(activeFut) &&
                                 XUTrader.futData.get(f).lastKey().truncatedTo(MINUTES).equals(ldt.truncatedTo(MINUTES))) {
-
                             XUTrader.processTradeStrategyMain(ldt, price);
-
                         }
                     }
                 }

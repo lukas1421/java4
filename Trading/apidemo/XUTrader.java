@@ -768,7 +768,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    public static boolean checkf10maxAftermint(String name) {
+    private static boolean checkf10maxAftermint(String name) {
         if (!priceMapBar.containsKey(name) || priceMapBar.get(name).size() < 2) {
             return false;
         } else if (priceMapBar.get(name).lastKey().isBefore(LocalTime.of(9, 40))) {
@@ -783,11 +783,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     .filter(e -> e.getKey().isBefore(LocalTime.of(9, 41)))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MAX);
+
             return maxT.isAfter(minT);
         }
     }
 
-    public static boolean checkf10MaxAbovePrev(String name) {
+    private static boolean checkf10MaxAbovePrev(String name) {
         if (!closeMap.containsKey(name) || closeMap.get(name) == 0.0) {
             return false;
         } else {
@@ -799,10 +800,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    public static int getPercentileChgYFut() {
+    private static int getPercentileChgYFut() {
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
         if (futdata.size() <= 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
-            throw new IllegalStateException(" ytd not enough data (get perc chg y fut ) ");
+            //throw new IllegalStateException(" ytd not enough data (get perc chg y fut ) ");
+            return 0;
         } else {
             LocalDate prevDate = futdata.firstKey().toLocalDate();
 
@@ -822,8 +824,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     .getValue().getOpen();
 
             if (prevMax == 0.0 || prevMin == 0.0 || prevClose == 0.0 || pmOpen == 0.0) {
-                throw new IllegalStateException(" ytd data corrupt ");
-                //return 0;
+                //throw new IllegalStateException(" ytd data corrupt ");
+                return 0;
             } else {
                 return (int) Math.round(100d * (prevClose - pmOpen) / (prevMax - prevMin));
             }
@@ -1438,7 +1440,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             int id = autoTradeID.incrementAndGet();
             int size = getSizeForDelta(freshPrice, fxMap.get("USD"), delta / 3);
-            Order o = placeBidLimit(freshPrice, Math.min(size, MAX_FUT_LIMIT));
+            Order o = placeBidLimit(freshPrice, 1); //Math.min(size, MAX_FUT_LIMIT)
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.OPEN_COVER));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "open cover", globalIdOrderMap.get(id)));

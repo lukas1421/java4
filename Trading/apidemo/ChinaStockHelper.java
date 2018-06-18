@@ -578,7 +578,7 @@ public final class ChinaStockHelper {
                 priceMapBar.get(FTSE_INDEX).put(t, new SimpleBar(open));
                 priceMapBar.get(FTSE_INDEX).get(t).updateClose(open * (1 + rtn));
                 openMap.put(FTSE_INDEX, open);
-                closeMap.put(FTSE_INDEX, open);
+                //closeMap.put(FTSE_INDEX, open);
             } else {
                 priceMapBar.get(FTSE_INDEX).put(t, new SimpleBar(open * (1 + rtn)));
             }
@@ -591,7 +591,7 @@ public final class ChinaStockHelper {
             ChinaData.sizeTotalMap.get(FTSE_INDEX).put(t, vol);
         });
 
-        closeMap.put(FTSE_INDEX, open);
+        //closeMap.put(FTSE_INDEX, open);
         openMap.put(FTSE_INDEX, open);
 
         //pr( "last key a50" +priceMapBar.get(FTSE_INDEX).lastKey());
