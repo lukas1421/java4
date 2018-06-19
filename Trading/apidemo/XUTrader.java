@@ -744,7 +744,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         add(chartScroll);
     }
 
-    public static void processTradeStrategyMain(LocalDateTime ldt, double price) {
+    public static void processFutMain(LocalDateTime ldt, double price) {
 
         if (!globalTradingOn.get()) {
             pr(" global trading off ");
@@ -768,12 +768,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
 
             XUTrader.trimTrader(ldt, price);
+
             if (maxAfterMin && maxAbovePrev && pmChgY < 0) {
-                XUTrader.MATrader(ldt, price);
-                XUTrader.indexMATrader(ldt, price);
-                XUTrader.percentileTrader(ldt, price);
-                XUTrader.dayTrader(ldt, price);
-                XUTrader.openCoverTrader(ldt, price);
+                MATrader(ldt, price);
+                percentileTrader(ldt, price);
+                dayTrader(ldt, price);
+                openCoverTrader(ldt, price);
+            } else {
+                //cut delta to flat
+                fullHedgeTrader(ldt, price);
             }
 
             //XUTrader.pdTrader(ldt, price);
@@ -781,6 +784,42 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             //CompletableFuture.runAsync(() -> XUTrader.flattenTrader(ldt, price));
         } else {
             pr(" delta out of bound ", r(currDelta), " range ", getBullishTarget(), getBearishTarget());
+        }
+    }
+
+    private static void fullHedgeTrader(LocalDateTime nowMilli, double freshPrice) {
+        //cut until delta is flat.
+        double currDelta = getNetPtfDelta();
+        NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
+
+        LocalDate currentDate = (nowMilli.toLocalTime().isAfter(LocalTime.of(23, 59, 59))
+                && nowMilli.toLocalTime().isBefore(LocalTime.of(5, 0, 0))) ? LocalDate.now().minusDays(1L) :
+                LocalDate.now();
+
+        NavigableMap<LocalDateTime, SimpleBar> todayPriceMap =
+                futdata.entrySet().stream()
+                        .filter(e -> e.getKey().isAfter(LocalDateTime.of(currentDate, LocalTime.of(8, 59))))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
+                                ConcurrentSkipListMap::new));
+
+        LocalDateTime lastFullHedgeOrderTime = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == AutoOrderType.FULL_HEDGE)
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getOrderTime())
+                .orElse(LocalDateTime.of(LocalDate.now(), LocalTime.of(0, 0)));
+
+        int todayPerc = getPercentileForLast(todayPriceMap);
+
+        if (todayPerc > 95 && currDelta > 0.0 &&
+                ChronoUnit.MINUTES.between(lastFullHedgeOrderTime, nowMilli) >= ORDER_WAIT_TIME
+                && nowMilli.toLocalTime().isBefore(LocalTime.of(13, 0))) {
+
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimit(freshPrice, 1);
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FULL_HEDGE));
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(str(o.orderId(), "full hedge",
+                    globalIdOrderMap.get(id)));
         }
     }
 
@@ -1536,7 +1575,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    public static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice) {
 
         LocalTime lt = nowMilli.toLocalTime();
 
