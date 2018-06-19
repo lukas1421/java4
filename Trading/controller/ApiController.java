@@ -1488,6 +1488,9 @@ public class ApiController implements EWrapper {
         void handle(int errorCode, String errorMsg);
 
         class DefaultOrderHandler implements IOrderHandler {
+
+            static Set<Integer> filledOrderSet = new HashSet<>();
+
             int defaultID;
 
             public DefaultOrderHandler() {
@@ -1509,10 +1512,13 @@ public class ApiController implements EWrapper {
                 }
 
                 if (orderState.status() == OrderStatus.Filled) {
-                    String msg = str("||Order||", globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                            defaultID, globalIdOrderMap.get(defaultID), orderState.status());
-                    XuTraderHelper.outputToAutoLog(msg);
-                    XuTraderHelper.outputPurelyOrders(msg);
+                    if (!filledOrderSet.contains(defaultID)) {
+                        String msg = str("||Order||", globalIdOrderMap.get(defaultID).getOrder().orderId(),
+                                defaultID, globalIdOrderMap.get(defaultID), orderState.status());
+                        XuTraderHelper.outputToAutoLog(msg);
+                        XuTraderHelper.outputPurelyOrders(msg);
+                        filledOrderSet.add(defaultID);
+                    }
 
                     if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getOrderType())) {
                         XUTrader.flattenEagerness = Eagerness.Passive;

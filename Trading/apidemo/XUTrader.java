@@ -51,11 +51,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static volatile double currentIBNAV = 0.0;
 
     static final LocalDateTime ENGINE_START_TIME = XuTraderHelper.getEngineStartTime();
-    static volatile Set<String> uniqueTradeKeySet = new HashSet<>();
+    private static volatile Set<String> uniqueTradeKeySet = new HashSet<>();
     static ApiController apcon;
-    static XUTraderRoll traderRoll;
+    private static XUTraderRoll traderRoll;
 
-    public static final int ORDER_WAIT_TIME = 10;
+    private static final int ORDER_WAIT_TIME = 10;
     private static final double DELTA_HARD_HI_LIMIT = 1000000.0;
     private static final double DELTA_HARD_LO_LIMIT = -1000000.0;
 
@@ -68,7 +68,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static final int MAX_FUT_LIMIT = 20;
     static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
     static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
-    public static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
+    static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
     private static final int UP_PERC = 90;
     private static final int DOWN_PERC = 10;
@@ -140,14 +140,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double PD_DOWN_THRESH = -0.003;
 
     //open/fast trading
-    static LocalDateTime lastOpenTradeTime = LocalDateTime.now();
     private static LocalDateTime lastFastOrderTime = LocalDateTime.now();
     private static AtomicInteger fastTradeSignals = new AtomicInteger(0);
     private static NavigableMap<LocalDateTime, Order> fastOrderMap = new ConcurrentSkipListMap<>();
     private static final long MAX_OPEN_TRADE_ORDERS = 10;
-
-    //direction makeup trade
-    private static final int MIN_LAST_IDEA_LAPSE_TIME = 5;
 
     //music
     private EmbeddedSoundPlayer soundPlayer = new EmbeddedSoundPlayer();
@@ -155,10 +151,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //detailed MA
     private static AtomicBoolean detailedPrint = new AtomicBoolean(false);
 
-
     //display
     public static volatile Predicate<LocalDateTime> displayPred = e -> true;
-
     private final static Contract frontFut = utility.Utility.getFrontFutContract();
     private final static Contract backFut = utility.Utility.getBackFutContract();
 
