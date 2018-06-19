@@ -14,10 +14,8 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -36,8 +34,8 @@ public class GraphBigYtd extends JComponent implements GraphFillable, MouseListe
     private int heightVol;
     private double min;
     private double max;
-    private int closeY;
-    private int lowY;
+    //private int closeY;
+    //private int lowY;
 
     NavigableMap<LocalTime, SimpleBar> tm;
     private NavigableMap<LocalTime, Double> tmVol;
@@ -59,6 +57,9 @@ public class GraphBigYtd extends JComponent implements GraphFillable, MouseListe
 
     private volatile int mouseXCord = Integer.MAX_VALUE;
     private volatile int mouseYCord = Integer.MAX_VALUE;
+
+    private static Map.Entry<LocalTime, SimpleBar> defaultEntry =
+            new AbstractMap.SimpleEntry<>(LocalTime.MIN, new SimpleBar(0.0));
 
 
     public GraphBigYtd() {
@@ -232,7 +233,25 @@ public class GraphBigYtd extends JComponent implements GraphFillable, MouseListe
         int openY;
         int volumeY;
         int highY;
+        int lowY = 0;
+        int closeY = 0;
         int volumeLowerBound;
+
+        Map.Entry<LocalTime, SimpleBar> maxY2 = tmY2.entrySet().stream()
+                .max(Comparator.comparingDouble(e -> e.getValue().getHigh())).orElse(defaultEntry);
+        Map.Entry<LocalTime, SimpleBar> minY2 = tmY2.entrySet().stream()
+                .min(Comparator.comparingDouble(e -> e.getValue().getLow())).orElse(defaultEntry);
+
+        Map.Entry<LocalTime, SimpleBar> maxYtd = tmYtd.entrySet().stream()
+                .max(Comparator.comparingDouble(e -> e.getValue().getHigh())).orElse(defaultEntry);
+        Map.Entry<LocalTime, SimpleBar> minYtd = tmYtd.entrySet().stream()
+                .min(Comparator.comparingDouble(e -> e.getValue().getLow())).orElse(defaultEntry);
+
+        Map.Entry<LocalTime, SimpleBar> maxT = tm.entrySet().stream()
+                .max(Comparator.comparingDouble(e -> e.getValue().getHigh())).orElse(defaultEntry);
+        Map.Entry<LocalTime, SimpleBar> minT = tm.entrySet().stream()
+                .min(Comparator.comparingDouble(e -> e.getValue().getLow())).orElse(defaultEntry);
+
         for (LocalTime lt : tmY2.keySet()) {
 
             openY = getY(tmY2.floorEntry(lt).getValue().getOpen());
@@ -270,6 +289,18 @@ public class GraphBigYtd extends JComponent implements GraphFillable, MouseListe
                     g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x - 10, getHeight() - 25);
                 }
             }
+
+
+            if (maxY2.getKey().equals(lt)) {
+                g.drawString(lt.toString() + " " + Math.round(100d * maxY2.getValue().getHigh()) / 100d,
+                        x + 20, highY);
+            }
+
+            if (minY2.getKey().equals(lt)) {
+                g.drawString(lt.toString() + " " + Math.round(100d * minY2.getValue().getLow()) / 100d,
+                        x, lowY + (mouseYCord < closeY ? -20 : +20));
+            }
+
 
             if (roundDownToN(mouseXCord, WIDTH_YTD) == x - INITIAL_OFFSET) {
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
@@ -345,6 +376,18 @@ public class GraphBigYtd extends JComponent implements GraphFillable, MouseListe
                     g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x - 10, getHeight() - 25);
                 }
             }
+
+
+            if (maxYtd.getKey().equals(lt)) {
+                g.drawString(lt.toString() + " " + Math.round(100d * maxYtd.getValue().getHigh()) / 100d,
+                        x + 20, highY);
+            }
+
+            if (minYtd.getKey().equals(lt)) {
+                g.drawString(lt.toString() + " " + Math.round(100d * minYtd.getValue().getLow()) / 100d,
+                        x, lowY + (mouseYCord < closeY ? -20 : +20));
+            }
+
             if (roundDownToN(mouseXCord, WIDTH_YTD) == x - INITIAL_OFFSET) {
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
                 g.drawString(lt.toString() + " " + Math.round(100d * tmYtd.floorEntry(lt).getValue().getClose()) / 100d,
@@ -429,6 +472,18 @@ public class GraphBigYtd extends JComponent implements GraphFillable, MouseListe
                     g.drawString(Integer.toString(lt.getHour()) + ":" + Integer.toString(lt.getMinute()), x + 10, getHeight() - 25);
                 }
             }
+
+
+            if (maxT.getKey().equals(lt)) {
+                g.drawString(lt.toString() + " " + Math.round(100d * maxT.getValue().getHigh()) / 100d,
+                        x + 20, highY);
+            }
+
+            if (minT.getKey().equals(lt)) {
+                g.drawString(lt.toString() + " " + Math.round(100d * minT.getValue().getLow()) / 100d,
+                        x, lowY + (mouseYCord < closeY ? -20 : +20));
+            }
+
             if (roundDownToN(mouseXCord, WIDTH_YTD) == x - INITIAL_OFFSET) {
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
                 g.drawString(lt.toString() + " " + Math.round(100d * tm.floorEntry(lt).getValue().getClose()) / 100d,
@@ -441,8 +496,8 @@ public class GraphBigYtd extends JComponent implements GraphFillable, MouseListe
         }
 
         if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0) {
-            int lowY = getY(tm.lastEntry().getValue().getLow());
-            int closeY = getY(tm.lastEntry().getValue().getClose());
+            lowY = getY(tm.lastEntry().getValue().getLow());
+            closeY = getY(tm.lastEntry().getValue().getClose());
             g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
             g.drawString(tm.lastKey().toString() + " " +
                             Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
