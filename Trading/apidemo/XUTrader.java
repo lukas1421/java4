@@ -1568,7 +1568,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
         double netDelta = getNetPtfDelta();
 
-        LocalDateTime lastOrderT = globalIdOrderMap.entrySet().stream()
+        LocalDateTime lastTrimOrderT = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == AutoOrderType.TRIM)
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                 .map(e -> e.getValue().getOrderTime())
@@ -1587,7 +1587,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (lastOrderStatus != OrderStatus.Filled && lastOrderStatus != OrderStatus.Cancelled
                     && lastOrderStatus != OrderStatus.ApiCancelled) {
 
-                if (ChronoUnit.MINUTES.between(lastOrderT, nowMilli) > ORDER_WAIT_TIME * 2) {
+                if (ChronoUnit.MINUTES.between(lastTrimOrderT, nowMilli) > ORDER_WAIT_TIME * 2) {
                     apcon.cancelAllOrders();
                     outputOrderToAutoLog(nowMilli + " cancelling orders from trim trader ");
                 }
@@ -1596,9 +1596,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         pr("trim trader delta/target", r(netDelta), getBullishTarget(), getBearishTarget(), "last order T ",
-                lastOrderT, "next order T", lastOrderT.plusMinutes(10L));
+                lastTrimOrderT, "next order T", lastTrimOrderT.plusMinutes(20L));
 
-        if (ChronoUnit.MINUTES.between(lastOrderT, nowMilli) >= ORDER_WAIT_TIME * 2) {
+        if (ChronoUnit.MINUTES.between(lastTrimOrderT, nowMilli) >= ORDER_WAIT_TIME * 2) {
             if (netDelta > getBullishTarget()) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);

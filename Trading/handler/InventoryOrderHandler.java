@@ -7,6 +7,8 @@ import client.OrderStatus;
 import controller.ApiController;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -19,6 +21,8 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
     private int defaultID;
     private CountDownLatch latch;
     private CyclicBarrier barrier;
+    //private static Map<Integer, AtomicBoolean> filledOrderSingleOutput = new HashMap<>();
+    private static Set<Integer> filledOrdersSet = new HashSet<>();
 
     public InventoryOrderHandler(int i, CountDownLatch l, CyclicBarrier cb) {
         defaultID = i;
@@ -38,10 +42,15 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
         globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
 
         if (orderState.status() == OrderStatus.Filled) {
-            globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
-            String msg = str("||Order||", defaultID, globalIdOrderMap.get(defaultID), orderState.status());
-            XuTraderHelper.outputToAutoLog(msg);
-            XuTraderHelper.outputPurelyOrders(msg);
+//            filledOrderSingleOutput.put(defaultID, new AtomicBoolean(true));
+
+            if (!filledOrdersSet.contains(defaultID)) {
+                globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
+                String msg = str("||Order||", defaultID, globalIdOrderMap.get(defaultID), orderState.status());
+                XuTraderHelper.outputToAutoLog(msg);
+                XuTraderHelper.outputPurelyOrders(msg);
+                filledOrdersSet.add(defaultID);
+            }
 
             if (latch.getCount() == 1) {
                 System.out.println(" counting down latch Inv handler ");
