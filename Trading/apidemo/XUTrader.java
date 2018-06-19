@@ -56,6 +56,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static XUTraderRoll traderRoll;
 
     public static final int ORDER_WAIT_TIME = 10;
+    private static final double DELTA_HARD_HI_LIMIT = 1000000.0;
+    private static final double DELTA_HARD_LO_LIMIT = -1000000.0;
+
 
     //global
     private static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
@@ -759,32 +762,36 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000001);
         int pmChgY = getPercentileChgYFut();
 
+        if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
+            pr(" curr delta is outside range ");
+            return;
+        }
+
 
         pr("maxAfterMin: ", maxAfterMin, "maxAbovePrev", maxAbovePrev,
                 "pmchgy", pmChgY, "delta range ", getBearishTarget(), getBullishTarget());
 
         XUTrader.updateLastMinuteMap(ldt, price);
 
-        if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
 
-            XUTrader.trimTrader(ldt, price);
+        XUTrader.trimTrader(ldt, price);
 
-            if (maxAfterMin && maxAbovePrev && pmChgY < 0) {
+        if (maxAfterMin && maxAbovePrev && pmChgY < 0) {
+            if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
                 MATrader(ldt, price);
                 percentileTrader(ldt, price);
                 dayTrader(ldt, price);
                 openCoverTrader(ldt, price);
-            } else {
-                //cut delta to flat
-                fullHedgeTrader(ldt, price);
             }
-
-            //XUTrader.pdTrader(ldt, price);
-            //CompletableFuture.runAsync(() -> XUTrader.inventoryTrader(ldt, price));
-            //CompletableFuture.runAsync(() -> XUTrader.flattenTrader(ldt, price));
         } else {
-            pr(" delta out of bound ", r(currDelta), " range ", getBullishTarget(), getBearishTarget());
+            //cut delta to flat
+            fullHedgeTrader(ldt, price);
         }
+
+        //XUTrader.pdTrader(ldt, price);
+        //CompletableFuture.runAsync(() -> XUTrader.inventoryTrader(ldt, price));
+        //CompletableFuture.runAsync(() -> XUTrader.flattenTrader(ldt, price));
+
     }
 
     private static void fullHedgeTrader(LocalDateTime nowMilli, double freshPrice) {
@@ -1227,6 +1234,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime lt = nowMilli.toLocalTime();
         double currDelta = getNetPtfDelta();
 
+        if (!(lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(15, 0)))) {
+            pr(" day trader: not in time range, return ", nowMilli.toLocalTime());
+            return;
+        }
+
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
 
         LocalDate currentDate = (nowMilli.toLocalTime().isAfter(LocalTime.of(23, 59, 59))
@@ -1238,6 +1250,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         .filter(e -> e.getKey().isAfter(LocalDateTime.of(currentDate, LocalTime.of(8, 59))))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
                                 ConcurrentSkipListMap::new));
+
+        if (todayPriceMap.size() < 2) {
+            return;
+        }
 
         LocalDateTime lastOrderTime = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == AutoOrderType.DAY_COVER)
@@ -1261,22 +1277,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         pr(" Day cover trader: ", dayTraderOn.get(), "last order time ", lastOrderTime,
                 " today p%: ", todayPerc, " open p% ", openPerc);
 
-        if (!dayTraderOn.get()) {
-            pr(" day cover trader off quitting ");
+        if (!dayTraderOn.get() || futdata.size() < 2 || futdata.firstKey().toLocalDate()
+                .equals(futdata.lastKey().toLocalDate())) {
             return;
         }
 
-        if (futdata.size() < 2) {
-            pr(" fut data less than 2");
-            return;
-        }
         LocalDate prevDate = futdata.firstEntry().getKey().toLocalDate();
-
-
-        if (futdata.size() < 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
-            pr(" prev day data not available ");
-            return;
-        }
 
         double ytdClose = futdata.lowerEntry(LocalDateTime.of(prevDate, LocalTime.of(15, 0))).getValue().getHigh();
 
@@ -1287,22 +1293,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "today p% ", todayPerc, "currDel", r(currDelta), "Del Range", getBullishTarget(), getBearishTarget());
 
 
-        if (todayPriceMap.size() < 2) {
-            pr("day cover trader: today prices < 2, return ");
-            return;
-        }
-
-        if (!(lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(15, 0)))) {
-            pr(" day trader: not in time range, return ", nowMilli.toLocalTime());
-            return;
-        }
-
-        if (ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) < ORDER_WAIT_TIME) {
-            pr(" last order time too close ", lastOrderTime);
-            return;
-        }
-
-        if ((todayPerc < 5 || pmPerc <= 1) && currDelta < getBullishTarget()
+        if (todayPerc < 5 && currDelta < getBullishTarget()
                 && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= ORDER_WAIT_TIME) {
 
             int id = autoTradeID.incrementAndGet();
@@ -1313,7 +1304,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc, "pm p%", pmPerc
                     , getBullishTarget(), getBearishTarget()));
 
-        } else if ((todayPerc > 95 || pmPerc >= 99) && currDelta > getBearishTarget()
+        } else if (todayPerc > 95 && currDelta > getBearishTarget()
                 && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= ORDER_WAIT_TIME
                 && nowMilli.toLocalTime().isBefore(LocalTime.of(13, 0))) {
 
