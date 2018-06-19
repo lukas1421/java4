@@ -248,8 +248,10 @@ public class GraphBigYtd extends JComponent implements GraphFillable, MouseListe
                 .min(Comparator.comparingDouble(e -> e.getValue().getLow())).orElse(defaultEntry);
 
         Map.Entry<LocalTime, SimpleBar> maxT = tm.entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29)))
                 .max(Comparator.comparingDouble(e -> e.getValue().getHigh())).orElse(defaultEntry);
         Map.Entry<LocalTime, SimpleBar> minT = tm.entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29)))
                 .min(Comparator.comparingDouble(e -> e.getValue().getLow())).orElse(defaultEntry);
 
         for (LocalTime lt : tmY2.keySet()) {

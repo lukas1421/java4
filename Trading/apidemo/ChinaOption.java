@@ -20,6 +20,8 @@ import javax.swing.*;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.*;
 import java.net.URL;
 import java.net.URLConnection;
@@ -121,6 +123,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     private static TableRowSorter<OptionTableModel> sorter;
     private static RowFilter<OptionTableModel, Integer> otmFilter;
+    static OptionTableModel model;
 
     ChinaOption() {
         otmFilter = new RowFilter<OptionTableModel, Integer>() {
@@ -155,8 +158,7 @@ public class ChinaOption extends JPanel implements Runnable {
         JPanel rightPanel = new JPanel();
 
         NewTabbedPanel p = new NewTabbedPanel();
-
-        OptionTableModel model = new OptionTableModel();
+        model = new OptionTableModel();
         JTable optionTable = new JTable(model) {
             @Override
             public Component prepareRenderer(TableCellRenderer tableCellRenderer, int r, int c) {
@@ -201,6 +203,23 @@ public class ChinaOption extends JPanel implements Runnable {
                 return comp;
             }
         };
+
+        optionTable.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    if (SwingUtilities.isRightMouseButton(e)) {
+                        SwingUtilities.invokeLater(() -> {
+                            model.fireTableDataChanged();
+                        });
+                        sorter.setRowFilter(null);
+                        filterOn = false;
+                    }
+                } catch (Exception x) {
+                    x.printStackTrace();
+                }
+            }
+        });
 
         JScrollPane optTableScroll = new JScrollPane(optionTable) {
             @Override
@@ -1045,7 +1064,7 @@ public class ChinaOption extends JPanel implements Runnable {
                     pr(str(c.getVolDate(), c.getCallPut(), c.getStrike(), c.getExpiryDate(),
                             c.getVol(), c.getMoneyness(), c.getOptionTicker()));
 
-                    pr(" counter is " + i.incrementAndGet());
+                    //pr(" counter is " + i.incrementAndGet());
                     LocalDate volDate = c.getVolDate();
                     LocalDate expiry = c.getExpiryDate();
                     CallPutFlag f = c.getCallPut().equalsIgnoreCase("C") ? CALL : PUT;

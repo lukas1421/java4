@@ -774,12 +774,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return false;
         } else {
             LocalTime maxT = priceMapBar.get(name).entrySet().stream()
-                    .filter(e -> e.getKey().isBefore(LocalTime.of(9, 41)))
+                    .filter(e -> e.getKey().isAfter(LocalTime.of(9, 30)) &&
+                            e.getKey().isBefore(LocalTime.of(9, 41)))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MIN);
 
             LocalTime minT = priceMapBar.get(name).entrySet().stream()
-                    .filter(e -> e.getKey().isBefore(LocalTime.of(9, 41)))
+                    .filter(e -> e.getKey().isAfter(LocalTime.of(9, 30)) &&
+                            e.getKey().isBefore(LocalTime.of(9, 41)))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MAX);
             pr(name, "checkf10maxAftermint", maxT, minT);
@@ -793,7 +795,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return false;
         } else {
             double f10max = priceMapBar.get(name).entrySet().stream()
-                    .filter(e -> e.getKey().isBefore(LocalTime.of(9, 41)))
+                    .filter(e -> e.getKey().isAfter(LocalTime.of(9, 30)) &&
+                            e.getKey().isBefore(LocalTime.of(9, 41)))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
             pr(name, "checkf10max ", f10max, "close", closeMap.get(name));
