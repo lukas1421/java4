@@ -23,6 +23,9 @@ public final class TradingConstants {
     //public static final LocalDate A50_FRONT_EXP_DATE =;
 
     public static final String FTSE_INDEX = "FTSEA50";
+    public static final String INDEX_000001 = "sh000001";
+    public static final String INDEX_000016 = "sh000016";
+
 
     public static String getFutLastExpiry() {
         LocalDate today = LocalDate.now();

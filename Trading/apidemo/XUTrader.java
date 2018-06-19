@@ -38,8 +38,7 @@ import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaPosition.*;
 import static apidemo.ChinaStock.closeMap;
 import static apidemo.ChinaStock.currencyMap;
-import static apidemo.TradingConstants.FTSE_INDEX;
-import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
+import static apidemo.TradingConstants.*;
 import static apidemo.XuTraderHelper.*;
 import static java.lang.System.out;
 import static util.AutoOrderType.*;
@@ -741,8 +740,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
 
         double currDelta = getNetPtfDelta();
-        boolean maxAfterMin = checkf10maxAftermint(FTSE_INDEX);
-        boolean maxAbovePrev = checkf10MaxAbovePrev(FTSE_INDEX);
+        boolean maxAfterMin = checkf10maxAftermint(INDEX_000001);
+        boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000001);
         int pmChgY = getPercentileChgYFut();
 
 
@@ -783,6 +782,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     .filter(e -> e.getKey().isBefore(LocalTime.of(9, 41)))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MAX);
+            pr(name, "checkf10maxAftermint", maxT, minT);
 
             return maxT.isAfter(minT);
         }
@@ -796,6 +796,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     .filter(e -> e.getKey().isBefore(LocalTime.of(9, 41)))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
+            pr(name, "checkf10max ", f10max, "close", closeMap.get(name));
             return f10max > closeMap.get(name);
         }
     }
@@ -813,13 +814,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             && e.getKey().toLocalTime().isBefore(LocalTime.of(15, 0)))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
+
             double prevMin = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(prevDate))
                     .filter(e -> e.getKey().toLocalTime().isAfter(LocalTime.of(9, 29))
                             && e.getKey().toLocalTime().isBefore(LocalTime.of(15, 0)))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(e -> e.getValue().getLow()).orElse(0.0);
+
             double prevClose = futdata.floorEntry(LocalDateTime.of(prevDate, LocalTime.of(15, 0)))
                     .getValue().getClose();
+
             double pmOpen = futdata.floorEntry(LocalDateTime.of(prevDate, LocalTime.of(13, 0)))
                     .getValue().getOpen();
 
@@ -827,7 +831,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 //throw new IllegalStateException(" ytd data corrupt ");
                 return 0;
             } else {
-                return (int) Math.round(100d * (prevClose - pmOpen) / (prevMax - prevMin));
+                int res = (int) Math.round(100d * (prevClose - pmOpen) / (prevMax - prevMin));
+                pr(" perc chg y fut ", res, "close, pmopen, max, min ",
+                        prevClose, pmOpen, prevMax, prevMin);
+                return res;
             }
         }
     }
