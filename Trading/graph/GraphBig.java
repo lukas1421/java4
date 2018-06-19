@@ -9,8 +9,12 @@ import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
@@ -21,13 +25,16 @@ import static apidemo.ChinaData.*;
 import static apidemo.ChinaDataYesterday.*;
 import static apidemo.ChinaStock.*;
 import static apidemo.ChinaStockHelper.*;
+import static apidemo.XuTraderHelper.getMAGenLT;
 import static java.lang.Double.min;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
+import static utility.Utility.defaultEntry;
+import static utility.Utility.roundDownToN;
 
-public class GraphBig extends JComponent implements GraphFillable {
+public class GraphBig extends JComponent implements GraphFillable, MouseMotionListener, MouseListener {
 
     private static final int WIDTH_BIG = 6;
     private int height;
@@ -35,6 +42,10 @@ public class GraphBig extends JComponent implements GraphFillable {
     private double min;
     private double max;
     private double size;
+    private volatile int mouseXCord = Integer.MAX_VALUE;
+    private volatile int mouseYCord = Integer.MAX_VALUE;
+    private static final int INITIAL_OFFSET = 25;
+
 
     // private int close;
     // private int open;
@@ -62,6 +73,8 @@ public class GraphBig extends JComponent implements GraphFillable {
         maxAMT = LocalTime.of(9, 30);
         minAMT = LocalTime.of(9, 30);
         this.tm = new ConcurrentSkipListMap<>();
+        addMouseListener(this);
+        addMouseMotionListener(this);
     }
 
     public GraphBig(String s) {
@@ -178,6 +191,7 @@ public class GraphBig extends JComponent implements GraphFillable {
 
     @Override
     protected void paintComponent(Graphics g) {
+        NavigableMap<LocalTime, Double> sma = getMAGenLT(tm, 60);
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
@@ -185,19 +199,30 @@ public class GraphBig extends JComponent implements GraphFillable {
         heightVol = (int) ((getHeight() - height) * 0.5);
         min = getMin();
         max = getMax();
+        int highY = 0;
+        int openY = 0;
+        int lowY = 0;
+        int closeY = 0;
         double minRtn = getMinRtn();
         double maxRtn = getMaxRtn();
         int last = 0;
         double rtn = getReturn();
+        Map.Entry<LocalTime, SimpleBar> maxT = tm.entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29)))
+                .max(Comparator.comparingDouble(e -> e.getValue().getHigh())).orElse(defaultEntry);
+        Map.Entry<LocalTime, SimpleBar> minT = tm.entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29)))
+                .min(Comparator.comparingDouble(e -> e.getValue().getLow())).orElse(defaultEntry);
 
-        int x = 25;
+
+        int x = INITIAL_OFFSET;
 
         for (LocalTime lt : tm.keySet()) {
 
-            int openY = getY(tm.floorEntry(lt).getValue().getOpen());
-            int highY = getY(tm.floorEntry(lt).getValue().getHigh());
-            int lowY = getY(tm.floorEntry(lt).getValue().getLow());
-            int closeY = getY(tm.floorEntry(lt).getValue().getClose());
+            openY = getY(tm.floorEntry(lt).getValue().getOpen());
+            highY = getY(tm.floorEntry(lt).getValue().getHigh());
+            lowY = getY(tm.floorEntry(lt).getValue().getLow());
+            closeY = getY(tm.floorEntry(lt).getValue().getClose());
 
             int volumeY = getYVol(ofNullable(tmVol.floorEntry(lt)).map(Entry::getValue).orElse(0.0));
             //  System.out.println( " lt is " + lt.toString());
@@ -235,8 +260,54 @@ public class GraphBig extends JComponent implements GraphFillable {
                     g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
                 }
             }
+
+            if (maxT.getKey().equals(lt)) {
+                g.drawString(lt.toString() + " " + Math.round(100d * maxT.getValue().getHigh()) / 100d,
+                        x + 20, highY);
+            }
+
+            if (minT.getKey().equals(lt)) {
+                g.drawString(lt.toString() + " " + Math.round(100d * minT.getValue().getLow()) / 100d,
+                        x, lowY + (mouseYCord < closeY ? -20 : +20));
+            }
+
+            if (roundDownToN(mouseXCord, WIDTH_BIG) == x - INITIAL_OFFSET) {
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+                g.drawString(lt.toString() + " " + Math.round(100d * tm.floorEntry(lt).getValue().getClose()) / 100d,
+                        x, lowY + (mouseYCord < closeY ? -20 : +20));
+                g.drawOval(x + 2, lowY, 5, 5);
+                g.fillOval(x + 2, lowY, 5, 5);
+                g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
+            }
+
+            if (sma.size() > 0 && sma.containsKey(lt)) {
+                g.setColor(Color.blue);
+                Stroke sk = g2.getStroke();
+                g2.setStroke(new BasicStroke(5));
+                int maY = getY(sma.get(lt));
+                g.drawLine(x, maY, x + 3, maY);
+                if (lt.equals(sma.lastKey())) {
+                    g.drawString("MA:", x + 20, maY);
+                }
+                g.setColor(Color.black);
+                g2.setStroke(sk);
+            }
+
             x += WIDTH_BIG;
         }
+
+        if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0) {
+            lowY = getY(tm.lastEntry().getValue().getLow());
+            closeY = getY(tm.lastEntry().getValue().getClose());
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
+            g.drawString(tm.lastKey().toString() + " " +
+                            Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
+                    x, lowY + (mouseYCord < closeY ? -20 : +20));
+            g.drawOval(x + 2, lowY, 5, 5);
+            g.fillOval(x + 2, lowY, 5, 5);
+            g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
+        }
+
 
         g2.setColor(Color.red);
         g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 1.5F));
@@ -503,5 +574,47 @@ public class GraphBig extends JComponent implements GraphFillable {
         double minD = mp.entrySet().stream().mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
         return round(100 * (avgForThisIndus - minD) / (maxD - minD));
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mousePressed(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseExited(MouseEvent mouseEvent) {
+        mouseXCord = Integer.MAX_VALUE;
+        mouseYCord = Integer.MAX_VALUE;
+        this.repaint();
+
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent mouseEvent) {
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+        mouseXCord = e.getX();
+        mouseYCord = e.getY();
+        //System.out.println(" graph bar x mouse x is " + mouseXCord);
+        this.repaint();
+
     }
 }

@@ -82,6 +82,8 @@ public class Utility {
     public static BiPredicate<? super Map<String, ? extends Map<LocalTime, ?>>, String> NORMAL_MAP = (mp, name) -> mp.containsKey(name) && !mp.get(name).isEmpty() && mp.get(name).size() > 0;
     public static Predicate<LocalTime> chinaTradingTimeHist = t -> (t.isAfter(LocalTime.of(9, 30)) && t.isBefore(LocalTime.of(11, 31))) ||
             (t.isAfter(LocalTime.of(13, 0)) && t.isBefore(LocalTime.of(15, 1)));
+    public static Map.Entry<LocalTime, SimpleBar> defaultEntry =
+            new AbstractMap.SimpleEntry<>(LocalTime.MIN, new SimpleBar(0.0));
 
 
     private static Predicate<LocalTime> tradingTimePred(LocalTime t1, LocalTime t2, LocalTime t3, LocalTime t4) {

@@ -14,8 +14,11 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Comparator;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.NavigableMap;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -57,9 +60,6 @@ public class GraphBigYtd extends JComponent implements GraphFillable, MouseListe
 
     private volatile int mouseXCord = Integer.MAX_VALUE;
     private volatile int mouseYCord = Integer.MAX_VALUE;
-
-    private static Map.Entry<LocalTime, SimpleBar> defaultEntry =
-            new AbstractMap.SimpleEntry<>(LocalTime.MIN, new SimpleBar(0.0));
 
 
     public GraphBigYtd() {

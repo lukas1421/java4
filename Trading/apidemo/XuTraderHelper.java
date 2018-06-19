@@ -49,6 +49,22 @@ public class XuTraderHelper {
         return sma;
     }
 
+    public static NavigableMap<LocalTime, Double> getMAGenLT(NavigableMap<LocalTime, SimpleBar> mp, int period) {
+        NavigableMap<LocalTime, Double> sma = new ConcurrentSkipListMap<>();
+        for (Map.Entry<LocalTime, SimpleBar> e : mp.entrySet()) {
+            long n = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey())).count();
+            if (n > period) {
+                long size = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey())).skip(n - period)
+                        .count();
+                double val = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey()))
+                        .skip(n - period).mapToDouble(e2 -> e2.getValue().getAverage()).sum() / size;
+                sma.put(e.getKey(), val);
+            }
+        }
+        return sma;
+    }
+
+
     private static boolean priceMAUntouched(NavigableMap<LocalDateTime, SimpleBar> mp, int period, LocalDateTime lastTradeTime) {
         NavigableMap<LocalDateTime, Double> sma = getMAGen(mp, period);
         NavigableMap<LocalDateTime, Double> smaFiltered = sma.entrySet().stream().filter(e -> e.getKey().isAfter(lastTradeTime))
