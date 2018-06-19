@@ -58,6 +58,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static final int ORDER_WAIT_TIME = 10;
 
     //global
+    private static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
     private static volatile MASentiment sentiment = MASentiment.Directionless;
     private static LocalDateTime lastTradeTime = LocalDateTime.now();
@@ -339,6 +340,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             });
         });
 
+        JToggleButton globalTradingButton = new JToggleButton("Trading:" + (globalTradingOn.get() ? "ON" : "OFF"));
+        globalTradingButton.setSelected(false);
+        globalTradingButton.addActionListener(l -> {
+            globalTradingOn.set(globalTradingButton.isSelected());
+            globalTradingButton.setText("Trading:" + (globalTradingOn.get() ? "ON" : "OFF"));
+            pr(" global order set to " + (globalTradingOn.get() ? "ON" : "OFF"));
+        });
+
         JButton trimDeltaButton = new JButton("Trim: " + (trimTraderOn.get() ? "ON" : "OFF"));
         trimDeltaButton.addActionListener(l -> {
             trimTraderOn.set(!trimTraderOn.get());
@@ -609,6 +618,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(pdTraderButton);
         controlPanel1.add(trimDeltaButton);
         controlPanel1.add(rollButton);
+        controlPanel1.add(globalTradingButton);
 
         controlPanel2.add(getPositionButton);
         controlPanel2.add(level2Button);
@@ -736,6 +746,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     public static void processTradeStrategyMain(LocalDateTime ldt, double price) {
 
+        if (!globalTradingOn.get()) {
+            pr(" global trading off ");
+            return;
+        }
+
 
         //sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
 
@@ -745,15 +760,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int pmChgY = getPercentileChgYFut();
 
 
+        pr("maxAfterMin: ", maxAfterMin, "maxAbovePrev", maxAbovePrev,
+                "pmchgy", pmChgY, "delta range ", getBearishTarget(), getBullishTarget());
+
+        XUTrader.updateLastMinuteMap(ldt, price);
+
         if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
-            XUTrader.updateLastMinuteMap(ldt, price);
-            XUTrader.MATrader(ldt, price);
-            XUTrader.indexMATrader(ldt, price);
 
             XUTrader.trimTrader(ldt, price);
-
-
             if (maxAfterMin && maxAbovePrev && pmChgY < 0) {
+                XUTrader.MATrader(ldt, price);
+                XUTrader.indexMATrader(ldt, price);
                 XUTrader.percentileTrader(ldt, price);
                 XUTrader.dayTrader(ldt, price);
                 XUTrader.openCoverTrader(ldt, price);
@@ -784,7 +801,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             e.getKey().isBefore(LocalTime.of(9, 41)))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MAX);
-            pr(name, "checkf10maxAftermint", maxT, minT);
+            //pr(name, "checkf10maxAftermint", maxT, minT);
 
             return maxT.isAfter(minT);
         }
@@ -799,7 +816,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             e.getKey().isBefore(LocalTime.of(9, 41)))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
-            pr(name, "checkf10max ", f10max, "close", closeMap.get(name));
+            //pr(name, "checkf10max ", f10max, "close", closeMap.get(name));
             return f10max > closeMap.get(name);
         }
     }
@@ -1466,7 +1483,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param nowMilli   time in milliseconds
      * @param freshPrice last price
      */
-    public static synchronized void indexMATrader(LocalDateTime nowMilli, double freshPrice) {
+    private static synchronized void indexMATrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         if (!(lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(15, 0)))) {
             return;
@@ -1484,6 +1501,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         SimpleBar secLastBar = new SimpleBar(index.lowerEntry(index.lastKey()).getValue());
         LocalTime secLastBarTime = index.lowerEntry(index.lastKey()).getKey().toLocalTime();
 
+        LocalDateTime lastIndexMAOrder = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == AutoOrderType.INDEX_MA)
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getOrderTime())
+                .orElse(sessionOpenT());
+
         lastBar.add(freshPrice);
         NavigableMap<LocalDateTime, Double> sma = getMAGen(index, 5);
 
@@ -1492,7 +1515,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int todayPerc = getPercentileForLast(index);
         double delta = getNetPtfDelta();
 
-        if (touchConditionMet(secLastBar, lastBar, maLast) && delta > getBearishTarget() && delta < getBullishTarget()) {
+        if (ChronoUnit.MINUTES.between(lastIndexMAOrder, nowMilli) > ORDER_WAIT_TIME &&
+                touchConditionMet(secLastBar, lastBar, maLast) && delta > getBearishTarget() && delta < getBullishTarget()) {
             if (bullishTouchMet(secLastBar, lastBar, maLast) && todayPerc < DOWN_PERC) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);

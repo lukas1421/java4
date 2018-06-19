@@ -789,8 +789,8 @@ public class ChinaOption extends JPanel implements Runnable {
                 URLConnection urlconnPutFront = urlPutFront.openConnection();
 
                 String callStringBack = "http://hq.sinajs.cn/list=OP_UP_510050" + backMonth;
-                pr(" front back month ", frontMonth, backMonth, thirdMonth, fourthMonth);
-                pr(" expiry ", frontExpiry, backExpiry, thirdExpiry, fourthExpiry);
+                //pr(" front back month ", frontMonth, backMonth, thirdMonth, fourthMonth);
+                //pr(" expiry ", frontExpiry, backExpiry, thirdExpiry, fourthExpiry);
                 URL urlCallBack = new URL(callStringBack);
                 URLConnection urlconnCallBack = urlCallBack.openConnection();
 
