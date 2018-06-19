@@ -1478,11 +1478,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     private static synchronized void indexMATrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
-        if (!(lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(15, 0)))) {
+        if (!((lt.isAfter(LocalTime.of(10, 30)) && lt.isBefore(LocalTime.of(11, 30))) ||
+                (lt.isAfter(LocalTime.of(14, 0)) && lt.isBefore(LocalTime.of(15, 0))))) {
             return;
         }
 
-        if (priceMapBar.get(FTSE_INDEX).size() < 5) {
+        if (priceMapBar.get(FTSE_INDEX).size() < 20) {
             pr(" index data not enough ");
             return;
         }
@@ -1501,7 +1502,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .orElse(sessionOpenT());
 
         lastBar.add(freshPrice);
-        NavigableMap<LocalDateTime, Double> sma = getMAGen(index, 5);
+        NavigableMap<LocalDateTime, Double> sma = getMAGen(index, 60);
 
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
         sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;

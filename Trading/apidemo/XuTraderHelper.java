@@ -18,7 +18,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.Temporal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -135,14 +138,14 @@ public class XuTraderHelper {
         return 50;
     }
 
-    public static <T extends Temporal> int getPercentileForX(NavigableMap<T, SimpleBar> map, double x) {
+    static <T extends Temporal> int getPercentileForX(NavigableMap<T, SimpleBar> map, double x) {
         if (map.size() > 1) {
             double max = map.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
             double min = map.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
-            Map.Entry<T, SimpleBar> maxEntry = map.entrySet().stream().max(Comparator.comparingDouble(e ->
-                    e.getValue().getHigh())).get();
-            Map.Entry<T, SimpleBar> minEntry = map.entrySet().stream().min(Comparator.comparingDouble(e ->
-                    e.getValue().getLow())).get();
+//            Map.Entry<T, SimpleBar> maxEntry = map.entrySet().stream().max(Comparator.comparingDouble(e ->
+//                    e.getValue().getHigh())).get();
+//            Map.Entry<T, SimpleBar> minEntry = map.entrySet().stream().min(Comparator.comparingDouble(e ->
+//                    e.getValue().getLow())).get();
             //pr(" max min x ** maxT, minT", max, min, x, maxEntry.getKey(), minEntry.getKey());
 
             return (int) Math.round(100d * ((x - min) / (max - min)));
