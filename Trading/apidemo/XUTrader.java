@@ -1323,14 +1323,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long accSize = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == PERC_ACC)
                 .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
-                .mapToInt(e -> e.getValue().getOrder().getTotalSize())
-                .sum();
+                .mapToInt(e -> e.getValue().getOrder().getTotalSize()).sum();
 
         long deccSize = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == AutoOrderType.PERC_DECC)
                 .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
-                .mapToInt(e -> e.getValue().getOrder().getTotalSize())
-                .sum();
+                .mapToInt(e -> e.getValue().getOrder().getTotalSize()).sum();
 
         long netPercTrades = accSize - deccSize;
 
@@ -1599,25 +1597,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 " pd trader ", " barrier# ", pdBarrier.getNumberWaiting(), " PD sem#: ",
                 pdSemaphore.availablePermits(), "pd", r10000(pd), "pd P%", pdPerc);
 
-        if (nowMilli.toLocalTime().isBefore(LocalTime.of(9, 30))) {
+        if (!pdTraderOn.get() || nowMilli.toLocalTime().isBefore(LocalTime.of(9, 30))) {
             pr(" QUITTING PD, local time before 9 30 ");
-            return;
-        }
-
-        if (currDelta > getDeltaHighLimit() || currDelta < getDeltaLowLimit()) {
-            pr("PD Trader: outside delta limit ");
-            return;
-        }
-
-        if (!pdTraderOn.get()) {
-            pr("pd trader off");
             return;
         }
 
         // print all pd trades
         globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == AutoOrderType.PD_OPEN ||
-                e.getValue().getOrderType() == AutoOrderType.PD_CLOSE)
-                .forEach(Utility::pr);
+                e.getValue().getOrderType() == AutoOrderType.PD_CLOSE).forEach(Utility::pr);
 
         if (pdBarrier.getNumberWaiting() == 2) {
             outputToAutoLog(str(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), " resetting PD barrier" +
