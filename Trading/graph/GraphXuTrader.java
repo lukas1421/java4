@@ -43,8 +43,8 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     int last = 0;
     double rtn = 0;
     NavigableMap<LocalDateTime, SimpleBar> tm;
-    private NavigableMap<LocalDateTime, Double> ma60 = new ConcurrentSkipListMap<>();
-    private NavigableMap<LocalDateTime, Double> ma80 = new ConcurrentSkipListMap<>();
+    private NavigableMap<LocalDateTime, Double> maShort = new ConcurrentSkipListMap<>();
+    private NavigableMap<LocalDateTime, Double> maLong = new ConcurrentSkipListMap<>();
 
     private NavigableMap<LocalDateTime, TradeBlock> trademap;
     private volatile FutType fut;
@@ -77,22 +77,22 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                         ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
     }
 
-    private void setMA60Map(NavigableMap<LocalDateTime, SimpleBar> mp) {
-        NavigableMap<LocalDateTime, Double> sma60 = new ConcurrentSkipListMap<>();
-        for (Map.Entry<LocalDateTime, SimpleBar> e : mp.entrySet()) {
-
-            long n = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey())).count();
-            if (n > 60) {
-                long size = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey())).skip(n - 60)
-                        .count();
-                double val = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey()))
-                        .skip(n - 60).mapToDouble(e2 -> e2.getValue().getAverage()).sum() / size;
-                System.out.println(str(" n, size, val ", n, size, val));
-                sma60.put(e.getKey(), val);
-            }
-        }
-        this.ma60 = sma60;
-    }
+//    private void setMA60Map(NavigableMap<LocalDateTime, SimpleBar> mp) {
+//        NavigableMap<LocalDateTime, Double> sma60 = new ConcurrentSkipListMap<>();
+//        for (Map.Entry<LocalDateTime, SimpleBar> e : mp.entrySet()) {
+//
+//            long n = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey())).count();
+//            if (n > 60) {
+//                long size = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey())).skip(n - 60)
+//                        .count();
+//                double val = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey()))
+//                        .skip(n - 60).mapToDouble(e2 -> e2.getValue().getAverage()).sum() / size;
+//                System.out.println(str(" n, size, val ", n, size, val));
+//                sma60.put(e.getKey(), val);
+//            }
+//        }
+//        this.maShort = sma60;
+//    }
 
     private void setTradesMap(NavigableMap<LocalDateTime, TradeBlock> trade) {
         //System.out.println(" Graph Xu Trader: set trades map " + trade);
@@ -128,12 +128,12 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     public void fillInGraph(NavigableMap<LocalDateTime, SimpleBar> mp) {
         if (XUTrader.gran == DisplayGranularity._1MDATA) {
             this.setNavigableMap(mp, displayPred);
-            ma60 = new ConcurrentSkipListMap<>();
-            ma80 = new ConcurrentSkipListMap<>();
+            maShort = new ConcurrentSkipListMap<>();
+            maLong = new ConcurrentSkipListMap<>();
         } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
             this.setNavigableMap(map1mTo5mLDT(mp), displayPred);
-            ma60 = XuTraderHelper.getMAGen(map1mTo5mLDT(mp), 60);
-            ma80 = XuTraderHelper.getMAGen(map1mTo5mLDT(mp), 80);
+            maShort = XuTraderHelper.getMAGen(map1mTo5mLDT(mp), 5);
+            maLong = XuTraderHelper.getMAGen(map1mTo5mLDT(mp), 10);
         }
     }
 
@@ -152,10 +152,10 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
     public void computeMAStrategyForAll() {
         System.out.println(" computing MA strategy 60 ");
-        computeMAStrategy(ma60);
+        computeMAStrategy(maShort);
 
         System.out.println(" computing MA strategy 80 ");
-        computeMAStrategy(ma80);
+        computeMAStrategy(maLong);
     }
 
     private void computeMAStrategy(NavigableMap<LocalDateTime, Double> sma) {
@@ -254,22 +254,23 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             int lowY = getY(tm.floorEntry(lt).getValue().getLow());
             int closeY = getY(tm.floorEntry(lt).getValue().getClose());
 
-            if (ma60.size() > 0 && ma60.containsKey(lt)) {
+            if (maShort.size() > 0 && maShort.containsKey(lt)) {
                 g.setColor(Color.blue);
-                int ma60Y = getY(ma60.get(lt));
-                g.drawLine(x, ma60Y, x + 1, ma60Y);
-                if (lt.equals(ma60.lastKey())) {
-                    g.drawString("MA60: " + Math.round(100d * ma60.lastEntry().getValue()) / 100d, x + 20, ma60Y);
+                int maShortY = getY(maShort.get(lt));
+                g.drawLine(x, maShortY, x + 1, maShortY);
+                if (lt.equals(maShort.lastKey())) {
+                    g.drawString("MA Short: " + Math.round(100d * maShort.lastEntry().getValue()) / 100d, x + 20, maShortY);
                 }
                 g.setColor(Color.black);
             }
 
-            if (ma80.size() > 0 && ma80.containsKey(lt)) {
+            if (maLong.size() > 0 && maLong.containsKey(lt)) {
                 g.setColor(Color.orange);
-                int ma80Y = getY(ma80.get(lt));
-                g.drawLine(x, ma80Y, x + 1, ma80Y);
-                if (lt.equals(ma80.lastKey())) {
-                    g.drawString("MA80", x + 20, ma80Y);
+                int maLongY = getY(maLong.get(lt));
+                g.drawLine(x, maLongY, x + 1, maLongY);
+                if (lt.equals(maLong.lastKey())) {
+                    g.drawString("MA Long" + Math.round(100d * maLong.lastEntry().getValue()) / 100d
+                            , x + 20, maLongY);
                 }
                 g.setColor(Color.black);
             }
@@ -349,9 +350,9 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                 g.drawOval(x - 3, lowY, 5, 5);
                 g.fillOval(x - 3, lowY, 5, 5);
 
-                if (ma60.size() > 0 && ma60.containsKey(lt)) {
-                    int maY = getY(ma60.get(lt));
-                    g.drawString("MA60: " + lt.toLocalTime() + " " + Math.round(ma60.floorEntry(lt).getValue()), x, maY);
+                if (maShort.size() > 0 && maShort.containsKey(lt)) {
+                    int maY = getY(maShort.get(lt));
+                    g.drawString("MA Short: " + lt.toLocalTime() + " " + Math.round(maShort.floorEntry(lt).getValue()), x, maY);
                     g.drawOval(x - 3, lowY, 5, 5);
                     g.fillOval(x - 3, lowY, 5, 5);
                 }
@@ -370,10 +371,10 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             g.drawOval(x + 2, lowY, 5, 5);
             g.fillOval(x + 2, lowY, 5, 5);
 
-            if (ma60.size() > 0) {
-                int maY = getY(ma60.lastEntry().getValue());
-                g.drawString(" ma60: " + ma60.lastKey().toLocalTime() + " " +
-                        Math.round(ma60.lastEntry().getValue()), x, maY);
+            if (maShort.size() > 0) {
+                int maY = getY(maShort.lastEntry().getValue());
+                g.drawString(" maShort: " + maShort.lastKey().toLocalTime() + " " +
+                        Math.round(maShort.lastEntry().getValue()), x, maY);
                 g.drawOval(x + 2, maY, 5, 5);
                 g.fillOval(x + 2, maY, 5, 5);
             }

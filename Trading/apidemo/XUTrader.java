@@ -768,6 +768,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (maxAfterMin && maxAbovePrev && pmChgY < 0) {
             //pure cover
             coverTrader(ldt, price);
+            dayTrader(ldt, price);
         } else if (pmChgY < 0) {
             MATrader(ldt, price);
             percentileTrader(ldt, price);
@@ -1479,13 +1480,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static synchronized void indexMATrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         String anchorIndex = FTSE_INDEX;
+        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate());
 
-        if (!((lt.isAfter(LocalTime.of(9, 40)) && lt.isBefore(LocalTime.of(11, 30))) ||
-                (lt.isAfter(LocalTime.of(13, 0)) && lt.isBefore(LocalTime.of(15, 0))))) {
-            return;
+        if (lt.isAfter(LocalTime.of(15, 0)) || lt.isBefore(LocalTime.of(5, 0))) {
+            //anchorIndex = "SGXA50";
+            index = futData.get(ibContractToFutType(activeFuture));
         }
 
-        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate());
+//        if (!((lt.isAfter(LocalTime.of(9, 40)) && lt.isBefore(LocalTime.of(11, 30))) ||
+//                (lt.isAfter(LocalTime.of(13, 0)) && lt.isBefore(LocalTime.of(15, 0))))) {
+//            return;
+//        }
+
 
         LocalDateTime lastIndexMAOrder = getLastOrderTime(INDEX_MA);
 
@@ -1545,7 +1551,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice) {
-
         if (!trimTraderOn.get()) {
             return;
         }
