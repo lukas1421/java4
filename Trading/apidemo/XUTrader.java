@@ -1478,22 +1478,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     private static synchronized void indexMATrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
-        if (!((lt.isAfter(LocalTime.of(10, 30)) && lt.isBefore(LocalTime.of(11, 30))) ||
-                (lt.isAfter(LocalTime.of(14, 0)) && lt.isBefore(LocalTime.of(15, 0))))) {
+        String anchorIndex = FTSE_INDEX;
+        if (!((lt.isAfter(LocalTime.of(9, 30)) && lt.isBefore(LocalTime.of(11, 30))) ||
+                (lt.isAfter(LocalTime.of(13, 0)) && lt.isBefore(LocalTime.of(15, 0))))) {
             return;
         }
 
-        if (priceMapBar.get(FTSE_INDEX).size() < 20) {
+        if (priceMapBar.get(anchorIndex).size() < 20) {
             pr(" index data not enough ");
             return;
         }
 
-        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate());
-
-        SimpleBar lastBar = new SimpleBar(index.lastEntry().getValue());
-        LocalTime lastBarTime = index.lastEntry().getKey().toLocalTime();
-        SimpleBar secLastBar = new SimpleBar(index.lowerEntry(index.lastKey()).getValue());
-        LocalTime secLastBarTime = index.lowerEntry(index.lastKey()).getKey().toLocalTime();
+        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate());
 
         LocalDateTime lastIndexMAOrder = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == AutoOrderType.INDEX_MA)
@@ -1501,31 +1497,40 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .map(e -> e.getValue().getOrderTime())
                 .orElse(sessionOpenT());
 
-        lastBar.add(freshPrice);
-        NavigableMap<LocalDateTime, Double> sma = getMAGen(index, 60);
+        //lastBar.add(freshPrice);
+        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, 5);
+        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, 10);
 
-        double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
-        sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
+        double maShortLast = smaShort.size() > 0 ? smaShort.lastEntry().getValue() : 0.0;
+        double maShortSecLast = smaShort.size() > 0 ? smaShort.lowerEntry(smaShort.lastKey()).getValue() : 0.0;
+        double maLongLast = smaLong.size() > 0 ? smaLong.lastEntry().getValue() : 0.0;
+        double maLongSecLast = smaLong.size() > 0 ? smaLong.lowerEntry((smaLong.lastKey())).getValue() : 0.0;
+
+
+        //sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
         int todayPerc = getPercentileForLast(index);
         double delta = getNetPtfDelta();
 
         if (ChronoUnit.MINUTES.between(lastIndexMAOrder, nowMilli) > ORDER_WAIT_TIME &&
-                touchConditionMet(secLastBar, lastBar, maLast) && delta > getBearishTarget() && delta < getBullishTarget()) {
-            if (bullishTouchMet(secLastBar, lastBar, maLast) && todayPerc < DOWN_PERC) {
+                delta > getBearishTarget() && delta < getBullishTarget()) {
+
+            if (maShortLast > maLongLast && maShortSecLast < maLongSecLast) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.INDEX_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "index MA buy", globalIdOrderMap.get(id),
-                        "target range ", getBullishTarget(), getBearishTarget()));
+                outputOrderToAutoLog(str(o.orderId(), "index MA buy", globalIdOrderMap.get(id)
+                        , "Last shortlong ", maShortLast, maLongLast, "SecLast Shortlong",
+                        maShortSecLast, maLongSecLast));
 
-            } else if (bearishTouchMet(secLastBar, lastBar, maLast) && todayPerc > UP_PERC) {
+            } else if (maShortLast < maLongLast && maShortSecLast > maLongLast) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.INDEX_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "index MA sell", globalIdOrderMap.get(id),
-                        "target range ", getBullishTarget(), getBearishTarget()));
+                outputOrderToAutoLog(str(o.orderId(), "index MA sell", globalIdOrderMap.get(id)
+                        , "Last shortlong ", maShortLast, maLongLast, "SecLast Shortlong",
+                        maShortSecLast, maLongSecLast));
             }
         }
     }
