@@ -73,7 +73,7 @@ public final class ChinaBigGraph extends JPanel {
     public static void refresh() {
         gb.repaint();
         gYtd.repaint();
-        setGraph(currentStock);
+        //setGraph(currentStock);
     }
 
     public static void setGraph(String nam) {
