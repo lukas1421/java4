@@ -307,11 +307,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             percTraderButton.setText("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
         });
 
-        JButton dayCoverButton = new JButton(" Day Cover " + (dayTraderOn.get() ? "ON" : "OFF"));
-        dayCoverButton.addActionListener(l -> {
+        JButton dayTraderButton = new JButton(" Day Cover " + (dayTraderOn.get() ? "ON" : "OFF"));
+        dayTraderButton.addActionListener(l -> {
             dayTraderOn.set(!dayTraderOn.get());
             outputToAutoLog("day cover trader set to " + dayTraderOn.get());
-            dayCoverButton.setText(" day cover trader: " + (dayTraderOn.get() ? "ON" : "OFF"));
+            dayTraderButton.setText(" day cover trader: " + (dayTraderOn.get() ? "ON" : "OFF"));
         });
 
 
@@ -610,7 +610,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(musicPlayableButton);
         controlPanel1.add(inventoryTraderButton);
         controlPanel1.add(percTraderButton);
-        controlPanel1.add(dayCoverButton);
+        controlPanel1.add(dayTraderButton);
         controlPanel1.add(pdTraderButton);
         controlPanel1.add(trimDeltaButton);
         controlPanel1.add(rollButton);
@@ -764,18 +764,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         XUTrader.updateLastMinuteMap(ldt, price);
         XUTrader.trimTrader(ldt, price);
 
-        //if (currDelta < DELTA_HARD_HI_LIMIT && currDelta > DELTA_HARD_LO_LIMIT) {
         indexMATrader(ldt, price);
-        //}
-
 
         if (maxAfterMin && maxAbovePrev && pmChgY < 0) {
             if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
                 MATrader(ldt, price);
                 percentileTrader(ldt, price);
                 dayTrader(ldt, price);
-                openCoverTrader(ldt, price);
+                coverTrader(ldt, price);
             }
+        } else if (pmChgY < 0) {
+            coverTrader(ldt, price);
         } else {
             amHedgeTrader(ldt, price);
         }
@@ -1448,35 +1447,30 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param nowMilli   time now in milli
      * @param freshPrice price
      */
-    private static synchronized void openCoverTrader(LocalDateTime nowMilli, double freshPrice) {
-        LocalTime lt = nowMilli.toLocalTime();
-        if (!(lt.isAfter(LocalTime.of(10, 0)) && lt.isBefore(LocalTime.of(15, 0)))) {
-            return;
-        }
+    private static synchronized void coverTrader(LocalDateTime nowMilli, double freshPrice) {
 
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate());
         int todayPerc = getPercentileForLast(index);
 
-        LocalDateTime lastOpenCoverOrderT = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == AutoOrderType.OPEN_COVER)
+        LocalDateTime lastCoverOrderT = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == AutoOrderType.COVER)
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                 .map(e -> e.getValue().getOrderTime())
                 .orElse(sessionOpenT());
-
 
         // add previous close
         double delta = getFutDelta();
 
         if (nowMilli.toLocalTime().isBefore(LocalTime.of(10, 0))
-                && todayPerc < DOWN_PERC && ChronoUnit.MINUTES.between(lastOpenCoverOrderT, nowMilli) >
+                && todayPerc < DOWN_PERC && ChronoUnit.MINUTES.between(lastCoverOrderT, nowMilli) >
                 ORDER_WAIT_TIME / 2) {
 
             int id = autoTradeID.incrementAndGet();
             int size = getSizeForDelta(freshPrice, fxMap.get("USD"), delta / 4);
             Order o = placeBidLimit(freshPrice, size); //Math.min(size, MAX_FUT_LIMIT)
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.OPEN_COVER));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.COVER));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            outputOrderToAutoLog(str(o.orderId(), "open cover", globalIdOrderMap.get(id)));
+            outputOrderToAutoLog(str(o.orderId(), "cover short follow PMY<0", globalIdOrderMap.get(id)));
         }
     }
 
