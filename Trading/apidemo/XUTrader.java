@@ -762,7 +762,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         XUTrader.updateLastMinuteMap(ldt, price);
         XUTrader.trimTrader(ldt, price);
 
-        indexMATrader(ldt, price);
+        if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
+            indexMATrader(ldt, price);
+        }
 
         if (maxAfterMin && maxAbovePrev && pmChgY < 0) {
             if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
@@ -1482,7 +1484,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime lt = nowMilli.toLocalTime();
         String anchorIndex = FTSE_INDEX;
 
-        if (!((lt.isAfter(LocalTime.of(9, 30)) && lt.isBefore(LocalTime.of(11, 30))) ||
+        if (!((lt.isAfter(LocalTime.of(9, 40)) && lt.isBefore(LocalTime.of(11, 30))) ||
                 (lt.isAfter(LocalTime.of(13, 0)) && lt.isBefore(LocalTime.of(15, 0))))) {
             return;
         }

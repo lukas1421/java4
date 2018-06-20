@@ -191,7 +191,8 @@ public class GraphBig extends JComponent implements GraphFillable, MouseMotionLi
 
     @Override
     protected void paintComponent(Graphics g) {
-        NavigableMap<LocalTime, Double> sma = getMAGenLT(tm, 60);
+        NavigableMap<LocalTime, Double> smaShort = getMAGenLT(tm, 5);
+        NavigableMap<LocalTime, Double> smaLong = getMAGenLT(tm, 10);
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
@@ -280,19 +281,31 @@ public class GraphBig extends JComponent implements GraphFillable, MouseMotionLi
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
             }
 
-            if (sma.size() > 0 && sma.containsKey(lt)) {
+            if (smaShort.size() > 0 && smaShort.containsKey(lt)) {
                 g.setColor(Color.blue);
                 Stroke sk = g2.getStroke();
                 g2.setStroke(new BasicStroke(5));
-                int maY = getY(sma.get(lt));
-                g.drawLine(x, maY, x + 3, maY);
-                if (lt.equals(sma.lastKey())) {
-                    g.drawString("MA:", x + 20, maY);
+                int maShortY = getY(smaShort.get(lt));
+                g.drawLine(x, maShortY, x + 3, maShortY);
+                if (lt.equals(smaShort.lastKey())) {
+                    g.drawString("ShortMA:", x + 20, maShortY);
                 }
                 g.setColor(Color.black);
                 g2.setStroke(sk);
             }
 
+            if (smaLong.size() > 0 && smaLong.containsKey(lt)) {
+                g.setColor(Color.green);
+                Stroke sk = g2.getStroke();
+                g2.setStroke(new BasicStroke(5));
+                int maLongY = getY(smaLong.get(lt));
+                g.drawLine(x, maLongY, x + 3, maLongY);
+                if (lt.equals(smaLong.lastKey())) {
+                    g.drawString("LongMA:", x + 20, maLongY);
+                }
+                g.setColor(Color.black);
+                g2.setStroke(sk);
+            }
             x += WIDTH_BIG;
         }
 
