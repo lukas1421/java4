@@ -756,15 +756,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        pr("maxAfterMin: ", maxAfterMin, "maxAbovePrev", maxAbovePrev,
-                "pmchgy", pmChgY, "delta range ", getBearishTarget(), getBullishTarget());
+        if (detailedPrint.get()) {
+            pr("maxAfterMin: ", maxAfterMin, "maxAbovePrev", maxAbovePrev,
+                    "pmchgy", pmChgY, "delta range ", getBearishTarget(), getBullishTarget());
+        }
 
         XUTrader.updateLastMinuteMap(ldt, price);
         XUTrader.trimTrader(ldt, price);
 
-        if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
-            indexMATrader(ldt, price);
-        }
+        //if (currDelta < DELTA_HARD_HI_LIMIT && currDelta > DELTA_HARD_LO_LIMIT) {
+        indexMATrader(ldt, price);
+        //}
+
 
         if (maxAfterMin && maxAbovePrev && pmChgY < 0) {
             if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
@@ -826,17 +829,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return false;
         } else {
             LocalTime maxT = priceMapBar.get(name).entrySet().stream()
-                    .filter(e -> e.getKey().isAfter(LocalTime.of(9, 30)) &&
+                    .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29)) &&
                             e.getKey().isBefore(LocalTime.of(9, 41)))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MIN);
 
             LocalTime minT = priceMapBar.get(name).entrySet().stream()
-                    .filter(e -> e.getKey().isAfter(LocalTime.of(9, 30)) &&
+                    .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29)) &&
                             e.getKey().isBefore(LocalTime.of(9, 41)))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MAX);
-            //pr(name, "checkf10maxAftermint", maxT, minT);
+            if (detailedPrint.get()) {
+                pr(name, "checkf10maxAftermint", maxT, minT);
+            }
 
             return maxT.isAfter(minT);
         }
@@ -851,7 +856,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             e.getKey().isBefore(LocalTime.of(9, 41)))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
-            //pr(name, "checkf10max ", f10max, "close", closeMap.get(name));
+            if (detailedPrint.get()) {
+                pr(name, "checkf10max ", f10max, "close", closeMap.get(name));
+            }
             return f10max > closeMap.get(name);
         }
     }
@@ -886,10 +893,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 //throw new IllegalStateException(" ytd data corrupt ");
                 return 0;
             } else {
-                int res = (int) Math.round(100d * (prevClose - pmOpen) / (prevMax - prevMin));
-                pr(" perc chg y fut ", res, "close, pmopen, max, min ",
-                        prevClose, pmOpen, prevMax, prevMin);
-                return res;
+                //                pr(" perc chg y fut ", res, "close, pmopen, max, min ",
+//                        prevClose, pmOpen, prevMax, prevMin);
+                return (int) Math.round(100d * (prevClose - pmOpen) / (prevMax - prevMin));
             }
         }
     }
@@ -1502,20 +1508,32 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, 10);
 
         if (smaShort.size() <= 2 || smaLong.size() <= 2) {
+            pr(" smashort size long size not enough ");
             return;
         }
+
+        if (detailedPrint.get()) {
+            pr(" smashort ", smaShort);
+            pr(" sma long ", smaLong);
+        }
+
 
         double maShortLast = smaShort.lastEntry().getValue();
         double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
         double maLongLast = smaLong.lastEntry().getValue();
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
+        if (detailedPrint.get()) {
+            pr(" ma cross last : ", r(maShortLast), r(maLongLast));
+            pr(" ma cross 2nd last : ", r(maShortSecLast), r(maLongSecLast));
+            pr(" bull crossed is ", maShortLast > maLongLast && maShortSecLast < maLongSecLast);
+            pr(" bear crossed is ", maShortLast < maLongLast && maShortSecLast > maLongSecLast);
+        }
+
         int todayPerc = getPercentileForLast(index);
         double delta = getNetPtfDelta();
 
-        if (ChronoUnit.MINUTES.between(lastIndexMAOrder, nowMilli) > ORDER_WAIT_TIME &&
-                delta > getBearishTarget() && delta < getBullishTarget()) {
-
+        if (ChronoUnit.MINUTES.between(lastIndexMAOrder, nowMilli) > 1) {
             if (maShortLast > maLongLast && maShortSecLast < maLongSecLast) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
