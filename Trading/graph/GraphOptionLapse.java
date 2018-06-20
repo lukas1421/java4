@@ -32,7 +32,9 @@ public class GraphOptionLapse extends JComponent implements MouseMotionListener,
     }
 
     public void setVolLapse(NavigableMap<LocalDate, Double> m) {
+
         volLapse = m.entrySet().stream().filter(e -> e.getKey().isAfter(LocalDate.now().minusDays(90)))
+                .filter(e -> (e.getValue() != 0.0 && e.getValue() < 100.0))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
     }

@@ -208,7 +208,10 @@ public final class ChinaMain implements IConnectionHandler {
                 }
             }, 10, 5, TimeUnit.MINUTES);
 
-            ses.scheduleAtFixedRate(ChinaBigGraph::refresh, 0, 1, TimeUnit.SECONDS);
+            ses.scheduleAtFixedRate(() -> {
+                ChinaBigGraph.setGraph(ChinaStock.selectedNameStock);
+                ChinaBigGraph.refresh();
+            }, 0, 1, TimeUnit.SECONDS);
 
             ses.scheduleAtFixedRate(chinaOption, 0, 5, SECONDS);
             ChinaOption.refresh();
