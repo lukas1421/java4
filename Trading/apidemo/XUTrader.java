@@ -1487,7 +1487,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             index = futData.get(ibContractToFutType(activeFuture));
         }
 
+        int perc = getPercentileForLast(index);
+
 //        if (!((lt.isAfter(LocalTime.of(9, 40)) && lt.isBefore(LocalTime.of(11, 30))) ||
+
 //                (lt.isAfter(LocalTime.of(13, 0)) && lt.isBefore(LocalTime.of(15, 0))))) {
 //            return;
 //        }
@@ -1532,7 +1535,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (ChronoUnit.MINUTES.between(lastIndexMAOrder, nowMilli) >= 1) {
             if (maShortLast > maLongLast && maShortSecLast < maLongSecLast) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, 1);
+                int size = perc < DOWN_PERC ? 2 : 1;
+                Order o = placeBidLimit(freshPrice, size);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "index MA buy", globalIdOrderMap.get(id)
