@@ -146,7 +146,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final long MAX_OPEN_TRADE_ORDERS = 10;
 
     //music
-    private EmbeddedSoundPlayer soundPlayer = new EmbeddedSoundPlayer();
+    private static EmbeddedSoundPlayer soundPlayer = new EmbeddedSoundPlayer();
 
     //detailed MA
     private static AtomicBoolean detailedPrint = new AtomicBoolean(false);
@@ -1526,8 +1526,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (detailedPrint.get()) {
             pr(" ma cross last : ", r(maShortLast), r(maLongLast));
             pr(" ma cross 2nd last : ", r(maShortSecLast), r(maLongSecLast));
-            pr(" bull crossed is ", maShortLast > maLongLast && maShortSecLast < maLongSecLast);
-            pr(" bear crossed is ", maShortLast < maLongLast && maShortSecLast > maLongSecLast);
+            boolean bull = maShortLast > maLongLast && maShortSecLast < maLongSecLast;
+            boolean bear = maShortLast < maLongLast && maShortSecLast > maLongSecLast;
+            pr(" bull crossed is ", bull);
+            pr(" bear crossed is ", bear);
+            if (bull || bear) {
+                soundPlayer.playClip();
+            }
         }
 
         int todayPerc = getPercentileForLast(index);
@@ -1548,8 +1553,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.INDEX_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "index MA sell", globalIdOrderMap.get(id)
-                        , "Last shortlong ", maShortLast, maLongLast, "SecLast Shortlong",
-                        maShortSecLast, maLongSecLast));
+                        , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
+                        r(maShortSecLast), r(maLongSecLast)));
             }
         }
     }
