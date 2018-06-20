@@ -763,26 +763,23 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         XUTrader.updateLastMinuteMap(ldt, price);
         XUTrader.trimTrader(ldt, price);
-
         indexMATrader(ldt, price);
 
+        // this part needs more work
         if (maxAfterMin && maxAbovePrev && pmChgY < 0) {
-            if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
-                MATrader(ldt, price);
-                percentileTrader(ldt, price);
-                dayTrader(ldt, price);
-                coverTrader(ldt, price);
-            }
-        } else if (pmChgY < 0) {
+            //pure cover
             coverTrader(ldt, price);
+        } else if (pmChgY < 0) {
+            MATrader(ldt, price);
+            percentileTrader(ldt, price);
+            dayTrader(ldt, price);
+            //coverTrader(ldt, price);
         } else {
             amHedgeTrader(ldt, price);
         }
-
         //XUTrader.pdTrader(ldt, price);
         //CompletableFuture.runAsync(() -> XUTrader.inventoryTrader(ldt, price));
         //CompletableFuture.runAsync(() -> XUTrader.flattenTrader(ldt, price));
-
     }
 
     private static void amHedgeTrader(LocalDateTime nowMilli, double freshPrice) {
@@ -1235,8 +1232,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
 
-        LocalDate currentDate = (nowMilli.toLocalTime().isAfter(LocalTime.of(23, 59, 59))
-                && nowMilli.toLocalTime().isBefore(LocalTime.of(5, 0, 0))) ? LocalDate.now().minusDays(1L) :
+        LocalDate currentDate = (lt.isAfter(LocalTime.of(23, 59, 59))
+                && lt.isBefore(LocalTime.of(5, 0, 0))) ? LocalDate.now().minusDays(1L) :
                 LocalDate.now();
 
         NavigableMap<LocalDateTime, SimpleBar> todayPriceMap =
@@ -1249,15 +1246,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
+        int todayPerc = getPercentileForLast(todayPriceMap);
+        int openPerc = getPercentileForX(todayPriceMap, todayPriceMap.firstEntry().getValue().getHigh());
+        int pmPerc = 50;
+
         LocalDateTime lastOrderTime = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == AutoOrderType.DAY_COVER)
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                 .map(e -> e.getValue().getOrderTime())
                 .orElse(LocalDateTime.of(LocalDate.now(), LocalTime.of(0, 0)));
 
-        int todayPerc = getPercentileForLast(todayPriceMap);
-        int openPerc = getPercentileForX(todayPriceMap, todayPriceMap.firstEntry().getValue().getHigh());
-        int pmPerc = 50;
 
         if (lt.isAfter(LocalTime.of(13, 15)) && lt.isBefore(LocalTime.of(15, 0))) {
             NavigableMap<LocalDateTime, SimpleBar> pmMap =
@@ -1268,47 +1266,40 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pmPerc = getPercentileForX(pmMap, freshPrice);
         }
 
-        pr(" Day cover trader: ", dayTraderOn.get(), "last order time ", lastOrderTime,
-                " today p%: ", todayPerc, " open p% ", openPerc);
+        LocalDate prevDate = futdata.firstEntry().getKey().toLocalDate();
+        double ytdClose = futdata.lowerEntry(LocalDateTime.of(prevDate, LocalTime.of(15, 0))).getValue().getHigh();
+        int ytdClosePerc = getPercentileForX(futdata.headMap(LocalDateTime.of(prevDate,
+                LocalTime.of(15, 0)), true), ytdClose);
 
         if (!dayTraderOn.get() || futdata.size() < 2 || futdata.firstKey().toLocalDate()
                 .equals(futdata.lastKey().toLocalDate())) {
             return;
         }
 
-        LocalDate prevDate = futdata.firstEntry().getKey().toLocalDate();
+        pr(" Day cover trader: ", dayTraderOn.get(), "last order time ", lastOrderTime,
+                " today p%: ", todayPerc, " open p% ", openPerc,
+                "ytd close ", ytdClose, " ytd close p% ", ytdClosePerc, "today p% ", todayPerc);
 
-        double ytdClose = futdata.lowerEntry(LocalDateTime.of(prevDate, LocalTime.of(15, 0))).getValue().getHigh();
+        if (ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= ORDER_WAIT_TIME) {
+            if (todayPerc < 5 && currDelta < getBullishTarget()) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(freshPrice, 1);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_BUY));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "day cover",
+                        globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc, "pm p%", pmPerc
+                        , getBullishTarget(), getBearishTarget()));
 
-        int ytdClosePerc = getPercentileForX(futdata.headMap(LocalDateTime.of(prevDate,
-                LocalTime.of(15, 0)), true), ytdClose);
+            } else if (todayPerc > 95 && currDelta > getBearishTarget() && lt.isBefore(LocalTime.of(13, 0))) {
 
-        pr("day trader *** ytd close ", ytdClose, " ytd close p% ", ytdClosePerc,
-                "today p% ", todayPerc, "currDel", r(currDelta), "Del Range", getBullishTarget(), getBearishTarget());
-
-
-        if (todayPerc < 5 && currDelta < getBullishTarget()
-                && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= ORDER_WAIT_TIME) {
-
-            int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimit(freshPrice, 1);
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_BUY));
-            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            outputOrderToAutoLog(str(o.orderId(), "day cover",
-                    globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc, "pm p%", pmPerc
-                    , getBullishTarget(), getBearishTarget()));
-
-        } else if (todayPerc > 95 && currDelta > getBearishTarget()
-                && ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= ORDER_WAIT_TIME
-                && nowMilli.toLocalTime().isBefore(LocalTime.of(13, 0))) {
-
-            int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimit(freshPrice, 1);
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_SELL));
-            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            outputOrderToAutoLog(str(o.orderId(), "day sell",
-                    globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc, "pm p%", pmPerc
-                    , getBullishTarget(), getBearishTarget()));
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(freshPrice, 1);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_SELL));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "day sell",
+                        globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc, "pm p%", pmPerc
+                        , getBullishTarget(), getBearishTarget()));
+            }
         }
     }
 
