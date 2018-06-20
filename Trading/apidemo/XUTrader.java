@@ -472,7 +472,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 XUTrader.clearLog();
                 XUTrader.updateLog("**************************************************************");
             });
-            XUTrader.processTradeMapActive();
+            XUTrader.computeTradeMapActive();
         }, 0, 10, TimeUnit.SECONDS));
 
         JButton overnightButton = new JButton("Overnight: " + (overnightTradeOn.get() ? "ON" : "OFF"));
@@ -761,6 +761,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         XUTrader.updateLastMinuteMap(ldt, price);
         XUTrader.trimTrader(ldt, price);
+
+        indexMATrader(ldt, price);
 
         if (maxAfterMin && maxAbovePrev && pmChgY < 0) {
             if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
@@ -1479,13 +1481,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static synchronized void indexMATrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         String anchorIndex = FTSE_INDEX;
+
         if (!((lt.isAfter(LocalTime.of(9, 30)) && lt.isBefore(LocalTime.of(11, 30))) ||
                 (lt.isAfter(LocalTime.of(13, 0)) && lt.isBefore(LocalTime.of(15, 0))))) {
-            return;
-        }
-
-        if (priceMapBar.get(anchorIndex).size() < 20) {
-            pr(" index data not enough ");
             return;
         }
 
@@ -1501,13 +1499,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, 5);
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, 10);
 
-        double maShortLast = smaShort.size() > 0 ? smaShort.lastEntry().getValue() : 0.0;
-        double maShortSecLast = smaShort.size() > 0 ? smaShort.lowerEntry(smaShort.lastKey()).getValue() : 0.0;
-        double maLongLast = smaLong.size() > 0 ? smaLong.lastEntry().getValue() : 0.0;
-        double maLongSecLast = smaLong.size() > 0 ? smaLong.lowerEntry((smaLong.lastKey())).getValue() : 0.0;
+        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
+            return;
+        }
 
+        double maShortLast = smaShort.lastEntry().getValue();
+        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
+        double maLongLast = smaLong.lastEntry().getValue();
+        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
-        //sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
         int todayPerc = getPercentileForLast(index);
         double delta = getNetPtfDelta();
 
@@ -1522,8 +1522,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "index MA buy", globalIdOrderMap.get(id)
                         , "Last shortlong ", maShortLast, maLongLast, "SecLast Shortlong",
                         maShortSecLast, maLongSecLast));
-
-            } else if (maShortLast < maLongLast && maShortSecLast > maLongLast) {
+            } else if (maShortLast < maLongLast && maShortSecLast > maLongSecLast) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.INDEX_MA));
@@ -2607,7 +2606,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return 0.0;
     }
 
-    private static void processTradeMapActive() {
+    private static void computeTradeMapActive() {
         FutType f = ibContractToFutType(activeFuture);
         int unitsBought = tradesMap.get(f).entrySet().stream().mapToInt(e -> e.getValue().getSizeBot()).sum();
         int unitsSold = tradesMap.get(f).entrySet().stream().mapToInt(e -> e.getValue().getSizeSold()).sum();
