@@ -922,16 +922,16 @@ public class ApiController implements EWrapper {
     }
 
 
-    public void req1ContractHistory(Contract ct, HistoricalHandler h) {
+    public void req1ContractHistory(Contract ct, BarSize b, HistoricalHandler h) {
         pr(" requesting stock hist ", ct.symbol());
         CompletableFuture.runAsync(() -> {
             int reqId = m_reqId.incrementAndGet();
             //Contract ct = generateStockContract(stock, exch, curr);
             ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
             String formatTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
-            String durationStr = 1 + " " + DurationUnit.DAY.toString().charAt(0);
+            String durationStr = 2 + " " + DurationUnit.DAY.toString().charAt(0);
             m_client.reqHistoricalData(reqId, ct, formatTime, durationStr,
-                    BarSize._1_min.toString(), WhatToShow.TRADES.toString(),
+                    b.toString(), WhatToShow.TRADES.toString(),
                     0, 2, Collections.<TagValue>emptyList());
         });
 

@@ -56,8 +56,8 @@ public class GraphXU extends JComponent {
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g2.setStroke(BS2);
-        min = getMin(tm1);
-        max = getMax(tm1);
+        min = getMinDouble(tm1);
+        max = getMaxDouble(tm1);
         double avg = Math.round(100d * (min + max) / 2) / 100d;
         int last = 0;
         double rtn = getRtn(tm1);
@@ -120,11 +120,11 @@ public class GraphXU extends JComponent {
         return new Dimension(1000, 50);
     }
 
-//    private double getMin() {
+//    private double getMinDouble() {
 //        return (tm1.size() > 0) ? tm1.entrySet().stream().min(Entry.comparingByValue()).map(Entry::getValue).orElse(0.0) : 0.0;
 //    }
 
-//    private double getMax() {
+//    private double getMaxDouble() {
 //        return (tm1.size() > 0) ? tm1.entrySet().stream().max(Entry.comparingByValue()).map(Entry::getValue).orElse(0.0) : 0.0;
 //    }
 

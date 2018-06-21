@@ -44,12 +44,12 @@ public class GraphHelper {
         if (tm.size() > 0) {
             double initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
             double finalP = getMin(tm);
-            return (Math.abs(finalP - initialP) > 0.0001) ? (double) round(log(getMin() / initialP) * 1000d) / 10d : 0;
+            return (Math.abs(finalP - initialP) > 0.0001) ? (double) round(log(finalP / initialP) * 1000d) / 10d : 0;
         }
         return 0.0;
     }
 
-    public static <T> double getLast(NavigableMap<T, SimpleBar> tm, double defaultV) {
+    public static <T> double getLast(NavigableMap<T, SimpleBar> tm) {
         return r(tm.size() > 0 ? tm.lastEntry().getValue().getClose() : 0.0);
         //return round(100d * priceMap.getOrDefault(name, (tm.size() > 0) ? tm.lastEntry().getValue().getClose() : 0.0)) / 100d;
     }

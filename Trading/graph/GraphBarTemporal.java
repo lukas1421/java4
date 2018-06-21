@@ -168,7 +168,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         min = Utility.reduceMapToDouble(mainMap, SimpleBar::getLow, Math::min);
         max = Utility.reduceMapToDouble(mainMap, SimpleBar::getHigh, Math::max);
         //minRtn = getMinRtn();
-        //maxRtn = getMaxRtn();
+        //maxRtn = getMaxRtnDouble();
         last = 0;
         //rtn = getRtn();
 
@@ -340,7 +340,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
         }
 
         //add bench here
-//        g2.drawString(Double.toString(getLast()), getWidth() * 3 / 8, 15);
+//        g2.drawString(Double.toString(getLastDouble()), getWidth() * 3 / 8, 15);
 
 //        g2.drawString("P%:" + Double.toString(getCurrentPercentile()), getWidth() * 4 / 8, 15);
 //        g2.drawString("涨:" + Double.toString(getRtn()) + "%", getWidth() * 5 / 8, 15);

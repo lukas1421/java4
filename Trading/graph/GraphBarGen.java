@@ -1,6 +1,6 @@
 package graph;
 
-import apidemo.XU;
+import apidemo.XuTraderHelper;
 import auxiliary.SimpleBar;
 import utility.Utility;
 
@@ -11,6 +11,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.NavigableMap;
@@ -24,6 +25,7 @@ import static utility.Utility.roundDownToN;
 
 public class GraphBarGen extends JComponent implements MouseMotionListener, MouseListener {
 
+    private static final int WIDTH_US = 6;
     int height;
     double min;
     double max;
@@ -42,11 +44,13 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
     private static final BasicStroke BS3 = new BasicStroke(3);
     //private Predicate<? super Map.Entry<LocalTime, ?>> graphBarDispPred;
 
+    private static final int INITIAL_X_OFFSET = 5;
+
     private volatile int mouseXCord = Integer.MAX_VALUE;
     private volatile int mouseYCord = Integer.MAX_VALUE;
 
 
-    GraphBarGen() {
+    public GraphBarGen() {
         name = "";
         chineseName = "";
         maxAMT = LocalTime.of(9, 30);
@@ -57,7 +61,7 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
         addMouseMotionListener(this);
     }
 
-    public void setNavigableMap(NavigableMap<LocalTime, SimpleBar> tm) {
+    public void setNavigableMap(NavigableMap<LocalDateTime, SimpleBar> tm) {
         this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue().containsZero())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
                         ConcurrentSkipListMap::new)) : new ConcurrentSkipListMap<>();
@@ -77,8 +81,8 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
         last = 0;
         rtn = getRtn(tm);
 
-        int x = 5;
-        for (LocalTime lt : tm.keySet()) {
+        int x = INITIAL_X_OFFSET;
+        for (LocalDateTime lt : tm.keySet()) {
             int openY = getY(tm.floorEntry(lt).getValue().getOpen());
             int highY = getY(tm.floorEntry(lt).getValue().getHigh());
             int lowY = getY(tm.floorEntry(lt).getValue().getLow());
@@ -98,23 +102,28 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
 
             g.setColor(Color.black);
             if (lt.equals(tm.firstKey())) {
-                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
+                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).format(DateTimeFormatter.ofPattern("MMDD"))
+                        , x, getHeight() - 40);
             } else {
-                if (lt.getMinute() == 0 || (lt.getHour() != 9 && lt.getHour() != 11
-                        && lt.getMinute() == 30)) {
-                    g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
+                if (lt.getMinute() == 0 && (lt.getHour() % 3 == 0)) {
+                    String addage = "";
+                    if (tm.lowerEntry(lt).getKey().toLocalDate().equals(lt.toLocalDate())) {
+                        addage = lt.toLocalDate().format(DateTimeFormatter.ofPattern("MMdd"));
+                    }
+                    g.drawString(addage + lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
                 }
             }
-            if (roundDownToN(mouseXCord, XU.graphBarWidth.get()) == x - 5) {
+            if (roundDownToN(mouseXCord, WIDTH_US) == x - INITIAL_X_OFFSET) {
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
-                g.drawString(lt.toString() + " " + Math.round(100d * tm.floorEntry(lt).getValue().getClose()) / 100d, x, lowY + (mouseYCord < closeY ? -20 : +20));
+                g.drawString(lt.toString() + " " + Math.round(100d * tm.floorEntry(lt).getValue().getClose()) / 100d
+                        , x, lowY + (mouseYCord < closeY ? -20 : +20));
                 g.drawOval(x + 2, lowY, 5, 5);
                 g.fillOval(x + 2, lowY, 5, 5);
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
 
             }
 
-            x += XU.graphBarWidth.get();
+            x += WIDTH_US;
         }
 
         if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0) {
@@ -142,22 +151,11 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
             g2.drawString(name, 5, 15);
         }
         //add bench here
-        g2.drawString(Double.toString(getLast()) + " (" + (Math.round(100d * closeMap.getOrDefault(name, 0.0))) / 100d + ")"
+        g2.drawString(Double.toString(getLast(tm)) + " (" + (Math.round(100d * closeMap.getOrDefault(name, 0.0))) / 100d + ")"
                 , getWidth() * 3 / 8, 15);
 
-        g2.drawString("P%:" + Integer.toString(getCurrentPercentile()), getWidth() * 9 / 16, 15);
-        g2.drawString("涨:" + Double.toString(getRtn()) + "%", getWidth() * 21 / 32, 15);
-        g2.drawString("高 " + (getAMMaxT()), getWidth() * 12 / 16, 15);
-        //g2.drawString("低 " + (getAMMinT()), getWidth() * 7 * 8, 15);
-        g2.drawString("夏 " + sharpe, getWidth() * 7 / 8, 15);
-
-        //below
-        g2.drawString("开 " + Double.toString(getRetOPC()), 5, getHeight() - 25);
-        g2.drawString("一 " + Double.toString(getFirst1()), getWidth() / 9, getHeight() - 25);
-        g2.drawString("量 " + Long.toString(getSize1()), 5, getHeight() - 5);
-        g2.drawString("位Y " + Integer.toString(getCurrentMaxMinYP()), getWidth() / 9, getHeight() - 5);
-        g2.drawString("十  " + Double.toString(getFirst10()), getWidth() / 9 + 75, getHeight() - 25);
-        g2.drawString("V比 " + Double.toString(getSizeSizeYT()), getWidth() / 9 + 75, getHeight() - 5);
+        g2.drawString("P%:" + Integer.toString(XuTraderHelper.getPercentileForLast(tm)), getWidth() * 9 / 16, 15);
+        g2.drawString("涨:" + Double.toString(getRtn(tm)) + "%", getWidth() * 21 / 32, 15);
 
     }
 

@@ -5,6 +5,7 @@ import client.Contract;
 import client.TickType;
 import client.Types;
 import controller.ApiController;
+import graph.GraphBarGen;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
 
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -26,9 +28,12 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
 
 
     ApiController apcon;
+    GraphBarGen g = new GraphBarGen();
 
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>>
             usPriceMapBar = new ConcurrentHashMap<>();
+
+    public static volatile NavigableMap<LocalDateTime, SimpleBar> vixMap = new ConcurrentSkipListMap<>();
 
 
     public USStock(ApiController ap) {
@@ -45,16 +50,33 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
         JButton getHistButton = new JButton(" Hist ");
         getHistButton.addActionListener(l -> {
             pr(" requesting hist ");
-            ap.req1ContractHistory(getVixContract(), this);
+            ap.req1ContractHistory(getVixContract(), Types.BarSize._15_mins, this);
+        });
+
+        JScrollPane scroll = new JScrollPane(g) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 300;
+                d.width = 1500;
+                return d;
+            }
+        };
+
+        JButton refreshButton = new JButton(" Refresh ");
+        refreshButton.addActionListener(l -> {
+            g.repaint();
+            this.repaint();
         });
 
         JPanel controlPanel = new JPanel();
         controlPanel.add(getLiveButton);
         controlPanel.add(getHistButton);
+        controlPanel.add(refreshButton);
 
         setLayout(new BorderLayout());
         add(controlPanel, BorderLayout.NORTH);
-
+        add(scroll, BorderLayout.SOUTH);
     }
 
 
@@ -92,6 +114,7 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
             int daysToGoBack = currDate.getDayOfWeek().equals(DayOfWeek.MONDAY) ? 4 : 2;
             if (ldt.toLocalDate().isAfter(currDate.minusDays(daysToGoBack))) {
                 usPriceMapBar.get(name).put(ldt, new SimpleBar(open, high, low, close));
+                vixMap.put(ldt, new SimpleBar(open, high, low, close));
             }
         } else {
             pr(str(date, open, high, low, close));
@@ -101,6 +124,7 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
 
     @Override
     public void actionUponFinish(String name) {
+        g.setNavigableMap(vixMap);
         pr(" finish ", name);
 
     }

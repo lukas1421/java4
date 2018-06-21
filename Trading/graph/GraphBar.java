@@ -23,11 +23,14 @@ import java.util.function.Predicate;
 import static apidemo.ChinaData.*;
 import static apidemo.ChinaDataYesterday.*;
 import static apidemo.ChinaStock.*;
+import static graph.GraphHelper.*;
 import static java.lang.Double.min;
-import static java.lang.Math.*;
+import static java.lang.Math.log;
+import static java.lang.Math.round;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-import static utility.Utility.*;
+import static utility.Utility.reduceDouble;
+import static utility.Utility.roundDownToN;
 
 public final class GraphBar extends JComponent implements GraphFillable, MouseMotionListener, MouseListener {
 
@@ -162,12 +165,12 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         g.setColor(Color.black);
 
         height = getHeight() - 70;
-        min = getMin();
-        max = getMax();
-        minRtn = getMinRtn();
-        maxRtn = getMaxRtn();
+        min = getMin(tm);
+        max = getMax(tm);
+        minRtn = getMinRtn(tm);
+        maxRtn = getMaxRtn(tm);
         last = 0;
-        rtn = getRtn();
+        rtn = getRtn(tm);
 
         int x = 5;
         for (LocalTime lt : tm.keySet()) {
@@ -246,7 +249,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
                 , getWidth() * 3 / 8, 15);
 
         g2.drawString("P%:" + Integer.toString(getCurrentPercentile()), getWidth() * 9 / 16, 15);
-        g2.drawString("涨:" + Double.toString(getRtn()) + "%", getWidth() * 21 / 32, 15);
+        g2.drawString("涨:" + Double.toString(getRtn(tm)) + "%", getWidth() * 21 / 32, 15);
         g2.drawString("高 " + (getAMMaxT()), getWidth() * 12 / 16, 15);
         //g2.drawString("低 " + (getAMMinT()), getWidth() * 7 * 8, 15);
         g2.drawString("夏 " + sharpe, getWidth() * 7 / 8, 15);
@@ -324,46 +327,46 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
     }
 
 
-    double getMin() {
-        return (tm.size() > 0) ? reduceMapToDouble(tm, SimpleBar::getLow, Math::min) : 0.0;
-        //tm.entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0)
-    }
-
-    double getMax() {
-        return (tm.size() > 0) ? reduceMapToDouble(tm, SimpleBar::getHigh, Math::max) : 0.0;
-        //tm.entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)
-    }
-
-    double getRtn() {
-        if (tm.size() > 0) {
-            double initialP = tm.entrySet().stream().findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
-            double finalP = tm.lastEntry().getValue().getClose();
-            return (double) round((finalP / initialP - 1) * 1000d) / 10d;
-        }
-        return 0.0;
-    }
+//    double getMinDouble() {
+//        return (tm.size() > 0) ? reduceMapToDouble(tm, SimpleBar::getLow, Math::min) : 0.0;
+//        //tm.entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0)
+//    }
+//
+//    double getMaxDouble() {
+//        return (tm.size() > 0) ? reduceMapToDouble(tm, SimpleBar::getHigh, Math::max) : 0.0;
+//        //tm.entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0)
+//    }
+//
+//    double getRtn() {
+//        if (tm.size() > 0) {
+//            double initialP = tm.entrySet().stream().findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+//            double finalP = tm.lastEntry().getValue().getClose();
+//            return (double) round((finalP / initialP - 1) * 1000d) / 10d;
+//        }
+//        return 0.0;
+//    }
 
     private double getRangeY() {
         return Utility.noZeroArrayGen(name, minMapY, maxMapY) ? round(100d * (maxMapY.get(name) / minMapY.get(name) - 1)) / 100d : 0.0;
     }
 
-    double getMaxRtn() {
-        if (tm.size() > 0) {
-            double initialP = tm.entrySet().stream().findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
-            double finalP = getMax();
-            return abs(finalP - initialP) > 0.0001 ? (double) round((finalP / initialP - 1) * 1000d) / 10d : 0;
-        }
-        return 0.0;
-    }
-
-    double getMinRtn() {
-        if (tm.size() > 0) {
-            double initialP = tm.entrySet().stream().findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
-            double finalP = getMin();
-            return (Math.abs(finalP - initialP) > 0.0001) ? (double) round(log(getMin() / initialP) * 1000d) / 10d : 0;
-        }
-        return 0.0;
-    }
+//    double getMaxRtn() {
+//        if (tm.size() > 0) {
+//            double initialP = tm.entrySet().stream().findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+//            double finalP = getMaxDouble();
+//            return abs(finalP - initialP) > 0.0001 ? (double) round((finalP / initialP - 1) * 1000d) / 10d : 0;
+//        }
+//        return 0.0;
+//    }
+//
+//    double getMinRtn() {
+//        if (tm.size() > 0) {
+//            double initialP = tm.entrySet().stream().findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+//            double finalP = getMinDouble();
+//            return (Math.abs(finalP - initialP) > 0.0001) ? (double) round(log(getMinDouble() / initialP) * 1000d) / 10d : 0;
+//        }
+//        return 0.0;
+//    }
 
     double getLast() {
         return round(100d * priceMap.getOrDefault(name, (tm.size() > 0) ? tm.lastEntry().getValue().getClose() : 0.0)) / 100d;

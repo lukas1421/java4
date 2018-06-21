@@ -668,12 +668,12 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
         return (tm.size() > 0) ? (double) 100 * Math.round(log(tm.lastEntry().getValue() / tm.firstEntry().getValue()) * 1000d) / 1000d : 0.0;
     }
 
-//    private double getMaxRtn() {
-//        return (tm.size() > 0) ? (Math.round(log(getMax() / tm.firstEntry().getValue()) * 1000d) / 10d) : 0.0;
+//    private double getMaxRtnDouble() {
+//        return (tm.size() > 0) ? (Math.round(log(getMaxDouble() / tm.firstEntry().getValue()) * 1000d) / 10d) : 0.0;
 //    }
 //
 //    private double getMinRtn() {
-//        return (tm.size() > 0) ? (Math.round(log(getMin() / tm.firstEntry().getValue()) * 1000d) / 10d) : 0.0;
+//        return (tm.size() > 0) ? (Math.round(log(getMinDouble() / tm.firstEntry().getValue()) * 1000d) / 10d) : 0.0;
 //    }
 
     private double getLast() {

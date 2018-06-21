@@ -128,10 +128,10 @@ public class Graph extends JComponent implements GraphFillable {
 
         height = getHeight() - 70;
         getWidth();
-        min = Utility.getMin(tm);
-        max = Utility.getMax(tm);
+        min = Utility.getMinDouble(tm);
+        max = Utility.getMaxDouble(tm);
         minRtn = getMinRtn(tm);
-        maxRtn = Utility.getMaxRtn(tm);
+        maxRtn = Utility.getMaxRtnDouble(tm);
         last = 0;
         rtn = getReturn(tm);
 
@@ -168,7 +168,7 @@ public class Graph extends JComponent implements GraphFillable {
         if (!Optional.ofNullable(chineseName).orElse("").equals("")) {
             g2.drawString(chineseName, getWidth() / 7, 15);
         }
-        g2.drawString(Double.toString(Utility.getLast(tm)), getWidth() / 7 * 2, 15);
+        g2.drawString(Double.toString(Utility.getLastDouble(tm)), getWidth() / 7 * 2, 15);
 
         g2.drawString("P%:" + Double.toString(getCurrentPercentile()), getWidth() / 7 * 3 - 30, 15);
         g2.drawString("涨:" + Double.toString(getReturn(tm)) + "%", getWidth() / 7 * 4 - 40, 15);
@@ -230,7 +230,7 @@ public class Graph extends JComponent implements GraphFillable {
     }
 
     public static double getMinRtn(NavigableMap<LocalTime, Double> tm) {
-        return tm.size() > 0 ? (double) Math.round((Utility.getMin(tm) / tm.entrySet().stream().findFirst().map(Entry::getValue).orElse(0.0) - 1) * 1000d) / 10d : 0.0;
+        return tm.size() > 0 ? (double) Math.round((Utility.getMinDouble(tm) / tm.entrySet().stream().findFirst().map(Entry::getValue).orElse(0.0) - 1) * 1000d) / 10d : 0.0;
     }
 
     private long getSize1() {

@@ -58,8 +58,8 @@ public class GraphOptionLapse extends JComponent implements MouseMotionListener,
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.4F));
 
         super.paintComponent(g);
-        double max = getMax(volLapse);
-        double min = getMin(volLapse);
+        double max = getMaxDouble(volLapse);
+        double min = getMinDouble(volLapse);
 
         //System.out.println(str(" max min ", max, min));
         //int height = (int) (getHeight() * 0.8);

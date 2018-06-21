@@ -224,7 +224,7 @@ public class Utility {
     }
 
 
-    public static <T> double getMin(Map<T, Double> tm) {
+    public static <T> double getMinDouble(Map<T, Double> tm) {
         return reduceMapToDouble(tm, d -> d, Math::min);
     }
 
@@ -242,15 +242,15 @@ public class Utility {
         return (tm != null && tm.size() > 0) ? tm.values().stream().mapToDouble(f).reduce(o).orElse(0.0) : 0.0;
     }
 
-    public static <T> double getMax(Map<T, Double> tm) {
+    public static <T> double getMaxDouble(Map<T, Double> tm) {
         return reduceMapToDouble(tm, d -> d, Math::max);
     }
 
-    public static double getMaxRtn(NavigableMap<LocalTime, Double> tm) {
-        return (tm.size() > 0) ? (double) Math.round((getMax(tm) / tm.firstEntry().getValue() - 1) * 1000d) / 10d : 0.0;
+    public static double getMaxRtnDouble(NavigableMap<LocalTime, Double> tm) {
+        return (tm.size() > 0) ? (double) Math.round((getMaxDouble(tm) / tm.firstEntry().getValue() - 1) * 1000d) / 10d : 0.0;
     }
 
-    public static <T> double getLast(NavigableMap<T, Double> tm) {
+    public static <T> double getLastDouble(NavigableMap<T, Double> tm) {
         return tm.size() > 0 ? Math.round(100d * tm.lastEntry().getValue()) / 100d : 0.0;
     }
 

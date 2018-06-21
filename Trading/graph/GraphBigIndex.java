@@ -497,7 +497,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
 //            g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2); 
 //            if(!Optional.ofNullable(name).orElse("").equals("")) { g2.drawString(name, 5, 15); }
 //            if(!Optional.ofNullable(chineseName).orElse("").equals("")) { g2.drawString(chineseName, getWidth()/7, 15);}
-//            g2.drawString(Double.toString(getLast()), getWidth()/7*2, 15);
+//            g2.drawString(Double.toString(getLastDouble()), getWidth()/7*2, 15);
 //            g2.drawString("P%:" + Double.toString(getCurrentPercentile()), getWidth()/7*3-30, 15);
 //            g2.drawString("涨:" + Double.toString(getRtn())+"%", getWidth()/7*4-40, 15);
 //            g2.drawString("高 " + (getAMMaxT()), getWidth()/7*5-40, 15);
