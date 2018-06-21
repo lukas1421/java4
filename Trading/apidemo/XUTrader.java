@@ -1476,24 +1476,21 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime lt = nowMilli.toLocalTime();
         String anchorIndex = FTSE_INDEX;
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate());
+        int shorterMA = 5;
+        int longerMA = 10;
 
         if (lt.isAfter(LocalTime.of(15, 0)) || lt.isBefore(LocalTime.of(9, 30))) {
-            //anchorIndex = "SGXA50";
-            index = futData.get(ibContractToFutType(activeFuture));
+            index = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
+            shorterMA = 60;
+            longerMA = 80;
         }
 
         int perc = getPercentileForLast(index);
 
-//        if (lt.isAfter(LocalTime.of(5, 0)) && lt.isBefore(LocalTime.of(9, 40))) {
-//            return;
-//        }
-
-
         LocalDateTime lastIndexMAOrder = getLastOrderTime(INDEX_MA);
 
-        //lastBar.add(freshPrice);
-        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, 5);
-        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, 10);
+        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
+        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
 
         if (smaShort.size() <= 2 || smaLong.size() <= 2) {
             pr(" smashort size long size not enough ");
@@ -1519,7 +1516,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" bear crossed is ", bear);
             pr(" current PD ", getPD(freshPrice));
             if (bull || bear) {
-                soundPlayer.playClip();
+                if (checkWithinTimeRangeBool(lt, 9, 30, 15, 0)) {
+                    soundPlayer.playClip();
+                }
             }
         }
 
@@ -1560,13 +1559,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> e.getValue().getOrderType() == TRIM).count();
 
         if (trimTrades != 0) {
-            OrderStatus lastOrderStatus = globalIdOrderMap.entrySet().stream()
+            OrderStatus lastOrdStatus = globalIdOrderMap.entrySet().stream()
                     .filter(e -> e.getValue().getOrderType() == TRIM)
                     .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                     .map(e -> e.getValue().getStatus()).orElse(OrderStatus.Unknown);
 
-            if (lastOrderStatus != OrderStatus.Filled && lastOrderStatus != OrderStatus.Cancelled
-                    && lastOrderStatus != OrderStatus.ApiCancelled) {
+            if (lastOrdStatus != OrderStatus.Filled && lastOrdStatus != OrderStatus.Cancelled
+                    && lastOrdStatus != OrderStatus.ApiCancelled) {
 
                 if (ChronoUnit.MINUTES.between(lastTrimOrderT, nowMilli) > ORDER_WAIT_TIME * 2) {
                     apcon.cancelAllOrders();
@@ -1906,7 +1905,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * Auto trading based on Moving Avg
      */
-    public static synchronized void MATrader(LocalDateTime nowMilli, double freshPrice) {
+    private static synchronized void MATrader(LocalDateTime nowMilli, double freshPrice) {
         if (!MATraderStatus.get()) {
             pr("MA trader off");
             return;
