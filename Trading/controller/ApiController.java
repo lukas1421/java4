@@ -906,7 +906,6 @@ public class ApiController implements EWrapper {
             HKData.hkPriceBar.keySet().forEach(k -> req1StockLive(k, "SEHK", "HKD",
                     apidemo.ChinaMain.hkdata, true));
         }, 5L, 10L, TimeUnit.SECONDS);
-
     }
 
     public void reqHKTodayData() {
@@ -922,6 +921,21 @@ public class ApiController implements EWrapper {
         });
     }
 
+
+    public void req1ContractHistory(Contract ct, HistoricalHandler h) {
+        pr(" requesting stock hist ", ct.symbol());
+        CompletableFuture.runAsync(() -> {
+            int reqId = m_reqId.incrementAndGet();
+            //Contract ct = generateStockContract(stock, exch, curr);
+            ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
+            String formatTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
+            String durationStr = 1 + " " + DurationUnit.DAY.toString().charAt(0);
+            m_client.reqHistoricalData(reqId, ct, formatTime, durationStr,
+                    BarSize._1_min.toString(), WhatToShow.TRADES.toString(),
+                    0, 2, Collections.<TagValue>emptyList());
+        });
+
+    }
 
     public void req1StockHistToday(String stock, String exch, String curr, HistoricalHandler h) {
         pr(" requesting stock hist ", stock, exch, curr);
@@ -950,6 +964,21 @@ public class ApiController implements EWrapper {
             ex.printStackTrace();
         }
     }
+
+    public void req1ContractLive(Contract ct, LiveHandler h, boolean snapshot) {
+        try {
+            int reqId = m_reqId.incrementAndGet();
+            if (reqId % 90 == 0) {
+                Thread.sleep(1000);
+            }
+            //Contract ct = generateStockContract(stock, exch, curr);
+            ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
+            m_client.reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
+    }
+
 
     public void reqA50Live() {
         for (String s : SinaStock.weightMapA50.keySet()) {

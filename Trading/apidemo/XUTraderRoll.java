@@ -16,8 +16,8 @@ import static utility.Utility.*;
 public class XUTraderRoll extends JPanel {
 
     private static ApiController apcon;
-    static Contract frontContract = getFrontFutContract();
-    static Contract backContract = getBackFutContract();
+    private static Contract frontContract = getFrontFutContract();
+    private static Contract backContract = getBackFutContract();
     public static volatile EnumMap<FutType, Integer> contractID = new EnumMap<FutType, Integer>(FutType.class);
     public static CountDownLatch latch = new CountDownLatch(2);
 

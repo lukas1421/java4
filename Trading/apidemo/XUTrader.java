@@ -1529,8 +1529,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
 
-        int todayPerc = getPercentileForLast(index);
-        double delta = getNetPtfDelta();
+        //int todayPerc = getPercentileForLast(index);
+        //double delta = getNetPtfDelta();
 
         if (ChronoUnit.MINUTES.between(lastIndexMAOrder, nowMilli) >= 1) {
             if (maShortLast > maLongLast && maShortSecLast < maLongSecLast) {

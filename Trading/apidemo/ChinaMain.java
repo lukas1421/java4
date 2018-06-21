@@ -70,6 +70,7 @@ public final class ChinaMain implements IConnectionHandler {
     private final JFrame m_frame9 = new JFrame();
     private final JFrame m_frame10 = new JFrame();
     private final JFrame m_frame11 = new JFrame();
+    private final JFrame m_frame12 = new JFrame();
 
     private final NewTabbedPanel m_tabbedPanel = new NewTabbedPanel(true);
     public static ConnectionPanel m_connectionPanel;
@@ -97,6 +98,7 @@ public final class ChinaMain implements IConnectionHandler {
     private static ChinaOption chinaOption = new ChinaOption();
     private static HistChinaStocks histChina = new HistChinaStocks();
     private static XUTrader xutrader = new XUTrader(M_CONTROLLER);
+    private static USStock usstock = new USStock(M_CONTROLLER);
 
     private SinaStock sinastock1 = SinaStock.getInstance();
     private ExecutorService pool;
@@ -144,6 +146,7 @@ public final class ChinaMain implements IConnectionHandler {
         m_tabbedPanel.addTab(" HK Stock", hkstock);
         m_tabbedPanel.addTab("Option", chinaOption);
         m_tabbedPanel.addTab("Hist China", histChina);
+        m_tabbedPanel.addTab("US", usstock);
 
         m_msg.setEditable(false);
         m_msg.setLineWrap(true);
