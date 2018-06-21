@@ -431,6 +431,14 @@ public class XuTraderHelper {
         return res;
     }
 
+    static Predicate<LocalTime> checkWithinTimeRange(int hour1, int min1, int hour2, int min2) {
+        return e -> e.isAfter(LocalTime.of(hour1, min1)) && e.isBefore(LocalTime.of(hour2, min2));
+    }
+
+    public static boolean checkWithinTimeRangeBool(LocalTime t, int hour1, int min1, int hour2, int min2) {
+        return t.isAfter(LocalTime.of(hour1, min1)) && t.isBefore(LocalTime.of(hour2, min2));
+    }
+
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
         @Override
         public void connected() {
