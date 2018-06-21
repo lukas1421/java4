@@ -2,26 +2,7 @@
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 package client;
 
-import static client.Types.AlgoParam.allowPastEndTime;
-import static client.Types.AlgoParam.catchUp;
-import static client.Types.AlgoParam.componentSize;
-import static client.Types.AlgoParam.displaySize;
-import static client.Types.AlgoParam.endTime;
-import static client.Types.AlgoParam.forceCompletion;
-import static client.Types.AlgoParam.getDone;
-import static client.Types.AlgoParam.giveUp;
-import static client.Types.AlgoParam.maxPctVol;
-import static client.Types.AlgoParam.noTakeLiq;
-import static client.Types.AlgoParam.noTradeAhead;
-import static client.Types.AlgoParam.pctVol;
-import static client.Types.AlgoParam.randomizeSize55;
-import static client.Types.AlgoParam.randomizeTime20;
-import static client.Types.AlgoParam.riskAversion;
-import static client.Types.AlgoParam.startTime;
-import static client.Types.AlgoParam.strategyType;
-import static client.Types.AlgoParam.timeBetweenOrders;
-import static client.Types.AlgoParam.useOddLots;
-import static client.Types.AlgoParam.waitForFill;
+import static client.Types.AlgoParam.*;
 
 public class Types {
 
@@ -248,7 +229,8 @@ public class Types {
     }
 
     public static enum BarSize {
-        _1_secs, _5_secs, _10_secs, _15_secs, _30_secs, _1_min, _2_mins, _3_mins, _5_mins, _10_mins, _15_mins, _20_mins, _30_mins, _1_hour, _4_hours, _1_day, _1_week;
+        _1_secs, _5_secs, _10_secs, _15_secs, _30_secs, _1_min, _2_mins, _3_mins,
+        _5_mins, _10_mins, _15_mins, _20_mins, _30_mins, _1_hour, _4_hours, _1_day, _1_week;
 
         @Override
         public String toString() {

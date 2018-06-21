@@ -102,13 +102,13 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
 
             g.setColor(Color.black);
             if (lt.equals(tm.firstKey())) {
-                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).format(DateTimeFormatter.ofPattern("MMDD"))
+                g.drawString(lt.truncatedTo(ChronoUnit.MINUTES).format(DateTimeFormatter.ofPattern("M/dd"))
                         , x, getHeight() - 40);
             } else {
                 if (lt.getMinute() == 0 && (lt.getHour() % 3 == 0)) {
                     String addage = "";
                     if (tm.lowerEntry(lt).getKey().toLocalDate().equals(lt.toLocalDate())) {
-                        addage = lt.toLocalDate().format(DateTimeFormatter.ofPattern("MMdd"));
+                        addage = lt.toLocalDate().format(DateTimeFormatter.ofPattern("M/dd"));
                     }
                     g.drawString(addage + lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
                 }
@@ -189,7 +189,9 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
 
     @Override
     public void mouseExited(MouseEvent mouseEvent) {
-
+        mouseYCord = Integer.MAX_VALUE;
+        mouseXCord = Integer.MAX_VALUE;
+        this.repaint();
     }
 
     @Override
@@ -198,7 +200,10 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
     }
 
     @Override
-    public void mouseMoved(MouseEvent mouseEvent) {
-
+    public void mouseMoved(MouseEvent e) {
+        mouseXCord = e.getX();
+        mouseYCord = e.getY();
+        //System.out.println(" graph bar x mouse x is " + mouseXCord);
+        this.repaint();
     }
 }

@@ -797,24 +797,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
                                 ConcurrentSkipListMap::new));
 
-        LocalDateTime lastAMHedgeOrderTime = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == AutoOrderType.AM_HEDGE)
-                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .map(e -> e.getValue().getOrderTime())
-                .orElse(LocalDateTime.of(LocalDate.now(), LocalTime.of(0, 0)));
+        LocalDateTime lastAMHedgeOrderTime = getLastOrderTime(AM_HEDGE);
 
         int todayPerc = getPercentileForLast(todayPriceMap);
 
-        if (todayPerc > 95 && currDelta > 0.0 &&
+        if (todayPerc > UP_PERC && currDelta > 0.0 &&
                 ChronoUnit.MINUTES.between(lastAMHedgeOrderTime, nowMilli) >= ORDER_WAIT_TIME
                 && nowMilli.toLocalTime().isBefore(LocalTime.of(13, 0))) {
 
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimit(freshPrice, 1);
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.AM_HEDGE));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AM_HEDGE));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            outputOrderToAutoLog(str(o.orderId(), "AM hedge",
-                    globalIdOrderMap.get(id)));
+            outputOrderToAutoLog(str(o.orderId(), "AM hedge", globalIdOrderMap.get(id)));
         }
     }
 
@@ -1482,16 +1477,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         String anchorIndex = FTSE_INDEX;
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate());
 
-        if (lt.isAfter(LocalTime.of(15, 0)) || lt.isBefore(LocalTime.of(5, 0))) {
+        if (lt.isAfter(LocalTime.of(15, 0)) || lt.isBefore(LocalTime.of(9, 30))) {
             //anchorIndex = "SGXA50";
             index = futData.get(ibContractToFutType(activeFuture));
         }
 
         int perc = getPercentileForLast(index);
 
-//        if (!((lt.isAfter(LocalTime.of(9, 40)) && lt.isBefore(LocalTime.of(11, 30))) ||
-
-//                (lt.isAfter(LocalTime.of(13, 0)) && lt.isBefore(LocalTime.of(15, 0))))) {
+//        if (lt.isAfter(LocalTime.of(5, 0)) && lt.isBefore(LocalTime.of(9, 40))) {
 //            return;
 //        }
 

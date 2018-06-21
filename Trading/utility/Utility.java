@@ -675,6 +675,11 @@ public class Utility {
         return (t1.getMinute() % 5 == 0) ? t1 : t1.minusMinutes(t1.getMinute() % 5);
     }
 
+    public static LocalDateTime roundToXLdt(LocalDateTime t, int x) {
+        LocalDateTime t1 = t.truncatedTo(ChronoUnit.MINUTES);
+        return (t1.getMinute() % x == 0) ? t1 : t1.minusMinutes(t1.getMinute() % x);
+    }
+
     public static LocalTime min(LocalTime... lts) {
         return Arrays.stream(lts).reduce(LocalTime.MAX, temporalGen(LocalTime::isBefore));
     }

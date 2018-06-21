@@ -21,26 +21,23 @@ import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import static utility.Utility.pr;
-import static utility.Utility.str;
+import static utility.Utility.*;
 
 public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
 
 
-    ApiController apcon;
-    GraphBarGen g = new GraphBarGen();
+    private ApiController apcon;
+    private GraphBarGen g = new GraphBarGen();
+    private Types.BarSize barsize = Types.BarSize._15_mins;
 
-    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>>
+    private static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>>
             usPriceMapBar = new ConcurrentHashMap<>();
 
-    public static volatile NavigableMap<LocalDateTime, SimpleBar> vixMap = new ConcurrentSkipListMap<>();
+    private static volatile NavigableMap<LocalDateTime, SimpleBar> vixMap = new ConcurrentSkipListMap<>();
 
-
-    public USStock(ApiController ap) {
+    USStock(ApiController ap) {
         usPriceMapBar.put("VIX", new ConcurrentSkipListMap<>());
-
         apcon = ap;
-
         JButton getLiveButton = new JButton("Live");
         getLiveButton.addActionListener(l -> {
             pr(" requesting vix live ");
@@ -50,7 +47,7 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
         JButton getHistButton = new JButton(" Hist ");
         getHistButton.addActionListener(l -> {
             pr(" requesting hist ");
-            ap.req1ContractHistory(getVixContract(), Types.BarSize._15_mins, this);
+            ap.req1ContractHistory(getVixContract(), barsize, this);
         });
 
         JScrollPane scroll = new JScrollPane(g) {
@@ -80,7 +77,7 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
     }
 
 
-    public static Contract getVixContract() {
+    private static Contract getVixContract() {
         Contract ct = new Contract();
         ct.symbol("VIX");
         ct.exchange("CFE");
@@ -131,9 +128,18 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
 
     @Override
     public void handlePrice(TickType tt, String name, double price, LocalDateTime t) {
+        //vixMap
+        LocalDateTime ldt = roundToXLdt(t, 15);
+
+        if (tt == TickType.LAST) {
+            if (vixMap.containsKey(ldt)) {
+                vixMap.get(ldt).add(price);
+            } else {
+                vixMap.put(ldt, new SimpleBar(price));
+            }
+        }
 
         pr("US ", tt, name, price, t);
-
     }
 
     @Override
