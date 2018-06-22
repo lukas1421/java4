@@ -1242,14 +1242,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     private static synchronized void slowCoverTrader(LocalDateTime nowMilli, double freshPrice) {
-
         LocalTime lt = nowMilli.toLocalTime();
         double currDelta = getNetPtfDelta();
+        double futDelta = getFutDelta();
+        int size = getSizeForDelta(freshPrice, fxMap.get("USD"), futDelta / 8);
 
         if (!(lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(15, 0)))) {
             pr(" day trader: not in time range, return ", nowMilli.toLocalTime());
             return;
         }
+
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
         int perc = getPercentileForLast(futdata);
         LocalDateTime lastSlowCoverTime = getLastOrderTime(SLOW_COVER);
@@ -1260,14 +1262,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         pr(" slow cover trader: ", "last order time ", lastSlowCoverTime, "p% ", perc);
 
+
         if (ChronoUnit.MINUTES.between(lastSlowCoverTime, nowMilli) >= ORDER_WAIT_TIME) {
             if (perc < DOWN_PERC && currDelta < DELTA_HARD_HI_LIMIT) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, 1);
+                Order o = placeBidLimit(freshPrice, Math.min(size, 3));
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.SLOW_COVER));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "day cover",
-                        globalIdOrderMap.get(id), " todayPerc ", perc));
+                outputOrderToAutoLog(str(o.orderId(), "day cover", globalIdOrderMap.get(id), " todayP% ", perc));
             }
         }
     }
@@ -1420,6 +1422,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         // add previous close
         double delta = getFutDelta();
+
 
         if (nowMilli.toLocalTime().isBefore(LocalTime.of(10, 0))
                 && todayPerc < DOWN_PERC && ChronoUnit.MINUTES.between(lastCoverOrderT, nowMilli) >
