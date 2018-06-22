@@ -1562,6 +1562,8 @@ public class ApiController implements EWrapper {
                             XUTrader.flattenEagerness = Eagerness.Aggressive;
                         }
                     }
+                } else if (orderState.status() == OrderStatus.Submitted) {
+
                 } else {
                     pr(" default order state ELSE: ", orderState.status(),
                             globalIdOrderMap.get(defaultID));

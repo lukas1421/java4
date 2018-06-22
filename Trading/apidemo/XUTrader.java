@@ -1535,8 +1535,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         LocalDateTime lastTrimOrderT = getLastOrderTime(TRIM);
 
-        long trimTrades = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == TRIM).count();
+        long trimTrades = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == TRIM).count();
 
         if (trimTrades != 0) {
             OrderStatus lastOrdStatus = globalIdOrderMap.entrySet().stream()
@@ -1551,7 +1550,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     apcon.cancelAllOrders();
                     outputOrderToAutoLog(nowMilli + " cancelling orders from trim trader ");
                 }
-                return;
+                //return;
             }
         }
 
@@ -1619,7 +1618,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PD_OPEN));
                 outputOrderToAutoLog(str(o.orderId(), LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
                         , " PD buy open ", globalIdOrderMap.get(id)));
-
             } else if (perc > UP_PERC && pdPerc > UP_PERC && pd > PD_UP_THRESH) {
                 try {
                     pdSemaphore.acquire();
@@ -2026,9 +2024,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
         setLongShortTradability(currPos);
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDate TDate = now.toLocalTime().isAfter(LocalTime.of(0, 0))
-                && now.toLocalTime().isBefore(LocalTime.of(5, 0)) ? LocalDate.now().minusDays(1L) : LocalDate.now();
+        //LocalDateTime now = LocalDateTime.now();
+        LocalDate TDate = checkTimeRangeBool(lt, 0, 0, 5, 0) ?
+                LocalDate.now().minusDays(1L) : LocalDate.now();
 
         double indexPrice = (priceMapBar.containsKey(FTSE_INDEX) &&
                 priceMapBar.get(FTSE_INDEX).size() > 0) ?
@@ -2048,7 +2046,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeOfferLimit(candidatePrice, 1);
-                    globalIdOrderMap.put(id, new OrderAugmented(now, o, "Overnight Short", OVERNIGHT));
+                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Overnight Short", OVERNIGHT));
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                     outputOrderToAutoLog(str(o.orderId(), "O/N placing sell order @ ", candidatePrice,
                             " curr p% ", currPercentile));
@@ -2058,19 +2056,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeBidLimit(candidatePrice, 1);
-                    globalIdOrderMap.put(id, new OrderAugmented(now, o, "Overnight Long", OVERNIGHT));
+                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Overnight Long", OVERNIGHT));
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                     outputOrderToAutoLog(str(o.orderId(), "O/N placing buy order @ ", candidatePrice,
                             "perc: ", currPercentile, "pmPercChg", pmPercChg));
                 }
             } else {
-                outputToAutoLog(str(now, " nothing done "));
+                outputToAutoLog(str(nowMilli, " nothing done "));
             }
         } else {
             outputToAutoLog(" outside tradable time slot");
         }
 
-        String outputString = str("||O/N||", now.format(DateTimeFormatter.ofPattern("M-d H:mm:ss")),
+        String outputString = str("||O/N||", nowMilli.format(DateTimeFormatter.ofPattern("M-d H:mm:ss")),
                 "||curr perc: ", currPercentile,
                 "||curr P: ", futPriceMap.lastEntry().getValue().getClose(),
                 "||index: ", Math.round(100d * indexPrice) / 100d,
