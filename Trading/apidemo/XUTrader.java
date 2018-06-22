@@ -54,7 +54,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static ApiController apcon;
     private static XUTraderRoll traderRoll;
 
-    private static final int ORDER_WAIT_TIME = 10;
+    private static final int ORDER_WAIT_TIME = 15;
     private static final double DELTA_HARD_HI_LIMIT = 1000000.0;
     private static final double DELTA_HARD_LO_LIMIT = -1000000.0;
 
@@ -82,7 +82,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     //day cover trader
-    private static volatile AtomicBoolean dayTraderOn = new AtomicBoolean(false);
+    private static volatile AtomicBoolean slowCoverTraderOn = new AtomicBoolean(false);
 
 
     //perc trader
@@ -306,12 +306,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             percTraderButton.setText("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
         });
 
-        JButton dayTraderButton = new JButton(" Day Cover " + (dayTraderOn.get() ? "ON" : "OFF"));
-        dayTraderButton.addActionListener(l -> {
-            dayTraderOn.set(!dayTraderOn.get());
-            outputToAutoLog("day cover trader set to " + dayTraderOn.get());
-            dayTraderButton.setText(" day cover trader: " + (dayTraderOn.get() ? "ON" : "OFF"));
-        });
+//        JButton dayTraderButton = new JButton(" Slow Cover " + (slowCoverTraderOn.get() ? "ON" : "OFF"));
+//        dayTraderButton.addActionListener(l -> {
+//            slowCoverTraderOn.set(!slowCoverTraderOn.get());
+//            outputToAutoLog("slow cover trader set to " + slowCoverTraderOn.get());
+//            dayTraderButton.setText(" slow cover trader: " + (slowCoverTraderOn.get() ? "ON" : "OFF"));
+//        });
 
 
         JButton pdTraderButton = new JButton("PD Trader: " + (pdTraderOn.get() ? "ON" : "OFF"));
@@ -607,10 +607,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(indexMAStatusButton);
         controlPanel1.add(overnightButton);
         controlPanel1.add(musicPlayableButton);
-        controlPanel1.add(inventoryTraderButton);
+        //controlPanel1.add(inventoryTraderButton);
         controlPanel1.add(percTraderButton);
-        controlPanel1.add(dayTraderButton);
-        controlPanel1.add(pdTraderButton);
+        //controlPanel1.add(dayTraderButton);
+        //controlPanel1.add(pdTraderButton);
         controlPanel1.add(trimDeltaButton);
         controlPanel1.add(rollButton);
         controlPanel1.add(globalTradingButton);
@@ -764,22 +764,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         XUTrader.trimTrader(ldt, price);
         indexMATrader(ldt, price);
 
-        // this part needs more work
-        if (maxAfterMin && maxAbovePrev && pmChgY < 0) {
-            //pure cover
-            coverTrader(ldt, price);
-            dayTrader(ldt, price);
-        } else if (pmChgY < 0) {
-            MATrader(ldt, price);
-            percentileTrader(ldt, price);
-            dayTrader(ldt, price);
-            //coverTrader(ldt, price);
-        } else {
+        if (pmChgY < 0) {
+            slowCoverTrader(ldt, price);
+            if (maxAfterMin && maxAbovePrev) {
+                aggressiveCoverTrader(ldt, price);
+            }
+        } else if (!(maxAfterMin && maxAbovePrev)) {
             amHedgeTrader(ldt, price);
+        } else {
+            percentileTrader(ldt, price);
         }
-        //XUTrader.pdTrader(ldt, price);
-        //CompletableFuture.runAsync(() -> XUTrader.inventoryTrader(ldt, price));
-        //CompletableFuture.runAsync(() -> XUTrader.flattenTrader(ldt, price));
     }
 
     private static void amHedgeTrader(LocalDateTime nowMilli, double freshPrice) {
@@ -793,7 +787,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         NavigableMap<LocalDateTime, SimpleBar> todayPriceMap =
                 futdata.entrySet().stream()
-                        .filter(e -> e.getKey().isAfter(LocalDateTime.of(currentDate, LocalTime.of(8, 59))))
+                        //.filter(e -> e.getKey().isAfter(LocalDateTime.of(currentDate, LocalTime.of(8, 59))))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
                                 ConcurrentSkipListMap::new));
 
@@ -1215,7 +1209,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
 
-    private static synchronized void dayTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static synchronized void slowCoverTrader(LocalDateTime nowMilli, double freshPrice) {
 
         LocalTime lt = nowMilli.toLocalTime();
         double currDelta = getNetPtfDelta();
@@ -1224,74 +1218,24 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" day trader: not in time range, return ", nowMilli.toLocalTime());
             return;
         }
-
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
+        int perc = getPercentileForLast(futdata);
+        LocalDateTime lastSlowCoverTime = getLastOrderTime(SLOW_COVER);
 
-        LocalDate currentDate = (lt.isAfter(LocalTime.of(23, 59, 59))
-                && lt.isBefore(LocalTime.of(5, 0, 0))) ? LocalDate.now().minusDays(1L) :
-                LocalDate.now();
-
-        NavigableMap<LocalDateTime, SimpleBar> todayPriceMap =
-                futdata.entrySet().stream()
-                        .filter(e -> e.getKey().isAfter(LocalDateTime.of(currentDate, LocalTime.of(8, 59))))
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
-                                ConcurrentSkipListMap::new));
-
-        if (todayPriceMap.size() < 2) {
+        if (futdata.size() < 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
             return;
         }
 
-        int todayPerc = getPercentileForLast(todayPriceMap);
-        int openPerc = getPercentileForX(todayPriceMap, todayPriceMap.firstEntry().getValue().getHigh());
-        int pmPerc = 50;
+        pr(" slow cover trader: ", "last order time ", lastSlowCoverTime, "p% ", perc);
 
-        LocalDateTime lastOrderTime = getLastOrderTime(DAY_COVER);
-
-
-        if (lt.isAfter(LocalTime.of(13, 15)) && lt.isBefore(LocalTime.of(15, 0))) {
-            NavigableMap<LocalDateTime, SimpleBar> pmMap =
-                    futdata.entrySet().stream()
-                            .filter(e -> e.getKey().isAfter(LocalDateTime.of(currentDate, LocalTime.of(12, 59))))
-                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
-                                    ConcurrentSkipListMap::new));
-            pmPerc = getPercentileForX(pmMap, freshPrice);
-        }
-
-        LocalDate prevDate = futdata.firstEntry().getKey().toLocalDate();
-
-        double ytdClose = futdata.lowerEntry(LocalDateTime.of(prevDate, LocalTime.of(15, 0))).getValue().getHigh();
-
-        int ytdClosePerc = getPercentileForX(futdata.headMap(LocalDateTime.of(prevDate,
-                LocalTime.of(15, 0)), true), ytdClose);
-
-        if (!dayTraderOn.get() || futdata.size() < 2 || futdata.firstKey().toLocalDate()
-                .equals(futdata.lastKey().toLocalDate())) {
-            return;
-        }
-
-        pr(" Day cover trader: ", dayTraderOn.get(), "last order time ", lastOrderTime,
-                " today p%: ", todayPerc, " open p% ", openPerc,
-                "ytd close ", ytdClose, " ytd close p% ", ytdClosePerc, "today p% ", todayPerc);
-
-        if (ChronoUnit.MINUTES.between(lastOrderTime, nowMilli) >= ORDER_WAIT_TIME) {
-            if (todayPerc < 5 && currDelta < getBullishTarget()) {
+        if (ChronoUnit.MINUTES.between(lastSlowCoverTime, nowMilli) >= ORDER_WAIT_TIME) {
+            if (perc < DOWN_PERC && currDelta < getBullishTarget()) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_BUY));
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.SLOW_COVER));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "day cover",
-                        globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc, "pm p%", pmPerc
-                        , getBullishTarget(), getBearishTarget()));
-
-            } else if (todayPerc > 95 && currDelta > getBearishTarget() && lt.isBefore(LocalTime.of(13, 0))) {
-
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, 1);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.DAY_SELL));
-                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "day sell",
-                        globalIdOrderMap.get(id), " todayPerc ", todayPerc, "open p%", openPerc, "pm p%", pmPerc
-                        , getBullishTarget(), getBearishTarget()));
+                        globalIdOrderMap.get(id), " todayPerc ", perc));
             }
         }
     }
@@ -1431,13 +1375,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param nowMilli   time now in milli
      * @param freshPrice price
      */
-    private static synchronized void coverTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static synchronized void aggressiveCoverTrader(LocalDateTime nowMilli, double freshPrice) {
 
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate());
         int todayPerc = getPercentileForLast(index);
 
         LocalDateTime lastCoverOrderT = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == AutoOrderType.COVER)
+                .filter(e -> e.getValue().getOrderType() == AutoOrderType.FAST_COVER)
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                 .map(e -> e.getValue().getOrderTime())
                 .orElse(sessionOpenT());
@@ -1452,7 +1396,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             int id = autoTradeID.incrementAndGet();
             int size = getSizeForDelta(freshPrice, fxMap.get("USD"), delta / 4);
             Order o = placeBidLimit(freshPrice, size); //Math.min(size, MAX_FUT_LIMIT)
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.COVER));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FAST_COVER));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "cover short follow PMY<0", globalIdOrderMap.get(id)));
         }

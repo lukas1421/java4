@@ -22,9 +22,10 @@ public enum AutoOrderType {
     DAY_COVER,
     DAY_BUY,
     DAY_SELL,
+    SLOW_COVER,
     INDEX_MA,
     TRIM,
-    COVER,
+    FAST_COVER,
     AM_HEDGE,
     DAY_SELLBACK,
     UNKNOWN
