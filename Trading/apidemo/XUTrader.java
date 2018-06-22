@@ -745,6 +745,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
+        XUTrader.trimTrader(ldt, price);
+
         double currDelta = getNetPtfDelta();
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000001);
         boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000001);
@@ -761,7 +763,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         XUTrader.updateLastMinuteMap(ldt, price);
-        XUTrader.trimTrader(ldt, price);
         indexMATrader(ldt, price);
 
         if (pmChgY < 0) {
@@ -780,17 +781,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static void amHedgeTrader(LocalDateTime nowMilli, double freshPrice) {
-        //cut until delta is flat.
+        LocalTime lt = nowMilli.toLocalTime();
         double currDelta = getNetPtfDelta();
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
 
-        LocalDate currentDate = (nowMilli.toLocalTime().isAfter(LocalTime.of(23, 59, 59))
-                && nowMilli.toLocalTime().isBefore(LocalTime.of(5, 0, 0))) ? LocalDate.now().minusDays(1L) :
-                LocalDate.now();
+        LocalDate currentDate = checkTimeRangeBool(lt, 23, 59, 5, 0) ?
+                LocalDate.now().minusDays(1L) : LocalDate.now();
 
         NavigableMap<LocalDateTime, SimpleBar> todayPriceMap =
                 futdata.entrySet().stream()
-                        //.filter(e -> e.getKey().isAfter(LocalDateTime.of(currentDate, LocalTime.of(8, 59))))
+                        .filter(e -> e.getKey().isAfter(LocalDateTime.of(currentDate, LocalTime.of(8, 59))))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
                                 ConcurrentSkipListMap::new));
 
@@ -817,16 +817,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return false;
         } else {
             LocalTime maxT = priceMapBar.get(name).entrySet().stream()
-                    .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29)) &&
-                            e.getKey().isBefore(LocalTime.of(9, 41)))
+                    .filter(e -> checkTimeRangeBool(e.getKey(), 9, 29, 9, 41))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MIN);
 
             LocalTime minT = priceMapBar.get(name).entrySet().stream()
-                    //.filter(e -> e.getKey().isAfter(LocalTime.of(9, 29)) && e.getKey().isBefore(LocalTime.of(9, 41)))
-                    .filter(e -> checkWithinTimeRange(9, 29, 9, 41).test(e.getKey()))
+                    .filter(e -> checkTimeRangeBool(e.getKey(), 9, 29, 9, 41))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MAX);
+
             if (detailedPrint.get()) {
                 pr(name, "checkf10maxAftermint", maxT, minT);
             }
@@ -840,8 +839,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return false;
         } else {
             double f10max = priceMapBar.get(name).entrySet().stream()
-                    .filter(e -> e.getKey().isAfter(LocalTime.of(9, 30)) &&
-                            e.getKey().isBefore(LocalTime.of(9, 41)))
+                    .filter(e -> checkTimeRangeBool(e.getKey(), 9, 30, 9, 41))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
             if (detailedPrint.get()) {
@@ -856,8 +854,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return 0;
         } else {
             double prevMax = data.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(d))
-                    .filter(e -> e.getKey().toLocalTime().isAfter(LocalTime.of(9, 29))
-                            && e.getKey().toLocalTime().isBefore(LocalTime.of(15, 0)))
+                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(),
+                            9, 29, 15, 0))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
 
@@ -1189,14 +1187,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             outputToAutoLog(msg);
             double lastMA = sma.lastEntry().getValue();
-            if (touchConditionMet(secLastBar, lastBar, lastMA)) {
-                outputToAutoLog(" sec last bar touched MA, playing clip ");
-                if (musicOn.get()) {
-                    soundPlayer.playClip();
-                }
-            } else {
-                outputToAutoLog(" no touch ");
-            }
+//            if (touchConditionMet(secLastBar, lastBar, lastMA)) {
+//                outputToAutoLog(" sec last bar touched MA, playing clip ");
+//                if (musicOn.get()) {
+//                    soundPlayer.playClip();
+//                }
+//            } else {
+//                outputToAutoLog(" no touch ");
+//            }
         }
     }
 
@@ -1459,8 +1457,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int longerMA = 10;
         int tBetweenOrder = 1;
 
-        if (!(checkWithinTimeRangeBool(lt, 9, 30, 11, 30)
-                || (checkWithinTimeRangeBool(lt, 13, 0, 15, 0)))) {
+        if (!(checkTimeRangeBool(lt, 9, 30, 11, 30)
+                || (checkTimeRangeBool(lt, 13, 0, 15, 0)))) {
             index = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
             shorterMA = 60;
             longerMA = 80;
@@ -1498,7 +1496,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" bear crossed is ", bear);
             pr(" current PD ", getPD(freshPrice));
             if (bull || bear) {
-                if (checkWithinTimeRangeBool(lt, 9, 30, 15, 0)) {
+                if (checkTimeRangeBool(lt, 9, 30, 15, 0)) {
                     soundPlayer.playClip();
                 }
             }
@@ -1507,7 +1505,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (ChronoUnit.MINUTES.between(lastIndexMAOrder, nowMilli) >= tBetweenOrder) {
             if (maShortLast > maLongLast && maShortSecLast < maLongSecLast) {
                 int id = autoTradeID.incrementAndGet();
-                //int size = perc < DOWN_PERC ? 2 : 1;
                 double priceOffset = perc < DOWN_PERC ? 0 : -2.5;
                 Order o = placeBidLimit(freshPrice + priceOffset, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_MA));
@@ -1517,7 +1514,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         r(maShortSecLast), r(maLongSecLast)));
             } else if (maShortLast < maLongLast && maShortSecLast > maLongSecLast) {
                 int id = autoTradeID.incrementAndGet();
-                //int size = perc > UP_PERC ? 2 : 1;
                 double priceOffset = perc > UP_PERC ? 0 : 2.5;
                 Order o = placeOfferLimit(freshPrice + priceOffset, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_MA));
@@ -1530,9 +1526,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice) {
-        if (!trimTraderOn.get()) {
+        if (!trimTraderOn.get() &&
+                checkTimeRangeBool(nowMilli.toLocalTime(), 9, 30, 15, 0)) {
             return;
         }
+
         double netDelta = getNetPtfDelta();
 
         LocalDateTime lastTrimOrderT = getLastOrderTime(TRIM);
@@ -1954,12 +1952,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         priceType = " maSignals > 0 -> BUY @ LAST BAR OPEN";
                     }
 
-//                    trimProposedPosition(
-//                            determinePDPercFactor(nowMilli.toLocalTime(), pd, Direction.Long,
-//                                    percentile) * determineTimeDiffFactor(), currPos)
                     Order o = placeBidLimit(candidatePrice, 1);
                     if (checkIfOrderPriceMakeSense(candidatePrice)) {
-                        //apcon.cancelAllOrders();
                         maOrderMap.put(nowMilli, o);
                         maSignals.incrementAndGet();
                         int id = autoTradeID.incrementAndGet();
@@ -2077,7 +2071,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         String outputString = str("||O/N||", now.format(DateTimeFormatter.ofPattern("M-d H:mm:ss")),
-                "||current percentile ", currPercentile,
+                "||curr perc: ", currPercentile,
                 "||curr P: ", futPriceMap.lastEntry().getValue().getClose(),
                 "||index: ", Math.round(100d * indexPrice) / 100d,
                 "||BID ASK ", bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
