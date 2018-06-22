@@ -1457,11 +1457,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate());
         int shorterMA = 5;
         int longerMA = 10;
+        int tBetweenOrder = 1;
 
-        if (lt.isAfter(LocalTime.of(15, 0)) || lt.isBefore(LocalTime.of(9, 30))) {
+        if (!(checkWithinTimeRangeBool(lt, 9, 30, 11, 30)
+                || (checkWithinTimeRangeBool(lt, 13, 0, 15, 0)))) {
             index = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
             shorterMA = 60;
             longerMA = 80;
+            tBetweenOrder = ORDER_WAIT_TIME;
         }
 
         int perc = getPercentileForLast(index);
@@ -1501,7 +1504,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
 
-        if (ChronoUnit.MINUTES.between(lastIndexMAOrder, nowMilli) >= 1) {
+        if (ChronoUnit.MINUTES.between(lastIndexMAOrder, nowMilli) >= tBetweenOrder) {
             if (maShortLast > maLongLast && maShortSecLast < maLongSecLast) {
                 int id = autoTradeID.incrementAndGet();
                 //int size = perc < DOWN_PERC ? 2 : 1;
@@ -1510,8 +1513,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "index MA buy", globalIdOrderMap.get(id)
-                        , "Last shortlong ", maShortLast, maLongLast, "SecLast Shortlong",
-                        maShortSecLast, maLongSecLast));
+                        , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
+                        r(maShortSecLast), r(maLongSecLast)));
             } else if (maShortLast < maLongLast && maShortSecLast > maLongSecLast) {
                 int id = autoTradeID.incrementAndGet();
                 //int size = perc > UP_PERC ? 2 : 1;
