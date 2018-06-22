@@ -1177,8 +1177,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     , "||Last:", lastKey, lastBar
                     , "||2nd:", secLastKey, secLastBar
                     , "||Index:", r(getIndexPrice())
-                    , "||PD:", r(pd)
-                    , "||Curr Dir", currentDirection
+                    , "||PD:", r(pd), "||Curr Dir", currentDirection
                     , "||P%", percentile
                     , "||Last Trade T", lastMATradeTime.truncatedTo(ChronoUnit.MINUTES)
                     , "||Last Order T ", lastMAOrderTime.truncatedTo(ChronoUnit.MINUTES)
@@ -1186,8 +1185,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     , "||Earliest Next Order: ", lastMAOrderTime.plusMinutes(timeBtwnMAOrders)
                     , "#: ", maSignals.get()
                     , "||Orders: ", maOrderMap.toString()
-                    , "|| Can LONG? ", canLongGlobal
-                    , "|| Can SHORT? ", canShortGlobal);
+                    , "|| Can LONG? ", canLongGlobal, "|| Can SHORT? ", canShortGlobal);
 
             outputToAutoLog(msg);
             double lastMA = sma.lastEntry().getValue();
@@ -1263,7 +1261,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         pr(" slow cover trader: ", "last order time ", lastSlowCoverTime, "p% ", perc);
 
         if (ChronoUnit.MINUTES.between(lastSlowCoverTime, nowMilli) >= ORDER_WAIT_TIME) {
-            if (perc < DOWN_PERC && currDelta < getBullishTarget()) {
+            if (perc < DOWN_PERC && currDelta < DELTA_HARD_HI_LIMIT) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.SLOW_COVER));
