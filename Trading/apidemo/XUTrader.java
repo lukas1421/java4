@@ -1245,7 +1245,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime lt = nowMilli.toLocalTime();
         double currDelta = getNetPtfDelta();
         double futDelta = getFutDelta();
-        int size = getSizeForDelta(freshPrice, fxMap.get("USD"), futDelta / 8);
+        int size = getSizeForDelta(freshPrice, fxMap.get("USD"), futDelta / 4);
 
         if (!(lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(15, 0)))) {
             pr(" day trader: not in time range, return ", nowMilli.toLocalTime());
