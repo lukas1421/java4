@@ -2111,8 +2111,9 @@ public class ApiController implements EWrapper {
 
     @Override
     public void updateNewsBulletin(int msgId, int msgType, String message, String origExchange) {
-        m_bulletinHandler.bulletin(msgId, NewsType.get(msgType), message, origExchange);
-        recEOM();
+        pr(" news: ",msgId, msgType, message, origExchange);
+        //m_bulletinHandler.bulletin(msgId, NewsType.get(msgType), message, origExchange);
+        //recEOM();
     }
 
     @Override

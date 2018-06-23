@@ -1414,24 +1414,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate());
         int todayPerc = getPercentileForLast(index);
 
-        LocalDateTime lastCoverOrderT = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == AutoOrderType.FAST_COVER)
-                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .map(e -> e.getValue().getOrderTime())
-                .orElse(sessionOpenT());
-
-        // add previous close
-        double delta = getFutDelta();
-
+        LocalDateTime lastCoverOrderT = getLastOrderTime(FAST_COVER);
 
         if (nowMilli.toLocalTime().isBefore(LocalTime.of(10, 0))
                 && todayPerc < DOWN_PERC && MINUTES.between(lastCoverOrderT, nowMilli) >
-                ORDER_WAIT_TIME / 2) {
+                ORDER_WAIT_TIME / 3) {
+
+            ;
+            ;
 
             int id = autoTradeID.incrementAndGet();
-            int size = getSizeForDelta(freshPrice, fxMap.get("USD"), delta / 4);
+            //int size = getSizeForDelta(freshPrice, fxMap.get("USD"), delta / 4);
+            int size = 2;
             Order o = placeBidLimit(freshPrice, size); //Math.min(size, MAX_FUT_LIMIT)
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FAST_COVER));
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FAST_COVER));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "cover short follow PMY<0", globalIdOrderMap.get(id)));
         }
@@ -1531,6 +1527,28 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    public static void checkCancelTrades(AutoOrderType type, LocalDateTime nowMilli, int timeLimit) {
+        long trades = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == type).count();
+
+        if (trades != 0) {
+            OrderStatus lastOrdStatus = globalIdOrderMap.entrySet().stream()
+                    .filter(e -> e.getValue().getOrderType() == type)
+                    .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                    .map(e -> e.getValue().getStatus()).orElse(OrderStatus.Unknown);
+
+            LocalDateTime lastOTime = getLastOrderTime(type);
+
+            if (lastOrdStatus != OrderStatus.Filled && lastOrdStatus != OrderStatus.Cancelled
+                    && lastOrdStatus != OrderStatus.ApiCancelled) {
+
+                if (MINUTES.between(lastOTime, nowMilli) > timeLimit) {
+                    apcon.cancelAllOrders();
+                    outputOrderToAutoLog(nowMilli + " cancelling orders trader for type " + type);
+                }
+            }
+        }
+    }
+
     private static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice) {
         if (!trimTraderOn.get() &&
                 checkTimeRangeBool(nowMilli.toLocalTime(), 9, 30, 15, 0)) {
@@ -1538,11 +1556,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         double netDelta = getNetPtfDelta();
-
         LocalDateTime lastTrimOrderT = getLastOrderTime(TRIM);
-
         long trimTrades = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == TRIM).count();
-
         if (trimTrades != 0) {
             OrderStatus lastOrdStatus = globalIdOrderMap.entrySet().stream()
                     .filter(e -> e.getValue().getOrderType() == TRIM)
