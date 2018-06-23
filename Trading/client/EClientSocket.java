@@ -9,10 +9,10 @@ import static utility.Utility.str;
 
 public class EClientSocket extends EClient implements EClientMsgSink {
 
-    protected int m_redirectCount = 0;
-    protected int m_defaultPort;
+    int m_redirectCount = 0;
+    private int m_defaultPort;
     private boolean m_allowRedirect;
-    protected DataInputStream m_dis;
+    private DataInputStream m_dis;
     private boolean m_asyncEConnect = false;
     private boolean m_connected = false;
     private Socket m_socket;

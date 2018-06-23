@@ -293,11 +293,13 @@ public class HistChinaStocks extends JPanel {
 
 
                             CompletableFuture.runAsync(() -> {
-                                CompletableFuture.supplyAsync(() -> weekMtmMap = computeWtdMtmPnl(e -> e.getKey().equals(selectedStock)))
+                                CompletableFuture.supplyAsync(() -> weekMtmMap =
+                                        computeWtdMtmPnl(e -> e.getKey().equals(selectedStock)))
                                         .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphWtdPnl.setMtm(a)))
                                         .thenRunAsync(graphWtdPnl::repaint);
 
-                                CompletableFuture.supplyAsync(() -> weekTradePnlMap = computeWtdTradePnl(e -> e.getKey().equals(selectedStock)))
+                                CompletableFuture.supplyAsync(() -> weekTradePnlMap =
+                                        computeWtdTradePnl(e -> e.getKey().equals(selectedStock)))
                                         .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> graphWtdPnl.setTrade(a)))
                                         .thenRunAsync(graphWtdPnl::repaint);
 
@@ -479,7 +481,7 @@ public class HistChinaStocks extends JPanel {
                 if (v.size() > 0) {
                     if (!v.firstKey().toLocalDate().equals(MONDAY_OF_WEEK)) {
                         pr(" missing for " + k);
-                        chinaWtd.get("sh600519").forEach((k1, v1) -> {
+                        chinaWtd.get("SGXA50").forEach((k1, v1) -> {
                             if (!v.containsKey(k1)) {
                                 v.put(k1, new SimpleBar(v.higherEntry(k1).getValue().getOpen()));
                             }
@@ -563,7 +565,7 @@ public class HistChinaStocks extends JPanel {
 
         noFutButton.addActionListener(l -> {
             if (noFutButton.isSelected()) {
-                MTM_PRED = m -> tickerNotFuture(m.getKey());
+                MTM_PRED = m -> nonIBProduct(m.getKey());
             } else {
                 MTM_PRED = m -> true;
             }
@@ -571,7 +573,7 @@ public class HistChinaStocks extends JPanel {
 
         futOnlyButton.addActionListener(l -> {
             if (futOnlyButton.isSelected()) {
-                MTM_PRED = m -> !tickerNotFuture(m.getKey());
+                MTM_PRED = m -> !nonIBProduct(m.getKey());
             } else {
                 MTM_PRED = m -> true;
             }
@@ -902,10 +904,11 @@ public class HistChinaStocks extends JPanel {
 
     private static void computePosition() {
         for (String s : chinaTradeMap.keySet()) {
-            if (tickerNotFuture(s)) {
+            if (nonIBProduct(s)) {
                 int openPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate()
                         .isBefore(MONDAY_OF_WEEK))
                         .mapToInt(e -> e.getValue().getSizeAll()).sum();
+
                 int thisWeekPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate()
                         .isAfter(MONDAY_OF_WEEK.minusDays(1L)))
                         .mapToInt(e -> e.getValue().getSizeAll()).sum();
@@ -924,6 +927,9 @@ public class HistChinaStocks extends JPanel {
                 wtdBotPosition.put(s, botPos);
                 wtdSoldPosition.put(s, soldPos);
                 currentPositionMap.put(s, currentPos);
+            } else {
+                weekOpenPositionMap.put(s, currentPositionMap.getOrDefault(s, 0)
+                        - wtdChgInPosition.getOrDefault(s, 0));
             }
         }
     }
@@ -934,6 +940,8 @@ public class HistChinaStocks extends JPanel {
             weekOpenPositionMap.put(ticker, currentPositionMap.getOrDefault(ticker, 0)
                     - wtdChgInPosition.getOrDefault(ticker, 0));
         }
+
+
         weekMtmMap = weekOpenPositionMap.entrySet().stream().filter(p).map(e ->
                 computeMtm(e.getKey(), e.getValue(), chinaWtd.get(e.getKey()), lastWeekCloseMap.getOrDefault(e.getKey(), 0.0))).
                 reduce(mapSummingDouble).orElse(new ConcurrentSkipListMap<>());
@@ -1361,7 +1369,7 @@ public class HistChinaStocks extends JPanel {
 
     private static void computeTradingCost() {
         for (String s : chinaTradeMap.keySet()) {
-            if (tickerNotFuture(s)) {
+            if (nonIBProduct(s)) {
                 double tradingCost = chinaTradeMap.get(s).entrySet().stream()
                         .mapToDouble(e -> e.getValue().getTradeList().stream().mapToDouble(
                                 t -> HistChinaHelper.getTradingCostCustom(s, e.getKey().toLocalDate(),
@@ -1433,9 +1441,18 @@ public class HistChinaStocks extends JPanel {
 
     private static double computeWtdMtmFor1Stock(String s) {
         if (chinaWtd.containsKey(s) && chinaWtd.get(s).size() > 0) {
-            if (tickerNotFuture(s)) {
-                int openPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONDAY_OF_WEEK))
+            if (nonIBProduct(s)) {
+                int openPos = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().
+                        isBefore(MONDAY_OF_WEEK))
                         .mapToInt(e -> e.getValue().getSizeAll()).sum();
+
+//                if (s.startsWith("hk")) {
+//                    openPos = currentPositionMap.getOrDefault(s, 0) - wtdChgInPosition.getOrDefault(s, 0);
+//                    pr(s, "wtd mtm ", " fx ", fxMap.getOrDefault(currencyMap.getOrDefault(s, "CNY"), 1.0),
+//                            "open pos ", openPos, "last ", chinaWtd.get(s).lastEntry().getValue().getClose(),
+//                            "last week close", lastWeekCloseMap.getOrDefault(s, 0.0), "default",
+//                            chinaWtd.get(s).firstEntry().getValue().getOpen());
+//                }
 
                 return fxMap.getOrDefault(currencyMap.getOrDefault(s, "CNY"), 1.0)
                         * (openPos * (chinaWtd.get(s).lastEntry().getValue().getClose()
@@ -1453,7 +1470,7 @@ public class HistChinaStocks extends JPanel {
 
     private static void computeWtdMtmPnlAll() {
         for (String s : chinaTradeMap.keySet()) {
-            if (tickerNotFuture(s)) {
+            if (nonIBProduct(s)) {
                 int posBeforeThisWeek = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(MONDAY_OF_WEEK))
                         .mapToInt(e -> e.getValue().getSizeAll()).sum();
                 weekOpenPositionMap.put(s, posBeforeThisWeek);
@@ -1462,6 +1479,7 @@ public class HistChinaStocks extends JPanel {
                         - lastWeekCloseMap.getOrDefault(s, chinaWtd.get(s).firstEntry().getValue().getOpen()))));
             } else {
                 int openPos = currentPositionMap.getOrDefault(s, 0) - wtdChgInPosition.getOrDefault(s, 0);
+                weekOpenPositionMap.put(s, openPos);
                 //+ (s.equalsIgnoreCase("SGXA50PR") ? futExpiryUnits : 0);
                 wtdMtmPnlMap.put(s, fxMap.getOrDefault(currencyMap.getOrDefault(s, "CNY"), 1.0) * (openPos) * (chinaWtd.get(s).lastEntry().getValue().getClose()
                         - lastWeekCloseMap.getOrDefault(s, chinaWtd.get(s).firstEntry().getValue().getOpen())));
@@ -1642,7 +1660,7 @@ public class HistChinaStocks extends JPanel {
             double mtm = r(computeWtdMtmFor1Stock(name));
             double trade = r(computeWtdTradePnlFor1Stock(name));
 
-            if (!tickerNotFuture(name)) {
+            if (!nonIBProduct(name)) {
 
                 double thisWeekCostBasis = chinaTradeMap.get(name).entrySet().stream()
                         .filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1L)))
@@ -1685,7 +1703,8 @@ public class HistChinaStocks extends JPanel {
                     return chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(MONDAY_OF_WEEK.minusDays(1)))
                             .mapToInt(e -> e.getValue().getSizeAll()).sum();
                 case 13:
-                    return currentPositionMap.getOrDefault(name, 0) - wtdChgInPosition.getOrDefault(name, 0);
+                    return weekOpenPositionMap.getOrDefault(name, 0);
+                //return currentPositionMap.getOrDefault(name, 0) - wtdChgInPosition.getOrDefault(name, 0);
                 case 14:
                     return wtdChgInPosition.getOrDefault(name, 0);
                 case 15:

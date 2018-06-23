@@ -126,7 +126,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //ma
     private static AtomicBoolean MATraderStatus = new AtomicBoolean(true);
-    private static volatile int currentMAPeriod = 60;
+    private static volatile int shortMAPeriod = 60;
+    private static volatile int longMAPeriod = 80;
+
     private static Direction currentDirection = Direction.Flat;
     private static final int DEFAULT_SIZE = 1;
     private static LocalDateTime lastMATradeTime = LocalDateTime.now();
@@ -777,10 +779,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         } else {
             percentileTrader(ldt, price);
         }
-
-
         overnightTrader(ldt, price);
-
     }
 
     private static void amHedgeTrader(LocalDateTime nowMilli, double freshPrice) {
@@ -1004,7 +1003,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         if (price5.size() <= 1) return;
 
-        NavigableMap<LocalDateTime, Double> sma = XuTraderHelper.getMAGen(price5, currentMAPeriod);
+        NavigableMap<LocalDateTime, Double> sma = XuTraderHelper.getMAGen(price5, shortMAPeriod);
         double lastPrice = price5.lastEntry().getValue().getClose();
         double pd = getPD(lastPrice);
 
@@ -1760,7 +1759,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .lowerEntry(nowMilli).getValue();
 
         lastBar.add(freshPrice);
-        NavigableMap<LocalDateTime, Double> sma = getMAGen(price5, currentMAPeriod);
+        NavigableMap<LocalDateTime, Double> sma = getMAGen(price5, shortMAPeriod);
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
 
 //        pr(nowMilli, " Flatten Trader Delta: "
@@ -1814,7 +1813,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double prevPrice = activeLastMinuteMap.size() <= 2 ? freshPrice : activeLastMinuteMap.lowerEntry(nowMilli).getValue();
         lastBar.add(freshPrice);
         NavigableMap<LocalDateTime, Double> sma;
-        sma = getMAGen(price5, currentMAPeriod);
+        sma = getMAGen(price5, shortMAPeriod);
 
         if (detailedPrint.get()) {
             pr(str(" Detailed MA ON", "pd", r10000(pd),
@@ -1906,10 +1905,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime secLastBarTime = price5.lowerEntry(price5.lastKey()).getKey().toLocalTime();
 
         lastBar.add(freshPrice);
-        NavigableMap<LocalDateTime, Double> sma;
-        sma = getMAGen(price5, currentMAPeriod);
+        NavigableMap<LocalDateTime, Double> smaShort;
+        NavigableMap<LocalDateTime, Double> smaLong;
 
-        double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
+        smaShort = getMAGen(price5, shortMAPeriod);
+
+
+        double maLast = smaShort.size() > 0 ? smaShort.lastEntry().getValue() : 0.0;
         sentiment = freshPrice > maLast ? MASentiment.Bullish : MASentiment.Bearish;
 
         pr("sentiment/fresh /malast ", sentiment, freshPrice, r(maLast));
@@ -2061,9 +2063,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "O/N buy @ ", freshPrice,
                         "perc: ", currPercentile, "pmPercChg", pmPercChg));
             }
-        } else
-
-        {
+        } else {
             outputToAutoLog(" outside tradable time slot");
         }
 
@@ -2208,7 +2208,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
         if (price5.size() <= 2) return 0.0;
 
-        NavigableMap<LocalDateTime, Double> sma = getMAGen(price5, currentMAPeriod);
+        NavigableMap<LocalDateTime, Double> sma = getMAGen(price5, shortMAPeriod);
         return sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
     }
 

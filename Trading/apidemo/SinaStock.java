@@ -166,7 +166,8 @@ public class SinaStock implements Runnable {
                         //updateBidAskMap(ticker, lt, datalist, BidAsk.BID, bidMap);
                         //updateBidAskMap(ticker, lt, datalist, BidAsk.ASK, askMap);
                     } else {
-                        if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker) && STOCK_COLLECTION_TIME.test(ldt)) {
+                        if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker)
+                                && STOCK_COLLECTION_TIME.test(ldt)) {
                             ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(Utility.pd(datalist, 2)));
                         }
 

@@ -838,8 +838,8 @@ public class Utility {
     }
 
 
-    public static boolean tickerNotFuture(String s) {
-        return !s.startsWith("SGXA50");
+    public static boolean nonIBProduct(String s) {
+        return !s.startsWith("SGXA50") && !s.startsWith("hk");
     }
 
     public static Color shiftColor(Color c) {

@@ -154,7 +154,7 @@ public class XuTraderHelper {
         return 50;
     }
 
-    public static <T extends Temporal> int getPercentileForDouble(NavigableMap<T, Double> map) {
+    static <T extends Temporal> int getPercentileForDouble(NavigableMap<T, Double> map) {
         if (map.size() > 1) {
             double max = map.entrySet().stream().mapToDouble(Map.Entry::getValue).max().orElse(0.0);
             double min = map.entrySet().stream().mapToDouble(Map.Entry::getValue).min().orElse(0.0);
@@ -181,7 +181,7 @@ public class XuTraderHelper {
         return o;
     }
 
-    public static Order placeBidLimit(double p, double quantity) {
+    static Order placeBidLimit(double p, double quantity) {
         return placeBidLimitTIF(p, quantity, Types.TimeInForce.DAY);
     }
 
@@ -268,7 +268,7 @@ public class XuTraderHelper {
         return t -> t.isAfter(LocalTime.of(15, 0)) || t.isBefore(LocalTime.of(5, 0));
     }
 
-    public static LocalDateTime getEngineStartTime() {
+    static LocalDateTime getEngineStartTime() {
         return LocalDateTime.now();
     }
 
