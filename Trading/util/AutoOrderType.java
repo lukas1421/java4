@@ -8,6 +8,7 @@ public enum AutoOrderType {
     OVERNIGHT,
     PERC_ACC,
     PERC_DECC,
+    PERC,
     PD_OPEN,
     PD_CLOSE,
     FLATTEN,

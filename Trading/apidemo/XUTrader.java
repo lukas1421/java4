@@ -1242,6 +1242,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     private static synchronized void slowCoverTrader(LocalDateTime nowMilli, double freshPrice) {
+        checkCancelTrades(SLOW_COVER, nowMilli, ORDER_WAIT_TIME);
+
         LocalTime lt = nowMilli.toLocalTime();
         double currDelta = getNetPtfDelta();
         double futDelta = getFutDelta();
@@ -1344,26 +1346,24 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         int minBetweenPercOrders = percOrdersTotal == 0 ? 0 : 10;
         double currDelta = getNetPtfDelta();
-        double currStockDelta = ChinaPosition.getStockPtfDelta();
 
-        pr("perc Trader status?", percentileTradeOn.get() ? "ON" : "OFF",
-                nowMilli.toLocalTime().truncatedTo(ChronoUnit.SECONDS),
-                "p%:", perc, "pd", r10000(pd), "BullBear target : ", getBullishTarget(), getBearishTarget(),
-                "acc#, decc#, net#", accSize, deccSize, netPercTrades
-                , "accAvg, DecAvg,", avgAccprice, avgDeccprice,
-                "OrderT TradeT,next tradeT",
-                lastPercOrderT.toLocalTime().truncatedTo(MINUTES),
-                lastPercTradeT.toLocalTime().truncatedTo(MINUTES),
-                lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime().truncatedTo(MINUTES)
-        );
+        if (detailedPrint.get()) {
+            pr("perc Trader status?", percentileTradeOn.get() ? "ON" : "OFF",
+                    nowMilli.toLocalTime().truncatedTo(ChronoUnit.SECONDS),
+                    "p%:", perc, "pd", r10000(pd), "BullBear target : ", getBullishTarget(), getBearishTarget(),
+                    "acc#, decc#, net#", accSize, deccSize, netPercTrades
+                    , "accAvg, DecAvg,", avgAccprice, avgDeccprice,
+                    "OrderT TradeT,next tradeT",
+                    lastPercOrderT.toLocalTime().truncatedTo(MINUTES),
+                    lastPercTradeT.toLocalTime().truncatedTo(MINUTES),
+                    lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime().truncatedTo(MINUTES)
+            );
+        }
 
         //******************************************************************************************//
         //if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
         if (!percentileTradeOn.get()) return;
-        if (currStockDelta == 0) {
-            pr(" stock delta 0 , returning ");
-            return;
-        }
+
         //********************************************z*********************************************//
         if (timeDiffinMinutes(lastPercOrderT, nowMilli) >= minBetweenPercOrders) {
             if (perc < DOWN_PERC) {
@@ -1402,7 +1402,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-
     /**
      * only cover if first 10 maxT> first 10 minT
      *
@@ -1432,9 +1431,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static LocalDateTime getLastOrderTime(AutoOrderType ordertype) {
+    private static LocalDateTime getLastOrderTime(AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == ordertype)
+                .filter(e -> e.getValue().getOrderType() == type)
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                 .map(e -> e.getValue().getOrderTime())
                 .orElse(sessionOpenT());
@@ -1454,7 +1453,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int longerMA = 10;
         int tBetweenOrder = 1;
 
-
         if (!(checkTimeRangeBool(lt, 9, 30, 11, 30)
                 || (checkTimeRangeBool(lt, 13, 0, 15, 0)))) {
             index = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
@@ -1464,9 +1462,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         } else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
             shorterMA = 1;
             longerMA = 5;
+            tBetweenOrder = 1;
         }
 
-        checkCancelTrades(INDEX_MA, nowMilli, tBetweenOrder);
+        checkCancelTrades(INDEX_MA, nowMilli, tBetweenOrder * 2);
 
         int perc = getPercentileForLast(index);
 
@@ -1535,11 +1534,24 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     .filter(e -> e.getValue().getOrderType() == type)
                     .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                     .map(e -> e.getValue().getStatus()).orElse(OrderStatus.Unknown);
+
             LocalDateTime lastOTime = getLastOrderTime(type);
+
             if (lastOrdStatus != OrderStatus.Filled && lastOrdStatus != OrderStatus.Cancelled
                     && lastOrdStatus != OrderStatus.ApiCancelled) {
+
                 if (MINUTES.between(lastOTime, nowMilli) > timeLimit) {
+                    globalIdOrderMap.entrySet().stream()
+                            .filter(e -> e.getValue().getOrderType() == type).forEach(e -> {
+                        if (e.getValue().getStatus() == OrderStatus.Submitted) {
+                            apcon.cancelOrder(e.getValue().getOrder().orderId());
+                            e.getValue().setFinalActionTime(LocalDateTime.now());
+                            e.getValue().setStatus(OrderStatus.Cancelled);
+                        }
+                    });
+
                     apcon.cancelAllOrders();
+
                     outputOrderToAutoLog(nowMilli + " cancelling orders trader for type " + type);
                 }
             }
