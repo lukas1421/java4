@@ -48,9 +48,6 @@ public final class NormalTrade extends Trade {
         } else {
             return 0.0;
         }
-
-        //return transactionFeeHelper(name, rate);
-        //return mergeList.stream().mapToDouble(t->((Trade)t).transactionFeeHelper(name,rate)).sum();
     }
 
     @Override
@@ -64,9 +61,6 @@ public final class NormalTrade extends Trade {
         } else {
             return 0.0;
         }
-
-        //return costBasisHelper(name, rate);
-        //return mergeList.stream().mapToDouble(t->((Trade)t).costBasisHelper(name, rate)).sum();
     }
 
 

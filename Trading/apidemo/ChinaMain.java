@@ -38,9 +38,6 @@ import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static utility.Utility.pr;
 
-//import java.time.temporal.ChronoUnit;
-//import java.time.temporal.TemporalUnit;
-
 public final class ChinaMain implements IConnectionHandler {
     public static volatile LocalDate currentTradingDate;
 
