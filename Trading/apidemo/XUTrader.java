@@ -860,7 +860,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static int getPercentileChgYFut() {
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
         if (futdata.size() <= 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
-            //throw new IllegalStateException(" ytd not enough data (get perc chg y fut ) ");
             return 0;
         } else {
             LocalDate prevDate = futdata.firstKey().toLocalDate();
@@ -1455,8 +1454,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr("short long MA period: ", shorterMA, longerMA);
             pr(" ma cross last : ", r(maShortLast), r(maLongLast), r(maShortLast - maLongLast));
             pr(" ma cross 2nd last : ", r(maShortSecLast), r(maLongSecLast), r(maShortSecLast - maLongSecLast));
-            boolean bull = maShortLast > maLongLast && maShortSecLast < maLongSecLast;
-            boolean bear = maShortLast < maLongLast && maShortSecLast > maLongSecLast;
+            boolean bull = maShortLast > maLongLast && maShortSecLast <= maLongSecLast;
+            boolean bear = maShortLast < maLongLast && maShortSecLast >= maLongSecLast;
             pr(" bull/bear cross ", bull, bear);
             pr(" current PD ", r10000(getPD(freshPrice)));
             if (bull || bear) {
@@ -1490,8 +1489,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * Last hour direction more clear - trade
      *
-     * @param nowMilli
-     * @param freshPrice
+     * @param nowMilli   timeNow
+     * @param freshPrice Latest fut price
      */
     private static void lastHourMATrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
