@@ -31,8 +31,7 @@ import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-import static utility.Utility.defaultEntry;
-import static utility.Utility.roundDownToN;
+import static utility.Utility.*;
 
 public class GraphBig extends JComponent implements GraphFillable, MouseMotionListener, MouseListener {
 
@@ -306,6 +305,20 @@ public class GraphBig extends JComponent implements GraphFillable, MouseMotionLi
                 g.setColor(Color.black);
                 g2.setStroke(sk);
             }
+
+            if (smaShort.containsKey(lt) && smaLong.containsKey(lt)) {
+                if (!lt.equals(smaShort.firstKey()) && !lt.equals(smaLong.firstKey())) {
+                    if (smaShort.get(lt) > smaLong.get(lt) && smaShort.lowerEntry(lt).getValue() <= smaLong.lowerEntry(lt).getValue()) {
+                        g.drawString(str("B", lt), x, lowY + 20 + ((mouseYCord < closeY ? -40 : +40)));
+                        g.drawString(r(tm.floorEntry(lt).getValue().getClose()) + "", x, lowY + 40 + ((mouseYCord < closeY ? -40 : +40)));
+                    } else if (smaShort.get(lt) < smaLong.get(lt) && smaShort.lowerEntry(lt).getValue() >= smaLong.lowerEntry(lt).getValue()) {
+                        g.drawString(str("S", lt), x, lowY + 20 + (mouseYCord < closeY ? -40 : +40));
+                        g.drawString(r(tm.floorEntry(lt).getValue().getClose()) + "",
+                                x, lowY + 40 + ((mouseYCord < closeY ? -40 : +40)));
+                    }
+                }
+            }
+
             x += WIDTH_BIG;
         }
 
