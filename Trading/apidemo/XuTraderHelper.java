@@ -1,5 +1,6 @@
 package apidemo;
 
+import TradeType.FutureTrade;
 import TradeType.MAIdea;
 import auxiliary.SimpleBar;
 import client.Order;
@@ -17,18 +18,17 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static apidemo.ChinaData.priceMapBar;
 import static apidemo.TradingConstants.FTSE_INDEX;
 import static java.lang.System.out;
-import static utility.Utility.str;
+import static utility.Utility.*;
 
 public class XuTraderHelper {
 
@@ -448,6 +448,124 @@ public class XuTraderHelper {
 
     static boolean checkTimeRangeBool(LocalTime t, int hrBegin, int minBegin, int hrEnd, int minEnd) {
         return t.isAfter(LocalTime.of(hrBegin, minBegin)) && t.isBefore(LocalTime.of(hrEnd, minEnd));
+    }
+
+    static int getMinuteBetween(LocalTime t1, LocalTime t2) {
+        if (t1.isBefore(LocalTime.of(11, 30)) && t2.isAfter(LocalTime.of(13, 0))) {
+            return (int) (ChronoUnit.MINUTES.between(t1, t2) - 90);
+        }
+        return (int) ChronoUnit.MINUTES.between(t1, t2);
+    }
+
+    public static void computeMAStrategy() {
+        //output the following to a file
+        // time in minute, buy/sell, index value, fut value,
+        String anchorIndex = FTSE_INDEX;
+        LocalDateTime nowMilli = LocalDateTime.now();
+        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate());
+        NavigableMap<LocalDateTime, SimpleBar> fut = XUTrader.futData.get(ibContractToFutType(XUTrader.activeFuture));
+        double futClose = fut.lowerEntry(LocalDateTime.of(LocalDate.now(), LocalTime.of(15, 0))).getValue().getClose();
+        int shorterMA = 5;
+        int longerMA = 10;
+
+        NavigableMap<LocalTime, FutureTrade> resultMap = new ConcurrentSkipListMap<>();
+
+        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
+        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
+
+        for (LocalDateTime k : smaShort.keySet()) {
+            if (!k.equals(smaShort.firstKey()) && k.toLocalTime().isBefore(LocalTime.of(15, 0))) {
+                if (smaLong.containsKey(k)) {
+                    if (smaShort.get(k) > smaLong.get(k)) {
+                        if (smaShort.lowerEntry(k).getValue() <= smaLong.lowerEntry(k).getValue()) {
+
+                            double futPrice = fut.floorEntry(k).getValue().getClose();
+                            resultMap.put(k.toLocalTime(), new FutureTrade(futPrice, +1));
+
+                            pr("buy ", k.toLocalTime(), "last short", r(smaShort.get(k)), "last long", r(smaLong.get(k)),
+                                    " seclast ", r(smaShort.lowerEntry(k).getValue()), "long", r(smaLong.lowerEntry(k).getValue()),
+                                    "index", r(index.floorEntry(k).getValue().getClose()), "fut", futPrice);
+                        }
+
+                    } else if (smaShort.get(k) < smaLong.get(k)) {
+                        if (smaShort.lowerEntry(k).getValue() >= smaLong.lowerEntry(k).getValue()) {
+                            double futPrice = fut.floorEntry(k).getValue().getClose();
+                            resultMap.put(k.toLocalTime(), new FutureTrade(futPrice, -1));
+
+                            pr("sell ", k.toLocalTime(), "last short", r(smaShort.get(k)), "last long", r(smaLong.get(k)),
+                                    " seclast ", r(smaShort.lowerEntry(k).getValue()), "long", r(smaLong.lowerEntry(k).getValue()),
+                                    "index", r(index.floorEntry(k).getValue().getClose()), "fut", fut.floorEntry(k)
+                                            .getValue().getClose());
+                        }
+                    }
+                }
+            }
+        }
+
+        resultMap.forEach((k, v) -> {
+            pr(k, v, "result", v.getSize() * (futClose - v.getPrice()));
+        });
+
+        pr("overall pnl " +
+                resultMap.entrySet().stream().mapToDouble(e -> e.getValue().getSize() *
+                        (futClose - e.getValue().getPrice())).sum());
+
+        pr(" am " + resultMap.entrySet().stream().filter(e -> e.getKey().isBefore(LocalTime.of(12, 0)))
+                .mapToDouble(e -> e.getValue().getSize() * (futClose - e.getValue().getPrice())).sum());
+
+        pr(" pm " + resultMap.entrySet().stream().filter(e -> e.getKey().isAfter(LocalTime.of(12, 0)))
+                .mapToDouble(e -> e.getValue().getSize() * (futClose - e.getValue().getPrice())).sum());
+
+
+        pr("by ampm", resultMap.entrySet().stream().collect(Collectors.partitioningBy(
+                e -> e.getKey().isBefore(LocalTime.of(12, 0)),
+                Collectors.summingDouble(e -> e.getValue().getSize() * (futClose - e.getValue().getPrice())))));
+
+        pr("by hour ", resultMap.entrySet().stream().collect(Collectors.groupingBy(e -> e.getKey().getHour(),
+                Collectors.summingDouble(e -> e.getValue().getSize() * (futClose - e.getValue().getPrice())))));
+
+        pr(" trades # by hour ", resultMap.entrySet().stream().collect(Collectors.groupingBy(e -> e.getKey().getHour(),
+                Collectors.summingInt(e -> 1))));
+
+        pr(" avg time btwn trades by hour ",
+                resultMap.entrySet().stream().collect(Collectors.groupingBy(e -> e.getKey().getHour(),
+                        Collectors.averagingDouble(e -> {
+                            if (e.getKey().equals(resultMap.lastKey())) {
+                                return getMinuteBetween(e.getKey(), LocalTime.of(15, 0));
+                            } else {
+                                return getMinuteBetween(e.getKey(), resultMap.higherKey(e.getKey()));
+                            }
+                        }))));
+    }
+
+    static int getPMPercChg(NavigableMap<LocalDateTime, SimpleBar> data, LocalDate d) {
+        if (data.size() <= 2 || data.firstKey().toLocalDate().equals(data.lastKey().toLocalDate())) {
+            return 0;
+        } else {
+            double prevMax = data.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(d))
+                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(),
+                            9, 29, 15, 0))
+                    .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
+                    .map(e -> e.getValue().getHigh()).orElse(0.0);
+
+            double prevMin = data.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(d))
+                    .filter(e -> e.getKey().toLocalTime().isAfter(LocalTime.of(9, 29))
+                            && e.getKey().toLocalTime().isBefore(LocalTime.of(15, 0)))
+                    .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
+                    .map(e -> e.getValue().getLow()).orElse(0.0);
+
+            double prevClose = data.floorEntry(LocalDateTime.of(d, LocalTime.of(15, 0)))
+                    .getValue().getClose();
+
+            double pmOpen = data.floorEntry(LocalDateTime.of(d, LocalTime.of(13, 0)))
+                    .getValue().getOpen();
+
+            if (prevMax == 0.0 || prevMin == 0.0 || prevClose == 0.0 || pmOpen == 0.0) {
+                return 0;
+            } else {
+                return (int) Math.round(100d * (prevClose - pmOpen) / (prevMax - prevMin));
+            }
+        }
     }
 
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
