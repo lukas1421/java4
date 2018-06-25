@@ -32,7 +32,8 @@ public class GraphIndustry extends JComponent {
     private int height;
     private double min;
     private double max;
-    private static volatile ConcurrentMap<String, ConcurrentSkipListMap<LocalTime, Double>> industryPriceMap = new ConcurrentHashMap<>();
+    private static volatile ConcurrentMap<String, ConcurrentSkipListMap<LocalTime, Double>> industryPriceMap
+            = new ConcurrentHashMap<>();
     public static volatile Map<String, Double> sectorMapInOrder = new LinkedHashMap<>();
     public static Map<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> industryMapBar = new ConcurrentHashMap<>();
 
@@ -40,7 +41,10 @@ public class GraphIndustry extends JComponent {
     public static volatile String quickestRiser;
     public static volatile String selectedNameIndus = "";
 
-    public static final Predicate<? super Entry<String, ?>> NO_GC = e -> !e.getKey().equals("sh204001") && e.getKey().length() > 2;
+    public static final Predicate<Entry<String, ?>> NO_GC = e -> !e.getKey().equals("sh204001");
+
+    public static final Predicate<Entry<String, ?>> STOCK_FUT = e -> e.getKey().startsWith("sh") || e.getKey().startsWith("sz")
+            || e.getKey().startsWith("hk") || e.getKey().startsWith("SGXA50");
 
     private final static Comparator<? super Entry<String, ? extends NavigableMap<LocalTime, Double>>> LAST_ENTRY_COMPARATOR
             = Comparator.comparingDouble(e -> Optional.ofNullable(e.getValue().lastEntry()).map(Entry::getValue).orElse(0.0));
@@ -60,7 +64,8 @@ public class GraphIndustry extends JComponent {
 
         int last;
         int x;
-        String maxNumTimeIndus = industryPriceMap.entrySet().stream().max(Comparator.comparingInt(e -> e.getValue().size())).map(Entry::getKey).orElse("");
+        String maxNumTimeIndus = industryPriceMap.entrySet().stream()
+                .max(Comparator.comparingInt(e -> e.getValue().size())).map(Entry::getKey).orElse("");
         //(e1, e2) -> e1.getValue().size() > e2.getValue().size() ? 1 : -1
 
         for (String key : industryPriceMap.keySet()) {
@@ -168,7 +173,7 @@ public class GraphIndustry extends JComponent {
         CompletableFuture.runAsync(GraphIndustry::getIndustryVol);
 
         CompletableFuture.supplyAsync(()
-                -> priceMapBar.entrySet().stream().filter(NO_GC).collect(groupingByConcurrent(
+                -> priceMapBar.entrySet().stream().filter(STOCK_FUT.and(NO_GC)).collect(groupingByConcurrent(
                 e -> ChinaStock.shortIndustryMap.get(e.getKey()), ConcurrentHashMap::new,
                 mapping(e -> getReturnMap(e.getValue()), collectingAndThen(toList(),
                         e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(TradingConstants.TRADING_HOURS))
@@ -220,18 +225,20 @@ public class GraphIndustry extends JComponent {
     }
 
     public static void getIndustryPrice() {
-        CompletableFuture.supplyAsync(()
-                -> priceMapBar.entrySet().stream().filter(NO_GC)
-                .collect(groupingByConcurrent(e -> ChinaStock.industryNameMap.get(e.getKey()),
-                        mapping(Entry::getValue, collectingAndThen(toList(), e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(TradingConstants.TRADING_HOURS))
-                                .collect(groupingByConcurrent(Entry::getKey, ConcurrentSkipListMap::new, mapping(Entry::getValue,
-                                        collectingAndThen(reducing(SimpleBar.addSB()), e1 -> e1.orElseGet(SimpleBar::new))))))))))
+        //pr(" getting industry price ");
+        CompletableFuture.supplyAsync(() ->
+                priceMapBar.entrySet().stream().filter(NO_GC)
+                        .collect(groupingByConcurrent(e -> ChinaStock.industryNameMap.getOrDefault(e.getKey(), "废"),
+                                mapping(Entry::getValue, collectingAndThen(toList(),
+                                        e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(TradingConstants.TRADING_HOURS))
+                                                .collect(groupingByConcurrent(Entry::getKey, ConcurrentSkipListMap::new, mapping(Entry::getValue,
+                                                        collectingAndThen(reducing(SimpleBar.addSB()), e1 -> e1.orElseGet(SimpleBar::new))))))))))
                 .thenAccept(m -> {
+                    //pr(" industry map bar ", m);
                     industryMapBar = m;
                     CompletableFuture.runAsync(GraphIndustry::processIndustry);
                     industryMapBar.keySet().forEach(s -> {
                         if (industryMapBar.get(s).size() > 0) {
-
                             CompletableFuture.runAsync(() -> priceMapBar.put(s, m.get(s)));
                             CompletableFuture.runAsync(() ->
                                     ChinaStock.openMap.put(s, Optional.ofNullable(industryMapBar.get(s).floorEntry(AMOPENT)).map(Entry::getValue).map(SimpleBar::getOpen).orElse(getIndustryOpen(s))));
@@ -259,7 +266,8 @@ public class GraphIndustry extends JComponent {
             LocalTime lastKey = value.lastKey();
 
             double prevHigh = value.headMap(lastKey, false).entrySet().stream()
-                    .max(comparingByValue(comparingDouble(SimpleBar::getHigh))).map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
+                    .max(comparingByValue(comparingDouble(SimpleBar::getHigh)))
+                    .map(Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
 
             String topRiser = getTopStockForRiser(indusName);
 
@@ -273,8 +281,8 @@ public class GraphIndustry extends JComponent {
 
     public static double getIndustryOpen(String sector) {
         try {
-            return ChinaStock.openMap.entrySet().stream().filter(NO_GC)
-                    .filter(e -> ChinaStock.industryNameMap.get(e.getKey()).equals(sector)).mapToDouble(Entry::getValue).sum();
+            return ChinaStock.openMap.entrySet().stream().filter(STOCK_FUT.and(NO_GC))
+                    .filter(e -> ChinaStock.industryNameMap.getOrDefault(e.getKey(), "废").equals(sector)).mapToDouble(Entry::getValue).sum();
         } catch (Exception x) {
             System.out.println(" sector wrong " + sector);
             x.printStackTrace();
@@ -300,11 +308,12 @@ public class GraphIndustry extends JComponent {
 
     @SuppressWarnings("unchecked")
     public static <T extends NavigableMap<LocalTime, SimpleBar>> void getIndustryPriceYtd(Map<String, T> mp) {
-        CompletableFuture.supplyAsync(()
-                -> mp.entrySet().stream().filter(NO_GC).collect(groupingBy(e -> ChinaStock.industryNameMap.get(e.getKey()), HashMap::new,
-                mapping(Entry::getValue, collectingAndThen(toList(), e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(TradingConstants.TRADING_HOURS))
-                        .collect(groupingBy(Entry::getKey, ConcurrentSkipListMap::new, mapping(Entry::getValue,
-                                collectingAndThen(reducing(SimpleBar.addSB()), e1 -> e1.orElseGet(SimpleBar::new))))))))))
+        CompletableFuture.supplyAsync(() ->
+                mp.entrySet().stream().filter(NO_GC).collect(groupingBy(e -> ChinaStock.industryNameMap.get(e.getKey()),
+                        HashMap::new, mapping(Entry::getValue,
+                                collectingAndThen(toList(), e -> e.stream().flatMap(e1 -> e1.entrySet().stream().filter(TradingConstants.TRADING_HOURS))
+                                        .collect(groupingBy(Entry::getKey, ConcurrentSkipListMap::new, mapping(Entry::getValue,
+                                                collectingAndThen(reducing(SimpleBar.addSB()), e1 -> e1.orElseGet(SimpleBar::new))))))))))
                 .thenAccept(m -> m.keySet().forEach(s -> {
                     mp.put(s, (T) m.get(s));
                 }));

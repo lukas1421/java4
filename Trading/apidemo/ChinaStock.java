@@ -112,7 +112,6 @@ public final class ChinaStock extends JPanel {
     private static volatile Map<String, Boolean> interestedName = new HashMap<>();
     static volatile Set<JDialog> dialogTracker = new HashSet<>();
 
-    //static final Comparator<? super Entry<LocalTime,Double>> Entry.comparingByValue() = (e1,e2)->e1.getValue()>=e2.getValue()?1:-1;
     public static final Predicate<String> NORMAL_STOCK = name -> priceMapBar.containsKey(name) &&
             !priceMapBar.get(name).isEmpty() && priceMapBar.get(name).size() > 0;
     private static final BiPredicate<String, LocalTime> FIRST_KEY_BEFORE = (name, lt) -> priceMapBar.get(name).firstKey().isBefore(lt);
@@ -227,11 +226,13 @@ public final class ChinaStock extends JPanel {
     static BiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>, LocalTime> GETMINTIME = (name, p) -> priceMapBar.
             get(name).entrySet().stream().filter(p).min(Utility.BAR_LOW).map(Entry::getKey).orElse(Utility.TIMEMAX);
 
-    static ToIntBiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>> GETMAXTIMETOINT = (name, p) -> convertTimeToInt(priceMapBar.
-            get(name).entrySet().stream().filter(p).max(Utility.BAR_HIGH).map(Entry::getKey).orElse(Utility.TIMEMAX));
+    static ToIntBiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>> GETMAXTIMETOINT = (name, p) ->
+            convertTimeToInt(priceMapBar.get(name).entrySet().stream()
+                    .filter(p).max(Utility.BAR_HIGH).map(Entry::getKey).orElse(Utility.TIMEMAX));
 
-    static ToIntBiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>> GETMINTIMETOINT = (name, p) -> convertTimeToInt(priceMapBar.
-            get(name).entrySet().stream().filter(p).min(Utility.BAR_LOW).map(Entry::getKey).orElse(Utility.TIMEMAX));
+    static ToIntBiFunction<String, Predicate<? super Entry<LocalTime, SimpleBar>>> GETMINTIMETOINT = (name, p) ->
+            convertTimeToInt(priceMapBar.get(name).entrySet().stream()
+                    .filter(p).min(Utility.BAR_LOW).map(Entry::getKey).orElse(Utility.TIMEMAX));
 
     public ChinaStock() {
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
@@ -267,7 +268,6 @@ public final class ChinaStock extends JPanel {
                 shortIndustryMap.put(al1.get(0), al1.get(3));
                 shortLongIndusMap.put(al1.get(3), al1.get(2));
                 longShortIndusMap.put(al1.get(2), al1.get(3));
-
             }
             symbolNamesFull = new ArrayList<>(nameMap.keySet());
 

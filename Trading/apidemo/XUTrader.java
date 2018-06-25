@@ -1,7 +1,6 @@
 package apidemo;
 
 import TradeType.FutureTrade;
-import TradeType.MAIdea;
 import TradeType.TradeBlock;
 import auxiliary.SimpleBar;
 import client.*;
@@ -135,9 +134,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //private static LocalDateTime lastMAOrderTime = sessionOpenT();
     private static final int MAX_MA_SIGNALS_PER_SESSION = 10;
     //private static AtomicInteger maSignals = new AtomicInteger(0); //session transient
-    private static volatile NavigableMap<LocalDateTime, Order> maOrderMap = new ConcurrentSkipListMap<>();
-    private static volatile TreeSet<MAIdea> maIdeasSet = new TreeSet<>(Comparator.comparing(MAIdea::getIdeaTime));
-    private static volatile long timeBtwnMAOrders = 5;
+    //private static volatile NavigableMap<LocalDateTime, Order> maOrderMap = new ConcurrentSkipListMap<>();
+    //private static volatile TreeSet<MAIdea> maIdeasSet = new TreeSet<>(Comparator.comparing(MAIdea::getIdeaTime));
+    //private static volatile long timeBtwnMAOrders = 5;
     private static final double PD_UP_THRESH = 0.003;
     private static final double PD_DOWN_THRESH = -0.003;
 
@@ -1142,12 +1141,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return factor;
     }
 
-    private static int determineTimeDiffFactor() {
-        if (maOrderMap.size() == 0) return 1;
-        return Math.max(1, Math.min(1,
-                (int) Math.floor(timeDiffinMinutes(maOrderMap.lastEntry().getKey(),
-                        LocalDateTime.now()) / 60d)));
-    }
+//    private static int determineTimeDiffFactor() {
+//        if (maOrderMap.size() == 0) return 1;
+//        return Math.max(1, Math.min(1,
+//                (int) Math.floor(timeDiffinMinutes(maOrderMap.lastEntry().getKey(),
+//                        LocalDateTime.now()) / 60d)));
+//    }
 
     private static Predicate<AutoOrderType> isInventoryTrade() {
         return e -> e.equals(AutoOrderType.INVENTORY_CLOSE) || e.equals(AutoOrderType.INVENTORY_OPEN);
@@ -1174,14 +1173,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             String msg = str("**Observing MA**"
                     , "||T:", LocalTime.now().truncatedTo(MINUTES)
                     , "||MA:", r(sma.lastEntry().getValue())
-                    , "||Last:", lastKey, lastBar
-                    , "||2nd:", secLastKey, secLastBar
+                    , "||Last:", lastKey, lastBar.getClose()
+                    , "||2nd:", secLastKey, secLastBar.getClose()
                     , "||Index:", r(getIndexPrice())
                     , "||PD:", r(pd), "||Curr Dir", currentDirection
                     , "||P%", percentile
-                    , "||WaitT Orders: ", timeBtwnMAOrders
-                    , "||Orders: ", maOrderMap.toString()
-                    , "|| Can LONG? ", canLongGlobal, "|| Can SHORT? ", canShortGlobal);
+                    , "||WaitT Orders: ", ORDER_WAIT_TIME);
 
             outputToAutoLog(msg);
             double lastMA = sma.lastEntry().getValue();
@@ -1939,7 +1936,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         LocalDateTime lastMAOrderTime = getLastOrderTime(MA);
 
-        if (timeDiffinMinutes(lastMAOrderTime, nowMilli) >= timeBtwnMAOrders) {
+        if (timeDiffinMinutes(lastMAOrderTime, nowMilli) >= ORDER_WAIT_TIME) {
             if (percentile < DOWN_PERC && maShortLast > maLongLast && maShortSecLast < maLongSecLast) {
                 candidatePrice = freshPrice;
 
@@ -1974,8 +1971,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "|secLast shortlong:", r(maShortSecLast), r(maLongSecLast),
                         "|PD", r10000(pd), "|Index", r(indexPrice),
                         "|Perc: ", percentile,
-                        "|Last Order Time:", lastMAOrderTime.truncatedTo(MINUTES),
-                        "|Order Wait T:", timeBtwnMAOrders);
+                        "|Last Order Time:", lastMAOrderTime.truncatedTo(MINUTES));
                 outputToAutoLog(outputMsg);
             }
         }

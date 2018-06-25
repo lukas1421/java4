@@ -201,11 +201,6 @@ public class Utility {
     }
 
 
-    @SuppressWarnings("SpellCheckingInspection")
-    private static String getStrGen(CharSequence delim, Object... cs) {
-        return Stream.of(cs).map(Object::toString).collect(Collectors.joining(delim));
-    }
-
     public static String getStrTabbed(Object... cs) {
         return getStrGen("\t", cs);
     }
@@ -217,6 +212,11 @@ public class Utility {
 
     public static String str(Object... cs) {
         return getStrGen(" ", cs);
+    }
+
+    @SuppressWarnings("SpellCheckingInspection")
+    private static String getStrGen(CharSequence delim, Object... cs) {
+        return Stream.of(cs).map(e -> e == null ? " NULL " : e.toString()).collect(Collectors.joining(delim));
     }
 
     public static String getStrCheckNull(Object... cs) {
