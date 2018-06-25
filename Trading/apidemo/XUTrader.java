@@ -1488,7 +1488,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             boolean bull = maShortLast > maLongLast && maShortSecLast < maLongSecLast;
             boolean bear = maShortLast < maLongLast && maShortSecLast > maLongSecLast;
             pr(" bull/bear cross ", bull, bear);
-            pr(" current PD ", r(getPD(freshPrice)));
+            pr(" current PD ", r10000(getPD(freshPrice)));
             if (bull || bear) {
                 if (checkTimeRangeBool(lt, 9, 30, 15, 0)) {
                     soundPlayer.playClip();
