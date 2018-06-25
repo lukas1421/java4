@@ -2004,10 +2004,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime lt = nowMilli.toLocalTime();
         if (futureAMSession().test(LocalTime.now()) || futurePMSession().test(LocalTime.now())) return;
         double currDelta = getNetPtfDelta();
-        //int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
 
         LocalDate TDate = checkTimeRangeBool(lt, 0, 0, 5, 0) ?
-                LocalDate.now().minusDays(1L) : LocalDate.now();
+                nowMilli.toLocalDate().minusDays(1L) : nowMilli.toLocalDate();
 
         double indexPrice = (priceMapBar.containsKey(FTSE_INDEX) &&
                 priceMapBar.get(FTSE_INDEX).size() > 0) ?
@@ -2016,33 +2015,32 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, SimpleBar> futPriceMap = futData.get(ibContractToFutType(activeFuture));
 
         int pmPercChg = getPMPercChg(futPriceMap, TDate);
-        int currPercentile = getPercentileForLast(futPriceMap);
+        int currPerc = getPercentileForLast(futPriceMap);
 
         LocalDateTime lastOrderTime = getLastOrderTime(OVERNIGHT);
 
         if (checkTimeRangeBool(lt, 3, 0, 5, 0)
                 && MINUTES.between(lastOrderTime, nowMilli) > ORDER_WAIT_TIME) {
-            if (currDelta > getDeltaLowLimit() && currPercentile > UP_PERC && pmPercChg > 0) {
+            if (currDelta > getDeltaLowLimit() && currPerc > UP_PERC && pmPercChg > 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Overnight Short", OVERNIGHT));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "O/N sell @ ", freshPrice,
-                        " curr p% ", currPercentile));
-            } else if (currDelta < getDeltaHighLimit() && currPercentile < DOWN_PERC && pmPercChg < 0) {
+                outputOrderToAutoLog(str(o.orderId(), "O/N sell @ ", freshPrice, " curr p% ", currPerc));
+            } else if (currDelta < getDeltaHighLimit() && currPerc < DOWN_PERC && pmPercChg < 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Overnight Long", OVERNIGHT));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "O/N buy @ ", freshPrice,
-                        "perc: ", currPercentile, "pmPercChg", pmPercChg));
+                        "perc: ", currPerc, "pmPercChg", pmPercChg));
             }
         } else {
             outputToAutoLog(" outside tradable time slot");
         }
 
         String outputString = str("||O/N||", nowMilli.format(DateTimeFormatter.ofPattern("M-d H:mm")),
-                "||curr perc: ", currPercentile,
+                "||curr P%: ", currPerc,
                 "||curr P: ", futPriceMap.lastEntry().getValue().getClose(),
                 "||index: ", Math.round(100d * indexPrice) / 100d,
                 "||BID ASK ", bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
