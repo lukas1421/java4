@@ -896,7 +896,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double target;
         LocalTime lt = LocalTime.now();
         if (lt.isBefore(LocalTime.of(9, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
-            return BULLISH_DELTA_TARGET / 2;
+            return 300000;
         }
 
         if (futureAMSession().test(lt)) {
@@ -919,7 +919,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double target;
         LocalTime lt = LocalTime.now();
         if (lt.isBefore(LocalTime.of(9, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
-            return BEARISH_DELTA_TARGET / 2;
+            return -100000;
         }
 
         if (futurePMSession().test(lt)) {
