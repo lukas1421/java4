@@ -1440,7 +1440,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
         if (detailedPrint.get()) {
-            pr(" Time: ", nowMilli.toLocalTime(), " perc: ", todayPerc);
+            pr("*INDEX MA Time: ", nowMilli.toLocalTime(), " perc: ", todayPerc);
             pr("short long MA: ", shorterMA, longerMA);
             pr(" ma cross last : ", r(maShortLast), r(maLongLast), r(maShortLast - maLongLast));
             pr(" ma cross 2nd last : ", r(maShortSecLast), r(maLongSecLast), r(maShortSecLast - maLongSecLast));
