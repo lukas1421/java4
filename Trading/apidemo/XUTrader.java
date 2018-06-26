@@ -723,7 +723,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         add(chartScroll);
     }
 
-    public static void processFutMain(LocalDateTime ldt, double price) {
+    public static void processAll(LocalDateTime ldt, double price) {
         if (!globalTradingOn.get()) {
             pr(" global trading off ");
             return;
@@ -753,7 +753,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (pmChgY < 0) {
             //slowCoverTrader(ldt, price);
             if (maxAfterMin && maxAbovePrev) {
-                slowCoverTrader(ldt, price);
+                //slowCoverTrader(ldt, price);
                 aggressiveCoverTrader(ldt, price);
             }
         } else if (pmChgY > 0) {
@@ -1184,8 +1184,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * slow cover trader (unconditional, not like MA)
      *
-     * @param nowMilli
-     * @param freshPrice
+     * @param nowMilli   time now
+     * @param freshPrice price now
      */
     private static synchronized void slowCoverTrader(LocalDateTime nowMilli, double freshPrice) {
         checkCancelTrades(SLOW_COVER, nowMilli, ORDER_WAIT_TIME);
@@ -1397,7 +1397,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int shorterMA = 5;
         int longerMA = 10;
         int tBetweenOrder = 1;
-        int maSize = 1;
+        int maSize = 2;
 
         if (!(checkTimeRangeBool(lt, 9, 30, 11, 30)
                 || (checkTimeRangeBool(lt, 13, 0, 15, 0)))) {
@@ -1548,7 +1548,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             });
 
                     //apcon.cancelAllOrders();
-
                     outputOrderToAutoLog(nowMilli + " cancelling orders trader for type " + type);
                 }
             }
