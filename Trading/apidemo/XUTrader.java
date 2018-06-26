@@ -84,7 +84,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //perc trader
     private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
-    private static final int MAX_PERC_TRADES = 5;
 
     //inventory market making
     private static volatile Semaphore inventorySemaphore = new Semaphore(1);
@@ -105,7 +104,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static AtomicBoolean pdTraderOn = new AtomicBoolean(false);
 
     //trim
-    private static AtomicBoolean trimTraderOn = new AtomicBoolean(false);
+    //private static AtomicBoolean trimTraderOn = new AtomicBoolean(false);
 
 
     //overnight trades
@@ -126,14 +125,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static volatile int longMAPeriod = 80;
 
     private static Direction currentDirection = Direction.Flat;
-    private static final int DEFAULT_SIZE = 1;
-    //private static LocalDateTime lastMATradeTime = LocalDateTime.now();
-    //private static LocalDateTime lastMAOrderTime = sessionOpenT();
-    private static final int MAX_MA_SIGNALS_PER_SESSION = 10;
-    //private static AtomicInteger maSignals = new AtomicInteger(0); //session transient
-    //private static volatile NavigableMap<LocalDateTime, Order> maOrderMap = new ConcurrentSkipListMap<>();
-    //private static volatile TreeSet<MAIdea> maIdeasSet = new TreeSet<>(Comparator.comparing(MAIdea::getIdeaTime));
-    //private static volatile long timeBtwnMAOrders = 5;
     private static final double PD_UP_THRESH = 0.003;
     private static final double PD_DOWN_THRESH = -0.003;
 
@@ -202,7 +193,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     XUTrader(ApiController ap) {
         pr(str(" ****** front fut ******* ", frontFut));
         pr(str(" ****** back fut ******* ", backFut));
-
 
         for (FutType f : FutType.values()) {
             futData.put(f, new ConcurrentSkipListMap<>());
@@ -338,11 +328,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JButton computeMAButton = new JButton("ComputeMA");
         computeMAButton.addActionListener(l -> computeMAStrategy());
 
-        JButton trimDeltaButton = new JButton("Trim: " + (trimTraderOn.get() ? "ON" : "OFF"));
-        trimDeltaButton.addActionListener(l -> {
-            trimTraderOn.set(!trimTraderOn.get());
-            trimDeltaButton.setText("Trim Trader:" + (trimTraderOn.get() ? "ON" : "OFF"));
-        });
+//        JButton trimDeltaButton = new JButton("Trim: " + (trimTraderOn.get() ? "ON" : "OFF"));
+//        trimDeltaButton.addActionListener(l -> {
+//            trimTraderOn.set(!trimTraderOn.get());
+//            trimDeltaButton.setText("Trim Trader:" + (trimTraderOn.get() ? "ON" : "OFF"));
+//        });
 
         JButton getPositionButton = new JButton(" get pos ");
         getPositionButton.addActionListener(l -> apcon.reqPositions(this));
@@ -604,7 +594,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(percTraderButton);
         //controlPanel1.add(dayTraderButton);
         //controlPanel1.add(pdTraderButton);
-        controlPanel1.add(trimDeltaButton);
+        //controlPanel1.add(trimDeltaButton);
         controlPanel1.add(rollButton);
         controlPanel1.add(globalTradingButton);
         controlPanel1.add(computeMAButton);
@@ -1143,9 +1133,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     , "||MA Short:", r(smaShort.lastEntry().getValue())
                     , "||MA Long:", r(smaLong.lastEntry().getValue())
                     , "||Index:", r(getIndexPrice())
-                    , "||PD:", r(pd), "||Curr Dir", currentDirection
-                    , "||P%", percentile
-                    , "||WaitT Orders: ", ORDER_WAIT_TIME);
+                    , "||PD:", r10000(pd), "||Curr Dir", currentDirection
+                    , "||2 Day P%", percentile);
 
             outputToAutoLog(msg);
         }
