@@ -757,7 +757,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     public static void refresh() {
         sesOption.scheduleAtFixedRate(() -> {
-            if (LocalTime.now().isAfter(LocalTime.of(9, 20)) && LocalTime.now().isBefore(LocalTime.of(15, 30))) {
+            if (LocalTime.now().isAfter(LocalTime.of(9, 20)) && LocalTime.now().isBefore(LocalTime.of(15, 15))) {
                 pr(" saving vols hib ");
                 saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance());
             }

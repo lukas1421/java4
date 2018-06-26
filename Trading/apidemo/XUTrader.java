@@ -761,8 +761,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         lastHourMATrader(ldt, price, pmChgY);
 
         if (pmChgY < 0) {
-            slowCoverTrader(ldt, price);
+            //slowCoverTrader(ldt, price);
             if (maxAfterMin && maxAbovePrev) {
+                slowCoverTrader(ldt, price);
                 aggressiveCoverTrader(ldt, price);
             }
         } else if (pmChgY > 0) {
