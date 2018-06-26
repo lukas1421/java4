@@ -757,7 +757,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         XUTrader.updateLastMinuteMap(ldt, price);
-        indexMATrader(ldt, price);
+        indexMATrader(ldt, price, pmChgY);
         lastHourMATrader(ldt, price, pmChgY);
 
         if (pmChgY < 0) {
@@ -1400,7 +1400,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param nowMilli   time in milliseconds
      * @param freshPrice last price
      */
-    private static synchronized void indexMATrader(LocalDateTime nowMilli, double freshPrice) {
+    private static synchronized void indexMATrader(LocalDateTime nowMilli, double freshPrice, int pmPercY) {
         LocalTime lt = nowMilli.toLocalTime();
         String anchorIndex = FTSE_INDEX;
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate());
@@ -1459,7 +1459,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tBetweenOrder) {
-            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && todayPerc < DOWN_PERC_WIDE) {
+            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && todayPerc < DOWN_PERC_WIDE
+                    && pmPercY < 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, maSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_MA));
@@ -1467,7 +1468,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "index MA buy", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast)));
-            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > UP_PERC_WIDE) {
+            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > UP_PERC_WIDE
+                    && pmPercY > 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, maSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_MA));
