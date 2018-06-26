@@ -906,11 +906,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static double getBullishTarget() {
         double target;
-        if (futureAMSession().test(LocalTime.now())) {
-            target = BULLISH_DELTA_TARGET / 2;
-        } else {
-            target = (sentiment == MASentiment.Bullish ? BULLISH_DELTA_TARGET : BULLISH_DELTA_TARGET / 2);
+        LocalTime lt = LocalTime.now();
+        if (lt.isBefore(LocalTime.of(9, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
+            return BULLISH_DELTA_TARGET / 2;
         }
+
+        if (futureAMSession().test(lt)) {
+            target = BULLISH_DELTA_TARGET / 2;
+        } else if (futurePMSession().test(lt)) {
+            target = (sentiment == MASentiment.Bullish ? BULLISH_DELTA_TARGET : BULLISH_DELTA_TARGET / 2);
+        } else {
+            target = BULLISH_DELTA_TARGET / 2;
+        }
+
         if ((LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY)) {
             return target / 2;
         } else if (LocalDate.now().getDayOfWeek() == DayOfWeek.TUESDAY) {
@@ -921,11 +929,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static double getBearishTarget() {
         double target;
-        if (futurePMSession().test(LocalTime.now())) {
+        LocalTime lt = LocalTime.now();
+        if (lt.isBefore(LocalTime.of(9, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
+            return BEARISH_DELTA_TARGET / 2;
+        }
+
+        if (futurePMSession().test(lt)) {
             target = BULLISH_DELTA_TARGET / 4;
         } else {
             target = sentiment == MASentiment.Bearish ? BEARISH_DELTA_TARGET : 0.0;
         }
+
         if (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) {
             return target / 2;
         } else if (LocalDate.now().getDayOfWeek() == DayOfWeek.TUESDAY) {
@@ -1419,7 +1433,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             tBetweenOrder = 1;
         }
         checkCancelTrades(INDEX_MA, nowMilli, tBetweenOrder * 2);
-
         LocalDate tTrade = checkTimeRangeBool(lt, 0, 0, 5, 0) ?
                 nowMilli.toLocalDate().minusDays(1) : nowMilli.toLocalDate();
 
@@ -1440,7 +1453,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
         if (detailedPrint.get()) {
-            pr("*INDEX MA Time: ", nowMilli.toLocalTime(), " perc: ", todayPerc);
+            pr("*INDEX MA Time: ", nowMilli.toLocalTime(), " T perc: ", todayPerc);
             pr("short long MA: ", shorterMA, longerMA);
             pr(" ma cross last : ", r(maShortLast), r(maLongLast), r(maShortLast - maLongLast));
             pr(" ma cross 2nd last : ", r(maShortSecLast), r(maLongSecLast), r(maShortSecLast - maLongSecLast));
@@ -1505,7 +1518,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         //only trade MA in the last hour, no perc required. Big order wait time.
         if (checkTimeRangeBool(lt, 14, 0, 15, 0)) {
-            if (MINUTES.between(lastHourMAOrderTime, nowMilli) >= ORDER_WAIT_TIME) {
+            if (MINUTES.between(lastHourMAOrderTime, nowMilli) >= ORDER_WAIT_TIME / 3) {
                 if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && pmPercYChg < 0) {
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeBidLimit(freshPrice, 1);
