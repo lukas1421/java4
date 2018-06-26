@@ -82,11 +82,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double BEARISH_DELTA_TARGET = -200000.0;
     public static volatile Eagerness flattenEagerness = Eagerness.Passive;
 
-
-    //day cover trader
-    private static volatile AtomicBoolean slowCoverTraderOn = new AtomicBoolean(false);
-
-
     //perc trader
     private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
     private static final int MAX_PERC_TRADES = 5;
@@ -309,14 +304,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             outputToAutoLog(" percentile trader set to " + percentileTradeOn.get());
             percTraderButton.setText("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
         });
-
-//        JButton dayTraderButton = new JButton(" Slow Cover " + (slowCoverTraderOn.get() ? "ON" : "OFF"));
-//        dayTraderButton.addActionListener(l -> {
-//            slowCoverTraderOn.set(!slowCoverTraderOn.get());
-//            outputToAutoLog("slow cover trader set to " + slowCoverTraderOn.get());
-//            dayTraderButton.setText(" slow cover trader: " + (slowCoverTraderOn.get() ? "ON" : "OFF"));
-//        });
-
 
         JButton pdTraderButton = new JButton("PD Trader: " + (pdTraderOn.get() ? "ON" : "OFF"));
         pdTraderButton.addActionListener(l -> {
@@ -1205,7 +1192,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     /**
-     * slow cover trader
+     * slow cover trader (unconditional, not like MA)
      *
      * @param nowMilli
      * @param freshPrice
@@ -1420,6 +1407,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int shorterMA = 5;
         int longerMA = 10;
         int tBetweenOrder = 1;
+        int maSize = 1;
 
         if (!(checkTimeRangeBool(lt, 9, 30, 11, 30)
                 || (checkTimeRangeBool(lt, 13, 0, 15, 0)))) {
@@ -1427,10 +1415,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             shorterMA = 60;
             longerMA = 80;
             tBetweenOrder = ORDER_WAIT_TIME;
+            maSize = 3;
         } else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
             shorterMA = 1;
             longerMA = 5;
             tBetweenOrder = 1;
+            maSize = 1;
         }
         checkCancelTrades(INDEX_MA, nowMilli, tBetweenOrder * 2);
         LocalDate tTrade = checkTimeRangeBool(lt, 0, 0, 5, 0) ?
@@ -1471,7 +1461,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tBetweenOrder) {
             if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && todayPerc < DOWN_PERC_WIDE) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, 3);
+                Order o = placeBidLimit(freshPrice, maSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "index MA buy", globalIdOrderMap.get(id)
@@ -1479,7 +1469,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         r(maShortSecLast), r(maLongSecLast)));
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > UP_PERC_WIDE) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, 3);
+                Order o = placeOfferLimit(freshPrice, maSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "index MA sell", globalIdOrderMap.get(id)
@@ -1502,6 +1492,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int shorterMA = 5;
         int longerMA = 10;
         LocalDateTime lastHourMAOrderTime = getLastOrderTime(LAST_HOUR_MA);
+        int waitTime = 1;
 
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
@@ -1518,7 +1509,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         //only trade MA in the last hour, no perc required. Big order wait time.
         if (checkTimeRangeBool(lt, 14, 0, 15, 0)) {
-            if (MINUTES.between(lastHourMAOrderTime, nowMilli) >= ORDER_WAIT_TIME / 3) {
+            if (MINUTES.between(lastHourMAOrderTime, nowMilli) >= waitTime) {
                 if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && pmPercYChg < 0) {
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeBidLimit(freshPrice, 1);
