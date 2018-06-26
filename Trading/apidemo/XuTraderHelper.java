@@ -139,7 +139,7 @@ public class XuTraderHelper {
     }
 
     public static <T extends Temporal> int getPercentileForLastPred(NavigableMap<T, SimpleBar> mp,
-                                                                      Predicate<Map.Entry<T, SimpleBar>> p) {
+                                                                    Predicate<Map.Entry<T, SimpleBar>> p) {
         if (mp.size() > 1) {
             double max = mp.entrySet().stream().filter(p).mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
             double min = mp.entrySet().stream().filter(p).mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
@@ -289,7 +289,8 @@ public class XuTraderHelper {
                 (futureAMSession().test(now) ? AM_BEGIN : PM_BEGIN);
         LocalDate TDate = now.isAfter(LocalTime.of(0, 0)) && now.isBefore(LocalTime.of(5, 0))
                 ? LocalDate.now().minusDays(1L) : LocalDate.now();
-        return LocalDateTime.of(TDate, sessionBeginTime);
+//        return LocalDateTime.of(TDate, sessionBeginTime);
+        return LocalDateTime.of(TDate, LocalTime.MIN);
     }
 
     static double roundToXUPricePassive(double x, Direction dir) {
