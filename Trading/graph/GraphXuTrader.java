@@ -151,10 +151,10 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     }
 
     public void computeMAStrategyForAll() {
-        System.out.println(" computing MA strategy 60 ");
+        System.out.println(" computing UNCON_MA strategy 60 ");
         computeMAStrategy(maShort);
 
-        System.out.println(" computing MA strategy 80 ");
+        System.out.println(" computing UNCON_MA strategy 80 ");
         computeMAStrategy(maLong);
     }
 
@@ -163,7 +163,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         AtomicBoolean currentLong = new AtomicBoolean(true);
 
         if (sma.size() > 0 && tm.size() > 0) {
-            System.out.println(" computing MA strategy ");
+            System.out.println(" computing UNCON_MA strategy ");
             sma.forEach((lt, ma) -> {
                 if (tm.containsKey(lt) && tm.get(lt).includes(ma)) {
                     SimpleBar sb = tm.get(lt);
@@ -259,7 +259,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                 int maShortY = getY(maShort.get(lt));
                 g.drawLine(x, maShortY, x + 1, maShortY);
                 if (lt.equals(maShort.lastKey())) {
-                    g.drawString("MA Short: " + Math.round(100d * maShort.lastEntry().getValue()) / 100d, x + 20, maShortY);
+                    g.drawString("UNCON_MA Short: " + Math.round(100d * maShort.lastEntry().getValue()) / 100d, x + 20, maShortY);
                 }
                 g.setColor(Color.black);
             }
@@ -269,7 +269,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                 int maLongY = getY(maLong.get(lt));
                 g.drawLine(x, maLongY, x + 1, maLongY);
                 if (lt.equals(maLong.lastKey())) {
-                    g.drawString("MA Long" + Math.round(100d * maLong.lastEntry().getValue()) / 100d
+                    g.drawString("UNCON_MA Long" + Math.round(100d * maLong.lastEntry().getValue()) / 100d
                             , x + 20, maLongY);
                 }
                 g.setColor(Color.black);
@@ -352,7 +352,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
                 if (maShort.size() > 0 && maShort.containsKey(lt)) {
                     int maY = getY(maShort.get(lt));
-                    g.drawString("MA Short: " + lt.toLocalTime() + " " + Math.round(maShort.floorEntry(lt).getValue()), x, maY);
+                    g.drawString("UNCON_MA Short: " + lt.toLocalTime() + " " + Math.round(maShort.floorEntry(lt).getValue()), x, maY);
                     g.drawOval(x - 3, lowY, 5, 5);
                     g.fillOval(x - 3, lowY, 5, 5);
                 }

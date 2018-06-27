@@ -82,6 +82,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double BEARISH_DELTA_TARGET = -200000.0;
     public static volatile Eagerness flattenEagerness = Eagerness.Passive;
 
+    //UNCON_MA periods
+    private static final int MA5 = 5;
+    private static final int MA10 = 10;
+    private static final int MA20 = 20;
+    private static final int MA30 = 30;
+    private static final int MA60 = 60;
+    private static final int MA80 = 80;
+
+
     //perc trader
     private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
 
@@ -137,7 +146,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //music
     private static EmbeddedSoundPlayer soundPlayer = new EmbeddedSoundPlayer();
 
-    //detailed MA
+    //detailed UNCON_MA
     private static AtomicBoolean detailedPrint = new AtomicBoolean(false);
 
     //display
@@ -260,18 +269,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             detailedButton.setText(" Detailed: " + detailedPrint.get());
         });
 
-        JButton maTraderStatusButton = new JButton("MA Trader: " + (MATraderStatus.get() ? "ON" : "OFF"));
+        JButton maTraderStatusButton = new JButton("UNCON_MA Trader: " + (MATraderStatus.get() ? "ON" : "OFF"));
         maTraderStatusButton.addActionListener(l -> {
             MATraderStatus.set(!MATraderStatus.get());
-            outputToAutoLog(" MA Trade set to " + MATraderStatus.get());
-            maTraderStatusButton.setText("MA Trader " + (MATraderStatus.get() ? "ON" : "OFF"));
+            outputToAutoLog(" UNCON_MA Trade set to " + MATraderStatus.get());
+            maTraderStatusButton.setText("UNCON_MA Trader " + (MATraderStatus.get() ? "ON" : "OFF"));
         });
 
         JButton indexMAStatusButton = new JButton("IndexMA " + (indexMAStatus.get() ? "ON" : "OFF"));
         indexMAStatusButton.addActionListener(l -> {
             indexMAStatus.set(!indexMAStatus.get());
-            outputToAutoLog(" Index MA set to " + indexMAStatus.get());
-            indexMAStatusButton.setText(" Index MA " + (indexMAStatus.get() ? "ON" : "OFF"));
+            outputToAutoLog(" Index UNCON_MA set to " + indexMAStatus.get());
+            indexMAStatusButton.setText(" Index UNCON_MA " + (indexMAStatus.get() ? "ON" : "OFF"));
         });
 
 
@@ -463,7 +472,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //            //ses2.scheduleAtFixedRate(this::overnightTrader, 0, 1, TimeUnit.MINUTES);
 //        });
 
-//        JButton maAnalysisButton = new JButton(" MA Analysis ");
+//        JButton maAnalysisButton = new JButton(" UNCON_MA Analysis ");
 //        maAnalysisButton.addActionListener(l -> maTradeAnalysis());
 
         JButton getData = new JButton("Data");
@@ -747,8 +756,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         XUTrader.updateLastMinuteMap(ldt, price);
-        indexMATrader(ldt, price, pmChgY);
+        percentileMATrader(ldt, price, pmChgY);
         lastHourMATrader(ldt, price, pmChgY);
+        unconditionalMATrader(ldt, price);
 
         if (pmChgY < 0) {
             //slowCoverTrader(ldt, price);
@@ -982,7 +992,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //            }
 //        });
 //
-//        // make up for the last MA trade wihch was missing due to in restriction period
+//        // make up for the last UNCON_MA trade wihch was missing due to in restriction period
 //        if (maIdeasSet.size() > 0) {
 //            if (maIdeasSet.last().getIdeaTime().isAfter(lastMAOrderTime)
 //                    && now.isAfter(lastMAOrderTime.plusMinutes(timeBtwnMAOrders))
@@ -1131,10 +1141,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int percentile = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         soundPlayer.stopIfPlaying();
         if (smaShort.size() > 0) {
-            String msg = str("**Observing MA**"
+            String msg = str("**Observing UNCON_MA**"
                     , "||T:", LocalTime.now().truncatedTo(MINUTES)
-                    , "||MA Short:", r(smaShort.lastEntry().getValue())
-                    , "||MA Long:", r(smaLong.lastEntry().getValue())
+                    , "||UNCON_MA Short:", r(smaShort.lastEntry().getValue())
+                    , "||UNCON_MA Long:", r(smaLong.lastEntry().getValue())
                     , "||Index:", r(getIndexPrice())
                     , "||PD:", r10000(pd), "||Curr Dir", currentDirection
                     , "||2 Day P%", percentile);
@@ -1185,7 +1195,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     /**
-     * slow cover trader (unconditional, not like MA)
+     * slow cover trader (unconditional, not like UNCON_MA)
      *
      * @param nowMilli   time now
      * @param freshPrice price now
@@ -1364,7 +1374,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (indexTPerc < DOWN_PERC && MINUTES.between(lastCoverOrderT, nowMilli) > ORDER_WAIT_TIME / 3) {
             int id = autoTradeID.incrementAndGet();
-            int size = 3;
+            int size = 1;
             Order o = placeBidLimit(freshPrice, size); //Math.min(size, MAX_FUT_LIMIT)
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FAST_COVER));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
@@ -1382,17 +1392,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     /**
-     * trading based on index MA
+     * trading based on index UNCON_MA
      *
      * @param nowMilli   time in milliseconds
      * @param freshPrice last price
      */
-    private static synchronized void indexMATrader(LocalDateTime nowMilli, double freshPrice, int pmPercY) {
+    private static synchronized void percentileMATrader(LocalDateTime nowMilli, double freshPrice, int pmPercY) {
         LocalTime lt = nowMilli.toLocalTime();
         String anchorIndex = FTSE_INDEX;
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate());
-        int shorterMA = 5;
-        int longerMA = 10;
+        int shorterMA = MA10;
+        int longerMA = MA20;
         int tBetweenOrder = 1;
         int maSize = 3;
 
@@ -1431,8 +1441,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
         if (detailedPrint.get()) {
-            pr("*INDEX MA Time: ", nowMilli.toLocalTime(), " T perc: ", todayPerc);
-            pr("short long MA: ", shorterMA, longerMA);
+            pr("*INDEX UNCON_MA Time: ", nowMilli.toLocalTime(), " T perc: ", todayPerc);
+            pr("short long UNCON_MA: ", shorterMA, longerMA);
             pr(" ma cross last : ", r(maShortLast), r(maLongLast), r(maShortLast - maLongLast));
             pr(" ma cross 2nd last : ", r(maShortSecLast), r(maLongSecLast), r(maShortSecLast - maLongSecLast));
             boolean bull = maShortLast > maLongLast && maShortSecLast <= maLongSecLast;
@@ -1453,7 +1463,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeBidLimit(freshPrice, maSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "index MA buy", globalIdOrderMap.get(id)
+                outputOrderToAutoLog(str(o.orderId(), "index UNCON_MA buy", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast)));
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > UP_PERC_WIDE
@@ -1462,7 +1472,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeOfferLimit(freshPrice, maSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "index MA sell", globalIdOrderMap.get(id)
+                outputOrderToAutoLog(str(o.orderId(), "index UNCON_MA sell", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast)));
             }
@@ -1497,7 +1507,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongLast = smaLong.lastEntry().getValue();
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
-        //only trade MA in the last hour, no perc required. Big order wait time.
+        //only trade UNCON_MA in the last hour, no perc required. Big order wait time.
         if (checkTimeRangeBool(lt, 14, 0, 15, 0)) {
             if (MINUTES.between(lastHourMAOrderTime, nowMilli) >= waitTime) {
                 if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && pmPercYChg < 0) {
@@ -1505,7 +1515,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     Order o = placeBidLimit(freshPrice, 1);
                     globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, LAST_HOUR_MA));
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                    outputOrderToAutoLog(str(o.orderId(), "last hr MA buy", globalIdOrderMap.get(id)
+                    outputOrderToAutoLog(str(o.orderId(), "last hr UNCON_MA buy", globalIdOrderMap.get(id)
                             , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
                             r(maShortSecLast), r(maLongSecLast)));
                 } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && pmPercYChg > 0) {
@@ -1513,7 +1523,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     Order o = placeOfferLimit(freshPrice, 1);
                     globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, LAST_HOUR_MA));
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                    outputOrderToAutoLog(str(o.orderId(), "last hr MA sell", globalIdOrderMap.get(id)
+                    outputOrderToAutoLog(str(o.orderId(), "last hr UNCON_MA sell", globalIdOrderMap.get(id)
                             , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
                             r(maShortSecLast), r(maLongSecLast)));
                 }
@@ -1735,7 +1745,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     /**
-     * Once touch the MA, flatten position into bull bear range
+     * Once touch the UNCON_MA, flatten position into bull bear range
      *
      * @param nowMilli   time in millisecs
      * @param freshPrice most recent price
@@ -1819,7 +1829,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         sma = getMAGen(price5, shortMAPeriod);
 
         if (detailedPrint.get()) {
-            pr(str(" Detailed MA ON", "pd", r10000(pd),
+            pr(str(" Detailed UNCON_MA ON", "pd", r10000(pd),
                     " freshPrice", freshPrice,
                     " prev Price", prevPrice,
                     " last bar", lastBar,
@@ -1854,7 +1864,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             "FAST ORDER || BIDDING @ ", o.toString(), "SMA",
                             "||Fresh: ", freshPrice,
                             "||Prev: ", prevPrice,
-                            "||MA LAST: ", r(maLast),
+                            "||UNCON_MA LAST: ", r(maLast),
                             "||Last Open Order T", lastFastOrderTime,
                             "||secToWait", secBtwnOpenOrders,
                             " #: ", numOrdersThisSession,
@@ -1877,7 +1887,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     outputOrderToAutoLog(str(o.orderId(), nowMilli.truncatedTo(MINUTES),
                             "FAST ORDER || OFFERING @ ", o.toString(), "SMA",
                             "||Fresh: ", freshPrice, "||Prev", prevPrice,
-                            "||MA Last: ", r(maLast),
+                            "||UNCON_MA Last: ", r(maLast),
                             "||Last Open Order T", lastFastOrderTime,
                             "||secToWait ", secBtwnOpenOrders,
                             "||#: ", fastTradeSignals.get(),
@@ -1892,26 +1902,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * Auto trading based on Moving Avg
      */
-    private static synchronized void MATrader(LocalDateTime nowMilli, double freshPrice) {
-        if (!MATraderStatus.get()) {
-            pr("MA trader off");
-            return;
-        }
-        NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
-        if (price5.size() <= 2) return;
-        int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
+    private static synchronized void unconditionalMATrader(LocalDateTime nowMilli, double freshPrice) {
+        NavigableMap<LocalDateTime, SimpleBar> price1 = futData.get(ibContractToFutType(activeFuture));
+        if (price1.size() <= 2) return;
 
-        SimpleBar lastBar = new SimpleBar(price5.lastEntry().getValue());
-        LocalTime lastBarTime = price5.lastEntry().getKey().toLocalTime();
-        SimpleBar secLastBar = new SimpleBar(price5.lowerEntry(price5.lastKey()).getValue());
-        LocalTime secLastBarTime = price5.lowerEntry(price5.lastKey()).getKey().toLocalTime();
-
-        lastBar.add(freshPrice);
-        NavigableMap<LocalDateTime, Double> smaShort;
-        NavigableMap<LocalDateTime, Double> smaLong;
-
-        smaShort = getMAGen(price5, shortMAPeriod);
-        smaLong = getMAGen(price5, longMAPeriod);
+        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(price1, MA20);
+        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(price1, MA80);
+        int uncon_size = 2;
 
         if (smaShort.size() < 2 || smaLong.size() < 2) {
             return;
@@ -1925,52 +1922,36 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         sentiment = maShortLast > maLongLast ? MASentiment.Bullish : MASentiment.Bearish;
         pr("sentiment/fresh /malast ", sentiment, r(maShortLast), r(maLongLast));
 
-        double candidatePrice;
-        int percentile = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
-
         double indexPrice = (priceMapBar.containsKey(FTSE_INDEX) &&
                 priceMapBar.get(FTSE_INDEX).size() > 0) ?
                 priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
 
         double pd = (indexPrice != 0.0 && freshPrice != 0.0) ? (freshPrice / indexPrice - 1) : 0.0;
 
-        LocalDateTime lastMAOrderTime = getLastOrderTime(MA);
+        LocalDateTime lastMAOrderTime = getLastOrderTime(UNCON_MA);
 
-        if (timeDiffinMinutes(lastMAOrderTime, nowMilli) >= ORDER_WAIT_TIME) {
-            if (percentile < DOWN_PERC && maShortLast > maLongLast && maShortSecLast < maLongSecLast) {
-                candidatePrice = freshPrice;
-
-                Order o = placeBidLimit(candidatePrice, 1);
-                if (checkIfOrderPriceMakeSense(candidatePrice)) {
-                    int id = autoTradeID.incrementAndGet();
-                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "MA Trade bid", MA));
-                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                    lastMAOrderTime = LocalDateTime.now();
-                    currentDirection = Direction.Long;
-                    outputOrderToAutoLog(str(o.orderId(), "MA ORDER || bidding @ ", o.toString(),
-                            globalIdOrderMap.get(id)));
-                }
-            } else if (percentile > UP_PERC && maShortLast < maLongLast && maShortSecLast > maLongSecLast) {
-
-                candidatePrice = freshPrice;
-                Order o = placeOfferLimit(candidatePrice, 1);
-                if (checkIfOrderPriceMakeSense(candidatePrice)) {
-                    int id = autoTradeID.incrementAndGet();
-                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "MA Trade offer", MA));
-                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                    lastMAOrderTime = LocalDateTime.now();
-                    currentDirection = Direction.Short;
-                    outputOrderToAutoLog(str(o.orderId(), "MA ORDER || offering @ ", o.toString()
-                            , globalIdOrderMap.get(id)));
-                }
+        if (timeDiffinMinutes(lastMAOrderTime, nowMilli) >= 1) {
+            if (maShortLast > maLongLast && maShortSecLast < maLongSecLast) {
+                Order o = placeBidLimit(freshPrice, uncon_size);
+                int id = autoTradeID.incrementAndGet();
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "BUY UNCON_MA", UNCON_MA));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "BUY UNCON_MA ", globalIdOrderMap.get(id)));
+            } else if (maShortLast < maLongLast && maShortSecLast > maLongSecLast) {
+                Order o = placeOfferLimit(freshPrice, uncon_size);
+                int id = autoTradeID.incrementAndGet();
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "SELL UNCON_MA", UNCON_MA));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                lastMAOrderTime = LocalDateTime.now();
+                outputOrderToAutoLog(str(o.orderId(), "UNCON_MA ORDER ", globalIdOrderMap.get(id)));
             }
+
             if (detailedPrint.get()) {
-                String outputMsg = str("MA TRIGGER CONDITION|| ",
+                String outputMsg = str("UNCON_MA TRIGGER CONDITION|| ",
                         nowMilli.truncatedTo(MINUTES),
                         "|last shortlong:", r(maShortLast), r(maLongLast),
                         "|secLast shortlong:", r(maShortSecLast), r(maLongSecLast),
                         "|PD", r10000(pd), "|Index", r(indexPrice),
-                        "|Perc: ", percentile,
                         "|Last Order Time:", lastMAOrderTime.truncatedTo(MINUTES));
                 outputToAutoLog(outputMsg);
             }

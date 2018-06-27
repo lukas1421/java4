@@ -1,7 +1,7 @@
 package util;
 
 public enum AutoOrderType {
-    MA,
+    UNCON_MA,
     FAST,
     INVENTORY_OPEN,
     INVENTORY_CLOSE,

@@ -1488,15 +1488,15 @@ public final class ChinaStock extends JPanel {
 
                 } //pm strat ends here
 
-                // MA BREAK ALL DAY
+                // UNCON_MA BREAK ALL DAY
                 LocalTime ma20FirstBreakTime = getMA20FirstBreakTime(name);
 
                 if (lastEntryTime.isAfter(Utility.AM929T) && ma20FirstBreakTime.equals(lastEntryTime) && !ma20RBroken.get(name) && sizeLast > sizeThresh) {
-                    stratAMMap.put(name, " breaking MA");
+                    stratAMMap.put(name, " breaking UNCON_MA");
                     stratTimeMap.put(name, ma20FirstBreakTime);
                     strategyTotalMap.get(name).put(lastEntryTime, new Strategy(lastEntryTime, last, StratType.MA));
 
-                    String msg = Utility.str("MA Break", name, last, nameMap.get(name), "Sina Time", lastEntryTime.toString(), "System time", LocalTime.now().toString());
+                    String msg = Utility.str("UNCON_MA Break", name, last, nameMap.get(name), "Sina Time", lastEntryTime.toString(), "System time", LocalTime.now().toString());
                     createDialogJD(name, msg, lastEntryTime);
                     ma20RBroken.put(name, true);
                     interestedName.put(name, true);

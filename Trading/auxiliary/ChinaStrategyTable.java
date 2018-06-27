@@ -161,7 +161,7 @@ public final class ChinaStrategyTable extends JPanel {
         @Override
         public String getColumnName(int col) {
             switch (col) {
-                //AMRETURN,AMRANGE,MA,VOL,OVERSOLD,OVERSOLD2,BIGDROP,PRICEBURST,GEN,SIZEEXPLODE,VRMAX, MAX, TMR;
+                //AMRETURN,AMRANGE,UNCON_MA,VOL,OVERSOLD,OVERSOLD2,BIGDROP,PRICEBURST,GEN,SIZEEXPLODE,VRMAX, MAX, TMR;
                 case 0:
                     return "T";
                 case 1:
@@ -181,7 +181,7 @@ public final class ChinaStrategyTable extends JPanel {
                 case 8:
                     return "VOL";
                 case 9:
-                    return "MA";
+                    return "UNCON_MA";
                 case 10:
                     return "PRICEBURST";
                 case 11:
