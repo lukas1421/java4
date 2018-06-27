@@ -1022,17 +1022,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(),
                 LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd")));
 
-
-        return frontFut;
-
-//        pr(" **********  days until expiry **********", daysUntilFrontExp);
-//        if (daysUntilFrontExp <= 1) {
-//            pr(" using back fut ");
-//            return backFut;
-//        } else {
-//            pr(" using front fut ");
-//            return frontFut;
-//        }
+        //return frontFut;
+        pr(" **********  days until expiry **********", daysUntilFrontExp);
+        if (daysUntilFrontExp <= 1) {
+            pr(" using back fut ");
+            return backFut;
+        } else {
+            pr(" using front fut ");
+            return frontFut;
+        }
     }
 
     private static double getExpiringDelta() {
@@ -1135,12 +1133,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int percentile = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         soundPlayer.stopIfPlaying();
         if (smaShort.size() > 0) {
-            String msg = str("**Observing UNCON_MA**"
+            String msg = str("**Observing MA**"
                     , "||T:", LocalTime.now().truncatedTo(MINUTES)
-                    , "||UNCON_MA Short:", r(smaShort.lastEntry().getValue())
-                    , "||UNCON_MA Long:", r(smaLong.lastEntry().getValue())
+                    , "||MA Short:", r(smaShort.lastEntry().getValue())
+                    , "||MA Long:", r(smaLong.lastEntry().getValue())
                     , "||Index:", r(getIndexPrice())
-                    , "||PD:", r10000(pd), "||Curr Dir", currentDirection
+                    , "||PD:", r10000(pd)
                     , "||2 Day P%", percentile);
 
             outputToAutoLog(msg);
@@ -1560,9 +1558,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (checkTimeRangeBool(nowMilli.toLocalTime(), 5, 0, 15, 0)) {
             return;
         }
-
         int frontPos = currentPosMap.getOrDefault(ibContractToFutType(getFrontFutContract()), 0);
-
         if (frontPos > 0) {
             activeFuture = getFrontFutContract();
         }
