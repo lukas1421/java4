@@ -54,15 +54,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static XUTraderRoll traderRoll;
 
     private static final int ORDER_WAIT_TIME = 15;
-    private static final double DELTA_HARD_HI_LIMIT = 2500000.0;
-    private static final double DELTA_HARD_LO_LIMIT = -1000000.0;
-
+    private static final double DELTA_HARD_HI_LIMIT = 500000.0;
+    private static final double DELTA_HARD_LO_LIMIT = -250000.0;
 
     //global
     private static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
     private static volatile MASentiment sentiment = MASentiment.Directionless;
-    private static LocalDateTime lastTradeTime = LocalDateTime.now();
     static final int MAX_FUT_LIMIT = 20;
     static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
     static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
@@ -115,9 +113,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     });
     private static final int PD_ORDER_QUANTITY = 1;
     private static AtomicBoolean pdTraderOn = new AtomicBoolean(false);
-
-    //trim
-    //private static AtomicBoolean trimTraderOn = new AtomicBoolean(false);
 
 
     //overnight trades
@@ -340,12 +335,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         JButton computeMAButton = new JButton("ComputeMA");
         computeMAButton.addActionListener(l -> computeMAStrategy());
-
-//        JButton trimDeltaButton = new JButton("Trim: " + (trimTraderOn.get() ? "ON" : "OFF"));
-//        trimDeltaButton.addActionListener(l -> {
-//            trimTraderOn.set(!trimTraderOn.get());
-//            trimDeltaButton.setText("Trim Trader:" + (trimTraderOn.get() ? "ON" : "OFF"));
-//        });
 
         JButton getPositionButton = new JButton(" get pos ");
         getPositionButton.addActionListener(l -> apcon.reqPositions(this));
@@ -759,10 +748,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     "pmchgy", pmChgY, "delta range ", getBearishTarget(), getBullishTarget());
         }
 
-        XUTrader.updateLastMinuteMap(ldt, price);
+        unconditionalMATrader(ldt, price);
+        //XUTrader.updateLastMinuteMap(ldt, price);
         percentileMATrader(ldt, price, pmChgY);
         lastHourMATrader(ldt, price, pmChgY);
-        unconditionalMATrader(ldt, price);
+
 
         if (pmChgY < 0) {
             //slowCoverTrader(ldt, price);
@@ -1376,7 +1366,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalDateTime lastCoverOrderT = getLastOrderTime(FAST_COVER);
         checkCancelTrades(FAST_COVER, nowMilli, ORDER_WAIT_TIME);
 
-        if (indexTPerc < DOWN_PERC && MINUTES.between(lastCoverOrderT, nowMilli) > ORDER_WAIT_TIME / 3) {
+        if (indexTPerc < DOWN_PERC && MINUTES.between(lastCoverOrderT, nowMilli) > ORDER_WAIT_TIME) {
             int id = autoTradeID.incrementAndGet();
             int size = 1;
             Order o = placeBidLimit(freshPrice, size); //Math.min(size, MAX_FUT_LIMIT)
@@ -1408,13 +1398,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int shorterMA = 10;
         int longerMA = 20;
         int tBetweenOrder = 1;
-        int maSize = 2;
+        int maSize = 1;
 
         if (!(checkTimeRangeBool(lt, 9, 30, 11, 30)
                 || (checkTimeRangeBool(lt, 13, 0, 15, 0)))) {
             index = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
-            shorterMA = 60;
-            longerMA = 80;
+            shorterMA = _1_min_ma_short;
+            longerMA = _1_min_ma_long;
             tBetweenOrder = ORDER_WAIT_TIME;
             maSize = 2;
         } else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
@@ -1571,15 +1561,24 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
+        int frontPos = currentPosMap.getOrDefault(ibContractToFutType(getFrontFutContract()), 0);
+
+        if (frontPos > 0) {
+            activeFuture = getFrontFutContract();
+        }
+        if (frontPos == 0) {
+            activeFuture = getBackFutContract();
+        }
+
         double netDelta = getNetPtfDelta();
         LocalDateTime lastTrimOrderT = getLastOrderTime(TRIM);
 
-        checkCancelTrades(TRIM, nowMilli, ORDER_WAIT_TIME * 2);
+        checkCancelTrades(TRIM, nowMilli, ORDER_WAIT_TIME);
 
         pr("trim trader delta/target", r(netDelta), getBullishTarget(), getBearishTarget(), "last order T ",
-                lastTrimOrderT, "next order T", lastTrimOrderT.plusMinutes(ORDER_WAIT_TIME * 2));
+                lastTrimOrderT, "next order T", lastTrimOrderT.plusMinutes(ORDER_WAIT_TIME));
 
-        if (MINUTES.between(lastTrimOrderT, nowMilli) >= ORDER_WAIT_TIME * 2) {
+        if (MINUTES.between(lastTrimOrderT, nowMilli) >= ORDER_WAIT_TIME) {
             if (netDelta > getBullishTarget()) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
@@ -1909,15 +1908,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static synchronized void unconditionalMATrader(LocalDateTime nowMilli, double freshPrice) {
         NavigableMap<LocalDateTime, SimpleBar> price1 = futData.get(ibContractToFutType(activeFuture));
         if (price1.size() <= 2) return;
-
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(price1, _1_min_ma_short);
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(price1, _1_min_ma_long);
-
-        int uncon_size = 2;
-
+        int uncon_size = 3;
         if (smaShort.size() < 2 || smaLong.size() < 2) {
             return;
         }
+
         double maShortLast = smaShort.lastEntry().getValue();
         double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
         double maLongLast = smaLong.lastEntry().getValue();
@@ -2315,7 +2312,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
             currentDirection = tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getValue().getSizeAll() > 0 ?
                     Direction.Long : Direction.Short;
-            lastTradeTime = tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getKey();
+            //lastTradeTime = tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getKey();
         }
     }
 
