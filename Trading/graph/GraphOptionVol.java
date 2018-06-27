@@ -51,7 +51,7 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
         colorMap.put(thirdExpiry, Color.red);
         colorMap.put(fourthExpiry, Color.magenta);
 
-        System.out.println(" color map in constructor " + colorMap);
+        //System.out.println(" color map in constructor " + colorMap);
         addMouseMotionListener(this);
         addMouseListener(this);
     }

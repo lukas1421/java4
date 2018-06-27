@@ -278,18 +278,20 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                 g.setColor(Color.black);
             }
 
-            if (maShort.size() > 2 && maLong.size() > 2 &&
-                    maShort.containsKey(lt) && maLong.containsKey(lt) && maShort.firstKey().isBefore(lt) &&
-                    maLong.firstKey().isBefore(lt)) {
-                int y = getY(maShort.get(lt));
-                if (maShort.get(lt) > maLong.get(lt) && maShort.lowerEntry(lt).getValue() <=
-                        maLong.lowerEntry(lt).getValue()) {
-                    g.drawString(str("B ", lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES), maShort.get(lt)), x,
-                            y + (mouseYCord < closeY ? -50 : +50));
-                } else if (maShort.get(lt) < maLong.get(lt) && maShort.lowerEntry(lt).getValue() >=
-                        maLong.lowerEntry(lt).getValue()) {
-                    g.drawString(str("S ", lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES), maShort.get(lt)), x,
-                            y + (mouseYCord < closeY ? +50 : -50));
+            if (XUTrader.showTrades.get() && XUTrader.gran == DisplayGranularity._1MDATA) {
+                if (maShort.size() > 2 && maLong.size() > 2 &&
+                        maShort.containsKey(lt) && maLong.containsKey(lt) && maShort.firstKey().isBefore(lt) &&
+                        maLong.firstKey().isBefore(lt)) {
+                    int y = getY(maShort.get(lt));
+                    if (maShort.get(lt) > maLong.get(lt) && maShort.lowerEntry(lt).getValue() <=
+                            maLong.lowerEntry(lt).getValue()) {
+                        g.drawString(str("B ", lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES), maShort.get(lt)), x,
+                                y + (mouseYCord < closeY ? -50 : +50));
+                    } else if (maShort.get(lt) < maLong.get(lt) && maShort.lowerEntry(lt).getValue() >=
+                            maLong.lowerEntry(lt).getValue()) {
+                        g.drawString(str("S ", lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES), maShort.get(lt)), x,
+                                y + (mouseYCord < closeY ? +50 : -50));
+                    }
                 }
             }
             //noinspection Duplicates
@@ -323,7 +325,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                 }
             }
             //trades
-            if (XUTrader.showTrades) {
+            if (XUTrader.showTrades.get()) {
                 if (trademap.containsKey(lt)) {
                     TradeBlock tb = trademap.get(lt);
                     if (tb.allBuys()) { //tb.getSizeAll() > 0
