@@ -86,9 +86,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final int MA5 = 5;
     private static final int MA10 = 10;
     private static final int MA20 = 20;
-    private static final int MA30 = 30;
     private static final int MA60 = 60;
     private static final int MA80 = 80;
+
+    public static volatile int _1_min_ma_short = MA20;
+    public static volatile int _1_min_ma_long = MA80;
+    public static volatile int _5_min_ma_short = MA5;
+    public static volatile int _5_min_ma_long = MA10;
 
 
     //perc trader
@@ -1906,11 +1910,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, SimpleBar> price1 = futData.get(ibContractToFutType(activeFuture));
         if (price1.size() <= 2) return;
 
-        int shortMA = MA20;
-        int longMA = MA60;
+//        int shortMA = MA20;
+//        int longMA = MA60;
 
-        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(price1, shortMA);
-        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(price1, longMA);
+        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(price1, _1_min_ma_short);
+        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(price1, _1_min_ma_long);
         int uncon_size = 2;
 
         if (smaShort.size() < 2 || smaLong.size() < 2) {
@@ -1949,7 +1953,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             if (detailedPrint.get()) {
                 String outputMsg = str("UNCON_MA || ",
-                        " Periods ShortLong", shortMA, longMA,
+                        " Periods ShortLong", _1_min_ma_short, _1_min_ma_long,
                         "|last shortlong:", r(maShortLast), r(maLongLast),
                         "|secLast shortlong:", r(maShortSecLast), r(maLongSecLast),
                         "|PD", r10000(pd), "|Index", r(indexPrice),

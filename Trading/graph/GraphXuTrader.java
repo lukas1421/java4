@@ -27,7 +27,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static apidemo.TradingConstants.FTSE_INDEX;
-import static apidemo.XUTrader.displayPred;
+import static apidemo.XUTrader.*;
 import static apidemo.XuTraderHelper.getPercentileForLast;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
@@ -128,12 +128,12 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
     public void fillInGraph(NavigableMap<LocalDateTime, SimpleBar> mp) {
         if (XUTrader.gran == DisplayGranularity._1MDATA) {
             this.setNavigableMap(mp, displayPred);
-            maShort = new ConcurrentSkipListMap<>();
-            maLong = new ConcurrentSkipListMap<>();
+            maShort = XuTraderHelper.getMAGen(mp, _1_min_ma_short);
+            maLong = XuTraderHelper.getMAGen(mp, _1_min_ma_long);
         } else if (XUTrader.gran == DisplayGranularity._5MDATA) {
             this.setNavigableMap(map1mTo5mLDT(mp), displayPred);
-            maShort = XuTraderHelper.getMAGen(map1mTo5mLDT(mp), 5);
-            maLong = XuTraderHelper.getMAGen(map1mTo5mLDT(mp), 10);
+            maShort = XuTraderHelper.getMAGen(map1mTo5mLDT(mp), _5_min_ma_short);
+            maLong = XuTraderHelper.getMAGen(map1mTo5mLDT(mp), _5_min_ma_long);
         }
     }
 
@@ -256,20 +256,23 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
             if (maShort.size() > 0 && maShort.containsKey(lt)) {
                 g.setColor(Color.blue);
+                int shortPeriod = (XUTrader.gran == DisplayGranularity._1MDATA) ? _1_min_ma_short : _5_min_ma_short;
                 int maShortY = getY(maShort.get(lt));
                 g.drawLine(x, maShortY, x + 1, maShortY);
                 if (lt.equals(maShort.lastKey())) {
-                    g.drawString("UNCON_MA Short: " + Math.round(100d * maShort.lastEntry().getValue()) / 100d, x + 20, maShortY);
+                    g.drawString("MA Short " + shortPeriod + ":" + Math.round(100d * maShort.lastEntry().getValue()) / 100d,
+                            x + 20, maShortY);
                 }
                 g.setColor(Color.black);
             }
 
             if (maLong.size() > 0 && maLong.containsKey(lt)) {
                 g.setColor(Color.orange);
+                int longPeriod = (XUTrader.gran == DisplayGranularity._1MDATA) ? _1_min_ma_long : _5_min_ma_long;
                 int maLongY = getY(maLong.get(lt));
                 g.drawLine(x, maLongY, x + 1, maLongY);
                 if (lt.equals(maLong.lastKey())) {
-                    g.drawString("UNCON_MA Long" + Math.round(100d * maLong.lastEntry().getValue()) / 100d
+                    g.drawString("MA Long " + longPeriod + ":" + Math.round(100d * maLong.lastEntry().getValue()) / 100d
                             , x + 20, maLongY);
                 }
                 g.setColor(Color.black);
@@ -352,7 +355,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
                 if (maShort.size() > 0 && maShort.containsKey(lt)) {
                     int maY = getY(maShort.get(lt));
-                    g.drawString("UNCON_MA Short: " + lt.toLocalTime() + " " + Math.round(maShort.floorEntry(lt).getValue()), x, maY);
+                    g.drawString("MA Short: " + lt.toLocalTime() + " " + Math.round(maShort.floorEntry(lt).getValue()), x, maY);
                     g.drawOval(x - 3, lowY, 5, 5);
                     g.fillOval(x - 3, lowY, 5, 5);
                 }
