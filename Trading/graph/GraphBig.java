@@ -1,9 +1,6 @@
 package graph;
 
-import apidemo.ChinaData;
-import apidemo.ChinaDataYesterday;
-import apidemo.ChinaStock;
-import apidemo.ChinaStockHelper;
+import apidemo.*;
 import auxiliary.SimpleBar;
 import utility.Utility;
 
@@ -45,10 +42,6 @@ public class GraphBig extends JComponent implements GraphFillable, MouseMotionLi
     private volatile int mouseYCord = Integer.MAX_VALUE;
     private static final int INITIAL_OFFSET = 25;
 
-
-    // private int close;
-    // private int open;
-    //private final ArrayList<Bar> m_rows;
     NavigableMap<LocalTime, SimpleBar> tm;
     private NavigableMap<LocalTime, Double> tmVol;
 
@@ -190,8 +183,8 @@ public class GraphBig extends JComponent implements GraphFillable, MouseMotionLi
 
     @Override
     protected void paintComponent(Graphics g) {
-        NavigableMap<LocalTime, Double> smaShort = getMAGenLT(tm, 5);
-        NavigableMap<LocalTime, Double> smaLong = getMAGenLT(tm, 10);
+        NavigableMap<LocalTime, Double> smaShort = getMAGenLT(tm, XUTrader._1_min_ma_short);
+        NavigableMap<LocalTime, Double> smaLong = getMAGenLT(tm, XUTrader._1_min_ma_long);
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
@@ -318,7 +311,6 @@ public class GraphBig extends JComponent implements GraphFillable, MouseMotionLi
                     }
                 }
             }
-
             x += WIDTH_BIG;
         }
 

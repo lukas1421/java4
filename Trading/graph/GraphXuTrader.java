@@ -267,13 +267,13 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             }
 
             if (maLong.size() > 0 && maLong.containsKey(lt)) {
-                g.setColor(Color.orange);
+                g.setColor(Color.green);
                 int longPeriod = (XUTrader.gran == DisplayGranularity._1MDATA) ? _1_min_ma_long : _5_min_ma_long;
                 int maLongY = getY(maLong.get(lt));
                 g.drawLine(x, maLongY, x + 1, maLongY);
                 if (lt.equals(maLong.lastKey())) {
                     g.drawString("MA Long " + longPeriod + ":" + Math.round(100d * maLong.lastEntry().getValue()) / 100d
-                            , x + 20, maLongY);
+                            , x + 20, maLongY + 20);
                 }
                 g.setColor(Color.black);
             }
@@ -292,8 +292,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                             y + (mouseYCord < closeY ? -50 : +50));
                 }
             }
-
-
             //noinspection Duplicates
             if (closeY < openY) {  //close>open
                 g.setColor(new Color(0, 140, 0));

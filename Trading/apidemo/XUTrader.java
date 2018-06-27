@@ -268,11 +268,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             detailedButton.setText(" Detailed: " + detailedPrint.get());
         });
 
-        JButton maTraderStatusButton = new JButton("UNCON_MA Trader: " + (MATraderStatus.get() ? "ON" : "OFF"));
+        JButton maTraderStatusButton = new JButton("MA Trader: " + (MATraderStatus.get() ? "ON" : "OFF"));
         maTraderStatusButton.addActionListener(l -> {
             MATraderStatus.set(!MATraderStatus.get());
-            outputToAutoLog(" UNCON_MA Trade set to " + MATraderStatus.get());
-            maTraderStatusButton.setText("UNCON_MA Trader " + (MATraderStatus.get() ? "ON" : "OFF"));
+            outputToAutoLog(" MA Trade set to " + MATraderStatus.get());
+            maTraderStatusButton.setText("MA Trader " + (MATraderStatus.get() ? "ON" : "OFF"));
         });
 
         JButton indexMAStatusButton = new JButton("IndexMA " + (indexMAStatus.get() ? "ON" : "OFF"));
@@ -1053,8 +1053,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .mapToDouble(e -> {
                     if (e.getKey() == FutType.FrontFut &&
                             LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd"))
-                                    .equals(LocalDate.now())
-                            && LocalTime.now().isAfter(LocalTime.of(15, 0))) {
+                                    .equals(LocalDate.now()) && LocalTime.now().isAfter(LocalTime.of(15, 0))) {
                         return 0.0;
                     }
                     return e.getValue() * futPriceMap.getOrDefault(e.getKey(), SinaStock.FTSE_OPEN)
