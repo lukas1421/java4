@@ -487,11 +487,9 @@ public class ApiController implements EWrapper {
             @Override
             public void accountSummary(String account, AccountSummaryTag tag, String value, String currency) {
                 String output = getStrCheckNull(LocalDateTime.now(), account, tag, value, currency);
-                pr("**********************");
-                pr("Account Pnl: ", output);
+                pr("Account Pnl: ", output, "**********************");
                 XUTrader.updateLog(str("Account pnl", output));
                 XUTrader.currentIBNAV = Double.parseDouble(value);
-                pr("**********************");
                 if (LocalTime.now().getMinute() < 2) {
                     XuTraderHelper.outputToAutoLog(output);
                 }
@@ -2111,7 +2109,7 @@ public class ApiController implements EWrapper {
 
     @Override
     public void updateNewsBulletin(int msgId, int msgType, String message, String origExchange) {
-        pr(" news: ",msgId, msgType, message, origExchange);
+        pr(" news: ", msgId, msgType, message, origExchange);
         //m_bulletinHandler.bulletin(msgId, NewsType.get(msgType), message, origExchange);
         //recEOM();
     }

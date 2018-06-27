@@ -723,7 +723,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         add(chartScroll);
     }
 
-    public static void processAll(LocalDateTime ldt, double price) {
+    public static void processMain(LocalDateTime ldt, double price) {
         if (!globalTradingOn.get()) {
             pr(" global trading off ");
             return;
@@ -1018,14 +1018,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(),
                 LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd")));
 
-        pr(" **********  days until expiry **********", daysUntilFrontExp);
-        if (daysUntilFrontExp <= 1) {
-            pr(" using back fut ");
-            return backFut;
-        } else {
-            pr(" using front fut ");
-            return frontFut;
-        }
+
+        return frontFut;
+
+//        pr(" **********  days until expiry **********", daysUntilFrontExp);
+//        if (daysUntilFrontExp <= 1) {
+//            pr(" using back fut ");
+//            return backFut;
+//        } else {
+//            pr(" using front fut ");
+//            return frontFut;
+//        }
     }
 
     private static double getExpiringDelta() {
@@ -1354,25 +1357,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param freshPrice price
      */
     private static synchronized void aggressiveCoverTrader(LocalDateTime nowMilli, double freshPrice) {
-
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate());
-        int todayPerc = getPercentileForLast(index);
-
+        int indexTPerc = getPercentileForLast(index);
         LocalDateTime lastCoverOrderT = getLastOrderTime(FAST_COVER);
-
         checkCancelTrades(FAST_COVER, nowMilli, ORDER_WAIT_TIME);
 
-        if (nowMilli.toLocalTime().isBefore(LocalTime.of(10, 0))
-                && todayPerc < DOWN_PERC && MINUTES.between(lastCoverOrderT, nowMilli) >
-                ORDER_WAIT_TIME / 3) {
-
+        if (indexTPerc < DOWN_PERC && MINUTES.between(lastCoverOrderT, nowMilli) > ORDER_WAIT_TIME / 3) {
             int id = autoTradeID.incrementAndGet();
-            //int size = getSizeForDelta(freshPrice, fxMap.get("USD"), delta / 4);
-            int size = 2;
+            int size = 3;
             Order o = placeBidLimit(freshPrice, size); //Math.min(size, MAX_FUT_LIMIT)
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FAST_COVER));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            outputOrderToAutoLog(str(o.orderId(), "cover short follow PMY<0", globalIdOrderMap.get(id)));
+            outputOrderToAutoLog(str(o.orderId(), "cover short follow PMY<0, p%", indexTPerc,
+                    globalIdOrderMap.get(id)));
         }
     }
 
@@ -1397,7 +1394,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int shorterMA = 5;
         int longerMA = 10;
         int tBetweenOrder = 1;
-        int maSize = 2;
+        int maSize = 3;
 
         if (!(checkTimeRangeBool(lt, 9, 30, 11, 30)
                 || (checkTimeRangeBool(lt, 13, 0, 15, 0)))) {
@@ -1405,13 +1402,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             shorterMA = 60;
             longerMA = 80;
             tBetweenOrder = ORDER_WAIT_TIME;
-            maSize = 3;
+            maSize = 2;
         } else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
             shorterMA = 1;
             longerMA = 5;
             tBetweenOrder = 1;
             maSize = 1;
         }
+
         checkCancelTrades(INDEX_MA, nowMilli, tBetweenOrder * 2);
         LocalDate tTrade = checkTimeRangeBool(lt, 0, 0, 5, 0) ?
                 nowMilli.toLocalDate().minusDays(1) : nowMilli.toLocalDate();
@@ -1555,7 +1553,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice) {
-        if (checkTimeRangeBool(nowMilli.toLocalTime(), 9, 30, 15, 0)) {
+        if (checkTimeRangeBool(nowMilli.toLocalTime(), 5, 0, 15, 0)) {
             return;
         }
 
