@@ -114,16 +114,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final int PD_ORDER_QUANTITY = 1;
     private static AtomicBoolean pdTraderOn = new AtomicBoolean(false);
 
-
-    //overnight trades
-    private static final AtomicBoolean overnightTradeOn = new AtomicBoolean(true);
-    private static final int maxOvernightTrades = 10;
-    private static AtomicInteger overnightClosingOrders = new AtomicInteger(0);
-    private static AtomicInteger overnightTradesDone = new AtomicInteger(0);
-    private static final double maxOvernightDeltaChgUSD = 50000.0;
-    private static final double OVERNIGHT_MAX_DELTA = 500000.0;
-    private static final double OVERNIGHT_MIN_DELTA = -500000.0;
-
     //index ma
     private static AtomicBoolean indexMAStatus = new AtomicBoolean(false);
 
@@ -186,6 +176,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return d;
         }
     };
+
     public static AtomicInteger graphWidth = new AtomicInteger(3);
     public static volatile EnumMap<FutType, NavigableMap<LocalDateTime, SimpleBar>> futData
             = new EnumMap<>(FutType.class);
@@ -196,7 +187,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static volatile boolean showTrades = false;
     static volatile boolean connectionStatus = false;
     static volatile JLabel connectionLabel = new JLabel();
-
 
     XUTrader(ApiController ap) {
         pr(str(" ****** front fut ******* ", frontFut));

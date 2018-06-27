@@ -477,13 +477,11 @@ public class ApiController implements EWrapper {
 
     // ---------------------------------------- Account Summary handling ----------------------------------------
     public interface IAccountSummaryHandler {
-
         void accountSummary(String account, AccountSummaryTag tag, String value, String currency);
 
         void accountSummaryEnd();
 
         class AccountInfoHandler implements IAccountSummaryHandler {
-
             @Override
             public void accountSummary(String account, AccountSummaryTag tag, String value, String currency) {
                 String output = getStrCheckNull(LocalDateTime.now(), account, tag, value, currency);
