@@ -320,7 +320,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         globalTradingButton.addActionListener(l -> {
             globalTradingOn.set(globalTradingButton.isSelected());
             globalTradingButton.setText("Trading:" + (globalTradingOn.get() ? "ON" : "OFF"));
-            pr(" global order set to " + (globalTradingOn.get() ? "ON" : "OFF"));
+            pr(" global trading set to " + (globalTradingOn.get() ? "ON" : "OFF"));
         });
 
         JButton computeMAButton = new JButton("ComputeMA");

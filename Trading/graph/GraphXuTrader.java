@@ -289,7 +289,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                 } else if (maShort.get(lt) < maLong.get(lt) && maShort.lowerEntry(lt).getValue() >=
                         maLong.lowerEntry(lt).getValue()) {
                     g.drawString(str("S ", lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES), maShort.get(lt)), x,
-                            y + (mouseYCord < closeY ? -50 : +50));
+                            y + (mouseYCord < closeY ? +50 : -50));
                 }
             }
             //noinspection Duplicates
@@ -350,7 +350,6 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                         g.fillPolygon(pBot);
                         //g.drawString(tb.getSizeBot() + "", x + 1, yCordBot + 10);
 
-
                         g.setColor(Color.black);
                         int yCordSold = getY(tb.getSoldAveragePrice());
                         Polygon pSld = new Polygon(new int[]{x - 4, x, x + 4},
@@ -369,7 +368,8 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
 
                 if (maShort.size() > 0 && maShort.containsKey(lt)) {
                     int maY = getY(maShort.get(lt));
-                    g.drawString("MA Short: " + lt.toLocalTime() + " " + Math.round(maShort.floorEntry(lt).getValue()), x, maY);
+                    g.drawString("MA Short: " + lt.toLocalTime() + " " +
+                            Math.round(maShort.floorEntry(lt).getValue()), x, maY);
                     g.drawOval(x - 3, lowY, 5, 5);
                     g.fillOval(x - 3, lowY, 5, 5);
                 }
@@ -381,8 +381,8 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             int lowY = getY(tm.lastEntry().getValue().getLow());
             int closeY = getY(tm.lastEntry().getValue().getClose());
             g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
-            g.drawString(" Fut: "
-                            + tm.lastKey().toLocalTime().toString() + " " + Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
+            g.drawString(" Fut: " + tm.lastKey().toLocalTime().toString()
+                            + " " + Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
                     x, lowY + (mouseYCord < closeY ? -30 : +30));
 
             g.drawOval(x + 2, lowY, 5, 5);
