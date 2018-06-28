@@ -1389,20 +1389,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate());
         int shorterMA = 10;
         int longerMA = 20;
-        int tBetweenOrder = 1;
+        int tBetweenOrder = ORDER_WAIT_TIME;
         int maSize = AGGRESSIVE_SIZE;
 
         if (!(checkTimeRangeBool(lt, 9, 30, 11, 30)
                 || (checkTimeRangeBool(lt, 13, 0, 15, 0)))) {
+            anchorIndex = "Future";
             index = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
             shorterMA = _1_min_ma_short;
             longerMA = _1_min_ma_long;
-            tBetweenOrder = ORDER_WAIT_TIME;
             maSize = 2;
         } else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
             shorterMA = 1;
             longerMA = 5;
-            tBetweenOrder = ORDER_WAIT_TIME;
             maSize = 1;
         }
 
@@ -1428,7 +1427,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
         if (detailedPrint.get()) {
-            pr("*perc MA Time: ", nowMilli.toLocalTime(), " T perc: ", todayPerc, "2D p%", _2dayPerc);
+            pr("*perc MA Time: ", nowMilli.toLocalTime(), "||T perc: ", todayPerc, "||2D p%", _2dayPerc);
             pr("Anchor / short long MA: ", anchorIndex, shorterMA, longerMA);
             pr(" ma cross last : ", r(maShortLast), r(maLongLast), r(maShortLast - maLongLast));
             pr(" ma cross 2nd last : ", r(maShortSecLast), r(maLongSecLast), r(maShortSecLast - maLongSecLast));
@@ -1465,6 +1464,116 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
     }
+
+    /**
+     * Auto trading based on Moving Avg, no percentile
+     */
+    private static synchronized void unconditionalMATrader(LocalDateTime nowMilli, double freshPrice) {
+        NavigableMap<LocalDateTime, SimpleBar> price1 = futData.get(ibContractToFutType(activeFuture));
+        if (price1.size() <= 2) return;
+        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(price1, _1_min_ma_short);
+        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(price1, _1_min_ma_long);
+        int uncon_size = CONSERVATIVE_SIZE;
+        if (smaShort.size() < 2 || smaLong.size() < 2) {
+            return;
+        }
+
+        double maShortLast = smaShort.lastEntry().getValue();
+        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
+        double maLongLast = smaLong.lastEntry().getValue();
+        double maLongSecLast = smaLong.lowerEntry(smaLong.lastKey()).getValue();
+
+        sentiment = maShortLast > maLongLast ? MASentiment.Bullish : MASentiment.Bearish;
+
+        double indexPrice = (priceMapBar.containsKey(FTSE_INDEX) &&
+                priceMapBar.get(FTSE_INDEX).size() > 0) ?
+                priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
+
+        double pd = (indexPrice != 0.0 && freshPrice != 0.0) ? (freshPrice / indexPrice - 1) : 0.0;
+
+        LocalDateTime lastUnconMAOrderTime = getLastOrderTime(UNCON_MA);
+
+        if (timeDiffinMinutes(lastUnconMAOrderTime, nowMilli) >= ORDER_WAIT_TIME) {
+            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(freshPrice, uncon_size);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "BUY UNCON_MA", UNCON_MA));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "BUY UNCON_MA ", globalIdOrderMap.get(id)));
+            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(freshPrice, uncon_size);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "SELL UNCON_MA", UNCON_MA));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "SELL UNCON_MA", globalIdOrderMap.get(id)));
+            }
+
+            if (detailedPrint.get()) {
+                String outputMsg = str("UNCON_MA || ",
+                        " Periods ShortLong", _1_min_ma_short, _1_min_ma_long,
+                        "|last shortlong:", r(maShortLast), r(maLongLast),
+                        "|secLast shortlong:", r(maShortSecLast), r(maLongSecLast),
+                        "|PD", r10000(pd), "|Index", r(indexPrice),
+                        "|Last Order Time:", lastUnconMAOrderTime.truncatedTo(MINUTES));
+                pr(outputMsg);
+            }
+        }
+    }
+
+    /**
+     * overnight close trading
+     */
+    private static void overnightTrader(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        if (futureAMSession().test(LocalTime.now()) || futurePMSession().test(LocalTime.now())) return;
+        double currDelta = getNetPtfDelta();
+
+        LocalDate TDate = checkTimeRangeBool(lt, 0, 0, 5, 0) ?
+                nowMilli.toLocalDate().minusDays(1L) : nowMilli.toLocalDate();
+
+        double indexPrice = (priceMapBar.containsKey(FTSE_INDEX) &&
+                priceMapBar.get(FTSE_INDEX).size() > 0) ?
+                priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
+
+        NavigableMap<LocalDateTime, SimpleBar> futPriceMap = futData.get(ibContractToFutType(activeFuture));
+
+        int pmPercChg = getPMPercChg(futPriceMap, TDate);
+        int currPerc = getPercentileForLast(futPriceMap);
+
+        LocalDateTime lastOrderTime = getLastOrderTime(OVERNIGHT);
+
+        if (checkTimeRangeBool(lt, 3, 0, 5, 0)
+                && MINUTES.between(lastOrderTime, nowMilli) > ORDER_WAIT_TIME) {
+            if (currDelta > getDeltaLowLimit() && currPerc > UP_PERC && pmPercChg > 0) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(freshPrice, 1);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Overnight Short", OVERNIGHT));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "O/N sell @ ", freshPrice, " curr p% ", currPerc));
+            } else if (currDelta < getDeltaHighLimit() && currPerc < DOWN_PERC && pmPercChg < 0) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(freshPrice, 1);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Overnight Long", OVERNIGHT));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "O/N buy @ ", freshPrice,
+                        "perc: ", currPerc, "pmPercChg", pmPercChg));
+            }
+        } else {
+            outputToAutoLog(" outside tradable time slot");
+        }
+
+        String outputString = str("||O/N||", nowMilli.format(DateTimeFormatter.ofPattern("M-d H:mm")),
+                "||curr P%: ", currPerc,
+                "||curr P: ", futPriceMap.lastEntry().getValue().getClose(),
+                "||index: ", Math.round(100d * indexPrice) / 100d,
+                "||BID ASK ", bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
+                askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
+                "pmchy", pmPercChg);
+
+        outputToAutoLog(outputString);
+        requestOvernightExecHistory();
+    }
+
 
     /**
      * Last hour direction more clear - trade
@@ -1541,8 +1650,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                                     e.getValue().setStatus(OrderStatus.Cancelled);
                                 }
                             });
-
-                    //apcon.cancelAllOrders();
                     outputOrderToAutoLog(nowMilli + " cancelling orders trader for type " + type);
                 }
             }
@@ -1553,13 +1660,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (checkTimeRangeBool(nowMilli.toLocalTime(), 5, 0, 15, 0)) {
             return;
         }
-//        int frontPos = currentPosMap.getOrDefault(ibContractToFutType(getFrontFutContract()), 0);
-//        if (frontPos > 0) {
-//            activeFuture = getFrontFutContract();
-//        }
-//        if (frontPos == 0) {
-//            activeFuture = getBackFutContract();
-//        }
 
         double netDelta = getNetPtfDelta();
         LocalDateTime lastTrimOrderT = getLastOrderTime(TRIM);
@@ -1887,114 +1987,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    /**
-     * Auto trading based on Moving Avg
-     */
-    private static synchronized void unconditionalMATrader(LocalDateTime nowMilli, double freshPrice) {
-        NavigableMap<LocalDateTime, SimpleBar> price1 = futData.get(ibContractToFutType(activeFuture));
-        if (price1.size() <= 2) return;
-        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(price1, _1_min_ma_short);
-        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(price1, _1_min_ma_long);
-        int uncon_size = CONSERVATIVE_SIZE;
-        if (smaShort.size() < 2 || smaLong.size() < 2) {
-            return;
-        }
-
-        double maShortLast = smaShort.lastEntry().getValue();
-        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
-        double maLongLast = smaLong.lastEntry().getValue();
-        double maLongSecLast = smaLong.lowerEntry(smaLong.lastKey()).getValue();
-
-        sentiment = maShortLast > maLongLast ? MASentiment.Bullish : MASentiment.Bearish;
-
-        double indexPrice = (priceMapBar.containsKey(FTSE_INDEX) &&
-                priceMapBar.get(FTSE_INDEX).size() > 0) ?
-                priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
-
-        double pd = (indexPrice != 0.0 && freshPrice != 0.0) ? (freshPrice / indexPrice - 1) : 0.0;
-
-        LocalDateTime lastUnconMAOrderTime = getLastOrderTime(UNCON_MA);
-
-        if (timeDiffinMinutes(lastUnconMAOrderTime, nowMilli) >= ORDER_WAIT_TIME) {
-            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, uncon_size);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "BUY UNCON_MA", UNCON_MA));
-                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "BUY UNCON_MA ", globalIdOrderMap.get(id)));
-            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, uncon_size);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "SELL UNCON_MA", UNCON_MA));
-                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "SELL UNCON_MA", globalIdOrderMap.get(id)));
-            }
-
-            if (detailedPrint.get()) {
-                String outputMsg = str("UNCON_MA || ",
-                        " Periods ShortLong", _1_min_ma_short, _1_min_ma_long,
-                        "|last shortlong:", r(maShortLast), r(maLongLast),
-                        "|secLast shortlong:", r(maShortSecLast), r(maLongSecLast),
-                        "|PD", r10000(pd), "|Index", r(indexPrice),
-                        "|Last Order Time:", lastUnconMAOrderTime.truncatedTo(MINUTES));
-                pr(outputMsg);
-            }
-        }
-    }
-
-    /**
-     * overnight close trading
-     */
-    private static void overnightTrader(LocalDateTime nowMilli, double freshPrice) {
-        LocalTime lt = nowMilli.toLocalTime();
-        if (futureAMSession().test(LocalTime.now()) || futurePMSession().test(LocalTime.now())) return;
-        double currDelta = getNetPtfDelta();
-
-        LocalDate TDate = checkTimeRangeBool(lt, 0, 0, 5, 0) ?
-                nowMilli.toLocalDate().minusDays(1L) : nowMilli.toLocalDate();
-
-        double indexPrice = (priceMapBar.containsKey(FTSE_INDEX) &&
-                priceMapBar.get(FTSE_INDEX).size() > 0) ?
-                priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
-
-        NavigableMap<LocalDateTime, SimpleBar> futPriceMap = futData.get(ibContractToFutType(activeFuture));
-
-        int pmPercChg = getPMPercChg(futPriceMap, TDate);
-        int currPerc = getPercentileForLast(futPriceMap);
-
-        LocalDateTime lastOrderTime = getLastOrderTime(OVERNIGHT);
-
-        if (checkTimeRangeBool(lt, 3, 0, 5, 0)
-                && MINUTES.between(lastOrderTime, nowMilli) > ORDER_WAIT_TIME) {
-            if (currDelta > getDeltaLowLimit() && currPerc > UP_PERC && pmPercChg > 0) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, 1);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Overnight Short", OVERNIGHT));
-                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "O/N sell @ ", freshPrice, " curr p% ", currPerc));
-            } else if (currDelta < getDeltaHighLimit() && currPerc < DOWN_PERC && pmPercChg < 0) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, 1);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Overnight Long", OVERNIGHT));
-                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "O/N buy @ ", freshPrice,
-                        "perc: ", currPerc, "pmPercChg", pmPercChg));
-            }
-        } else {
-            outputToAutoLog(" outside tradable time slot");
-        }
-
-        String outputString = str("||O/N||", nowMilli.format(DateTimeFormatter.ofPattern("M-d H:mm")),
-                "||curr P%: ", currPerc,
-                "||curr P: ", futPriceMap.lastEntry().getValue().getClose(),
-                "||index: ", Math.round(100d * indexPrice) / 100d,
-                "||BID ASK ", bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
-                askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
-                "pmchy", pmPercChg);
-
-        outputToAutoLog(outputString);
-        requestOvernightExecHistory();
-    }
 
     /**
      * inventory trader
