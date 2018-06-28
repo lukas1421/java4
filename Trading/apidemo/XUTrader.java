@@ -742,8 +742,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         XUTrader.trimTrader(ldt, price);
 
         double currDelta = getNetPtfDelta();
-        boolean maxAfterMin = checkf10maxAftermint(INDEX_000001);
-        boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000001);
+        boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
+        boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000016);
         int pmChgY = getPercentileChgYFut();
 
         if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
@@ -752,11 +752,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (detailedPrint.get()) {
-            pr("maxAfterMin: ", maxAfterMin, "maxAbovePrev", maxAbovePrev,
+            pr("20DayMA", _20DayMA,
+                    "maxAfterMin: ", maxAfterMin, "maxAbovePrev", maxAbovePrev,
                     "pmchgy", pmChgY, "delta range ", getBearishTarget(), getBullishTarget());
         }
 
-        unconditionalMATrader(ldt, price);
+        //unconditionalMATrader(ldt, price);
         //XUTrader.updateLastMinuteMap(ldt, price);
         percentileMATrader(ldt, price, pmChgY);
         //lastHourMATrader(ldt, price, pmChgY);
@@ -1467,8 +1468,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PERC_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "perc MA buy", globalIdOrderMap.get(id)
-                        , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
-                        r(maShortSecLast), r(maLongSecLast)));
+                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
+                        r(maShortSecLast), r(maLongSecLast), " anchor ", anchorIndex, "perc", todayPerc, "2d Perc ",
+                        _2dayPerc));
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && _2dayPerc > UP_PERC_WIDE
                     && pmPercY > 0) {
                 int id = autoTradeID.incrementAndGet();
@@ -1476,8 +1478,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PERC_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "perc MA sell", globalIdOrderMap.get(id)
-                        , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
-                        r(maShortSecLast), r(maLongSecLast)));
+                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
+                        r(maShortSecLast), r(maLongSecLast), " anchor ", anchorIndex, "perc", todayPerc, "2d Perc ",
+                        _2dayPerc));
             }
         }
     }
