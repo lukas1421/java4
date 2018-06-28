@@ -1413,30 +1413,29 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 , e -> !checkTimeRangeBool(e, 11, 30, 12, 59));
         int shorterMA = 10;
         int longerMA = 20;
-        int tBetweenOrder = ORDER_WAIT_TIME;
+        //int tBetweenOrder = ORDER_WAIT_TIME;
         int maSize = AGGRESSIVE_SIZE;
 
         if (!(checkTimeRangeBool(lt, 9, 30, 11, 30)
                 || (checkTimeRangeBool(lt, 13, 0, 15, 0)))) {
             anchorIndex = "Future";
-            index = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
-            shorterMA = _1_min_ma_short;
-            longerMA = _1_min_ma_long;
-            maSize = 2;
+            index = futData.get(ibContractToFutType(activeFuture));
+            //shorterMA = _1_min_ma_short;
+            //longerMA = _1_min_ma_long;
+            //maSize = 2;
         } else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
             shorterMA = 1;
             longerMA = 5;
             maSize = 1;
         }
 
-        checkCancelTrades(PERC_MA, nowMilli, tBetweenOrder * 2);
+        checkCancelTrades(PERC_MA, nowMilli, ORDER_WAIT_TIME * 2);
         LocalDate tTrade = checkTimeRangeBool(lt, 0, 0, 5, 0) ?
                 nowMilli.toLocalDate().minusDays(1) : nowMilli.toLocalDate();
 
         int _2dayPerc = getPercentileForLast(index);
         int todayPerc = getPercentileForLastPred(index, e -> e.getKey().toLocalDate().equals(tTrade));
         LocalDateTime lastIndexMAOrder = getLastOrderTime(PERC_MA);
-
 
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
@@ -1467,7 +1466,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
 
-        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tBetweenOrder) {
+        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME) {
             if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && _2dayPerc < DOWN_PERC_WIDE
                     && pmPercY < 0 && currDelta + maSize * freshPrice * fx < getBullishTarget()) {
                 int id = autoTradeID.incrementAndGet();
@@ -1477,7 +1476,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "perc MA buy", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), " anchor ", anchorIndex, "perc", todayPerc, "2d Perc ",
-                        _2dayPerc));
+                        _2dayPerc, "delta chg ", maSize * freshPrice * fx));
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && _2dayPerc > UP_PERC_WIDE
                     && pmPercY > 0 && currDelta - maSize * freshPrice * fx > getBearishTarget()) {
                 int id = autoTradeID.incrementAndGet();
@@ -1487,7 +1486,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "perc MA sell", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), " anchor ", anchorIndex, "perc", todayPerc, "2d Perc ",
-                        _2dayPerc));
+                        _2dayPerc, "delta chg ", -1 * maSize * freshPrice * fx));
             }
         }
     }
@@ -1592,7 +1591,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         } else {
             outputToAutoLog(" outside tradable time slot");
         }
-
         String outputString = str("||O/N||", nowMilli.format(DateTimeFormatter.ofPattern("M-d H:mm")),
                 "||curr P%: ", currPerc,
                 "||curr P: ", futPriceMap.lastEntry().getValue().getClose(),
@@ -1699,7 +1697,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         checkCancelTrades(TRIM, nowMilli, ORDER_WAIT_TIME);
 
         pr("trim trader delta/target", r(netDelta), getBullishTarget(), getBearishTarget(), "last order T ",
-                lastTrimOrderT, "next order T", lastTrimOrderT.plusMinutes(ORDER_WAIT_TIME));
+                lastTrimOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
+                , "next order T", lastTrimOrderT.plusMinutes(ORDER_WAIT_TIME)
+                        .toLocalTime().truncatedTo(ChronoUnit.MINUTES));
 
         if (MINUTES.between(lastTrimOrderT, nowMilli) >= ORDER_WAIT_TIME) {
             if (netDelta > getBullishTarget()) {
