@@ -144,7 +144,7 @@ public class ChinaOptionHelper {
         if (moneyVolMap.size() > 0) {
             if (moneyVolMap.containsKey(moneyness)) {
                 return moneyVolMap.get(moneyness);
-            } else {
+            } else if (moneyVolMap.firstKey() <= moneyness && moneyVolMap.lastKey() >= moneyness) {
                 Map.Entry<Integer, Double> ceilEntry = moneyVolMap.ceilingEntry(moneyness);
                 Map.Entry<Integer, Double> floorEntry = moneyVolMap.floorEntry(moneyness);
                 if (ceilEntry.getKey().intValue() == floorEntry.getKey().intValue()) {

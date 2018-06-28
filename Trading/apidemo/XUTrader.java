@@ -2327,10 +2327,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @Override
     public void openOrder(Contract contract, Order order, OrderState orderState) {
-        if (detailedPrint.get()) {
-            pr(" open order ", contract.symbol(), contract.lastTradeDateOrContractMonth()
-                    , ibContractToSymbol(contract), order, orderState);
-        }
+//        if (detailedPrint.get()) {
+//            pr(" open order ", contract.symbol(), contract.lastTradeDateOrContractMonth()
+//                    , ibContractToSymbol(contract), order, orderState);
+//        }
 
         activeFutLiveIDOrderMap.put(order.orderId(), order);
 
@@ -2349,11 +2349,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @Override
     public void openOrderEnd() {
-        if (detailedPrint.get()) {
-            pr(" open order ended");
-            pr("activeFutLiveIDOrderMap", activeFutLiveIDOrderMap);
-            pr("activeFutLiveOrder", activeFutLiveOrder);
-        }
+//        if (detailedPrint.get()) {
+//            pr(" open order ended");
+//            pr("activeFutLiveIDOrderMap", activeFutLiveIDOrderMap);
+//            pr("activeFutLiveOrder", activeFutLiveOrder);
+//        }
     }
 
     @Override
