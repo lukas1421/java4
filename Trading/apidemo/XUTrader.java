@@ -92,6 +92,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static volatile int _5_min_ma_short = 5;
     public static volatile int _5_min_ma_long = 10;
 
+    //size
+    public static final int CONSERVATIVE_SIZE = 1;
+    public static final int AGGRESSIVE_SIZE = 2;
+
 
     //perc trader
     private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
@@ -741,22 +745,22 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         unconditionalMATrader(ldt, price);
         //XUTrader.updateLastMinuteMap(ldt, price);
         percentileMATrader(ldt, price, pmChgY);
-        lastHourMATrader(ldt, price, pmChgY);
+        //lastHourMATrader(ldt, price, pmChgY);
 
 
-        if (pmChgY < 0) {
-            //slowCoverTrader(ldt, price);
-            if (maxAfterMin && maxAbovePrev) {
-                //slowCoverTrader(ldt, price);
-                //fastCoverTrader(ldt, price);
-            }
-        } else if (pmChgY > 0) {
-            if (!(maxAfterMin && maxAbovePrev)) {
-                amHedgeTrader(ldt, price);
-            } else {
-                percentileTrader(ldt, price);
-            }
-        }
+//        if (pmChgY < 0) {
+//            //slowCoverTrader(ldt, price);
+//            if (maxAfterMin && maxAbovePrev) {
+//                //slowCoverTrader(ldt, price);
+//                //fastCoverTrader(ldt, price);
+//            }
+//        } else if (pmChgY > 0) {
+//            if (!(maxAfterMin && maxAbovePrev)) {
+//                amHedgeTrader(ldt, price);
+//            } else {
+//                percentileTrader(ldt, price);
+//            }
+//        }
         overnightTrader(ldt, price);
     }
 
@@ -1386,7 +1390,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int shorterMA = 10;
         int longerMA = 20;
         int tBetweenOrder = 1;
-        int maSize = 1;
+        int maSize = AGGRESSIVE_SIZE;
 
         if (!(checkTimeRangeBool(lt, 9, 30, 11, 30)
                 || (checkTimeRangeBool(lt, 13, 0, 15, 0)))) {
@@ -1599,7 +1603,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" QUITTING PD, local time before 9 30 ");
             return;
         }
-
         // print all pd trades
         globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == AutoOrderType.PD_OPEN ||
                 e.getValue().getOrderType() == AutoOrderType.PD_CLOSE).forEach(Utility::pr);
@@ -1764,11 +1767,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, Double> sma = getMAGen(price5, shortMAPeriod);
         double maLast = sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
 
-//        pr(nowMilli, " Flatten Trader Delta: "
-//                , r(currDelta), "prev Price ", prevPrice, " price ", freshPrice, " ma ", r(maLast)
-//                , "Crossed?: ", (prevPrice > maLast && freshPrice <= maLast) ||
-//                        (prevPrice < maLast && freshPrice >= maLast));
-
         if (currDelta > getBullishTarget() && prevPrice > maLast && freshPrice <= maLast
                 && perc > UP_PERC && pd > PD_DOWN_THRESH) { //no sell at discount or at bottom
             int id = autoTradeID.incrementAndGet();
@@ -1896,7 +1894,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (price1.size() <= 2) return;
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(price1, _1_min_ma_short);
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(price1, _1_min_ma_long);
-        int uncon_size = 3;
+        int uncon_size = CONSERVATIVE_SIZE;
         if (smaShort.size() < 2 || smaLong.size() < 2) {
             return;
         }
@@ -1914,9 +1912,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double pd = (indexPrice != 0.0 && freshPrice != 0.0) ? (freshPrice / indexPrice - 1) : 0.0;
 
-        LocalDateTime lastMAOrderTime = getLastOrderTime(UNCON_MA);
+        LocalDateTime lastUnconMAOrderTime = getLastOrderTime(UNCON_MA);
 
-        if (timeDiffinMinutes(lastMAOrderTime, nowMilli) >= 1) {
+        if (timeDiffinMinutes(lastUnconMAOrderTime, nowMilli) >= ORDER_WAIT_TIME) {
             if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, uncon_size);
@@ -1937,7 +1935,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "|last shortlong:", r(maShortLast), r(maLongLast),
                         "|secLast shortlong:", r(maShortSecLast), r(maLongSecLast),
                         "|PD", r10000(pd), "|Index", r(indexPrice),
-                        "|Last Order Time:", lastMAOrderTime.truncatedTo(MINUTES));
+                        "|Last Order Time:", lastUnconMAOrderTime.truncatedTo(MINUTES));
                 pr(outputMsg);
             }
         }
@@ -2470,7 +2468,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static void computeTradeMapActive() {
-        pr(" compute trade map active ", ibContractToFutType(activeFuture));
+        //pr(" compute trade map active ", ibContractToFutType(activeFuture));
         FutType f = ibContractToFutType(activeFuture);
 
         int unitsBought = tradesMap.get(f).entrySet().stream().mapToInt(e -> e.getValue().getSizeBot()).sum();
@@ -2515,7 +2513,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     + "HK Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isHKStock(e.getKey())))
                     + " China Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isChinaStock(e.getKey()))));
             updateLog(" expiring delta " + getExpiringDelta());
-
         });
     }
 }

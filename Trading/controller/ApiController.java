@@ -1638,7 +1638,7 @@ public class ApiController implements EWrapper {
     }
 
     public void reqLiveOrders(ILiveOrderHandler handler) {
-        pr(" req live orders ");
+        //pr(" req live orders ");
         m_liveOrderHandlers.add(handler);
         m_client.reqAllOpenOrders();
         sendEOM();

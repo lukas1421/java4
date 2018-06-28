@@ -313,16 +313,16 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             } else if (!lt.toLocalDate().isEqual(tm.lowerKey(lt).toLocalDate())) {
                 g.drawString(lt.toLocalDate().format(DateTimeFormatter.ofPattern("M-d")), x, getHeight() - 10);
             } else {
-                if (XUTrader.gran == DisplayGranularity._1MDATA) {
-                    if ((lt.getMinute() == 0 || lt.getMinute() % 30 == 0)) {
-                        g.drawString(lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString()
-                                , x, getHeight() - 20);
-                    }
-                } else {
-                    if (lt.getMinute() == 0) {
-                        g.drawString(lt.toLocalTime().format(DateTimeFormatter.ofPattern("H")), x, getHeight() - 20);
-                    }
+                //if (XUTrader.gran == DisplayGranularity._1MDATA) {
+//                    if ((lt.getMinute() == 0 || lt.getMinute() % 30 == 0)) {
+//                        g.drawString(lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString()
+//                                , x, getHeight() - 20);
+//                    }
+                // } else {
+                if (lt.getMinute() == 0) {
+                    g.drawString(lt.toLocalTime().format(DateTimeFormatter.ofPattern("H")), x, getHeight() - 20);
                 }
+                //   }
             }
             //trades
             if (XUTrader.showTrades.get()) {
