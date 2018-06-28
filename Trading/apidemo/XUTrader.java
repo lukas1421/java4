@@ -1402,7 +1402,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         } else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
             shorterMA = 1;
             longerMA = 5;
-            tBetweenOrder = 1;
+            tBetweenOrder = ORDER_WAIT_TIME;
             maSize = 1;
         }
 
@@ -1410,6 +1410,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalDate tTrade = checkTimeRangeBool(lt, 0, 0, 5, 0) ?
                 nowMilli.toLocalDate().minusDays(1) : nowMilli.toLocalDate();
 
+        int _2dayPerc = getPercentileForLast(index);
         int todayPerc = getPercentileForLastPred(index, e -> e.getKey().toLocalDate().equals(tTrade));
         LocalDateTime lastIndexMAOrder = getLastOrderTime(PERC_MA);
 
@@ -1427,8 +1428,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
         if (detailedPrint.get()) {
-            pr("*INDEX UNCON_MA Time: ", nowMilli.toLocalTime(), " T perc: ", todayPerc);
-            pr("short long UNCON_MA: ", shorterMA, longerMA);
+            pr("*perc MA Time: ", nowMilli.toLocalTime(), " T perc: ", todayPerc, "2D p%", _2dayPerc);
+            pr("Anchor / short long MA: ", anchorIndex, shorterMA, longerMA);
             pr(" ma cross last : ", r(maShortLast), r(maLongLast), r(maShortLast - maLongLast));
             pr(" ma cross 2nd last : ", r(maShortSecLast), r(maLongSecLast), r(maShortSecLast - maLongSecLast));
             boolean bull = maShortLast > maLongLast && maShortSecLast <= maLongSecLast;
@@ -1443,22 +1444,22 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tBetweenOrder) {
-            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && todayPerc < DOWN_PERC_WIDE
+            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && _2dayPerc < DOWN_PERC_WIDE
                     && pmPercY < 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, maSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PERC_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "index UNCON_MA buy", globalIdOrderMap.get(id)
+                outputOrderToAutoLog(str(o.orderId(), "perc MA buy", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast)));
-            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > UP_PERC_WIDE
+            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && _2dayPerc > UP_PERC_WIDE
                     && pmPercY > 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, maSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PERC_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "index UNCON_MA sell", globalIdOrderMap.get(id)
+                outputOrderToAutoLog(str(o.orderId(), "perc MA sell", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast)));
             }
