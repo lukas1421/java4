@@ -724,9 +724,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         String ticker = "sh000001";
         if (ma20Map.getOrDefault(ticker, 0.0) == 0.0 || priceMap.getOrDefault(ticker, 0.0) == 0.0) {
             _20DayMA = MASentiment.Directionless;
-        } else if (ma20Map.get(ticker) > priceMap.get(ticker)) {
+        } else if (priceMap.get(ticker) < ma20Map.get(ticker)) {
             _20DayMA = MASentiment.Bearish;
-        } else if (ma20Map.get(ticker) < priceMap.get(ticker)) {
+        } else if (priceMap.get(ticker) > ma20Map.get(ticker)) {
             _20DayMA = MASentiment.Bullish;
         }
 //        pr(" 20 dma ", _20DayMA, " ma20 ", ma20Map.getOrDefault(ticker, 0.0),
@@ -1368,7 +1368,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param freshPrice price
      */
     private static synchronized void fastCoverTrader(LocalDateTime nowMilli, double freshPrice) {
-        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate());
+        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
+                , e -> !checkTimeRangeBool(e, 11, 30, 12, 59));
         int indexTPerc = getPercentileForLast(index);
         LocalDateTime lastCoverOrderT = getLastOrderTime(FAST_COVER);
         checkCancelTrades(FAST_COVER, nowMilli, ORDER_WAIT_TIME);
@@ -1401,7 +1402,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static synchronized void percentileMATrader(LocalDateTime nowMilli, double freshPrice, int pmPercY) {
         LocalTime lt = nowMilli.toLocalTime();
         String anchorIndex = FTSE_INDEX;
-        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate());
+        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate()
+                , e -> !checkTimeRangeBool(e, 11, 30, 12, 59));
         int shorterMA = 10;
         int longerMA = 20;
         int tBetweenOrder = ORDER_WAIT_TIME;
@@ -1484,7 +1486,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * Auto trading based on Moving Avg, no percentile
      */
     private static synchronized void unconditionalMATrader(LocalDateTime nowMilli, double freshPrice) {
-        NavigableMap<LocalDateTime, SimpleBar> price1 = futData.get(ibContractToFutType(activeFuture));
+        NavigableMap<LocalDateTime, SimpleBar> price1 = convertToLDT(priceMapBar.get(FTSE_INDEX),
+                nowMilli.toLocalDate(),
+                e -> !checkTimeRangeBool(e, 11, 30, 12, 59));
+        //futData.get(ibContractToFutType(activeFuture));
+        LocalTime lt = nowMilli.toLocalTime();
+        if (checkTimeRangeBool(lt, 11, 29, 13, 0)) {
+            return;
+        }
         if (price1.size() <= 2) return;
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(price1, _1_min_ma_short);
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(price1, _1_min_ma_long);
@@ -1596,7 +1605,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void lastHourMATrader(LocalDateTime nowMilli, double freshPrice, double pmPercYChg) {
         LocalTime lt = nowMilli.toLocalTime();
         String anchorIndex = FTSE_INDEX;
-        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate());
+        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate()
+                , e -> !checkTimeRangeBool(e, 11, 30, 12, 59));
         int shorterMA = 5;
         int longerMA = 10;
         LocalDateTime lastHourMAOrderTime = getLastOrderTime(LAST_HOUR_MA);

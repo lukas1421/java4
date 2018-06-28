@@ -438,9 +438,15 @@ public class XuTraderHelper {
         return o.lmtPrice() > currPrice && (o.totalQuantity() > 0);
     }
 
-    static <S> NavigableMap<LocalDateTime, S> convertToLDT(NavigableMap<LocalTime, S> mp, LocalDate d) {
+    static <S> NavigableMap<LocalDateTime, S> convertToLDT(NavigableMap<LocalTime, S> mp, LocalDate d
+            , Predicate<LocalTime> p) {
         NavigableMap<LocalDateTime, S> res = new ConcurrentSkipListMap<>();
-        mp.forEach((k, v) -> res.put(LocalDateTime.of(d, k), v));
+        mp.forEach((k, v) -> {
+                    if (p.test(k)) {
+                        res.put(LocalDateTime.of(d, k), v);
+                    }
+                }
+        );
         return res;
     }
 
@@ -464,7 +470,9 @@ public class XuTraderHelper {
         // time in minute, buy/sell, index value, fut value,
         String anchorIndex = FTSE_INDEX;
         LocalDateTime nowMilli = LocalDateTime.now();
-        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate());
+        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(
+                priceMapBar.get(anchorIndex), nowMilli.toLocalDate(), e -> e.isBefore(LocalTime.of(11, 30)) &&
+                        e.isAfter(LocalTime.of(12, 59)));
         NavigableMap<LocalDateTime, SimpleBar> fut = XUTrader.futData.get(ibContractToFutType(XUTrader.activeFuture));
         double futClose = fut.lowerEntry(LocalDateTime.of(LocalDate.now(), LocalTime.of(15, 0))).getValue().getClose();
         int shorterMA = 5;
