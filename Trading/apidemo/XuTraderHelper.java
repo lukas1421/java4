@@ -454,8 +454,8 @@ public class XuTraderHelper {
         return e -> e.isAfter(LocalTime.of(hour1, min1)) && e.isBefore(LocalTime.of(hour2, min2));
     }
 
-    static boolean checkTimeRangeBool(LocalTime t, int hrBegin, int minBegin, int hrEnd, int minEnd) {
-        return t.isAfter(LocalTime.of(hrBegin, minBegin)) && t.isBefore(LocalTime.of(hrEnd, minEnd));
+    static boolean checkTimeRangeBool(LocalTime t, int hrBeg, int minBeg, int hrEnd, int minEnd) {
+        return t.isAfter(LocalTime.of(hrBeg, minBeg)) && t.isBefore(LocalTime.of(hrEnd, minEnd));
     }
 
     static int getMinuteBetween(LocalTime t1, LocalTime t2) {
@@ -553,8 +553,7 @@ public class XuTraderHelper {
             return 0;
         } else {
             double prevMax = data.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(d))
-                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(),
-                            9, 29, 15, 0))
+                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
 
@@ -573,6 +572,7 @@ public class XuTraderHelper {
             if (prevMax == 0.0 || prevMin == 0.0 || prevClose == 0.0 || pmOpen == 0.0) {
                 return 0;
             } else {
+                pr(" prevClose, pmOpen, prevMax, prevMin ", prevClose, pmOpen, prevMax, prevMin);
                 return (int) Math.round(100d * (prevClose - pmOpen) / (prevMax - prevMin));
             }
         }
