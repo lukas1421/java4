@@ -33,9 +33,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaDataYesterday.ma20Map;
 import static apidemo.ChinaPosition.*;
-import static apidemo.ChinaStock.closeMap;
-import static apidemo.ChinaStock.currencyMap;
+import static apidemo.ChinaStock.*;
 import static apidemo.TradingConstants.*;
 import static apidemo.XuTraderHelper.*;
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -46,6 +46,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         ApiController.ITradeReportHandler, ApiController.IOrderHandler, ApiController.ILiveOrderHandler
         , ApiController.IPositionHandler, ApiController.IConnectionHandler {
 
+    private static MASentiment _20DayMA = MASentiment.Directionless;
     public static volatile double currentIBNAV = 0.0;
 
     static final LocalDateTime ENGINE_START_TIME = XuTraderHelper.getEngineStartTime();
@@ -87,8 +88,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //    private static final int MA60 = 60;
 //    private static final int MA80 = 80;
 
-    public static volatile int _1_min_ma_short = 20;
-    public static volatile int _1_min_ma_long = 80;
+    public static volatile int _1_min_ma_short = 5;
+    public static volatile int _1_min_ma_long = 20;
     public static volatile int _5_min_ma_short = 5;
     public static volatile int _5_min_ma_long = 10;
 
@@ -719,6 +720,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         add(chartScroll);
     }
 
+    static void set20DayBullBear() {
+        String ticker = "sh000001";
+        if (ma20Map.getOrDefault(ticker, 0.0) == 0.0 || priceMap.getOrDefault(ticker, 0.0) == 0.0) {
+            _20DayMA = MASentiment.Directionless;
+        } else if (ma20Map.get(ticker) > priceMap.get(ticker)) {
+            _20DayMA = MASentiment.Bearish;
+        } else if (ma20Map.get(ticker) < priceMap.get(ticker)) {
+            _20DayMA = MASentiment.Bullish;
+        }
+//        pr(" 20 dma ", _20DayMA, " ma20 ", ma20Map.getOrDefault(ticker, 0.0),
+//                " price ", priceMap.getOrDefault(ticker, 0.0));
+    }
+
     public static void processMain(LocalDateTime ldt, double price) {
         if (!globalTradingOn.get()) {
             pr(" global trading off ");
@@ -900,7 +914,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         } else if (LocalDate.now().getDayOfWeek() == DayOfWeek.TUESDAY) {
             return target * 2;
         }
-        return target;
+        return target + (_20DayMA == MASentiment.Bearish ? -500000 : 0);
     }
 
     private static double getBearishTarget() {
@@ -921,7 +935,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         } else if (LocalDate.now().getDayOfWeek() == DayOfWeek.TUESDAY) {
             return Math.max(0.0, target * 2);
         }
-        return target;
+        return target + (_20DayMA == MASentiment.Bearish ? -500000 : 0);
     }
 
     private static double getDeltaHighLimit() {
@@ -1128,6 +1142,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         soundPlayer.stopIfPlaying();
         if (smaShort.size() > 0) {
             String msg = str("**Observing MA**"
+                    , "20day", _20DayMA
                     , "||T:", LocalTime.now().truncatedTo(MINUTES)
                     , "||MA Short:", r(smaShort.lastEntry().getValue())
                     , "||MA Long:", r(smaLong.lastEntry().getValue())
@@ -1477,14 +1492,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (smaShort.size() < 2 || smaLong.size() < 2) {
             return;
         }
-
         double maShortLast = smaShort.lastEntry().getValue();
         double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
         double maLongLast = smaLong.lastEntry().getValue();
         double maLongSecLast = smaLong.lowerEntry(smaLong.lastKey()).getValue();
-
         sentiment = maShortLast > maLongLast ? MASentiment.Bullish : MASentiment.Bearish;
-
         double indexPrice = (priceMapBar.containsKey(FTSE_INDEX) &&
                 priceMapBar.get(FTSE_INDEX).size() > 0) ?
                 priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;

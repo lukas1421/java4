@@ -2427,8 +2427,10 @@ public final class ChinaStock extends JPanel {
 //                            ? (int) round(100d * log(priceMap.get(name) / maxMap.get(name)) / log(maxMapY.get(name) / minMapY.get(name))) : 0;
                 //ma20 
                 case 52:
-                    return 0.0;
-                //return Utility.noZeroArrayGen(name, ma20Map, priceMap) ? round(100d * 20 / (ma20Map.get(name) / priceMap.get(name) * 19 + 1)) / 100d : 0.0;
+                    return ma20Map.getOrDefault(name, 0.0);
+                //return 0.0;
+                //return Utility.noZeroArrayGen(name, ma20Map, priceMap) ?
+                //       round(100d * 20 / (ma20Map.get(name) / priceMap.get(name) * 19 + 1)) / 100d : 0.0;
 
                 // dayMinT
                 case 53:
