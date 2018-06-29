@@ -55,8 +55,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static XUTraderRoll traderRoll;
 
     private static final int ORDER_WAIT_TIME = 15;
-    private static final double DELTA_HARD_HI_LIMIT = 500000.0;
-    private static final double DELTA_HARD_LO_LIMIT = -250000.0;
+    private static final double DELTA_HARD_HI_LIMIT = 1000000.0;
+    private static final double DELTA_HARD_LO_LIMIT = -1000000.0;
 
     //global
     private static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
@@ -1723,13 +1723,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         .toLocalTime().truncatedTo(ChronoUnit.MINUTES));
 
         if (MINUTES.between(lastTrimOrderT, nowMilli) >= ORDER_WAIT_TIME) {
-            if (netDelta > getBullishTarget()) {
+            if (netDelta > DELTA_HARD_HI_LIMIT) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, TRIM));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "trim sell", globalIdOrderMap.get(id)));
-            } else if (netDelta < getBearishTarget()) {
+            } else if (netDelta < DELTA_HARD_LO_LIMIT) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, TRIM));
