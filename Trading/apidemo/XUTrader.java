@@ -1009,40 +1009,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return new OrderAugmented();
     }
 
-    /**
-     * Determine order size by taking into account the trade time, PD, proposed direction and percentile
-     */
-    private static int determinePDPercFactor(LocalTime t, double pd, Direction dir, int perc) {
-        int factor = 1;
-        if (perc > UP_PERC && dir == Direction.Long) {
-            return 0;
-        } else if (perc < DOWN_PERC && dir == Direction.Short) {
-            return 0;
-        }
-
-        if (pd > PD_UP_THRESH || perc > UP_PERC) {
-            factor = dir == Direction.Long ? 1 : 2;
-        } else if (pd < PD_DOWN_THRESH || perc < DOWN_PERC) {
-            factor = dir == Direction.Long ? 2 : 1;
-        } else {
-            if (futureAMSession().test(t)) {
-                factor = (dir == Direction.Long ? 1 : 2);
-            } else if (futurePMSession().test(t)) {
-                factor = (dir == Direction.Long ? 2 : 1);
-            }
-        }
-        outputToAutoLog(str(" Determining Order Size ||T PERC PD DIR -> FACTOR, FINAL SIZE ", t, perc
-                , r10000(pd), dir, factor, factor));
-
-        return factor;
-    }
-
-//    private static int determineTimeDiffFactor() {
-//        if (maOrderMap.size() == 0) return 1;
-//        return Math.max(1, Math.min(1,
-//                (int) Math.floor(timeDiffinMinutes(maOrderMap.lastEntry().getKey(),
-//                        LocalDateTime.now()) / 60d)));
-//    }
 
     private static Predicate<AutoOrderType> isInventoryTrade() {
         return e -> e.equals(INVENTORY_CLOSE) || e.equals(INVENTORY_OPEN);
@@ -1078,43 +1044,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static int getSizeForDelta(double price, double fx, double delta) {
         return (int) Math.floor(Math.abs(delta) / (fx * price));
     }
-
-    // used for flatten long or short
-    private static int sizeToFlatten(double price, double fx, double currDelta) {
-        int candidate = 1;
-        if (currDelta > getBullishTarget()) {
-            candidate = (int) Math.floor((currDelta - getBullishTarget()) / (price * fx));
-        } else if (currDelta < getBearishTarget()) {
-            candidate = (int) Math.floor((getBearishTarget() - currDelta) / (price * fx));
-        }
-        return Math.max(1, Math.min(candidate, 3));
-    }
-
-    //adjust delta here.
-    private static int getPercTraderSize(double price, double fx, Direction d, double currDelta) {
-        int candidate = 0;
-        if (sentiment == MASentiment.Directionless || d == Direction.Flat) return 1;
-        double target = (sentiment == MASentiment.Bullish ? getBullishTarget() : getBearishTarget());
-
-        if (d == Direction.Long) {
-            if (currDelta < target) {
-                candidate = (int) Math.floor((target - currDelta) / (price * fx));
-            }
-        } else if (d == Direction.Short) {
-            if (currDelta > target) {
-                candidate = (int) Math.floor((currDelta - target) / (price * fx));
-            }
-        }
-        pr("GET PERC SIZE: price", price, "*fx", fx, "*senti", sentiment, "*dir", d, "*currDel", currDelta,
-                "*bull bear targets", getBullishTarget(), getBearishTarget(), "*candidate ", candidate);
-        LocalTime now = LocalTime.now();
-        //am trade size is forced to be 1
-        //pm trade size can be 3 at a time.
-        int maxSize = futurePMSession().test(now) ? (d == Direction.Long ? 2 : 1) :
-                futureAMSession().test(now) ? (d == Direction.Long ? 1 : 2) : 1;
-        return Math.max(0, Math.min(candidate, maxSize));
-    }
-
 
     /**
      * slow cover trader (unconditional, not like UNCON_MA)
@@ -1249,7 +1178,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (perc < DOWN_PERC) {
                 if (currDelta < getBullishTarget()) {
                     int id = autoTradeID.incrementAndGet();
-                    int buySize = getPercTraderSize(freshPrice, fx, Direction.Long, currDelta);
+                    int buySize = 1;
                     if (buySize > 0) {
                         Order o = placeBidLimit(freshPrice, buySize);
                         globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid", PERC_ACC));
@@ -1265,7 +1194,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             } else if (perc > UP_PERC) {
                 if (currDelta > getBearishTarget()) {
                     int id = autoTradeID.incrementAndGet();
-                    int sellSize = getPercTraderSize(freshPrice, fx, Direction.Short, currDelta);
+                    int sellSize = 1;
                     if (sellSize > 0) {
                         Order o = placeOfferLimit(freshPrice, sellSize);
                         globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer",
@@ -1763,15 +1692,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (currDelta > getBullishTarget()) { //no sell at discount or at bottom
             int id = autoTradeID.incrementAndGet();
             double candidatePrice = bidMap.get(ibContractToFutType(activeFuture));
-            Order o = placeOfferLimitTIF(candidatePrice, sizeToFlatten(candidatePrice, fx, currDelta),
-                    Types.TimeInForce.IOC);
+            Order o = placeOfferLimitTIF(candidatePrice, 1, Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FLATTEN_AGGRESSIVE));
             outputOrderToAutoLog(str(o.orderId(), " AGGRESSIVE Sell Flatten ", globalIdOrderMap.get(id)));
         } else if (currDelta < getBearishTarget()) { // no buy at premium or at top
             int id = autoTradeID.incrementAndGet();
             double candidatePrice = askMap.get(ibContractToFutType(activeFuture));
-            Order o = placeBidLimitTIF(candidatePrice, sizeToFlatten(candidatePrice, fx, currDelta), Types.TimeInForce.IOC);
+            Order o = placeBidLimitTIF(candidatePrice, 1, Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FLATTEN_AGGRESSIVE));
             outputOrderToAutoLog(str(o.orderId(), " AGGRESSIVE Buy Flatten ", globalIdOrderMap.get(id)));
@@ -1779,7 +1707,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     /**
-     * Once touch the UNCON_MA, flatten position into bull bear range
+     * Once touch the MA, flatten position into bull bear range
      *
      * @param nowMilli   time in millisecs
      * @param freshPrice most recent price
@@ -1816,8 +1744,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             double candidatePrice = (flattenEagerness == Eagerness.Passive) ? freshPrice :
                     bidMap.get(ibContractToFutType(activeFuture));
 
-            Order o = placeOfferLimitTIF(candidatePrice, sizeToFlatten(freshPrice, fx, currDelta),
-                    Types.TimeInForce.IOC);
+            Order o = placeOfferLimitTIF(candidatePrice, 1, Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Sell", FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Sell Flatten ", globalIdOrderMap.get(id)));
@@ -1828,7 +1755,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             double candidatePrice = (flattenEagerness == Eagerness.Passive) ? freshPrice :
                     askMap.get(ibContractToFutType(activeFuture));
 
-            Order o = placeBidLimitTIF(candidatePrice, sizeToFlatten(freshPrice, fx, currDelta), Types.TimeInForce.IOC);
+            Order o = placeBidLimitTIF(candidatePrice, 1, Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "BUY", FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Buy Flatten ", globalIdOrderMap.get(id)));
