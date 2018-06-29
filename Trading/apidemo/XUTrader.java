@@ -1324,7 +1324,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "perc MA buy", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), " anchor ", anchorIndex, "perc", todayPerc, "2d Perc ",
-                        _2dayPerc, "delta chg ", maSize * freshPrice * fx));
+                        _2dayPerc, "delta chg ", r(maSize * freshPrice * fx)));
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && _2dayPerc > up_perc
                     && pmPercChg > 0 && currDelta - maSize * freshPrice * fx > getBearishTarget()) {
                 int id = autoTradeID.incrementAndGet();
@@ -1334,7 +1334,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "perc MA sell", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), " anchor ", anchorIndex, "perc", todayPerc, "2d Perc ",
-                        _2dayPerc, "delta chg ", -1 * maSize * freshPrice * fx));
+                        _2dayPerc, "delta chg ", r(-1 * maSize * freshPrice * fx)));
             }
         }
     }
@@ -1448,7 +1448,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         outputToAutoLog(outputString);
         requestOvernightExecHistory();
     }
-
 
     /**
      * Last hour direction more clear - trade
