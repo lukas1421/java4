@@ -755,7 +755,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (detailedPrint.get()) {
             pr("20DayMA", _20DayMA, "maxAfterMin: ", maxAfterMin, "maxAbovePrev", maxAbovePrev,
-                    "pmchgy", pmChgY, "delta range ", getBearishTarget(), getBullishTarget());
+                    "pmchgy", pmChgY, "pmch ", pmChg, "delta range ", getBearishTarget(), getBullishTarget());
         }
 
         if (isOvernight(ldt.toLocalTime())) {
@@ -885,7 +885,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
         if (futdata.size() <= 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
             return 0;
-        } else {
+        } else if (futdata.lastKey().isAfter(LocalDateTime.of(dt, LocalTime.of(13, 0)))) {
             //LocalDate prevDate = futdata.firstKey().toLocalDate();
 
             double prevMax = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
@@ -910,6 +910,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 return (int) Math.round(100d * (prevClose - pmOpen) / (prevMax - prevMin));
             }
         }
+        return 0;
     }
 
 
@@ -928,19 +929,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static double getBullishTarget() {
-        return 1000000;
+        return 500000;
     }
 
     private static double getBearishTarget() {
-        return -1000000;
+        return -500000;
     }
 
     private static double getDeltaHighLimit() {
-        return 1000000;
+        return 500000;
     }
 
     private static double getDeltaLowLimit() {
-        return -1000000;
+        return -500000;
     }
 
     public XUTrader getThis() {
@@ -1270,8 +1271,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         checkCancelTrades(PERC_MA, nowMilli, ORDER_WAIT_TIME * 2);
-        LocalDate tTrade = checkTimeRangeBool(lt, 0, 0, 5, 0) ?
-                nowMilli.toLocalDate().minusDays(1) : nowMilli.toLocalDate();
+        LocalDate tTrade = getTradeDate(nowMilli);
 
         int _2dayPerc = getPercentileForLast(index);
         int todayPerc = getPercentileForLastPred(index, e -> e.getKey().toLocalDate().equals(tTrade));
@@ -1291,7 +1291,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
         if (detailedPrint.get()) {
-            pr("*perc MA Time: ", nowMilli.toLocalTime(), "||T perc: ", todayPerc, "||2D p%", _2dayPerc);
+            pr("*perc MA Time: ", nowMilli.toLocalTime(), "||T perc: ", todayPerc, "||2D p%", _2dayPerc
+                    , "pmch: ", pmPercChg);
             pr("Anchor / short long MA: ", anchorIndex, shorterMA, longerMA);
             pr(" ma cross last : ", r(maShortLast), r(maLongLast), r(maShortLast - maLongLast));
             pr(" ma cross 2nd last : ", r(maShortSecLast), r(maLongSecLast), r(maShortSecLast - maLongSecLast));
