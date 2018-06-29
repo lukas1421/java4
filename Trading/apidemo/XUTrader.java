@@ -1261,12 +1261,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int longerMA = 20;
         int maSize = AGGRESSIVE_SIZE;
         int tOrders = ORDER_WAIT_TIME;
+        int up_perc = UP_PERC_WIDE;
+        int down_perc = DOWN_PERC_WIDE;
 
         if (isOvernight(lt) || isStockNoonBreak(lt)) {
             anchorIndex = "Future";
             index = futData.get(ibContractToFutType(activeFuture));
             maSize = CONSERVATIVE_SIZE;
-            tOrders  = 60;
+            up_perc = UP_PERC;
+            down_perc = DOWN_PERC;
+            tOrders = 60;
         } else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
             shorterMA = 1;
             longerMA = 5;
@@ -1311,7 +1315,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tOrders) {
-            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && _2dayPerc < DOWN_PERC_WIDE
+            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && _2dayPerc < down_perc
                     && pmPercChg < 0 && currDelta + maSize * freshPrice * fx < getBullishTarget()) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, maSize);
@@ -1321,7 +1325,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), " anchor ", anchorIndex, "perc", todayPerc, "2d Perc ",
                         _2dayPerc, "delta chg ", maSize * freshPrice * fx));
-            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && _2dayPerc > UP_PERC_WIDE
+            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && _2dayPerc > up_perc
                     && pmPercChg > 0 && currDelta - maSize * freshPrice * fx > getBearishTarget()) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, maSize);
