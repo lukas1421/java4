@@ -263,19 +263,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             detailedButton.setText(" Detailed: " + detailedPrint.get());
         });
 
-        JButton maTraderStatusButton = new JButton("MA Trader: " + (MATraderStatus.get() ? "ON" : "OFF"));
-        maTraderStatusButton.addActionListener(l -> {
-            MATraderStatus.set(!MATraderStatus.get());
-            outputToAutoLog(" MA Trade set to " + MATraderStatus.get());
-            maTraderStatusButton.setText("MA Trader " + (MATraderStatus.get() ? "ON" : "OFF"));
-        });
+//        JButton maTraderStatusButton = new JButton("MA Trader: " + (MATraderStatus.get() ? "ON" : "OFF"));
+//        maTraderStatusButton.addActionListener(l -> {
+//            MATraderStatus.set(!MATraderStatus.get());
+//            outputToAutoLog(" MA Trade set to " + MATraderStatus.get());
+//            maTraderStatusButton.setText("MA Trader " + (MATraderStatus.get() ? "ON" : "OFF"));
+//        });
 
-        JButton indexMAStatusButton = new JButton("IndexMA " + (indexMAStatus.get() ? "ON" : "OFF"));
-        indexMAStatusButton.addActionListener(l -> {
-            indexMAStatus.set(!indexMAStatus.get());
-            outputToAutoLog(" Index UNCON_MA set to " + indexMAStatus.get());
-            indexMAStatusButton.setText(" Index UNCON_MA " + (indexMAStatus.get() ? "ON" : "OFF"));
-        });
+//        JButton indexMAStatusButton = new JButton("IndexMA " + (indexMAStatus.get() ? "ON" : "OFF"));
+//        indexMAStatusButton.addActionListener(l -> {
+//            indexMAStatus.set(!indexMAStatus.get());
+//            outputToAutoLog(" Index UNCON_MA set to " + indexMAStatus.get());
+//            indexMAStatusButton.setText(" Index UNCON_MA " + (indexMAStatus.get() ? "ON" : "OFF"));
+//        });
 
 
         JButton musicPlayableButton = new JButton("Music: " + (musicOn.get() ? "ON" : "OFF"));
@@ -284,26 +284,26 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             musicPlayableButton.setText("Music:" + (musicOn.get() ? "ON" : "OFF"));
         });
 
-        JButton inventoryTraderButton = new JButton("Inv Trader: " + (inventoryTraderOn.get() ? "ON" : "OFF"));
-        inventoryTraderButton.addActionListener(l -> {
-            inventoryTraderOn.set(!inventoryTraderOn.get());
-            outputToAutoLog(" inv trader set to " + inventoryTraderOn.get());
-            inventoryTraderButton.setText("Inv Trader: " + (inventoryTraderOn.get() ? "ON" : "OFF"));
-        });
+//        JButton inventoryTraderButton = new JButton("Inv Trader: " + (inventoryTraderOn.get() ? "ON" : "OFF"));
+//        inventoryTraderButton.addActionListener(l -> {
+//            inventoryTraderOn.set(!inventoryTraderOn.get());
+//            outputToAutoLog(" inv trader set to " + inventoryTraderOn.get());
+//            inventoryTraderButton.setText("Inv Trader: " + (inventoryTraderOn.get() ? "ON" : "OFF"));
+//        });
 
-        JButton percTraderButton = new JButton("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
-        percTraderButton.addActionListener(l -> {
-            percentileTradeOn.set(!percentileTradeOn.get());
-            outputToAutoLog(" percentile trader set to " + percentileTradeOn.get());
-            percTraderButton.setText("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
-        });
+//        JButton percTraderButton = new JButton("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
+//        percTraderButton.addActionListener(l -> {
+//            percentileTradeOn.set(!percentileTradeOn.get());
+//            outputToAutoLog(" percentile trader set to " + percentileTradeOn.get());
+//            percTraderButton.setText("Perc Trader: " + (percentileTradeOn.get() ? "ON" : "OFF"));
+//        });
 
-        JButton pdTraderButton = new JButton("PD Trader: " + (pdTraderOn.get() ? "ON" : "OFF"));
-        pdTraderButton.addActionListener(l -> {
-            pdTraderOn.set(!pdTraderOn.get());
-            outputToAutoLog(" PD Trader set to " + pdTraderOn.get());
-            pdTraderButton.setText("PD Trader: " + (pdTraderOn.get() ? "ON" : "OFF"));
-        });
+//        JButton pdTraderButton = new JButton("PD Trader: " + (pdTraderOn.get() ? "ON" : "OFF"));
+//        pdTraderButton.addActionListener(l -> {
+//            pdTraderOn.set(!pdTraderOn.get());
+//            outputToAutoLog(" PD Trader set to " + pdTraderOn.get());
+//            pdTraderButton.setText("PD Trader: " + (pdTraderOn.get() ? "ON" : "OFF"));
+//        });
 
         JButton rollButton = new JButton("Roll");
         rollButton.addActionListener(l -> {
@@ -583,12 +583,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(sellBidButton);
         controlPanel1.add(toggleMusicButton);
         controlPanel1.add(detailedButton);
-        controlPanel1.add(maTraderStatusButton);
-        controlPanel1.add(indexMAStatusButton);
+        //controlPanel1.add(maTraderStatusButton);
+        //controlPanel1.add(indexMAStatusButton);
         //controlPanel1.add(overnightButton);
         controlPanel1.add(musicPlayableButton);
         //controlPanel1.add(inventoryTraderButton);
-        controlPanel1.add(percTraderButton);
+        //controlPanel1.add(percTraderButton);
         //controlPanel1.add(dayTraderButton);
         //controlPanel1.add(pdTraderButton);
         //controlPanel1.add(trimDeltaButton);
@@ -764,19 +764,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             percentileMATrader(ldt, price, pmChgY);
         }
 
-//        if (pmChgY < 0) {
-//            //slowCoverTrader(ldt, price);
-//            if (maxAfterMin && maxAbovePrev) {
-//                //slowCoverTrader(ldt, price);
-//                //fastCoverTrader(ldt, price);
-//            }
-//        } else if (pmChgY > 0) {
+        if (pmChgY < 0) {
+            //slowCoverTrader(ldt, price);
+            if (maxAfterMin && maxAbovePrev) {
+                //slowCoverTrader(ldt, price);
+                //fastCoverTrader(ldt, price);
+            }
+        } else if (pmChgY > 0) {
 //            if (!(maxAfterMin && maxAbovePrev)) {
 //                amHedgeTrader(ldt, price);
 //            } else {
 //                percentileTrader(ldt, price);
 //            }
-//        }
+        }
+
         overnightTrader(ldt, price);
     }
 
@@ -927,132 +928,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static double getBullishTarget() {
-        double target;
-        LocalTime lt = LocalTime.now();
-        if (lt.isBefore(LocalTime.of(9, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
-            return 300000;
-        }
-
-        if (futureAMSession().test(lt)) {
-            target = BULLISH_DELTA_TARGET / 2;
-        } else if (futurePMSession().test(lt)) {
-            target = (sentiment == MASentiment.Bullish ? BULLISH_DELTA_TARGET : BULLISH_DELTA_TARGET / 2);
-        } else {
-            target = BULLISH_DELTA_TARGET / 2;
-        }
-
-        if ((LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY)) {
-            return target / 2;
-        } else if (LocalDate.now().getDayOfWeek() == DayOfWeek.TUESDAY) {
-            return target * 2;
-        }
-        return target + (_20DayMA == MASentiment.Bearish ? -500000 : 0);
+        return 1000000;
     }
 
     private static double getBearishTarget() {
-        double target;
-        LocalTime lt = LocalTime.now();
-        if (lt.isBefore(LocalTime.of(9, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
-            return -100000;
-        }
-
-        if (futurePMSession().test(lt)) {
-            target = BULLISH_DELTA_TARGET / 4;
-        } else {
-            target = sentiment == MASentiment.Bearish ? BEARISH_DELTA_TARGET : 0.0;
-        }
-
-        if (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) {
-            return target / 2;
-        } else if (LocalDate.now().getDayOfWeek() == DayOfWeek.TUESDAY) {
-            return Math.max(0.0, target * 2);
-        }
-        return target + (_20DayMA == MASentiment.Bearish ? -500000 : 0);
+        return -1000000;
     }
 
     private static double getDeltaHighLimit() {
-        double limit;
-        if (futureAMSession().test(LocalTime.now())) {
-            limit = DELTA_HIGH_LIMIT / 2;
-        } else {
-            limit = sentiment == MASentiment.Bullish ? DELTA_HIGH_LIMIT : 0.0;
-        }
-        if (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) {
-            return limit / 2;
-        } else if (LocalDate.now().getDayOfWeek() == DayOfWeek.TUESDAY) {
-            return limit * 2;
-        }
-        return limit;
+        return 1000000;
     }
 
     private static double getDeltaLowLimit() {
-        double limit;
-        if (futurePMSession().test(LocalTime.now())) {
-            limit = 0;
-        } else {
-            limit = sentiment == MASentiment.Bearish ? DELTA_LOW_LIMIT : 0.0;
-        }
-        if (LocalDate.now().getDayOfWeek() == DayOfWeek.FRIDAY) {
-            return limit / 2;
-        } else if (LocalDate.now().getDayOfWeek() == DayOfWeek.TUESDAY) {
-            return Math.max(0.0, limit * 2);
-        }
-        return limit;
+        return -1000000;
     }
-
-//    private static void maTradeAnalysis() {
-//        LocalDateTime now = LocalDateTime.now();
-//        LocalDateTime sessionBeginLDT = sessionOpenT();
-//        maIdeasSet = new TreeSet<>(Comparator.comparing(MAIdea::getIdeaTime));
-//
-//        NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
-//        if (price5.size() <= 1) return;
-//
-//        NavigableMap<LocalDateTime, Double> sma = XuTraderHelper.getMAGen(price5, shortMAPeriod);
-//        double lastPrice = price5.lastEntry().getValue().getClose();
-//        double pd = getPD(lastPrice);
-//
-//        sma.forEach((lt, ma) -> {
-//            if (lt.isAfter(sessionBeginLDT) && !lt.equals(price5.firstKey()) && price5.containsKey(lt)) {
-//                SimpleBar sb = price5.get(lt);
-//                SimpleBar sbPrevious = price5.lowerEntry(lt).getValue();
-//                if (bullishTouchMet(sbPrevious, sb, ma)) {
-//                    maIdeasSet.add(new MAIdea(lt, ma, +1,
-//                            str("prev, last, ma ", sbPrevious.getOpen(), sbPrevious.getClose(), sb.getOpen(), r(ma))));
-//                } else if (bearishTouchMet(sbPrevious, sb, ma)) {
-//                    maIdeasSet.add(new MAIdea(lt, ma, -1,
-//                            str("prev, last, ma ", sbPrevious.getOpen(), sbPrevious.getClose(), sb.getOpen(), r(ma))));
-//                }
-//            }
-//        });
-//
-//        // make up for the last UNCON_MA trade wihch was missing due to in restriction period
-//        if (maIdeasSet.size() > 0) {
-//            if (maIdeasSet.last().getIdeaTime().isAfter(lastMAOrderTime)
-//                    && now.isAfter(lastMAOrderTime.plusMinutes(timeBtwnMAOrders))
-//                    && maIdeasSet.last().getIdeaTime().isAfter(lastTradeTime)) {
-//
-//                MAIdea lastIdea = maIdeasSet.last();
-//                //outputToAutoLog(str(now, "MAKE UP TRADE ", lastIdea));
-//                if (lastIdea.getIdeaSize() > 0 && canLongGlobal.get() && pd < PD_UP_THRESH) {
-//                    Order o = placeBidLimit(roundToXUPricePassive(lastIdea.getIdeaPrice(), Direction.Long), 1);
-//                    //apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
-////                    outputOrderToAutoLog(str(now, " MakeUp BUY || BIDDING @ ", o.toString(), "SMA",
-////                            lastIdea));
-//                    //maOrderMap.put(now, o);
-//                    //maSignals.incrementAndGet();
-//                    //lastMAOrderTime = now;
-//                } else if (lastIdea.getIdeaSize() < 0 && canShortGlobal.get() && pd > PD_DOWN_THRESH) {
-//                    Order o = placeOfferLimit(roundToXUPricePassive(lastIdea.getIdeaPrice(), Direction.Short), 1);
-//                    //apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler());
-////                    outputOrderToAutoLog(str(now, " MakeUp SELL || OFFERING @ ", o.toString(), "SMA", lastIdea));
-//                    //maOrderMap.put(now, o);
-//                    //maSignals.incrementAndGet();
-//                    //lastMAOrderTime = now;
-//                }
-//            }
-//        }
-//    }
 
     public XUTrader getThis() {
         return this;
@@ -1579,8 +1468,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (futureAMSession().test(LocalTime.now()) || futurePMSession().test(LocalTime.now())) return;
         double currDelta = getNetPtfDelta();
 
-        LocalDate TDate = checkTimeRangeBool(lt, 0, 0, 5, 0) ?
-                nowMilli.toLocalDate().minusDays(1L) : nowMilli.toLocalDate();
+        LocalDate TDate = getTradeDate(nowMilli);
 
         double indexPrice = (priceMapBar.containsKey(FTSE_INDEX) &&
                 priceMapBar.get(FTSE_INDEX).size() > 0) ?
