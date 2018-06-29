@@ -579,6 +579,11 @@ public class XuTraderHelper {
         return t.isAfter(LocalTime.of(15, 0)) || t.isBefore(LocalTime.of(9, 0));
     }
 
+    static boolean isStockNoonBreak(LocalTime t) {
+        return t.isAfter(LocalTime.of(11, 29)) && t.isBefore(LocalTime.of(13, 0));
+    }
+
+
     static LocalDate getTradeDate(LocalDateTime ldt) {
         if (checkTimeRangeBool(ldt.toLocalTime(), 0, 0, 5, 0)) {
             return ldt.toLocalDate().minusDays(1);
