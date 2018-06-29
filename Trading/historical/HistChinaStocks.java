@@ -252,8 +252,8 @@ public class HistChinaStocks extends JPanel {
                         comp.setBackground(Color.GREEN);
 
                         if (chinaTradeMap.containsKey(selectedStock)) {
-                            chinaTradeMap.get(selectedStock).forEach((k, v) ->
-                                    pr(" printing selected ", k, v));
+//                            chinaTradeMap.get(selectedStock).forEach((k, v) ->
+//                                    pr(" printing selected ", k, v));
                         }
 
 //                        if (selectedStock.equals("SGXA50")) {
@@ -671,11 +671,12 @@ public class HistChinaStocks extends JPanel {
         getTodayDataButton.addActionListener(al -> {
             CompletableFuture.runAsync(() -> {
                 for (String s : chinaWtd.keySet()) {
-                    if (priceMapBar.containsKey(s) && priceMapBar.get(s).size() > 0) {
+                    if (!s.equals("SGXA50PR") && priceMapBar.containsKey(s) && priceMapBar.get(s).size() > 0) {
                         NavigableMap<LocalDateTime, SimpleBar> wtdNew = mergeMaps(chinaWtd.get(s),
                                 Utility.priceMapToLDT(map1mTo5m(priceMapBar.get(s)), ChinaMain.currentTradingDate));
                         chinaWtd.put(s, wtdNew);
-                        NavigableMap<LocalDate, SimpleBar> ytdNew = mergeMapGen(chinaYtd.get(s), reduceMapToBar(priceMapBar.get(s), ChinaMain.currentTradingDate));
+                        NavigableMap<LocalDate, SimpleBar> ytdNew = mergeMapGen(chinaYtd.get(s),
+                                reduceMapToBar(priceMapBar.get(s), ChinaMain.currentTradingDate));
                         chinaYtd.put(s, ytdNew);
                     }
                 }
@@ -800,9 +801,7 @@ public class HistChinaStocks extends JPanel {
 
     private static void handleIBWtdData(Contract c, String date,
                                         double open, double high, double low, double close, @SuppressWarnings("unused") int volume) {
-
         String ticker = ibContractToSymbol(c);
-
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);
             Calendar cal = Calendar.getInstance();
@@ -810,6 +809,8 @@ public class HistChinaStocks extends JPanel {
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
             LocalDateTime ldt = LocalDateTime.of(ld, lt);
+
+            pr(ticker, ldt, high, low, close);
 
             if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
                 if ((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))

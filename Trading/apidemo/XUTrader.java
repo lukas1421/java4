@@ -1260,14 +1260,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int shorterMA = 10;
         int longerMA = 20;
         int maSize = AGGRESSIVE_SIZE;
+        int tOrders = ORDER_WAIT_TIME;
 
         if (isOvernight(lt) || isStockNoonBreak(lt)) {
             anchorIndex = "Future";
             index = futData.get(ibContractToFutType(activeFuture));
+            maSize = CONSERVATIVE_SIZE;
+            tOrders  = 60;
         } else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
             shorterMA = 1;
             longerMA = 5;
-            maSize = 1;
+            maSize = CONSERVATIVE_SIZE;
         }
 
         checkCancelTrades(PERC_MA, nowMilli, ORDER_WAIT_TIME * 2);
@@ -1307,7 +1310,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
 
-        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME) {
+        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tOrders) {
             if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && _2dayPerc < DOWN_PERC_WIDE
                     && pmPercChg < 0 && currDelta + maSize * freshPrice * fx < getBullishTarget()) {
                 int id = autoTradeID.incrementAndGet();

@@ -1,7 +1,6 @@
 package graph;
 
 import apidemo.ChinaStock;
-import apidemo.ChinaStockHelper;
 import apidemo.TradingConstants;
 import auxiliary.SimpleBar;
 
@@ -190,7 +189,7 @@ public class GraphIndustry extends JComponent {
 
                             CompletableFuture.supplyAsync(()
                                     -> m.entrySet().stream().sorted(LAST_ENTRY_COMPARATOR.reversed())
-                                    .collect(Collectors.toMap(Entry::getKey,
+                                    .collect(Collectors.toMap(Map.Entry::getKey,
                                             e -> Optional.ofNullable(e.getValue().lastEntry()).map(Entry::getValue).orElse(0.0),
                                             (a, b) -> a, LinkedHashMap::new)))
                                     .thenAcceptAsync(sm -> {
@@ -271,11 +270,10 @@ public class GraphIndustry extends JComponent {
 
             String topRiser = getTopStockForRiser(indusName);
 
-            String msg = str(" break high ", indusName, lastKey, "top riser:", topRiser, ChinaStock.nameMap.get(topRiser));
-
-            if (lastHigh > prevHigh) {
-                ChinaStockHelper.createDialogJD(indusName, msg, lastKey);
-            }
+            //String msg = str(" break high ", indusName, lastKey, "top riser:", topRiser, ChinaStock.nameMap.get(topRiser));
+//            if (lastHigh > prevHigh) {
+//                ChinaStockHelper.createDialogJD(indusName, msg, lastKey);
+//            }
         });
     }
 
