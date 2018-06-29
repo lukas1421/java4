@@ -1443,7 +1443,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "||index: ", Math.round(100d * indexPrice) / 100d,
                 "||BID ASK ", bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
                 askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
-                "pmchy", pmPercChg);
+                "pmPercChg", pmPercChg);
 
         outputToAutoLog(outputString);
         requestOvernightExecHistory();
