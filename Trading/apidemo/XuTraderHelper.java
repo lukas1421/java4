@@ -558,16 +558,13 @@ public class XuTraderHelper {
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
 
             double prevMin = data.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(d))
-                    .filter(e -> e.getKey().toLocalTime().isAfter(LocalTime.of(9, 29))
-                            && e.getKey().toLocalTime().isBefore(LocalTime.of(15, 0)))
+                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(e -> e.getValue().getLow()).orElse(0.0);
 
-            double prevClose = data.floorEntry(LocalDateTime.of(d, LocalTime.of(15, 0)))
-                    .getValue().getClose();
+            double prevClose = data.floorEntry(LocalDateTime.of(d, LocalTime.of(15, 0))).getValue().getClose();
 
-            double pmOpen = data.floorEntry(LocalDateTime.of(d, LocalTime.of(13, 0)))
-                    .getValue().getOpen();
+            double pmOpen = data.floorEntry(LocalDateTime.of(d, LocalTime.of(13, 0))).getValue().getOpen();
 
             if (prevMax == 0.0 || prevMin == 0.0 || prevClose == 0.0 || pmOpen == 0.0) {
                 return 0;
@@ -576,6 +573,17 @@ public class XuTraderHelper {
                 return (int) Math.round(100d * (prevClose - pmOpen) / (prevMax - prevMin));
             }
         }
+    }
+
+    static boolean isOvernight(LocalTime t) {
+        return t.isAfter(LocalTime.of(15, 0)) || t.isBefore(LocalTime.of(9, 0));
+    }
+
+    static LocalDate getTradeDate(LocalDateTime ldt) {
+        if (checkTimeRangeBool(ldt.toLocalTime(), 0, 0, 5, 0)) {
+            return ldt.toLocalDate().minusDays(1);
+        }
+        return ldt.toLocalDate();
     }
 
     static class XUConnectionHandler implements ApiController.IConnectionHandler {

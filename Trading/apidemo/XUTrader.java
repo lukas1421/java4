@@ -88,14 +88,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //    private static final int MA60 = 60;
 //    private static final int MA80 = 80;
 
-    public static volatile int _1_min_ma_short = 5;
+    public static volatile int _1_min_ma_short = 10;
     public static volatile int _1_min_ma_long = 20;
     public static volatile int _5_min_ma_short = 5;
     public static volatile int _5_min_ma_long = 10;
 
     //size
     public static final int CONSERVATIVE_SIZE = 1;
-    public static final int AGGRESSIVE_SIZE = 2;
+    public static final int AGGRESSIVE_SIZE = 3;
 
 
     //perc trader
@@ -744,7 +744,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double currDelta = getNetPtfDelta();
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
         boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000016);
-        int pmChgY = getPercentileChgYFut();
+        NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
+        int pmChgY = getPercentileChgFut(futdata, futdata.firstKey().toLocalDate());
+        int pmChg = getPercentileChgFut(futdata, getTradeDate(futdata.lastKey()));
 
         if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
             pr(" curr delta is outside range ");
@@ -756,16 +758,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     "maxAfterMin: ", maxAfterMin, "maxAbovePrev", maxAbovePrev,
                     "pmchgy", pmChgY, "delta range ", getBearishTarget(), getBullishTarget());
         }
-
-        //unconditionalMATrader(ldt, price);
-        //XUTrader.updateLastMinuteMap(ldt, price);
-
-        //if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
-        percentileMATrader(ldt, price, pmChgY);
-        //}
-
-        //lastHourMATrader(ldt, price, pmChgY);
-
+        if (isOvernight(ldt.toLocalTime())) {
+            percentileMATrader(ldt, price, pmChg);
+        } else {
+            percentileMATrader(ldt, price, pmChgY);
+        }
 
 //        if (pmChgY < 0) {
 //            //slowCoverTrader(ldt, price);
@@ -782,7 +779,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 //        }
         overnightTrader(ldt, price);
     }
-
 
     private static void amHedgeTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
@@ -874,6 +870,37 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     .getValue().getClose();
 
             double pmOpen = futdata.floorEntry(LocalDateTime.of(prevDate, LocalTime.of(13, 0)))
+                    .getValue().getOpen();
+
+            if (prevMax == 0.0 || prevMin == 0.0 || prevClose == 0.0 || pmOpen == 0.0) {
+                return 0;
+            } else {
+                return (int) Math.round(100d * (prevClose - pmOpen) / (prevMax - prevMin));
+            }
+        }
+    }
+
+    private static int getPercentileChgFut(NavigableMap<LocalDateTime, SimpleBar> futdata, LocalDate dt) {
+        //NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
+        if (futdata.size() <= 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
+            return 0;
+        } else {
+            //LocalDate prevDate = futdata.firstKey().toLocalDate();
+
+            double prevMax = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
+                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
+                    .map(e -> e.getValue().getHigh()).orElse(0.0);
+
+            double prevMin = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
+                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
+                    .map(e -> e.getValue().getLow()).orElse(0.0);
+
+            double prevClose = futdata.floorEntry(LocalDateTime.of(dt, LocalTime.of(15, 0)))
+                    .getValue().getClose();
+
+            double pmOpen = futdata.floorEntry(LocalDateTime.of(dt, LocalTime.of(13, 0)))
                     .getValue().getOpen();
 
             if (prevMax == 0.0 || prevMin == 0.0 || prevClose == 0.0 || pmOpen == 0.0) {
@@ -1496,8 +1523,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     private static synchronized void unconditionalMATrader(LocalDateTime nowMilli, double freshPrice) {
         NavigableMap<LocalDateTime, SimpleBar> price1 = convertToLDT(priceMapBar.get(FTSE_INDEX),
-                nowMilli.toLocalDate(),
-                e -> !checkTimeRangeBool(e, 11, 30, 12, 59));
+                nowMilli.toLocalDate(), e -> !checkTimeRangeBool(e, 11, 30, 12, 59));
         //futData.get(ibContractToFutType(activeFuture));
         LocalTime lt = nowMilli.toLocalTime();
         if (checkTimeRangeBool(lt, 11, 29, 13, 0)) {
