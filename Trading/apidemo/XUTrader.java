@@ -746,6 +746,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000016);
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
         int pmChgY = getPercentileChgFut(futdata, futdata.firstKey().toLocalDate());
+        int closePercY = getClosingPercentile(futdata, futdata.firstKey().toLocalDate());
+        int openPercY = getOpenPercentile(futdata, futdata.firstKey().toLocalDate());
         int pmChg = getPercentileChgFut(futdata, getTradeDate(futdata.lastKey()));
 
         if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
@@ -764,10 +766,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             percentileMATrader(ldt, price, pmChgY);
         }
 
-        if (pmChgY < 0) {
+        if (pmChgY < 0 && closePercY < 20 && openPercY < 50) {
             //slowCoverTrader(ldt, price);
             if (maxAfterMin && maxAbovePrev) {
-                //slowCoverTrader(ldt, price);
+                slowCoverTrader(ldt, price);
                 //fastCoverTrader(ldt, price);
             }
         } else if (pmChgY > 0) {
@@ -882,12 +884,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static int getPercentileChgFut(NavigableMap<LocalDateTime, SimpleBar> futdata, LocalDate dt) {
-        //NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
         if (futdata.size() <= 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
             return 0;
         } else if (futdata.lastKey().isAfter(LocalDateTime.of(dt, LocalTime.of(13, 0)))) {
-            //LocalDate prevDate = futdata.firstKey().toLocalDate();
-
             double prevMax = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
                     .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
@@ -908,6 +907,58 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 return 0;
             } else {
                 return (int) Math.round(100d * (prevClose - pmOpen) / (prevMax - prevMin));
+            }
+        }
+        return 0;
+    }
+
+    private static int getClosingPercentile(NavigableMap<LocalDateTime, SimpleBar> futdata, LocalDate dt) {
+        if (futdata.size() <= 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
+            return 0;
+        } else if (futdata.lastKey().isAfter(LocalDateTime.of(dt, LocalTime.of(13, 0)))) {
+
+            double prevMax = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
+                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
+                    .map(e -> e.getValue().getHigh()).orElse(0.0);
+
+            double prevMin = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
+                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
+                    .map(e -> e.getValue().getLow()).orElse(0.0);
+
+            double prevClose = futdata.floorEntry(LocalDateTime.of(dt, LocalTime.of(15, 0)))
+                    .getValue().getClose();
+            if (prevMax == 0.0 || prevMin == 0.0 || prevClose == 0.0) {
+                return 0;
+            } else {
+                return (int) Math.round(100d * (prevClose - prevMin) / (prevMax - prevMin));
+            }
+        }
+        return 0;
+    }
+
+    private static int getOpenPercentile(NavigableMap<LocalDateTime, SimpleBar> futdata, LocalDate dt) {
+        if (futdata.size() <= 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
+            return 0;
+        } else if (futdata.firstKey().isBefore(LocalDateTime.of(dt, LocalTime.of(9, 31)))) {
+            double prevOpen = futdata.ceilingEntry(LocalDateTime.of(dt, LocalTime.of(9, 30)))
+                    .getValue().getOpen();
+
+            double prevMax = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
+                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
+                    .map(e -> e.getValue().getHigh()).orElse(0.0);
+
+            double prevMin = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
+                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
+                    .map(e -> e.getValue().getLow()).orElse(0.0);
+
+            if (prevMax == 0.0 || prevMin == 0.0 || prevOpen == 0.0) {
+                return 0;
+            } else {
+                return (int) Math.round(100d * (prevOpen - prevMin) / (prevMax - prevMin));
             }
         }
         return 0;
@@ -1054,13 +1105,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     private static synchronized void slowCoverTrader(LocalDateTime nowMilli, double freshPrice) {
         checkCancelTrades(SLOW_COVER, nowMilli, ORDER_WAIT_TIME);
-
         LocalTime lt = nowMilli.toLocalTime();
         double currDelta = getNetPtfDelta();
         double futDelta = getFutDelta();
-        //int size = getSizeForDelta(freshPrice, fxMap.get("USD"), futDelta / 4);
 
-        if (!(lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(15, 0)))) {
+        if (!(checkTimeRangeBool(lt, 9, 29, 15, 0))) {
             pr(" day trader: not in time range, return ", nowMilli.toLocalTime());
             return;
         }
@@ -1075,13 +1124,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         pr(" slow cover trader: ", "last order time ", lastSlowCoverTime, "p% ", perc);
 
-        if (MINUTES.between(lastSlowCoverTime, nowMilli) >= ORDER_WAIT_TIME / 3) {
-            if (perc < DOWN_PERC && currDelta < DELTA_HARD_HI_LIMIT) {
+        if (MINUTES.between(lastSlowCoverTime, nowMilli) >= ORDER_WAIT_TIME) {
+            if (perc < DOWN_PERC && currDelta < getBullishTarget()) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, 1);
+                Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.SLOW_COVER));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "day cover", globalIdOrderMap.get(id), " todayP% ", perc));
+                outputOrderToAutoLog(str(o.orderId(), "slow cover", globalIdOrderMap.get(id), " todayP% ", perc));
             }
         }
     }
