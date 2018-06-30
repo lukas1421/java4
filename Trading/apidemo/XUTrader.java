@@ -1106,8 +1106,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static synchronized void slowCoverTrader(LocalDateTime nowMilli, double freshPrice) {
         checkCancelTrades(SLOW_COVER, nowMilli, ORDER_WAIT_TIME);
         LocalTime lt = nowMilli.toLocalTime();
-        double currDelta = getNetPtfDelta();
-        double futDelta = getFutDelta();
 
         if (!(checkTimeRangeBool(lt, 9, 29, 15, 0))) {
             pr(" day trader: not in time range, return ", nowMilli.toLocalTime());
@@ -1115,7 +1113,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
-        int perc = getPercentileForLast(futdata);
+        LocalDate tDate = getTradeDate(nowMilli);
+        int perc = getPercentileForLastPred(futdata, e -> e.getKey().toLocalDate().equals(tDate));
         LocalDateTime lastSlowCoverTime = getLastOrderTime(SLOW_COVER);
 
         if (futdata.size() < 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
@@ -1125,7 +1124,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         pr(" slow cover trader: ", "last order time ", lastSlowCoverTime, "p% ", perc);
 
         if (MINUTES.between(lastSlowCoverTime, nowMilli) >= ORDER_WAIT_TIME) {
-            if (perc < DOWN_PERC && currDelta < getBullishTarget()) {
+            if (perc < DOWN_PERC) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.SLOW_COVER));
@@ -1134,7 +1133,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
     }
-
 
     /**
      * percentileTrader
