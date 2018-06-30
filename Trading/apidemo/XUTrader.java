@@ -1098,7 +1098,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     /**
-     * slow cover trader (unconditional, not like UNCON_MA)
+     * slow cover trader (unconditional, not like MA)
      *
      * @param nowMilli   time now
      * @param freshPrice price now
@@ -1224,40 +1224,37 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //********************************************z*********************************************//
         if (timeDiffinMinutes(lastPercOrderT, nowMilli) >= minBetweenPercOrders) {
             if (perc < DOWN_PERC) {
-                if (currDelta < getBullishTarget()) {
-                    int id = autoTradeID.incrementAndGet();
-                    int buySize = 1;
-                    if (buySize > 0) {
-                        Order o = placeBidLimit(freshPrice, buySize);
-                        globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid", PERC_ACC));
-                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                        outputOrderToAutoLog(str(o.orderId(), "perc bid",
-                                globalIdOrderMap.get(id), " perc ", perc));
-                    } else {
-                        pr("perc buy size not tradable " + buySize);
-                    }
+                int id = autoTradeID.incrementAndGet();
+                int buySize = 1;
+                if (buySize > 0) {
+                    Order o = placeBidLimit(freshPrice, buySize);
+                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid", PERC_ACC));
+                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                    outputOrderToAutoLog(str(o.orderId(), "perc bid",
+                            globalIdOrderMap.get(id), " perc ", perc));
                 } else {
-                    pr(" perc: delta above bullish target ");
+                    pr("perc buy size not tradable " + buySize);
                 }
-            } else if (perc > UP_PERC) {
-                if (currDelta > getBearishTarget()) {
-                    int id = autoTradeID.incrementAndGet();
-                    int sellSize = 1;
-                    if (sellSize > 0) {
-                        Order o = placeOfferLimit(freshPrice, sellSize);
-                        globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer",
-                                AutoOrderType.PERC_DECC));
-                        apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                        outputOrderToAutoLog(str(o.orderId(), "perc offer", globalIdOrderMap.get(id), "perc", perc));
-                    } else {
-                        pr("perc sell size not tradable " + sellSize);
-                    }
-                } else {
-                    pr("perc: delta below bearish target ");
-                }
+            } else {
+                pr(" perc: delta above bullish target ");
             }
+        } else if (perc > UP_PERC) {
+            int id = autoTradeID.incrementAndGet();
+            int sellSize = 1;
+            if (sellSize > 0) {
+                Order o = placeOfferLimit(freshPrice, sellSize);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer",
+                        AutoOrderType.PERC_DECC));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "perc offer", globalIdOrderMap.get(id), "perc", perc));
+            } else {
+                pr("perc sell size not tradable " + sellSize);
+            }
+        } else {
+            pr("perc: delta below bearish target ");
         }
     }
+
 
     /**
      * only cover if first 10 maxT> first 10 minT
