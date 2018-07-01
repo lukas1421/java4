@@ -1202,7 +1202,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         int minBetweenPercOrders = percOrdersTotal == 0 ? 0 : 10;
-        double currDelta = getNetPtfDelta();
 
         if (detailedPrint.get()) {
             pr("perc Trader status?", percentileTradeOn.get() ? "ON" : "OFF",
@@ -1275,7 +1274,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             Order o = placeBidLimit(freshPrice, size); //Math.min(size, MAX_FUT_LIMIT)
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FAST_COVER));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            outputOrderToAutoLog(str(o.orderId(), "cover short follow PMY<0, p%", indexTPerc,
+            outputOrderToAutoLog(str(o.orderId(), "cover short follow PMY < 0, p%", indexTPerc,
                     globalIdOrderMap.get(id)));
         }
     }
