@@ -59,7 +59,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
     private static volatile MASentiment sentiment = MASentiment.Directionless;
-    static final int MAX_FUT_LIMIT = 20;
+    //static final int MAX_FUT_LIMIT = 20;
     static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
     static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
     static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
@@ -71,18 +71,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //flatten drift trader
     private static final double FLATTEN_THRESH = 200000.0;
+    public static volatile Eagerness flattenEagerness = Eagerness.Passive;
+
+
     private static final int ORDER_WAIT_TIME = 15;
 
     private static final double DELTA_HARD_HI_LIMIT = 1000000.0;
     private static final double DELTA_HARD_LO_LIMIT = -1000000.0;
-    public static volatile Eagerness flattenEagerness = Eagerness.Passive;
-
-    //UNCON_MA periods
-//    private static final int MA5 = 5;
-//    private static final int MA10 = 10;
-//    private static final int MA20 = 20;
-//    private static final int MA60 = 60;
-//    private static final int MA80 = 80;
 
     public static volatile int _1_min_ma_short = 10;
     public static volatile int _1_min_ma_long = 20;
@@ -1668,7 +1663,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 double q = e.getValue().getOrder().totalQuantity();
                 double limit = e.getValue().getOrder().lmtPrice();
 
-                if (q > 0 && pdPerc > 70 && freshPrice > limit && pd > 0.0) {
+                if (q > 0 && pdPerc > UP_PERC_WIDE && freshPrice > limit && pd > 0.0) {
                     try {
                         pdSemaphore.acquire();
                     } catch (InterruptedException e1) {
@@ -1680,7 +1675,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     globalIdOrderMap.put(idSellClose, new OrderAugmented(nowMilli, sellO, PD_CLOSE));
                     outputOrderToAutoLog(str(sellO.orderId(), LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
                             , " PD sell Close ", globalIdOrderMap.get(idSellClose)));
-                } else if (q < 0 && pdPerc < 30 && freshPrice < limit && pd < 0.0) {
+                } else if (q < 0 && pdPerc < DOWN_PERC_WIDE && freshPrice < limit && pd < 0.0) {
                     try {
                         pdSemaphore.acquire();
                     } catch (InterruptedException e1) {
@@ -1791,7 +1786,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             double candidatePrice = (flattenEagerness == Eagerness.Passive) ? freshPrice :
                     bidMap.get(ibContractToFutType(activeFuture));
 
-            Order o = placeOfferLimitTIF(candidatePrice, 1, Types.TimeInForce.IOC);
+            Order o = placeOfferLimitTIF(candidatePrice, CONSERVATIVE_SIZE, Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Sell", FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Sell Flatten ", globalIdOrderMap.get(id)));
@@ -1802,7 +1797,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             double candidatePrice = (flattenEagerness == Eagerness.Passive) ? freshPrice :
                     askMap.get(ibContractToFutType(activeFuture));
 
-            Order o = placeBidLimitTIF(candidatePrice, 1, Types.TimeInForce.IOC);
+            Order o = placeBidLimitTIF(candidatePrice, CONSERVATIVE_SIZE, Types.TimeInForce.IOC);
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "BUY", FLATTEN));
             outputOrderToAutoLog(str(o.orderId(), " Buy Flatten ", globalIdOrderMap.get(id)));
@@ -1917,11 +1912,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double currDelta = getNetPtfDelta();
 
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
-
-        if (Math.abs(currPos) > MAX_FUT_LIMIT) {
-            pr(" quitting inventory trade, pos:", currPos, ": exceeding fut limit ");
-            return;
-        }
 
         if (currDelta > getBullishTarget() || currDelta < getBearishTarget()) {
             pr(" quitting inventory trade", r(currDelta), ": exceeding Delta limit ");
