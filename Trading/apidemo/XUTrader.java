@@ -1813,7 +1813,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
         int currPos = currentPosMap.getOrDefault(ibContractToFutType(activeFuture), 0);
-        setLongShortTradability(currPos);
+        //setLongShortTradability(currPos);
 
         int default_sec_btwn_fast_orders = nowMilli.toLocalTime().isBefore(LocalTime.of(9, 40)) ? 5 : 10;
         NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
@@ -1851,7 +1851,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (prevPrice < maLast && freshPrice >= maLast && canLongGlobal.get() && pd < PD_UP_THRESH) {
                 candidatePrice = roundToXUPriceVeryPassive(maLast, Direction.Long, numOrdersThisSession);
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
-                    Order o = placeBidLimit(candidatePrice, trimProposedPosition(1, currPos));
+                    Order o = placeBidLimit(candidatePrice, CONSERVATIVE_SIZE);
                     int id = autoTradeID.incrementAndGet();
                     globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Fast Trade Bid", FAST));
                     apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
@@ -1874,7 +1874,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (prevPrice > maLast && freshPrice <= maLast && canShortGlobal.get() && pd > PD_DOWN_THRESH) {
                 candidatePrice = roundToXUPriceVeryPassive(maLast, Direction.Short, numOrdersThisSession);
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
-                    Order o = placeOfferLimit(candidatePrice, trimProposedPosition(1, currPos));
+                    Order o = placeOfferLimit(candidatePrice, CONSERVATIVE_SIZE);
                     int id = autoTradeID.incrementAndGet();
                     globalIdOrderMap.put(id, new OrderAugmented(nowMilli.truncatedTo(MINUTES), o,
                             "Fast Trade Offer", FAST));
