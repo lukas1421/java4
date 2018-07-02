@@ -55,7 +55,7 @@ final class ChinaIndex extends JPanel {
     private static volatile GraphBigIndex gYtd = new GraphBigIndex();
     private static volatile AtomicBoolean LINKALL = new AtomicBoolean(false);
 
-//    static Map<String, Double> amMin = new ConcurrentHashMap<>();
+    //    static Map<String, Double> amMin = new ConcurrentHashMap<>();
 //    static Map<String, Double> amMax = new ConcurrentHashMap<>();
     private static Map<String, LocalTime> amMaxTMap = new ConcurrentHashMap<>();
     private static Map<String, LocalTime> pmMinTMap = new ConcurrentHashMap<>();
@@ -239,7 +239,8 @@ final class ChinaIndex extends JPanel {
                     hoMap.put(name, max / open - 1);
                     ddMap.put(name, last / max - 1);
                     hoddrMap.put(name, ((max / open) - (last / max)) / (max / min - 1));
-                    sizeMap.put(name, sizeTotalMap.get(name).lastEntry().getValue());
+                    sizeMap.put(name, (sizeTotalMap.containsKey(name) && sizeTotalMap.get(name).size() > 0
+                    ) ? sizeTotalMap.get(name).lastEntry().getValue() : 0.0);
                     vrMap.put(name, ChinaSizeRatio.computeSizeRatioLast(name));
                     vrPMap.put(name, getVRPercentile(name));
                     pricePercentileMap.put(name, (int) round(100 * (last - min) / (max - min)));
@@ -338,7 +339,7 @@ final class ChinaIndex extends JPanel {
     private static void computeFTSEKiyodo() {
         if (SinaStock.rtn != 0.0) {
             ftseKiyodoMap = weightMapA50.entrySet().stream().collect(
-                    Collectors.groupingBy(e -> ChinaStock.shortIndustryMap.getOrDefault(e.getKey(),"noExist"),
+                    Collectors.groupingBy(e -> ChinaStock.shortIndustryMap.getOrDefault(e.getKey(), "noExist"),
                             Collectors.summingDouble(e -> e.getValue() * ChinaStock.returnMap.getOrDefault(e.getKey(), 0.0) / SinaStock.rtn)));
         }
     }
@@ -346,11 +347,12 @@ final class ChinaIndex extends JPanel {
     private static void computeFTSESumWeight() {
         ftseSectorSumWeightMap = weightMapA50.entrySet().stream()
                 .collect(Collectors.groupingBy(e -> {
-                    if(ChinaStock.shortIndustryMap.containsKey(e.getKey())) {
+                    if (ChinaStock.shortIndustryMap.containsKey(e.getKey())) {
                         return ChinaStock.shortIndustryMap.get(e.getKey());
                     } else {
                         throw new IllegalArgumentException(" no short industry for " + e.getKey());
-                    }},Collectors.summingDouble(Entry::getValue)));
+                    }
+                }, Collectors.summingDouble(Entry::getValue)));
     }
 
     private static void computeFTSESectorWeightedReturn() {

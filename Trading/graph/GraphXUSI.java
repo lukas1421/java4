@@ -196,9 +196,13 @@ public class GraphXUSI extends JComponent {
 
     static double getXUIndexReturn() {
         if (prevCloseSI != 0.0 && openSI != 0.0 && sina.size() > 0) {
-            return Math.round(10000d * (sina.lastEntry().getValue() / (prevCloseSI != 0.0 ? prevCloseSI : openSI) - 1)) / 100d;
+            return Math.round(10000d * (sina.lastEntry().getValue() / (openSI != 0.0 ? openSI : prevCloseSI) - 1)) / 100d;
         }
         return 0.0;
+    }
+
+    static double getXUIndexLastClose() {
+        return openSI != 0.0 ? openSI : prevCloseSI;
     }
 
     /**

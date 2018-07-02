@@ -165,7 +165,6 @@ public final class ChinaStockHelper {
     static void fillHolesInData(Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp, LocalTime startTime) {
         symbolNames.forEach(name -> {
             try {
-
                 NavigableMap<LocalTime, SimpleBar> tm = mp.get(name);
                 if (LocalTime.now().isAfter(LocalTime.of(15, 0))) {
                     if (!tm.containsKey(LocalTime.of(15, 0)) || tm.get(LocalTime.of(15, 0)).containsZero()) {

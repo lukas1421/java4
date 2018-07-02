@@ -992,6 +992,7 @@ public class ApiController implements EWrapper {
     }
 
     public void reqHoldingsTodayHist() {
+        pr(" request holdings today ");
         CompletableFuture.runAsync(() -> {
             AtomicInteger i = new AtomicInteger(0);
             for (String s : ChinaData.priceMapBar.keySet()) {
@@ -1013,11 +1014,11 @@ public class ApiController implements EWrapper {
                                 e.printStackTrace();
                             }
                         }
-                        req1StockHistToday(ticker, exch, "CNH", new HistoricalHandler.DefaultHistHandle());
+                        req1StockHistToday(ticker, exch, "CNH", new HistoricalHandler.TodayHistHandle());
                     } else if (s.startsWith("hk")) {
                         String ticker = s.substring(2);
                         pr(" req today hist ", ticker);
-                        req1StockHistToday(ticker, "SEHK", "HKD", new HistoricalHandler.DefaultHistHandle());
+                        req1StockHistToday(ticker, "SEHK", "HKD", new HistoricalHandler.TodayHistHandle());
                     }
                 }
             }
