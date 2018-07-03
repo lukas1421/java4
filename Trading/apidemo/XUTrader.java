@@ -1579,9 +1579,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double downDelta = DELTA_HARD_LO_LIMIT;
 
         if (pmChg >= 0) {
-            upDelta = DELTA_HARD_HI_LIMIT / 2;
+            upDelta = DELTA_HARD_HI_LIMIT / 4;
         } else {
-            downDelta = DELTA_HARD_LO_LIMIT / 2;
+            downDelta = DELTA_HARD_LO_LIMIT / 4;
         }
 
         double netDelta = getNetPtfDelta();
