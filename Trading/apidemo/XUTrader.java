@@ -734,7 +734,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        XUTrader.trimTrader(ldt, price);
 
         double currDelta = getNetPtfDelta();
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
@@ -744,6 +743,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int closePercY = getClosingPercentile(futdata, futdata.firstKey().toLocalDate());
         int openPercY = getOpenPercentile(futdata, futdata.firstKey().toLocalDate());
         int pmChg = getPercentileChgFut(futdata, getTradeDate(futdata.lastKey()));
+
+        XUTrader.trimTrader(ldt, price, pmChg);
 
         if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
             pr(" curr delta is outside range ");
@@ -1569,9 +1570,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice, int pmChg) {
         if (checkTimeRangeBool(nowMilli.toLocalTime(), 5, 0, 15, 0)) {
             return;
+        }
+
+        double upDelta = DELTA_HARD_HI_LIMIT;
+        double downDelta = DELTA_HARD_LO_LIMIT;
+
+        if (pmChg >= 0) {
+            upDelta = DELTA_HARD_HI_LIMIT / 2;
+        } else {
+            downDelta = DELTA_HARD_LO_LIMIT / 2;
         }
 
         double netDelta = getNetPtfDelta();
@@ -1579,19 +1589,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         checkCancelTrades(TRIM, nowMilli, ORDER_WAIT_TIME);
 
-        pr("trim trader delta/target", r(netDelta), getBullishTarget(), getBearishTarget(), "last order T ",
+        pr("trim trader delta/target", r(netDelta), upDelta, downDelta,
+                "pmChg ", pmChg, "last order T ",
                 lastTrimOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
                 , "next order T", lastTrimOrderT.plusMinutes(ORDER_WAIT_TIME)
                         .toLocalTime().truncatedTo(ChronoUnit.MINUTES));
 
         if (MINUTES.between(lastTrimOrderT, nowMilli) >= ORDER_WAIT_TIME) {
-            if (netDelta > DELTA_HARD_HI_LIMIT) {
+            if (netDelta > upDelta) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, TRIM));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "trim sell", globalIdOrderMap.get(id)));
-            } else if (netDelta < DELTA_HARD_LO_LIMIT) {
+            } else if (netDelta < downDelta) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, TRIM));
@@ -2421,7 +2432,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     + "HK Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isHKStock(e.getKey())))
                     + " China Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isChinaStock(e.getKey()))));
             updateLog(str("Curr:", percLast,
-                    "pmChgY:", pmChgY, "open:", openPercY, "close:", closePercY, "pmChg", pmChg));
+                    "pmChgY:", pmChgY, "openY:", openPercY, "closeY:", closePercY, "pmChg", pmChg));
             updateLog(" expiring delta " + getExpiringDelta());
         });
     }
