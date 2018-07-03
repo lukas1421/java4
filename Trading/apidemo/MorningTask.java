@@ -152,7 +152,7 @@ public final class MorningTask implements HistoricalHandler {
                     sb.append("\t");
 
                     while ((line = reader2.readLine()) != null) {
-                        pr("line is ", line);
+                        //pr("line is ", line);
                         Matcher matcher = p.matcher(line);
                         Matcher m2 = p2.matcher(line);
                         Matcher m3 = p3.matcher(line);

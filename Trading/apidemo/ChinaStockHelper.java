@@ -566,7 +566,7 @@ public final class ChinaStockHelper {
         buildA50Gen(open, ChinaData.priceMapBar, ChinaData.sizeTotalMap);
 
         ChinaData.tradeTimePure.forEach(t -> {
-            pr(" t " + t);
+            //pr(" t " + t);
             double rtn = weightMapA50.entrySet().stream().mapToDouble(e
                     -> (priceMapBar.get(e.getKey()).ceilingEntry(t).getValue().getClose()
                     / closeMap.getOrDefault(e.getKey(), priceMapBar.get(e.getKey()).firstEntry().getValue().getOpen()) - 1) * e.getValue() / 100).sum();
@@ -582,7 +582,7 @@ public final class ChinaStockHelper {
                 priceMapBar.get(FTSE_INDEX).put(t, new SimpleBar(open * (1 + rtn)));
             }
 
-            pr(" value " + priceMapBar.get(FTSE_INDEX).get(t).toString());
+            //pr(" ftse value " + priceMapBar.get(FTSE_INDEX).get(t).toString());
 
             double vol = weightMapA50.entrySet().stream().mapToDouble(a -> (ChinaData.sizeTotalMap
                     .containsKey(a.getKey()) && ChinaData.sizeTotalMap.get(a.getKey()).size() > 0)
