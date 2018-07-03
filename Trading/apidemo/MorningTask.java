@@ -142,6 +142,9 @@ public final class MorningTask implements HistoricalHandler {
             try {
                 URL url = new URL(urlString);
                 URLConnection urlconn = url.openConnection(proxy);
+                urlconn.addRequestProperty("User-Agent",
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) " +
+                                "Chrome/67.0.3396.99 Safari/537.36");
 
                 try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream()))) {
                     StringBuilder sb = new StringBuilder();
@@ -149,6 +152,7 @@ public final class MorningTask implements HistoricalHandler {
                     sb.append("\t");
 
                     while ((line = reader2.readLine()) != null) {
+                        pr("line is ", line);
                         Matcher matcher = p.matcher(line);
                         Matcher m2 = p2.matcher(line);
                         Matcher m3 = p3.matcher(line);
@@ -169,6 +173,8 @@ public final class MorningTask implements HistoricalHandler {
                     }
 
                     String etfTicker = e.substring(0, e.length() - 3);
+
+                    pr("printing sb ", urlString, etfTicker, sb);
 
                     sb.append(e.endsWith(":US") && usAfterClose.containsKey(etfTicker) ? ("\t" +
                             usAfterClose.get(etfTicker).lastKey()
