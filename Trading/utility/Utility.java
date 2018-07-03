@@ -815,6 +815,8 @@ public class Utility {
             }
         } else if (ct.secType() == Types.SecType.STK && ct.exchange().equals("SEHK") && ct.currency().equals("HKD")) {
             return "hk" + ct.symbol();
+        } else if (ct.secType() == Types.SecType.STK && ct.currency().equals("CNH")) {
+            return addSHSZHK(ct.symbol());
         }
         return ct.symbol();
     }
