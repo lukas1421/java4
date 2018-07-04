@@ -2408,11 +2408,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double mtmPnl = (currentPosMap.getOrDefault(f, 0) - unitsBought - unitsSold) * (futPriceMap.getOrDefault(f, 0.0)
                 - futPrevCloseMap.getOrDefault(f, 0.0));
 
-        NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
+        NavigableMap<LocalDateTime, SimpleBar> futdata =
+                trimDataFromYtd(futData.get(ibContractToFutType(activeFuture)));
+
         int pmChgY = getPercentileChgFut(futdata, futdata.firstKey().toLocalDate());
         int closePercY = getClosingPercentile(futdata, futdata.firstKey().toLocalDate());
         int openPercY = getOpenPercentile(futdata, futdata.firstKey().toLocalDate());
-        int pmChg = getPercentileChgFut(futdata, futdata.lastKey().toLocalDate());
+        int pmChg = getPercentileChgFut(futdata, getTradeDate(futdata.lastKey()));
         int percLast = getPercentileForLast(futdata);
 
         SwingUtilities.invokeLater(() -> {

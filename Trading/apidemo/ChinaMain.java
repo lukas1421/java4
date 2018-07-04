@@ -437,6 +437,7 @@ public final class ChinaMain implements IConnectionHandler {
                 ibConnLatch.await();
                 pr(" ib conn latch finished waiting " + LocalTime.now());
                 M_CONTROLLER.reqXUDataArray();
+                M_CONTROLLER.reqHKInPosLive();
                 ses.scheduleAtFixedRate(() -> {
                     AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
                     M_CONTROLLER.reqAccountSummary("All", tags
