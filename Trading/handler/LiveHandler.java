@@ -9,8 +9,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
-import static utility.Utility.pr;
-
 public interface LiveHandler extends GeneralHandler {
     void handlePrice(TickType tt, String name, double price, LocalDateTime t);
 
@@ -21,7 +19,7 @@ public interface LiveHandler extends GeneralHandler {
         @Override
         public void handlePrice(TickType tt, String name, double price, LocalDateTime t) {
             LocalTime lt = t.toLocalTime().truncatedTo(ChronoUnit.MINUTES);
-            pr(name, tt, price, t.toLocalTime());
+            //pr(name, tt, price, t.toLocalTime());
             if (tt == TickType.LAST) {
                 ChinaStock.priceMap.put(name, price);
                 if (ChinaData.priceMapBar.get(name).containsKey(lt)) {

@@ -403,7 +403,6 @@ public class XuTraderHelper {
 //        }
 //        return proposedPos;
 //    }
-
     static Predicate<AutoOrderType> isPercTrade() {
         return e -> e == AutoOrderType.PERC_ACC || e == AutoOrderType.PERC_DECC;
     }
@@ -581,11 +580,29 @@ public class XuTraderHelper {
     }
 
 
+    static NavigableMap<LocalDateTime, SimpleBar> trimDataFromYtd(NavigableMap<LocalDateTime, SimpleBar> mp) {
+        LocalDate prevDate = getPrevTradingDate(mp);
+        return mp.entrySet().stream().filter(e -> e.getKey().isAfter(LocalDateTime.of(prevDate, LocalTime.of(8, 59))))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
+    }
+
+
     static LocalDate getTradeDate(LocalDateTime ldt) {
         if (checkTimeRangeBool(ldt.toLocalTime(), 0, 0, 5, 0)) {
             return ldt.toLocalDate().minusDays(1);
         }
         return ldt.toLocalDate();
+    }
+
+    static LocalDate getPrevTradingDate(NavigableMap<LocalDateTime, SimpleBar> data) {
+        if (data.size() < 1) {
+            return LocalDate.now();
+        }
+        return data.entrySet().stream().filter(e -> e.getKey().toLocalTime().isAfter(LocalTime.of(15, 0)))
+                .max(Comparator.comparing(e -> e.getKey().toLocalDate())).map(e -> e.getKey().toLocalDate())
+                .orElse(data.firstKey().toLocalDate());
+
     }
 
     static class XUConnectionHandler implements ApiController.IConnectionHandler {

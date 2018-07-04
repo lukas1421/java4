@@ -1454,8 +1454,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             double currPrice = ChinaStock.priceMap.getOrDefault(name, 0.0) == 0.0 ?
                     ChinaStock.closeMap.getOrDefault(name, defaultPrice) : ChinaStock.priceMap.get(name);
 
-            //pr(" china pos ", name, currPrice);
-
             double wkMaxHist = Double.MIN_VALUE;
             double wkMinHist = Double.MAX_VALUE;
             if (HistChinaStocks.chinaWtd.containsKey(name) && HistChinaStocks.chinaWtd.get(name).size() > 0) {

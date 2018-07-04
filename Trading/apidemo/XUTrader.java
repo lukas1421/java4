@@ -369,7 +369,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
                 SwingUtilities.invokeLater(() -> {
                     currTimeLabel.setText(time);
-                    xuGraph.fillInGraph(futData.get(ibContractToFutType(activeFuture)));
+                    xuGraph.fillInGraph(trimDataFromYtd(futData.get(ibContractToFutType(activeFuture))));
                     xuGraph.fillTradesMap(tradesMap.get(ibContractToFutType(activeFuture)));
                     xuGraph.setName(ibContractToSymbol(activeFuture));
                     xuGraph.setFut(ibContractToFutType(activeFuture));
@@ -738,10 +738,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double currDelta = getNetPtfDelta();
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
         boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000016);
-        NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
-        int pmChgY = getPercentileChgFut(futdata, futdata.firstKey().toLocalDate());
-        int closePercY = getClosingPercentile(futdata, futdata.firstKey().toLocalDate());
-        int openPercY = getOpenPercentile(futdata, futdata.firstKey().toLocalDate());
+        NavigableMap<LocalDateTime, SimpleBar> futdata =
+                trimDataFromYtd(futData.get(ibContractToFutType(activeFuture)));
+        int pmChgY = getPercentileChgFut(futdata, getPrevTradingDate(futdata));
+        int closePercY = getClosingPercentile(futdata, getPrevTradingDate(futdata));
+        int openPercY = getOpenPercentile(futdata, getPrevTradingDate(futdata));
         int pmChg = getPercentileChgFut(futdata, getTradeDate(futdata.lastKey()));
 
         XUTrader.trimTrader(ldt, price, pmChg);
@@ -1543,8 +1544,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     /**
      * cancel order of type
-     * @param type type of trade to cancel
-     * @param nowMilli time now
+     *
+     * @param type      type of trade to cancel
+     * @param nowMilli  time now
      * @param timeLimit how long to wait
      */
     private static void checkCancelTrades(AutoOrderType type, LocalDateTime nowMilli, int timeLimit) {
