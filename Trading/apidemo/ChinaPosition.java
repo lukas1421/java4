@@ -593,7 +593,6 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
 
-
     static double getNetPtfDelta() {
         return getStockPtfDelta() + XUTrader.getFutDelta();
     }
@@ -1452,8 +1451,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
             if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
                 defaultPrice = priceMapBar.get(name).lastEntry().getValue().getClose();
             }
-            double currPrice = ChinaStock.priceMap.getOrDefault(name, 0.0) == 0.0 ? defaultPrice :
-                    ChinaStock.priceMap.get(name);
+            double currPrice = ChinaStock.priceMap.getOrDefault(name, 0.0) == 0.0 ?
+                    ChinaStock.closeMap.getOrDefault(name, defaultPrice) : ChinaStock.priceMap.get(name);
+
+            //pr(" china pos ", name, currPrice);
 
             double wkMaxHist = Double.MIN_VALUE;
             double wkMinHist = Double.MAX_VALUE;
@@ -1490,10 +1491,12 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
                     return r(fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0) *
                             (currPrice - closeMap.getOrDefault(name, 0.0)) * openpos);
                 case 11:
-                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0) * (closeMap.getOrDefault(name, 0.0)
-                            - costMap.getOrDefault(name, 0.0)) * openpos);
+                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0) *
+                            (closeMap.getOrDefault(name, 0.0)
+                                    - costMap.getOrDefault(name, 0.0)) * openpos);
                 case 12:
-                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0) * (currPrice - costMap.getOrDefault(name, 0.0)) * openpos);
+                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0) *
+                            (currPrice - costMap.getOrDefault(name, 0.0)) * openpos);
                 case 13:
 //                    if (name.equalsIgnoreCase("SGXA50")) {
 //                        pr("getting A50 Bot in Trades map " + tradesMap.get("SGXA50"));

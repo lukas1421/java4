@@ -1541,6 +1541,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    /**
+     * cancel order of type
+     * @param type type of trade to cancel
+     * @param nowMilli time now
+     * @param timeLimit how long to wait
+     */
     private static void checkCancelTrades(AutoOrderType type, LocalDateTime nowMilli, int timeLimit) {
         long trades = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == type).count();
 
