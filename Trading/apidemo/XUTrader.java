@@ -60,8 +60,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
     private static volatile MASentiment sentiment = MASentiment.Directionless;
     //static final int MAX_FUT_LIMIT = 20;
-    static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
-    static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
+    //static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
+    //static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
     static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
     private static final int UP_PERC = 95;
@@ -78,6 +78,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static final double DELTA_HARD_HI_LIMIT = 1000000.0;
     private static final double DELTA_HARD_LO_LIMIT = -1000000.0;
+
+    private static final double BULL_BASE_DELTA = 200000;
+    private static final double BEAR_BASE_DELTA = -200000;
+    private static final double PMCHY_DELTA = 200000;
+
 
     public static volatile int _1_min_ma_short = 10;
     public static volatile int _1_min_ma_long = 20;
@@ -1578,39 +1583,61 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    private static double getWeekdayDeltaAddition(LocalDateTime ldt) {
+        switch (ldt.getDayOfWeek()) {
+            case MONDAY:
+                return 100000;
+            case TUESDAY:
+                return 0.0;
+            case WEDNESDAY:
+                return -100000;
+            case THURSDAY:
+                return 0.0;
+            case FRIDAY:
+                return 0.0;
+        }
+        return 0.0;
+    }
+
     private static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice, int pmChg) {
         if (checkTimeRangeBool(nowMilli.toLocalTime(), 5, 0, 15, 0)) {
             return;
         }
 
-        double upDelta = DELTA_HARD_HI_LIMIT;
-        double downDelta = DELTA_HARD_LO_LIMIT;
+        double baseDelta = _20DayMA == MASentiment.Bearish ? BEAR_BASE_DELTA : BULL_BASE_DELTA;
+        double pmchgDelta = (pmChg < 0 ? 1 : -1) * PMCHY_DELTA;
+        double weekdayDelta = getWeekdayDeltaAddition(nowMilli);
+        double deltaTarget = baseDelta + pmchgDelta + weekdayDelta;
 
-        if (pmChg >= 0) {
-            upDelta = DELTA_HARD_HI_LIMIT / 4;
-        } else {
-            downDelta = DELTA_HARD_LO_LIMIT / 4;
-        }
+//        double upDelta = DELTA_HARD_HI_LIMIT;
+//        double downDelta = DELTA_HARD_LO_LIMIT;
+//
+//        if (pmChg >= 0) {
+//            upDelta = DELTA_HARD_HI_LIMIT / 4;
+//        } else {
+//            downDelta = DELTA_HARD_LO_LIMIT / 4;
+//        }
 
         double netDelta = getNetPtfDelta();
         LocalDateTime lastTrimOrderT = getLastOrderTime(TRIM);
 
         checkCancelTrades(TRIM, nowMilli, ORDER_WAIT_TIME);
 
-        pr("trim trader delta/target", r(netDelta), upDelta, downDelta,
+        pr("trim trader currDelta", r(netDelta),
+                " Delta: base pmch weekday target ", baseDelta, pmchgDelta, weekdayDelta, deltaTarget,
                 "pmChg ", pmChg, "last order T ",
                 lastTrimOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
                 , "next order T", lastTrimOrderT.plusMinutes(ORDER_WAIT_TIME)
                         .toLocalTime().truncatedTo(ChronoUnit.MINUTES));
 
         if (MINUTES.between(lastTrimOrderT, nowMilli) >= ORDER_WAIT_TIME) {
-            if (netDelta > upDelta) {
+            if (netDelta > deltaTarget + 100000) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, TRIM));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "trim sell", globalIdOrderMap.get(id)));
-            } else if (netDelta < downDelta) {
+            } else if (netDelta < deltaTarget - 100000) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, TRIM));
@@ -1870,7 +1897,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (timeDiffInSeconds(lastFastOrderTime, nowMilli) >= secBtwnOpenOrders &&
                 numOrdersThisSession <= MAX_OPEN_TRADE_ORDERS) {
-            if (prevPrice < maLast && freshPrice >= maLast && canLongGlobal.get() && pd < PD_UP_THRESH) {
+            if (prevPrice < maLast && freshPrice >= maLast && pd < PD_UP_THRESH) {
                 candidatePrice = roundToXUPriceVeryPassive(maLast, Direction.Long, numOrdersThisSession);
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
                     Order o = placeBidLimit(candidatePrice, CONSERVATIVE_SIZE);
@@ -1893,7 +1920,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                             "||PD: ", r10000(pd)));
                 }
             }
-            if (prevPrice > maLast && freshPrice <= maLast && canShortGlobal.get() && pd > PD_DOWN_THRESH) {
+            if (prevPrice > maLast && freshPrice <= maLast && pd > PD_DOWN_THRESH) {
                 candidatePrice = roundToXUPriceVeryPassive(maLast, Direction.Short, numOrdersThisSession);
                 if (checkIfOrderPriceMakeSense(candidatePrice)) {
                     Order o = placeOfferLimit(candidatePrice, CONSERVATIVE_SIZE);
