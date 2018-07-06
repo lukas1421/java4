@@ -118,7 +118,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static AtomicBoolean indexMAStatus = new AtomicBoolean(false);
 
     //ma
-    private static AtomicBoolean MATraderStatus = new AtomicBoolean(true);
     private static volatile int shortMAPeriod = 60;
     private static volatile int longMAPeriod = 80;
 
@@ -258,12 +257,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             detailedButton.setText(" Detailed: " + detailedPrint.get());
         });
 
-//        JButton maTraderStatusButton = new JButton("MA Trader: " + (MATraderStatus.get() ? "ON" : "OFF"));
-//        maTraderStatusButton.addActionListener(l -> {
-//            MATraderStatus.set(!MATraderStatus.get());
-//            outputToAutoLog(" MA Trade set to " + MATraderStatus.get());
-//            maTraderStatusButton.setText("MA Trader " + (MATraderStatus.get() ? "ON" : "OFF"));
-//        });
 
 //        JButton indexMAStatusButton = new JButton("IndexMA " + (indexMAStatus.get() ? "ON" : "OFF"));
 //        indexMAStatusButton.addActionListener(l -> {
@@ -575,7 +568,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel1.add(sellBidButton);
         controlPanel1.add(toggleMusicButton);
         controlPanel1.add(detailedButton);
-        //controlPanel1.add(maTraderStatusButton);
         //controlPanel1.add(indexMAStatusButton);
         //controlPanel1.add(overnightButton);
         controlPanel1.add(musicPlayableButton);
@@ -1370,7 +1362,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "perc MA buy", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), "|anchor ", anchorIndex, "|perc", todayPerc, "|2d Perc ",
-                        _2dayPerc, "|delta chg ", r(maSize * freshPrice * fx)));
+                        _2dayPerc, "pmChg", pmPercChg, "|delta chg ", r(maSize * freshPrice * fx)));
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && _2dayPerc > UP_PERC_WIDE
                     && pmPercChg > 0 && currDelta > getBearishTarget()) {
                 int id = autoTradeID.incrementAndGet();
@@ -1380,7 +1372,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "perc MA sell", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), " anchor ", anchorIndex, "perc", todayPerc, "2d Perc ",
-                        _2dayPerc, "delta chg ", r(-1 * maSize * freshPrice * fx)));
+                        _2dayPerc, "pmChg", pmPercChg, "delta chg ", r(-1 * maSize * freshPrice * fx)));
             }
         }
     }
@@ -1638,7 +1630,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static double getWeekdayDeltaAdjustment(LocalDateTime ldt) {
+    private static double getWeekdayDeltaAdjustment(LocalDate ldt) {
         switch (ldt.getDayOfWeek()) {
             case MONDAY:
                 return 100000;
@@ -1655,16 +1647,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double baseDelta = _20DayMA == MASentiment.Bearish ? BEAR_BASE_DELTA : BULL_BASE_DELTA;
         double pmchgDelta = (pmChg < 0 ? 1 : -1) * PMCHY_DELTA;
-        double weekdayDelta = getWeekdayDeltaAdjustment(nowMilli);
+        double weekdayDelta = getWeekdayDeltaAdjustment(getTradeDate(nowMilli));
         double deltaTarget = baseDelta + pmchgDelta + weekdayDelta;
-
-//        double upDelta = DELTA_HARD_HI_LIMIT;
-//        double downDelta = DELTA_HARD_LO_LIMIT;
-//        if (pmChg >= 0) {
-//            upDelta = DELTA_HARD_HI_LIMIT / 4;
-//        } else {
-//            downDelta = DELTA_HARD_LO_LIMIT / 4;
-//        }
 
         double netDelta = getNetPtfDelta();
         LocalDateTime lastTrimOrderT = getLastOrderTime(TRIM);
