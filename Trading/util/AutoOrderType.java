@@ -25,6 +25,7 @@ public enum AutoOrderType {
     DAY_SELL,
     SLOW_COVER,
     PERC_MA,
+    INTRADAY_MA,
     LAST_HOUR_MA,
     TRIM,
     FAST_COVER,
