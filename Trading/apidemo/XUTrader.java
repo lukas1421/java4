@@ -880,7 +880,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static int getPercentileChgFut(NavigableMap<LocalDateTime, SimpleBar> futdata, LocalDate dt) {
-        if (futdata.size() <= 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
+        if (futdata.size() <= 2) {
             return 0;
         } else if (futdata.lastKey().isAfter(LocalDateTime.of(dt, LocalTime.of(13, 0)))) {
             double prevMax = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
@@ -909,7 +909,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static int getClosingPercentile(NavigableMap<LocalDateTime, SimpleBar> futdata, LocalDate dt) {
-        if (futdata.size() <= 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
+        if (futdata.size() <= 2) {
             return 0;
         } else if (futdata.lastKey().isAfter(LocalDateTime.of(dt, LocalTime.of(13, 0)))) {
 
@@ -935,7 +935,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static int getOpenPercentile(NavigableMap<LocalDateTime, SimpleBar> futdata, LocalDate dt) {
-        if (futdata.size() <= 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
+        if (futdata.size() <= 2) {
             return 0;
         } else if (futdata.firstKey().isBefore(LocalDateTime.of(dt, LocalTime.of(9, 31)))) {
             double prevOpen = futdata.ceilingEntry(LocalDateTime.of(dt, LocalTime.of(9, 30)))
@@ -1671,10 +1671,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         checkCancelTrades(TRIM, nowMilli, ORDER_WAIT_TIME);
 
-        pr("trim trader currDelta", r(netDelta),
-                " Delta: base pmch weekday target ", baseDelta, pmchgDelta, weekdayDelta, deltaTarget,
-                "pmChg ", pmChg, "last order T ",
-                lastTrimOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
+        pr("trim trader currDel", r(netDelta),
+                " Del: base pmch weekday", baseDelta, pmchgDelta, weekdayDelta, "target:", deltaTarget,
+                "pmChg ", pmChg, "last order T ", lastTrimOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
                 , "next order T", lastTrimOrderT.plusMinutes(ORDER_WAIT_TIME)
                         .toLocalTime().truncatedTo(ChronoUnit.MINUTES));
 
