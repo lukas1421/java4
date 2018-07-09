@@ -7,9 +7,6 @@ public class IBStockTrader {
         // if low closer < 20P buy
 
     }
-
     static void sellOvernight() {
-
     }
-
 }

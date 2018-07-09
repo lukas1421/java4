@@ -1380,7 +1380,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static synchronized void intradayMATrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
 
-        if (!checkTimeRangeBool(lt, 9, 29, 15, 0)) {
+        if (!checkTimeRangeBool(lt, 9, 29, 15, 0) || isStockNoonBreak(lt)) {
             return;
         }
 
