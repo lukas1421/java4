@@ -79,9 +79,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double DELTA_HARD_HI_LIMIT = 1000000.0;
     private static final double DELTA_HARD_LO_LIMIT = -1000000.0;
 
-    private static final double BULL_BASE_DELTA = 200000;
-    private static final double BEAR_BASE_DELTA = -200000;
-    private static final double PMCHY_DELTA = 200000;
+    private static final double BULL_BASE_DELTA = 500000;
+    private static final double BEAR_BASE_DELTA = -500000;
+    private static final double PMCHY_DELTA = 500000;
 
 
     public static volatile int _1_min_ma_short = 10;
@@ -749,7 +749,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         percentileMATrader(ldt, price, pmChgY);
 
-        if (maxAfterMin && maxAbovePrev) {
+        //maxAfterMin && maxAbovePrev &&
+        if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
             intradayMATrader(ldt, price);
         }
 
@@ -1424,7 +1425,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday MA sell", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
-                        r(maShortSecLast), r(maLongSecLast), "perc", todayPerc));
+                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
             }
         }
     }
