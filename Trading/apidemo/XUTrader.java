@@ -733,19 +733,21 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int closePercY = getClosingPercentile(futdata, getPrevTradingDate(futdata));
         int openPercY = getOpenPercentile(futdata, getPrevTradingDate(futdata));
         int pmChg = getPercentileChgFut(futdata, getTradeDate(futdata.lastKey()));
+        int lastPerc = getClosingPercentile(futdata, getTradeDate(futdata.lastKey()));
 
-        XUTrader.trimTrader(ldt, price, pmChg);
+        //XUTrader.trimTrader(ldt, price, pmChg, lastPerc);
+
+        if (detailedPrint.get()) {
+            pr("20DayMA", _20DayMA, "maxAfterMin: ", maxAfterMin, "maxAbovePrev", maxAbovePrev,
+                    "closeY", closePercY, "openPercY", openPercY, "pmchgy", pmChgY,
+                    "pmch ", pmChg, "closeP", lastPerc, "delta range ", getBearishTarget(), getBullishTarget());
+        }
 
         if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
             pr(" curr delta is outside range ");
             return;
         }
 
-        if (detailedPrint.get()) {
-            pr("20DayMA", _20DayMA, "maxAfterMin: ", maxAfterMin, "maxAbovePrev", maxAbovePrev,
-                    "closeY", closePercY, "openPercY", openPercY, "pmchgy", pmChgY,
-                    "pmch ", pmChg, "delta range ", getBearishTarget(), getBullishTarget());
-        }
 
         percentileMATrader(ldt, price, pmChgY);
 
@@ -1303,7 +1305,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 , e -> !isStockNoonBreak(e));
         int shorterMA = 10;
         int longerMA = 20;
-        int maSize = AGGRESSIVE_SIZE;
+        int maSize = CONSERVATIVE_SIZE;
         int tOrders = ORDER_WAIT_TIME;
 
         if (isOvernight(lt) || isStockNoonBreak(lt)) {
@@ -1355,8 +1357,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tOrders) {
             if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && _2dayPerc < DOWN_PERC_WIDE
-                    && pmPercChg < 0 && currDelta < getBullishTarget()) {
+                    && currDelta < getBullishTarget()) {
                 int id = autoTradeID.incrementAndGet();
+                if (pmPercChg < 0) {
+                    maSize = AGGRESSIVE_SIZE;
+                } else {
+                    maSize = CONSERVATIVE_SIZE;
+                }
                 Order o = placeBidLimit(freshPrice, maSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PERC_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
@@ -1365,8 +1372,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         r(maShortSecLast), r(maLongSecLast), "|anchor ", anchorIndex, "|perc", todayPerc, "|2d Perc ",
                         _2dayPerc, "pmChg", pmPercChg, "|delta chg ", r(maSize * freshPrice * fx)));
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && _2dayPerc > UP_PERC_WIDE
-                    && pmPercChg > 0 && currDelta > getBearishTarget()) {
+                    && currDelta > getBearishTarget()) {
                 int id = autoTradeID.incrementAndGet();
+                if (pmPercChg > 0) {
+                    maSize = AGGRESSIVE_SIZE;
+                } else {
+                    maSize = CONSERVATIVE_SIZE;
+                }
                 Order o = placeOfferLimit(freshPrice, maSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PERC_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
@@ -1641,7 +1653,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return 0.0;
     }
 
-    private static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice, int pmChg) {
+    private static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice, int pmChg, int lastP) {
         if (checkTimeRangeBool(nowMilli.toLocalTime(), 5, 0, 15, 0)) {
             return;
         }
@@ -1658,18 +1670,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         pr("trim trader currDel", r(netDelta),
                 " Del: base pmch weekday", baseDelta, pmchgDelta, weekdayDelta, "target:", deltaTarget,
-                "pmChg ", pmChg, "last order T ", lastTrimOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
-                , "next order T", lastTrimOrderT.plusMinutes(ORDER_WAIT_TIME)
-                        .toLocalTime().truncatedTo(ChronoUnit.MINUTES));
+                "pmChg ", pmChg, "lastP", lastP, "last order T ", lastTrimOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
+                , "next order T", lastTrimOrderT.plusMinutes(ORDER_WAIT_TIME).toLocalTime().truncatedTo(ChronoUnit.MINUTES));
 
         if (MINUTES.between(lastTrimOrderT, nowMilli) >= ORDER_WAIT_TIME) {
-            if (netDelta > deltaTarget && pmChg > 0) {
+            if (netDelta > deltaTarget && pmChg > 0 && lastP > UP_PERC_WIDE) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, TRIM));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "trim sell", globalIdOrderMap.get(id)));
-            } else if (netDelta < deltaTarget && pmChg < 0) {
+            } else if (netDelta < deltaTarget && pmChg < 0 && lastP < DOWN_PERC_WIDE) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, TRIM));
