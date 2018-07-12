@@ -91,7 +91,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //size
     private static final int CONSERVATIVE_SIZE = 1;
-    private static final int AGGRESSIVE_SIZE = 3;
+    private static final int AGGRESSIVE_SIZE = 2;
 
     //perc trader
     private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
@@ -743,34 +743,24 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     "pmch ", pmChg, "closeP", lastPerc, "delta range ", getBearishTarget(), getBullishTarget());
         }
 
+        percentileMATrader(ldt, price, pmChgY);
+
         if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
             pr(" curr delta is outside range ");
             return;
         }
 
 
-        percentileMATrader(ldt, price, pmChgY);
-
         //maxAfterMin && maxAbovePrev &&
         if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
             intradayMATrader(ldt, price);
         }
 
-
         if (pmChgY < 0 && closePercY < 20 && openPercY < 50) {
-            //slowCoverTrader(ldt, price);
             if (maxAfterMin && maxAbovePrev) {
                 slowCoverTrader(ldt, price);
-                //fastCoverTrader(ldt, price);
             }
-        } else if (pmChgY > 0) {
-//            if (!(maxAfterMin && maxAbovePrev)) {
-//                amHedgeTrader(ldt, price);
-//            } else {
-//                percentileTrader(ldt, price);
-//            }
         }
-
         overnightTrader(ldt, price);
     }
 
@@ -1305,13 +1295,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 , e -> !isStockNoonBreak(e));
         int shorterMA = 10;
         int longerMA = 20;
-        int maSize = CONSERVATIVE_SIZE;
+        int maSize;
         int tOrders = ORDER_WAIT_TIME;
 
         if (isOvernight(lt) || isStockNoonBreak(lt)) {
             anchorIndex = "Future";
             index = futData.get(ibContractToFutType(activeFuture));
-            maSize = CONSERVATIVE_SIZE;
             tOrders = 60;
         } else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
             shorterMA = 1;
@@ -1357,7 +1346,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tOrders) {
             if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && _2dayPerc < DOWN_PERC_WIDE
-                    && currDelta < getBullishTarget()) {
+                    && currDelta < DELTA_HARD_HI_LIMIT) {
                 int id = autoTradeID.incrementAndGet();
                 if (pmPercChg < 0) {
                     maSize = AGGRESSIVE_SIZE;
@@ -1372,8 +1361,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         r(maShortSecLast), r(maLongSecLast), "|anchor ", anchorIndex, "|perc", todayPerc, "|2d Perc ",
                         _2dayPerc, "pmChg", pmPercChg, "|delta chg ", r(maSize * freshPrice * fx)));
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && _2dayPerc > UP_PERC_WIDE
-                    && currDelta > getBearishTarget()) {
+                    && currDelta > DELTA_HARD_LO_LIMIT) {
+
                 int id = autoTradeID.incrementAndGet();
+
                 if (pmPercChg > 0) {
                     maSize = AGGRESSIVE_SIZE;
                 } else {
