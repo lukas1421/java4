@@ -74,7 +74,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static volatile Eagerness flattenEagerness = Eagerness.Passive;
 
 
-    private static final int ORDER_WAIT_TIME = 15;
+    private static final int ORDER_WAIT_TIME = 30;
 
     private static final double DELTA_HARD_HI_LIMIT = 1000000.0;
     private static final double DELTA_HARD_LO_LIMIT = -1000000.0;
@@ -728,6 +728,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double currDelta = getNetPtfDelta();
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
         boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000016);
+
         NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(ibContractToFutType(activeFuture)));
         int pmChgY = getPercentileChgFut(futdata, getPrevTradingDate(futdata));
         int closePercY = getClosingPercentile(futdata, getPrevTradingDate(futdata));
@@ -1298,7 +1299,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int maSize;
         int tOrders = ORDER_WAIT_TIME;
 
-        if (isOvernight(lt) || isStockNoonBreak(lt)) {
+        if (isStockNoonBreak(lt)) {
+            return;
+        } else if (isOvernight(lt)) {
             anchorIndex = "Future";
             index = futData.get(ibContractToFutType(activeFuture));
             tOrders = 60;

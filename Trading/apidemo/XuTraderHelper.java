@@ -583,8 +583,7 @@ public class XuTraderHelper {
     static NavigableMap<LocalDateTime, SimpleBar> trimDataFromYtd(NavigableMap<LocalDateTime, SimpleBar> mp) {
         LocalDate prevDate = getPrevTradingDate(mp);
         return mp.entrySet().stream().filter(e -> e.getKey().isAfter(LocalDateTime.of(prevDate, LocalTime.of(8, 59))))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                        (a, b) -> a, ConcurrentSkipListMap::new));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a, ConcurrentSkipListMap::new));
     }
 
 
