@@ -729,6 +729,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
         boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000016);
 
+
         NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(ibContractToFutType(activeFuture)));
         int pmChgY = getPercentileChgFut(futdata, getPrevTradingDate(futdata));
         int closePercY = getClosingPercentile(futdata, getPrevTradingDate(futdata));
@@ -743,6 +744,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     "closeY", closePercY, "openPercY", openPercY, "pmchgy", pmChgY,
                     "pmch ", pmChg, "closeP", lastPerc, "delta range ", getBearishTarget(), getBullishTarget());
         }
+
 
         percentileMATrader(ldt, price, pmChgY);
 
@@ -1299,6 +1301,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int maSize;
         int tOrders = ORDER_WAIT_TIME;
 
+        double baseDelta = _20DayMA == MASentiment.Bearish ? BEAR_BASE_DELTA : BULL_BASE_DELTA;
+        double pmchgDelta = (pmPercChg < 0 ? 1 : -1) * PMCHY_DELTA;
+        double weekdayDelta = getWeekdayDeltaAdjustment(getTradeDate(nowMilli));
+        double deltaTarget = baseDelta + pmchgDelta + weekdayDelta;
+
         if (isStockNoonBreak(lt)) {
             return;
         } else if (isOvernight(lt)) {
@@ -1349,7 +1356,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tOrders) {
             if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && _2dayPerc < DOWN_PERC_WIDE
-                    && currDelta < DELTA_HARD_HI_LIMIT) {
+                    && currDelta < deltaTarget) {
                 int id = autoTradeID.incrementAndGet();
                 if (pmPercChg < 0) {
                     maSize = AGGRESSIVE_SIZE;
@@ -1364,7 +1371,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         r(maShortSecLast), r(maLongSecLast), "|anchor ", anchorIndex, "|perc", todayPerc, "|2d Perc ",
                         _2dayPerc, "pmChg", pmPercChg, "|delta chg ", r(maSize * freshPrice * fx)));
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && _2dayPerc > UP_PERC_WIDE
-                    && currDelta > DELTA_HARD_LO_LIMIT) {
+                    && currDelta > deltaTarget) {
 
                 int id = autoTradeID.incrementAndGet();
 
@@ -1386,11 +1393,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static synchronized void intradayMATrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
-
         if (!checkTimeRangeBool(lt, 9, 29, 15, 0) || isStockNoonBreak(lt)) {
             return;
         }
-
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
                 , e -> !isStockNoonBreak(e));
         int shorterMA = 10;
