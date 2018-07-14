@@ -740,9 +740,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //XUTrader.trimTrader(ldt, price, pmChg, lastPerc);
 
         if (detailedPrint.get()) {
-            pr("20DayMA", _20DayMA, "maxAfterMin: ", maxAfterMin, "maxAbovePrev", maxAbovePrev,
+            pr("20DayMA", _20DayMA, "maxT>MinT: ", maxAfterMin, "max>PrevC", maxAbovePrev,
                     "closeY", closePercY, "openPercY", openPercY, "pmchgy", pmChgY,
-                    "pmch ", pmChg, "closeP", lastPerc, "delta range ", getBearishTarget(), getBullishTarget());
+                    "pmch ", pmChg, "lastP", lastPerc, "delta range ", getBearishTarget(), getBullishTarget());
         }
 
 
@@ -752,7 +752,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" curr delta is outside range ");
             return;
         }
-
 
         //maxAfterMin && maxAbovePrev &&
         if (currDelta < getBullishTarget() && currDelta > getBearishTarget()) {
@@ -1312,16 +1311,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             anchorIndex = "Future";
             index = futData.get(ibContractToFutType(activeFuture));
             tOrders = 60;
-        } else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
-            shorterMA = 1;
-            longerMA = 5;
         }
+//        else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
+//            shorterMA = 1;
+//            longerMA = 5;
+//        }
 
         checkCancelTrades(PERC_MA, nowMilli, ORDER_WAIT_TIME * 2);
-        LocalDate tTrade = getTradeDate(nowMilli);
 
         int _2dayPerc = getPercentileForLast(index);
-        int todayPerc = getPercentileForLastPred(index, e -> e.getKey().toLocalDate().equals(tTrade));
+        int todayPerc = getPercentileForLastPred(index, e -> e.getKey().toLocalDate().equals(getTradeDate(nowMilli)));
         LocalDateTime lastIndexMAOrder = getLastOrderTime(PERC_MA);
 
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);

@@ -629,8 +629,8 @@ public final class MorningTask implements HistoricalHandler {
         if (name.equals("USD")) {
             USDCNY = close;
             if (!date.startsWith("finished")) {
-                Date dt = new Date(Long.parseLong(date) * 1000);
 
+                Date dt = new Date(Long.parseLong(date) * 1000);
                 ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
                 ZoneId nyZone = ZoneId.of("America/New_York");
                 LocalDateTime ldt = LocalDateTime.ofInstant(dt.toInstant(), chinaZone);
@@ -663,7 +663,12 @@ public final class MorningTask implements HistoricalHandler {
                 }
             }
         } else if (name.equals("CNH")) {
-            pr(name, date, open, close);
+//            Date dt = new Date(Long.parseLong(date) * 1000);
+//            ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
+//            ZoneId nyZone = ZoneId.of("America/New_York");
+//            LocalDateTime ldt = LocalDateTime.ofInstant(dt.toInstant(), chinaZone);
+//            ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
+
 
             if (!date.startsWith("finished")) {
                 Date dt = new Date(Long.parseLong(date) * 1000);
@@ -673,6 +678,8 @@ public final class MorningTask implements HistoricalHandler {
                 LocalDateTime ldt = LocalDateTime.ofInstant(dt.toInstant(), chinaZone);
                 ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
                 HKDCNH = 1 / close;
+
+                pr(name, ldt, open, close);
                 //Utility.simpleWriteToFile("USD" + "\t" + close, true, fxOutput);
 
             }
