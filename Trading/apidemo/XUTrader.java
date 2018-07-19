@@ -378,7 +378,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             ses.scheduleAtFixedRate(() -> {
                 observeMATouch();
-                //maTradeAnalysis();
                 requestExecHistory();
             }, 0, 1, TimeUnit.MINUTES);
 
@@ -1062,29 +1061,41 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     /**
-     * if touched, play music
+     * only output upon a cross
      */
     private void observeMATouch() {
-        NavigableMap<LocalDateTime, SimpleBar> price5 = map1mTo5mLDT(futData.get(ibContractToFutType(activeFuture)));
-        if (price5.size() < 2) return;
+        NavigableMap<LocalDateTime, SimpleBar> futprice1m = (futData.get(ibContractToFutType(activeFuture)));
 
-        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(price5, shortMAPeriod);
-        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(price5, longMAPeriod);
+        if (futprice1m.size() < 2) return;
 
-        double pd = getPD(price5.lastEntry().getValue().getClose());
+        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(futprice1m, 10);
+        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(futprice1m, 20);
+
+        double maShortLast = smaShort.lastEntry().getValue();
+        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
+        double maLongLast = smaLong.lastEntry().getValue();
+        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
+
+        double pd = getPD(futprice1m.lastEntry().getValue().getClose());
         int percentile = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
         soundPlayer.stopIfPlaying();
         if (smaShort.size() > 0) {
-            String msg = str("**Observing MA**"
+            String msg = str("**MA CROSS**"
                     , "20day", get20DayBullBear()
                     , "||T:", LocalTime.now().truncatedTo(MINUTES)
-                    , "||MA Short:", r(smaShort.lastEntry().getValue())
-                    , "||MA Long:", r(smaLong.lastEntry().getValue())
+                    , "||Last Short Long:", r(maShortLast), r(maLongLast)
+                    , "||seclast shortlong:", r(maShortSecLast), r(maLongSecLast)
                     , "||Index:", r(getIndexPrice())
                     , "||PD:", r10000(pd)
                     , "||2 Day P%", percentile);
 
-            outputToAutoLog(msg);
+            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast) {
+                outputToAutoLog(" bullish cross ");
+                outputToAutoLog(msg);
+            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast) {
+                outputToAutoLog(" bearish cross ");
+                outputToAutoLog(msg);
+            }
         }
     }
 
@@ -1295,6 +1306,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double fx = ChinaPosition.fxMap.getOrDefault("USD", 0.0);
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate()
                 , e -> !isStockNoonBreak(e));
+
+        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
+
         int shorterMA = 10;
         int longerMA = 20;
         int maSize;
@@ -1318,8 +1332,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         checkCancelTrades(PERC_MA, nowMilli, ORDER_WAIT_TIME * 2);
 
-        int _2dayPerc = getPercentileForLast(index);
-        int todayPerc = getPercentileForLastPred(index, e -> e.getKey().toLocalDate().equals(getTradeDate(nowMilli)));
+        int _2dayPerc = getPercentileForLast(fut);
+        int todayPerc = getPercentileForLastPred(fut, e -> e.getKey().toLocalDate().equals(getTradeDate(nowMilli)));
         LocalDateTime lastIndexMAOrder = getLastOrderTime(PERC_MA);
 
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
@@ -1337,7 +1351,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (detailedPrint.get()) {
             pr("*perc MA Time: ", nowMilli.toLocalTime(), "next T:", lastIndexMAOrder.plusMinutes(tOrders),
-                    "||T perc: ", todayPerc, "||2D p%", _2dayPerc
+                    "||T fut p%: ", todayPerc, "||2D fut p%", _2dayPerc
                     , "pmchY: ", pmPercChg);
 
             pr("Anchor / short long MA: ", anchorIndex, shorterMA, longerMA);
@@ -1348,11 +1362,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" bull/bear cross ", bull, bear);
             pr(" current PD ", r10000(getPD(freshPrice)));
             pr("delta base,pm,weekday,target:", baseDelta, pmchgDelta, weekdayDelta, deltaTarget);
-            if (bull || bear) {
-                if (checkTimeRangeBool(lt, 9, 30, 15, 0)) {
-                    soundPlayer.playClip();
-                }
-            }
+//            if (bull || bear) {
+//                if (checkTimeRangeBool(lt, 9, 30, 15, 0)) {
+//                    soundPlayer.playClip();
+//                }
+//            }
         }
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tOrders) {
@@ -1540,7 +1554,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "perc: ", currPerc, "pmPercChg", pmPercChg));
             }
         } else {
-            outputToAutoLog(" outside tradable time slot");
+            //outputToAutoLog(" outside tradable time slot");
         }
         String outputString = str("||O/N||", nowMilli.format(DateTimeFormatter.ofPattern("M-d H:mm")),
                 "||curr P%: ", currPerc,
