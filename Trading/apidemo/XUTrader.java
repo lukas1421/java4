@@ -1311,11 +1311,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             anchorIndex = "Future";
             index = futData.get(ibContractToFutType(activeFuture));
             tOrders = 60;
+        } else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
+            shorterMA = 1;
+            longerMA = 5;
         }
-//        else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
-//            shorterMA = 1;
-//            longerMA = 5;
-//        }
 
         checkCancelTrades(PERC_MA, nowMilli, ORDER_WAIT_TIME * 2);
 

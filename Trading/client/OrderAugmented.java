@@ -3,7 +3,6 @@ package client;
 import util.AutoOrderType;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 import static utility.Utility.str;
 
@@ -76,6 +75,7 @@ public class OrderAugmented {
         return str("T: ", orderTime.toLocalTime(),
                 "Order:", order, "msg:", msg, "Tradetype", orderType
                 , order.orderId() == 0 ? "" : order.orderId(),
-                "Status:", status, "FinalT: ", finalActionTime.toLocalTime().truncatedTo(ChronoUnit.SECONDS));
+                "Status:", status);
+        //, "FinalT: ", finalActionTime.toLocalTime().truncatedTo(ChronoUnit.SECONDS));
     }
 }
