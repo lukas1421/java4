@@ -484,7 +484,8 @@ public class ApiController implements EWrapper {
         class AccountInfoHandler implements IAccountSummaryHandler {
             @Override
             public void accountSummary(String account, AccountSummaryTag tag, String value, String currency) {
-                String output = getStrCheckNull(LocalDateTime.now(), account, tag, value, currency);
+                String output = getStrCheckNull(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+                        ,account, tag, value, currency);
                 pr("Account Pnl: ", output, "**********************");
                 XUTrader.updateLog(str("Account pnl", output));
                 XUTrader.currentIBNAV = Double.parseDouble(value);

@@ -604,6 +604,10 @@ public class XuTraderHelper {
 
     }
 
+    static boolean futMarketOpen(LocalTime t) {
+        return !(t.isAfter(LocalTime.of(5, 0)) && t.isBefore(LocalTime.of(9, 0)));
+    }
+
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
         @Override
         public void connected() {

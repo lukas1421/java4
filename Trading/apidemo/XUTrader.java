@@ -81,7 +81,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static final double BULL_BASE_DELTA = 500000;
     private static final double BEAR_BASE_DELTA = -500000;
-    private static final double PMCHY_DELTA = 500000;
+    private static final double PMCHY_DELTA = 1000000;
 
 
     public static volatile int _1_min_ma_short = 10;
@@ -1362,11 +1362,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" bull/bear cross ", bull, bear);
             pr(" current PD ", r10000(getPD(freshPrice)));
             pr("delta base,pm,weekday,target:", baseDelta, pmchgDelta, weekdayDelta, deltaTarget);
-//            if (bull || bear) {
-//                if (checkTimeRangeBool(lt, 9, 30, 15, 0)) {
-//                    soundPlayer.playClip();
-//                }
-//            }
         }
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tOrders) {
@@ -1382,9 +1377,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PERC_MA));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "perc MA buy", globalIdOrderMap.get(id)
-                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
+                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast shortlong",
                         r(maShortSecLast), r(maLongSecLast), "|anchor ", anchorIndex, "|perc", todayPerc, "|2d Perc ",
-                        _2dayPerc, "pmChg", pmPercChg, "|delta chg ", r(maSize * freshPrice * fx)));
+                        _2dayPerc, "pmChg", pmPercChg, "|delta Base pmchg weekday target ",
+                        baseDelta, pmchgDelta, weekdayDelta, deltaTarget));
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && _2dayPerc > UP_PERC_WIDE
                     && currDelta > deltaTarget) {
 
@@ -1401,7 +1397,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "perc MA sell", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), " anchor ", anchorIndex, "perc", todayPerc, "2d Perc ",
-                        _2dayPerc, "pmChg", pmPercChg, "delta chg ", r(-1 * maSize * freshPrice * fx)));
+                        _2dayPerc, "pmChg", pmPercChg, "|delta Base pmchg weekday target ",
+                        baseDelta, pmchgDelta, weekdayDelta, deltaTarget));
             }
         }
     }
@@ -1523,9 +1520,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
         double currDelta = getNetPtfDelta();
-
         LocalDate TDate = getTradeDate(nowMilli);
-
         double indexPrice = (priceMapBar.containsKey(FTSE_INDEX) &&
                 priceMapBar.get(FTSE_INDEX).size() > 0) ?
                 priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose() : SinaStock.FTSE_OPEN;
@@ -1553,13 +1548,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "O/N buy @ ", freshPrice,
                         "perc: ", currPerc, "pmPercChg", pmPercChg));
             }
-        } else {
-            //outputToAutoLog(" outside tradable time slot");
         }
+
         String outputString = str("||O/N||", nowMilli.format(DateTimeFormatter.ofPattern("M-d H:mm")),
                 "||curr P%: ", currPerc,
                 "||curr P: ", futPriceMap.lastEntry().getValue().getClose(),
-                "||index: ", Math.round(100d * indexPrice) / 100d,
+                "||index: ", r(indexPrice),
                 "||BID ASK ", bidMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
                 askMap.getOrDefault(ibContractToFutType(activeFuture), 0.0),
                 "pmPercChg", pmPercChg);
@@ -2200,10 +2194,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 && Math.abs(askMap.get(f) - bidMap.get(f)) < 10;
     }
 
-    private boolean futMarketOpen(LocalTime t) {
-        return !(t.isAfter(LocalTime.of(5, 0)) && t.isBefore(LocalTime.of(9, 0)));
-    }
-
     private static ApiController getAPICon() {
         return apcon;
     }
@@ -2308,7 +2298,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public void commissionReport(String tradeKey, CommissionReport commissionReport) {
     }
 
-    //ApiController.IOrderHandler
     @Override
     public void orderState(OrderState orderState) {
 
@@ -2452,10 +2441,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         overnightTradesMap.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
         apcon.reqExecutions(new ExecutionFilter(), XUOvernightTradeExecHandler.DefaultOvernightHandler);
     }
-
-    //private void requestXUData() {
-    //        getAPICon().reqXUDataArray();
-    //    }
 
     @SuppressWarnings("unused")
     static double getNetPnlForAllFuts() {
