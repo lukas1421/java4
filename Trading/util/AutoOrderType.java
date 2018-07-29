@@ -32,5 +32,6 @@ public enum AutoOrderType {
     AM_HEDGE,
     DAY_SELLBACK,
     OPEN,
+    INDEX_NEW_HILO,
     UNKNOWN
 }
