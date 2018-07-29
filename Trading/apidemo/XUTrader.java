@@ -1099,6 +1099,41 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    private static void openTrader(LocalDateTime nowMilli, double freshPrice) {
+
+        LocalTime lt = nowMilli.toLocalTime();
+        if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(9, 35))) {
+            return;
+        }
+
+        double open = priceMapBar.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29)).getValue().getOpen();
+        double curr = priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose();
+
+        LocalDateTime lastOpenTime = getLastOrderTime(OPEN);
+
+        if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
+            if (curr > open) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(freshPrice, 1);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.OPEN));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "open buy", globalIdOrderMap.get(id), "open curr ", open, curr));
+            } else if (curr < open) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(freshPrice, 1);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.OPEN));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "open sell", globalIdOrderMap.get(id), "open curr ", open, curr));
+            }
+        }
+    }
+
+    private static void newHighLowTrader(LocalDateTime nowMilli, double freshPrice) {
+
+
+    }
+
+
     private static int getSizeForDelta(double price, double fx, double delta) {
         return (int) Math.floor(Math.abs(delta) / (fx * price));
     }
