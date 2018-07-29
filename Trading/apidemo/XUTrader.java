@@ -1117,19 +1117,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29)).getValue();
         double curr = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
-        LocalDateTime lastOpenTime = getLastOrderTime(OPEN);
+        LocalDateTime lastOpenTime = getLastOrderTime(FIRST_TICK);
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
             if (curr > open) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.OPEN));
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open buy", globalIdOrderMap.get(id), "open curr ", open, curr));
             } else if (curr < open) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.OPEN));
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open sell", globalIdOrderMap.get(id), "open curr ", open, curr));
             }
@@ -1138,14 +1138,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static void newHiLoTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
-        if (lt.isBefore(LocalTime.of(9, 30)) || lt.isAfter(LocalTime.of(9, 40))) {
+        if (lt.isBefore(LocalTime.of(9, 40))) {
             return;
         }
 
         if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
             return;
         }
-        LocalDateTime lastOpenTime = getLastOrderTime(INDEX_NEW_HILO);
+        LocalDateTime lastHiLoTime = getLastOrderTime(INDEX_NEW_HILO);
         double curr = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
         LocalTime lastkey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
         double hi = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
@@ -1153,7 +1153,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double lo = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isBefore(lastkey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
+        if (MINUTES.between(lastHiLoTime, nowMilli) >= ORDER_WAIT_TIME) {
             if (curr > hi) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
@@ -1169,7 +1169,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "index new low sell",
                         globalIdOrderMap.get(id), "curr hi lo ", curr, hi, lo));
             }
-
         }
     }
 

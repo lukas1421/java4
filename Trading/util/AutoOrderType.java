@@ -31,7 +31,7 @@ public enum AutoOrderType {
     FAST_COVER,
     AM_HEDGE,
     DAY_SELLBACK,
-    OPEN,
+    FIRST_TICK,
     INDEX_NEW_HILO,
     UNKNOWN
 }
