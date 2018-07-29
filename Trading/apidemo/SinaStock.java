@@ -19,8 +19,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaData.sizeTotalMap;
+import static apidemo.ChinaData.*;
 import static apidemo.ChinaStock.*;
 import static apidemo.TradingConstants.FTSE_INDEX;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
@@ -68,10 +67,11 @@ public class SinaStock implements Runnable {
             URLConnection urlconnSH = urlSH.openConnection();
             URLConnection urlconnSZ = urlSZ.openConnection();
             //LocalTime lt = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
-            LocalDateTime ldt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+            LocalDateTime ldt = LocalDateTime.now();
+            LocalDateTime ldtMin = ldt.truncatedTo(ChronoUnit.MINUTES);
 
-            getInfoFromURLConn(ldt, urlconnSH);
-            getInfoFromURLConn(ldt, urlconnSZ);
+            getInfoFromURLConn(ldtMin, urlconnSH);
+            getInfoFromURLConn(ldtMin, urlconnSZ);
 
             if (STOCK_COLLECTION_TIME.test(LocalDateTime.now())) {
                 rtn = weightMapA50.entrySet().stream().mapToDouble(a -> {
@@ -94,26 +94,33 @@ public class SinaStock implements Runnable {
                 }
 
 
-                if (indexPriceSina.containsKey(ldt.toLocalTime())) {
-                    indexPriceSina.get(ldt.toLocalTime()).add(currPrice);
+                if (indexPriceSina.containsKey(ldtMin.toLocalTime())) {
+                    indexPriceSina.get(ldtMin.toLocalTime()).add(currPrice);
                 } else {
-                    indexPriceSina.put(ldt.toLocalTime(), new SimpleBar(currPrice));
+                    indexPriceSina.put(ldtMin.toLocalTime(), new SimpleBar(currPrice));
                 }
 
                 if (priceMapBar.containsKey(FTSE_INDEX)) {
-                    if (priceMapBar.get(FTSE_INDEX).containsKey(ldt.toLocalTime())) {
-                        priceMapBar.get(FTSE_INDEX).get(ldt.toLocalTime()).add(currPrice);
+                    if (priceMapBar.get(FTSE_INDEX).containsKey(ldtMin.toLocalTime())) {
+                        priceMapBar.get(FTSE_INDEX).get(ldtMin.toLocalTime()).add(currPrice);
                     } else {
-                        priceMapBar.get(FTSE_INDEX).put(ldt.toLocalTime(), new SimpleBar(currPrice));
+                        priceMapBar.get(FTSE_INDEX).put(ldtMin.toLocalTime(), new SimpleBar(currPrice));
                     }
                 } else {
                     priceMapBar.put(FTSE_INDEX, (ConcurrentSkipListMap) indexPriceSina);
                 }
 
-                indexVol.put(ldt.toLocalTime(), sinaVol);
+                if (priceMapBarDetail.containsKey(FTSE_INDEX)) {
+                    if (ldt.toLocalTime().isAfter(LocalTime.of(9, 27))
+                            && ldt.toLocalTime().isBefore(LocalTime.of(9, 35))) {
+                        priceMapBarDetail.get(FTSE_INDEX).put(ldt.toLocalTime(), currPrice);
+                    }
+                }
+
+                indexVol.put(ldtMin.toLocalTime(), sinaVol);
                 openMap.put(FTSE_INDEX, FTSE_OPEN);
                 sizeMap.put(FTSE_INDEX, Math.round(sinaVol));
-                sizeTotalMap.get(FTSE_INDEX).put(ldt.toLocalTime(), sinaVol);
+                sizeTotalMap.get(FTSE_INDEX).put(ldtMin.toLocalTime(), sinaVol);
             }
         } catch (IOException ex) {
             ex.printStackTrace();

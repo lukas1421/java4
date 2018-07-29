@@ -33,6 +33,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaDataYesterday.ma20Map;
 import static apidemo.ChinaPosition.*;
 import static apidemo.ChinaStock.*;
@@ -724,6 +725,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
+        firstTickTrader(ldt, price);
+
         double currDelta = getNetPtfDelta();
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
         boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000016);
@@ -1099,16 +1102,21 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static void openTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static void firstTickTrader(LocalDateTime nowMilli, double freshPrice) {
 
         LocalTime lt = nowMilli.toLocalTime();
-        if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(9, 35))) {
+        if (lt.isBefore(LocalTime.of(9, 28)) || lt.isAfter(LocalTime.of(9, 35))) {
             return;
         }
 
-        double open = priceMapBar.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29)).getValue().getOpen();
-        double curr = priceMapBar.get(FTSE_INDEX).lastEntry().getValue().getClose();
+        if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
+            return;
+        }
 
+        pr(" detailed ftse index ", priceMapBarDetail.get(FTSE_INDEX));
+
+        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29)).getValue();
+        double curr = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
         LocalDateTime lastOpenTime = getLastOrderTime(OPEN);
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
@@ -1126,6 +1134,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "open sell", globalIdOrderMap.get(id), "open curr ", open, curr));
             }
         }
+
     }
 
     private static void newHighLowTrader(LocalDateTime nowMilli, double freshPrice) {
