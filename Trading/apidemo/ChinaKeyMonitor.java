@@ -121,7 +121,8 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 //        } catch (IOException x) {
 //            x.printStackTrace();
 //        }
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "wtdSumSumSq.txt")))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "wtdSumSumSq.txt")))) {
             String line;
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
@@ -453,7 +454,6 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
             if (displayPos) {
                 positionComparingFunc = e -> ChinaData.wtdSharpe.getOrDefault(e.getKey(), 0.0);
 
-                //LinkedList<String> l = ;
                 processGraphMonitors(ChinaPosition.getNetPosition().entrySet().stream().sorted(
                         Comparator.comparingDouble(positionComparingFunc).reversed()).map(Map.Entry::getKey).limit(18)
                         .peek(e -> System.out.println(" ticker " + e + " get current delta " + getCurrentDelta(e)))
@@ -651,6 +651,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
             if (ftes.isShutdown()) {
                 ftes = Executors.newScheduledThreadPool(10);
             }
+
             ftes.scheduleAtFixedRate(() -> {
                 timeLabel.setText(getCurrentTime());
                 //timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
@@ -793,26 +794,16 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
     }
 
     static void refresh() {
-        //System.out.println(" refresh @ " + LocalTime.now());
-        //ChinaPosition.getOpenPositionsFromFile();
-        //ChinaPosition.getCurrentPosition();
         if (displayPos) {
-            //System.out.println(" refreshing displaypos in method ");
             if (ChinaPosition.openPositionMap.size() > 0) {
                 Map<String, Integer> resMap = ChinaPosition.getNetPosition();
-                //System.out.println( " res map " + resMap);
                 LinkedHashMap<String, Integer> s = resMap.entrySet().stream().sorted(
                         reverseComparator(Comparator.comparingDouble(positionComparingFunc)))
                         .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (a, b) -> a, LinkedHashMap::new));
                 LinkedList<String> l = new LinkedList<>(s.keySet());
-                //processGraphMonitors(generateGraphList());
                 processGraphMonitors(l);
             }
         } else if (displaySharp) {
-            //System.out.println(" refreshing sharpe in refresh method ");
-//            System.out.println(" displaying sharpe in refresh ");
-//            LinkedList<String> l = sharpMapMaster.get(yqm).keySet().stream().collect(Collectors.toCollection(LinkedList::new));
-
             processGraphMonitors(sharpMapMaster.get(yqm).keySet()
                     .stream().sorted(reverseComparator(Comparator.comparingDouble(sharpeComparingFunc)))
                     .collect(Collectors.toCollection(LinkedList::new)));

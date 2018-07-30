@@ -729,6 +729,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         firstTickTrader(ldt, price);
+        intradayFirstTickTrader(ldt, price);
         //newHiLoTrader(ldt, price);
 
         double currDelta = getNetPtfDelta();
@@ -1034,7 +1035,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static double getFutDelta() {
         return currentPosMap.entrySet().stream()
                 .mapToDouble(e -> {
-                    if (e.getKey() == FutType.FrontFut &&
+                    if (e.getKey() == FutType.PreviousFut) {
+                        return 0.0;
+                    } else if (e.getKey() == FutType.FrontFut &&
                             LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd"))
                                     .equals(LocalDate.now()) && LocalTime.now().isAfter(LocalTime.of(15, 0))) {
                         return 0.0;
