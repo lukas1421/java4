@@ -46,7 +46,6 @@ public final class ChinaData extends JPanel {
     //public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> priceMapPlain = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBar = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> priceMapBarDetail = new ConcurrentHashMap<>();
-
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBarYtd = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBarY2 = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> sizeTotalMap = new ConcurrentHashMap<>();

@@ -40,6 +40,7 @@ import static apidemo.ChinaStock.*;
 import static apidemo.TradingConstants.*;
 import static apidemo.XuTraderHelper.*;
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static java.time.temporal.ChronoUnit.SECONDS;
 import static util.AutoOrderType.*;
 import static utility.Utility.*;
 
@@ -54,7 +55,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static volatile Set<String> uniqueTradeKeySet = new HashSet<>();
     static ApiController apcon;
     private static XUTraderRoll traderRoll;
-
 
     //global
     private static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
@@ -73,6 +73,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //flatten drift trader
     private static final double FLATTEN_THRESH = 200000.0;
     public static volatile Eagerness flattenEagerness = Eagerness.Passive;
+
+    //hilo trader
+    private static volatile Direction hiloDirection = Direction.Flat;
 
 
     private static final int ORDER_WAIT_TIME = 30;
@@ -726,6 +729,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         firstTickTrader(ldt, price);
+        newHiLoTrader(ldt, price);
 
         double currDelta = getNetPtfDelta();
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
@@ -1137,41 +1141,48 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static void newHiLoTrader(LocalDateTime nowMilli, double freshPrice) {
+
         LocalTime lt = nowMilli.toLocalTime();
-        if (lt.isBefore(LocalTime.of(9, 40))) {
+        if (lt.isAfter(LocalTime.of(9, 40))) {
             return;
         }
 
         if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
             return;
         }
+
         LocalDateTime lastHiLoTime = getLastOrderTime(INDEX_NEW_HILO);
         double curr = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
         LocalTime lastkey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
-        double hi = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isBefore(lastkey)).mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-        double lo = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isBefore(lastkey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        if (MINUTES.between(lastHiLoTime, nowMilli) >= ORDER_WAIT_TIME) {
-            if (curr > hi) {
+        double hi = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isBefore(lastkey)).mapToDouble(Map.Entry::getValue).max()
+                .orElse(Double.MAX_VALUE);
+
+        double lo = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isBefore(lastkey)).mapToDouble(Map.Entry::getValue).min()
+                .orElse(Double.MIN_VALUE);
+
+        if (SECONDS.between(lastHiLoTime, nowMilli) >= 60) {
+            if (curr > hi && hiloDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.INDEX_NEW_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "index new high buy",
-                        globalIdOrderMap.get(id), "curr hi lo ", curr, hi, lo));
-            } else if (curr < lo) {
+                        globalIdOrderMap.get(id), "curr hi lo ", curr, hi, lo, "hilo direc ", hiloDirection));
+                hiloDirection = Direction.Long;
+            } else if (curr < lo && hiloDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.INDEX_NEW_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "index new low sell",
-                        globalIdOrderMap.get(id), "curr hi lo ", curr, hi, lo));
+                        globalIdOrderMap.get(id), "curr hi lo ", curr, hi, lo, "hilo direc ", hiloDirection));
+                hiloDirection = Direction.Short;
             }
         }
     }
-
 
     private static int getSizeForDelta(double price, double fx, double delta) {
         return (int) Math.floor(Math.abs(delta) / (fx * price));
