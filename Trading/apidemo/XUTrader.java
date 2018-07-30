@@ -1020,9 +1020,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static double getExpiringDelta() {
         return currentPosMap.entrySet().stream()
                 .mapToDouble(e -> {
-                    if (e.getKey() == FutType.FrontFut &&
+                    if ((e.getKey() == FutType.PreviousFut &&
+                            LocalDate.parse(TradingConstants.getFutLastExpiry(), DateTimeFormatter.ofPattern("yyyyMMdd"))
+                                    .equals(LocalDate.now()) && LocalTime.now().isAfter(LocalTime.of(15, 0)))
+                            || (e.getKey() == FutType.FrontFut &&
                             LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd"))
-                                    .equals(LocalDate.now())) {
+                                    .equals(LocalDate.now()) && LocalTime.now().isBefore(LocalTime.of(15, 0)))) {
+//                        pr(" get expiring delta ", e.getValue(), futPriceMap.getOrDefault(e.getKey(),
+//                                SinaStock.FTSE_OPEN), ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getTicker(),
+//                                "CNY"), 1.0));
                         return e.getValue() * futPriceMap.getOrDefault(e.getKey(), SinaStock.FTSE_OPEN)
                                 * ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getTicker(),
                                 "CNY"), 1.0);
