@@ -1170,18 +1170,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday first tick buy",
-                        globalIdOrderMap.get(id), "open curr ftsePerc", open, firstTick, perc));
+                        globalIdOrderMap.get(id), "open first1 first2 ftsePerc", open, firstTick, firstTicker2, perc));
             } else if (firstTick < open && perc > 90) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday first tick sell",
-                        globalIdOrderMap.get(id), "open curr ftsePerc", open, firstTick, perc));
+                        globalIdOrderMap.get(id), "open first1 first2 ftsePerc", open, firstTick, firstTicker2, perc));
             }
         }
-
-
     }
 
     private static void newHiLoTrader(LocalDateTime nowMilli, double freshPrice) {
