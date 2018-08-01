@@ -1085,16 +1085,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static void firstTickTrader(LocalDateTime nowMilli, double freshPrice) {
-
         LocalTime lt = nowMilli.toLocalTime();
         if (lt.isBefore(LocalTime.of(9, 28)) || lt.isAfter(LocalTime.of(9, 35))) {
             return;
         }
-
         if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
             return;
         }
-
         pr(" detailed ftse index ", priceMapBarDetail.get(FTSE_INDEX));
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28)).getValue();
@@ -1133,12 +1130,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29, 0)).getValue();
         double firstTick = priceMapBarDetail.get(FTSE_INDEX).higherEntry(LocalTime.of(9, 30, 0)).getValue();
-        LocalDateTime lastOpenTime = getLastOrderTime(INTRADAY_FIRSTTICK);
-
         double firstTick2 = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
 
+        LocalDateTime lastOpenTime = getLastOrderTime(INTRADAY_FIRSTTICK);
         pr(" intraday first tick, open, firstT1, firstT2, perc ", open, firstTick, firstTick2, perc);
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
@@ -1534,46 +1530,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return 0.0;
     }
 
-    private static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice, int pmChg, int lastP) {
-        if (checkTimeRangeBool(nowMilli.toLocalTime(), 5, 0, 15, 0)) {
-            return;
-        }
-
-        double baseDelta = _20DayMA == MASentiment.Bearish ? BEAR_BASE_DELTA : BULL_BASE_DELTA;
-        double pmchgDelta = (pmChg < 0 ? 1 : -1) * PMCHY_DELTA;
-        double weekdayDelta = getWeekdayDeltaAdjustment(getTradeDate(nowMilli));
-        double deltaTarget = baseDelta + pmchgDelta + weekdayDelta;
-
-        double netDelta = getNetPtfDelta();
-        LocalDateTime lastTrimOrderT = getLastOrderTime(TRIM);
-
-        checkCancelTrades(TRIM, nowMilli, ORDER_WAIT_TIME);
-
-        pr("trim trader currDel", r(netDelta),
-                " Del: base pmch weekday", baseDelta, pmchgDelta, weekdayDelta, "target:", deltaTarget,
-                "pmChg ", pmChg, "lastP", lastP, "last order T ",
-                lastTrimOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
-                , "next order T",
-                lastTrimOrderT.plusMinutes(ORDER_WAIT_TIME).toLocalTime().truncatedTo(ChronoUnit.MINUTES));
-
-        if (MINUTES.between(lastTrimOrderT, nowMilli) >= ORDER_WAIT_TIME) {
-            if (netDelta > deltaTarget && pmChg > 0 && lastP > UP_PERC_WIDE) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, TRIM));
-                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "trim sell", globalIdOrderMap.get(id)));
-            } else if (netDelta < deltaTarget && pmChg < 0 && lastP < DOWN_PERC_WIDE) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, TRIM));
-                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "trim buy", globalIdOrderMap.get(id)));
-            }
-        }
-    }
-
-
     /**
      * PD trader
      */
@@ -1871,7 +1827,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
     }
-
 
     /**
      * inventory trader
@@ -2315,7 +2270,44 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    private static synchronized void trimTrader(LocalDateTime nowMilli, double freshPrice, int pmChg, int lastP) {
+        if (checkTimeRangeBool(nowMilli.toLocalTime(), 5, 0, 15, 0)) {
+            return;
+        }
 
+        double baseDelta = _20DayMA == MASentiment.Bearish ? BEAR_BASE_DELTA : BULL_BASE_DELTA;
+        double pmchgDelta = (pmChg < 0 ? 1 : -1) * PMCHY_DELTA;
+        double weekdayDelta = getWeekdayDeltaAdjustment(getTradeDate(nowMilli));
+        double deltaTarget = baseDelta + pmchgDelta + weekdayDelta;
+
+        double netDelta = getNetPtfDelta();
+        LocalDateTime lastTrimOrderT = getLastOrderTime(TRIM);
+
+        checkCancelTrades(TRIM, nowMilli, ORDER_WAIT_TIME);
+
+        pr("trim trader currDel", r(netDelta),
+                " Del: base pmch weekday", baseDelta, pmchgDelta, weekdayDelta, "target:", deltaTarget,
+                "pmChg ", pmChg, "lastP", lastP, "last order T ",
+                lastTrimOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
+                , "next order T",
+                lastTrimOrderT.plusMinutes(ORDER_WAIT_TIME).toLocalTime().truncatedTo(ChronoUnit.MINUTES));
+
+        if (MINUTES.between(lastTrimOrderT, nowMilli) >= ORDER_WAIT_TIME) {
+            if (netDelta > deltaTarget && pmChg > 0 && lastP > UP_PERC_WIDE) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, TRIM));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "trim sell", globalIdOrderMap.get(id)));
+            } else if (netDelta < deltaTarget && pmChg < 0 && lastP < DOWN_PERC_WIDE) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, TRIM));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "trim buy", globalIdOrderMap.get(id)));
+            }
+        }
+    }
 
 
     //**********************************************Trade types **********************************************

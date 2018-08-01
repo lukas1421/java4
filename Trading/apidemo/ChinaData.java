@@ -491,11 +491,8 @@ public final class ChinaData extends JPanel {
                                    ChinaSaveInterface2Blob saveclass) {
 
         LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
-
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
-
         CompletableFuture.runAsync(() -> {
-
             try (Session session = sessionF.openSession()) {
                 try {
                     session.getTransaction().begin();
