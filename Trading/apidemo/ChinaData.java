@@ -464,6 +464,10 @@ public final class ChinaData extends JPanel {
     }
 
     static void withHibernate() {
+        if (priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
+            saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());
+        }
+
         if (priceMapBar.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) { // && LocalTime.now().isAfter(AM914T)
             saveHibGen(priceMapBar, sizeTotalMap, ChinaSave.getInstance());
         }
@@ -486,6 +490,8 @@ public final class ChinaData extends JPanel {
         Hibtask.loadHibGen(ChinaSaveBidAsk.getInstance());
     }
 
+    //private static void saveHib
+
     private static void saveHibGen(Map<String, ? extends NavigableMap<LocalTime, ?>> mp,
                                    Map<String, ? extends NavigableMap<LocalTime, ?>> mp2,
                                    ChinaSaveInterface2Blob saveclass) {
@@ -499,10 +505,12 @@ public final class ChinaData extends JPanel {
                     session.createQuery("DELETE from " + saveclass.getClass().getName()).executeUpdate();
                     AtomicLong i = new AtomicLong(0L);
                     mp.keySet().forEach(name -> {
-                        if (mp2.isEmpty() || mp2.containsKey(name)) {
+                        if (mp2.size() == 0 || mp2.containsKey(name)) {
                             ChinaSaveInterface2Blob cs = saveclass.createInstance(name);
                             cs.setFirstBlob(blobify(mp.get(name), session));
-                            cs.setSecondBlob(blobify(mp2.get(name), session));
+                            if (mp2.size() > 0) {
+                                cs.setSecondBlob(blobify(mp2.get(name), session));
+                            }
                             session.save(cs);
                             if (i.get() % 100 == 0) {
                                 session.flush();
