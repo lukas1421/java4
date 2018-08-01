@@ -1115,6 +1115,59 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    //intraday MA
+    private static synchronized void intradayMATrader(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        if (!checkTimeRangeBool(lt, 9, 29, 15, 0) || isStockNoonBreak(lt)) {
+            return;
+        }
+
+        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
+                , e -> !isStockNoonBreak(e));
+
+        int shorterMA = 5;
+        int longerMA = 10;
+
+        checkCancelTrades(INTRADAY_MA, nowMilli, ORDER_WAIT_TIME * 2);
+        LocalDate tTrade = getTradeDate(nowMilli);
+
+        int todayPerc = getPercentileForLastPred(index, e -> e.getKey().toLocalDate().equals(tTrade));
+        LocalDateTime lastIndexMAOrder = getLastOrderTime(INTRADAY_MA);
+
+        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
+        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
+
+        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
+            pr(" smashort size long size not enough ");
+            return;
+        }
+
+        double maShortLast = smaShort.lastEntry().getValue();
+        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
+        double maLongLast = smaLong.lastEntry().getValue();
+        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
+
+        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME) {
+            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && todayPerc < 10) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_MA));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "intraday MA buy", globalIdOrderMap.get(id)
+                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
+                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
+            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > 90) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_MA));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "intraday MA sell", globalIdOrderMap.get(id)
+                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
+                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
+            }
+        }
+    }
+
     private static void intradayFirstTickTrader(LocalDateTime nowMilli, double freshPrice) {
 
         LocalTime lt = nowMilli.toLocalTime();
@@ -1322,57 +1375,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static synchronized void intradayMATrader(LocalDateTime nowMilli, double freshPrice) {
-        LocalTime lt = nowMilli.toLocalTime();
-        if (!checkTimeRangeBool(lt, 9, 29, 15, 0) || isStockNoonBreak(lt)) {
-            return;
-        }
 
-        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
-                , e -> !isStockNoonBreak(e));
-
-        int shorterMA = 10;
-        int longerMA = 20;
-
-        checkCancelTrades(INTRADAY_MA, nowMilli, ORDER_WAIT_TIME * 2);
-        LocalDate tTrade = getTradeDate(nowMilli);
-
-        int todayPerc = getPercentileForLastPred(index, e -> e.getKey().toLocalDate().equals(tTrade));
-        LocalDateTime lastIndexMAOrder = getLastOrderTime(INTRADAY_MA);
-
-        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
-        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
-
-        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            pr(" smashort size long size not enough ");
-            return;
-        }
-
-        double maShortLast = smaShort.lastEntry().getValue();
-        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
-        double maLongLast = smaLong.lastEntry().getValue();
-        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
-
-        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME) {
-            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && todayPerc < 10) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_MA));
-                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "intraday MA buy", globalIdOrderMap.get(id)
-                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
-                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
-            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > 90) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_MA));
-                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "intraday MA sell", globalIdOrderMap.get(id)
-                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
-                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
-            }
-        }
-    }
 
     /**
      * Auto trading based on Moving Avg, no percentile

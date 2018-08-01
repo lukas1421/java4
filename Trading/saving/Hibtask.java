@@ -18,6 +18,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import static apidemo.ChinaStock.symbolNames;
+import static apidemo.TradingConstants.FTSE_INDEX;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class Hibtask {
@@ -50,15 +51,17 @@ public class Hibtask {
         LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
         try (Session session = sessionF.openSession()) {
+
             symbolNames.forEach((key) -> {
-                //if (!key.startsWith("hk")) {
-                ChinaSaveInterface2Blob cs = session.load(saveclass.getClass(), key);
-                Blob blob1 = cs.getFirstBlob();
-                Blob blob2 = cs.getSecondBlob();
-                saveclass.updateFirstMap(key, unblob(blob1));
-                saveclass.updateSecondMap(key, unblob(blob2));
-                //}
+                if (!saveclass.getSimpleName().equals("PriceMapBarDetailed") || key.equals(FTSE_INDEX)) {
+                    ChinaSaveInterface2Blob cs = session.load(saveclass.getClass(), key);
+                    Blob blob1 = cs.getFirstBlob();
+                    Blob blob2 = cs.getSecondBlob();
+                    saveclass.updateFirstMap(key, unblob(blob1));
+                    saveclass.updateSecondMap(key, unblob(blob2));
+                }
             });
+
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -68,6 +71,7 @@ public class Hibtask {
         LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         CompletableFuture.runAsync(() -> {
             loadHibGen(ChinaSave.getInstance());
+            loadHibGen(ChinaSaveDetailed.getInstance());
             System.out.println(" load finished " + " size is " + ChinaData.priceMapBar.size());
         }).thenAccept(
                 v -> {

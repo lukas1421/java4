@@ -14,7 +14,7 @@ import static apidemo.ChinaData.priceMapBarDetail;
 @javax.persistence.Entity
 @Table(name = "CHINASAVEDETAILED")
 
-public class ChinaSaveDetailed implements Serializable {
+public class ChinaSaveDetailed implements Serializable, ChinaSaveInterface2Blob {
 
     private static final long serialVersionUID = 88888800L;
     private static final ChinaSaveDetailed CS = new ChinaSaveDetailed();
@@ -38,12 +38,24 @@ public class ChinaSaveDetailed implements Serializable {
         return CS;
     }
 
+    @Override
     public void setFirstBlob(Blob x) {
         this.dayPriceMapBlob = x;
     }
 
+    @Override
+    public void setSecondBlob(Blob x) {
+
+    }
+
+    @Override
     public Blob getFirstBlob() {
         return dayPriceMapBlob;
+    }
+
+    @Override
+    public Blob getSecondBlob() {
+        return null;
     }
 
     public ChinaSaveDetailed createInstance(String name) {
@@ -53,6 +65,11 @@ public class ChinaSaveDetailed implements Serializable {
     public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
         //priceMapBar.put(name,(ConcurrentSkipListMap<LocalTime,SimpleBar>)trimSkipMap(mp, LocalTime.of(9,19)));
         priceMapBarDetail.put(name, (ConcurrentSkipListMap<LocalTime, Double>) Utility.trimSkipMap(mp, LocalTime.of(9, 0)));
+    }
+
+    @Override
+    public void updateSecondMap(String name, NavigableMap<LocalTime, ?> mp) {
+
     }
 
     @Override
