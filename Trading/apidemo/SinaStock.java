@@ -89,7 +89,8 @@ public class SinaStock implements Runnable {
                 double sinaVol = weightMapA50.entrySet().stream()
                         .mapToDouble(a -> sizeMap.getOrDefault(a.getKey(), 0L).doubleValue() * a.getValue() / 100d).sum();
 
-                if (LocalTime.now().isAfter(LocalTime.of(8, 59)) && LocalTime.now().isBefore(LocalTime.of(9, 5))) {
+                if (LocalTime.now().isAfter(LocalTime.of(8, 59))
+                        && LocalTime.now().isBefore(LocalTime.of(9, 5))) {
                     currPrice = FTSE_OPEN; //currprice is unstable in the first 5 minutes
                 }
 
@@ -157,6 +158,10 @@ public class SinaStock implements Runnable {
 
                             double last = Utility.pd(datalist, 3);
                             sizeTotalMap.get(ticker).put(lt, Utility.pd(datalist, 9) / 1000000d);
+
+                            if (lt.isBefore(LocalTime.of(10, 0))) {
+                                priceMapBarDetail.get(ticker).put(lt, last);
+                            }
 
                             if (priceMapBar.get(ticker).containsKey(lt)) {
                                 priceMapBar.get(ticker).get(lt).add(last);

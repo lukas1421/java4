@@ -18,7 +18,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import static apidemo.ChinaStock.symbolNames;
-import static apidemo.TradingConstants.FTSE_INDEX;
 import static java.time.temporal.ChronoUnit.SECONDS;
 
 public class Hibtask {
@@ -53,13 +52,13 @@ public class Hibtask {
         try (Session session = sessionF.openSession()) {
 
             symbolNames.forEach((key) -> {
-                if (!saveclass.getSimpleName().equals("PriceMapBarDetailed") || key.equals(FTSE_INDEX)) {
+                //if (!saveclass.getSimpleName().equals("PriceMapBarDetailed") || key.equals(FTSE_INDEX)) {
                     ChinaSaveInterface2Blob cs = session.load(saveclass.getClass(), key);
                     Blob blob1 = cs.getFirstBlob();
                     Blob blob2 = cs.getSecondBlob();
                     saveclass.updateFirstMap(key, unblob(blob1));
                     saveclass.updateSecondMap(key, unblob(blob2));
-                }
+                //}
             });
 
         } catch (Exception ex) {
@@ -74,12 +73,10 @@ public class Hibtask {
             loadHibGen(ChinaSaveDetailed.getInstance());
             System.out.println(" load finished " + " size is " + ChinaData.priceMapBar.size());
         }).thenAccept(
-                v -> {
-                    ChinaMain.updateSystemNotif(Utility.str(" LOAD HIB T DONE ",
-                            LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
-                            SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
-                    ));
-                }
+                v -> ChinaMain.updateSystemNotif(Utility.str(" LOAD HIB T DONE ",
+                        LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
+                        SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
+                ))
         );
     }
 

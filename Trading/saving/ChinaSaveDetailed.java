@@ -62,9 +62,12 @@ public class ChinaSaveDetailed implements Serializable, ChinaSaveInterface2Blob 
         return new ChinaSaveDetailed(name);
     }
 
+    @SuppressWarnings("unchecked")
     public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
         //priceMapBar.put(name,(ConcurrentSkipListMap<LocalTime,SimpleBar>)trimSkipMap(mp, LocalTime.of(9,19)));
-        priceMapBarDetail.put(name, (ConcurrentSkipListMap<LocalTime, Double>) Utility.trimSkipMap(mp, LocalTime.of(9, 0)));
+        if (mp.size() > 0) {
+            priceMapBarDetail.put(name, (ConcurrentSkipListMap<LocalTime, Double>) Utility.trimSkipMap(mp, LocalTime.of(9, 0)));
+        }
     }
 
     @Override

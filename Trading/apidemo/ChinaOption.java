@@ -79,8 +79,8 @@ public class ChinaOption extends JPanel implements Runnable {
 
     public static LocalDate frontExpiry = getExpiryDateAuto(1);
     public static LocalDate backExpiry = getExpiryDateAuto(2);
-    public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.SEPTEMBER);
-    public static LocalDate fourthExpiry = getOptionExpiryDate(2018, Month.DECEMBER);
+    public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.DECEMBER);
+    public static LocalDate fourthExpiry = getOptionExpiryDate(2019, Month.MARCH);
 
     private static String frontMonth = frontExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
     private static String backMonth = backExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
