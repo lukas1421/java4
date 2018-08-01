@@ -771,35 +771,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         overnightTrader(ldt, price);
     }
 
-    private static void amHedgeTrader(LocalDateTime nowMilli, double freshPrice) {
-        LocalTime lt = nowMilli.toLocalTime();
-        double currDelta = getNetPtfDelta();
-        NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
-
-        LocalDate tDate = checkTimeRangeBool(lt, 23, 59, 5, 0) ?
-                nowMilli.toLocalDate().minusDays(1L) : nowMilli.toLocalDate();
-
-        NavigableMap<LocalDateTime, SimpleBar> todayPriceMap =
-                futdata.entrySet().stream().filter(e -> e.getKey()
-                        .isAfter(LocalDateTime.of(tDate, LocalTime.of(8, 59))))
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
-                                ConcurrentSkipListMap::new));
-
-        LocalDateTime lastAMHedgeOrderTime = getLastOrderTime(AM_HEDGE);
-
-        int todayPerc = getPercentileForLast(todayPriceMap);
-
-        if (todayPerc > UP_PERC && currDelta > 0.0 &&
-                MINUTES.between(lastAMHedgeOrderTime, nowMilli) >= ORDER_WAIT_TIME
-                && nowMilli.toLocalTime().isBefore(LocalTime.of(13, 0))) {
-
-            int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimit(freshPrice, 1);
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AM_HEDGE));
-            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            outputOrderToAutoLog(str(o.orderId(), "AM hedge", globalIdOrderMap.get(id)));
-        }
-    }
 
     private static boolean checkf10maxAftermint(String name) {
         if (!priceMapBar.containsKey(name) || priceMapBar.get(name).size() < 2) {
@@ -1237,188 +1208,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return (int) Math.floor(Math.abs(delta) / (fx * price));
     }
 
-    /**
-     * slow cover trader (unconditional, not like MA)
-     *
-     * @param nowMilli   time now
-     * @param freshPrice price now
-     */
-    private static synchronized void slowCoverTrader(LocalDateTime nowMilli, double freshPrice) {
-        checkCancelTrades(SLOW_COVER, nowMilli, ORDER_WAIT_TIME);
-        LocalTime lt = nowMilli.toLocalTime();
-
-        if (!(checkTimeRangeBool(lt, 9, 29, 15, 0))) {
-            pr(" day trader: not in time range, return ", nowMilli.toLocalTime());
-            return;
-        }
-
-        NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
-        LocalDate tDate = getTradeDate(nowMilli);
-        int perc = getPercentileForLastPred(futdata, e -> e.getKey().toLocalDate().equals(tDate));
-        LocalDateTime lastSlowCoverTime = getLastOrderTime(SLOW_COVER);
-
-        if (futdata.size() < 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
-            return;
-        }
-
-        pr(" slow cover trader: ", "last order time ", lastSlowCoverTime, "p% ", perc);
-
-        if (MINUTES.between(lastSlowCoverTime, nowMilli) >= ORDER_WAIT_TIME) {
-            if (perc < DOWN_PERC) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.SLOW_COVER));
-                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "slow cover", globalIdOrderMap.get(id), " todayP% ", perc));
-            }
-        }
-    }
-
-    /**
-     * percentileTrader
-     */
-    private static synchronized void percentileTrader(LocalDateTime nowMilli, double freshPrice) {
-        // run every 15 minutes
-        int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
-        double pd = getPD(freshPrice);
-        double fx = ChinaPosition.fxMap.getOrDefault("USD", 0.0);
-
-        NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
-
-        if (futdata.size() < 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
-            pr(" perc trader doesnt contain 2 days ");
-            return;
-        }
-
-        long accSize = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == PERC_ACC)
-                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
-                .mapToInt(e -> e.getValue().getOrder().getTotalSize()).sum();
-
-        long deccSize = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == AutoOrderType.PERC_DECC)
-                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
-                .mapToInt(e -> e.getValue().getOrder().getTotalSize()).sum();
-
-        long netPercTrades = accSize - deccSize;
-
-        long percOrdersTotal = globalIdOrderMap.entrySet().stream()
-                .filter(e -> isPercTrade().test(e.getValue().getOrderType())).count();
-
-        LocalDateTime lastPercTradeT = globalIdOrderMap.entrySet().stream()
-                .filter(e -> isPercTrade().test(e.getValue().getOrderType()))
-                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
-                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .map(e -> e.getValue().getOrderTime())
-                .orElse(sessionOpenT());
-
-        LocalDateTime lastPercOrderT = globalIdOrderMap.entrySet().stream()
-                .filter(e -> isPercTrade().test(e.getValue().getOrderType()))
-                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .map(e -> e.getValue().getOrderTime())
-                .orElse(sessionOpenT());
-
-        double avgAccprice = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == PERC_ACC)
-                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
-                .mapToDouble(e -> e.getValue().getOrder().lmtPrice()).average().orElse(0.0);
-
-        double avgDeccprice = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == AutoOrderType.PERC_DECC)
-                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
-                .mapToDouble(e -> e.getValue().getOrder().lmtPrice()).average().orElse(0.0);
-
-        int unfilledPercOrdersCount = (int) globalIdOrderMap.entrySet().stream()
-                .filter(e -> isPercTrade().test(e.getValue().getOrderType()))
-                .filter(e -> e.getValue().getStatus() != OrderStatus.Filled &&
-                        e.getValue().getStatus() != OrderStatus.Inactive &&
-                        e.getValue().getStatus() != OrderStatus.Cancelled &&
-                        e.getValue().getStatus() != OrderStatus.ApiCancelled)
-                .peek(e -> pr(e.getValue())).count();
-
-        if (unfilledPercOrdersCount != 0) {
-            pr(" unfilled perc orders count: ", unfilledPercOrdersCount, " manual cancel required ");
-            return;
-        }
-
-        int minBetweenPercOrders = percOrdersTotal == 0 ? 0 : 10;
-
-        if (detailedPrint.get()) {
-            pr("perc Trader status?", percentileTradeOn.get() ? "ON" : "OFF",
-                    nowMilli.toLocalTime().truncatedTo(ChronoUnit.SECONDS),
-                    "p%:", perc, "pd", r10000(pd), "BullBear target : ", getBullishTarget(), getBearishTarget(),
-                    "acc#, decc#, net#", accSize, deccSize, netPercTrades
-                    , "accAvg, DecAvg,", avgAccprice, avgDeccprice,
-                    "OrderT TradeT,next tradeT",
-                    lastPercOrderT.toLocalTime().truncatedTo(MINUTES),
-                    lastPercTradeT.toLocalTime().truncatedTo(MINUTES),
-                    lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime().truncatedTo(MINUTES)
-            );
-        }
-
-        //******************************************************************************************//
-        //if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
-        if (!percentileTradeOn.get()) return;
-
-        //********************************************z*********************************************//
-        if (timeDiffinMinutes(lastPercOrderT, nowMilli) >= minBetweenPercOrders) {
-            if (perc < DOWN_PERC) {
-                int id = autoTradeID.incrementAndGet();
-                int buySize = 1;
-                if (buySize > 0) {
-                    Order o = placeBidLimit(freshPrice, buySize);
-                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid", PERC_ACC));
-                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                    outputOrderToAutoLog(str(o.orderId(), "perc bid",
-                            globalIdOrderMap.get(id), " perc ", perc));
-                } else {
-                    pr("perc buy size not tradable " + buySize);
-                }
-            } else {
-                pr(" perc: delta above bullish target ");
-            }
-        } else if (perc > UP_PERC) {
-            int id = autoTradeID.incrementAndGet();
-            int sellSize = 1;
-            if (sellSize > 0) {
-                Order o = placeOfferLimit(freshPrice, sellSize);
-                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer",
-                        AutoOrderType.PERC_DECC));
-                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "perc offer", globalIdOrderMap.get(id), "perc", perc));
-            } else {
-                pr("perc sell size not tradable " + sellSize);
-            }
-        } else {
-            pr("perc: delta below bearish target ");
-        }
-    }
-
-
-    /**
-     * only cover if first 10 maxT> first 10 minT
-     *
-     * @param nowMilli   time now in milli
-     * @param freshPrice price
-     */
-    private static synchronized void fastCoverTrader(LocalDateTime nowMilli, double freshPrice) {
-        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
-                , e -> !checkTimeRangeBool(e, 11, 30, 12, 59));
-        int indexTPerc = getPercentileForLast(index);
-        LocalDateTime lastCoverOrderT = getLastOrderTime(FAST_COVER);
-        checkCancelTrades(FAST_COVER, nowMilli, ORDER_WAIT_TIME);
-
-        if (indexTPerc < DOWN_PERC && MINUTES.between(lastCoverOrderT, nowMilli) > ORDER_WAIT_TIME) {
-            int id = autoTradeID.incrementAndGet();
-            int size = 1;
-            Order o = placeBidLimit(freshPrice, size); //Math.min(size, MAX_FUT_LIMIT)
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FAST_COVER));
-            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            outputOrderToAutoLog(str(o.orderId(), "cover short follow PMY < 0, p%", indexTPerc,
-                    globalIdOrderMap.get(id)));
-        }
-    }
-
     private static LocalDateTime getLastOrderTime(AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
@@ -1443,8 +1232,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
 
-        int shorterMA = 10;
-        int longerMA = 20;
+        int shorterMA = 5;
+        int longerMA = 10;
         int maSize;
         int tOrders = ORDER_WAIT_TIME;
 
@@ -1698,58 +1487,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         requestOvernightExecHistory();
     }
 
-    /**
-     * Last hour direction more clear - trade
-     *
-     * @param nowMilli   timeNow
-     * @param freshPrice Latest fut price
-     */
-    private static void lastHourMATrader(LocalDateTime nowMilli, double freshPrice, double pmPercYChg) {
-        LocalTime lt = nowMilli.toLocalTime();
-        String anchorIndex = FTSE_INDEX;
-        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate()
-                , e -> !checkTimeRangeBool(e, 11, 30, 12, 59));
-        int shorterMA = 5;
-        int longerMA = 10;
-        LocalDateTime lastHourMAOrderTime = getLastOrderTime(LAST_HOUR_MA);
-        int waitTime = 1;
-
-        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
-        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
-
-        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            pr(" smashort size long size not enough ");
-            return;
-        }
-
-        double maShortLast = smaShort.lastEntry().getValue();
-        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
-        double maLongLast = smaLong.lastEntry().getValue();
-        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
-
-        //only trade UNCON_MA in the last hour, no perc required. Big order wait time.
-        if (checkTimeRangeBool(lt, 14, 0, 15, 0)) {
-            if (MINUTES.between(lastHourMAOrderTime, nowMilli) >= waitTime) {
-                if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && pmPercYChg < 0) {
-                    int id = autoTradeID.incrementAndGet();
-                    Order o = placeBidLimit(freshPrice, 1);
-                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, LAST_HOUR_MA));
-                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                    outputOrderToAutoLog(str(o.orderId(), "last hr UNCON_MA buy", globalIdOrderMap.get(id)
-                            , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
-                            r(maShortSecLast), r(maLongSecLast)));
-                } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && pmPercYChg > 0) {
-                    int id = autoTradeID.incrementAndGet();
-                    Order o = placeOfferLimit(freshPrice, 1);
-                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, LAST_HOUR_MA));
-                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                    outputOrderToAutoLog(str(o.orderId(), "last hr UNCON_MA sell", globalIdOrderMap.get(id)
-                            , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
-                            r(maShortSecLast), r(maLongSecLast)));
-                }
-            }
-        }
-    }
 
     /**
      * cancel order of type
@@ -1814,8 +1551,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         pr("trim trader currDel", r(netDelta),
                 " Del: base pmch weekday", baseDelta, pmchgDelta, weekdayDelta, "target:", deltaTarget,
-                "pmChg ", pmChg, "lastP", lastP, "last order T ", lastTrimOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
-                , "next order T", lastTrimOrderT.plusMinutes(ORDER_WAIT_TIME).toLocalTime().truncatedTo(ChronoUnit.MINUTES));
+                "pmChg ", pmChg, "lastP", lastP, "last order T ",
+                lastTrimOrderT.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
+                , "next order T",
+                lastTrimOrderT.plusMinutes(ORDER_WAIT_TIME).toLocalTime().truncatedTo(ChronoUnit.MINUTES));
 
         if (MINUTES.between(lastTrimOrderT, nowMilli) >= ORDER_WAIT_TIME) {
             if (netDelta > deltaTarget && pmChg > 0 && lastP > UP_PERC_WIDE) {
@@ -2313,6 +2052,274 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    /**
+     * only cover if first 10 maxT> first 10 minT
+     *
+     * @param nowMilli   time now in milli
+     * @param freshPrice price
+     */
+    private static synchronized void fastCoverTrader(LocalDateTime nowMilli, double freshPrice) {
+        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
+                , e -> !checkTimeRangeBool(e, 11, 30, 12, 59));
+        int indexTPerc = getPercentileForLast(index);
+        LocalDateTime lastCoverOrderT = getLastOrderTime(FAST_COVER);
+        checkCancelTrades(FAST_COVER, nowMilli, ORDER_WAIT_TIME);
+
+        if (indexTPerc < DOWN_PERC && MINUTES.between(lastCoverOrderT, nowMilli) > ORDER_WAIT_TIME) {
+            int id = autoTradeID.incrementAndGet();
+            int size = 1;
+            Order o = placeBidLimit(freshPrice, size); //Math.min(size, MAX_FUT_LIMIT)
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FAST_COVER));
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(str(o.orderId(), "cover short follow PMY < 0, p%", indexTPerc,
+                    globalIdOrderMap.get(id)));
+        }
+    }
+
+    /**
+     * Last hour direction more clear - trade
+     *
+     * @param nowMilli   timeNow
+     * @param freshPrice Latest fut price
+     */
+    private static void lastHourMATrader(LocalDateTime nowMilli, double freshPrice, double pmPercYChg) {
+        LocalTime lt = nowMilli.toLocalTime();
+        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
+                , e -> !checkTimeRangeBool(e, 11, 30, 12, 59));
+        int shorterMA = 5;
+        int longerMA = 10;
+        LocalDateTime lastHourMAOrderTime = getLastOrderTime(LAST_HOUR_MA);
+        int waitTime = 1;
+
+        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
+        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
+
+        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
+            pr(" smashort size long size not enough ");
+            return;
+        }
+
+        double maShortLast = smaShort.lastEntry().getValue();
+        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
+        double maLongLast = smaLong.lastEntry().getValue();
+        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
+
+        //only trade UNCON_MA in the last hour, no perc required. Big order wait time.
+        if (checkTimeRangeBool(lt, 14, 0, 15, 0)) {
+            if (MINUTES.between(lastHourMAOrderTime, nowMilli) >= waitTime) {
+                if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && pmPercYChg < 0) {
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeBidLimit(freshPrice, 1);
+                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, LAST_HOUR_MA));
+                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                    outputOrderToAutoLog(str(o.orderId(), "last hr UNCON_MA buy", globalIdOrderMap.get(id)
+                            , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
+                            r(maShortSecLast), r(maLongSecLast)));
+                } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && pmPercYChg > 0) {
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeOfferLimit(freshPrice, 1);
+                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, LAST_HOUR_MA));
+                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                    outputOrderToAutoLog(str(o.orderId(), "last hr UNCON_MA sell", globalIdOrderMap.get(id)
+                            , "Last shortlong ", r(maShortLast), r(maLongLast), "SecLast Shortlong",
+                            r(maShortSecLast), r(maLongSecLast)));
+                }
+            }
+        }
+    }
+
+    /**
+     * percentileTrader
+     */
+    private static synchronized void percentileTrader(LocalDateTime nowMilli, double freshPrice) {
+        // run every 15 minutes
+        int perc = getPercentileForLast(futData.get(ibContractToFutType(activeFuture)));
+        double pd = getPD(freshPrice);
+        double fx = ChinaPosition.fxMap.getOrDefault("USD", 0.0);
+
+        NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
+
+        if (futdata.size() < 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
+            pr(" perc trader doesnt contain 2 days ");
+            return;
+        }
+
+        long accSize = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == PERC_ACC)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .mapToInt(e -> e.getValue().getOrder().getTotalSize()).sum();
+
+        long deccSize = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == AutoOrderType.PERC_DECC)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .mapToInt(e -> e.getValue().getOrder().getTotalSize()).sum();
+
+        long netPercTrades = accSize - deccSize;
+
+        long percOrdersTotal = globalIdOrderMap.entrySet().stream()
+                .filter(e -> isPercTrade().test(e.getValue().getOrderType())).count();
+
+        LocalDateTime lastPercTradeT = globalIdOrderMap.entrySet().stream()
+                .filter(e -> isPercTrade().test(e.getValue().getOrderType()))
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getOrderTime())
+                .orElse(sessionOpenT());
+
+        LocalDateTime lastPercOrderT = globalIdOrderMap.entrySet().stream()
+                .filter(e -> isPercTrade().test(e.getValue().getOrderType()))
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getOrderTime())
+                .orElse(sessionOpenT());
+
+        double avgAccprice = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == PERC_ACC)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .mapToDouble(e -> e.getValue().getOrder().lmtPrice()).average().orElse(0.0);
+
+        double avgDeccprice = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == AutoOrderType.PERC_DECC)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .mapToDouble(e -> e.getValue().getOrder().lmtPrice()).average().orElse(0.0);
+
+        int unfilledPercOrdersCount = (int) globalIdOrderMap.entrySet().stream()
+                .filter(e -> isPercTrade().test(e.getValue().getOrderType()))
+                .filter(e -> e.getValue().getStatus() != OrderStatus.Filled &&
+                        e.getValue().getStatus() != OrderStatus.Inactive &&
+                        e.getValue().getStatus() != OrderStatus.Cancelled &&
+                        e.getValue().getStatus() != OrderStatus.ApiCancelled)
+                .peek(e -> pr(e.getValue())).count();
+
+        if (unfilledPercOrdersCount != 0) {
+            pr(" unfilled perc orders count: ", unfilledPercOrdersCount, " manual cancel required ");
+            return;
+        }
+
+        int minBetweenPercOrders = percOrdersTotal == 0 ? 0 : 10;
+
+        if (detailedPrint.get()) {
+            pr("perc Trader status?", percentileTradeOn.get() ? "ON" : "OFF",
+                    nowMilli.toLocalTime().truncatedTo(ChronoUnit.SECONDS),
+                    "p%:", perc, "pd", r10000(pd), "BullBear target : ", getBullishTarget(), getBearishTarget(),
+                    "acc#, decc#, net#", accSize, deccSize, netPercTrades
+                    , "accAvg, DecAvg,", avgAccprice, avgDeccprice,
+                    "OrderT TradeT,next tradeT",
+                    lastPercOrderT.toLocalTime().truncatedTo(MINUTES),
+                    lastPercTradeT.toLocalTime().truncatedTo(MINUTES),
+                    lastPercOrderT.plusMinutes(minBetweenPercOrders).toLocalTime().truncatedTo(MINUTES)
+            );
+        }
+
+        //******************************************************************************************//
+        //if (!(now.isAfter(LocalTime.of(9, 0)) && now.isBefore(LocalTime.of(15, 0)))) return;
+        if (!percentileTradeOn.get()) return;
+
+        //********************************************z*********************************************//
+        if (timeDiffinMinutes(lastPercOrderT, nowMilli) >= minBetweenPercOrders) {
+            if (perc < DOWN_PERC) {
+                int id = autoTradeID.incrementAndGet();
+                int buySize = 1;
+                if (buySize > 0) {
+                    Order o = placeBidLimit(freshPrice, buySize);
+                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc bid", PERC_ACC));
+                    apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                    outputOrderToAutoLog(str(o.orderId(), "perc bid",
+                            globalIdOrderMap.get(id), " perc ", perc));
+                } else {
+                    pr("perc buy size not tradable " + buySize);
+                }
+            } else {
+                pr(" perc: delta above bullish target ");
+            }
+        } else if (perc > UP_PERC) {
+            int id = autoTradeID.incrementAndGet();
+            int sellSize = 1;
+            if (sellSize > 0) {
+                Order o = placeOfferLimit(freshPrice, sellSize);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Perc offer",
+                        AutoOrderType.PERC_DECC));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "perc offer", globalIdOrderMap.get(id), "perc", perc));
+            } else {
+                pr("perc sell size not tradable " + sellSize);
+            }
+        } else {
+            pr("perc: delta below bearish target ");
+        }
+    }
+
+    private static void amHedgeTrader(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        double currDelta = getNetPtfDelta();
+        NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
+
+        LocalDate tDate = checkTimeRangeBool(lt, 23, 59, 5, 0) ?
+                nowMilli.toLocalDate().minusDays(1L) : nowMilli.toLocalDate();
+
+        NavigableMap<LocalDateTime, SimpleBar> todayPriceMap =
+                futdata.entrySet().stream().filter(e -> e.getKey()
+                        .isAfter(LocalDateTime.of(tDate, LocalTime.of(8, 59))))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b) -> a,
+                                ConcurrentSkipListMap::new));
+
+        LocalDateTime lastAMHedgeOrderTime = getLastOrderTime(AM_HEDGE);
+
+        int todayPerc = getPercentileForLast(todayPriceMap);
+
+        if (todayPerc > UP_PERC && currDelta > 0.0 &&
+                MINUTES.between(lastAMHedgeOrderTime, nowMilli) >= ORDER_WAIT_TIME
+                && nowMilli.toLocalTime().isBefore(LocalTime.of(13, 0))) {
+
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimit(freshPrice, 1);
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AM_HEDGE));
+            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(str(o.orderId(), "AM hedge", globalIdOrderMap.get(id)));
+        }
+    }
+
+    /**
+     * slow cover trader (unconditional, not like MA)
+     *
+     * @param nowMilli   time now
+     * @param freshPrice price now
+     */
+    private static synchronized void slowCoverTrader(LocalDateTime nowMilli, double freshPrice) {
+        checkCancelTrades(SLOW_COVER, nowMilli, ORDER_WAIT_TIME);
+        LocalTime lt = nowMilli.toLocalTime();
+
+        if (!(checkTimeRangeBool(lt, 9, 29, 15, 0))) {
+            pr(" day trader: not in time range, return ", nowMilli.toLocalTime());
+            return;
+        }
+
+        NavigableMap<LocalDateTime, SimpleBar> futdata = futData.get(ibContractToFutType(activeFuture));
+        LocalDate tDate = getTradeDate(nowMilli);
+        int perc = getPercentileForLastPred(futdata, e -> e.getKey().toLocalDate().equals(tDate));
+        LocalDateTime lastSlowCoverTime = getLastOrderTime(SLOW_COVER);
+
+        if (futdata.size() < 2 || futdata.firstKey().toLocalDate().equals(futdata.lastKey().toLocalDate())) {
+            return;
+        }
+
+        pr(" slow cover trader: ", "last order time ", lastSlowCoverTime, "p% ", perc);
+
+        if (MINUTES.between(lastSlowCoverTime, nowMilli) >= ORDER_WAIT_TIME) {
+            if (perc < DOWN_PERC) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.SLOW_COVER));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "slow cover", globalIdOrderMap.get(id), " todayP% ", perc));
+            }
+        }
+    }
+
+
+
+
+    //**********************************************Trade types **********************************************
+
     private void loadXU() {
         pr("in loadXU");
         ChinaMain.GLOBAL_REQ_ID.addAndGet(5);
@@ -2396,14 +2403,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (contract.symbol().equals("XINA50")) {
             FutType f = ibContractToFutType(contract);
-
             if (uniqueTradeKeySet.contains(tradeKey)) {
                 pr(" duplicate trade key ", tradeKey);
                 return;
             } else {
                 uniqueTradeKeySet.add(tradeKey);
             }
-
             int sign = (execution.side().equals("BOT")) ? 1 : -1;
             LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
 
@@ -2422,11 +2427,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @Override
     public void tradeReportEnd() {
-        //pr("printing all tradesmap all ", tradesMap);
         if (tradesMap.get(ibContractToFutType(activeFuture)).size() > 0) {
             currentDirection = tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getValue().getSizeAll() > 0 ?
                     Direction.Long : Direction.Short;
-            //lastTradeTime = tradesMap.get(ibContractToFutType(activeFuture)).lastEntry().getKey();
         }
     }
 
