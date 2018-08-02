@@ -53,11 +53,11 @@ public class Hibtask {
 
             symbolNames.forEach((key) -> {
                 //if (!saveclass.getSimpleName().equals("PriceMapBarDetailed") || key.equals(FTSE_INDEX)) {
-                    ChinaSaveInterface2Blob cs = session.load(saveclass.getClass(), key);
-                    Blob blob1 = cs.getFirstBlob();
-                    Blob blob2 = cs.getSecondBlob();
-                    saveclass.updateFirstMap(key, unblob(blob1));
-                    saveclass.updateSecondMap(key, unblob(blob2));
+                ChinaSaveInterface2Blob cs = session.load(saveclass.getClass(), key);
+                Blob blob1 = cs.getFirstBlob();
+                Blob blob2 = cs.getSecondBlob();
+                saveclass.updateFirstMap(key, unblob(blob1));
+                saveclass.updateSecondMap(key, unblob(blob2));
                 //}
             });
 

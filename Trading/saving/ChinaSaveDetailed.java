@@ -1,7 +1,5 @@
 package saving;
 
-import utility.Utility;
-
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Blob;
@@ -66,7 +64,7 @@ public class ChinaSaveDetailed implements Serializable, ChinaSaveInterface2Blob 
     public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
         //priceMapBar.put(name,(ConcurrentSkipListMap<LocalTime,SimpleBar>)trimSkipMap(mp, LocalTime.of(9,19)));
         if (mp.size() > 0) {
-            priceMapBarDetail.put(name, (ConcurrentSkipListMap<LocalTime, Double>) Utility.trimSkipMap(mp, LocalTime.of(9, 0)));
+            priceMapBarDetail.put(name, (ConcurrentSkipListMap<LocalTime, Double>) mp);
         }
     }
 
@@ -98,6 +96,4 @@ public class ChinaSaveDetailed implements Serializable, ChinaSaveInterface2Blob 
     public String getSimpleName() {
         return "PriceMapBarDetailed";
     }
-
-
 }

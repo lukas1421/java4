@@ -319,7 +319,10 @@ public final class ChinaData extends JPanel {
         saveHibernate.addActionListener(al -> withHibernate());
         saveOHLCButton.addActionListener(al -> saveChinaOHLC());
         loadHibGenPriceButton.addActionListener(al -> Hibtask.loadHibGenPrice());
-        unloadHibAllButton.addActionListener(al -> priceMapBar.replaceAll((k, v) -> new ConcurrentSkipListMap<>()));
+        unloadHibAllButton.addActionListener(al -> {
+            priceMapBar.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
+            priceMapBarDetail.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
+        });
         hibMorning.addActionListener(al -> {
             int ans = JOptionPane.showConfirmDialog(null, "are you sure", "", JOptionPane.YES_NO_OPTION);
             if (ans == JOptionPane.YES_OPTION) {
