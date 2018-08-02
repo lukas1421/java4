@@ -95,7 +95,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //size
     private static final int CONSERVATIVE_SIZE = 1;
-    private static final int AGGRESSIVE_SIZE = 2;
+    private static final int AGGRESSIVE_SIZE = 3;
 
     //perc trader
     private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
@@ -1099,13 +1099,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
             if (curr > open) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, 1);
+                Order o = placeBidLimit(freshPrice, AGGRESSIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open buy", globalIdOrderMap.get(id), "open curr ", open, curr));
             } else if (curr < open) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, 1);
+                Order o = placeOfferLimit(freshPrice, AGGRESSIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open sell", globalIdOrderMap.get(id), "open curr ", open, curr));
