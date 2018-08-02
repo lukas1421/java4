@@ -70,8 +70,8 @@ public class SinaStock implements Runnable {
             LocalDateTime ldt = LocalDateTime.now();
             LocalDateTime ldtMin = ldt.truncatedTo(ChronoUnit.MINUTES);
 
-            getInfoFromURLConn(ldtMin, urlconnSH);
-            getInfoFromURLConn(ldtMin, urlconnSZ);
+            getInfoFromURLConn(ldt, urlconnSH);
+            getInfoFromURLConn(ldt, urlconnSZ);
 
             if (STOCK_COLLECTION_TIME.test(LocalDateTime.now())) {
                 rtn = weightMapA50.entrySet().stream().mapToDouble(a -> {
@@ -133,7 +133,9 @@ public class SinaStock implements Runnable {
         String line;
         Matcher matcher;
         List<String> datalist;
-        LocalTime lt = ldt.toLocalTime();
+
+        LocalDateTime ldtMin = ldt.truncatedTo(ChronoUnit.MINUTES);
+        LocalTime lt = ldtMin.toLocalTime();
 
         try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(conn.getInputStream(), "gbk"))) {
             while ((line = reader2.readLine()) != null) {
@@ -160,7 +162,7 @@ public class SinaStock implements Runnable {
                             sizeTotalMap.get(ticker).put(lt, Utility.pd(datalist, 9) / 1000000d);
 
                             if (lt.isBefore(LocalTime.of(10, 0))) {
-                                priceMapBarDetail.get(ticker).put(lt, last);
+                                priceMapBarDetail.get(ticker).put(ldt.toLocalTime(), last);
                             }
 
                             if (priceMapBar.get(ticker).containsKey(lt)) {

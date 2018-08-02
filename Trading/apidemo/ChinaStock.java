@@ -336,6 +336,11 @@ public final class ChinaStock extends JPanel {
                             CompletableFuture.runAsync(() -> {
                                 selectedNameStock = symbolNamesFull.get(modelRow);
                                 selectedBench = benchSimpleMap.getOrDefault(selectedNameStock, "");
+
+                                if (priceMapBarDetail.containsKey(selectedNameStock)) {
+                                    pr(" pmb detailed ", selectedNameStock, priceMapBarDetail.get(selectedNameStock));
+                                }
+
                                 graph1.fillInGraph(selectedNameStock);
                                 ChinaBigGraph.setGraph(selectedNameStock);
 
