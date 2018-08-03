@@ -948,6 +948,20 @@ public class ApiController implements EWrapper {
         });
     }
 
+    public void reqLiveContract(Contract ct, LiveHandler h, boolean snapshot) {
+        try {
+            int reqId = m_reqId.incrementAndGet();
+            if (reqId % 90 == 0) {
+                Thread.sleep(1000);
+            }
+            ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
+            m_client.reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
+
+    }
+
     public void req1StockLive(String stock, String exch, String curr, LiveHandler h, boolean snapshot) {
         try {
             int reqId = m_reqId.incrementAndGet();
