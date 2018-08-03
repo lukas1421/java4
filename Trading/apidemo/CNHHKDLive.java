@@ -66,9 +66,7 @@ public class CNHHKDLive implements LiveHandler {
             e.printStackTrace();
         }
         pr(" Time after latch released " + LocalTime.now());
-
         pr(" requesting position ");
-
         getUSDDetailed(ap);
     }
 
@@ -80,10 +78,6 @@ public class CNHHKDLive implements LiveHandler {
     @Override
     public void handlePrice(TickType tt, String name, double price, LocalDateTime t) {
         pr(name, t, tt, price);
-//        switch (tt) {
-//            case LAST:
-//                pr(name, t, "last ", tt, price);
-//        }
     }
 
     @Override

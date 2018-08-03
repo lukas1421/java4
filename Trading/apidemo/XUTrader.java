@@ -691,8 +691,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         futOpenTrader(ldt, price);
+
         firstTickTrader(ldt, price);
-        intradayFirstTickTrader(ldt, price);
+        firstTickProfitTaker(ldt, price);
+        intraday1stTickAccumulator(ldt, price);
+
         intradayMATrader(ldt, price);
 
         double currDelta = getNetPtfDelta();
@@ -1083,13 +1086,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     private static void firstTickTrader(LocalDateTime nowMilli, double freshPrice) {
+
         LocalTime lt = nowMilli.toLocalTime();
+
         if (lt.isBefore(LocalTime.of(9, 28)) || lt.isAfter(LocalTime.of(9, 35))) {
             return;
         }
+
         if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
             return;
         }
+
         pr(" detailed ftse index ", priceMapBarDetail.get(FTSE_INDEX));
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28)).getValue();
@@ -1113,7 +1120,71 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static void intradayFirstTickTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static void firstTickProfitTaker(LocalDateTime nowMilli, double freshPrice) {
+
+        LocalTime lt = nowMilli.toLocalTime();
+
+        if (!checkTimeRangeBool(lt, 9, 29, 15, 0) || isStockNoonBreak(lt)) {
+            return;
+        }
+
+        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29, 0)).getValue();
+
+        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
+                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
+
+        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
+                , e -> !isStockNoonBreak(e));
+
+        int shorterMA = 2;
+        int longerMA = 5;
+
+        checkCancelTrades(FTICK_TAKE_PROFIT, nowMilli, ORDER_WAIT_TIME * 2);
+        int todayPerc = getPercentileForLast(priceMapBar.get(FTSE_INDEX));
+
+        LocalDateTime lastIndexMAOrder = getLastOrderTime(FTICK_TAKE_PROFIT);
+
+        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
+        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
+
+        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
+            pr(" smashort size long size not enough ");
+            return;
+        }
+
+        double maShortLast = smaShort.lastEntry().getValue();
+        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
+        double maLongLast = smaLong.lastEntry().getValue();
+        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
+
+        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME) {
+            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && todayPerc < 10
+                    && firstTick < open) {
+
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FTICK_TAKE_PROFIT));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "ftick MA buy", globalIdOrderMap.get(id)
+                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
+                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
+
+            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > 90
+                    && firstTick > open) {
+
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FTICK_TAKE_PROFIT));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "ftick MA sell", globalIdOrderMap.get(id)
+                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
+                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
+            }
+        }
+    }
+
+    private static void intraday1stTickAccumulator(LocalDateTime nowMilli, double freshPrice) {
 
         LocalTime lt = nowMilli.toLocalTime();
         if (lt.isBefore(LocalTime.of(9, 40))) {
