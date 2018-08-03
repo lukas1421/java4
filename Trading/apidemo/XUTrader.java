@@ -1121,13 +1121,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static void firstTickProfitTaker(LocalDateTime nowMilli, double freshPrice) {
-
         LocalTime lt = nowMilli.toLocalTime();
-
         if (!checkTimeRangeBool(lt, 9, 29, 15, 0) || isStockNoonBreak(lt)) {
             return;
         }
-
+        if (priceMapBarDetail.get(FTSE_INDEX).size() < 2) {
+            return;
+        }
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29, 0)).getValue();
 
         double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
@@ -1143,7 +1143,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         checkCancelTrades(FTICK_TAKE_PROFIT, nowMilli, ORDER_WAIT_TIME * 2);
         int todayPerc = getPercentileForLast(priceMapBar.get(FTSE_INDEX));
 
-        LocalDateTime lastIndexMAOrder = getLastOrderTime(FTICK_TAKE_PROFIT);
+        LocalDateTime lastProfitTakerOrder = getLastOrderTime(FTICK_TAKE_PROFIT);
 
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
@@ -1158,7 +1158,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongLast = smaLong.lastEntry().getValue();
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
-        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME) {
+        if (MINUTES.between(lastProfitTakerOrder, nowMilli) >= ORDER_WAIT_TIME) {
             if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && todayPerc < 10
                     && firstTick < open) {
 
