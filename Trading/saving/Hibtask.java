@@ -24,6 +24,10 @@ public class Hibtask {
 
     public static <T extends Temporal> ConcurrentSkipListMap<T, ?> unblob(Blob b) {
 
+        if(b== null) {
+            return new ConcurrentSkipListMap<>();
+        }
+
         try {
             int len = (int) b.length();
             if (len > 1) {

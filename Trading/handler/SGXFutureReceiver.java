@@ -9,9 +9,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static utility.Utility.pr;
 
 public class SGXFutureReceiver implements LiveHandler {
 
@@ -40,9 +42,15 @@ public class SGXFutureReceiver implements LiveHandler {
                 XUTrader.askMap.put(f, price);
                 break;
 
+            case CLOSE:
+                //find out what time is the close taken
+                pr(name, " close ", price);
+
             case LAST:
                 ChinaStock.priceMap.put(name, price);
                 XUTrader.futPriceMap.put(f, price);
+                //at 9am the price is wrong (ytd's open), make sure first tick is correct
+                priceMapBarDetail.get(name).put(ldt.toLocalTime(), price);
 
                 // need to capture overnight data
                 if (t.isAfter(LocalTime.of(8, 55)) || t.isBefore(LocalTime.of(5, 0))) {

@@ -1044,7 +1044,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        if (priceMapBarDetail.get("SGXA50").size() <= 2) {
+        if (priceMapBarDetail.get("SGXA50").size() <= 5) {
             return;
         }
 
@@ -1153,7 +1153,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
     }
-
 
     //intraday MA
     private static synchronized void intradayMATrader(LocalDateTime nowMilli, double freshPrice) {

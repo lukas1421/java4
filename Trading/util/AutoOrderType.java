@@ -33,6 +33,7 @@ public enum AutoOrderType {
     DAY_SELLBACK,
     FIRST_TICK,
     INTRADAY_FIRSTTICK,
+    FUT_OPEN,
     INDEX_NEW_HILO,
     UNKNOWN
 }

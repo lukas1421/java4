@@ -52,7 +52,7 @@ public final class MorningTask implements HistoricalHandler {
         mt.getFromIB();
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
             writeIndexTDX(out);
-            writeETF(out);
+            //writeETF(out);
             writeA50_MW(out);
             writeA50FT(out);
             writeXIN0U(out);
@@ -66,7 +66,7 @@ public final class MorningTask implements HistoricalHandler {
         ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
         es.scheduleAtFixedRate(() -> pr(" countDown ... "), 0, 1, TimeUnit.SECONDS);
 
-        es.schedule(() -> System.exit(0), 5, TimeUnit.SECONDS);
+        es.schedule(() -> System.exit(0), 60, TimeUnit.SECONDS);
     }
 
     // this
@@ -218,7 +218,7 @@ public final class MorningTask implements HistoricalHandler {
     }
 
     private static void writeA50_MW(BufferedWriter out) {
-
+        pr(" writing A50 MW ");
         urlString = "https://www.marketwatch.com/investing/index/xin9?countrycode=xx";
         String line;
         Pattern p = Pattern.compile("Close:.*?(\\d{2},\\d{3}(\\.\\d+))");
@@ -229,8 +229,10 @@ public final class MorningTask implements HistoricalHandler {
 
             try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream()))) {
                 while ((line = reader2.readLine()) != null) {
+                    //pr(" mw, line ", line);
                     Matcher m = p.matcher(line);
                     while (m.find()) {
+                        pr("FTSE A50 MW " + "\t" + m.group(1).replace(",", ""));
                         out.write("FTSE A50" + "\t" + m.group(1).replace(",", ""));
                         out.newLine();
                     }
@@ -253,6 +255,7 @@ public final class MorningTask implements HistoricalHandler {
     }
 
     private static void writeA50FT(BufferedWriter out) {
+        pr(" writing a50 ft ");
         String line;
         urlString = "https://markets.ft.com/data/indices/tearsheet/historical?s=FTXIN9:FSI";
         Pattern p;
@@ -271,12 +274,14 @@ public final class MorningTask implements HistoricalHandler {
 
             try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream()))) {
                 while ((line = reader2.readLine()) != null) {
+                    pr("ft line: ", line);
                     Matcher m = p.matcher(line);
                     while (m.find()) {
                         pr(m.group());
                         List<String> sp = Arrays.asList(m.group(1).replace(",", "")
                                 .split("</td><td>")); //m.group()
                         pr(Double.parseDouble(sp.get(4)));
+                        pr("FTSE A50 ft " + "\t" + sp);
                         out.append("FTSEA50 2" + "\t").append(sp.get(4));
                         out.newLine();
                     }
@@ -319,6 +324,7 @@ public final class MorningTask implements HistoricalHandler {
     }
 
     static void getBOCFX() {
+        pr(" getting BOCFX ");
         urlString = "http://www.boc.cn/sourcedb/whpj";
         String line1;
         Pattern p1 = Pattern.compile("(?s)美元</td>.*");
