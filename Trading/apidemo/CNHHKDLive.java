@@ -47,7 +47,7 @@ public class CNHHKDLive implements LiveHandler, HistoricalHandler {
         ap.reqLiveContract(c, this, false);
     }
 
-    private void getFXHistory(ApiController ap) {
+    private void getFXLast(ApiController ap) {
         LocalDateTime lt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
         String formatTime = lt.format(dtf);
@@ -65,7 +65,7 @@ public class CNHHKDLive implements LiveHandler, HistoricalHandler {
         boolean connectionStatus = false;
 
         try {
-            ap.connect("127.0.0.1", 7496, 2, "");
+            ap.connect("127.0.0.1", 7496, 3, "");
             connectionStatus = true;
             pr(" connection status is true ");
             l.countDown();
@@ -75,7 +75,7 @@ public class CNHHKDLive implements LiveHandler, HistoricalHandler {
 
         if (!connectionStatus) {
             pr(" using port 4001 ");
-            ap.connect("127.0.0.1", 4001, 2, "");
+            ap.connect("127.0.0.1", 4001, 3, "");
             l.countDown();
             pr(" Latch counted down " + LocalTime.now());
         }
@@ -88,7 +88,7 @@ public class CNHHKDLive implements LiveHandler, HistoricalHandler {
         pr(" Time after latch released " + LocalTime.now());
         pr(" requesting position ");
         //getUSDDetailed(ap);
-        getFXHistory(ap);
+        getFXLast(ap);
     }
 
     public static void main(String[] args) {

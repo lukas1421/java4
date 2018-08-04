@@ -1166,7 +1166,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FTICK_TAKE_PROFIT));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "ftick MA buy", globalIdOrderMap.get(id)
+                outputOrderToAutoLog(str(o.orderId(), "ftick MA cover", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
 
@@ -1177,7 +1177,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FTICK_TAKE_PROFIT));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "ftick MA sell", globalIdOrderMap.get(id)
+                outputOrderToAutoLog(str(o.orderId(), "ftick MA sellback", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
             }
@@ -1198,29 +1198,29 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int perc = getPercentileForLast(priceMapBar.get(FTSE_INDEX));
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29, 0)).getValue();
-        double firstTick = priceMapBarDetail.get(FTSE_INDEX).higherEntry(LocalTime.of(9, 30, 0)).getValue();
-        double firstTick2 = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+        //double firstTick = priceMapBarDetail.get(FTSE_INDEX).higherEntry(LocalTime.of(9, 30, 0)).getValue();
+        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
 
         LocalDateTime lastOpenTime = getLastOrderTime(INTRADAY_FIRSTTICK);
-        pr(" intraday first tick, open, firstT1, firstT2, perc ", open, firstTick, firstTick2, perc);
+        pr(" intraday first tick, open, firstTick, perc ", open, firstTick, perc);
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
-            if (firstTick2 > open && perc < 10) {
+            if (firstTick > open && perc < 10) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday first tick buy",
-                        globalIdOrderMap.get(id), "open first1 first2 ftsePerc", open, firstTick, firstTick2, perc));
-            } else if (firstTick2 < open && perc > 90) {
+                        globalIdOrderMap.get(id), "open first2 ftsePerc", open, firstTick, perc));
+            } else if (firstTick < open && perc > 90) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday first tick sell",
-                        globalIdOrderMap.get(id), "open first1 first2 ftsePerc", open, firstTick, firstTick2, perc));
+                        globalIdOrderMap.get(id), "open first2 ftsePerc", open, firstTick, perc));
             }
         }
     }
