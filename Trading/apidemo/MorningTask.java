@@ -457,7 +457,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
         getHKDDetailed(ap);
         getUSPricesAfterMarket(ap);
 
-
         getXINA50Index(ap);
 
 
@@ -521,8 +520,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
 
         ap.req1ContractLive(c, this, true);
 
-//        ap.reqHistoricalDataSimple(generateReqId(c), this, c, formatTime, 5, Types.DurationUnit.DAY,
-//                Types.BarSize._1_day, Types.WhatToShow.BID, false);
     }
 
     private void getUSPricesAfterMarket(ApiController ap) {
@@ -751,7 +748,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
 
     @Override
     public void handlePrice(TickType tt, String name, double price, LocalDateTime t) {
-        if (tt == TickType.CLOSE) {
+        if (tt == TickType.CLOSE && name.equals("XINA50")) {
             Utility.simpleWriteToFile("FTSE A50" + "\t" + price, true, output);
         }
         pr(name, tt, price, t);
