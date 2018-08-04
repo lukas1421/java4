@@ -453,9 +453,9 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
         }
         pr(" Time after latch released " + LocalTime.now());
 
-        //getUSDDetailed(ap);
-        //getHKDDetailed(ap);
-        //getUSPricesAfterMarket(ap);
+        getUSDDetailed(ap);
+        getHKDDetailed(ap);
+        getUSPricesAfterMarket(ap);
 
 
         getXINA50Index(ap);
