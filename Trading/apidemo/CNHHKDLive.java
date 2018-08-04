@@ -54,8 +54,8 @@ public class CNHHKDLive implements LiveHandler, HistoricalHandler {
 
         Contract c = getCNHHKDContract();
 
-        ap.reqHistoricalDataSimple(2, this, c, formatTime, 1, Types.DurationUnit.DAY,
-                Types.BarSize._1_min, Types.WhatToShow.MIDPOINT, false);
+        ap.reqHistoricalDataSimple(2, this, c, formatTime, 3, Types.DurationUnit.DAY,
+                Types.BarSize._1_hour, Types.WhatToShow.MIDPOINT, false);
     }
 
     private void getFromIB() {

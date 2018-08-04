@@ -2,12 +2,14 @@ package apidemo;
 
 import auxiliary.SimpleBar;
 import client.Contract;
+import client.TickType;
 import client.Types;
 import controller.AccountSummaryTag;
 import controller.ApiConnection.ILogger.DefaultLogger;
 import controller.ApiController;
 import controller.ApiController.IConnectionHandler.DefaultConnectionHandler;
 import handler.HistoricalHandler;
+import handler.LiveHandler;
 import utility.Utility;
 
 import java.io.*;
@@ -26,7 +28,7 @@ import java.util.regex.Pattern;
 
 import static utility.Utility.*;
 
-public final class MorningTask implements HistoricalHandler {
+public final class MorningTask implements HistoricalHandler, LiveHandler {
 
     public static File output = new File(TradingConstants.GLOBALPATH + "morningOutput.txt");
     private static File bocOutput = new File(TradingConstants.GLOBALPATH + "BOCUSD.txt");
@@ -53,6 +55,7 @@ public final class MorningTask implements HistoricalHandler {
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
             writeIndexTDX(out);
             //writeETF(out);
+            writeA50(out);
             writeA50_MW(out);
             writeA50FT(out);
             writeXIN0U(out);
@@ -64,8 +67,7 @@ public final class MorningTask implements HistoricalHandler {
 
         pr("done and starting exiting sequence in 5");
         ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
-        es.scheduleAtFixedRate(() -> pr(" countDown ... "), 0, 1, TimeUnit.SECONDS);
-
+        //es.scheduleAtFixedRate(() -> pr(" countDown ... "), 0, 1, TimeUnit.SECONDS);
         es.schedule(() -> System.exit(0), 60, TimeUnit.SECONDS);
     }
 
@@ -192,7 +194,8 @@ public final class MorningTask implements HistoricalHandler {
 
     //not stable
     private static void writeA50(BufferedWriter out) {
-        urlString = "https://www.investing.com/indices/ftse-china-a50";
+        //urlString = "https://www.investing.com/indices/ftse-china-a50";
+        urlString = "https://hk.investing.com/indices/ftse-china-a50";
         String line;
         Pattern p = Pattern.compile("(?<=<td id=\"_last_28930\" class=\"pid-28930-last\">)\\d+,\\d+\\.\\d+");
         try {
@@ -204,9 +207,10 @@ public final class MorningTask implements HistoricalHandler {
                 while ((line = reader2.readLine()) != null) {
                     Matcher m = p.matcher(line);
                     while (m.find()) {
+                        pr(" a50 investing", m.group());
                         out.write("FTSE A50" + "\t" + m.group().replace(",", ""));
                         out.newLine();
-                        pr(m.group());
+                        //pr(m.group());
                     }
                 }
             } catch (Exception ex) {
@@ -306,6 +310,7 @@ public final class MorningTask implements HistoricalHandler {
 
             try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream()))) {
                 while ((line = reader2.readLine()) != null) {
+                    pr("xin0u line ", line);
                     Matcher m = p.matcher(line);
                     while (m.find()) {
                         String res = m.group(1).replace(",", "");
@@ -407,7 +412,8 @@ public final class MorningTask implements HistoricalHandler {
                     Utility.simpleWrite("HK NOON" + "\t" + c + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), false);
                     break;
                 case 16:
-                    Utility.simpleWrite("HK CLOSE" + "\t" + c + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
+                    Utility.simpleWrite("HK CLOSE" + "\t" + c + "\t" + sdf.format(dt) +
+                            "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
                     break;
                 case 4:
                     Utility.simpleWrite("US CLOSE" + "\t" + c + "\t" + sdf.format(dt) + "\t" + cal.get(Calendar.HOUR_OF_DAY), true);
@@ -447,10 +453,13 @@ public final class MorningTask implements HistoricalHandler {
         }
         pr(" Time after latch released " + LocalTime.now());
 
-        getUSDDetailed(ap);
-        getHKDDetailed(ap);
+        //getUSDDetailed(ap);
+        //getHKDDetailed(ap);
+        //getUSPricesAfterMarket(ap);
 
-        getUSPricesAfterMarket(ap);
+
+        getXINA50Index(ap);
+
 
         pr(" requesting position ");
 
@@ -499,6 +508,23 @@ public final class MorningTask implements HistoricalHandler {
     }
 
 
+    private void getXINA50Index(ApiController ap) {
+        Contract c = new Contract();
+        c.symbol("XINA50");
+        c.secType(Types.SecType.IND);
+        c.exchange("SGX");
+        c.currency("USD");
+
+        LocalDateTime lt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
+        String formatTime = lt.format(dtf);
+
+        ap.req1ContractLive(c, this, true);
+
+//        ap.reqHistoricalDataSimple(generateReqId(c), this, c, formatTime, 5, Types.DurationUnit.DAY,
+//                Types.BarSize._1_day, Types.WhatToShow.BID, false);
+    }
+
     private void getUSPricesAfterMarket(ApiController ap) {
         List<String> etfs = Arrays.asList("FXI:US", "CNXT:US", "ASHR:US", "ASHS:US");
         for (String e : etfs) {
@@ -518,7 +544,7 @@ public final class MorningTask implements HistoricalHandler {
             String formatTime = lt.format(dtf);
 
             ap.reqHistoricalDataSimple(generateReqId(c), this, c, formatTime, 1, Types.DurationUnit.DAY,
-                    Types.BarSize._5_mins, Types.WhatToShow.TRADES, false);
+                    Types.BarSize._5_mins, Types.WhatToShow.MIDPOINT, false);
         }
     }
 
@@ -659,7 +685,8 @@ public final class MorningTask implements HistoricalHandler {
                 switch (zdt.withZoneSameInstant(nyZone).getHour()) {
                     case 15:
                         pr(" Date " + ldt.toString() + " US close " + close);
-                        Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" + ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
+                        Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" +
+                                ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                                 + "\t" + zdt.getHour(), true);
 
                         //Utility.simpleWriteToFile("USD" + "\t" + close, false, fxOutput);
@@ -720,5 +747,18 @@ public final class MorningTask implements HistoricalHandler {
             usAfterClose.forEach((key, value) -> pr(str(key, value.lastEntry())));
         }
         pr(" data is finished ");
+    }
+
+    @Override
+    public void handlePrice(TickType tt, String name, double price, LocalDateTime t) {
+        if (tt == TickType.CLOSE) {
+            Utility.simpleWriteToFile("FTSE A50" + "\t" + price, true, output);
+        }
+        pr(name, tt, price, t);
+    }
+
+    @Override
+    public void handleVol(String name, double vol, LocalDateTime t) {
+
     }
 }

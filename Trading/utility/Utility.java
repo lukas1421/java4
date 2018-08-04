@@ -805,7 +805,7 @@ public class Utility {
 
     @SuppressWarnings("SpellCheckingInspection")
     public static String ibContractToSymbol(Contract ct) {
-        if (ct.symbol().equals("XINA50")) {
+        if (ct.symbol().equals("XINA50") && ct.secType() == Types.SecType.FUT) {
             if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutFrontExpiry())) {
                 return "SGXA50";
             } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutBackExpiry())) {
