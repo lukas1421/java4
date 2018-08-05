@@ -87,7 +87,7 @@ public class CNHHKDLive implements LiveHandler, HistoricalHandler {
         }
         pr(" Time after latch released " + LocalTime.now());
         pr(" requesting position ");
-        //getUSDDetailed(ap);
+        getUSDDetailed(ap);
         getFXLast(ap);
     }
 
@@ -117,7 +117,7 @@ public class CNHHKDLive implements LiveHandler, HistoricalHandler {
             ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
             //HKDCNH = 1 / close;
 
-            pr("hist ", name, ldt, Math.round(1 / open * 1000d) / 1000d, Math.round(1 / close * 1000d) / 1000d);
+            pr("hist: ", name, ldt, Math.round(1 / open * 1000d) / 1000d, Math.round(1 / close * 1000d) / 1000d);
             //Utility.simpleWriteToFile("USD" + "\t" + close, true, fxOutput);
 
         }

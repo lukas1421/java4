@@ -67,8 +67,8 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
 
         pr("done and starting exiting sequence in 5");
         ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
-        //es.scheduleAtFixedRate(() -> pr(" countDown ... "), 0, 1, TimeUnit.SECONDS);
-        es.schedule(() -> System.exit(0), 60, TimeUnit.SECONDS);
+        es.scheduleAtFixedRate(() -> pr(" countDown ... "), 0, 1, TimeUnit.SECONDS);
+        es.schedule(() -> System.exit(0), 20, TimeUnit.SECONDS);
     }
 
     // this
@@ -207,7 +207,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
                 while ((line = reader2.readLine()) != null) {
                     Matcher m = p.matcher(line);
                     while (m.find()) {
-                        pr(" a50 investing", m.group());
+                        pr(" a50 investing.com ", m.group());
                         out.write("FTSE A50" + "\t" + m.group().replace(",", ""));
                         out.newLine();
                         //pr(m.group());
@@ -222,7 +222,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
     }
 
     private static void writeA50_MW(BufferedWriter out) {
-        pr(" writing A50 MW ");
+        //pr(" writing A50 MW ");
         urlString = "https://www.marketwatch.com/investing/index/xin9?countrycode=xx";
         String line;
         Pattern p = Pattern.compile("Close:.*?(\\d{2},\\d{3}(\\.\\d+))");
@@ -259,7 +259,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
     }
 
     private static void writeA50FT(BufferedWriter out) {
-        pr(" writing a50 ft ");
+        //pr(" writing a50 ft ");
         String line;
         urlString = "https://markets.ft.com/data/indices/tearsheet/historical?s=FTXIN9:FSI";
         Pattern p;
@@ -278,7 +278,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
 
             try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream()))) {
                 while ((line = reader2.readLine()) != null) {
-                    pr("ft line: ", line);
+                    //pr("ft line: ", line);
                     Matcher m = p.matcher(line);
                     while (m.find()) {
                         pr(m.group());
@@ -299,7 +299,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
     }
 
     private static void writeXIN0U(BufferedWriter out) {
-        pr((" getting XIN0U"));
+        //pr((" getting XIN0U"));
         String line;
         urlString = "https://www.marketwatch.com/investing/index/xin0u?countrycode=xx";
         Pattern p = Pattern.compile("Close:.*?(\\d{2},\\d{3}(\\.\\d+))");
@@ -315,7 +315,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
                     while (m.find()) {
                         String res = m.group(1).replace(",", "");
                         pr(res);
-                        pr("XIN0U" + "\t" + res);
+                        //pr("XIN0U" + "\t" + res);
                         out.append("XIN0U" + "\t").append(res);
                         out.newLine();
                     }
