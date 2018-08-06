@@ -98,7 +98,8 @@ public class CNHHKDLive implements LiveHandler, HistoricalHandler {
 
     @Override
     public void handlePrice(TickType tt, String name, double price, LocalDateTime t) {
-        pr(name, t, tt, 1 / price);
+
+        pr("handleprice ", name, t, tt, Math.round(10000d / price) / 10000d);
     }
 
     @Override
