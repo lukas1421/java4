@@ -1167,7 +1167,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
 
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > UP_PERC_WIDE
-                    && firstTick > open) {
+                    && firstTick > open && lt.isBefore(LocalTime.of(11, 30))) {
 
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
@@ -1222,7 +1222,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void intraday1stTickAccumulator(LocalDateTime nowMilli, double freshPrice) {
 
         LocalTime lt = nowMilli.toLocalTime();
-        if (lt.isBefore(LocalTime.of(9, 40)) || isStockNoonBreak(lt)) {
+        if (lt.isBefore(LocalTime.of(9, 40)) || lt.isAfter(LocalTime.of(15, 0)) || isStockNoonBreak(lt)) {
             return;
         }
 
@@ -1249,7 +1249,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday first tick buy",
                         globalIdOrderMap.get(id), "open first ftsePerc", open, firstTick, perc));
-            } else if (firstTick < open && perc > 95) {
+            } else if (firstTick < open && perc > 95 && lt.isBefore(LocalTime.of(11, 30))) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
@@ -1304,7 +1304,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > UP_PERC_WIDE
-                    && pmChgY > 0) {
+                    && pmChgY > 0 && lt.isBefore(LocalTime.of(11, 30))) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_MA));

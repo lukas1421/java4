@@ -1567,7 +1567,7 @@ public class ApiController implements EWrapper {
                 } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
                     if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getOrderType())) {
                         pr(" flatten trade IOC cancelled, flatten aggressively ");
-                        XUTrader.flattenAggressively();
+                        //XUTrader.flattenAggressively();
 
                         if (XUTrader.flattenEagerness == Eagerness.Passive) {
                             pr(" in flatten order handler change to aggressive");
