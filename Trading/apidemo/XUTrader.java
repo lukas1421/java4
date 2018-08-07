@@ -691,8 +691,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         futOpenTrader(ldt, price);
         firstTickTrader(ldt, price);
-        firstTickMAProfitTaker(ldt, price);
         intraday1stTickAccumulator(ldt, price);
+
+        firstTickMAProfitTaker(ldt, price);
         intradayMATrader(ldt, price);
         closeProfitTaker(ldt, price);
 
@@ -1152,7 +1153,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
         if (MINUTES.between(lastProfitTakerOrder, nowMilli) >= ORDER_WAIT_TIME) {
-            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && todayPerc < 10
+            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && todayPerc < 20
                     && firstTick < open) {
 
                 int id = autoTradeID.incrementAndGet();
@@ -1163,7 +1164,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
 
-            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > 90
+            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > 80
                     && firstTick > open) {
 
                 int id = autoTradeID.incrementAndGet();
@@ -1241,14 +1242,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
             if (firstTick > open && perc < 10) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, 1);
+                Order o = placeBidLimit(freshPrice, 2);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday first tick buy",
                         globalIdOrderMap.get(id), "open first ftsePerc", open, firstTick, perc));
             } else if (firstTick < open && perc > 90) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, 1);
+                Order o = placeOfferLimit(freshPrice, 2);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday first tick sell",
