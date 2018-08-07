@@ -686,6 +686,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
+        if (isStockNoonBreak(ldt.toLocalTime())) {
+            return;
+        }
+
         futOpenTrader(ldt, price);
         firstTickTrader(ldt, price);
         intraday1stTickAccumulator(ldt, price);
