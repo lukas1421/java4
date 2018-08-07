@@ -1153,7 +1153,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
         if (MINUTES.between(lastProfitTakerOrder, nowMilli) >= ORDER_WAIT_TIME) {
-            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && todayPerc < 20
+            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast && todayPerc < DOWN_PERC_WIDE
                     && firstTick < open) {
 
                 int id = autoTradeID.incrementAndGet();
@@ -1164,7 +1164,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
 
-            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > 80
+            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > UP_PERC_WIDE
                     && firstTick > open) {
 
                 int id = autoTradeID.incrementAndGet();
