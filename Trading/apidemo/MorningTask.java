@@ -310,12 +310,10 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
 
             try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream()))) {
                 while ((line = reader2.readLine()) != null) {
-                    pr("xin0u line ", line);
                     Matcher m = p.matcher(line);
                     while (m.find()) {
                         String res = m.group(1).replace(",", "");
                         pr(res);
-                        //pr("XIN0U" + "\t" + res);
                         out.append("XIN0U" + "\t").append(res);
                         out.newLine();
                     }
