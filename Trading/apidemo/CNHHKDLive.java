@@ -8,6 +8,12 @@ import controller.ApiController;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Proxy;
+import java.net.URL;
+import java.net.URLConnection;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -15,8 +21,15 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static utility.Utility.pr;
 
 public class CNHHKDLive implements LiveHandler, HistoricalHandler {
@@ -31,6 +44,53 @@ public class CNHHKDLive implements LiveHandler, HistoricalHandler {
         c.right(Types.Right.None);
         c.secIdType(Types.SecIdType.None);
         return c;
+    }
+
+    private void getBOCOfficial() {
+        pr(" getting BOCFX ");
+        String urlString = "http://www.boc.cn/sourcedb/whpj";
+        String line1;
+        Pattern p1 = Pattern.compile("(?s)港币</td>.*");
+        Pattern p2 = Pattern.compile("<td>(.*?)</td>");
+        Pattern p3 = Pattern.compile("</tr>");
+        boolean found = false;
+        List<String> l = new LinkedList<>();
+
+        try {
+            URL url = new URL(urlString);
+            URLConnection urlconn = url.openConnection(Proxy.NO_PROXY);
+            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(urlconn.getInputStream()))) {
+                while ((line1 = reader2.readLine()) != null) {
+                    if (!found) {
+                        Matcher m = p1.matcher(line1);
+                        while (m.find()) {
+                            found = true;
+                        }
+                    } else {
+                        if (p3.matcher(line1).find()) {
+                            break;
+                        } else {
+                            Matcher m2 = p2.matcher(line1);
+                            while (m2.find()) {
+                                l.add(m2.group(1));
+                            }
+                        }
+                    }
+                }
+                pr("l " + l);
+
+                if (l.size() > 0) {
+                    pr("***********************************");
+                    pr("BOC HKD" +
+                            "\t" + Double.parseDouble(l.get(3)) / 100d + "\t" + l.get(5) + "\t" + l.get(6));
+                    pr("***********************************");
+                }
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     private void getUSDDetailed(ApiController ap) {
@@ -48,6 +108,7 @@ public class CNHHKDLive implements LiveHandler, HistoricalHandler {
     }
 
     private void getFXLast(ApiController ap) {
+
         LocalDateTime lt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
         String formatTime = lt.format(dtf);
@@ -92,13 +153,18 @@ public class CNHHKDLive implements LiveHandler, HistoricalHandler {
     }
 
     public static void main(String[] args) {
+
         CNHHKDLive c = new CNHHKDLive();
         c.getFromIB();
+
+        ScheduledExecutorService ses = Executors.newScheduledThreadPool(1);
+
+        ses.scheduleAtFixedRate(c::getBOCOfficial, 0, 30, SECONDS);
+
     }
 
     @Override
     public void handlePrice(TickType tt, String name, double price, LocalDateTime t) {
-
         pr("handleprice ", name, t, tt, Math.round(10000d / price) / 10000d);
     }
 
@@ -118,7 +184,11 @@ public class CNHHKDLive implements LiveHandler, HistoricalHandler {
             ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
             //HKDCNH = 1 / close;
 
-            pr("hist: ", name, ldt, Math.round(1 / open * 1000d) / 1000d, Math.round(1 / close * 1000d) / 1000d);
+            int hr = ldt.getHour();
+
+            if (hr % 3 == 0 && hr >= 6) {
+                pr("hist: ", name, ldt, Math.round(1 / open * 1000d) / 1000d, Math.round(1 / close * 1000d) / 1000d);
+            }
             //Utility.simpleWriteToFile("USD" + "\t" + close, true, fxOutput);
 
         }
