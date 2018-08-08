@@ -29,6 +29,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarDetail;
@@ -1097,7 +1098,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-
     private static void firstTickTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
         LocalTime lt = nowMilli.toLocalTime();
         if (lt.isBefore(LocalTime.of(9, 28)) || lt.isAfter(LocalTime.of(9, 35))) {
@@ -1903,6 +1903,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int pmChg = getPercentileChgFut(futdata, getTradeDate(futdata.lastKey()));
         int percLast = getPercentileForLast(futdata);
 
+        String pnlString = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .collect(Collectors.collectingAndThen(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType()
+                        , Collectors.summingDouble(e -> e.getValue().getPnl(futPriceMap.get(f)))),
+                        e -> e.entrySet().stream().map(e1 -> str(e1.getKey(), e1.getValue()))
+                                .collect(Collectors.joining(","))));
+
         SwingUtilities.invokeLater(() -> {
             updateLog(" Expiry " + activeFuture.lastTradeDateOrContractMonth());
             updateLog(" NAV: " + currentIBNAV);
@@ -1919,7 +1925,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             updateLog(" avg sell " + avgSell);
             updateLog(" buy pnl " + buyTradePnl);
             updateLog(" sell pnl " + sellTradePnl);
-            updateLog(" net pnl " + r(netTradePnl));
+            //breakdown of pnl
+            updateLog(" net pnl " + r(netTradePnl) + " breakdown: " + pnlString);
+
             updateLog(" net commission " + netTotalCommissions);
             updateLog(" MTM + Trade " + r(netTradePnl + mtmPnl));
             updateLog("pos "

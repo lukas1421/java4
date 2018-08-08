@@ -24,6 +24,17 @@ public class OrderAugmented {
         finalActionTime = LocalDateTime.MIN;
     }
 
+    public double getPnl(double currPrice) {
+        double tradedPrice = order.lmtPrice();
+        double size = order.totalQuantity();
+        if (order.action() == Types.Action.BUY) {
+            return (currPrice - tradedPrice) * size;
+        } else if (order.action() == Types.Action.SELL) {
+            return -1 * (currPrice - tradedPrice) * size;
+        }
+        return 0.0;
+    }
+
     public OrderAugmented(LocalDateTime t, Order o, AutoOrderType tt) {
         orderTime = t;
         order = o;

@@ -308,7 +308,8 @@ final class ChinaIndex extends JPanel {
         System.out.println(SinaStock.weightMapA50.entrySet().stream()
                 .filter(e -> ChinaStock.shortIndustryMap.get(e.getKey()).equals(name)).sorted(Comparator.comparingDouble(e -> returnMap.get(e.getKey())))
                 .collect(Collectors.groupingBy(Entry::getKey,
-                        mapping(e1 -> Utility.str(nameMap.get(e1.getKey()), "weight", e1.getValue(), " return ", round(10000d * returnMap.getOrDefault(e1.getKey(), 0.0)) / 10000d),
+                        mapping(e1 -> Utility.str(nameMap.get(e1.getKey()), "weight", e1.getValue(), " return ",
+                                round(10000d * returnMap.getOrDefault(e1.getKey(), 0.0)) / 10000d),
                                 Collectors.joining(",")))));
 
         System.out.println("avg return ");
