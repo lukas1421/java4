@@ -1043,7 +1043,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static void futOpenTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
-        if (lt.isBefore(LocalTime.of(8, 59)) || lt.isAfter(LocalTime.of(9, 30))) {
+        if (lt.isBefore(LocalTime.of(8, 59)) || lt.isAfter(LocalTime.of(9, 29))) {
             return;
         }
 
@@ -1248,7 +1248,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     private static void intraday1stTickAccumulator(LocalDateTime nowMilli, double freshPrice) {
-
         LocalTime lt = nowMilli.toLocalTime();
         if (lt.isBefore(LocalTime.of(9, 40)) || lt.isAfter(LocalTime.of(15, 0)) || isStockNoonBreak(lt)) {
             return;
@@ -1261,12 +1260,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int perc = getPercentileForLast(priceMapBar.get(FTSE_INDEX));
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29, 0)).getValue();
-        //double firstTick = priceMapBarDetail.get(FTSE_INDEX).higherEntry(LocalTime.of(9, 30, 0)).getValue();
         double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
 
         LocalDateTime lastOpenTime = getLastOrderTime(INTRADAY_FIRSTTICK_ACCU);
+
         pr(" intraday first tick, open, firstTick, perc ", open, firstTick, perc);
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
@@ -1370,7 +1369,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate()
                 , e -> !isStockNoonBreak(e));
 
-        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
+        NavigableMap<LocalDateTime, SimpleBar> fut = trimDataFromYtd(futData.get(ibContractToFutType(activeFuture)));
+        //NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(ibContractToFutType(activeFuture)));
         int _2dayPerc = getPercentileForLast(fut);
 
         int shorterMA = 5;
