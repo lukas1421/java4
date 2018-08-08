@@ -50,10 +50,12 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
     private static volatile JLabel askLabel = new JLabel("");
     private static volatile NavigableMap<LocalDateTime, SimpleBar> offshorePriceHist = new ConcurrentSkipListMap<>();
     private static volatile NavigableMap<LocalDateTime, SimpleBar> offshorePriceLive = new ConcurrentSkipListMap<>();
+    private static volatile NavigableMap<LocalDateTime, SimpleBar> bocPriceLive = new ConcurrentSkipListMap<>();
 
 
     private static volatile GraphBarGen g1 = new GraphBarGen();
     private static volatile GraphBarGen g2 = new GraphBarGen();
+    private static volatile GraphBarGen g3 = new GraphBarGen();
 
     private CNHHKDLive() {
         bochkdLabel = new JLabel("0.0");
@@ -90,7 +92,7 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = 300;
+                d.height = 250;
                 d.width = 1500;
                 return d;
             }
@@ -100,15 +102,27 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
-                d.height = 300;
+                d.height = 250;
                 d.width = 1500;
                 return d;
             }
         };
+
+        JScrollPane jp3 = new JScrollPane(g3) {
+            @Override
+            public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                d.height = 250;
+                d.width = 1500;
+                return d;
+            }
+        };
+
         JPanel graphPanel = new JPanel();
-        graphPanel.setLayout(new GridLayout(2, 1));
+        graphPanel.setLayout(new GridLayout(3, 1));
         graphPanel.add(jp);
         graphPanel.add(jp2);
+        graphPanel.add(jp3);
 
         topPanel.add(timeLabel);
         topPanel.add(bochkdLabel);
@@ -170,6 +184,13 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
                     bocHKDPrice = hkdPrice;
                     bochkdLabel.setText("BOC: " + hkdPrice + "      " + l.get(6));
                     pr("***********************************");
+                    LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+                    if (bocPriceLive.containsKey(now)) {
+                        bocPriceLive.get(now).add(hkdPrice);
+                    } else {
+                        bocPriceLive.put(now, new SimpleBar(hkdPrice));
+                    }
+                    g3.setNavigableMap(bocPriceLive);
                 }
             } catch (Exception ex) {
                 ex.printStackTrace();
@@ -255,8 +276,6 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
     }
 
     public static void main(String[] args) {
-
-
         CNHHKDLive c = new CNHHKDLive();
         c.getFromIB();
 
@@ -266,7 +285,8 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
         ses.scheduleAtFixedRate(c::updateTime, 0, 1, SECONDS);
         ses.scheduleAtFixedRate(() -> {
             g1.repaint();
-            //pr(" tm ", g1.tm);
+            g2.repaint();
+            g3.repaint();
         }, 0, 1, SECONDS);
 
         JFrame jf = new JFrame();
@@ -302,10 +322,7 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
         } else {
             offshorePriceHist.put(ldtHour, new SimpleBar(pr2));
         }
-
-
         g2.setNavigableMap(offshorePriceLive);
-
         this.repaint();
     }
 
@@ -336,9 +353,7 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
             if (hr % 3 == 0 && hr >= 6) {
                 pr("hist: ", name, ldt, Math.round(1 / open * 1000d) / 1000d, Math.round(1 / close * 1000d) / 1000d);
             }
-
         }
-
     }
 
     @Override
