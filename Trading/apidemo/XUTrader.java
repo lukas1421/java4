@@ -1394,8 +1394,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             longerMA = 5;
         }
 
-        checkCancelTrades(PERC_MA, nowMilli, ORDER_WAIT_TIME * 2);
-
+        checkCancelTrades(PERC_MA, nowMilli, ORDER_WAIT_TIME);
 
         int todayPerc = getPercentileForLastPred(fut, e -> e.getKey().toLocalDate().equals(getTradeDate(nowMilli)));
         LocalDateTime lastIndexMAOrder = getLastOrderTime(PERC_MA);
@@ -1415,8 +1414,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (detailedPrint.get()) {
             pr("*perc MA Time: ", nowMilli.toLocalTime(), "next T:", lastIndexMAOrder.plusMinutes(tOrders),
-                    "||T fut p%: ", todayPerc, "||2D fut p%", _2dayPerc
-                    , "pmchY: ", pmPercChg);
+                    "||T fut p%: ", todayPerc, "||2D fut p%", _2dayPerc, "pmchY: ", pmPercChg);
             pr("Anchor / short long MA: ", anchorIndex, shorterMA, longerMA);
             pr(" ma cross last : ", r(maShortLast), r(maLongLast), r(maShortLast - maLongLast));
             pr(" ma cross 2nd last : ", r(maShortSecLast), r(maLongSecLast), r(maShortSecLast - maLongSecLast));
@@ -1446,9 +1444,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         baseDelta, pmchgDelta, weekdayDelta, deltaTarget));
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && _2dayPerc > UP_PERC_WIDE
                     && currDelta > deltaTarget) {
-
                 int id = autoTradeID.incrementAndGet();
-
                 if (pmPercChg > 0) {
                     maSize = AGGRESSIVE_SIZE;
                 } else {
