@@ -33,7 +33,7 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
     double minRtn;
     int last = 0;
     double rtn = 0;
-    NavigableMap<LocalDateTime, SimpleBar> tm;
+    public NavigableMap<LocalDateTime, SimpleBar> tm;
     String name;
     String chineseName;
     private String bench;
@@ -60,6 +60,7 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
         addMouseListener(this);
         addMouseMotionListener(this);
     }
+
 
     public void setNavigableMap(NavigableMap<LocalDateTime, SimpleBar> tm) {
         this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue().containsZero())
