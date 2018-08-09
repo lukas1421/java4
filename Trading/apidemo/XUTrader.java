@@ -703,7 +703,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int lastPerc = getClosingPercentile(futdata, getTradeDate(futdata.lastKey()));
 
 
-        futOpenTrader(ldt, price);
+        futOpenTrader(ldt, price, pmChgY);
         firstTickTrader(ldt, price, pmChgY);
 
         intraday1stTickAccumulator(ldt, price);
@@ -1042,7 +1042,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static void futOpenTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static void futOpenTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
         LocalTime lt = nowMilli.toLocalTime();
         if (lt.isBefore(LocalTime.of(8, 59)) || lt.isAfter(LocalTime.of(9, 29))) {
             return;
@@ -1069,9 +1069,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int buyWaitTime = 5;
         int sellWaitTime = 5;
 
-        if (_2dayPerc < DOWN_PERC_WIDE) {
+        if (_2dayPerc < DOWN_PERC_WIDE && pmchy < 0) {
             buyWaitTime = 1;
-        } else if (_2dayPerc > UP_PERC_WIDE) {
+        } else if (_2dayPerc > UP_PERC_WIDE && pmchy > 0) {
             sellWaitTime = 1;
         }
 
@@ -1396,7 +1396,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         checkCancelTrades(PERC_MA, nowMilli, ORDER_WAIT_TIME);
 
-        int todayPerc = getPercentileForLastPred(fut, e -> e.getKey().toLocalDate().equals(getTradeDate(nowMilli)));
+        int todayPerc = getPercentileForLastPred(fut,
+                e -> e.getKey().isAfter(LocalDateTime.of(getTradeDate(nowMilli), LocalTime.of(8, 59))));
         LocalDateTime lastIndexMAOrder = getLastOrderTime(PERC_MA);
 
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
@@ -1903,7 +1904,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int pmChg = getPercentileChgFut(futdata, getTradeDate(futdata.lastKey()));
         int percLast = getPercentileForLast(futdata);
 
-        String pnlString = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+        String pnlString = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
                 .collect(Collectors.collectingAndThen(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType()
                         , Collectors.summingDouble(e -> e.getValue().getPnl(futPriceMap.get(f)))),
                         e -> e.entrySet().stream().map(e1 -> str(e1.getKey(), e1.getValue()))

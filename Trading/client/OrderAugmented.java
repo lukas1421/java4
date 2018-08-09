@@ -1,5 +1,6 @@
 package client;
 
+import TradeType.FutureTrade;
 import util.AutoOrderType;
 
 import java.time.LocalDateTime;
@@ -28,9 +29,9 @@ public class OrderAugmented {
         double tradedPrice = order.lmtPrice();
         double size = order.totalQuantity();
         if (order.action() == Types.Action.BUY) {
-            return (currPrice - tradedPrice) * size;
+            return Math.round(100d * (currPrice - tradedPrice - FutureTrade.COST_PER_LOT) * size) / 100d;
         } else if (order.action() == Types.Action.SELL) {
-            return -1 * (currPrice - tradedPrice) * size;
+            return Math.round(100d * (tradedPrice - currPrice - FutureTrade.COST_PER_LOT) * size) / 100d;
         }
         return 0.0;
     }
