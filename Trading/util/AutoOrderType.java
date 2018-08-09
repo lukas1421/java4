@@ -32,6 +32,7 @@ public enum AutoOrderType {
     AM_HEDGE,
     DAY_SELLBACK,
     FIRST_TICK,
+    CHINA_OPEN,
     FTICK_TAKE_PROFIT,
     CLOSE_TAKE_PROFIT,
     INTRADAY_FIRSTTICK_ACCU,
