@@ -1071,7 +1071,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (_2dayPerc < DOWN_PERC_WIDE && pmchy < 0) {
             buyWaitTime = 1;
+            sellWaitTime = 30;
         } else if (_2dayPerc > UP_PERC_WIDE && pmchy > 0) {
+            buyWaitTime = 30;
             sellWaitTime = 1;
         }
 
@@ -1121,9 +1123,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         //perc high OR pmchy up, sell more
         if (pmchy > 0 && _2dayPerc > UP_PERC_WIDE) {
+            buySize = 1;
             sellSize = 6;
         } else if (pmchy < 0 && _2dayPerc < DOWN_PERC_WIDE) {
             buySize = 6;
+            sellSize = 1;
         }
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
@@ -1904,11 +1908,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int pmChg = getPercentileChgFut(futdata, getTradeDate(futdata.lastKey()));
         int percLast = getPercentileForLast(futdata);
 
+        Map<AutoOrderType, Long> numTrades = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .collect(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType(), Collectors.counting()));
+
         String pnlString = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
                 .collect(Collectors.collectingAndThen(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType()
                         , Collectors.summingDouble(e -> e.getValue().getPnl(futPriceMap.get(f)))),
-                        e -> e.entrySet().stream().map(e1 -> str(e1.getKey(), e1.getValue()))
+                        e -> e.entrySet().stream().map(e1 -> str(e1.getKey(),
+                                numTrades.getOrDefault(e1.getKey(), 0L), e1.getValue()))
                                 .collect(Collectors.joining(","))));
 
         SwingUtilities.invokeLater(() -> {
