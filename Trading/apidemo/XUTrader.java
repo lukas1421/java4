@@ -91,6 +91,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static volatile int _5_min_ma_short = 5;
     public static volatile int _5_min_ma_long = 10;
 
+
+    //china open
+    private static volatile Direction chinaOpenDirection = Direction.Flat;
+
     //size
     private static final int CONSERVATIVE_SIZE = 1;
     private static final int AGGRESSIVE_SIZE = 3;
@@ -706,6 +710,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         futOpenTrader(ldt, price, pmChgY);
         firstTickTrader(ldt, price, pmChgY);
 
+        chinaOpenTrader(ldt, price);
+
         intraday1stTickAccumulator(ldt, price, pmChgY);
         firstTickMAProfitTaker(ldt, price);
         closeProfitTaker(ldt, price);
@@ -1148,24 +1154,49 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static void chinaOpenTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
-        if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(9, 35))) {
+        if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(9, 32))) {
             return;
         }
         if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
             return;
         }
 
-        //if(priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue())
-
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
         int _2dayPerc = getPercentileForLast(fut);
 
         pr(" detailed ftse index ", priceMapBarDetail.get(FTSE_INDEX));
 
-        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28)).getValue();
-        double curr = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
+        //double curr = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
+        long numTrades = getOrderTradeSize(CHINA_OPEN);
+
+        if (numTrades > 30) {
+            if (detailedPrint.get()) {
+                pr(" china open trades exceed max ");
+            }
+            return;
+        }
 
         LocalDateTime lastChinaOpenTime = getLastOrderTime(CHINA_OPEN);
+
+        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28)).getValue();
+        double last = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
+
+
+        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
+                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
+
+        LocalTime firstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
+                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
+                .orElse(LocalTime.MIN);
+
+        if (firstTick > open) {
+            currentDirection = Direction.Long;
+        } else if (firstTick < open) {
+            currentDirection = Direction.Short;
+        }
+
 
         double lastV = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
         LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
@@ -1180,19 +1211,27 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 28))).mapToDouble(Map.Entry::getValue).min()
                 .orElse(0.0);
 
-        if (lastV >= maxSoFar && secLast < maxSoFar) {
+        if (lastV >= maxSoFar && secLast < maxSoFar && chinaOpenDirection != Direction.Long) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimit(freshPrice, 1);
+            Order o = placeBidLimit(freshPrice, 3);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.CHINA_OPEN));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "china open max", globalIdOrderMap.get(id)));
-        } else if (lastV <= minSoFar && secLast > minSoFar) {
+            chinaOpenDirection = Direction.Long;
+        } else if (lastV <= minSoFar && secLast > minSoFar && chinaOpenDirection != Direction.Short) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimit(freshPrice, 1);
+            Order o = placeOfferLimit(freshPrice, 3);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.CHINA_OPEN));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "china open min", globalIdOrderMap.get(id)));
+            chinaOpenDirection = Direction.Short;
         }
+    }
+
+//    private static void
+
+
+    private static void hedgeOnOffTrader(LocalDateTime nowMilli, double freshPrice) {
 
 
     }
@@ -1408,6 +1447,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .map(e -> e.getValue().getOrderTime())
                 .orElse(sessionOpenT());
     }
+
+    private static long getOrderTradeSize(AutoOrderType type) {
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .count();
+    }
+
 
     /**
      * trading based on index MA
