@@ -1075,14 +1075,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int buyWaitTime = 5;
         int sellWaitTime = 5;
 
-        if (_2dayPerc < DOWN_PERC_WIDE && pmchy < 0) {
+        if (_2dayPerc < DOWN_PERC_WIDE || pmchy < 0) {
             buyWaitTime = 1;
             sellWaitTime = 30;
-        } else if (_2dayPerc > UP_PERC_WIDE && pmchy > 0) {
+        } else if (_2dayPerc > UP_PERC_WIDE || pmchy > 0) {
             buyWaitTime = 30;
             sellWaitTime = 1;
         }
-
 
         if (last == maxP && maxP > secLast && pmchy < 0) {
             if (MINUTES.between(lastOpenTime, nowMilli) >= buyWaitTime) {
@@ -1154,7 +1153,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static void chinaHILOTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
-        if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(15, 0))) {
+        if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(15, 0)) ||
+                isStockNoonBreak(lt)) {
             return;
         }
 
@@ -1170,8 +1170,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
             return;
         }
-
-        //LocalDateTime lastChinaOpenTime = getLastOrderTime(CHINA_HILO);
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28)).getValue();
 
