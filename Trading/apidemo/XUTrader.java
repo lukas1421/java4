@@ -39,6 +39,7 @@ import static apidemo.ChinaStock.*;
 import static apidemo.TradingConstants.*;
 import static apidemo.XuTraderHelper.*;
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static java.time.temporal.ChronoUnit.SECONDS;
 import static util.AutoOrderType.*;
 import static utility.Utility.*;
 
@@ -93,7 +94,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     //china open
-    private static volatile Direction chinaOpenDirection = Direction.Flat;
+    private static volatile Direction ftseDirection = Direction.Flat;
 
     //size
     private static final int CONSERVATIVE_SIZE = 1;
@@ -1215,11 +1216,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .orElse(LocalTime.MIN);
 
         if (firstTick > open) {
-            chinaOpenDirection = Direction.Long;
+            ftseDirection = Direction.Long;
         } else if (firstTick < open) {
-            chinaOpenDirection = Direction.Short;
+            ftseDirection = Direction.Short;
         } else {
-            chinaOpenDirection = Direction.Flat;
+            ftseDirection = Direction.Flat;
         }
 
         double lastV = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
@@ -1236,23 +1237,23 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min()
                 .orElse(0.0);
 
-        if (MINUTES.between(lastHiLoTradeTime, nowMilli) >= 10) {
-            if (lastV > maxSoFar && chinaOpenDirection == Direction.Short && pmchy < 0) {
+        if (SECONDS.between(lastHiLoTradeTime, nowMilli) >= 60) {
+            if (lastV > maxSoFar && ftseDirection == Direction.Short && pmchy < 0) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, 3);
+                Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
-                        "open firsttick direction ", open, firstTick, chinaOpenDirection));
-                chinaOpenDirection = Direction.Long;
-            } else if (lastV < minSoFar && chinaOpenDirection == Direction.Long && pmchy > 0) {
+                        "open ft/time direction ", open, firstTick, firstTickTime, ftseDirection));
+                ftseDirection = Direction.Long;
+            } else if (lastV < minSoFar && ftseDirection == Direction.Long && pmchy > 0) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, 3);
+                Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
-                        "open firsttick direction ", open, firstTick, chinaOpenDirection));
-                chinaOpenDirection = Direction.Short;
+                        "open ft/time direction ", open, firstTick, firstTickTime, ftseDirection));
+                ftseDirection = Direction.Short;
             }
         }
     }
