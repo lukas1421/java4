@@ -1108,21 +1108,32 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static void firstTickTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
+
         LocalTime lt = nowMilli.toLocalTime();
+
         if (lt.isBefore(LocalTime.of(9, 28)) || lt.isAfter(LocalTime.of(9, 35))) {
             return;
         }
+
         if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
             return;
         }
 
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
+
         int _2dayPerc = getPercentileForLast(fut);
 
         pr(" detailed ftse index ", priceMapBarDetail.get(FTSE_INDEX));
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28)).getValue();
+
         double curr = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
+
+        double curr2 = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
+                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue)
+                .orElse(open);
+
         LocalDateTime lastOpenTime = getLastOrderTime(FIRST_TICK);
 
         int buySize = 3;
@@ -1138,18 +1149,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
-            if (curr > open && pmchy < 0) {
+            if (curr2 > open && pmchy < 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, buySize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "open buy", globalIdOrderMap.get(id), "open curr ", open, curr));
-            } else if (curr < open && pmchy > 0) {
+                outputOrderToAutoLog(str(o.orderId(), "open buy", globalIdOrderMap.get(id), "open curr curr2 "
+                        , open, curr, curr2));
+            } else if (curr2 < open && pmchy > 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "open sell", globalIdOrderMap.get(id), "open curr ", open, curr));
+                outputOrderToAutoLog(str(o.orderId(), "open sell", globalIdOrderMap.get(id), "open curr curr2 "
+                        , open, curr, curr2));
             }
         }
     }
@@ -1172,8 +1185,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         long numTrades = getOrderTradeSize(CHINA_HILO);
+        LocalDateTime lastHiLoTradeTime = getLastOrderTime(CHINA_HILO);
 
-        if (numTrades > 5) {
+        if (numTrades > 1) {
             if (detailedPrint.get()) {
                 pr(" china open trades exceed max ");
             }
@@ -1217,20 +1231,22 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min()
                 .orElse(0.0);
 
-        if (lastV > maxSoFar && chinaOpenDirection == Direction.Short && pmchy < 0) {
-            int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimit(freshPrice, 3);
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.CHINA_HILO));
-            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id)));
-            chinaOpenDirection = Direction.Long;
-        } else if (lastV < minSoFar && chinaOpenDirection == Direction.Long && pmchy > 0) {
-            int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimit(freshPrice, 3);
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.CHINA_HILO));
-            apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-            outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id)));
-            chinaOpenDirection = Direction.Short;
+        if (MINUTES.between(lastHiLoTradeTime, nowMilli) >= 10) {
+            if (lastV > maxSoFar && chinaOpenDirection == Direction.Short && pmchy < 0) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(freshPrice, 3);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.CHINA_HILO));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id)));
+                chinaOpenDirection = Direction.Long;
+            } else if (lastV < minSoFar && chinaOpenDirection == Direction.Long && pmchy > 0) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(freshPrice, 3);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.CHINA_HILO));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id)));
+                chinaOpenDirection = Direction.Short;
+            }
         }
     }
 
@@ -2017,7 +2033,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
                 .collect(Collectors.collectingAndThen(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType()
                         , Collectors.summingDouble(e -> e.getValue().getPnl(futPriceMap.get(f)))),
-                        e -> e.entrySet().stream().map(e1 -> str(" ||| ",e1.getKey(),
+                        e -> e.entrySet().stream().map(e1 -> str(" ||| ", e1.getKey(),
                                 "num Trades: ", numTradesByOrder.getOrDefault(e1.getKey(), 0L),
                                 "Tot Q: ", quantitySumByOrder.getOrDefault(e1.getKey(), 0d), e1.getValue()))
                                 .collect(Collectors.joining(","))));
