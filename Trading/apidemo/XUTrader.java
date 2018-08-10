@@ -1149,6 +1149,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    /**
+     * break high low trader
+     *
+     * @param nowMilli   time
+     * @param freshPrice fut price
+     */
     private static void chinaHILOTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(15, 0)) ||
@@ -1193,6 +1199,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         double lastV = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
+
         LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
 
         double maxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
@@ -1336,7 +1343,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        int perc = getPercentileForLast(priceMapBar.get(FTSE_INDEX));
+        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
+        int _2dayFutPerc = getPercentileForLast(fut);
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29, 0)).getValue();
         double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
@@ -1345,23 +1353,23 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         LocalDateTime lastOpenTime = getLastOrderTime(INTRADAY_FIRSTTICK_ACCU);
 
-        pr(" intraday first tick, open, firstTick, perc ", open, firstTick, perc);
+        pr(" intraday first tick, open, firstTick, futP% ", open, firstTick, _2dayFutPerc);
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
-            if (firstTick > open && perc < 5 && lt.isBefore(LocalTime.of(11, 30)) && pmchy < 0) {
+            if (firstTick > open && _2dayFutPerc < 5 && lt.isBefore(LocalTime.of(11, 30)) && pmchy < 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday first tick buy",
-                        globalIdOrderMap.get(id), "open first ftsePerc", open, firstTick, perc));
-            } else if (firstTick < open && perc > 95 && lt.isBefore(LocalTime.of(11, 30)) && pmchy > 0) {
+                        globalIdOrderMap.get(id), "open first futP%", open, firstTick, _2dayFutPerc));
+            } else if (firstTick < open && _2dayFutPerc > 95 && lt.isBefore(LocalTime.of(11, 30)) && pmchy > 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday first tick sell",
-                        globalIdOrderMap.get(id), "open first ftsePerc", open, firstTick, perc));
+                        globalIdOrderMap.get(id), "open first futP% ", open, firstTick, _2dayFutPerc));
             }
         }
     }
