@@ -1134,6 +1134,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue)
                 .orElse(open);
 
+        LocalTime firstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
+                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
+                .orElse(LocalTime.MIN);
+
         LocalDateTime lastOpenTime = getLastOrderTime(FIRST_TICK);
 
         int buySize = 3;
@@ -1149,20 +1154,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
-            if (curr2 > open && pmchy < 0) {
+            if (curr2 > open) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, buySize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "open buy", globalIdOrderMap.get(id), "open curr curr2 "
-                        , open, curr, curr2));
-            } else if (curr2 < open && pmchy > 0) {
+                outputOrderToAutoLog(str(o.orderId(), "open buy", globalIdOrderMap.get(id), "open curr curr2 1ttime"
+                        , open, curr, curr2, firstTickTime));
+            } else if (curr2 < open) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "open sell", globalIdOrderMap.get(id), "open curr curr2 "
-                        , open, curr, curr2));
+                outputOrderToAutoLog(str(o.orderId(), "open sell", globalIdOrderMap.get(id), "open curr curr2 1ttime"
+                        , open, curr, curr2, firstTickTime));
             }
         }
     }
