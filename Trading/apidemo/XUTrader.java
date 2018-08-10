@@ -1237,14 +1237,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeBidLimit(freshPrice, 3);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id)));
+                outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
+                        "open firsttick direction ", open, firstTick, chinaOpenDirection));
                 chinaOpenDirection = Direction.Long;
             } else if (lastV < minSoFar && chinaOpenDirection == Direction.Long && pmchy > 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 3);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id)));
+                outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
+                        "open firsttick direction ", open, firstTick, chinaOpenDirection));
                 chinaOpenDirection = Direction.Short;
             }
         }
@@ -2022,7 +2024,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         Map<AutoOrderType, Double> quantitySumByOrder = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
                 .collect(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType(),
-                        Collectors.summingDouble(e1 -> e1.getValue().getOrder().totalQuantity())));
+                        Collectors.summingDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())));
 
         Map<AutoOrderType, Long> numTradesByOrder = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)

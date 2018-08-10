@@ -393,6 +393,10 @@ public class Order {
         return m_totalQuantity;
     }
 
+    public double signedTotalQuantity() {
+        return (action() == Action.BUY ? 1 : -1) * m_totalQuantity;
+    }
+
     public long permId() {
         return m_permId;
     }
