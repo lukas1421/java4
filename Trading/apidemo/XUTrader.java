@@ -1076,14 +1076,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int sellWaitTime = 5;
 
         if (_2dayPerc < DOWN_PERC_WIDE || pmchy < 0) {
-            buyWaitTime = 1;
             sellWaitTime = 30;
         } else if (_2dayPerc > UP_PERC_WIDE || pmchy > 0) {
             buyWaitTime = 30;
-            sellWaitTime = 1;
         }
 
-        if (last == maxP && maxP > secLast && pmchy < 0) {
+        if (last == maxP && maxP > secLast && pmchy < 0 && _2dayPerc < DOWN_PERC_WIDE) {
             if (MINUTES.between(lastOpenTime, nowMilli) >= buyWaitTime) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
@@ -1092,7 +1090,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "fut open buy",
                         globalIdOrderMap.get(id), " max min last ", maxP, minP, last));
             }
-        } else if (last == minP && minP < secLast && pmchy > 0) {
+        } else if (last == minP && minP < secLast && pmchy > 0 && _2dayPerc > UP_PERC_WIDE) {
             if (MINUTES.between(lastOpenTime, nowMilli) >= sellWaitTime) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
@@ -1128,20 +1126,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //perc high OR pmchy up, sell more
         if (pmchy > 0 && _2dayPerc > UP_PERC_WIDE) {
             buySize = 1;
-            sellSize = 6;
+            //sellSize = 6;
         } else if (pmchy < 0 && _2dayPerc < DOWN_PERC_WIDE) {
-            buySize = 6;
+            //buySize = 6;
             sellSize = 1;
         }
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
-            if (curr > open && pmchy < 0) {
+            if (curr > open && pmchy < 0 && _2dayPerc < DOWN_PERC_WIDE) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, buySize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open buy", globalIdOrderMap.get(id), "open curr ", open, curr));
-            } else if (curr < open && pmchy > 0) {
+            } else if (curr < open && pmchy > 0 && _2dayPerc > UP_PERC_WIDE) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
@@ -1170,6 +1168,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
             return;
         }
+
+        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
+        int _2dayFutPerc = getPercentileForLast(fut);
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28)).getValue();
 
@@ -1204,14 +1205,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min()
                 .orElse(0.0);
 
-        if (lastV > maxSoFar && chinaOpenDirection == Direction.Short) {
+        if (lastV > maxSoFar && chinaOpenDirection == Direction.Short && _2dayFutPerc < DOWN_PERC_WIDE) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 3);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.CHINA_HILO));
             apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "china open buy", globalIdOrderMap.get(id)));
             chinaOpenDirection = Direction.Long;
-        } else if (lastV < minSoFar && chinaOpenDirection == Direction.Long) {
+        } else if (lastV < minSoFar && chinaOpenDirection == Direction.Long && _2dayFutPerc > UP_PERC_WIDE) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimit(freshPrice, 3);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.CHINA_HILO));
