@@ -1120,6 +1120,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
+
         int _2dayPerc = getPercentileForLast(fut);
 
         pr(" detailed ftse index ", priceMapBarDetail.get(FTSE_INDEX));
@@ -1198,6 +1199,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
+
         int _2dayFutPerc = getPercentileForLast(fut);
 
         if (_2dayFutPerc > UP_PERC_WIDE || pmchy > 0) {
@@ -1470,8 +1472,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
 
             } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > UP_PERC_WIDE
-                    && pmChgY > 0
-                    && lt.isBefore(LocalTime.of(11, 30))) {
+                    && pmChgY > 0 && lt.isBefore(LocalTime.of(11, 30))) {
 
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
