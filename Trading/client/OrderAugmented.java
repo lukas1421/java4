@@ -41,7 +41,7 @@ public class OrderAugmented {
         order = o;
         msg = "";
         orderType = tt;
-        status = OrderStatus.Unknown;
+        status = OrderStatus.JustCreated;
         finalActionTime = LocalDateTime.MIN;
     }
 
@@ -50,7 +50,7 @@ public class OrderAugmented {
         order = new Order();
         msg = "";
         orderType = AutoOrderType.UNKNOWN;
-        status = OrderStatus.Unknown;
+        status = OrderStatus.JustCreated;
         finalActionTime = LocalDateTime.MIN;
     }
 

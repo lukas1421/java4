@@ -13,7 +13,8 @@ public enum OrderStatus {
     Filled,
     Inactive,
     PendingSubmit,
-    Unknown;
+    Unknown,
+    JustCreated;
 
     public static OrderStatus get(String apiString) {
         for (OrderStatus type : values()) {
