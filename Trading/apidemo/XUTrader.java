@@ -1160,7 +1160,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open buy", globalIdOrderMap.get(id), "open ftick1 ftick 2 " +
                         "1ttime", open, ftick1, ftick2, firstTickTime));
-            } else if (!noMoreSell.get() && ftick2 < open && (_2dayPerc > UP_PERC_WIDE && pmchy > 0)) {
+            } else if (!noMoreSell.get() && ftick2 < open && (_2dayPerc > UP_PERC_WIDE || pmchy > 0)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
@@ -1284,6 +1284,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
         if (priceMapBarDetail.get(FTSE_INDEX).size() < 2) {
+            return;
+        }
+
+        double firstTickTotalQ = getTotalSignedQForType(FIRST_TICK);
+
+        double ftProfitTakeQ = getTotalSignedQForType(FTICK_TAKE_PROFIT);
+
+
+        if (firstTickTotalQ == 0.0 || Math.abs(ftProfitTakeQ) >= Math.abs(firstTickTotalQ)) {
+            pr("first tick Q, profitTaker Q ", firstTickTotalQ, ftProfitTakeQ);
             return;
         }
 

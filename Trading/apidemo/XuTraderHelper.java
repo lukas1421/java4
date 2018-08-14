@@ -4,6 +4,7 @@ import TradeType.FutureTrade;
 import TradeType.MAIdea;
 import auxiliary.SimpleBar;
 import client.Order;
+import client.OrderStatus;
 import client.OrderType;
 import client.Types;
 import controller.ApiController;
@@ -606,6 +607,14 @@ public class XuTraderHelper {
 
     static boolean futMarketOpen(LocalTime t) {
         return !(t.isAfter(LocalTime.of(5, 0)) && t.isBefore(LocalTime.of(9, 0)));
+    }
+
+    static double getTotalSignedQForType(AutoOrderType type) {
+        return XUTrader.globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
+                .sum();
     }
 
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
