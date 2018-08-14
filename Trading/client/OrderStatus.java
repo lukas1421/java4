@@ -14,7 +14,7 @@ public enum OrderStatus {
     Inactive,
     PendingSubmit,
     Unknown,
-    JustCreated;
+    Created;
 
     public static OrderStatus get(String apiString) {
         for (OrderStatus type : values()) {

@@ -1105,14 +1105,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut open buy",
-                        globalIdOrderMap.get(id), " max min last 2dp%", maxP, minP, last, _2dayPerc));
+                        globalIdOrderMap.get(id), " max min last 2dp%", r(maxP), r(minP), r(last), _2dayPerc));
             } else if (!noMoreSell.get() && last < minP && (_2dayPerc > UP_PERC_WIDE || pmchy > 0)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut open sell",
-                        globalIdOrderMap.get(id), "max min last 2dp%", maxP, minP, last, _2dayPerc));
+                        globalIdOrderMap.get(id), "max min last 2dp%", r(maxP), r(minP), r(last), _2dayPerc));
             }
         }
     }
@@ -1703,7 +1703,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == type)
                             .forEach(e -> {
                                 if (e.getValue().getStatus() == OrderStatus.Submitted ||
-                                        e.getValue().getStatus() == OrderStatus.JustCreated) {
+                                        e.getValue().getStatus() == OrderStatus.Created) {
                                     apcon.cancelOrder(e.getValue().getOrder().orderId());
                                     e.getValue().setFinalActionTime(LocalDateTime.now());
                                     e.getValue().setStatus(OrderStatus.Cancelled);
