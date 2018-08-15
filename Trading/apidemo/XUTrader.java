@@ -1069,6 +1069,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    /**
+     * fut trades at fut open at 9am
+     *
+     * @param nowMilli   time now
+     * @param freshPrice fut price
+     * @param pmchy      ytd pm change in percentile
+     */
     private static void futOpenTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
         LocalTime lt = nowMilli.toLocalTime();
 
@@ -1132,6 +1139,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    /**
+     * trades based on ftse first tick
+     *
+     * @param nowMilli   time
+     * @param freshPrice fut price
+     * @param pmchy      ytd pm change in percentile
+     */
     private static void firstTickTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
         LocalTime lt = nowMilli.toLocalTime();
 
