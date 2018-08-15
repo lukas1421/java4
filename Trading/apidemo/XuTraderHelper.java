@@ -609,7 +609,7 @@ public class XuTraderHelper {
         return !(t.isAfter(LocalTime.of(5, 0)) && t.isBefore(LocalTime.of(9, 0)));
     }
 
-    static double getTotalSignedQForType(AutoOrderType type) {
+    static double getTotalFilledSignedQForType(AutoOrderType type) {
         return XUTrader.globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
