@@ -1443,16 +1443,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         pr(" intraday first tick, open, firstTick, futP% ", open, firstTick, _2dayFutPerc);
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME * 2) {
-            if (!noMoreBuy.get() &&
-                    firstTick > open && lt.isBefore(LocalTime.of(11, 30)) && _2dayFutPerc < 5 && pmchy < 0) {
+            if (!noMoreBuy.get() && firstTick > open && _2dayFutPerc < 20 && (_2dayFutPerc < 5 || pmchy < 0)
+                    && lt.isBefore(LocalTime.of(13, 30))) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday first tick buy",
                         globalIdOrderMap.get(id), "open first futP%", open, firstTick, _2dayFutPerc));
-            } else if (!noMoreSell.get() &&
-                    firstTick < open && lt.isBefore(LocalTime.of(11, 30)) && _2dayFutPerc > 95 && pmchy > 0) {
+            } else if (!noMoreSell.get() && firstTick < open && _2dayFutPerc > 80 &&
+                    (_2dayFutPerc > 95 || pmchy > 0) && lt.isBefore(LocalTime.of(11, 30))) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
