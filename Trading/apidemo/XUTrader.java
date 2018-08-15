@@ -1088,7 +1088,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        long futOpenOrdersNum = getTotalOrderNumForType(FUT_OPEN);
+        long futOpenOrdersNum = getOrderSizeForTradeType(FUT_OPEN);
 
         NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get("SGXA50");
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
@@ -1216,7 +1216,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        long numTrades = getOrderTradeSize(CHINA_HILO);
+        long numTrades = getOrderSizeForTradeType(CHINA_HILO);
 
         LocalDateTime lastHiLoTradeTime = getLastOrderTime(CHINA_HILO);
 
@@ -1511,7 +1511,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME * 2) {
             if (!noMoreBuy.get() &&
                     maShortLast > maLongLast && maShortSecLast <= maLongSecLast && todayPerc < DOWN_PERC_WIDE
-                    && pmChgY < 0) {
+                    && (todayPerc < 5 || pmChgY < 0)) {
 
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, buySize);
@@ -1523,7 +1523,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             } else if (!noMoreSell.get() &&
                     maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > UP_PERC_WIDE
-                    && pmChgY > 0 && lt.isBefore(LocalTime.of(11, 30))) {
+                    && (todayPerc > 95 || pmChgY > 0) && lt.isBefore(LocalTime.of(11, 30))) {
 
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
@@ -1548,7 +1548,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .orElse(sessionOpenT());
     }
 
-    private static long getOrderTradeSize(AutoOrderType type) {
+    private static long getOrderSizeForTradeType(AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .count();
