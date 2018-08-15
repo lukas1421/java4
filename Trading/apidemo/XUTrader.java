@@ -1188,14 +1188,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
             if (!noMoreBuy.get() && ftick2 > open && (_2dayPerc < DOWN_PERC_WIDE || pmchy < 0)) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, buySize, Types.TimeInForce.DAY);
+                Order o = placeBidLimitTIF(freshPrice + 2.5, buySize, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open buy", globalIdOrderMap.get(id), "open ftick1 ftick 2 " +
                         "1ttime", open, ftick1, ftick2, firstTickTime));
             } else if (!noMoreSell.get() && ftick2 < open && (_2dayPerc > UP_PERC_WIDE || pmchy > 0)) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, sellSize, Types.TimeInForce.DAY);
+                Order o = placeOfferLimitTIF(freshPrice - 2.5, sellSize, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open sell", globalIdOrderMap.get(id), "open ftick1 ftick 2 " +
