@@ -1257,7 +1257,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
 
-
         if (!manualSetDirection.get()) {
             if (firstTick > open) {
                 a50IndexDirection = Direction.Long;
