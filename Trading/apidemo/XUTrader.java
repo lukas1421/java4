@@ -1071,7 +1071,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static void futOpenTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
         LocalTime lt = nowMilli.toLocalTime();
+
         if (lt.isBefore(LocalTime.of(8, 59)) || lt.isAfter(LocalTime.of(9, 29))) {
+            checkCancelOrders(FUT_OPEN, nowMilli, ORDER_WAIT_TIME * 2);
             return;
         }
 
@@ -1099,14 +1101,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int waitTime = 1;
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= waitTime) {
-            if (!noMoreBuy.get() && last > maxP && (_2dayPerc < DOWN_PERC_WIDE || pmchy < 0)) {
+            if (!noMoreBuy.get() && last > maxP && _2dayPerc < 50 && (_2dayPerc < DOWN_PERC_WIDE || pmchy < 0)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut open buy",
                         globalIdOrderMap.get(id), " max min last 2dp%", r(maxP), r(minP), r(last), _2dayPerc));
-            } else if (!noMoreSell.get() && last < minP && (_2dayPerc > UP_PERC_WIDE || pmchy > 0)) {
+            } else if (!noMoreSell.get() && last < minP && _2dayPerc > 50 && (_2dayPerc > UP_PERC_WIDE || pmchy > 0)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN));
@@ -1121,6 +1123,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime lt = nowMilli.toLocalTime();
 
         if (lt.isBefore(LocalTime.of(9, 28)) || lt.isAfter(LocalTime.of(9, 35))) {
+            checkCancelOrders(FIRST_TICK, nowMilli, ORDER_WAIT_TIME);
             return;
         }
 
