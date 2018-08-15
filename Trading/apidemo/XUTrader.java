@@ -1194,7 +1194,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeOfferLimitTIF(freshPrice - 2.5, sellSize, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, AutoOrderType.FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "open sell", globalIdOrderMap.get(id), "open ftick1 ftick 2 " +
+                outputOrderToAutoLog(str(o.orderId(), "open sell", globalIdOrderMap.get(id), "open ftick1 ftick2 " +
                         "1ttime", open, ftick1, ftick2, firstTickTime));
             }
         }
@@ -1290,7 +1290,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
-                        "open ft/time direction ", open, firstTick, firstTickTime, a50IndexDirection,
+                        "open ft/time/direction ", r(open), r(firstTick), firstTickTime, a50IndexDirection,
                         "lastV, max, min", r(lastV), r(maxSoFar), r(minSoFar)));
                 a50IndexDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastV < minSoFar && a50IndexDirection == Direction.Long &&
@@ -1300,7 +1300,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
-                        "open ft/time direction ", open, firstTick, firstTickTime, a50IndexDirection,
+                        "open ft/time/direction ", r(open), r(firstTick), firstTickTime, a50IndexDirection,
                         " lastV, max, min", r(lastV), r(maxSoFar), r(minSoFar)));
                 a50IndexDirection = Direction.Short;
             }
