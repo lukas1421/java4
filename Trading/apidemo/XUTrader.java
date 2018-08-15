@@ -1084,7 +1084,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        if (priceMapBarDetail.get("SGXA50").size() == 0) {
+        if (priceMapBarDetail.get("SGXA50").size() <= 1) {
             return;
         }
 
@@ -1105,11 +1105,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
         double last = futPrice.lastEntry().getValue();
+
         LocalDateTime lastOpenTime = getLastOrderTime(FUT_OPEN);
 
-        int waitTime = 1;
-
-        if (MINUTES.between(lastOpenTime, nowMilli) >= waitTime) {
+        if (MINUTES.between(lastOpenTime, nowMilli) >= 1) {
             if (!noMoreBuy.get() && last > maxP && _2dayPerc < 50 && (_2dayPerc < DOWN_PERC_WIDE || pmchy < 0)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o;
