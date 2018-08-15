@@ -1084,11 +1084,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        if (priceMapBarDetail.get("SGXA50").size() <= 5) {
+        if (priceMapBarDetail.get("SGXA50").size() == 0) {
             return;
         }
 
-        double futOpenTotalQ = getTotalFilledSignedQForType(FUT_OPEN);
+        long futOpenOrdersNum = getTotalOrderNumForType(FUT_OPEN);
 
         NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get("SGXA50");
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
@@ -1113,12 +1113,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (!noMoreBuy.get() && last > maxP && _2dayPerc < 50 && (_2dayPerc < DOWN_PERC_WIDE || pmchy < 0)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o;
-                if (futOpenTotalQ == 0.0) {
+                if (futOpenOrdersNum == 0L) {
                     o = placeBidLimitTIF(freshPrice + 2.5, 1, Types.TimeInForce.IOC);
                 } else {
                     o = placeBidLimit(freshPrice, 1);
                 }
-
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut open buy",
@@ -1126,7 +1125,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             } else if (!noMoreSell.get() && last < minP && _2dayPerc > 50 && (_2dayPerc > UP_PERC_WIDE || pmchy > 0)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o;
-                if (futOpenTotalQ == 0.0) {
+                if (futOpenOrdersNum == 0L) {
                     o = placeOfferLimitTIF(freshPrice - 2.5, 1, Types.TimeInForce.IOC);
                 } else {
                     o = placeOfferLimit(freshPrice, 1);
@@ -1179,8 +1178,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .orElse(LocalTime.MIN);
 
         LocalDateTime lastOpenTime = getLastOrderTime(FIRST_TICK);
-
-        //double firstTickTotalQ = getTotalFilledSignedQForType(FIRST_TICK);
 
         int buySize = 2;
         int sellSize = 2;

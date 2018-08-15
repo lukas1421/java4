@@ -617,6 +617,13 @@ public class XuTraderHelper {
                 .sum();
     }
 
+    static long getTotalOrderNumForType(AutoOrderType type) {
+        return XUTrader.globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .count();
+    }
+
+
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
         @Override
         public void connected() {
