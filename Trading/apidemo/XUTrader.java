@@ -1554,7 +1554,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .count();
     }
 
-
     /**
      * trading based on index MA
      *
