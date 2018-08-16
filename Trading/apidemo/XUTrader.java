@@ -1739,8 +1739,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             LocalDateTime lastOTime = getLastOrderTime(type);
 
             if (lastOrdStatus != OrderStatus.Filled && lastOrdStatus != OrderStatus.Cancelled
-                    && lastOrdStatus != OrderStatus.ApiCancelled &&
-                    lastOrdStatus != OrderStatus.PendingCancel) {
+                    && lastOrdStatus != OrderStatus.ApiCancelled && lastOrdStatus != OrderStatus.PendingCancel) {
 
                 if (MINUTES.between(lastOTime, nowMilli) > timeLimit) {
                     globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == type)
@@ -1774,7 +1773,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static int getPDPercentile() {
-        LocalDate d = (LocalTime.now().isBefore(LocalTime.of(5, 0))) ? LocalDate.now().minusDays(1) : LocalDate.now();
+        LocalDate d = (LocalTime.now().isBefore(LocalTime.of(5, 0))) ? LocalDate.now().minusDays(1) :
+                LocalDate.now();
         int candidate = 50;
         NavigableMap<LocalDateTime, Double> dpMap = new ConcurrentSkipListMap<>();
         futData.get(ibContractToFutType(activeFuture)).entrySet().stream().filter(e -> e.getKey()
