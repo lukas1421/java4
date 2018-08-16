@@ -50,7 +50,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static MASentiment _20DayMA = MASentiment.Directionless;
     public static volatile double currentIBNAV = 0.0;
 
-    static final LocalDateTime ENGINE_START_TIME = XuTraderHelper.getEngineStartTime();
     private static volatile Set<String> uniqueTradeKeySet = new HashSet<>();
     static ApiController apcon;
     private static XUTraderRoll traderRoll;
@@ -70,7 +69,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final int DOWN_PERC_WIDE = 20;
 
     //flatten drift trader
-    private static final double FLATTEN_THRESH = 200000.0;
     public static volatile Eagerness flattenEagerness = Eagerness.Passive;
 
     private static final int ORDER_WAIT_TIME = 30;
@@ -88,7 +86,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public static volatile int _5_min_ma_short = 5;
     public static volatile int _5_min_ma_long = 10;
 
-
     //china open
     private static volatile Direction a50IndexDirection = Direction.Flat;
     private static volatile AtomicBoolean manualSetDirection = new AtomicBoolean(false);
@@ -97,37 +94,26 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final int CONSERVATIVE_SIZE = 1;
     private static final int AGGRESSIVE_SIZE = 3;
 
-    //perc trader
-    private static volatile AtomicBoolean percentileTradeOn = new AtomicBoolean(false);
-
     //inventory market making
     private static volatile Semaphore inventorySemaphore = new Semaphore(1);
     private static volatile CyclicBarrier inventoryBarrier = new CyclicBarrier(2, () -> {
         outputToAutoLog(str(LocalTime.now(), "inventory barrier reached 2",
                 "Trading Cycle Ends"));
     });
-    private static final double margin = 2.5;
-    private static final int INV_TRADE_QUANTITY = 1;
-    private static AtomicBoolean inventoryTraderOn = new AtomicBoolean(false);
 
     //pd market making
     private static volatile Semaphore pdSemaphore = new Semaphore(2);
     private static volatile CyclicBarrier pdBarrier = new CyclicBarrier(2, () -> {
         outputToAutoLog(str(LocalTime.now(), " PD barrier reached 2, Trading cycle ends"));
     });
-    private static final int PD_ORDER_QUANTITY = 1;
-    private static AtomicBoolean pdTraderOn = new AtomicBoolean(false);
-
-    //index ma
-    private static AtomicBoolean indexMAStatus = new AtomicBoolean(false);
 
     //ma
     private static volatile int shortMAPeriod = 60;
     private static volatile int longMAPeriod = 80;
 
     private static Direction currentDirection = Direction.Flat;
-    private static final double PD_UP_THRESH = 0.003;
-    private static final double PD_DOWN_THRESH = -0.003;
+    //private static final double PD_UP_THRESH = 0.003;
+    //private static final double PD_DOWN_THRESH = -0.003;
 
     //open/fast trading
     private static LocalDateTime lastFastOrderTime = LocalDateTime.now();

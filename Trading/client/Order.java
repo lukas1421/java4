@@ -1369,17 +1369,13 @@ public class Order {
         if (!Util.ArrayEqualsUnordered(m_orderComboLegs, l_theOther.m_orderComboLegs)) {
             return false;
         }
-
         if (!Util.ArrayEqualsUnordered(m_conditions, l_theOther.m_conditions)) {
             return false;
         }
-
         return true;
     }
 
     public String toString() {
-        return Utility.str(m_action, m_orderType, m_totalQuantity, "at", m_lmtPrice);
-
+        return Utility.str(m_orderId, m_action, m_tif, m_orderType, m_totalQuantity, "at", m_lmtPrice);
     }
-
 }
