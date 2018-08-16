@@ -1229,11 +1229,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
 
-        int _2dayFutPerc = getPercentileForLast(fut);
+        int _2dayPerc = getPercentileForLast(fut);
 
-        if (_2dayFutPerc > UP_PERC_WIDE || pmchy > 0) {
+        if (_2dayPerc > UP_PERC_WIDE || pmchy > 0) {
             sellSize = 3;
-        } else if (_2dayFutPerc < DOWN_PERC_WIDE || pmchy < 0) {
+        } else if (_2dayPerc < DOWN_PERC_WIDE || pmchy < 0) {
             buySize = 3;
         }
 
@@ -1277,36 +1277,35 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double lastV = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
         LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
+
         double maxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 28))
-                        && e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).max()
-                .orElse(0.0);
+                        && e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).max().orElse(0.0);
 
         double minSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 28)) &&
-                        e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min()
-                .orElse(0.0);
+                        e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
         if (SECONDS.between(lastHiLoTradeTime, nowMilli) >= 60) {
             if (!noMoreBuy.get() && lastV > maxSoFar && a50IndexDirection == Direction.Short &&
-                    (_2dayFutPerc < DOWN_PERC_WIDE || pmchy < 0)) {
+                    (_2dayPerc < DOWN_PERC_WIDE || pmchy < 0)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, buySize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
                         "open ft/time/direction ", r(open), r(firstTick), firstTickTime, a50IndexDirection,
-                        "lastV, max, min, 2dp ", r(lastV), r(maxSoFar), r(minSoFar), _2dayFutPerc));
+                        "lastV, max, min, 2dp ", r(lastV), r(maxSoFar), r(minSoFar), _2dayPerc));
                 a50IndexDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastV < minSoFar && a50IndexDirection == Direction.Long &&
-                    (_2dayFutPerc > UP_PERC_WIDE || pmchy > 0)) {
+                    (_2dayPerc > UP_PERC_WIDE || pmchy > 0)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
                         "open ft/time/direction ", r(open), r(firstTick), firstTickTime, a50IndexDirection,
-                        " lastV, max, min 2dp", r(lastV), r(maxSoFar), r(minSoFar), _2dayFutPerc));
+                        " lastV, max, min 2dp", r(lastV), r(maxSoFar), r(minSoFar), _2dayPerc));
                 a50IndexDirection = Direction.Short;
             }
         }
