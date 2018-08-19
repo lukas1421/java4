@@ -617,6 +617,9 @@ public class XuTraderHelper {
                 .sum();
     }
 
+    private static int getSizeForDelta(double price, double fx, double delta) {
+        return (int) Math.floor(Math.abs(delta) / (fx * price));
+    }
 
 
     static class XUConnectionHandler implements ApiController.IConnectionHandler {

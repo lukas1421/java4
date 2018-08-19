@@ -431,7 +431,8 @@ public class ChinaOption extends JPanel implements Runnable {
             if (LocalTime.now().isAfter(LocalTime.of(15, 0))) {
                 saveVolsCSV();
             } else {
-                JOptionPane.showMessageDialog(null, " cannot save before 15pm");
+                pr(" cannot save before 15 pm ");
+                //JOptionPane.showMessageDialog(null, " cannot save before 15pm");
             }
         });
 
@@ -439,7 +440,8 @@ public class ChinaOption extends JPanel implements Runnable {
             if (LocalTime.now().isAfter(LocalTime.of(15, 0))) {
                 saveHibEOD();
             } else {
-                JOptionPane.showMessageDialog(null, " cannot save before 15pm");
+                pr(" cannot save before 15 pm ");
+                //JOptionPane.showMessageDialog(null, " cannot save before 15pm");
             }
             //ChinaOptionHelper.getVolsFromVolOutputToHib();
         });
@@ -643,7 +645,8 @@ public class ChinaOption extends JPanel implements Runnable {
                     }
             );
         } else {
-            JOptionPane.showMessageDialog(null, " cannot save before load ");
+            pr(" cannot save before load ");
+            //JOptionPane.showMessageDialog(null, " cannot save before load ");
         }
     }
 
