@@ -1180,16 +1180,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeBidLimitTIF(freshPrice + 2.5, buySize, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "1st tick buy", globalIdOrderMap.get(id), "open ftick1 ftick 2 " +
-                        "1ttime", open, ftick1, ftick2, firstTickTime, " bid ask ", bidNow, askNow));
+                outputOrderToAutoLog(str(o.orderId(), "1st tick buy", globalIdOrderMap.get(id),
+                        "open ftick1 ftick 2 1ttime", open, ftick1, ftick2, firstTickTime,
+                        " bid ask ", bidNow, askNow));
             } else if (!noMoreSell.get() && ftick2 < open && _2dayPerc > 50 &&
                     (_2dayPerc > UP_PERC_WIDE || pmchy > PMCHY_HI)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice - 2.5, sellSize, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "1st tick sell", globalIdOrderMap.get(id), "open ftick1 ftick2 " +
-                        "1ttime", open, ftick1, ftick2, firstTickTime, " bid ask ", bidNow, askNow));
+                outputOrderToAutoLog(str(o.orderId(), "1st tick sell", globalIdOrderMap.get(id),
+                        "open ftick1 ftick2 1ttime", open, ftick1, ftick2, firstTickTime,
+                        " bid ask ", bidNow, askNow));
             }
         }
     }
