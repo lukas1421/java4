@@ -95,8 +95,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static volatile Direction a50IndexDirection = Direction.Flat;
     private static volatile AtomicBoolean manualSetDirection = new AtomicBoolean(false);
     private static volatile AtomicBoolean manualAccuOn = new AtomicBoolean(false);
-    private static final long MANUAL_ACCU_MAX_SIZE = 2;
-    private static final LocalTime MANUAL_ACCU_DEADLINE = LocalTime.of(9, 40);
+    private static final long HILO_ACCU_MAX_SIZE = 2;
+    private static final LocalTime HILO_ACCU_DEADLINE = LocalTime.of(9, 40);
 
     //size
     private static final int CONSERVATIVE_SIZE = 1;
@@ -728,6 +728,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         futOpenTrader(ldt, price, pmChgY);
         firstTickTrader(ldt, price, pmChgY);
         chinaHiLoTrader(ldt, price, pmChgY);
+        chinaHiloAccumulator(ldt, price);
         intraday1stTickAccumulator(ldt, price, pmChgY);
 
         firstTickMAProfitTaker(ldt, price);
@@ -1312,20 +1313,23 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static void chinaHiloAccumulator(LocalDateTime nowMilli, double freshPrice, int pmchy) {
+    private static void chinaHiloAccumulator(LocalDateTime nowMilli, double freshPrice) {
 
-        if (!manualAccuOn.get() || nowMilli.toLocalTime().isAfter(MANUAL_ACCU_DEADLINE)
+        if (!manualAccuOn.get() || nowMilli.toLocalTime().isAfter(HILO_ACCU_DEADLINE)
                 || a50IndexDirection == Direction.Flat) {
             return;
         }
 
         LocalDateTime lastHiLoAccuTradeTime = getLastOrderTime(CHINA_HILO_ACCU);
 
-        double hiloAccuTotalQ = getTotalFilledSignedQForType(CHINA_HILO_ACCU);
+        double hiloAccuTotalOrderQ = getOrderTotalSignedQForType(CHINA_HILO_ACCU);
+
+        checkCancelOrders(CHINA_HILO_ACCU, nowMilli, ORDER_WAIT_TIME);
 
         int todayPerc = getPercentileForLast(priceMapBar.get(FTSE_INDEX));
 
-        if (SECONDS.between(lastHiLoAccuTradeTime, nowMilli) >= 60 && Math.abs(hiloAccuTotalQ) < MANUAL_ACCU_MAX_SIZE) {
+        if (SECONDS.between(lastHiLoAccuTradeTime, nowMilli) >= 60 &&
+                Math.abs(hiloAccuTotalOrderQ) <= HILO_ACCU_MAX_SIZE) {
 
             if (!noMoreBuy.get() && todayPerc < 1 && a50IndexDirection == Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
@@ -1333,14 +1337,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO_ACCU));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "hilo accu buy", globalIdOrderMap.get(id),
-                        " accu #", hiloAccuTotalQ));
+                        " accu #", hiloAccuTotalOrderQ));
             } else if (!noMoreSell.get() && todayPerc > 99 && a50IndexDirection == Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO_ACCU));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "hilo accu sell", globalIdOrderMap.get(id),
-                        " decu #", hiloAccuTotalQ));
+                outputOrderToAutoLog(str(o.orderId(), "hilo decu sell", globalIdOrderMap.get(id),
+                        " decu #", hiloAccuTotalOrderQ));
             }
         }
 
@@ -1591,6 +1595,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> e.getValue().getOrderType() == type)
                 .count();
     }
+
+    private static double getOrderTotalSignedQForType(AutoOrderType type) {
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
+                .sum();
+    }
+
 
     /**
      * trading based on index MA
