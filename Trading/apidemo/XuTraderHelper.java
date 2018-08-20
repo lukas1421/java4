@@ -577,7 +577,7 @@ public class XuTraderHelper {
     }
 
     static boolean isStockNoonBreak(LocalTime t) {
-        return t.isAfter(LocalTime.of(11, 29)) && t.isBefore(LocalTime.of(13, 0));
+        return t.isAfter(LocalTime.of(11, 29, 59)) && t.isBefore(LocalTime.of(13, 0, 0));
     }
 
 
