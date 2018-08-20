@@ -91,12 +91,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double PMCHY_LO = -20;
 
 
-    //china open
+    //china open/firsttick
     private static volatile Direction a50IndexDirection = Direction.Flat;
     private static volatile AtomicBoolean manualSetDirection = new AtomicBoolean(false);
     private static volatile AtomicBoolean manualAccuOn = new AtomicBoolean(false);
     private static final long HILO_ACCU_MAX_SIZE = 2;
     private static final LocalTime HILO_ACCU_DEADLINE = LocalTime.of(9, 40);
+    private static final long FIRSTTICK_ACCU_MAX_SIZE = 2;
+
 
     //size
     private static final int CONSERVATIVE_SIZE = 1;
@@ -1313,6 +1315,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    /**
+     * In addition to china hilo, this trades in the same direction as hilo
+     *
+     * @param nowMilli
+     * @param freshPrice
+     */
+
     private static void chinaHiloAccumulator(LocalDateTime nowMilli, double freshPrice) {
 
         if (!manualAccuOn.get() || nowMilli.toLocalTime().isAfter(HILO_ACCU_DEADLINE)
@@ -1323,13 +1332,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalDateTime lastHiLoAccuTradeTime = getLastOrderTime(CHINA_HILO_ACCU);
 
         double hiloAccuTotalOrderQ = getOrderTotalSignedQForType(CHINA_HILO_ACCU);
+        double hiloTotalOrderQ = getOrderTotalSignedQForType(CHINA_HILO);
 
         checkCancelOrders(CHINA_HILO_ACCU, nowMilli, ORDER_WAIT_TIME);
 
         int todayPerc = getPercentileForLast(priceMapBar.get(FTSE_INDEX));
 
         if (SECONDS.between(lastHiLoAccuTradeTime, nowMilli) >= 60 &&
-                Math.abs(hiloAccuTotalOrderQ) <= HILO_ACCU_MAX_SIZE) {
+                Math.abs(hiloAccuTotalOrderQ) <= HILO_ACCU_MAX_SIZE && Math.abs(hiloTotalOrderQ) > 0.0) {
 
             if (!noMoreBuy.get() && todayPerc < 1 && a50IndexDirection == Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
@@ -1464,9 +1474,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * accumulate based on intraday
      *
-     * @param nowMilli
-     * @param freshPrice
-     * @param pmchy
+     * @param nowMilli   time
+     * @param freshPrice fut price
+     * @param pmchy      ytd pm change in perc
      */
     private static void intraday1stTickAccumulator(LocalDateTime nowMilli, double freshPrice, int pmchy) {
         LocalTime lt = nowMilli.toLocalTime();
@@ -1489,9 +1499,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         LocalDateTime lastOpenTime = getLastOrderTime(INTRADAY_FIRSTTICK_ACCU);
 
-        pr(" intraday first tick, open, firstTick, futP% ", open, firstTick, _2dayFutPerc);
+        double firstTickSignedQuant = getOrderTotalSignedQForType(FIRST_TICK);
 
-        if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME * 2) {
+        double ftAccuSignedQuant = getOrderTotalSignedQForType(INTRADAY_FIRSTTICK_ACCU);
+
+        pr(" intraday first tick, open, firstTick, futP% ", r(open), r(firstTick), _2dayFutPerc);
+
+        if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME * 2 && Math.abs(firstTickSignedQuant) > 0.0
+                && Math.abs(ftAccuSignedQuant) <= FIRSTTICK_ACCU_MAX_SIZE) {
             if (!noMoreBuy.get() && firstTick > open && _2dayFutPerc < 20 && (_2dayFutPerc < 5 || pmchy < PMCHY_LO)
                     && lt.isBefore(LocalTime.of(13, 30))) {
                 int id = autoTradeID.incrementAndGet();
@@ -1499,7 +1514,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday first tick buy",
-                        globalIdOrderMap.get(id), "open first futP%", open, firstTick, _2dayFutPerc));
+                        globalIdOrderMap.get(id), "open first futP%", open, firstTick, _2dayFutPerc,
+                        "first tick size ", firstTickSignedQuant));
             } else if (!noMoreSell.get() && firstTick < open && _2dayFutPerc > 80 &&
                     (_2dayFutPerc > 95 || pmchy > PMCHY_HI) && lt.isBefore(LocalTime.of(11, 30))) {
                 int id = autoTradeID.incrementAndGet();
@@ -1507,7 +1523,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday first tick sell",
-                        globalIdOrderMap.get(id), "open first futP% ", open, firstTick, _2dayFutPerc));
+                        globalIdOrderMap.get(id), "open first futP% ", open, firstTick, _2dayFutPerc,
+                        "first tick size ", firstTickSignedQuant));
             }
         }
     }
