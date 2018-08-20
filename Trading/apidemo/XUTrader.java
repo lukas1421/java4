@@ -1613,6 +1613,39 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .orElse(sessionOpenT());
     }
 
+    private static double getAvgBuyPriceForOrderType(AutoOrderType type) {
+        double botUnits = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().getOrder().action() == Types.Action.BUY)
+                .mapToDouble(e -> e.getValue().getOrder().totalQuantity()).sum();
+
+        if (botUnits == 0.0) {
+            return 0.0;
+        }
+
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().getOrder().action() == Types.Action.BUY)
+                .mapToDouble(e -> e.getValue().getOrder().totalQuantity() * e.getValue().getOrder().lmtPrice())
+                .sum() / botUnits;
+    }
+
+    private static double getAvgSellPriceForOrderType(AutoOrderType type) {
+        double soldUnits = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().getOrder().action() == Types.Action.SELL)
+                .mapToDouble(e -> e.getValue().getOrder().totalQuantity()).sum();
+
+        if (soldUnits == 0.0) {
+            return 0.0;
+        }
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().getOrder().action() == Types.Action.SELL)
+                .mapToDouble(e -> e.getValue().getOrder().totalQuantity() * e.getValue().getOrder().lmtPrice())
+                .sum() / soldUnits;
+    }
+
     private static long getOrderSizeForTradeType(AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
@@ -1685,6 +1718,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongLast = smaLong.lastEntry().getValue();
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
+        double avgBuy = getAvgBuyPriceForOrderType(PERC_MA);
+        double avgSell = getAvgSellPriceForOrderType(PERC_MA);
+
         if (detailedPrint.get()) {
             pr("*perc MA Time: ", nowMilli.toLocalTime(), "next T:", lastIndexMAOrder.plusMinutes(tOrders),
                     "||1D p%: ", todayPerc, "||2D p%", _2dayPerc, "pmchY: ", pmchy);
@@ -1696,11 +1732,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" bull/bear cross ", bull, bear);
             pr(" current PD ", r10000(getPD(freshPrice)));
             pr("delta base,pm,weekday,target:", baseDelta, pmchgDelta, weekdayDelta, deltaTarget);
+            pr(" avg buy sell ", avgBuy, avgSell);
         }
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tOrders) {
             if (!noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
-                    && _2dayPerc < DOWN_PERC_WIDE && currDelta < deltaTarget) {
+                    && _2dayPerc < DOWN_PERC_WIDE && currDelta < deltaTarget && freshPrice < avgBuy) {
                 int id = autoTradeID.incrementAndGet();
                 if (pmchy < -20) {
                     maSize = 4;
@@ -1716,7 +1753,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         _2dayPerc, "pmChg", pmchy, "|delta Base pmchg weekday target ",
                         baseDelta, pmchgDelta, weekdayDelta, deltaTarget));
             } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
-                    && _2dayPerc > UP_PERC_WIDE && currDelta > deltaTarget) {
+                    && _2dayPerc > UP_PERC_WIDE && currDelta > deltaTarget && freshPrice > avgSell) {
                 int id = autoTradeID.incrementAndGet();
                 if (pmchy > 20) {
                     maSize = 4;
