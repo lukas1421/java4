@@ -94,6 +94,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //china open
     private static volatile Direction a50IndexDirection = Direction.Flat;
     private static volatile AtomicBoolean manualSetDirection = new AtomicBoolean(false);
+    private static volatile AtomicBoolean manualAccuOn = new AtomicBoolean(false);
+    private static final long MANUAL_ACCU_MAX_SIZE = 2;
+    private static final LocalTime MANUAL_ACCU_DEADLINE = LocalTime.of(9, 40);
 
     //size
     private static final int CONSERVATIVE_SIZE = 1;
@@ -1291,8 +1294,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
                         "open/1tk/time/direction ", r(open), r(firstTick), firstTickTime, a50IndexDirection,
-                        "lastV, max, min, 2dp ", r(lastV), r(maxSoFar), r(minSoFar), _2dayPerc));
+                        "lastV, max, min, 2dp pmchy ", r(lastV), r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50IndexDirection = Direction.Long;
+                manualAccuOn.set(true);
             } else if (!noMoreSell.get() && lastV < minSoFar && a50IndexDirection == Direction.Long &&
                     (_2dayPerc > UP_PERC_WIDE || pmchy > PMCHY_HI)) {
                 int id = autoTradeID.incrementAndGet();
@@ -1301,11 +1305,47 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
                         "open/1tk/time/direction ", r(open), r(firstTick), firstTickTime, a50IndexDirection,
-                        " lastV, max, min 2dp", r(lastV), r(maxSoFar), r(minSoFar), _2dayPerc));
+                        " lastV, max, min 2dp pmchy ", r(lastV), r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50IndexDirection = Direction.Short;
+                manualAccuOn.set(true);
             }
         }
     }
+
+    private static void chinaHiloAccumulator(LocalDateTime nowMilli, double freshPrice, int pmchy) {
+
+        if (!manualAccuOn.get() || nowMilli.toLocalTime().isAfter(MANUAL_ACCU_DEADLINE)
+                || a50IndexDirection == Direction.Flat) {
+            return;
+        }
+
+        LocalDateTime lastHiLoAccuTradeTime = getLastOrderTime(CHINA_HILO_ACCU);
+
+        double hiloAccuTotalQ = getTotalFilledSignedQForType(CHINA_HILO_ACCU);
+
+        int todayPerc = getPercentileForLast(priceMapBar.get(FTSE_INDEX));
+
+        if (SECONDS.between(lastHiLoAccuTradeTime, nowMilli) >= 60 && Math.abs(hiloAccuTotalQ) < MANUAL_ACCU_MAX_SIZE) {
+
+            if (!noMoreBuy.get() && todayPerc < 1 && a50IndexDirection == Direction.Long) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(freshPrice, 1);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO_ACCU));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "hilo accu buy", globalIdOrderMap.get(id),
+                        " accu #", hiloAccuTotalQ));
+            } else if (!noMoreSell.get() && todayPerc > 99 && a50IndexDirection == Direction.Short) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(freshPrice, 1);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO_ACCU));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "hilo accu sell", globalIdOrderMap.get(id),
+                        " decu #", hiloAccuTotalQ));
+            }
+        }
+
+    }
+
 
     private static void firstTickMAProfitTaker(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();

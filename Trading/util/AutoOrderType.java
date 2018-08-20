@@ -33,6 +33,7 @@ public enum AutoOrderType {
     DAY_SELLBACK,
     FIRST_TICK,
     CHINA_HILO,
+    CHINA_HILO_ACCU,
     HEDGE_ON_OFF,
     FTICK_TAKE_PROFIT,
     CLOSE_TAKE_PROFIT,

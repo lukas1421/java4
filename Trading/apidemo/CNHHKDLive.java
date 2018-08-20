@@ -58,6 +58,10 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
     private static volatile GraphBarGen g3 = new GraphBarGen();
 
     private CNHHKDLive() {
+        g1.setGraphName("Offshore hist ");
+        g2.setGraphName("Offshore live");
+        g3.setGraphName("Boc live ");
+
         bochkdLabel = new JLabel("0.0");
         bochkdLabel.setFont(bochkdLabel.getFont().deriveFont(50F));
         bochkdLabel.setOpaque(true);

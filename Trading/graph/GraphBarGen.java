@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import static apidemo.ChinaStock.closeMap;
 import static graph.GraphHelper.*;
 import static java.util.Optional.ofNullable;
+import static utility.Utility.r10000;
 import static utility.Utility.roundDownToN;
 
 public class GraphBarGen extends JComponent implements MouseMotionListener, MouseListener {
@@ -34,7 +35,7 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
     int last = 0;
     double rtn = 0;
     public NavigableMap<LocalDateTime, SimpleBar> tm;
-    String name;
+    String name = "";
     String chineseName;
     private String bench;
     private double sharpe;
@@ -62,6 +63,10 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
     }
 
 
+    public void setGraphName(String nam) {
+        name = nam;
+    }
+
     public void setNavigableMap(NavigableMap<LocalDateTime, SimpleBar> tm) {
         this.tm = (tm != null) ? tm.entrySet().stream().filter(e -> !e.getValue().containsZero())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u,
@@ -83,6 +88,10 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
         rtn = getRtn(tm);
 
         int x = INITIAL_X_OFFSET;
+//        if (!name.equals("")) {
+//            g.drawString(name, 5, 5);
+//        }
+
         for (LocalDateTime lt : tm.keySet()) {
             int openY = getY(tm.floorEntry(lt).getValue().getOpen());
             int highY = getY(tm.floorEntry(lt).getValue().getHigh());
@@ -111,12 +120,13 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
                     if (tm.lowerEntry(lt).getKey().toLocalDate().equals(lt.toLocalDate())) {
                         addage = lt.toLocalDate().format(DateTimeFormatter.ofPattern("M/dd"));
                     }
-                    g.drawString(addage + lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString(), x, getHeight() - 40);
+                    g.drawString(addage + lt.toLocalTime().truncatedTo(ChronoUnit.MINUTES).toString(),
+                            x, getHeight() - 40);
                 }
             }
             if (roundDownToN(mouseXCord, WIDTH_US) == x - INITIAL_X_OFFSET) {
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
-                g.drawString(lt.toString() + " " + Math.round(100d * tm.floorEntry(lt).getValue().getClose()) / 100d
+                g.drawString(lt.toString() + " " + r10000(tm.floorEntry(lt).getValue().getClose())
                         , x, lowY + (mouseYCord < closeY ? -20 : +20));
                 g.drawOval(x + 2, lowY, 5, 5);
                 g.fillOval(x + 2, lowY, 5, 5);
@@ -133,8 +143,7 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
             int closeY = getY(tm.lastEntry().getValue().getClose());
             g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
             g.drawString(tm.lastKey().toString() + " " +
-                            Math.round(100d * tm.lastEntry().getValue().getClose()) / 100d,
-                    x, lowY + (mouseYCord < closeY ? -10 : +10));
+                    r10000(tm.lastEntry().getValue().getClose()), x, lowY + (mouseYCord < closeY ? -10 : +10));
             g.drawOval(x + 2, lowY, 5, 5);
             g.fillOval(x + 2, lowY, 5, 5);
             g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
@@ -152,7 +161,7 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
             g2.drawString(name, 5, 15);
         }
         //add bench here
-        g2.drawString(Double.toString(getLast(tm)) + " (" + (Math.round(100d * closeMap.getOrDefault(name, 0.0))) / 100d + ")"
+        g2.drawString(Double.toString(getLast(tm)) + " (" + (r10000(closeMap.getOrDefault(name, 0.0))) + ")"
                 , getWidth() * 3 / 8, 15);
 
         g2.drawString("P%:" + Integer.toString(XuTraderHelper.getPercentileForLast(tm)), getWidth() * 9 / 16, 15);
