@@ -1732,7 +1732,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" bull/bear cross ", bull, bear);
             pr(" current PD ", r10000(getPD(freshPrice)));
             pr("delta base,pm,weekday,target:", baseDelta, pmchgDelta, weekdayDelta, deltaTarget);
-            pr(" avg buy sell ", avgBuy, avgSell);
+            pr("perc avg buy sell ", avgBuy, avgSell);
         }
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tOrders) {
@@ -1751,7 +1751,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast shortlong",
                         r(maShortSecLast), r(maLongSecLast), "|anchor ", anchorIndex, "|perc", todayPerc, "|2d Perc ",
                         _2dayPerc, "pmChg", pmchy, "|delta Base pmchg weekday target ",
-                        baseDelta, pmchgDelta, weekdayDelta, deltaTarget));
+                        baseDelta, pmchgDelta, weekdayDelta, deltaTarget, "avg buy sell ", avgBuy, avgSell));
             } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
                     && _2dayPerc > UP_PERC_WIDE && currDelta > deltaTarget && freshPrice > avgSell) {
                 int id = autoTradeID.incrementAndGet();
@@ -1767,7 +1767,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), " anchor ", anchorIndex, "perc", todayPerc, "2d Perc ",
                         _2dayPerc, "pmChg", pmchy, "|delta Base pmchg weekday target ",
-                        baseDelta, pmchgDelta, weekdayDelta, deltaTarget));
+                        baseDelta, pmchgDelta, weekdayDelta, deltaTarget, "avg buy sell ", avgBuy, avgSell));
             }
         }
     }
@@ -1800,7 +1800,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Overnight Short", OVERNIGHT));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "O/N sell @ ", freshPrice, " curr p% ", currPerc));
+                outputOrderToAutoLog(str(o.orderId(), "O/N sell @ ", freshPrice, " curr p% ", currPerc,
+                        "pmPercChg ", pmPercChg));
             } else if (currDelta < getBullishTarget() && currPerc < DOWN_PERC && pmPercChg < PMCHY_LO) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
