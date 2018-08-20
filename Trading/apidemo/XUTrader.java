@@ -1542,7 +1542,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         LocalTime lt = nowMilli.toLocalTime();
 
-        if (!checkTimeRangeBool(lt, 9, 29, 15, 0) || isStockNoonBreak(lt)) {
+        if (!checkTimeRangeBool(lt, 9, 29, 15, 0)) {
             return;
         }
 
@@ -1576,7 +1576,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME * 2) {
             if (!noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
-                    && todayPerc < DOWN_PERC_WIDE && (todayPerc < 5 || pmChgY < PMCHY_LO)) {
+                    && todayPerc < DOWN_PERC_WIDE && pmChgY < 0 && (todayPerc < 5 || pmChgY < PMCHY_LO)) {
+
+                if (lt.isAfter(LocalTime.of(13, 0))) {
+                    buySize = 2;
+                }
 
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, buySize);
@@ -1588,7 +1592,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             } else if (!noMoreSell.get() &&
                     maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > UP_PERC_WIDE
-                    && (todayPerc > 95 || pmChgY > PMCHY_HI) && lt.isBefore(LocalTime.of(11, 30))) {
+                    && pmChgY > 0 && (todayPerc > 95 || pmChgY > PMCHY_HI) && lt.isBefore(LocalTime.of(11, 30))) {
 
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
