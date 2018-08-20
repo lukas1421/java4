@@ -699,7 +699,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int lastPerc = getClosingPercentile(futdata, getTradeDate(futdata.lastKey()));
 
         if (detailedPrint.get()) {
-            pr("20DayMA", _20DayMA, "maxT>MinT: ", maxAfterMin, "max>PrevC", maxAbovePrev,
+            pr("||20DayMA ", _20DayMA, "||maxT>MinT: ", maxAfterMin, "||max>PrevC", maxAbovePrev,
                     "closeY", closePercY, "openPercY", openPercY, "pmchgy", pmChgY,
                     "pmch ", pmChg, "lastP", lastPerc, "delta range ", getBearishTarget(), getBullishTarget()
                     , "currDelta ", Math.round(currDelta), " hilo direction: ", a50IndexDirection);
@@ -765,7 +765,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     .map(Map.Entry::getKey).orElse(LocalTime.MAX);
 
             if (detailedPrint.get()) {
-                pr(name, "checkf10maxAftermint", maxT, minT);
+                pr(name, "checkf10:max min", maxT, minT);
             }
 
             return maxT.isAfter(minT);
@@ -1349,14 +1349,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO_ACCU));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "hilo accu buy", globalIdOrderMap.get(id),
-                        " accu #", hiloAccuTotalOrderQ));
+                        " accu #, hilo #", hiloAccuTotalOrderQ, hiloTotalOrderQ));
             } else if (!noMoreSell.get() && todayPerc > 99 && a50IndexDirection == Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO_ACCU));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "hilo decu sell", globalIdOrderMap.get(id),
-                        " decu #", hiloAccuTotalOrderQ));
+                        " decu #, hilo #", hiloAccuTotalOrderQ, hiloTotalOrderQ));
             }
         }
 
