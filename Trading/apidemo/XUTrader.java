@@ -1079,8 +1079,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         long futOpenOrdersNum = getOrderSizeForTradeType(FUT_OPEN);
 
-        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get("SGXA50");
-        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
+        NavigableMap<LocalTime, Double> futPrice =
+                priceMapBarDetail.get("SGXA50").entrySet().stream().filter(e -> e.getKey().isAfter(LocalTime.of(8, 59)))
+                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                                (a, b) -> a, ConcurrentSkipListMap::new));
+
+        NavigableMap<LocalDateTime, SimpleBar> fut =
+                futData.get(ibContractToFutType(activeFuture));
         int _2dayPerc = getPercentileForLast(fut);
 
         pr("fut open trader " + futPrice);
@@ -1101,7 +1106,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (!noMoreBuy.get() && last > maxP && _2dayPerc < 50 && (_2dayPerc < DOWN_PERC_WIDE || pmchy < PMCHY_LO)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o;
-                if (futOpenOrdersNum == 0L) {
+                if (futOpenOrdersNum == 0L && lt.isBefore(LocalTime.of(9, 0, 10))) {
                     o = placeBidLimitTIF(freshPrice + 2.5, 1, Types.TimeInForce.IOC);
                 } else {
                     o = placeBidLimit(freshPrice, 1);
@@ -1114,7 +1119,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             } else if (!noMoreSell.get() && last < minP && _2dayPerc > 50 && (_2dayPerc > UP_PERC_WIDE || pmchy > PMCHY_HI)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o;
-                if (futOpenOrdersNum == 0L) {
+                if (futOpenOrdersNum == 0L && lt.isBefore(LocalTime.of(9, 0, 10))) {
                     o = placeOfferLimitTIF(freshPrice - 2.5, 1, Types.TimeInForce.IOC);
                 } else {
                     o = placeOfferLimit(freshPrice, 1);
