@@ -99,6 +99,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final LocalTime HILO_ACCU_DEADLINE = LocalTime.of(9, 40);
     private static final long FIRSTTICK_ACCU_MAX_SIZE = 2;
 
+    //open deviation
+    private static volatile Direction openDeviationDirection = Direction.Flat;
+
 
     //size
     private static final int CONSERVATIVE_SIZE = 1;
@@ -1178,7 +1181,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalDateTime lastFTickTime = getLastOrderTime(FIRST_TICK);
 
         int buySize = 3;
-        int sellSize = 3;
+        int sellSize = 1;
 
         pr(" first tick trader open ftick1, ftick2 ftTime", open, ftick1, ftick2, firstTickTime);
 
@@ -1205,6 +1208,57 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     /**
+     * @param nowMilli   time now
+     * @param freshPrice price
+     */
+    private static void openDeviationTrader(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+
+        if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(15, 0))) {
+            return;
+        }
+        if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
+            return;
+        }
+
+        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28)).getValue();
+        double last = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
+        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
+                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue)
+                .orElse(open);
+
+        if (firstTick > open) {
+            openDeviationDirection = Direction.Long;
+        } else if (firstTick < open) {
+            openDeviationDirection = Direction.Short;
+        }
+
+        LocalDateTime lastOpenDevTradeTime = getLastOrderTime(OPEN_DEVIATION);
+        int buySize = 1;
+        int sellSize = 1;
+
+        if (SECONDS.between(lastOpenDevTradeTime, nowMilli) >= 60) {
+            if (!noMoreBuy.get() && last > open && openDeviationDirection == Direction.Short) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(freshPrice, buySize);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "open deviation buy", globalIdOrderMap.get(id)));
+                openDeviationDirection = Direction.Long;
+
+            } else if (!noMoreSell.get() && last < open && openDeviationDirection == Direction.Long) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(freshPrice, sellSize);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "open deviation sell", globalIdOrderMap.get(id)));
+                openDeviationDirection = Direction.Short;
+            }
+        }
+    }
+
+    /**
      * ftse break high low trader
      *
      * @param nowMilli   time
@@ -1220,21 +1274,21 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        long numTrades = getOrderSizeForTradeType(CHINA_HILO);
+        long numOrders = getOrderSizeForTradeType(CHINA_HILO);
 
         LocalDateTime lastHiLoTradeTime = getLastOrderTime(CHINA_HILO);
 
-        int buySize = 2;
+        int buySize = 1;
         int sellSize = 1;
 
-        if (numTrades > 5) {
+        if (numOrders > 5) {
             if (detailedPrint.get()) {
                 pr(" china open trades exceed max ");
             }
             return;
         }
 
-        if (numTrades > 2 || MINUTES.between(lastHiLoTradeTime, nowMilli) <= 60) {
+        if (numOrders > 2 || MINUTES.between(lastHiLoTradeTime, nowMilli) <= 60) {
             buySize = 1;
             sellSize = 1;
         }
@@ -1337,8 +1391,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * In addition to china hilo, this trades in the same direction as hilo
      *
-     * @param nowMilli
-     * @param freshPrice
+     * @param nowMilli   time now
+     * @param freshPrice price
      */
 
     private static void chinaHiloAccumulator(LocalDateTime nowMilli, double freshPrice) {
@@ -1743,7 +1797,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double avgSell = getAvgFilledSellPriceForOrderType(PERC_MA);
 
         if (detailedPrint.get()) {
-            pr("*perc MA Time: ", nowMilli.toLocalTime(), "next T:", lastIndexMAOrder.plusMinutes(ORDER_WAIT_TIME),
+            pr("*perc MA Time: ", nowMilli.toLocalTime(), "next T:",
+                    lastIndexMAOrder.plusMinutes(ORDER_WAIT_TIME),
                     "||1D p%: ", todayPerc, "||2D p%", _2dayPerc, "pmchY: ", pmchy);
             pr("Anchor / short long MA: ", anchorIndex, shorterMA, longerMA);
             pr(" ma cross last : ", r(maShortLast), r(maLongLast), r(maShortLast - maLongLast));
@@ -1887,16 +1942,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
     }
-
-//    private static double getWeekdayDeltaAdjustment(LocalDate ld) {
-//        switch (ld.getDayOfWeek()) {
-//            case MONDAY:
-//                return 100000;
-//            case WEDNESDAY:
-//                return -100000;
-//        }
-//        return 0.0;
-//    }
 
     private static double getWeekdayDeltaAdjustmentLdt(LocalDateTime ldt) {
         LocalTime lt = ldt.toLocalTime();
