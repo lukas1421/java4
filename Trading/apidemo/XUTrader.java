@@ -1771,7 +1771,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     && _2dayPerc > UP_PERC_WIDE && currDelta > deltaTarget && (freshPrice > avgSell || avgSell == 0.0)) {
                 int id = autoTradeID.incrementAndGet();
                 if (pmchy > 20) {
-                    maSize = 4;
+                    maSize = 2;
                 } else {
                     maSize = CONSERVATIVE_SIZE;
                 }
