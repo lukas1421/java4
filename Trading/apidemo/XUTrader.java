@@ -1879,23 +1879,27 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static double getWeekdayDeltaAdjustment(LocalDate ld) {
-        switch (ld.getDayOfWeek()) {
-            case MONDAY:
-                return 100000;
-            case WEDNESDAY:
-                return -100000;
-        }
-        return 0.0;
-    }
+//    private static double getWeekdayDeltaAdjustment(LocalDate ld) {
+//        switch (ld.getDayOfWeek()) {
+//            case MONDAY:
+//                return 100000;
+//            case WEDNESDAY:
+//                return -100000;
+//        }
+//        return 0.0;
+//    }
 
     private static double getWeekdayDeltaAdjustmentLdt(LocalDateTime ldt) {
         LocalTime lt = ldt.toLocalTime();
         switch (ldt.getDayOfWeek()) {
             case MONDAY:
-                return 100000;
+                if (lt.isAfter(LocalTime.of(15, 0))) {
+                    return 1000000;
+                } else {
+                    return 100000;
+                }
             case TUESDAY:
-                if (lt.isBefore(LocalTime.of(13, 0  ))) {
+                if (lt.isBefore(LocalTime.of(13, 0))) {
                     return 1000000;
                 } else {
                     return 0.0;
