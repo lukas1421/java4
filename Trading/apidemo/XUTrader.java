@@ -102,7 +102,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //open deviation
     private static volatile Direction openDeviationDirection = Direction.Flat;
     private static volatile AtomicBoolean manualOpenDevOn = new AtomicBoolean(false);
-    private static long MAX_OPEN_DEV_SIZE = 5;
+
+    private static final long PREFERRED_OPEN_DEV_SIZE = 5;
+    private static final long MAX_OPEN_DEV_SIZE = 6;
 
 
     //size
@@ -734,7 +736,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         futOpenTrader(ldt, price, pmChgY);
         firstTickTrader(ldt, price, pmChgY);
-        openDeviationTrader(ldt, price);
+        openDeviationTrader(ldt, price, pmChgY);
         chinaHiLoTrader(ldt, price, pmChgY);
         chinaHiloAccumulator(ldt, price);
         intraday1stTickAccumulator(ldt, price, pmChgY);
@@ -1216,7 +1218,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param nowMilli   time now
      * @param freshPrice price
      */
-    private static void openDeviationTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static void openDeviationTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
         LocalTime lt = nowMilli.toLocalTime();
 
         if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(15, 0))) {
@@ -1270,6 +1272,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int sellSize = 1;
 
         if (numOrdersOpenDev >= MAX_OPEN_DEV_SIZE) {
+            return;
+        }
+
+        if (numOrdersOpenDev >= PREFERRED_OPEN_DEV_SIZE &&
+                ((pmchy > 0 && openDeviationDirection == Direction.Short)
+                        || (pmchy < 0 && openDeviationDirection == Direction.Long))) {
             return;
         }
 
