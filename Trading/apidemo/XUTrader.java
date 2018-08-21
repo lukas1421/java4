@@ -1908,10 +1908,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     return 100000;
                 }
             case TUESDAY:
-                if (lt.isBefore(LocalTime.of(13, 0))) {
+                if (lt.isBefore(LocalTime.of(15, 0))) {
                     return 1000000;
-                } else {
-                    return 0.0;
                 }
             case WEDNESDAY:
                 return -100000;
