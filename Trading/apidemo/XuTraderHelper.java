@@ -285,8 +285,8 @@ public class XuTraderHelper {
 
     static LocalDateTime sessionOpenT() {
         LocalTime now = LocalTime.now();
-        LocalTime sessionBeginTime = futureOvernightSession().test(now) ? OVERNIGHT_BEGIN :
-                (futureAMSession().test(now) ? AM_BEGIN : PM_BEGIN);
+//        LocalTime sessionBeginTime = futureOvernightSession().test(now) ? OVERNIGHT_BEGIN :
+//                (futureAMSession().test(now) ? AM_BEGIN : PM_BEGIN);
 
         LocalDate TDate = now.isAfter(LocalTime.of(0, 0)) && now.isBefore(LocalTime.of(5, 0))
                 ? LocalDate.now().minusDays(1L) : LocalDate.now();

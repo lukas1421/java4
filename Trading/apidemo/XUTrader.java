@@ -1621,10 +1621,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .orElse(sessionOpenT());
     }
 
-    private static double getAvgBuyPriceForOrderType(AutoOrderType type) {
+    private static double getAvgFilledBuyPriceForOrderType(AutoOrderType type) {
         double botUnits = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getOrder().action() == Types.Action.BUY)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
                 .mapToDouble(e -> e.getValue().getOrder().totalQuantity()).sum();
 
         if (botUnits == 0.0) {
@@ -1634,14 +1635,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getOrder().action() == Types.Action.BUY)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
                 .mapToDouble(e -> e.getValue().getOrder().totalQuantity() * e.getValue().getOrder().lmtPrice())
                 .sum() / botUnits;
     }
 
-    private static double getAvgSellPriceForOrderType(AutoOrderType type) {
+    private static double getAvgFilledSellPriceForOrderType(AutoOrderType type) {
         double soldUnits = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getOrder().action() == Types.Action.SELL)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
                 .mapToDouble(e -> e.getValue().getOrder().totalQuantity()).sum();
 
         if (soldUnits == 0.0) {
@@ -1650,6 +1653,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getOrder().action() == Types.Action.SELL)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
                 .mapToDouble(e -> e.getValue().getOrder().totalQuantity() * e.getValue().getOrder().lmtPrice())
                 .sum() / soldUnits;
     }
@@ -1688,10 +1692,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int shorterMA = 5;
         int longerMA = 10;
         int maSize;
-        int tOrders = Math.min(ORDER_WAIT_TIME / 2, 30);
+        int tOrders = 30;
 
         double baseDelta = _20DayMA == MASentiment.Bearish ? BEAR_BASE_DELTA : BULL_BASE_DELTA;
-        double pmchgDelta = (pmchy < -20 ? 1 : (pmchy > 20 ? -1 : 0)) * PMCHY_DELTA * Math.abs(pmchy) / 100.0;
+        double pmchgDelta = (pmchy < -20 ? 1 : (pmchy > 20 ? -0.5 : 0)) * PMCHY_DELTA * Math.abs(pmchy) / 100.0;
         double weekdayDelta = getWeekdayDeltaAdjustment(getTradeDate(nowMilli));
         double deltaTarget = baseDelta + pmchgDelta + weekdayDelta;
 
@@ -1726,8 +1730,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongLast = smaLong.lastEntry().getValue();
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
-        double avgBuy = getAvgBuyPriceForOrderType(PERC_MA);
-        double avgSell = getAvgSellPriceForOrderType(PERC_MA);
+        double avgBuy = getAvgFilledBuyPriceForOrderType(PERC_MA);
+        double avgSell = getAvgFilledSellPriceForOrderType(PERC_MA);
+        //long buyFilledQuant = get;
+        //long sellTotalQuant = ;
 
         if (detailedPrint.get()) {
             pr("*perc MA Time: ", nowMilli.toLocalTime(), "next T:", lastIndexMAOrder.plusMinutes(tOrders),
@@ -1746,7 +1752,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= tOrders) {
             if (!noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
-                    && _2dayPerc < DOWN_PERC_WIDE && currDelta < deltaTarget && freshPrice < avgBuy) {
+                    && _2dayPerc < DOWN_PERC_WIDE && currDelta < deltaTarget && (freshPrice < avgBuy || avgBuy == 0.0)) {
                 int id = autoTradeID.incrementAndGet();
                 if (pmchy < -20) {
                     maSize = 4;
@@ -1762,7 +1768,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         _2dayPerc, "pmChg", pmchy, "|delta Base pmchg weekday target ",
                         baseDelta, pmchgDelta, weekdayDelta, deltaTarget, "avg buy sell ", avgBuy, avgSell));
             } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
-                    && _2dayPerc > UP_PERC_WIDE && currDelta > deltaTarget && freshPrice > avgSell) {
+                    && _2dayPerc > UP_PERC_WIDE && currDelta > deltaTarget && (freshPrice > avgSell || avgSell == 0.0)) {
                 int id = autoTradeID.incrementAndGet();
                 if (pmchy > 20) {
                     maSize = 4;
