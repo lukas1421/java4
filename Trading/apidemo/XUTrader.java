@@ -101,6 +101,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //open deviation
     private static volatile Direction openDeviationDirection = Direction.Flat;
+    private static volatile AtomicBoolean manualOpenDevOn = new AtomicBoolean(false);
     private static long MAX_OPEN_DEV_SIZE = 5;
 
 
@@ -733,6 +734,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         futOpenTrader(ldt, price, pmChgY);
         firstTickTrader(ldt, price, pmChgY);
+        openDeviationTrader(ldt, price);
         chinaHiLoTrader(ldt, price, pmChgY);
         chinaHiloAccumulator(ldt, price);
         intraday1stTickAccumulator(ldt, price, pmChgY);
@@ -1231,10 +1233,35 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue)
                 .orElse(open);
 
-        if (firstTick > open) {
-            openDeviationDirection = Direction.Long;
-        } else if (firstTick < open) {
-            openDeviationDirection = Direction.Short;
+        LocalTime firstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
+                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
+                .orElse(LocalTime.MIN);
+        LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
+
+
+        if (!manualOpenDevOn.get()) {
+            if (firstTickTime.equals(lastKey)) {
+                if (firstTick > open) {
+                    openDeviationDirection = Direction.Long;
+                    manualOpenDevOn.set(true);
+                } else if (firstTick < open) {
+                    openDeviationDirection = Direction.Short;
+                    manualOpenDevOn.set(true);
+                } else {
+                    openDeviationDirection = Direction.Flat;
+                }
+            } else {
+                if (last > open) {
+                    openDeviationDirection = Direction.Long;
+                    manualOpenDevOn.set(true);
+                } else if (last < open) {
+                    openDeviationDirection = Direction.Short;
+                    manualOpenDevOn.set(true);
+                } else {
+                    openDeviationDirection = Direction.Flat;
+                }
+            }
         }
 
         long numOrdersOpenDev = getOrderSizeForTradeType(OPEN_DEVIATION);
@@ -1252,16 +1279,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeBidLimit(freshPrice, buySize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "open deviation buy", globalIdOrderMap.get(id)));
+                outputOrderToAutoLog(str(o.orderId(), "open deviation buy", globalIdOrderMap.get(id),
+                        "open/last/openDevDir ", open, last, openDeviationDirection));
                 openDeviationDirection = Direction.Long;
+                manualOpenDevOn.set(true);
 
             } else if (!noMoreSell.get() && last < open && openDeviationDirection == Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "open deviation sell", globalIdOrderMap.get(id)));
+                outputOrderToAutoLog(str(o.orderId(), "open deviation sell", globalIdOrderMap.get(id),
+                        "open/last/openDevDir ", open, last, openDeviationDirection));
                 openDeviationDirection = Direction.Short;
+                manualOpenDevOn.set(true);
             }
         }
     }
