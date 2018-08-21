@@ -1211,7 +1211,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     /**
-     * open deviation - buy if above open and sell if below
+     * open deviation - buy if above open and sell if below, no cares for pmchy and percentile, shud always trade
      *
      * @param nowMilli   time now
      * @param freshPrice price
@@ -1280,19 +1280,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open deviation buy", globalIdOrderMap.get(id),
-                        "open/last/openDevDir ", open, last, openDeviationDirection));
+                        "open/ft/last/openDevDir ", open, firstTick, last, openDeviationDirection));
                 openDeviationDirection = Direction.Long;
-                manualOpenDevOn.set(true);
-
             } else if (!noMoreSell.get() && last < open && openDeviationDirection == Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open deviation sell", globalIdOrderMap.get(id),
-                        "open/last/openDevDir ", open, last, openDeviationDirection));
+                        "open/ft/last/openDevDir ", open, firstTick, last, openDeviationDirection));
                 openDeviationDirection = Direction.Short;
-                manualOpenDevOn.set(true);
             }
         }
     }
