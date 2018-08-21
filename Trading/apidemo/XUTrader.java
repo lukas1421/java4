@@ -101,6 +101,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //open deviation
     private static volatile Direction openDeviationDirection = Direction.Flat;
+    private static long MAX_OPEN_DEV_SIZE = 5;
 
 
     //size
@@ -1208,6 +1209,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     /**
+     * open deviation - buy if above open and sell if below
+     *
      * @param nowMilli   time now
      * @param freshPrice price
      */
@@ -1234,9 +1237,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             openDeviationDirection = Direction.Short;
         }
 
+        long numOrdersOpenDev = getOrderSizeForTradeType(OPEN_DEVIATION);
         LocalDateTime lastOpenDevTradeTime = getLastOrderTime(OPEN_DEVIATION);
         int buySize = 1;
         int sellSize = 1;
+
+        if (numOrdersOpenDev >= MAX_OPEN_DEV_SIZE) {
+            return;
+        }
 
         if (SECONDS.between(lastOpenDevTradeTime, nowMilli) >= 60) {
             if (!noMoreBuy.get() && last > open && openDeviationDirection == Direction.Short) {
