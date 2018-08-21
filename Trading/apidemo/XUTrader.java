@@ -1174,12 +1174,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
 
-        LocalDateTime lastOpenTime = getLastOrderTime(FIRST_TICK);
+        LocalDateTime lastFTickTime = getLastOrderTime(FIRST_TICK);
 
         int buySize = 3;
         int sellSize = 3;
 
-        if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
+        pr(" first tick trader open ftick1, ftick2 ftTime", open, ftick1, ftick2, firstTickTime);
+
+        if (MINUTES.between(lastFTickTime, nowMilli) >= 10) {
             if (!noMoreBuy.get() && ftick2 > open && _2dayPerc < 50 && (_2dayPerc < DOWN_PERC_WIDE || pmchy < PMCHY_LO)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice + 2.5, buySize, Types.TimeInForce.IOC);
@@ -1381,16 +1383,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double ftProfitTakeQ = getTotalFilledSignedQForType(FTICK_TAKE_PROFIT);
 
-        if (firstTickTotalQ == 0.0 || Math.abs(ftProfitTakeQ) >= Math.abs(firstTickTotalQ)) {
-            pr("first tick Q, profitTaker Q ", firstTickTotalQ, ftProfitTakeQ);
-            return;
-        }
-
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29, 0)).getValue();
 
         double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
+
+        if (firstTickTotalQ == 0.0 || Math.abs(ftProfitTakeQ) >= Math.abs(firstTickTotalQ)) {
+            pr("first tick Q, profitTaker Q, open, firsttick ",
+                    firstTickTotalQ, ftProfitTakeQ, open, firstTick);
+            return;
+        }
 
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
                 , e -> !isStockNoonBreak(e));
