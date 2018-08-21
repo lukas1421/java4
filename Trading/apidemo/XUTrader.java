@@ -1692,11 +1692,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int shorterMA = 5;
         int longerMA = 10;
         int maSize;
-        int tOrders = 30;
+        int tOrders = 60;
 
         double baseDelta = _20DayMA == MASentiment.Bearish ? BEAR_BASE_DELTA : BULL_BASE_DELTA;
         double pmchgDelta = (pmchy < -20 ? 1 : (pmchy > 20 ? -0.5 : 0)) * PMCHY_DELTA * Math.abs(pmchy) / 100.0;
-        double weekdayDelta = getWeekdayDeltaAdjustment(getTradeDate(nowMilli));
+        double weekdayDelta = getWeekdayDeltaAdjustmentLdt(nowMilli);
         double deltaTarget = baseDelta + pmchgDelta + weekdayDelta;
 
         if (isStockNoonBreak(lt)) {
@@ -1732,8 +1732,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double avgBuy = getAvgFilledBuyPriceForOrderType(PERC_MA);
         double avgSell = getAvgFilledSellPriceForOrderType(PERC_MA);
-        //long buyFilledQuant = get;
-        //long sellTotalQuant = ;
 
         if (detailedPrint.get()) {
             pr("*perc MA Time: ", nowMilli.toLocalTime(), "next T:", lastIndexMAOrder.plusMinutes(tOrders),
@@ -1744,7 +1742,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             boolean bull = maShortLast > maLongLast && maShortSecLast <= maLongSecLast;
             boolean bear = maShortLast < maLongLast && maShortSecLast >= maLongSecLast;
             pr(" bull/bear cross ", bull, bear);
-            //pr(" crossed ")
             pr(" current PD ", r10000(getPD(freshPrice)));
             pr("delta base,pm,weekday,target:", baseDelta, pmchgDelta, weekdayDelta, deltaTarget);
             pr("perc avg buy sell ", avgBuy, avgSell);
@@ -1882,10 +1879,27 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static double getWeekdayDeltaAdjustment(LocalDate ldt) {
+    private static double getWeekdayDeltaAdjustment(LocalDate ld) {
+        switch (ld.getDayOfWeek()) {
+            case MONDAY:
+                return 100000;
+            case WEDNESDAY:
+                return -100000;
+        }
+        return 0.0;
+    }
+
+    private static double getWeekdayDeltaAdjustmentLdt(LocalDateTime ldt) {
+        LocalTime lt = ldt.toLocalTime();
         switch (ldt.getDayOfWeek()) {
             case MONDAY:
                 return 100000;
+            case TUESDAY:
+                if (lt.isBefore(LocalTime.of(13, 0  ))) {
+                    return 1000000;
+                } else {
+                    return 0.0;
+                }
             case WEDNESDAY:
                 return -100000;
         }
