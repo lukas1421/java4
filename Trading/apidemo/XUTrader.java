@@ -1688,7 +1688,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int shorterMA = 5;
         int longerMA = 10;
         int maSize;
-        int tOrders = ORDER_WAIT_TIME;
+        int tOrders = Math.min(ORDER_WAIT_TIME / 2, 30);
 
         double baseDelta = _20DayMA == MASentiment.Bearish ? BEAR_BASE_DELTA : BULL_BASE_DELTA;
         double pmchgDelta = (pmchy < -20 ? 1 : (pmchy > 20 ? -1 : 0)) * PMCHY_DELTA * Math.abs(pmchy) / 100.0;
@@ -1738,6 +1738,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             boolean bull = maShortLast > maLongLast && maShortSecLast <= maLongSecLast;
             boolean bear = maShortLast < maLongLast && maShortSecLast >= maLongSecLast;
             pr(" bull/bear cross ", bull, bear);
+            //pr(" crossed ")
             pr(" current PD ", r10000(getPD(freshPrice)));
             pr("delta base,pm,weekday,target:", baseDelta, pmchgDelta, weekdayDelta, deltaTarget);
             pr("perc avg buy sell ", avgBuy, avgSell);
