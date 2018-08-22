@@ -1259,13 +1259,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "open/ft/lastIndex/fut/openDevDir ", r(openIndex), r(firstTick), r(lastIndex), r(freshPrice)
                 , r10000(freshPrice / lastIndex - 1), openDeviationDirection);
 
-        if (numOrdersOpenDev >= PREFERRED_OPEN_DEV_SIZE &&
-                ((pmchy > 0 && openDeviationDirection == Direction.Short)
-                        || (pmchy < 0 && openDeviationDirection == Direction.Long))) {
-            return;
-        }
+//        if (numOrdersOpenDev >= PREFERRED_OPEN_DEV_SIZE &&
+//                ((pmchy > 0 && openDeviationDirection == Direction.Short)
+//                        || (pmchy < 0 && openDeviationDirection == Direction.Long))) {
+//            return;
+//        }
 
-        if (numOrdersOpenDev >= MAX_OPEN_DEV_SIZE) {
+        if (numOrdersOpenDev > MAX_OPEN_DEV_SIZE) {
             return;
         }
 
