@@ -1244,15 +1244,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (!manualOpenDevOn.get()) {
             if (firstTickTime.equals(lastKey)) {
-                if (firstTick > open) {
-                    openDeviationDirection = Direction.Long;
-                    manualOpenDevOn.set(true);
-                } else if (firstTick < open) {
-                    openDeviationDirection = Direction.Short;
-                    manualOpenDevOn.set(true);
-                } else {
-                    openDeviationDirection = Direction.Flat;
-                }
+                manualOpenDevOn.set(true);
             } else {
                 if (last > open) {
                     openDeviationDirection = Direction.Long;
@@ -1275,6 +1267,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
+        pr(" open dev: numOrder ", numOrdersOpenDev,
+                "open/ft/last/openDevDir ", open, firstTick, last, openDeviationDirection);
+
         if (numOrdersOpenDev >= PREFERRED_OPEN_DEV_SIZE &&
                 ((pmchy > 0 && openDeviationDirection == Direction.Short)
                         || (pmchy < 0 && openDeviationDirection == Direction.Long))) {
@@ -1282,7 +1277,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (SECONDS.between(lastOpenDevTradeTime, nowMilli) >= 60) {
-            if (!noMoreBuy.get() && last > open && openDeviationDirection == Direction.Short) {
+            if (!noMoreBuy.get() && last > open && openDeviationDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, buySize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
@@ -1290,7 +1285,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "open deviation buy", globalIdOrderMap.get(id),
                         "open/ft/last/openDevDir ", open, firstTick, last, openDeviationDirection));
                 openDeviationDirection = Direction.Long;
-            } else if (!noMoreSell.get() && last < open && openDeviationDirection == Direction.Long) {
+            } else if (!noMoreSell.get() && last < open && openDeviationDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
