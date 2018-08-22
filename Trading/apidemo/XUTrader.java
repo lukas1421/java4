@@ -1268,7 +1268,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         pr(" open dev: numOrder ", numOrdersOpenDev,
-                "open/ft/last/openDevDir ", open, firstTick, last, openDeviationDirection);
+                "open/ft/lastIndex/fut/openDevDir ", r(open), r(firstTick), r(last), r(freshPrice)
+                , r10000(freshPrice / last - 1), openDeviationDirection);
 
         if (numOrdersOpenDev >= PREFERRED_OPEN_DEV_SIZE &&
                 ((pmchy > 0 && openDeviationDirection == Direction.Short)
@@ -1616,7 +1617,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double ftAccuSignedQuant = getOrderTotalSignedQForType(INTRADAY_FIRSTTICK_ACCU);
 
-        pr(" intraday first tick, open, firstTick, futP% ", r(open), r(firstTick), _2dayFutPerc);
+        pr(" intraday first tick accu: open, firstTick, futP% ", r(open), r(firstTick), _2dayFutPerc);
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME * 2 && Math.abs(firstTickSignedQuant) > 0.0
                 && Math.abs(ftAccuSignedQuant) <= FIRSTTICK_ACCU_MAX_SIZE) {
