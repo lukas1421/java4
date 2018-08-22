@@ -101,7 +101,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     //open deviation
     private static volatile Direction openDeviationDirection = Direction.Flat;
-    private static volatile AtomicBoolean manualOpenDevOn = new AtomicBoolean(false);
+    private static volatile AtomicBoolean manualOpenDeviationOn = new AtomicBoolean(false);
 
     private static final long PREFERRED_OPEN_DEV_SIZE = 5;
     private static final long MAX_OPEN_DEV_SIZE = 6;
@@ -1221,7 +1221,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void openDeviationTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
         LocalTime lt = nowMilli.toLocalTime();
 
-        if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(15, 0))) {
+        if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;
         }
         if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
@@ -1230,28 +1230,30 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28)).getValue();
         double last = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
+
+        //LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
+
         double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue)
                 .orElse(open);
 
-        LocalTime firstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
-                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
-                .orElse(LocalTime.MIN);
-        LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
+//        LocalTime firstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
+//                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
+//                .orElse(LocalTime.MIN);
 
 
-        if (!manualOpenDevOn.get()) {
-            if (firstTickTime.equals(lastKey)) {
-                manualOpenDevOn.set(true);
+        if (!manualOpenDeviationOn.get()) {
+            if (lt.isBefore(LocalTime.of(9, 30, 0))) {
+                manualOpenDeviationOn.set(true);
             } else {
                 if (last > open) {
                     openDeviationDirection = Direction.Long;
-                    manualOpenDevOn.set(true);
+                    manualOpenDeviationOn.set(true);
                 } else if (last < open) {
                     openDeviationDirection = Direction.Short;
-                    manualOpenDevOn.set(true);
+                    manualOpenDeviationOn.set(true);
                 } else {
                     openDeviationDirection = Direction.Flat;
                 }
@@ -1267,7 +1269,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        pr(" open dev: numOrder ", numOrdersOpenDev,
+        pr(" open dev: numOrder ", lt.truncatedTo(ChronoUnit.SECONDS), numOrdersOpenDev,
                 "open/ft/lastIndex/fut/openDevDir ", r(open), r(firstTick), r(last), r(freshPrice)
                 , r10000(freshPrice / last - 1), openDeviationDirection);
 
@@ -1840,9 +1842,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr("*perc MA Time: ", nowMilli.toLocalTime(), "next T:",
                     lastIndexMAOrder.plusMinutes(ORDER_WAIT_TIME),
                     "||1D p%: ", todayPerc, "||2D p%", _2dayPerc, "pmchY: ", pmchy);
-            pr("Anchor / short long MA: ", anchorIndex, shorterMA, longerMA);
-            pr(" ma cross last : ", r(maShortLast), r(maLongLast), r(maShortLast - maLongLast));
-            pr(" ma cross 2nd last : ", r(maShortSecLast), r(maLongSecLast), r(maShortSecLast - maLongSecLast));
+            //pr("Anchor / short long MA: ", anchorIndex, shorterMA, longerMA);
+            //pr(" ma cross last : ", r(maShortLast), r(maLongLast), r(maShortLast - maLongLast));
+            //pr(" ma cross 2nd last : ", r(maShortSecLast), r(maLongSecLast), r(maShortSecLast - maLongSecLast));
             boolean bull = maShortLast > maLongLast && maShortSecLast <= maLongSecLast;
             boolean bear = maShortLast < maLongLast && maShortSecLast >= maLongSecLast;
             pr(" bull/bear cross ", bull, bear);
