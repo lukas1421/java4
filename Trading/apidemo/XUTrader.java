@@ -1269,13 +1269,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "open/ft/lastIndex/fut/openDevDir ", r(openIndex), r(firstTick), r(lastIndex), r(freshPrice)
                 , r10000(freshPrice / lastIndex - 1), openDeviationDirection);
 
-        if (numOrdersOpenDev >= MAX_OPEN_DEV_SIZE) {
-            return;
-        }
-
         if (numOrdersOpenDev >= PREFERRED_OPEN_DEV_SIZE &&
                 ((pmchy > 0 && openDeviationDirection == Direction.Short)
                         || (pmchy < 0 && openDeviationDirection == Direction.Long))) {
+            return;
+        }
+
+        if (numOrdersOpenDev >= MAX_OPEN_DEV_SIZE) {
             return;
         }
 
@@ -1401,7 +1401,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "open/1tk/time/direction ", r(open), r(firstTick), firstTickTime, a50IndexDirection,
                         "lastV, max, min, 2dp pmchy msg ", r(lastV), r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, msg));
                 a50IndexDirection = Direction.Long;
-                manualAccuOn.set(true);
             } else if (!noMoreSell.get() && lastV < minSoFar && a50IndexDirection == Direction.Long &&
                     (_2dayPerc > UP_PERC_WIDE || pmchy > PMCHY_HI)) {
                 int id = autoTradeID.incrementAndGet();
@@ -1412,7 +1411,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "open/1tk/time/direction ", r(open), r(firstTick), firstTickTime, a50IndexDirection,
                         " lastV, max, min 2dp pmchy ", r(lastV), r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50IndexDirection = Direction.Short;
-                manualAccuOn.set(true);
             }
         }
 
