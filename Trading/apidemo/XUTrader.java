@@ -1228,15 +1228,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28, 0)).getValue();
-        double last = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
+        double openIndex = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28, 0)).getValue();
+        double lastIndex = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
 
         //LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
 
         double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
-                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue)
-                .orElse(open);
+                .filter(e -> Math.abs(e.getValue() - openIndex) > 0.01).findFirst().map(Map.Entry::getValue)
+                .orElse(openIndex);
 
 //        LocalTime firstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
 //                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
@@ -1248,10 +1248,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (lt.isBefore(LocalTime.of(9, 30, 0))) {
                 manualOpenDeviationOn.set(true);
             } else {
-                if (last > open) {
+                if (lastIndex > openIndex) {
                     openDeviationDirection = Direction.Long;
                     manualOpenDeviationOn.set(true);
-                } else if (last < open) {
+                } else if (lastIndex < openIndex) {
                     openDeviationDirection = Direction.Short;
                     manualOpenDeviationOn.set(true);
                 } else {
@@ -1265,13 +1265,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int buySize = 1;
         int sellSize = 1;
 
+        pr(" open dev: numOrder ", lt.truncatedTo(ChronoUnit.SECONDS), numOrdersOpenDev,
+                "open/ft/lastIndex/fut/openDevDir ", r(openIndex), r(firstTick), r(lastIndex), r(freshPrice)
+                , r10000(freshPrice / lastIndex - 1), openDeviationDirection);
+
         if (numOrdersOpenDev >= MAX_OPEN_DEV_SIZE) {
             return;
         }
-
-        pr(" open dev: numOrder ", lt.truncatedTo(ChronoUnit.SECONDS), numOrdersOpenDev,
-                "open/ft/lastIndex/fut/openDevDir ", r(open), r(firstTick), r(last), r(freshPrice)
-                , r10000(freshPrice / last - 1), openDeviationDirection);
 
         if (numOrdersOpenDev >= PREFERRED_OPEN_DEV_SIZE &&
                 ((pmchy > 0 && openDeviationDirection == Direction.Short)
@@ -1280,21 +1280,21 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (SECONDS.between(lastOpenDevTradeTime, nowMilli) >= 60) {
-            if (!noMoreBuy.get() && last > open && openDeviationDirection != Direction.Long) {
+            if (!noMoreBuy.get() && lastIndex > openIndex && openDeviationDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, buySize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open deviation buy", globalIdOrderMap.get(id),
-                        "open/ft/last/openDevDir ", r(open), r(firstTick), r(last), openDeviationDirection));
+                        "open/ft/last/openDevDir ", r(openIndex), r(firstTick), r(lastIndex), openDeviationDirection));
                 openDeviationDirection = Direction.Long;
-            } else if (!noMoreSell.get() && last < open && openDeviationDirection != Direction.Short) {
+            } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open deviation sell", globalIdOrderMap.get(id),
-                        "open/ft/last/openDevDir ", open, firstTick, last, openDeviationDirection));
+                        "open/ft/last/openDevDir ", r(openIndex), r(firstTick), r(lastIndex), openDeviationDirection));
                 openDeviationDirection = Direction.Short;
             }
         }
