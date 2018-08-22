@@ -1228,7 +1228,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28)).getValue();
+        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28, 0)).getValue();
         double last = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
 
         //LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
@@ -1358,28 +1358,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .orElse(LocalTime.MIN);
 
         if (!manualSetDirection.get()) {
-            LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
-            if (lastKey.equals(firstTickTime)) {
-                if (firstTick > open) {
-                    a50IndexDirection = Direction.Long;
-                    manualSetDirection.set(true);
-                } else if (firstTick < open) {
-                    a50IndexDirection = Direction.Short;
-                    manualSetDirection.set(true);
-                } else {
-                    a50IndexDirection = Direction.Flat;
-                }
+            double last = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
+            if (last > open) {
+                a50IndexDirection = Direction.Long;
+                manualSetDirection.set(true);
+            } else if (last < open) {
+                a50IndexDirection = Direction.Short;
+                manualSetDirection.set(true);
             } else {
-                double last = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
-                if (last > open) {
-                    a50IndexDirection = Direction.Long;
-                    manualSetDirection.set(true);
-                } else if (last < open) {
-                    a50IndexDirection = Direction.Short;
-                    manualSetDirection.set(true);
-                } else {
-                    a50IndexDirection = Direction.Flat;
-                }
+                a50IndexDirection = Direction.Flat;
             }
         }
 
@@ -1428,6 +1415,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 manualAccuOn.set(true);
             }
         }
+
     }
 
     /**
