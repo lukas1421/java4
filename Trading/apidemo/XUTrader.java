@@ -1283,7 +1283,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open deviation buy", globalIdOrderMap.get(id),
-                        "open/ft/last/openDevDir ", open, firstTick, last, openDeviationDirection));
+                        "open/ft/last/openDevDir ", r(open), r(firstTick), r(last), openDeviationDirection));
                 openDeviationDirection = Direction.Long;
             } else if (!noMoreSell.get() && last < open && openDeviationDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
