@@ -1281,6 +1281,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open deviation buy", globalIdOrderMap.get(id),
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
+                        "IDX chg: ", r10000(lastIndex / openIndex - 1), "pd", r10000(freshPrice / lastIndex - 1),
                         openDeviationDirection, atmVol));
                 openDeviationDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
@@ -1290,6 +1291,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open deviation sell", globalIdOrderMap.get(id),
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
+                        "IDX chg: ", r10000(lastIndex / openIndex - 1), "pd", r10000(freshPrice / lastIndex - 1),
                         openDeviationDirection, atmVol));
                 openDeviationDirection = Direction.Short;
             }
