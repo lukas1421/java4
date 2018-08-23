@@ -1848,7 +1848,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (!noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
                     && _2dayPerc < DOWN_PERC_WIDE && currDelta < deltaTarget && (freshPrice < avgBuy || avgBuy == 0.0)) {
                 int id = autoTradeID.incrementAndGet();
-                if (pmchy < -20) {
+                if (pmchy < -20 || (checkTimeRangeBool(lt, 13, 0, 15, 0))) {
                     buySize = 4;
                 } else {
                     buySize = CONSERVATIVE_SIZE;
