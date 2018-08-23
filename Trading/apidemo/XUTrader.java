@@ -1187,7 +1187,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int buySize = 3;
         int sellSize = 1;
 
-        pr(" first tick trader open ftick1, ftick2 ftTime", open, ftick1, ftick2, firstTickTime);
+        pr(" first tick trader open ftick1, ftick2 ftTime", r(open), r(ftick1), r(ftick2), firstTickTime);
 
         if (MINUTES.between(lastFTickTime, nowMilli) >= 10) {
             if (!noMoreBuy.get() && ftick2 > open && _2dayPerc < 50 &&
@@ -1197,7 +1197,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "1st tick buy", globalIdOrderMap.get(id),
-                        "open ftick 1ttime", open, ftick2, firstTickTime, " bid ask ", bidNow, askNow));
+                        "open ftick 1ttime", r(open), r(ftick2), firstTickTime, " bid ask ", bidNow, askNow));
             } else if (!noMoreSell.get() && ftick2 < open && _2dayPerc > 50 &&
                     (_2dayPerc > UP_PERC_WIDE || pmchy > PMCHY_HI)) {
                 int id = autoTradeID.incrementAndGet();
@@ -1219,7 +1219,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void openDeviationTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
         LocalTime lt = nowMilli.toLocalTime();
 
-        double atmVol = ChinaOption.getATMVol();
+        double atmVol = ChinaOption.getATMVol(ChinaOption.backExpiry);
 
         if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;

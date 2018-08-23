@@ -534,7 +534,7 @@ public class ChinaOption extends JPanel implements Runnable {
             pr(" loading vol hib and intraday vol ");
             loadVolsHib(); // load previous
             loadIntradayVolsHib(ChinaVolIntraday.getInstance()); // load intraday
-        }, 5, TimeUnit.SECONDS);
+        }, 15, TimeUnit.SECONDS);
 
     } // end of constructor
 
@@ -1001,11 +1001,12 @@ public class ChinaOption extends JPanel implements Runnable {
         }
     }
 
-    static double getATMVol() {
-        if (strikeVolMapCall.get(frontExpiry).size() > 0 && strikeVolMapPut.get(frontExpiry).size() > 0 && currentStockPrice != 0.0) {
+    static double getATMVol(LocalDate exp) {
+        if (strikeVolMapCall.containsKey(exp) && strikeVolMapPut.containsKey(exp) &&
+                strikeVolMapCall.get(exp).size() > 0 && strikeVolMapPut.get(exp).size() > 0 && currentStockPrice != 0.0) {
             return getVolByMoneyness(
-                    mergePutCallVolsMoneyness(strikeVolMapCall.get(frontExpiry),
-                            strikeVolMapPut.get(frontExpiry), currentStockPrice), 100);
+                    mergePutCallVolsMoneyness(strikeVolMapCall.get(exp),
+                            strikeVolMapPut.get(exp), currentStockPrice), 100);
         }
         return 0.0;
     }
