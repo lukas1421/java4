@@ -35,6 +35,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
@@ -46,6 +47,7 @@ import java.util.stream.Collectors;
 import static apidemo.CallPutFlag.CALL;
 import static apidemo.CallPutFlag.PUT;
 import static apidemo.ChinaOptionHelper.*;
+import static apidemo.XuTraderHelper.checkTimeRangeBool;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -69,6 +71,7 @@ public class ChinaOption extends JPanel implements Runnable {
     //private static final List<LocalDate> expiryList = new ArrayList<>();
     private static final NavigableSet<LocalDate> expiryList = new TreeSet<>();
     //static HashMap<String, Option> optionMap = new HashMap<>();
+    public static volatile double frontMonthATMVol = 0.0;
 
     private static GraphOptionVol graphTS = new GraphOptionVol();
     private static GraphOptionVolDiff graphVolDiff = new GraphOptionVolDiff();
@@ -88,6 +91,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static String fourthMonth = fourthExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
 
     private static volatile boolean filterOn = false;
+    private static volatile AtomicBoolean savedVolEOD = new AtomicBoolean(false);
 
     private static ScheduledExecutorService sesOption = Executors.newScheduledThreadPool(10);
 
@@ -525,7 +529,14 @@ public class ChinaOption extends JPanel implements Runnable {
         //noinspection unchecked
         sorter = (TableRowSorter<OptionTableModel>) optionTable.getRowSorter();
         sorter.setRowFilter(otmFilter);
-    }
+
+        es.schedule(() -> {
+            pr(" loading vol hib and intraday vol ");
+            loadVolsHib(); // load previous
+            loadIntradayVolsHib(ChinaVolIntraday.getInstance()); // load intraday
+        }, 5, TimeUnit.SECONDS);
+
+    } // end of constructor
 
     private static void updateOptionSystemInfo(String text) {
         SwingUtilities.invokeLater(() -> {
@@ -681,7 +692,7 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
 
-    private void saveVolsCSV() {
+    private static void saveVolsCSV() {
 
         File output = new File(TradingConstants.GLOBALPATH + "volOutput.csv");
 
@@ -701,7 +712,7 @@ public class ChinaOption extends JPanel implements Runnable {
         }
     }
 
-    private void saveHibEOD() {
+    private static void saveHibEOD() {
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
         try (Session session = sessionF.openSession()) {
             session.getTransaction().begin();
@@ -741,8 +752,8 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
 
-    private void saveVolHelper(BufferedWriter w, LocalDate writeDate, CallPutFlag f,
-                               Map<LocalDate, NavigableMap<Double, Double>> mp, LocalDate expireDate, double spot) {
+    private static void saveVolHelper(BufferedWriter w, LocalDate writeDate, CallPutFlag f,
+                                      Map<LocalDate, NavigableMap<Double, Double>> mp, LocalDate expireDate, double spot) {
         if (mp.containsKey(expireDate)) {
             mp.get(expireDate).forEach((k, v) -> {
                 try {
@@ -760,10 +771,17 @@ public class ChinaOption extends JPanel implements Runnable {
 
     public static void refresh() {
         sesOption.scheduleAtFixedRate(() -> {
-            if (LocalTime.now().isAfter(LocalTime.of(9, 20)) && LocalTime.now().isBefore(LocalTime.of(15, 15))) {
+            LocalTime lt = LocalTime.now();
+            if (lt.isAfter(LocalTime.of(9, 20)) && lt.isBefore(LocalTime.of(15, 15))) {
                 pr(" saving vols hib ");
                 saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance());
             }
+
+            if (!savedVolEOD.get() && checkTimeRangeBool(lt, 15, 0, 15, 15)) {
+                saveVolsCSV();
+                saveHibEOD();
+            }
+
         }, 3, 1, TimeUnit.MINUTES);
 
         sesOption.scheduleAtFixedRate(() -> {
