@@ -1230,6 +1230,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double atmVol = ChinaOption.getATMVol(ChinaOption.backExpiry);
 
+        int waitTimeInSeconds = 60;
+
+        if (lt.isAfter(LocalTime.of(9, 40))) {
+            waitTimeInSeconds = 300;
+        }
+
         if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;
         }
@@ -1237,6 +1243,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
             return;
         }
+
 
         double openIndex = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28, 0)).getValue();
         //double lastIndex = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
@@ -1272,13 +1279,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "chg:", r10000(lastIndex / openIndex - 1),
                 "fut/pd", r(freshPrice), r10000(freshPrice / lastIndex - 1),
                 "openDevDir/vol ", openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
-                " IDX chg: ", r(lastIndex - openIndex));
+                " IDX chg: ", r(lastIndex - openIndex), "wait for(s):", waitTimeInSeconds);
 
         if (numOrdersOpenDev > MAX_OPEN_DEV_SIZE) {
             return;
         }
 
-        if (SECONDS.between(lastOpenDevTradeTime, nowMilli) >= 60) {
+        if (SECONDS.between(lastOpenDevTradeTime, nowMilli) >= waitTimeInSeconds) {
             if (!noMoreBuy.get() && lastIndex > openIndex && openDeviationDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, buySize);

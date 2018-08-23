@@ -338,7 +338,9 @@ public final class ChinaStock extends JPanel {
                                 selectedBench = benchSimpleMap.getOrDefault(selectedNameStock, "");
 
                                 if (priceMapBarDetail.containsKey(selectedNameStock)) {
-                                    pr(" pmb detailed ", selectedNameStock, priceMapBarDetail.get(selectedNameStock));
+                                    pr(" pmb detailed ", selectedNameStock,
+                                            trimTo3DP(priceMapBarDetail.get(selectedNameStock)));
+                                    //outputPMBDetailedToTxt(trimTo3DP(priceMapBarDetail.get(selectedNameStock)));
                                 }
 
                                 graph1.fillInGraph(selectedNameStock);

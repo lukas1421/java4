@@ -11,10 +11,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.Month;
@@ -119,6 +116,31 @@ public final class ChinaStockHelper {
             ex.printStackTrace();
         }
     }
+
+    static NavigableMap<LocalTime, Double> trimTo3DP(NavigableMap<LocalTime, Double> inMap) {
+        NavigableMap<LocalTime, Double> outMap = new ConcurrentSkipListMap<>();
+        inMap.forEach((k, v) -> outMap.put(k, Math.round(v * 1000d) / 1000d));
+        return outMap;
+    }
+
+    static void outputPMBDetailedToTxt(NavigableMap<LocalTime, Double> inMap) {
+        //pmbOutput.txt
+        pr(" outputting options");
+        File output = new File(TradingConstants.GLOBALPATH + "pmbOutput.txt");
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, false))) {
+            inMap.forEach((k, v) -> {
+                try {
+                    out.append(str(k, "\t", v));
+                    out.newLine();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            });
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
 
     public static <T> Comparator<T> reverseThis(Comparator<T> c) {
         return c.reversed();
