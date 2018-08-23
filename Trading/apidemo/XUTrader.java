@@ -1229,9 +1229,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double freshPrice = XUTrader.futPriceMap.get(FutType.FrontFut);
 
         double atmVol = ChinaOption.getATMVol(ChinaOption.backExpiry);
+
         if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;
         }
+
         if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
             return;
         }
@@ -1266,17 +1268,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int sellSize = 1;
 
         pr(" open dev: numOrder ", lt.truncatedTo(ChronoUnit.SECONDS), numOrdersOpenDev,
-                "open:", r(openIndex), "ft", r(firstTick), "lastIndex", r(lastIndex),
+                "open:", r(openIndex), "ft", r(firstTick), "lastIndex", r(lastIndex), "fut", freshPrice,
                 "chg:", r10000(lastIndex / openIndex - 1),
                 "fut/pd", r(freshPrice), r10000(freshPrice / lastIndex - 1),
                 "openDevDir/vol ", openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
                 " IDX chg: ", r(lastIndex - openIndex));
-
-//        if (numOrdersOpenDev >= PREFERRED_OPEN_DEV_SIZE &&
-//                ((pmchy > 0 && openDeviationDirection == Direction.Short)
-//                        || (pmchy < 0 && openDeviationDirection == Direction.Long))) {
-//            return;
-//        }
 
         if (numOrdersOpenDev > MAX_OPEN_DEV_SIZE) {
             return;
@@ -1290,8 +1286,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open deviation buy", globalIdOrderMap.get(id),
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
-                        "IDX chg: ", r10000(lastIndex / openIndex - 1), "pd", r10000(freshPrice / lastIndex - 1),
-                        openDeviationDirection, atmVol));
+                        "IDX chg: ", r10000(lastIndex / openIndex - 1), "fut pd", freshPrice,
+                        r10000(freshPrice / lastIndex - 1), openDeviationDirection, atmVol));
                 openDeviationDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
@@ -1300,8 +1296,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open deviation sell", globalIdOrderMap.get(id),
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
-                        "IDX chg: ", r10000(lastIndex / openIndex - 1), "pd", r10000(freshPrice / lastIndex - 1),
-                        openDeviationDirection, atmVol));
+                        "IDX chg: ", r10000(lastIndex / openIndex - 1), "fut pd", freshPrice,
+                        r10000(freshPrice / lastIndex - 1), openDeviationDirection, atmVol));
                 openDeviationDirection = Direction.Short;
             }
         }
@@ -1310,12 +1306,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * ftse break high low trader
      *
-     * @param nowMilli   time
+     * @param nowMilli  time
      * @param indexLast last index
      */
     static void chinaHiLoTrader(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
-
         int pmchy = getPmchy();
         double freshPrice = futPriceMap.get(FutType.FrontFut);
 
