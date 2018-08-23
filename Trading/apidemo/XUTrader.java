@@ -34,7 +34,6 @@ import java.util.stream.Collectors;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaDataYesterday.ma20Map;
-import static apidemo.ChinaOption.frontMonthATMVol;
 import static apidemo.ChinaPosition.*;
 import static apidemo.ChinaStock.*;
 import static apidemo.TradingConstants.*;
@@ -1219,6 +1218,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     private static void openDeviationTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
         LocalTime lt = nowMilli.toLocalTime();
+        double atmVol = ChinaOption.getATMVol();
 
         if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;
@@ -1258,7 +1258,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         pr(" open dev: numOrder ", lt.truncatedTo(ChronoUnit.SECONDS), numOrdersOpenDev,
                 "open/ft/lastIndex/fut/openDevDir/vol ", r(openIndex), r(firstTick), r(lastIndex), r(freshPrice)
-                , r10000(freshPrice / lastIndex - 1), openDeviationDirection, frontMonthATMVol);
+                , r10000(freshPrice / lastIndex - 1), openDeviationDirection, atmVol);
 
 //        if (numOrdersOpenDev >= PREFERRED_OPEN_DEV_SIZE &&
 //                ((pmchy > 0 && openDeviationDirection == Direction.Short)
@@ -1278,7 +1278,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open deviation buy", globalIdOrderMap.get(id),
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
-                        openDeviationDirection, frontMonthATMVol));
+                        openDeviationDirection, atmVol));
                 openDeviationDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
@@ -1287,7 +1287,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open deviation sell", globalIdOrderMap.get(id),
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
-                        openDeviationDirection, frontMonthATMVol));
+                        openDeviationDirection, atmVol));
                 openDeviationDirection = Direction.Short;
             }
         }

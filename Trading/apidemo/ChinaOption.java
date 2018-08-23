@@ -71,7 +71,7 @@ public class ChinaOption extends JPanel implements Runnable {
     //private static final List<LocalDate> expiryList = new ArrayList<>();
     private static final NavigableSet<LocalDate> expiryList = new TreeSet<>();
     //static HashMap<String, Option> optionMap = new HashMap<>();
-    public static volatile double frontMonthATMVol = 0.0;
+    //public static volatile double frontMonthATMVol = 0.0;
 
     private static GraphOptionVol graphTS = new GraphOptionVol();
     private static GraphOptionVolDiff graphVolDiff = new GraphOptionVolDiff();
@@ -780,6 +780,7 @@ public class ChinaOption extends JPanel implements Runnable {
             if (!savedVolEOD.get() && checkTimeRangeBool(lt, 15, 0, 15, 15)) {
                 saveVolsCSV();
                 saveHibEOD();
+                savedVolEOD.set(true);
             }
 
         }, 3, 1, TimeUnit.MINUTES);
@@ -958,6 +959,7 @@ public class ChinaOption extends JPanel implements Runnable {
             g.setCurrentPrice(currentStockPrice);
         }
 
+
         graphVolDiff.setCurrentPrice(currentStockPrice);
         graphVolDiff.setVolNow(mergePutCallVols(strikeVolMapCall.get(expiryToCheck),
                 strikeVolMapPut.get(expiryToCheck), currentStockPrice));
@@ -997,6 +999,15 @@ public class ChinaOption extends JPanel implements Runnable {
                 graphLapse.repaint();
             }
         }
+    }
+
+    static double getATMVol() {
+        if (strikeVolMapCall.get(frontExpiry).size() > 0 && strikeVolMapPut.get(frontExpiry).size() > 0 && currentStockPrice != 0.0) {
+            return getVolByMoneyness(
+                    mergePutCallVolsMoneyness(strikeVolMapCall.get(frontExpiry),
+                            strikeVolMapPut.get(frontExpiry), currentStockPrice), 100);
+        }
+        return 0.0;
     }
 
     private static void loadPreviousOptionsExcel() {
@@ -1084,7 +1095,6 @@ public class ChinaOption extends JPanel implements Runnable {
                     ChinaVolSave c = (ChinaVolSave) o;
                     pr(str(c.getVolDate(), c.getCallPut(), c.getStrike(), c.getExpiryDate(),
                             c.getVol(), c.getMoneyness(), c.getOptionTicker()));
-
                     //pr(" counter is " + i.incrementAndGet());
                     LocalDate volDate = c.getVolDate();
                     LocalDate expiry = c.getExpiryDate();
@@ -1114,7 +1124,6 @@ public class ChinaOption extends JPanel implements Runnable {
                         }
                     }
                 }
-
                 //session.getTransaction().commit();
                 session.close();
             } catch (Exception x) {
@@ -1167,6 +1176,22 @@ public class ChinaOption extends JPanel implements Runnable {
         return res;
     }
 
+    private static double getCurrentATMVol(NavigableMap<Double, Double> callMap
+            , NavigableMap<Double, Double> putMap, double spot) {
+        NavigableMap<Integer, Double> res = new TreeMap<>();
+        callMap.forEach((k, v) -> {
+            if (k > spot) {
+                res.put((int) Math.round(k / spot * 100), v);
+            }
+        });
+        putMap.forEach((k, v) -> {
+            if (k < spot) {
+                res.put((int) Math.round(k / spot * 100), v);
+            }
+        });
+
+        return 0.0;
+    }
 
     private static NavigableMap<Double, Double> mergePutCallVols(NavigableMap<Double, Double> callMap
             , NavigableMap<Double, Double> putMap, double spot) {
