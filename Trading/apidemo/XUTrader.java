@@ -1220,7 +1220,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime lt = nowMilli.toLocalTime();
 
         double atmVol = ChinaOption.getATMVol(ChinaOption.backExpiry);
-
         if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;
         }
@@ -1258,8 +1257,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int sellSize = 1;
 
         pr(" open dev: numOrder ", lt.truncatedTo(ChronoUnit.SECONDS), numOrdersOpenDev,
-                "open/ft/lastIndex/fut/openDevDir/vol ", r(openIndex), r(firstTick), r(lastIndex), r(freshPrice)
-                , r10000(freshPrice / lastIndex - 1), openDeviationDirection, atmVol);
+                "open:", r(openIndex), "ft", r(firstTick), "lastIndex", r(lastIndex),
+                "chg:", r10000(lastIndex / openIndex - 1),
+                "fut/pd", r(freshPrice), r10000(freshPrice / lastIndex - 1),
+                "openDevDir/vol ", openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
+                " IDX chg: ", r(lastIndex - openIndex));
 
 //        if (numOrdersOpenDev >= PREFERRED_OPEN_DEV_SIZE &&
 //                ((pmchy > 0 && openDeviationDirection == Direction.Short)
@@ -1477,7 +1479,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (firstTickTotalQ == 0.0 || Math.abs(ftProfitTakeQ) >= Math.abs(firstTickTotalQ)) {
             pr("first tick Q, profitTaker Q, open, firsttick ",
-                    firstTickTotalQ, ftProfitTakeQ, open, firstTick);
+                    firstTickTotalQ, ftProfitTakeQ, r(open), r(firstTick));
             return;
         }
 
@@ -1819,7 +1821,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double avgSell = getAvgFilledSellPriceForOrderType(PERC_MA);
 
         if (detailedPrint.get()) {
-            pr("*perc MA Time: ", nowMilli.toLocalTime(), "next T:",
+            pr("*perc MA Time: ", nowMilli.toLocalTime().truncatedTo(ChronoUnit.SECONDS), "next T:",
                     lastIndexMAOrder.plusMinutes(ORDER_WAIT_TIME),
                     "||1D p%: ", todayPerc, "||2D p%", _2dayPerc, "pmchY: ", pmchy);
             //pr("Anchor / short long MA: ", anchorIndex, shorterMA, longerMA);
