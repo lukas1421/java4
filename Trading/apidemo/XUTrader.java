@@ -689,6 +689,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 ma20Map.getOrDefault(ticker, 0.0));
     }
 
+    public static int getPmchy() {
+        NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(ibContractToFutType(activeFuture)));
+        return getPercentileChgFut(futdata, getPrevTradingDate(futdata));
+
+    }
+
     public static void processMain(LocalDateTime ldt, double price) {
 
         double currDelta = getNetPtfDelta();
@@ -696,7 +702,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000016);
 
         NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(ibContractToFutType(activeFuture)));
-
         int pmChgY = getPercentileChgFut(futdata, getPrevTradingDate(futdata));
 
         int closePercY = getClosingPercentile(futdata, getPrevTradingDate(futdata));
@@ -734,8 +739,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         futOpenTrader(ldt, price, pmChgY);
-        firstTickTrader(ldt, price, pmChgY);
-        openDeviationTrader(ldt, price, pmChgY);
+        firstTickTrader(ldt, price);
+        //openDeviationTrader(ldt, price, pmChgY);
         chinaHiLoTrader(ldt, price, pmChgY);
         chinaHiloAccumulator(ldt, price);
         intraday1stTickAccumulator(ldt, price, pmChgY);
@@ -1144,14 +1149,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * trades based on ftse first tick
      *
-     * @param nowMilli   time
-     * @param freshPrice fut price
-     * @param pmchy      ytd pm change in percentile
+     * @param nowMilli  time
+     * @param indexLast fut price
      */
-    private static void firstTickTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
+    static void firstTickTrader(LocalDateTime nowMilli, double indexLast) {
+        int pmchy = getPmchy();
         LocalTime lt = nowMilli.toLocalTime();
         double bidNow = bidMap.getOrDefault(FutType.FrontFut, 0.0);
         double askNow = askMap.getOrDefault(FutType.FrontFut, 0.0);
+
+        double freshPrice = XUTrader.futPriceMap.get(FutType.FrontFut);
 
         if (lt.isBefore(LocalTime.of(9, 28)) || lt.isAfter(LocalTime.of(9, 35))) {
             checkCancelOrders(FIRST_TICK, nowMilli, ORDER_WAIT_TIME);
@@ -1170,7 +1177,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28)).getValue();
 
-        double ftick1 = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
+        //double ftick1 = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
 
         double ftick2 = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
@@ -1187,7 +1194,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int buySize = 3;
         int sellSize = 1;
 
-        pr(" first tick trader open ftick1, ftick2 ftTime", r(open), r(ftick1), r(ftick2), firstTickTime);
+        pr("firstTickTrader:: open / last / ft / ftTime", r(open), r(indexLast), r(ftick2), firstTickTime);
 
         if (MINUTES.between(lastFTickTime, nowMilli) >= 10) {
             if (!noMoreBuy.get() && ftick2 > open && _2dayPerc < 50 &&
@@ -1213,11 +1220,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * open deviation - buy if above open and sell if below, no cares for pmchy and percentile, shud always trade
      *
-     * @param nowMilli   time now
-     * @param freshPrice price
+     * @param nowMilli  time now
+     * @param lastIndex last index price
      */
-    private static void openDeviationTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
+    static void openDeviationTrader(LocalDateTime nowMilli, double lastIndex) {
         LocalTime lt = nowMilli.toLocalTime();
+
+        double freshPrice = XUTrader.futPriceMap.get(FutType.FrontFut);
 
         double atmVol = ChinaOption.getATMVol(ChinaOption.backExpiry);
         if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
@@ -1228,7 +1237,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         double openIndex = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28, 0)).getValue();
-        double lastIndex = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
+        //double lastIndex = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
 
         double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
