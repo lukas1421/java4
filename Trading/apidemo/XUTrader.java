@@ -1405,7 +1405,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
                         "open/1tk/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
-                        "lastV, max, min, 2dp pmchy msg ", r(indexLast), r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, msg));
+                        "indexLast, max, min, 2dp pmchy msg ", r(indexLast), r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, msg));
                 a50HiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && indexLast < minSoFar && a50HiLoDirection == Direction.Long &&
                     (_2dayPerc > UP_PERC_WIDE || pmchy > PMCHY_HI)) {
@@ -1464,7 +1464,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         " decu #, hilo #", hiloAccuTotalOrderQ, hiloTotalOrderQ));
             }
         }
-
     }
 
 
