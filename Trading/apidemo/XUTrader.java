@@ -1218,6 +1218,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     private static void openDeviationTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
         LocalTime lt = nowMilli.toLocalTime();
+
         double atmVol = ChinaOption.getATMVol();
 
         if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
