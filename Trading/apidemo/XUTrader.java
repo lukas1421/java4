@@ -1297,8 +1297,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double sellPrice = freshPrice;
 
         if (numOrdersOpenDev >= 2) {
-            buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Long));
-            sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Short));
+            if (numOrdersOpenDev % 2 == 0) {
+                buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Long));
+                sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Short));
+            }
         }
 
 
@@ -1388,7 +1390,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .orElse(LocalTime.MIN);
 
         if (!manualSetDirection.get()) {
-            //double last = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
             if (indexLast > open) {
                 a50HiLoDirection = Direction.Long;
                 manualSetDirection.set(true);
@@ -1400,7 +1401,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
 
-        //double indexLast = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
         LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
 
         double maxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
