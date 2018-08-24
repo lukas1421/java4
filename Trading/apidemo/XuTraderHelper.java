@@ -303,7 +303,13 @@ public class XuTraderHelper {
     }
 
     static double roundToXUPriceAggressive(double x, Direction dir) {
-        return (Math.round(x * 10) - Math.round(x * 10) % 25 + (dir == Direction.Long ? 25 : 0)) / 10d;
+        double addOn = 0.0;
+        if (dir == Direction.Long) {
+            addOn = 2.5;
+        } else if (dir == Direction.Short) {
+            addOn = -2.5;
+        }
+        return (Math.round(x * 10) - Math.round(x * 10) % 25) / 10d + addOn;
     }
 
 
