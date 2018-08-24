@@ -1297,8 +1297,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double sellPrice = freshPrice;
 
         if (numOrdersOpenDev >= 2) {
-            buyPrice = roundToXUPriceAggressive(lastIndex, Direction.Long);
-            sellPrice = roundToXUPriceAggressive(lastIndex, Direction.Short);
+            buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Long));
+            sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Short));
         }
 
 
