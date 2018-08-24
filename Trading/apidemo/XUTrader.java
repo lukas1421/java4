@@ -1357,7 +1357,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (numOrders > 5) {
             if (detailedPrint.get()) {
-                pr(" china open trades exceed max ");
+                pr(" china hilo exceed max 5");
             }
             return;
         }
@@ -1655,7 +1655,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     /**
-     * intraday ma -
+     * intraday ma
      *
      * @param nowMilli  time
      * @param indexLast index last price
@@ -1679,7 +1679,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int buySize = 1;
         int sellSize = 1;
 
-        checkCancelOrders(INTRADAY_MA, nowMilli, ORDER_WAIT_TIME * 2);
+        checkCancelOrders(INTRADAY_MA, nowMilli, 30);
         LocalDate tTrade = getTradeDate(nowMilli);
 
         int todayPerc = getPercentileForLastPred(index, e -> e.getKey().toLocalDate().equals(tTrade));
@@ -1698,7 +1698,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongLast = smaLong.lastEntry().getValue();
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
-        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME) {
+        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME / 2) {
             if (!noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
                     && todayPerc < DOWN_PERC_WIDE && (todayPerc < 5 || pmChgY < PMCHY_LO)) {
 
@@ -1829,7 +1829,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             longerMA = 5;
         }
 
-        checkCancelOrders(PERC_MA, nowMilli, ORDER_WAIT_TIME);
+        checkCancelOrders(PERC_MA, nowMilli, 30);
 
         int todayPerc = getPercentileForLastPred(fut,
                 e -> e.getKey().isAfter(LocalDateTime.of(getTradeDate(nowMilli), LocalTime.of(8, 59))));
