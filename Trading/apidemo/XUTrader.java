@@ -1425,7 +1425,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "indexLast, max, min, 2dp pmchy msg ", r(indexLast), r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50HiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && indexLast < minSoFar && a50HiLoDirection != Direction.Short) {
-
                 if (_2dayPerc > 50 && (_2dayPerc > UP_PERC_WIDE || pmchy > PMCHY_HI)) {
                     sellSize = 2;
                 }
@@ -1439,7 +1438,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 a50HiLoDirection = Direction.Short;
             }
         }
-
     }
 
     /**
@@ -1702,7 +1700,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME) {
             if (!noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
-                    && todayPerc < DOWN_PERC_WIDE && pmChgY < 0 && (todayPerc < 5 || pmChgY < PMCHY_LO)) {
+                    && todayPerc < DOWN_PERC_WIDE && (todayPerc < 5 || pmChgY < PMCHY_LO)) {
 
                 double addOn = 0.0;
                 if (checkTimeRangeBool(lt, 13, 0, 15, 0)) {
@@ -1720,7 +1718,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             } else if (!noMoreSell.get() &&
                     maShortLast < maLongLast && maShortSecLast >= maLongSecLast && todayPerc > UP_PERC_WIDE
-                    && pmChgY > 0 && (todayPerc > 95 || pmChgY > PMCHY_HI) && lt.isBefore(LocalTime.of(11, 30))) {
+                    && (todayPerc > 95 || pmChgY > PMCHY_HI)) {
+
+                sellSize = (lt.isBefore(LocalTime.of(11, 30))) ? 2 : 1;
 
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
