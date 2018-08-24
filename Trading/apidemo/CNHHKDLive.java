@@ -133,6 +133,7 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
         add(topPanel, BorderLayout.NORTH);
         add(offshorePanel, BorderLayout.CENTER);
         add(graphPanel, BorderLayout.SOUTH);
+
     }
 
     private Contract getCNHHKDContract() {
@@ -249,6 +250,7 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
     private void getFromIB() {
         ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
+
         CountDownLatch l = new CountDownLatch(1);
         boolean connectionStatus = false;
 
@@ -275,6 +277,7 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
         }
         pr(" Time after latch released " + LocalTime.now());
         pr(" requesting position ");
+
         getUSDDetailed(ap);
         getFXLast(ap);
     }
@@ -284,7 +287,6 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
         c.getFromIB();
 
         ScheduledExecutorService ses = Executors.newScheduledThreadPool(1);
-
         ses.scheduleAtFixedRate(c::getBOCOfficial, 0, 30, SECONDS);
         ses.scheduleAtFixedRate(c::updateTime, 0, 1, SECONDS);
         ses.scheduleAtFixedRate(() -> {

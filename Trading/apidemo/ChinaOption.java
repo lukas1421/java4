@@ -535,7 +535,7 @@ public class ChinaOption extends JPanel implements Runnable {
             loadVolsHib(); // load previous
             loadIntradayVolsHib(ChinaVolIntraday.getInstance()); // load intraday
         }, 15, TimeUnit.SECONDS);
-
+        pr(" china option constructor done ");
     } // end of constructor
 
     private static void updateOptionSystemInfo(String text) {

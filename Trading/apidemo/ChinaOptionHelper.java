@@ -159,7 +159,7 @@ public class ChinaOptionHelper {
         return 0.0;
     }
 
-    public static void getLastTradingDate() {
+    static void getLastTradingDate() {
         int lineNo = 0;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
