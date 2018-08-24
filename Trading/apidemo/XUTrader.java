@@ -689,10 +689,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 ma20Map.getOrDefault(ticker, 0.0));
     }
 
-    public static int getPmchy() {
+    private static int getPmchy() {
         NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(ibContractToFutType(activeFuture)));
         return getPercentileChgFut(futdata, getPrevTradingDate(futdata));
-
     }
 
     public static void processMain(LocalDateTime ldt, double price) {
@@ -744,7 +743,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //chinaHiLoTrader(ldt, price, pmChgY);
         chinaHiloAccumulator(ldt, price);
         intraday1stTickAccumulator(ldt, price, pmChgY);
-
         firstTickMAProfitTaker(ldt, price);
         closeProfitTaker(ldt, price);
         percentileMATrader(ldt, price, pmChgY);
@@ -1079,7 +1077,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double currentAsk = askMap.get(FutType.FrontFut);
 
         if (lt.isBefore(LocalTime.of(8, 59)) || lt.isAfter(LocalTime.of(9, 29))) {
-            checkCancelOrders(FUT_OPEN, nowMilli, ORDER_WAIT_TIME * 2);
+            checkCancelOrders(FUT_OPEN, nowMilli, 5);
             return;
         }
 
@@ -1089,18 +1087,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         long futOpenOrdersNum = getOrderSizeForTradeType(FUT_OPEN);
 
-        NavigableMap<LocalTime, Double> futPrice =
-                priceMapBarDetail.get("SGXA50").entrySet().stream()
-                        .filter(e -> e.getKey().isAfter(LocalTime.of(8, 59)))
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                                (a, b) -> a, ConcurrentSkipListMap::new));
+        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get("SGXA50").entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(8, 59)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
 
-        NavigableMap<LocalDateTime, SimpleBar> fut =
-                futData.get(ibContractToFutType(activeFuture));
+        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
         int _2dayPerc = getPercentileForLast(fut);
 
         pr("fut open trader " + futPrice);
-
         LocalTime lastKey = futPrice.lastKey();
 
         double maxP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
@@ -1174,8 +1169,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28)).getValue();
 
-        //double ftick1 = priceMapBarDetail.get(FTSE_INDEX).lastEntry().getValue();
-
         double ftick2 = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue)
@@ -1191,7 +1184,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int buySize = 3;
         int sellSize = 1;
 
-        pr("firstTickTrader:: open / last / ft / ftTime", r(open), r(indexLast), r(ftick2), firstTickTime);
+        pr("firstTickTrader:open/last/ft/ftTime", r(open), r(indexLast), r(ftick2), firstTickTime);
 
         if (MINUTES.between(lastFTickTime, nowMilli) >= 10) {
             if (!noMoreBuy.get() && ftick2 > open && _2dayPerc < 50 &&
@@ -1222,11 +1215,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     static void openDeviationTrader(LocalDateTime nowMilli, double lastIndex) {
         LocalTime lt = nowMilli.toLocalTime();
-
         double freshPrice = XUTrader.futPriceMap.get(FutType.FrontFut);
-
         double atmVol = ChinaOption.getATMVol(ChinaOption.backExpiry);
-
         int waitTimeInSeconds = 60;
 
         if (lt.isAfter(LocalTime.of(9, 40))) {
@@ -1274,12 +1264,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int baseSize = 1;
         int buySize = baseSize;
         int sellSize = baseSize;
-//        if (_2dayPerc < 5) {
-//            buySize = baseSize * 2;
-//        } else if (_2dayPerc > 95) {
-//            sellSize = baseSize * 2;
-//        }
-
 
         pr(" open dev: numOrder ", lt.truncatedTo(ChronoUnit.SECONDS), numOrdersOpenDev,
                 "open:", r(openIndex), "ft", r(firstTick), "lastIndex", r(lastIndex), "fut", freshPrice,
@@ -1302,7 +1286,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Short));
             }
         }
-
 
         if (SECONDS.between(lastOpenDevTradeTime, nowMilli) >= waitTimeInSeconds) {
             if (!noMoreBuy.get() && lastIndex > openIndex && openDeviationDirection != Direction.Long) {
@@ -1425,9 +1408,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "indexLast, max, min, 2dp pmchy msg ", r(indexLast), r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50HiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && indexLast < minSoFar && a50HiLoDirection != Direction.Short) {
-                if (_2dayPerc > 50 && (_2dayPerc > UP_PERC_WIDE || pmchy > PMCHY_HI)) {
-                    sellSize = 2;
-                }
+                sellSize = (_2dayPerc > 50 && (_2dayPerc > UP_PERC_WIDE || pmchy > PMCHY_HI)) ? 2 : 1;
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, sellSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
@@ -1448,7 +1429,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
 
     private static void chinaHiloAccumulator(LocalDateTime nowMilli, double freshPrice) {
-
         if (!manualAccuOn.get() || nowMilli.toLocalTime().isAfter(HILO_ACCU_DEADLINE)
                 || a50HiLoDirection == Direction.Flat) {
             return;
