@@ -1283,10 +1283,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         pr(" open dev: numOrder ", lt.truncatedTo(ChronoUnit.SECONDS), numOrdersOpenDev,
                 "open:", r(openIndex), "ft", r(firstTick), "lastIndex", r(lastIndex), "fut", freshPrice,
-                "chg:", r10000(lastIndex / openIndex - 1),
+                "IDX chg:", r10000(lastIndex / openIndex - 1),
                 "fut/pd", r(freshPrice), r10000(freshPrice / lastIndex - 1),
                 "openDevDir/vol ", openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
-                " IDX chg: ", r(lastIndex - openIndex), "wait for(s):", waitTimeInSeconds);
+                " IDX chg: ", r(lastIndex - openIndex), "prevT:", lastOpenDevTradeTime,
+                "wait(s):", waitTimeInSeconds);
 
         if (numOrdersOpenDev > MAX_OPEN_DEV_SIZE) {
             return;
