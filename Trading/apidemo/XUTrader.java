@@ -1329,11 +1329,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
             return;
         }
-
         long numOrders = getOrderSizeForTradeType(CHINA_HILO);
-
         LocalDateTime lastHiLoTradeTime = getLastOrderTime(CHINA_HILO);
-
         int buySize = 1;
         int sellSize = 1;
 
@@ -1373,6 +1370,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
             }
         }
+
         LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
         double maxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 28))
@@ -1390,7 +1388,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
-                        "open/1tk/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
+                        "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
                         "indexLast, max, min, 2dp pmchy msg ", r(indexLast), r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50HiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && indexLast < minSoFar && a50HiLoDirection != Direction.Short) {
@@ -1400,7 +1398,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
-                        "open/1tk/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
+                        "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
                         " lastV, max, min 2dp pmchy ", r(indexLast), r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50HiLoDirection = Direction.Short;
             }
