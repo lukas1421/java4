@@ -299,15 +299,11 @@ public class XuTraderHelper {
     }
 
     static double roundToXUPriceVeryPassive(double x, Direction dir, long factor) {
-        return (Math.round(x * 10) - Math.round(x * 10) % 25 + ((dir == Direction.Long ? -25 : 25) * factor)) / 10d;
+        return (Math.round(x * 10) - Math.round(x * 10) % 25) / 10d + ((dir == Direction.Long ? -2.5 : 2.5) * factor);
     }
 
     static double roundToXUPriceAggressive(double x, Direction dir) {
-        double addOn = 0.0;
-        if (dir == Direction.Long) {
-            addOn = 2.5;
-        }
-        return (Math.round(x * 10) - Math.round(x * 10) % 25) / 10d + addOn;
+        return (Math.round(x * 10) - Math.round(x * 10) % 25) / 10d + (dir == Direction.Long ? 2.5 : 0.0);
     }
 
 
