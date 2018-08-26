@@ -1325,6 +1325,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime lt = nowMilli.toLocalTime();
         int pmchy = getPmchy();
         double freshPrice = futPriceMap.get(FutType.FrontFut);
+        int hiloWaitTime;
 
         if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;
@@ -1352,6 +1353,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
+
+        long timeBetweenLast2Trades = lastTwoOrderMilliDiff(CHINA_HILO);
+
+        if (timeBetweenLast2Trades < 10000) {
+            hiloWaitTime = 60;
+        } else {
+            hiloWaitTime = 0;
+        }
+
 
         if (!manualSetDirection.get()) {
             if (lt.isBefore(LocalTime.of(9, 30))) {
@@ -1388,7 +1398,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 28)) &&
                         e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        if (SECONDS.between(lastHiLoTradeTime, nowMilli) >= 60 && maxSoFar != 0.0 && minSoFar != 0.0) {
+        if (SECONDS.between(lastHiLoTradeTime, nowMilli) >= hiloWaitTime && maxSoFar != 0.0 && minSoFar != 0.0) {
             if (!noMoreBuy.get() && indexLast > maxSoFar && a50HiLoDirection != Direction.Long) {
                 buyQ = (_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO) ? 3 : 2;
                 int id = autoTradeID.incrementAndGet();
