@@ -1656,7 +1656,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
                 , e -> !isStockNoonBreak(e));
-//        int todayPerc = getPercentileForLastPred(index, e -> e.getKey().toLocalDate().equals(tTrade));
         int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
         LocalDateTime lastIndexMAOrder = getLastOrderTime(INTRADAY_MA);
 
@@ -1690,8 +1689,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "intraday MA buy", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc, "pmchg ", pmChgY));
-            } else if (!noMoreSell.get() &&
-                    maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
+            } else if (!noMoreSell.get() &&maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
                     todayPerc > 95 && pmChgY > PMCHY_HI && lt.isAfter(LocalTime.of(14, 50))) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
@@ -1704,63 +1702,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static LocalDateTime getLastOrderTime(AutoOrderType type) {
-        return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == type)
-                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .map(e -> e.getValue().getOrderTime())
-                .orElse(sessionOpenT());
-    }
-
-    private static double getAvgFilledBuyPriceForOrderType(AutoOrderType type) {
-        double botUnits = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == type)
-                .filter(e -> e.getValue().getOrder().action() == Types.Action.BUY)
-                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
-                .mapToDouble(e -> e.getValue().getOrder().totalQuantity()).sum();
-
-        if (botUnits == 0.0) {
-            return 0.0;
-        }
-
-        return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == type)
-                .filter(e -> e.getValue().getOrder().action() == Types.Action.BUY)
-                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
-                .mapToDouble(e -> e.getValue().getOrder().totalQuantity() * e.getValue().getOrder().lmtPrice())
-                .sum() / botUnits;
-    }
-
-    private static double getAvgFilledSellPriceForOrderType(AutoOrderType type) {
-        double soldUnits = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == type)
-                .filter(e -> e.getValue().getOrder().action() == Types.Action.SELL)
-                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
-                .mapToDouble(e -> e.getValue().getOrder().totalQuantity()).sum();
-
-        if (soldUnits == 0.0) {
-            return 0.0;
-        }
-        return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == type)
-                .filter(e -> e.getValue().getOrder().action() == Types.Action.SELL)
-                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
-                .mapToDouble(e -> e.getValue().getOrder().totalQuantity() * e.getValue().getOrder().lmtPrice())
-                .sum() / soldUnits;
-    }
-
-    private static long getOrderSizeForTradeType(AutoOrderType type) {
-        return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == type)
-                .count();
-    }
-
-    private static double getOrderTotalSignedQForType(AutoOrderType type) {
-        return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == type)
-                .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
-                .sum();
-    }
 
 
     /**
@@ -2020,6 +1961,65 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, Double> sma = getMAGen(price5, shortMAPeriod);
         return sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
     }
+
+    private static LocalDateTime getLastOrderTime(AutoOrderType type) {
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getOrderTime())
+                .orElse(sessionOpenT());
+    }
+
+    private static double getAvgFilledBuyPriceForOrderType(AutoOrderType type) {
+        double botUnits = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().getOrder().action() == Types.Action.BUY)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .mapToDouble(e -> e.getValue().getOrder().totalQuantity()).sum();
+
+        if (botUnits == 0.0) {
+            return 0.0;
+        }
+
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().getOrder().action() == Types.Action.BUY)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .mapToDouble(e -> e.getValue().getOrder().totalQuantity() * e.getValue().getOrder().lmtPrice())
+                .sum() / botUnits;
+    }
+
+    private static double getAvgFilledSellPriceForOrderType(AutoOrderType type) {
+        double soldUnits = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().getOrder().action() == Types.Action.SELL)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .mapToDouble(e -> e.getValue().getOrder().totalQuantity()).sum();
+
+        if (soldUnits == 0.0) {
+            return 0.0;
+        }
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().getOrder().action() == Types.Action.SELL)
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .mapToDouble(e -> e.getValue().getOrder().totalQuantity() * e.getValue().getOrder().lmtPrice())
+                .sum() / soldUnits;
+    }
+
+    private static long getOrderSizeForTradeType(AutoOrderType type) {
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .count();
+    }
+
+    private static double getOrderTotalSignedQForType(AutoOrderType type) {
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
+                .sum();
+    }
+
 
     //**********************************************Trade types **********************************************
 
