@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -1211,10 +1212,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime lt = nowMilli.toLocalTime();
         double freshPrice = XUTrader.futPriceMap.get(FutType.FrontFut);
         double atmVol = ChinaOption.getATMVol(ChinaOption.backExpiry);
-        int waitTimeInSeconds = 60;
+        int waitTimeInSeconds;
+        int defaultWaitTime = 60;
 
         if (lt.isAfter(LocalTime.of(9, 40))) {
-            waitTimeInSeconds = 300;
+            defaultWaitTime = 300;
         }
 
         if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
@@ -1251,8 +1253,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         long numOrdersOpenDev = getOrderSizeForTradeType(OPEN_DEVIATION);
         LocalDateTime lastOpenDevTradeTime = getLastOrderTime(OPEN_DEVIATION);
+        long timeDiffLastTwoOrders = lastTwoOrderMilliDiff(OPEN_DEVIATION);
 
-        int buySize = 3;
+        if (timeDiffLastTwoOrders < 10000) {
+            waitTimeInSeconds = defaultWaitTime;
+        } else {
+            waitTimeInSeconds = 0;
+        }
+
+        int buySize = 1;
         int sellSize = 1;
 
         pr(" open dev: numOrder ", lt.truncatedTo(ChronoUnit.SECONDS), numOrdersOpenDev,
@@ -1289,7 +1298,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
                         "IDX chg: ", r10000(lastIndex / openIndex - 1), "||fut pd", freshPrice,
                         r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol: ", atmVol,
-                        "msg:", msg));
+                        "wait time ", waitTimeInSeconds, "msg:", msg));
                 openDeviationDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
@@ -1300,7 +1309,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
                         "IDX chg: ", r10000(lastIndex / openIndex - 1), "||fut pd", freshPrice,
                         r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol:", atmVol,
-                        "msg:", msg));
+                        "wait time ", waitTimeInSeconds, "msg:", msg));
                 openDeviationDirection = Direction.Short;
             }
         }
@@ -1980,6 +1989,26 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .map(e -> e.getValue().getOrderTime())
                 .orElse(sessionOpenT());
     }
+
+    private static long lastTwoOrderMilliDiff(AutoOrderType type) {
+        long numOrders = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type).count();
+        if (numOrders < 2) {
+            return Long.MAX_VALUE;
+        } else {
+            LocalDateTime last = globalIdOrderMap.entrySet().stream()
+                    .filter(e -> e.getValue().getOrderType() == type)
+                    .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                    .map(e -> e.getValue().getOrderTime()).orElseThrow(() -> new IllegalArgumentException("no"));
+            LocalDateTime secLast = globalIdOrderMap.entrySet().stream()
+                    .filter(e -> e.getValue().getOrderType() == type)
+                    .map(e -> e.getValue().getOrderTime())
+                    .filter(e -> e.isBefore(last))
+                    .max(Comparator.comparing(Function.identity())).orElseThrow(() -> new IllegalArgumentException("no"));
+            return ChronoUnit.MILLIS.between(secLast, last);
+        }
+    }
+
 
     private static double getAvgFilledBuyPriceForOrderType(AutoOrderType type) {
         double botUnits = globalIdOrderMap.entrySet().stream()
