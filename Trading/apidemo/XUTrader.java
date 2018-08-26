@@ -741,10 +741,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //firstTickTrader(ldt, price);
         //openDeviationTrader(ldt, price, pmChgY);
         //chinaHiLoTrader(ldt, price, pmChgY);
-        chinaHiloAccumulator(ldt, price);
+        //
         intraday1stTickAccumulator(ldt, price, pmChgY);
-        firstTickMAProfitTaker(ldt, price);
-        closeProfitTaker(ldt, price);
+        //firstTickMAProfitTaker(ldt, price);
+        //closeProfitTaker(ldt, price);
         percentileMATrader(ldt, price, pmChgY);
 
         if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
@@ -1404,14 +1404,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * In addition to china hilo, this trades in the same direction as hilo
      *
      * @param nowMilli   time now
-     * @param freshPrice price
+     * @param indexPrice price
      */
 
-    private static void chinaHiloAccumulator(LocalDateTime nowMilli, double freshPrice) {
+    static void chinaHiloAccumulator(LocalDateTime nowMilli, double indexPrice) {
         if (!manualAccuOn.get() || nowMilli.toLocalTime().isAfter(HILO_ACCU_DEADLINE)
                 || a50HiLoDirection == Direction.Flat) {
             return;
         }
+        double freshPrice = futPriceMap.get(FutType.FrontFut);
         LocalTime lt = nowMilli.toLocalTime();
         LocalDateTime lastHiLoAccuTradeTime = getLastOrderTime(CHINA_HILO_ACCU);
 
@@ -1420,7 +1421,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         checkCancelOrders(CHINA_HILO_ACCU, nowMilli, ORDER_WAIT_TIME);
 
-        int todayPerc = getPercentileForLast(priceMapBar.get(FTSE_INDEX));
+        int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
 
         if (MINUTES.between(lastHiLoAccuTradeTime, nowMilli) >= ORDER_WAIT_TIME &&
                 Math.abs(hiloAccuTotalOrderQ) <= HILO_ACCU_MAX_SIZE && Math.abs(hiloTotalOrderQ) > 0.0) {
@@ -1433,7 +1434,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "hilo accu buy", globalIdOrderMap.get(id),
                         " accu #, hilo #", hiloAccuTotalOrderQ, hiloTotalOrderQ));
             } else if (!noMoreSell.get() && todayPerc > 99 && a50HiLoDirection == Direction.Short
-                    && lt.isAfter(LocalTime.of(14, 55))) {
+                    && lt.isAfter(LocalTime.of(14, 50))) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO_ACCU));
@@ -1445,8 +1446,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
 
-    private static void firstTickMAProfitTaker(LocalDateTime nowMilli, double freshPrice) {
+    static void firstTickMAProfitTaker(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
+        double freshPrice = futPriceMap.get(FutType.FrontFut);
         if (!checkTimeRangeBool(lt, 9, 29, 15, 0)) {
             return;
         }
@@ -1465,7 +1467,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
 
         if (firstTickTotalQ == 0.0 || Math.abs(ftProfitTakeQ) >= Math.abs(firstTickTotalQ)) {
-            pr("first tick Q, profitTaker Q, open, firsttick ",
+            pr("first tick Q, profitTaker Q, open, ft ",
                     firstTickTotalQ, ftProfitTakeQ, r(open), r(firstTick));
             return;
         }
@@ -1477,7 +1479,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int longerMA = 5;
 
         checkCancelOrders(FTICK_TAKE_PROFIT, nowMilli, ORDER_WAIT_TIME * 2);
-        int todayPerc = getPercentileForLast(priceMapBar.get(FTSE_INDEX));
+        int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
 
         LocalDateTime lastProfitTakerOrder = getLastOrderTime(FTICK_TAKE_PROFIT);
 
@@ -1507,7 +1509,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
 
             } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
-                    && todayPerc > HI_PERC_WIDE && firstTick > open && lt.isAfter(LocalTime.of(14, 55))) {
+                    && todayPerc > HI_PERC_WIDE && firstTick > open && lt.isAfter(LocalTime.of(14, 50))) {
 
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
@@ -1523,13 +1525,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * taking profit at close
      *
-     * @param nowMilli
-     * @param freshPrice
+     * @param nowMilli  time now
+     * @param indexLast last index price
      */
-    private static void closeProfitTaker(LocalDateTime nowMilli, double freshPrice) {
+    static void closeProfitTaker(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
+        double freshPrice = futPriceMap.get(FutType.FrontFut);
 
-        if (lt.isBefore(LocalTime.of(14, 55)) || lt.isAfter(LocalTime.of(15, 5))) {
+        if (lt.isBefore(LocalTime.of(14, 50)) || lt.isAfter(LocalTime.of(15, 5))) {
             return;
         }
 
@@ -1537,7 +1540,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        int todayPerc = getPercentileForLast(priceMapBar.get(FTSE_INDEX));
+        int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29, 0)).getValue();
         double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
@@ -1552,7 +1555,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CLOSE_TAKE_PROFIT));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "close profit taking COVER", globalIdOrderMap.get(id)));
-            } else if (!noMoreSell.get() && todayPerc > 90 && firstTick > open) {
+            } else if (!noMoreSell.get() && todayPerc > 99 && firstTick > open && lt.isAfter(LocalTime.of(14, 55))) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CLOSE_TAKE_PROFIT));
@@ -1834,8 +1837,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     && _2dayPerc < LO_PERC_WIDE && currDelta < deltaTarget && (freshPrice < avgBuy || avgBuy == 0.0)) {
                 int id = autoTradeID.incrementAndGet();
                 double addOn = 0.0;
-                if (pmchy < -20 || (checkTimeRangeBool(lt, 13, 0, 15, 0))) {
-                    buySize = 5;
+                if (pmchy < LO_PERC_WIDE || (checkTimeRangeBool(lt, 13, 0, 15, 0))) {
+                    buySize = 4;
                     addOn = 2.5;
                 } else {
                     buySize = CONSERVATIVE_SIZE;
