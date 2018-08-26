@@ -1689,7 +1689,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "intraday MA buy", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc, "pmchg ", pmChgY));
-            } else if (!noMoreSell.get() &&maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
+            } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
                     todayPerc > 95 && pmChgY > PMCHY_HI && lt.isAfter(LocalTime.of(14, 50))) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
@@ -1701,7 +1701,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
     }
-
 
 
     /**
@@ -1922,7 +1921,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     return 1000000;
                 }
             case WEDNESDAY:
-                return -100000;
+                if (lt.isAfter(LocalTime.of(15, 0))) {
+                    return -100000;
+                }
+            case THURSDAY:
+                if (lt.isBefore(LocalTime.of(15, 0))) {
+                    return -100000;
+                }
         }
         return 0.0;
     }
@@ -2318,11 +2323,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double sellTradePnl = Math.round(100d * (futPriceMap.get(f) - avgSell) * unitsSold) / 100d;
         double netTradePnl = buyTradePnl + sellTradePnl;
         double netTotalCommissions = Math.round(100d * ((unitsBought - unitsSold) * 1.505d)) / 100d;
-        double mtmPnl = (currentPosMap.getOrDefault(f, 0) - unitsBought - unitsSold) * (futPriceMap.getOrDefault(f, 0.0)
-                - futPrevCloseMap.getOrDefault(f, 0.0));
+        double mtmPnl = (currentPosMap.getOrDefault(f, 0) - unitsBought - unitsSold) *
+                (futPriceMap.getOrDefault(f, 0.0) - futPrevCloseMap.getOrDefault(f, 0.0));
 
-        NavigableMap<LocalDateTime, SimpleBar> futdata =
-                trimDataFromYtd(futData.get(ibContractToFutType(activeFuture)));
+        NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(ibContractToFutType(activeFuture)));
 
         int pmChgY = getPercentileChgFut(futdata, futdata.firstKey().toLocalDate());
         int closePercY = getClosingPercentile(futdata, futdata.firstKey().toLocalDate());
@@ -2371,8 +2375,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             updateLog(" net pnl " + r(netTradePnl) + " breakdown: " + pnlString);
             updateLog(" net commission " + netTotalCommissions);
             updateLog(" MTM + Trade " + r(netTradePnl + mtmPnl));
-            updateLog("pos "
-                    + currentPosMap.getOrDefault(f, 0) + " Delta " + r(getNetPtfDelta()) +
+            updateLog("pos " + currentPosMap.getOrDefault(f, 0) + " Delta " + r(getNetPtfDelta()) +
                     " Stock Delta " + r(ChinaPosition.getStockPtfDelta()) + " Fut Delta " + r(XUTrader.getFutDelta())
                     + "HK Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isHKStock(e.getKey())))
                     + " China Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isChinaStock(e.getKey()))));
