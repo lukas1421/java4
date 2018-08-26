@@ -1298,7 +1298,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
                         "IDX chg: ", r10000(lastIndex / openIndex - 1), "||fut pd", freshPrice,
                         r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol: ", atmVol,
-                        "wait time ", waitTimeInSeconds, "msg:", msg));
+                        "wait/last2Diff:", waitTimeInSeconds, timeDiffLastTwoOrders, "msg:", msg));
                 openDeviationDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
@@ -1309,7 +1309,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
                         "IDX chg: ", r10000(lastIndex / openIndex - 1), "||fut pd", freshPrice,
                         r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol:", atmVol,
-                        "wait time ", waitTimeInSeconds, "msg:", msg));
+                        "waitT/last2Diff:", waitTimeInSeconds, timeDiffLastTwoOrders, "msg:", msg));
                 openDeviationDirection = Direction.Short;
             }
         }
