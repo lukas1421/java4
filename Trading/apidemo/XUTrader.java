@@ -1219,9 +1219,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             waitTimeInSeconds = 300;
         }
 
-//        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
-//        int _2dayPerc = getPercentileForLast(fut);
-
         if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;
         }
@@ -1261,11 +1258,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int sellSize = 1;
 
         pr(" open dev: numOrder ", lt.truncatedTo(ChronoUnit.SECONDS), numOrdersOpenDev,
-                "open:", r(openIndex), "ft", r(firstTick), "lastIndex", r(lastIndex), "fut", freshPrice,
+                "open:", r(openIndex), "ft", r(firstTick), "lastIndex", r(lastIndex),
                 "IDX chg:", r10000(lastIndex / openIndex - 1),
                 "fut/pd", r(freshPrice), r10000(freshPrice / lastIndex - 1),
                 "openDevDir/vol ", openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
-                " IDX chg: ", r(lastIndex - openIndex), "prevT:", lastOpenDevTradeTime,
+                "IDX chg: ", r(lastIndex - openIndex), "prevT:", lastOpenDevTradeTime,
                 "wait(s):", waitTimeInSeconds);
 
         if (numOrdersOpenDev >= MAX_OPEN_DEV_SIZE) {
@@ -1274,11 +1271,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double buyPrice = freshPrice;
         double sellPrice = freshPrice;
+        String msg = "";
 
         if (numOrdersOpenDev >= 2) {
             if (numOrdersOpenDev % 2 == 0) {
                 buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Long));
                 sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Short));
+                msg = " conservative on even ";
             }
         }
 
@@ -1291,7 +1290,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "open dev buy", globalIdOrderMap.get(id),
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
                         "IDX chg: ", r10000(lastIndex / openIndex - 1), "||fut pd", freshPrice,
-                        r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol: ", atmVol));
+                        r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol: ", atmVol,
+                        "msg:", msg));
                 openDeviationDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
@@ -1301,7 +1301,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "open dev sell", globalIdOrderMap.get(id),
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
                         "IDX chg: ", r10000(lastIndex / openIndex - 1), "||fut pd", freshPrice,
-                        r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol:", atmVol));
+                        r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol:", atmVol,
+                        "msg:",msg));
                 openDeviationDirection = Direction.Short;
             }
         }
