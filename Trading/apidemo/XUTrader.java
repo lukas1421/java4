@@ -738,14 +738,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         futOpenTrader(ldt, price, pmChgY);
+        intraday1stTickAccumulator(ldt, price, pmChgY);
+        percentileMATrader(ldt, price, pmChgY);
+
         //firstTickTrader(ldt, price);
         //openDeviationTrader(ldt, price, pmChgY);
         //chinaHiLoTrader(ldt, price, pmChgY);
         //
-        intraday1stTickAccumulator(ldt, price, pmChgY);
+
         //firstTickMAProfitTaker(ldt, price);
         //closeProfitTaker(ldt, price);
-        percentileMATrader(ldt, price, pmChgY);
 
         if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
             pr(" curr delta is outside range ");
@@ -1601,24 +1603,24 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME * 2 && Math.abs(firstTickSignedQuant) > 0.0
                 && Math.abs(ftAccuSignedQuant) <= FT_ACCU_MAX_SIZE) {
-            if (!noMoreBuy.get() && firstTick > open && _2dayFutPerc < 20 && (_2dayFutPerc < 5 || pmchy < PMCHY_LO)
+            if (!noMoreBuy.get() && firstTick > open && _2dayFutPerc < 20 && (_2dayFutPerc < 1 || pmchy < PMCHY_LO)
                     && lt.isBefore(LocalTime.of(13, 30))) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "intraday first tick buy",
+                outputOrderToAutoLog(str(o.orderId(), "intraday ft accu",
                         globalIdOrderMap.get(id), "open first futP%", open, firstTick, _2dayFutPerc,
-                        "first tick size ", firstTickSignedQuant));
-            } else if (!noMoreSell.get() && firstTick < open && _2dayFutPerc > 80 &&
-                    (_2dayFutPerc > 95 || pmchy > PMCHY_HI) && lt.isAfter(LocalTime.of(14, 50))) {
+                        "ft size ", firstTickSignedQuant));
+            } else if (!noMoreSell.get() && firstTick < open &&
+                    _2dayFutPerc > 99 && pmchy > PMCHY_HI && lt.isAfter(LocalTime.of(14, 50))) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "intraday first tick sell",
+                outputOrderToAutoLog(str(o.orderId(), "intraday ft decu",
                         globalIdOrderMap.get(id), "open first futP% ", open, firstTick, _2dayFutPerc,
-                        "first tick size ", firstTickSignedQuant));
+                        "ft size ", firstTickSignedQuant));
             }
         }
     }
@@ -1674,7 +1676,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
                 double addOn = 0.0;
                 if (checkTimeRangeBool(lt, 13, 0, 15, 0)) {
-                    buySize = 3;
+                    buySize = 2;
                     addOn = 2.5;
                 }
 
