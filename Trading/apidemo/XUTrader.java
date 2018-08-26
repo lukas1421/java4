@@ -744,8 +744,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //firstTickTrader(ldt, price);
         //openDeviationTrader(ldt, price, pmChgY);
         //chinaHiLoTrader(ldt, price, pmChgY);
-        //
-
         //firstTickMAProfitTaker(ldt, price);
         //closeProfitTaker(ldt, price);
 
@@ -1302,7 +1300,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
                         "IDX chg: ", r10000(lastIndex / openIndex - 1), "||fut pd", freshPrice,
                         r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol:", atmVol,
-                        "msg:",msg));
+                        "msg:", msg));
                 openDeviationDirection = Direction.Short;
             }
         }
@@ -1330,11 +1328,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalDateTime lastHiLoTradeTime = getLastOrderTime(CHINA_HILO);
         int buyQ;
         int sellQ;
-
-        if (numOrders >= 6) {
-            pr(" china hilo exceed max");
-            return;
-        }
 
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
         int _2dayPerc = getPercentileForLast(fut);
@@ -1366,6 +1359,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
             }
         }
+        if (numOrders >= 6) {
+            pr(" china hilo exceed max");
+            return;
+        }
+        double buyPrice = freshPrice;
+        double sellPrice = freshPrice;
+        if (numOrders % 2 == 0) {
+            buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Long));
+            sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Short));
+        }
 
         LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
         double maxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
@@ -1380,24 +1383,26 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (!noMoreBuy.get() && indexLast > maxSoFar && a50HiLoDirection != Direction.Long) {
                 buyQ = (_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO) ? 3 : 2;
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, buyQ);
+                Order o = placeBidLimit(buyPrice, buyQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
+                        "buy price: ", buyPrice,
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
-                        "indexLast,fut, pd: ", r(indexLast), freshPrice, r10000(freshPrice / indexLast - 1),
-                        "max, min 2dp pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
+                        "indexLast/fut/pd: ", r(indexLast), freshPrice, r10000(freshPrice / indexLast - 1),
+                        "max/min/2dp/pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50HiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && indexLast < minSoFar && a50HiLoDirection != Direction.Short) {
                 sellQ = (_2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI) ? 2 : 1;
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, sellQ);
+                Order o = placeOfferLimit(sellPrice, sellQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
+                        "sell price: ", sellPrice,
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
-                        "indexLast,fut, pd: ", r(indexLast), freshPrice, r10000(freshPrice / indexLast - 1),
-                        "max, min 2dp pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
+                        "indexLast/fut/pd: ", r(indexLast), freshPrice, r10000(freshPrice / indexLast - 1),
+                        "max/min/2dp/pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50HiLoDirection = Direction.Short;
             }
         }
