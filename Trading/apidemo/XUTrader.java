@@ -1373,7 +1373,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 28)) &&
                         e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        if (SECONDS.between(lastHiLoTradeTime, nowMilli) >= 60) {
+        if (SECONDS.between(lastHiLoTradeTime, nowMilli) >= 60 && maxSoFar != 0.0 && minSoFar != 0.0) {
             if (!noMoreBuy.get() && indexLast > maxSoFar && a50HiLoDirection != Direction.Long) {
                 buyQ = (_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO) ? 3 : 1;
                 int id = autoTradeID.incrementAndGet();
@@ -1382,7 +1382,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
-                        "indexLast, max, min, 2dp pmchy ", r(indexLast), r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
+                        "indexLast,fut, pd: ", r(indexLast), freshPrice, r10000(freshPrice / indexLast - 1),
+                        "max, min 2dp pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50HiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && indexLast < minSoFar && a50HiLoDirection != Direction.Short) {
                 sellQ = (_2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI) ? 2 : 1;
@@ -1392,7 +1393,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
-                        "indexLast, max, min 2dp pmchy ", r(indexLast), r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
+                        "indexLast,fut, pd: ", r(indexLast), freshPrice, r10000(freshPrice / indexLast - 1),
+                        "max, min 2dp pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50HiLoDirection = Direction.Short;
             }
         }
