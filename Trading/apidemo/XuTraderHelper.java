@@ -617,6 +617,21 @@ public class XuTraderHelper {
                 .sum();
     }
 
+    static OrderStatus getLastOrderStatusForType(AutoOrderType type) {
+        long size = XUTrader.globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type).count();
+
+        if (size == 0L) {
+            return OrderStatus.NoOrder;
+        }
+
+        return XUTrader.globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getStatus())
+                .orElseThrow(() -> new IllegalStateException("no status"));
+    }
+
     private static int getSizeForDelta(double price, double fx, double delta) {
         return (int) Math.floor(Math.abs(delta) / (fx * price));
     }

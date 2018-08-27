@@ -1126,7 +1126,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut open buy",
                         globalIdOrderMap.get(id), " max min last 2dp% pmchy ", r(maxP), r(minP), r(last), _2dayPerc,
-                        pmchy, "bid ask ", currentBid, currentAsk,"currDelta/tgt:", currDelta, deltaTgt));
+                        pmchy, "bid ask ", currentBid, currentAsk, "currDelta/tgt:", currDelta, deltaTgt));
             } else if (!noMoreSell.get() && last < minP && _2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI
                     && currDelta > deltaTgt) {
                 int id = autoTradeID.incrementAndGet();
@@ -1220,6 +1220,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double atmVol = ChinaOption.getATMVol(ChinaOption.backExpiry);
         int waitTimeInSeconds;
         int defaultWaitTime = 60;
+        OrderStatus lastStatus = getLastOrderStatusForType(OPEN_DEVIATION);
 
         if (lt.isAfter(LocalTime.of(9, 40))) {
             defaultWaitTime = 300;
@@ -1275,7 +1276,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "fut/pd", r(freshPrice), r10000(freshPrice / lastIndex - 1),
                 "openDevDir/vol ", openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
                 "IDX chg: ", r(lastIndex - openIndex), "prevT:", lastOpenDevTradeTime,
-                "wait(s):", waitTimeInSeconds);
+                "wait(s):", waitTimeInSeconds, "last status ", lastStatus);
+
+        if (numOrdersOpenDev > 0 && lastStatus != OrderStatus.Filled) {
+            pr(" open order last not filled ");
+            return;
+        }
 
         if (numOrdersOpenDev >= MAX_OPEN_DEV_SIZE) {
             return;
@@ -1285,12 +1291,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double sellPrice = freshPrice;
         String msg = "";
 
-        if (numOrdersOpenDev >= 2) {
-            if (numOrdersOpenDev % 2 == 0) {
-                buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Long));
-                sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Short));
-                msg = " conservative on even ";
-            }
+        if (numOrdersOpenDev % 2 == 0) {
+            buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Long));
+            sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Short));
+            msg = " conservative on even ";
         }
 
         if (SECONDS.between(lastOpenDevTradeTime, nowMilli) >= waitTimeInSeconds) {
@@ -1300,9 +1304,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open dev buy", globalIdOrderMap.get(id),
-                        "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
+                        numOrdersOpenDev, "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
                         "IDX chg: ", r10000(lastIndex / openIndex - 1), "||fut pd", freshPrice,
-                        r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol: ", atmVol,
+                        r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol: ",
+                        Math.round(atmVol * 10000d) / 100d + "v",
                         "wait/last2Diff:", waitTimeInSeconds, timeDiffLastTwoOrders, "msg:", msg));
                 openDeviationDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
@@ -1310,10 +1315,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeOfferLimit(sellPrice, sellSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "open dev sell", globalIdOrderMap.get(id),
-                        "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
+                outputOrderToAutoLog(str(o.orderId(), "open dev sell #", globalIdOrderMap.get(id)
+                        , numOrdersOpenDev, "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
                         "IDX chg: ", r10000(lastIndex / openIndex - 1), "||fut pd", freshPrice,
-                        r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol:", atmVol,
+                        r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol:",
+                        Math.round(atmVol * 10000d) / 100d + "v",
                         "waitT/last2Diff:", waitTimeInSeconds, timeDiffLastTwoOrders, "msg:", msg));
                 openDeviationDirection = Direction.Short;
             }
@@ -1367,7 +1373,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             hiloWaitTimeSeconds = 10;
         }
 
-
         if (!manualSetDirection.get()) {
             if (lt.isBefore(LocalTime.of(9, 30))) {
                 manualSetDirection.set(true);
@@ -1389,6 +1394,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
         double buyPrice = freshPrice;
         double sellPrice = freshPrice;
+
         if (numOrders % 2 == 0) {
             buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Long));
             sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Short));
