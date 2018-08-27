@@ -1404,7 +1404,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double buyPrice = freshPrice;
         double sellPrice = freshPrice;
 
-        //conservative at open, let opentrader do the job. Aggressive after open.
+        //conservative at open, let opentrader do the job. Aggressive after open (or always passive, depends).
+        // but definitely conservative at open
         if (lt.isBefore(LocalTime.of(9, 40)) && numOrders % 2 == 0) {
             buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Long));
             sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Short));
