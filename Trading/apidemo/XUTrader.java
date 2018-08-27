@@ -1515,7 +1515,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
-                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
+                .filter(e -> Math.abs(e.getValue() - open) > 0.01)
+                .findFirst().map(Map.Entry::getValue).orElse(0.0);
 
         if (firstTickTotalQ == 0.0 || Math.abs(ftProfitTakeQ) >= Math.abs(firstTickTotalQ)) {
             pr("first tick Q, profitTaker Q, open, ft ",
@@ -1561,7 +1562,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
                     && todayPerc > HI_PERC_WIDE && firstTick > open && lt.isAfter(LocalTime.of(14, 50))) {
-
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FTICK_TAKE_PROFIT));
@@ -1582,6 +1582,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static void closeProfitTaker(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         double freshPrice = futPriceMap.get(FutType.FrontFut);
+        double currDelta = getNetPtfDelta();
+        double deltaTgt = getDeltaTarget(nowMilli, getPmchy());
 
         if (lt.isBefore(LocalTime.of(14, 50)) || lt.isAfter(LocalTime.of(15, 5))) {
             return;
@@ -1600,18 +1602,21 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalDateTime lastCloseProfitTaker = getLastOrderTime(CLOSE_TAKE_PROFIT);
 
         if (MINUTES.between(lastCloseProfitTaker, nowMilli) >= ORDER_WAIT_TIME) {
-            if (!noMoreBuy.get() && todayPerc < 5 && firstTick < open) {
+            if (!noMoreBuy.get() && todayPerc < 5 && firstTick < open && currDelta < deltaTgt) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CLOSE_TAKE_PROFIT));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "close profit taking COVER", globalIdOrderMap.get(id)));
-            } else if (!noMoreSell.get() && todayPerc > 99 && firstTick > open && lt.isAfter(LocalTime.of(14, 50))) {
+                outputOrderToAutoLog(str(o.orderId(), "close profit taking COVER", globalIdOrderMap.get(id)
+                        , "curDel, deltaTarget", currDelta, deltaTgt));
+            } else if (!noMoreSell.get() && todayPerc > 99 && firstTick > open && currDelta > deltaTgt
+                    && lt.isAfter(LocalTime.of(14, 50))) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CLOSE_TAKE_PROFIT));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "close profit taking SELL", globalIdOrderMap.get(id)));
+                outputOrderToAutoLog(str(o.orderId(), "close profit taking SELL", globalIdOrderMap.get(id)
+                        , "curDel, deltaTarget", currDelta, deltaTgt));
             }
         }
     }
