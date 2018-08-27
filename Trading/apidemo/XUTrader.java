@@ -1264,7 +1264,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (milliDiffLastTwoOrders < 10000) {
             waitTimeInSeconds = defaultWaitTime;
         } else {
-            waitTimeInSeconds = 50; //change this to 0 if working properly
+            waitTimeInSeconds = 10; //change this to 0 if working properly
         }
 
         int buySize = 1;
@@ -1306,10 +1306,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open dev buy", globalIdOrderMap.get(id),
-                        numOrdersOpenDev, "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
-                        "IDX chg: ", r10000(lastIndex / openIndex - 1), "||fut pd", freshPrice,
-                        r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol: ",
-                        Math.round(atmVol * 10000d) / 100d + "v",
+                        "#", numOrdersOpenDev, "limit:", buyPrice,
+                        "indexLast/fut/pd", lastIndex, freshPrice, r10000(freshPrice / lastIndex - 1) * 10000d, "bp",
+                        "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
+                        openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
+                        "IDX chg: ", r10000(lastIndex / openIndex - 1),
                         "wait/last2Diff:", waitTimeInSeconds, milliDiffLastTwoOrders, "msg:", msg));
                 openDeviationDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
@@ -1317,11 +1318,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeOfferLimit(sellPrice, sellSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "open dev sell #", globalIdOrderMap.get(id)
-                        , numOrdersOpenDev, "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
-                        "IDX chg: ", r10000(lastIndex / openIndex - 1), "||fut pd", freshPrice,
-                        r10000(freshPrice / lastIndex - 1), "dir:", openDeviationDirection, "vol:",
-                        Math.round(atmVol * 10000d) / 100d + "v",
+                outputOrderToAutoLog(str(o.orderId(), "open dev sell", globalIdOrderMap.get(id)
+                        , "#:", numOrdersOpenDev, "limit: ", sellPrice,
+                        "indexLast/fut/pd", lastIndex, freshPrice, r10000(freshPrice / lastIndex - 1) * 10000d, "bp",
+                        "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
+                        openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
+                        "IDX chg: ", r10000(lastIndex / openIndex - 1),
                         "waitT/last2Diff:", waitTimeInSeconds, milliDiffLastTwoOrders, "msg:", msg));
                 openDeviationDirection = Direction.Short;
             }
@@ -1406,7 +1408,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         //conservative at open, let opentrader do the job. Aggressive after open (or always passive, depends).
         // but definitely conservative at open
-        if (lt.isBefore(LocalTime.of(9, 40)) && numOrders % 2 == 0) {
+        if (numOrders % 2 == 0) {
             buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Long));
             sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Short));
         }
@@ -1428,11 +1430,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
-                        "buy px: ", buyPrice,
+                        "#", numOrders, "buy limit: ", buyPrice,
+                        "indexLast/fut/pd: ", r(indexLast), freshPrice,
+                        r10000(freshPrice / indexLast - 1) * 10000d, " bp",
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
-                        "indexLast/fut/pd: ", r(indexLast), freshPrice, r10000(freshPrice / indexLast - 1),
                         "waitT, lastTwoTDiff ", hiloWaitTimeSeconds, milliBetweenLast2Trades,
-                        "max/min/2dp/pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
+                        "max/min/2dp%/pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50HiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && indexLast < minSoFar && a50HiLoDirection != Direction.Short) {
                 sellQ = (_2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI) ? 2 : 1;
@@ -1441,11 +1444,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
-                        "sell px: ", sellPrice,
+                        "#", numOrders, "sell limit: ", sellPrice,
+                        "indexLast/fut/pd: ", r(indexLast), freshPrice,
+                        r10000(freshPrice / indexLast - 1)*10000d, " bp",
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
-                        "indexLast/fut/pd: ", r(indexLast), freshPrice, r10000(freshPrice / indexLast - 1),
                         "waitT, lastTwoTDiff ", hiloWaitTimeSeconds, milliBetweenLast2Trades,
-                        "max/min/2dp/pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
+                        "max/min/2dp%/pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50HiLoDirection = Direction.Short;
             }
         }
