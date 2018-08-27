@@ -1112,7 +1112,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         LocalDateTime lastOpenTime = getLastOrderTime(FUT_OPEN);
 
-        if (SECONDS.between(lastOpenTime, nowMilli) >= 45) {
+        if (SECONDS.between(lastOpenTime, nowMilli) >= 60) {
             if (!noMoreBuy.get() && last > maxP && _2dayPerc < 50 && (_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO)
                     && currDelta < deltaTgt) {
                 int id = autoTradeID.incrementAndGet();
@@ -1291,10 +1291,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double sellPrice = freshPrice;
         String msg = "";
 
-        if (numOrdersOpenDev % 2 == 0) {
+        // Aggressive at the open, aggressive when battling around open
+        //conservative later when markets are supposed to remain calm.
+        if (lt.isAfter(LocalTime.of(9, 40)) && numOrdersOpenDev % 2 == 0) {
             buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Long));
             sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Short));
-            msg = " conservative on even ";
+            msg = " conservative on opening, even trades ";
         }
 
         if (SECONDS.between(lastOpenDevTradeTime, nowMilli) >= waitTimeInSeconds) {
@@ -1337,6 +1339,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int pmchy = getPmchy();
         double freshPrice = futPriceMap.get(FutType.FrontFut);
         int hiloWaitTimeSeconds;
+        OrderStatus lastStatus = getLastOrderStatusForType(CHINA_HILO);
 
         if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;
@@ -1392,10 +1395,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" china hilo exceed max");
             return;
         }
+
+        if (numOrders > 0L && lastStatus != OrderStatus.Filled) {
+            pr(lt, " last hilo order not filled ");
+            return;
+        }
+
         double buyPrice = freshPrice;
         double sellPrice = freshPrice;
 
-        if (numOrders % 2 == 0) {
+        //conservative at open, let opentrader do the job. Aggressive after open.
+        if (lt.isBefore(LocalTime.of(9, 40)) && numOrders % 2 == 0) {
             buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Long));
             sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Short));
         }
