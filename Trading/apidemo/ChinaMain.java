@@ -39,6 +39,7 @@ import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.ChinaPosition.refreshButton;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
+import static apidemo.XuTraderHelper.checkTimeRangeBool;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static utility.Utility.pr;
 
@@ -466,8 +467,6 @@ public final class ChinaMain implements IConnectionHandler {
                     public void componentShown(ComponentEvent componentEvent) {
                         super.componentShown(componentEvent);
                         Timer t = new Timer(3000, ae -> {
-                            jd1.setVisible(false);
-                            jd1.dispose();
                             if (!pane.getValue().equals(JOptionPane.NO_OPTION)) {
                                 ses.schedule(() -> {
                                     pr(" fetching data ");
@@ -476,7 +475,9 @@ public final class ChinaMain implements IConnectionHandler {
                                     startIBHK.doClick();
 
                                     pr(" hib ");
-                                    Hibtask.loadHibGenPrice();
+                                    if (!checkTimeRangeBool(LocalTime.now(), 8, 59, 9, 30)) {
+                                        Hibtask.loadHibGenPrice();
+                                    }
                                     ChinaData.loadHibernateYesterday();
 
                                     pr(" pos ");
@@ -488,6 +489,7 @@ public final class ChinaMain implements IConnectionHandler {
                                     pr(" mon ");
                                     ChinaKeyMonitor.refreshButton.doClick();
                                     ChinaKeyMonitor.computeButton.doClick();
+                                    pr(" xu ");
                                     xutrader.openingProcess();
                                 }, 1, TimeUnit.MILLISECONDS);
 
@@ -498,6 +500,8 @@ public final class ChinaMain implements IConnectionHandler {
                                     xutrader.openingRefresh();
                                 }, 5, TimeUnit.SECONDS);
                             }
+                            jd1.setVisible(false);
+                            jd1.dispose();
                         });
                         t.setRepeats(false);
                         t.start();

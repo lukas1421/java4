@@ -221,7 +221,7 @@ public class ApiController implements EWrapper {
             }
         }
 
-        public static class ChinaMainHandler implements IConnectionHandler {
+        class ChinaMainHandler implements IConnectionHandler {
 
             @Override
             public void connected() {
@@ -485,7 +485,7 @@ public class ApiController implements EWrapper {
             @Override
             public void accountSummary(String account, AccountSummaryTag tag, String value, String currency) {
                 String output = getStrCheckNull(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
-                        ,account, tag, value, currency);
+                        , account, tag, value, currency);
                 pr("Account Pnl: ", output, "**********************");
                 XUTrader.updateLog(str("Account pnl", output));
                 XUTrader.currentIBNAV = Double.parseDouble(value);

@@ -1785,7 +1785,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    public static double getDeltaTarget(LocalDateTime nowMilli, int pmchy) {
+    private static double getDeltaTarget(LocalDateTime nowMilli, int pmchy) {
         double baseDelta = _20DayMA == MASentiment.Bearish ? BEAR_BASE_DELTA : BULL_BASE_DELTA;
         double pmchgDelta = (pmchy < -20 ? 1 : (pmchy > 20 ? -0.5 : 0)) * PMCHY_DELTA * Math.abs(pmchy) / 100.0;
         double weekdayDelta = getWeekdayDeltaAdjustmentLdt(nowMilli);
@@ -1838,6 +1838,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
+
+        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
+            pr(" smashort size long size not enough ");
+            return;
+        }
+
         double maShortLast = smaShort.lastEntry().getValue();
         double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
         double maLongLast = smaLong.lastEntry().getValue();
@@ -1859,12 +1865,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr(" current PD ", r10000(getPD(freshPrice)));
             pr("delta base,pm,weekday,target:", baseDelta, pmchgDelta, weekdayDelta, deltaTarget);
             pr("perc avg buy sell ", avgBuy, avgSell);
-        }
-
-
-        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            pr(" smashort size long size not enough ");
-            return;
         }
 
 
