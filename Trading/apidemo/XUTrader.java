@@ -1339,12 +1339,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Long));
             sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Short));
             msg = " conservative on opening, even trades ";
+        } else {
+            msg = " aggressive on closing trades ";
         }
 
         if (SECONDS.between(lastOpenDevTradeTime, nowMilli) >= waitTimeInSeconds) {
             if (!noMoreBuy.get() && lastIndex > openIndex && openDeviationDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(buyPrice, buySize);
+                Order o = placeBidLimit(buyPrice, buySize * OPENDEV_BASE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open dev buy", globalIdOrderMap.get(id),
@@ -1359,7 +1361,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 openDeviationDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(sellPrice, sellSize);
+                Order o = placeOfferLimit(sellPrice, sellSize * OPENDEV_BASE_SIZE);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open dev sell", globalIdOrderMap.get(id)
