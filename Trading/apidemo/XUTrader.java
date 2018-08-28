@@ -1125,6 +1125,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int _2dayPerc = getPercentileForLast(fut);
 
         pr("fut open trader " + futPrice);
+        pr(" curDelta/delta target ", currDelta, deltaTgt);
         LocalTime lastKey = futPrice.lastKey();
 
         double maxP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
@@ -2195,9 +2196,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
                 if (priceMapBarDetail.containsKey(name) && ldt.toLocalDate().equals(LocalDate.now())
                         && ldt.toLocalTime().isAfter(LocalTime.of(8, 59))) {
-                    priceMapBarDetail.get(name).put(ldt.toLocalTime(), close);
-                }
 
+                    if (priceMapBarDetail.get(name).size() > 0) {
+                        if (ldt.toLocalTime().isBefore(priceMapBarDetail.get(name).firstKey())) {
+                            priceMapBarDetail.get(name).put(ldt.toLocalTime(), close);
+                        }
+                    } else {
+                        priceMapBarDetail.get(name).put(ldt.toLocalTime(), close);
+                    }
+                }
             }
         } else {
             pr(str(date, open, high, low, close));
