@@ -15,6 +15,7 @@ import controller.Formats;
 import graph.GraphIndustry;
 import historical.HistChinaStocks;
 import historical.Request;
+import saving.Hibtask;
 import util.*;
 import util.IConnectionConfiguration.DefaultConnectionConfiguration;
 import utility.Utility;
@@ -34,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
+import static apidemo.ChinaPosition.refreshButton;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static utility.Utility.pr;
@@ -217,7 +219,6 @@ public final class ChinaMain implements IConnectionHandler {
 
             ses.scheduleAtFixedRate(chinaOption, 0, 5, SECONDS);
             ChinaOption.refresh();
-
         });
 
         JButton loadYesterday = new JButton("Load Yest");
@@ -443,7 +444,36 @@ public final class ChinaMain implements IConnectionHandler {
                     M_CONTROLLER.reqAccountSummary("All", tags
                             , new ApiController.IAccountSummaryHandler.AccountInfoHandler());
                 }, 0, 1, TimeUnit.MINUTES);
-                ;
+
+                ses.schedule(() -> {
+
+                    pr(" fetching data ");
+                    getSinaData.doClick();
+                    loadYesterday.doClick();
+                    startIBHK.doClick();
+
+                    pr(" hib ");
+                    Hibtask.loadHibGenPrice();
+                    ChinaData.loadHibernateYesterday();
+
+                    pr(" pos ");
+                    ChinaPosition.getOpenPositionsNormal();
+                    ChinaPosition.getOpenPositionsFromMargin();
+                    CompletableFuture.runAsync(ChinaPosition::updatePosition)
+                            .thenRun(ChinaPosition::getOpenTradePositionForFuture);
+
+                    pr(" mon ");
+                    ChinaKeyMonitor.refreshButton.doClick();
+                    ChinaKeyMonitor.computeButton.doClick();
+                }, 1, TimeUnit.SECONDS);
+
+                ses.schedule(() -> {
+                    refreshButton.doClick();
+                    ChinaPosition.filterButton.doClick();
+                    ChinaPosition.autoUpdateButton.doClick();
+                    pr(" refreshing china pos");
+                }, 5, TimeUnit.SECONDS);
+
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
             }

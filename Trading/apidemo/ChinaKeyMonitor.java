@@ -81,6 +81,9 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
     private static final GraphMonitor GRAPH17 = GraphMonitorFactory.generate(17);
     private static final GraphMonitor GRAPH18 = GraphMonitorFactory.generate(18);
 
+    static JButton refreshButton;
+    static JButton computeButton;
+
     ChinaKeyMonitor() {
 
         readSharpeFromFile("sharpeOutputYtd.txt", topSharpeMapYtd);
@@ -378,9 +381,9 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         timeLabel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         timeLabel.setForeground(Color.black);
 
-        JButton computeButton = new JButton("Compute");
+        computeButton = new JButton("Compute");
         JButton stopComputeButton = new JButton("Stop");
-        JButton refreshButton = new JButton("Refresh");
+        refreshButton = new JButton("Refresh");
 
         JLabel displayWhatLabel = new JLabel("WHAT");
         JLabel durationLabel = new JLabel("WHEN");

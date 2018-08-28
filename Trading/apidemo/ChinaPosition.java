@@ -41,19 +41,24 @@ import java.util.stream.Stream;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaMain.currentTradingDate;
+import static apidemo.ChinaPosition.costMap;
 import static apidemo.ChinaStock.*;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
 
-public class ChinaPosition extends JPanel implements HistoricalHandler {
+public class ChinaPosition extends JPanel {
 
+    private static ChinaPositionHistHandler posHandler = new ChinaPositionHistHandler();
+    static JButton filterButton;
+    static JButton refreshButton;
+    static JToggleButton autoUpdateButton;
     static volatile Set<String> uniqueKeySet = new HashSet<>();
     static String line;
     private static AtomicBoolean includeExpired = new AtomicBoolean(true);
     public volatile static Map<String, Integer> openPositionMap = new HashMap<>();
     public volatile static Map<String, Integer> currentPositionMap = new HashMap<>();
-    private static Map<String, Double> costMap = new HashMap<>();
+    static Map<String, Double> costMap = new HashMap<>();
     public volatile static Map<String, ConcurrentSkipListMap<LocalTime, TradeBlock>> tradesMap = new ConcurrentHashMap<>();
     private static Map<String, ConcurrentSkipListMap<LocalTime, Double>> tradePnlMap = new ConcurrentHashMap<>();
     public static volatile HashMap<String, Double> wtdMaxMap = new HashMap<>();
@@ -89,7 +94,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     //static volatile LinkedList<String> chg5m = new LinkedList<>();
     //static volatile LinkedList<String> topKiyodo = new LinkedList<>();
 
-    private static GraphPnl gPnl = new GraphPnl();
+    static GraphPnl gPnl = new GraphPnl();
 
     private final int OPEN_POS_COL = 2;
     private final int BOT_POS_COL = 13;
@@ -103,7 +108,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     private static final Predicate<Map.Entry<String, ?>> FUT_PRED = m -> m.getKey().startsWith("SGXA50");
     private static final Predicate<Map.Entry<String, ?>> HK_PRED = e -> isHKStock(e.getKey());
 
-    private static volatile Predicate<Map.Entry<String, ?>> GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
+    static volatile Predicate<Map.Entry<String, ?>> GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
     private static volatile UpdateFrequency updateFreq = UpdateFrequency.oneSec;
 
     @Override
@@ -185,7 +190,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         tablePanel.add(scroll);
 
         JPanel controlPanel = new JPanel();
-        JButton refreshButton = new JButton("Refresh");
+        refreshButton = new JButton("Refresh");
         JButton getOpenButton = new JButton("getOpen");
         JButton getCurrentButton = new JButton("getCurrent");
         JButton getWtdMaxMinButton = new JButton("getWtdMaxMin");
@@ -208,13 +213,14 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 
         getCurrentButton.addActionListener(l -> {
             //symbolNames.forEach((String name) -> tradesMap.put(name, new ConcurrentSkipListMap<>()));
-            CompletableFuture.runAsync(ChinaPosition::updatePosition).thenRun(this::getOpenTradePositionForFuture);
+            CompletableFuture.runAsync(ChinaPosition::updatePosition)
+                    .thenRun(ChinaPosition::getOpenTradePositionForFuture);
             //getCurrentPositionNormal();
             //getCurrentPositionMargin();
         });
 
         getWtdMaxMinButton.addActionListener(l -> getWtdMaxMin());
-        JButton filterButton = new JButton("Active Only");
+        filterButton = new JButton("Active Only");
         sorter = (TableRowSorter<BarModel_POS>) tab.getRowSorter();
 
         filterButton.addActionListener(l -> {
@@ -234,7 +240,8 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         JRadioButton rb1 = new JRadioButton("Trade", true);
         JRadioButton rb2 = new JRadioButton("Buy Sell", false);
 
-        JToggleButton autoUpdateButton = new JToggleButton("Auto Update");
+        autoUpdateButton = new JToggleButton("Auto Update");
+        //autoUpdateButton.setSelected(true);
 
         autoUpdateButton.addActionListener(l -> {
             if (autoUpdateButton.isSelected()) {
@@ -353,6 +360,10 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         getWtdMaxMin();
     }
 
+    static void refreshTable() {
+        m_model.fireTableDataChanged();
+    }
+
     private static void getWtdMaxMin() {
         String line1;
         List<String> res;
@@ -378,7 +389,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
     private void refreshPositions() {
-        CompletableFuture.runAsync(ChinaPosition::updatePosition).thenRun(this::getOpenTradePositionForFuture);
+        CompletableFuture.runAsync(ChinaPosition::updatePosition).thenRun(ChinaPosition::getOpenTradePositionForFuture);
     }
 
     @SuppressWarnings("unused")
@@ -612,11 +623,11 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return openDelta + tradedDelta;
     }
 
-    public static boolean isChinaStock(String s) {
+    static boolean isChinaStock(String s) {
         return s.startsWith("sz") || s.startsWith("sh");
     }
 
-    public static boolean isHKStock(String s) {
+    static boolean isHKStock(String s) {
         return s.startsWith("hk");
     }
 
@@ -676,7 +687,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         return res;
     }
 
-    private void getOpenTradePositionForFuture() {
+    static void getOpenTradePositionForFuture() {
         //pr(" get open trade position for future " + LocalTime.now());
         uniqueKeySet = new HashSet<>();
 
@@ -692,7 +703,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         ChinaMain.controller().reqPositions(new IBPositionHandler());
         ChinaMain.controller().reqExecutions(new ExecutionFilter(), new IBPosTradesHandler());
         ChinaMain.GLOBAL_REQ_ID.addAndGet(5);
-        ChinaMain.controller().getSGXA50Historical2(ChinaMain.GLOBAL_REQ_ID.get(), this);
+        ChinaMain.controller().getSGXA50Historical2(ChinaMain.GLOBAL_REQ_ID.get(), posHandler);
 
 //        ChinaPosition.xuBotPos = ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.summingInt(e
 //                -> ((Trade) e.getValue()).getSize()));
@@ -703,7 +714,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
 //        openPositionMap.put("SGXA50", xuOpenPostion);
     }
 
-    private static void refreshIBPosition() {
+    static void refreshIBPosition() {
         pr(" refreshing future ");
         for (FutType f : FutType.values()) {
 //            if (f == FutType.PreviousFut && currentTradingDate.equals(getExpiredFutDate())) {
@@ -768,53 +779,53 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
     }
 
 
-    @Override
-    public void handleHist(String name, String date, double open, double high, double low, double close) {
+//    @Override
+//    public void handleHist(String name, String date, double open, double high, double low, double close) {
+//
+//        if (!date.startsWith("finished")) {
+//            Date dt = new Date();
+//            try {
+//                dt = new Date(Long.parseLong(date) * 1000);
+//            } catch (DateTimeParseException ex) {
+//                pr(" date format problem " + date);
+//            }
+//            Calendar cal = Calendar.getInstance();
+//            cal.setTime(dt);
+//            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1,
+//                    cal.get(Calendar.DAY_OF_MONTH));
+//            LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+//
+//            if (name.equalsIgnoreCase("SGXA50PR")) {
+//                if (ld.equals(currentTradingDate) && lt.isAfter(LocalTime.of(8, 59))) {
+//                    priceMapBar.get("SGXA50PR").put(lt, new SimpleBar(open, high, low, close));
+//                }
+//            }
+//
+//            if (lt.equals(LocalTime.of(14, 59)) && !ld.equals(currentTradingDate)) {
+//                ChinaStock.closeMap.put(name, close);
+////                pr(" Trading date " + currentTradingDate
+////                        + " checking close " + lt + " " + name + " " + close);
+//            }
+//
+//            if (((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
+//                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
+//                if (lt.equals(LocalTime.of(9, 0))) {
+//                    openMap.put(name, open);
+//                }
+//            }
+//        } else {
+//            pr(str(date, open, high, low, close));
+//        }
+//    }
+//
+//    @Override
+//    public void actionUponFinish(String name) {
+//        costMap.put(name, closeMap.getOrDefault(name, 0.0));
+////        pr(str(" finished in china pos + costmap just updated is ", name, costMap.get(name)
+////                , closeMap.getOrDefault(name, 0.0)));
+//    }
 
-        if (!date.startsWith("finished")) {
-            Date dt = new Date();
-            try {
-                dt = new Date(Long.parseLong(date) * 1000);
-            } catch (DateTimeParseException ex) {
-                pr(" date format problem " + date);
-            }
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(dt);
-            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1,
-                    cal.get(Calendar.DAY_OF_MONTH));
-            LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
-
-            if (name.equalsIgnoreCase("SGXA50PR")) {
-                if (ld.equals(currentTradingDate) && lt.isAfter(LocalTime.of(8, 59))) {
-                    priceMapBar.get("SGXA50PR").put(lt, new SimpleBar(open, high, low, close));
-                }
-            }
-
-            if (lt.equals(LocalTime.of(14, 59)) && !ld.equals(currentTradingDate)) {
-                ChinaStock.closeMap.put(name, close);
-//                pr(" Trading date " + currentTradingDate
-//                        + " checking close " + lt + " " + name + " " + close);
-            }
-
-            if (((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
-                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
-                if (lt.equals(LocalTime.of(9, 0))) {
-                    openMap.put(name, open);
-                }
-            }
-        } else {
-            pr(str(date, open, high, low, close));
-        }
-    }
-
-    @Override
-    public void actionUponFinish(String name) {
-        costMap.put(name, closeMap.getOrDefault(name, 0.0));
-//        pr(str(" finished in china pos + costmap just updated is ", name, costMap.get(name)
-//                , closeMap.getOrDefault(name, 0.0)));
-    }
-
-    private static void getOpenPositionsNormal() {
+    static void getOpenPositionsNormal() {
 
         //pr(" get open position from normal ");
 
@@ -859,7 +870,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
     }
 
-    private static void getOpenPositionsFromMargin() {
+    static void getOpenPositionsFromMargin() {
         pr(" get open position from margin ");
 
         int todaySoldCol = 0;
@@ -1091,7 +1102,7 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
     }
 
-    private static void updatePosition() {
+    static void updatePosition() {
         ChinaData.priceMapBar.keySet().forEach((String name) -> tradesMap.put(name, new ConcurrentSkipListMap<>()));
         getOpenPositionsNormal();
         getCurrentPositionNormal();
@@ -1563,6 +1574,54 @@ public class ChinaPosition extends JPanel implements HistoricalHandler {
         }
 
         int updateSec;
+    }
+}
+
+class ChinaPositionHistHandler implements HistoricalHandler {
+    @Override
+    public void handleHist(String name, String date, double open, double high, double low, double close) {
+
+        if (!date.startsWith("finished")) {
+            Date dt = new Date();
+            try {
+                dt = new Date(Long.parseLong(date) * 1000);
+            } catch (DateTimeParseException ex) {
+                pr(" date format problem " + date);
+            }
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(dt);
+            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1,
+                    cal.get(Calendar.DAY_OF_MONTH));
+            LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+
+            if (name.equalsIgnoreCase("SGXA50PR")) {
+                if (ld.equals(currentTradingDate) && lt.isAfter(LocalTime.of(8, 59))) {
+                    priceMapBar.get("SGXA50PR").put(lt, new SimpleBar(open, high, low, close));
+                }
+            }
+
+            if (lt.equals(LocalTime.of(14, 59)) && !ld.equals(currentTradingDate)) {
+                ChinaStock.closeMap.put(name, close);
+//                pr(" Trading date " + currentTradingDate
+//                        + " checking close " + lt + " " + name + " " + close);
+            }
+
+            if (((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
+                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
+                if (lt.equals(LocalTime.of(9, 0))) {
+                    openMap.put(name, open);
+                }
+            }
+        } else {
+            pr(str(date, open, high, low, close));
+        }
+    }
+
+    @Override
+    public void actionUponFinish(String name) {
+        costMap.put(name, closeMap.getOrDefault(name, 0.0));
+//        pr(str(" finished in china pos + costmap just updated is ", name, costMap.get(name)
+//                , closeMap.getOrDefault(name, 0.0)));
     }
 }
 
