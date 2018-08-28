@@ -1413,17 +1413,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
 
-        long milliBetweenLast2Trades = lastTwoOrderMilliDiff(CHINA_HILO);
-        long milliSinceLastTrade = timePrevOrderMilliDiff(CHINA_HILO, nowMilli);
+        long tBtwnLast2Trades = lastTwoOrderMilliDiff(CHINA_HILO);
+        long tSinceLastTrade = timePrevOrderMilliDiff(CHINA_HILO, nowMilli);
 
-        if (milliBetweenLast2Trades < 10000) {
+        if (tBtwnLast2Trades < 10000) {
             hiloWaitTimeSeconds = 60;
         } else {
             hiloWaitTimeSeconds = 10;
         }
 
         if (numOrders % 2 == 0) {
-            if (milliSinceLastTrade < 60000) {
+            if (tSinceLastTrade < 60000) {
                 HILO_BASE_SIZE = 1;
             } else {
                 HILO_BASE_SIZE = 2;
@@ -1484,10 +1484,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
                         "#", numOrders, "buy limit: ", buyPrice,
-                        "indexLast/fut/pd: ", r(indexLast), freshPrice,
+                        "indexLast/fut/pd/Base Size: ", r(indexLast), freshPrice, HILO_BASE_SIZE,
                         Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
-                        "waitT, lastTwoTDiff ", hiloWaitTimeSeconds, milliBetweenLast2Trades,
+                        "waitT, lastTwoTDiff, tSinceLast ", hiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
                         "max/min/2dp%/pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50HiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && indexLast < minSoFar && a50HiLoDirection != Direction.Short) {
@@ -1498,10 +1498,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
                         "#", numOrders, "sell limit: ", sellPrice,
-                        "indexLast/fut/pd: ", r(indexLast), freshPrice,
+                        "indexLast/fut/pd/Base size: ", r(indexLast), freshPrice, HILO_BASE_SIZE,
                         Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
-                        "waitT, lastTwoTDiff ", hiloWaitTimeSeconds, milliBetweenLast2Trades,
+                        "waitT, lastTwoTDiff, tSinceLast ", hiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
                         "max/min/2dp%/pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50HiLoDirection = Direction.Short;
             }
