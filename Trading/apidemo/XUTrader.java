@@ -111,7 +111,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static volatile AtomicBoolean manualOpenDeviationOn = new AtomicBoolean(false);
     private static final long PREFERRED_OPEN_DEV_SIZE = 5;
     private static final long MAX_OPEN_DEV_SIZE = 6;
+    private static volatile int OPENDEV_BASE_SIZE = 1;
 
+
+    //hilo
+    private static volatile int HILO_BASE_SIZE = 1;
 
     //size
     private static final int CONSERVATIVE_SIZE = 1;
@@ -1286,11 +1290,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long numOrdersOpenDev = getOrderSizeForTradeType(OPEN_DEVIATION);
         LocalDateTime lastOpenDevTradeTime = getLastOrderTime(OPEN_DEVIATION);
         long milliDiffLastTwoOrders = lastTwoOrderMilliDiff(OPEN_DEVIATION);
+        long timeSinceLastTrade = timePrevOrderMilliDiff(OPEN_DEVIATION, nowMilli);
 
         if (milliDiffLastTwoOrders < 10000) {
             waitTimeInSeconds = defaultWaitTime;
         } else {
             waitTimeInSeconds = 10; //change this to 0 if working properly
+        }
+
+        if (numOrdersOpenDev % 2 == 0) {
+            if (timeSinceLastTrade < 60000) {
+                OPENDEV_BASE_SIZE = 1;
+            } else {
+                OPENDEV_BASE_SIZE = 2;
+            }
         }
 
         int buySize = 1;
@@ -1312,6 +1325,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (numOrdersOpenDev >= MAX_OPEN_DEV_SIZE) {
             return;
         }
+
 
         double buyPrice = freshPrice;
         double sellPrice = freshPrice;
@@ -1400,12 +1414,22 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .orElse(LocalTime.MIN);
 
         long milliBetweenLast2Trades = lastTwoOrderMilliDiff(CHINA_HILO);
+        long milliSinceLastTrade = timePrevOrderMilliDiff(CHINA_HILO, nowMilli);
 
         if (milliBetweenLast2Trades < 10000) {
             hiloWaitTimeSeconds = 60;
         } else {
             hiloWaitTimeSeconds = 10;
         }
+
+        if (numOrders % 2 == 0) {
+            if (milliSinceLastTrade < 60000) {
+                HILO_BASE_SIZE = 1;
+            } else {
+                HILO_BASE_SIZE = 2;
+            }
+        }
+
 
         if (!manualSetDirection.get()) {
             if (lt.isBefore(LocalTime.of(9, 30))) {
@@ -1453,7 +1477,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (SECONDS.between(lastHiLoTradeTime, nowMilli) >= hiloWaitTimeSeconds && maxSoFar != 0.0 && minSoFar != 0.0) {
             if (!noMoreBuy.get() && indexLast > maxSoFar && a50HiLoDirection != Direction.Long) {
-                buyQ = (_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO) ? 3 : 2;
+                buyQ = ((_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO) ? 3 : 1) * HILO_BASE_SIZE;
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(buyPrice, buyQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
@@ -1467,7 +1491,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "max/min/2dp%/pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
                 a50HiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && indexLast < minSoFar && a50HiLoDirection != Direction.Short) {
-                sellQ = (_2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI) ? 2 : 1;
+                sellQ = ((_2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI) ? 2 : 1) * HILO_BASE_SIZE;
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(sellPrice, sellQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
@@ -2086,6 +2110,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     .filter(e -> e.isBefore(last))
                     .max(Comparator.comparing(Function.identity())).orElseThrow(() -> new IllegalArgumentException("no"));
             return ChronoUnit.MILLIS.between(secLast, last);
+        }
+    }
+
+    static long timePrevOrderMilliDiff(AutoOrderType type, LocalDateTime nowMilli) {
+        long numOrders = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type).count();
+        if (numOrders == 0) {
+            return Long.MAX_VALUE;
+        } else {
+            LocalDateTime last = globalIdOrderMap.entrySet().stream()
+                    .filter(e -> e.getValue().getOrderType() == type)
+                    .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                    .map(e -> e.getValue().getOrderTime()).orElseThrow(() -> new IllegalArgumentException("no"));
+            return ChronoUnit.MILLIS.between(last, nowMilli);
         }
     }
 

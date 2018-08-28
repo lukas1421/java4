@@ -489,6 +489,7 @@ public final class ChinaMain implements IConnectionHandler {
                                     pr(" mon ");
                                     ChinaKeyMonitor.refreshButton.doClick();
                                     ChinaKeyMonitor.computeButton.doClick();
+
                                     pr(" xu ");
                                     xutrader.openingProcess();
                                 }, 1, TimeUnit.MILLISECONDS);
