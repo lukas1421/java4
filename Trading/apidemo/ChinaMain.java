@@ -469,10 +469,12 @@ public final class ChinaMain implements IConnectionHandler {
                         Timer t = new Timer(3000, ae -> {
                             if (!pane.getValue().equals(JOptionPane.NO_OPTION)) {
                                 ses.schedule(() -> {
-                                    pr(" fetching data ");
-                                    getSinaData.doClick();
-                                    loadYesterday.doClick();
-                                    startIBHK.doClick();
+                                    SwingUtilities.invokeLater(() -> {
+                                        pr(" fetching data ");
+                                        getSinaData.doClick();
+                                        loadYesterday.doClick();
+                                        startIBHK.doClick();
+                                    });
 
                                     pr(" hib ");
                                     if (!checkTimeRangeBool(LocalTime.now(), 8, 59, 9, 30)) {
@@ -486,20 +488,35 @@ public final class ChinaMain implements IConnectionHandler {
                                     CompletableFuture.runAsync(ChinaPosition::updatePosition)
                                             .thenRun(ChinaPosition::getOpenTradePositionForFuture);
 
-                                    pr(" mon ");
-                                    ChinaKeyMonitor.refreshButton.doClick();
-                                    ChinaKeyMonitor.computeButton.doClick();
+                                    SwingUtilities.invokeLater(() -> {
+                                        pr(" mon ");
+                                        ChinaKeyMonitor.refreshButton.doClick();
+                                        ChinaKeyMonitor.computeButton.doClick();
+                                    });
 
                                     pr(" xu ");
                                     xutrader.openingProcess();
                                 }, 1, TimeUnit.MILLISECONDS);
 
                                 ses.schedule(() -> {
-                                    refreshButton.doClick();
-                                    ChinaPosition.filterButton.doClick();
-                                    ChinaPosition.autoUpdateButton.doClick();
+                                    SwingUtilities.invokeLater(() -> {
+                                        refreshButton.doClick();
+                                        ChinaPosition.filterButton.doClick();
+                                        ChinaPosition.autoUpdateButton.doClick();
+                                        //stocks
+                                        ChinaStock.computeButton.doClick();
+                                    });
                                     xutrader.openingRefresh();
                                 }, 5, TimeUnit.SECONDS);
+
+                                ses.schedule(() -> {
+                                    SwingUtilities.invokeLater(() -> {
+                                        ChinaStock.computeButton.doClick();
+                                        ChinaStock.graphButton.doClick();
+                                    });
+                                }, 10, TimeUnit.SECONDS);
+
+
                             }
                             jd1.setVisible(false);
                             jd1.dispose();

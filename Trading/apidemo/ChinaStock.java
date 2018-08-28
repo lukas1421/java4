@@ -206,6 +206,9 @@ public final class ChinaStock extends JPanel {
     private static final int MAXTYCOL = 97;
     private static final int A50_WEIGHT_COL = 119;
 
+    static JButton graphButton;
+    static JToggleButton computeButton;
+
     static ScheduledExecutorService ftes = Executors.newScheduledThreadPool(10);
 
     private static final ToDoubleFunction<String> DEFAULTOPEN = (String name) -> Optional.ofNullable(priceMapBar.get(name).ceilingEntry(Utility.AMOPENT))
@@ -386,6 +389,10 @@ public final class ChinaStock extends JPanel {
                 try {
                     if (SwingUtilities.isRightMouseButton(e)) {
                         sorter.setRowFilter(null);
+                        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+                        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
+                        sorter.setSortKeys(sortKeys);
+                        sorter.sort();
                         filterOn = false;
                     }
                 } catch (Exception x) {
@@ -516,7 +523,7 @@ public final class ChinaStock extends JPanel {
         tf28.setPreferredSize(new Dimension(32, 25));
         tf29.setPreferredSize(new Dimension(32, 25));
 
-        JButton graphButton = new JButton("Graph");
+        graphButton = new JButton("Graph");
         graphPanel = new JPanel() {
             @Override
             public Dimension getPreferredSize() {
@@ -581,13 +588,28 @@ public final class ChinaStock extends JPanel {
             }).thenRunAsync(() -> {
                 GraphIndustry.compute();
                 pureRefreshTable();
-                //this.repaint();
+                try {
+                    sorter.setRowFilter(null);
+                    List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+                    sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
+                    sorter.setSortKeys(sortKeys);
+                    sorter.sort();
+                    filterOn = false;
+                    tab.setRowSelectionInterval(0, 0);
+                } catch (Exception x) {
+                    x.printStackTrace();
+                    sorter = (TableRowSorter<BarModel_STOCK>) tab.getRowSorter();
+                }
             });
         });
 
-        JToggleButton computeButton = new JToggleButton("ComputeT");
+        computeButton = new
 
-        computeButton.addActionListener((ActionEvent al) -> {
+                JToggleButton("ComputeT");
+        computeButton.addActionListener((
+                ActionEvent al) ->
+
+        {
 
             if (computeButton.isSelected()) {
                 //pr(" begin T ");
@@ -677,7 +699,7 @@ public final class ChinaStock extends JPanel {
         jpRight.add(tf21);
         jpRight.add(Box.createHorizontalStrut(0));
         //jpRight.add(pmMaxTButton);
-        //jpRight.add(tf22);     
+        //jpRight.add(tf22);
         //jpRight.add(Box.createHorizontalStrut(0));
         //jpRight.add(dayMinTButton);
         //jpRight.add(tf23);
@@ -763,7 +785,9 @@ public final class ChinaStock extends JPanel {
         JToggleButton ratioBreakToggle = new JToggleButton("ratioBreakT");
         JToggleButton rangeBreakToggle = new JToggleButton("rngBreakT");
 
-        a50OnlyButton.addActionListener(l -> {
+        a50OnlyButton.addActionListener(l ->
+
+        {
             if (filterOn) {
                 sorter.setRowFilter(null);
                 filterOn = false;
@@ -782,7 +806,10 @@ public final class ChinaStock extends JPanel {
             }
         });
 
-        customFilter.addActionListener((ActionEvent al) -> {
+        customFilter.addActionListener((
+                ActionEvent al) ->
+
+        {
             if (!filterOn) {
                 List<RowFilter<Object, Object>> filters = new ArrayList<>();
                 if (sizeToggle.isSelected()) {
@@ -999,88 +1026,130 @@ public final class ChinaStock extends JPanel {
         jpMiddleBottom.add(pmReturnToggle);
         jpMiddleBottom.add(a50OnlyButton);
 
-        //jpMiddleBottom.add(peakToggle);  
+        //jpMiddleBottom.add(peakToggle);
         //jpMiddleBottom.add(ratioBreakToggle); jpMiddleBottom.add(rangeBreakToggle);
         jpMiddle.add(jpMiddleBottom);
         jp.add(jpMiddle, BorderLayout.WEST);
+
         setLayout(new BorderLayout());
+
         add(scroll, BorderLayout.WEST);
+
         add(jp, BorderLayout.NORTH);
+
         add(graphPanel, BorderLayout.CENTER);
 
-        tf11.addActionListener(ae -> {
+        tf11.addActionListener(ae ->
+
+        {
             rangeThresh = Double.parseDouble(tf11.getText());
             out.println(" range for display is " + rangeThresh);
         });
-        tf12.addActionListener(ae -> {
+        tf12.addActionListener(ae ->
+
+        {
             sizeThresh = Double.parseDouble(tf12.getText());
             out.println(" size for display is " + sizeThresh);
         });
-        tf13.addActionListener(ae -> {
+        tf13.addActionListener(ae ->
+
+        {
             rtnThresh = Double.parseDouble(tf13.getText());
             out.println(" return threashold for display is  " + rtnThresh);
         });
-        tf14.addActionListener(ae -> {
+        tf14.addActionListener(ae ->
+
+        {
             amMinTCeiling = Integer.parseInt(tf14.getText());
             out.println(" min Ceiling time is  " + amMinTCeiling);
         });
-        tf15.addActionListener(ae -> {
+        tf15.addActionListener(ae ->
+
+        {
             amMaxTFloor = Integer.parseInt(tf15.getText());
             out.println(" max floor  " + amMaxTFloor);
         });
-        tf16.addActionListener(ae -> {
+        tf16.addActionListener(ae ->
+
+        {
             openPCeiling = Integer.parseInt(tf16.getText());
             out.println(" open ceiling  " + openPCeiling);
         });
-        tf17.addActionListener(ae -> {
+        tf17.addActionListener(ae ->
+
+        {
             amClosePCeiling = Integer.parseInt(tf17.getText());
             out.println(" amClose Ceiling is  " + amClosePCeiling);
         });
-        tf18.addActionListener(ae -> {
+        tf18.addActionListener(ae ->
+
+        {
             first10Thresh = Double.parseDouble(tf18.getText());
             out.println("first10 threash is" + first10Thresh);
         });
-        tf19.addActionListener(ae -> {
+        tf19.addActionListener(ae ->
+
+        {
             minTYThresh = Integer.parseInt(tf19.getText());
             out.println(" minty thresh is  " + minTYThresh);
         });
-        tf20.addActionListener(ae -> {
+        tf20.addActionListener(ae ->
+
+        {
             maxTYFloor = Integer.parseInt(tf20.getText());
             out.println("maxty floor is " + maxTYFloor);
         });
-        tf21.addActionListener(ae -> {
+        tf21.addActionListener(ae ->
+
+        {
             percentileYCeiling = Integer.parseInt(tf21.getText());
             out.println("percentileY thresh is " + percentileYCeiling);
         });
-        tf22.addActionListener(ae -> {
+        tf22.addActionListener(ae ->
+
+        {
             pmMaxTYCeiling = Integer.parseInt(tf22.getText());
             out.println("pmmaxty ceilingis " + pmMaxTYCeiling);
         });
-        tf23.addActionListener(ae -> {
+        tf23.addActionListener(ae ->
+
+        {
             dayMinTFloor = Integer.parseInt(tf23.getText());
             out.println("day min floor is " + dayMinTFloor);
         });
-        tf24.addActionListener(ae -> {
+        tf24.addActionListener(ae ->
+
+        {
             vrFloor = Double.parseDouble(tf24.getText());
             out.println(" vr ceiling " + vrFloor);
         });
-        tf25.addActionListener(ae -> {
+        tf25.addActionListener(ae ->
+
+        {
             vrPM10Floor = Double.parseDouble(tf25.getText());
             out.println("vr pm floor " + vrPM10Floor);
         });
-        tf26.addActionListener(ae -> {
+        tf26.addActionListener(ae ->
+
+        {
             vrpFloor = Integer.parseInt(tf26.getText());
             out.println(" vrpfloor " + vrpFloor);
         });
-        tf27.addActionListener(ae -> {
+        tf27.addActionListener(ae ->
+
+        {
             vrMinTCeiling = Integer.parseInt(tf27.getText());
             out.println(" vrMinTCeiling " + vrMinTCeiling);
         });
-        tf28.addActionListener(ae -> {
+        tf28.addActionListener(ae ->
+
+        {
             ratioBreakFloor = Double.parseDouble(tf28.getText());
             out.println(" ratioBreakFloor " + ratioBreakFloor);
         });
-        tf29.addActionListener(ae -> {
+        tf29.addActionListener(ae ->
+
+        {
             rangeBreakFloor = Double.parseDouble(tf29.getText());
             out.println(" rangeBreakFloor " + rangeBreakFloor);
         });
@@ -2179,7 +2248,7 @@ public final class ChinaStock extends JPanel {
                 //业
                 case 2:
                     return industryNameMap.get(name);
-                //bench simple    
+                //bench simple
                 case 3:
                     return benchSimpleMap.getOrDefault(name, "");
 
@@ -2191,7 +2260,7 @@ public final class ChinaStock extends JPanel {
                 case 5:
                     return Utility.noZeroArrayGen(name, closeMap, openMap) ? round(1000d * (openMap.get(name) / closeMap.get(name) - 1)) / 10d : 0.0;
 
-                //rtn  
+                //rtn
                 case 6:
                     return Utility.noZeroArrayGen(name, priceMap, openMap, closeMap) && NORMAL_STOCK.test(name) ? round(1000d * (priceMap.get(name) /
                             closeMap.getOrDefault(name, openMap.getOrDefault(name, 0.0)) - 1)) / 10d : 0.0;
@@ -2201,7 +2270,7 @@ public final class ChinaStock extends JPanel {
                     return (NORMAL_STOCK.test(name) && LAST_KEY_AFTER.test(name, Utility.AMOPENT) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET))
                             ? (double) round(1000d * (priceMapBar.get(name).floorEntry(Utility.AMCLOSET).getValue().getClose() / DEFAULTOPEN.applyAsDouble(name) - 1)) / 10d : 0.0;
 
-                //PM 
+                //PM
                 case 8:
                     return (NORMAL_STOCK.test(name) && LAST_KEY_AFTER.test(name, Utility.PMOPENT))
                             ? (double) round(1000d * (priceMapBar.get(name).lastEntry().getValue().getClose()
@@ -2260,7 +2329,7 @@ public final class ChinaStock extends JPanel {
                     return (NORMAL_STOCK.test(name) && priceMapBar.get(name).firstKey().isBefore(Utility.AMCLOSET) && getAMMax(name) != 0.0)
                             ? round(1000d * log(priceMapBar.get(name).floorEntry(Utility.AMCLOSET).getValue().getClose() / getAMMax(name))) / 10d : 0.0;
 
-                //冲落差    
+                //冲落差
                 case 19:
                     return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)
                             && priceMapBar.get(name).firstKey().isBefore(Utility.AMCLOSET) && getAMMax(name) != 0.0)
@@ -2275,7 +2344,7 @@ public final class ChinaStock extends JPanel {
                 case 21:
                     return (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET) && LAST_KEY_AFTER.test(name, Utility.AMOPENT)) ? GETMAXTIMETOINT.applyAsInt(name, Utility.AM_PRED) : 930;
 
-                // pmMinT    
+                // pmMinT
                 case 22:
                     return (NORMAL_STOCK.test(name) && LAST_KEY_AFTER.test(name, Utility.PMOPENT)) ? GETMINTIMETOINT.applyAsInt(name, Utility.PM_PRED) : 1300;
 
@@ -2322,7 +2391,7 @@ public final class ChinaStock extends JPanel {
                     return 0.0;
                 //return getPMFirst10MaxMinTimeDiff(name);
 
-                //pm max return    
+                //pm max return
                 case 31:
                     return 0.0;
 //                    return (NORMAL_STOCK.test(name) && LAST_KEY_AFTER.test(name, Utility.PMOPENT))
@@ -2342,7 +2411,7 @@ public final class ChinaStock extends JPanel {
                     return 0.0;
                 //return (Utility.NO_ZERO.test(minMapY, name)) ? (int) min(100, round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
 
-                //P%Y    
+                //P%Y
                 case 34:
                     return 0.0;
                 //return getPercentileY(name);
@@ -2352,12 +2421,12 @@ public final class ChinaStock extends JPanel {
                     return 0.0;
                 //return getCHY(name);
 
-                //CLY 
+                //CLY
                 case 36:
                     return 0.0;
                 //return getCLY(name);
 
-                //HOY 
+                //HOY
                 case 37:
                     return 0.0;
                 //return getHOY(name);
@@ -2377,7 +2446,7 @@ public final class ChinaStock extends JPanel {
                     return 0.0;
                 //return getPMCOY(name);
 
-                //上下折Y  
+                //上下折Y
                 case 41:
                     return 0.0;
 //                    return (Utility.noZeroArrayGen(name, maxMapY, minMapY, priceMap, maxMap) && getRangeY(name) != 0.0)
@@ -2387,17 +2456,17 @@ public final class ChinaStock extends JPanel {
                 case 42:
                     return 0.0;
                 //return round(1000d * amFirst1Y.getOrDefault(name, 0.0)) / 10d;
-                //F10Y    
+                //F10Y
                 case 43:
                     return 0.0;
                 //return round(1000d * amFirst10Y.getOrDefault(name, 0.0)) / 10d;
 
-                //minTY    
+                //minTY
                 case 44:
                     return 0.0;
                 //return minTY.getOrDefault(name, 0);
 
-                // maxTY    
+                // maxTY
                 case 45:
                     return 0.0;
                 //return maxTY.getOrDefault(name, 0);
@@ -2417,7 +2486,7 @@ public final class ChinaStock extends JPanel {
                     return 0.0;
                 //return getRangeY(name);
 
-                // sizeY    
+                // sizeY
                 case 49:
                     return 0.0;
                 //return (Utility.NORMAL_MAP.test(sizeTotalMapYtd, name)) ? round(sizeTotalMapYtd.get(name).lastEntry().getValue()) : 0L;
@@ -2432,7 +2501,7 @@ public final class ChinaStock extends JPanel {
                     return 0.0;
 //                    return (Utility.noZeroArrayGen(name, maxMapY, minMapY, priceMap, maxMap))
 //                            ? (int) round(100d * log(priceMap.get(name) / maxMap.get(name)) / log(maxMapY.get(name) / minMapY.get(name))) : 0;
-                //ma20 
+                //ma20
                 case 52:
                     return ma20Map.getOrDefault(name, 0.0);
                 //return 0.0;
@@ -2443,7 +2512,7 @@ public final class ChinaStock extends JPanel {
                 case 53:
                     return (NORMAL_STOCK.test(name) && priceMapBar.get(name).lastKey().isAfter(Utility.AM929T)) ? GETMINTIMETOINT.applyAsInt(name, Utility.IS_OPEN_PRED) : 930;
 
-                //dayMaxT    
+                //dayMaxT
                 case 54:
                     return (NORMAL_STOCK.test(name) && priceMapBar.get(name).lastKey().isAfter(Utility.AM929T)) ? GETMAXTIMETOINT.applyAsInt(name, Utility.IS_OPEN_PRED) : 930;
 
@@ -2470,7 +2539,7 @@ public final class ChinaStock extends JPanel {
                 case 58:
                     return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) ? priceMapBar.get(name).get(Utility.AMOPENT).getOP() : 0;
 
-                //vrP%    
+                //vrP%
                 case 59:
                     return 0.0;
                 //return getVRPercentile(name);
@@ -2486,7 +2555,7 @@ public final class ChinaStock extends JPanel {
 //                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) ? priceMapBar.get(name).subMap(Utility.AMOPENT, true, Utility.AM940T, true)
 //                            .entrySet().stream().min(Utility.BAR_LOW).map(Entry::getKey).orElse(Utility.TIMEMAX) : Utility.AMOPENT;
 
-                // cypam 
+                // cypam
                 case 62:
                     return 0.0;
 
@@ -2503,12 +2572,12 @@ public final class ChinaStock extends JPanel {
                     }
                     return 0;
 
-                //openOpenJump 
+                //openOpenJump
                 case 64:
                     return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT) && Utility.NO_ZERO.test(openMap, name))
                             ? (int) round(1000d * (priceMapBar.get(name).get(Utility.AMOPENT).getOpen() / openMap.get(name) - 1)) / 10d : 0.0;
 
-                //寄    
+                //寄
                 case 65:
                     return (returnMap.containsKey(name) && weightMap.containsKey(name) && SinaStock.rtn != 0.0)
                             ? round(1000d * returnMap.get(name) * weightMap.get(name) / SinaStock.rtn) / 10d : 0.0;
@@ -2621,7 +2690,7 @@ public final class ChinaStock extends JPanel {
 //                    }
 //                    return Utility.PMCLOSET;
 
-                //ratioBreakRtn    
+                //ratioBreakRtn
                 case 80:
 //                    if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET) && LAST_KEY_AFTER.test(name, Utility.PMOPENT)) {
 //                        double retAM = getAMReturn(name);
@@ -2635,7 +2704,7 @@ public final class ChinaStock extends JPanel {
 //                        }
 //                    }
                     return 0.0;
-                //rangeBreakRtn    
+                //rangeBreakRtn
                 case 81:
 //                    if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET) && LAST_KEY_AFTER.test(name, Utility.PMOPENT)) {
 //                        double retAM = getAMReturn(name);
@@ -2666,7 +2735,7 @@ public final class ChinaStock extends JPanel {
                     return 0.0;
 //                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT))
 //                            ? priceMapBar.get(name).subMap(Utility.AMOPENT, Utility.AM940T).entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue).map(SimpleBar::getLow).orElse(0.0) : 0.0;
-                //f10_max   
+                //f10_max
                 case 84:
                     return 0.0;
 
@@ -2678,18 +2747,18 @@ public final class ChinaStock extends JPanel {
                     return 0.0;
 //                    return round(100d * ofNullable(ChinaSizeRatio.pmF10VRChgStandardizedMap.get(name)).orElse(0.0)) / 100d;
 
-                //vrPMF10    
+                //vrPMF10
                 case 86:
                     return 0.0;
 //                    return (Utility.NORMAL_MAP.test(sizeRatioMap, name) && sizeRatioMap.get(name).firstKey().isBefore(Utility.PMOPENT))
 //                            ? round(100d * sizeRatioMap.get(name).floorEntry(Utility.PM1310T).getValue() / sizeRatioMap.get(name).floorEntry(Utility.PMOPENT).getValue()) / 100d : 0.0;
 
-                //pm1stBreak    
+                //pm1stBreak
                 case 87:
                     return 0.0;
                 //return getPMFirstBreakTime(name);
 
-                // vrMnT    
+                // vrMnT
                 case 88:
                     return 0.0;
                 //return getVRMinT(name);
@@ -2704,7 +2773,7 @@ public final class ChinaStock extends JPanel {
                     return 0.0;
                 //return round((double) getVRMaxT(name) / (double) getVRMinT(name) * 100d);
 
-                //925R 
+                //925R
                 case 91:
                     return 0.0;
                 //return getVR(name, Utility.AM925T);
@@ -2714,7 +2783,7 @@ public final class ChinaStock extends JPanel {
                     return 0.0;
                 //return getVR(name, Utility.AMOPENT);
 
-                //935R    
+                //935R
                 case 93:
                     return 0.0;
 //                    return getVR(name, Utility.AM935T);
@@ -2761,7 +2830,7 @@ public final class ChinaStock extends JPanel {
                     return 0.0;
                 //return getMA20FirstFallTime(name);
 
-                //maBreakTime    
+                //maBreakTime
                 case 103:
                     return 0.0;
                 //return getMA20FirstBreakTime(name);
@@ -2804,7 +2873,7 @@ public final class ChinaStock extends JPanel {
 //                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT))
 //                            ? round(1000d * (priceMapBar.get(name).get(Utility.AMOPENT).getClose() / priceMapBar.get(name).get(Utility.AMOPENT).getOpen() - 1)) / 10d : 0.0;
 
-                //amC%  
+                //amC%
                 case 114:
 //                    if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET)) {
 //                        double max = GETMAX.applyAsDouble(name, Utility.AM_PRED);
