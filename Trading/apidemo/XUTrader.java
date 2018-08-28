@@ -1289,17 +1289,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         long numOrdersOpenDev = getOrderSizeForTradeType(OPEN_DEVIATION);
         LocalDateTime lastOpenDevTradeTime = getLastOrderTime(OPEN_DEVIATION);
-        long milliDiffLastTwoOrders = lastTwoOrderMilliDiff(OPEN_DEVIATION);
-        long timeSinceLastTrade = timePrevOrderMilliDiff(OPEN_DEVIATION, nowMilli);
 
-        if (milliDiffLastTwoOrders < 10000) {
+        long tBtwnLastTwoOrders = lastTwoOrderMilliDiff(OPEN_DEVIATION);
+        long tSinceLastOrder = tSincePrevOrderMilli(OPEN_DEVIATION, nowMilli);
+
+        if (tBtwnLastTwoOrders < 10000) {
             waitTimeInSeconds = defaultWaitTime;
         } else {
             waitTimeInSeconds = 10; //change this to 0 if working properly
         }
 
         if (numOrdersOpenDev % 2 == 0) {
-            if (timeSinceLastTrade < 60000) {
+            if (tSinceLastOrder < 60000) {
                 OPENDEV_BASE_SIZE = 1;
             } else {
                 OPENDEV_BASE_SIZE = 2;
@@ -1348,12 +1349,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open dev buy", globalIdOrderMap.get(id),
                         "#", numOrdersOpenDev, "buy limit:", buyPrice,
-                        "indexLast/fut/pd", r(lastIndex), freshPrice,
+                        "indexLast/fut/pd/Base Size", r(lastIndex), freshPrice, OPENDEV_BASE_SIZE,
                         Math.round(10000d * (freshPrice / lastIndex - 1)), "bp",
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
                         openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
                         "IDX chg: ", r10000(lastIndex / openIndex - 1),
-                        "wait/last2Diff:", waitTimeInSeconds, milliDiffLastTwoOrders, "msg:", msg));
+                        "wait/last2Diff/tSinceLast:", waitTimeInSeconds, tBtwnLastTwoOrders, tSinceLastOrder,
+                        "msg:", msg));
                 openDeviationDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
@@ -1362,12 +1364,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open dev sell", globalIdOrderMap.get(id)
                         , "#:", numOrdersOpenDev, "sell limit: ", sellPrice,
-                        "indexLast/fut/pd", r(lastIndex), freshPrice,
+                        "indexLast/fut/pd/Base Size", r(lastIndex), freshPrice, OPENDEV_BASE_SIZE,
                         Math.round(10000d * (freshPrice / lastIndex - 1)), "bp",
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
                         openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
                         "IDX chg: ", r10000(lastIndex / openIndex - 1),
-                        "waitT/last2Diff:", waitTimeInSeconds, milliDiffLastTwoOrders, "msg:", msg));
+                        "waitT/last2Diff/tSinceLast:", waitTimeInSeconds, tBtwnLastTwoOrders, tSinceLastOrder,
+                        "msg:", msg));
                 openDeviationDirection = Direction.Short;
             }
         }
@@ -1414,7 +1417,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .orElse(LocalTime.MIN);
 
         long tBtwnLast2Trades = lastTwoOrderMilliDiff(CHINA_HILO);
-        long tSinceLastTrade = timePrevOrderMilliDiff(CHINA_HILO, nowMilli);
+        long tSinceLastTrade = tSincePrevOrderMilli(CHINA_HILO, nowMilli);
 
         if (tBtwnLast2Trades < 10000) {
             hiloWaitTimeSeconds = 60;
@@ -2113,7 +2116,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    static long timePrevOrderMilliDiff(AutoOrderType type, LocalDateTime nowMilli) {
+    private static long tSincePrevOrderMilli(AutoOrderType type, LocalDateTime nowMilli) {
         long numOrders = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type).count();
         if (numOrders == 0) {
