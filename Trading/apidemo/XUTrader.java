@@ -1210,7 +1210,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalDateTime lastFTickTime = getLastOrderTime(FIRST_TICK);
 
         int buySize = 3;
-        int sellSize = 1;
+        int sellSize = 2;
 
         pr("firstTickTrader:open/last/ft/ftTime", r(open), r(indexLast), r(ftick), firstTickTime);
 
@@ -1221,7 +1221,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "1st tick buy", globalIdOrderMap.get(id),
-                        "open FT ftT", r(open), r(ftick), firstTickTime, " bid ask ", bidNow, askNow));
+                        "open/FT/T", r(open), r(ftick), firstTickTime, " bid ask ", bidNow, askNow));
             } else if (!noMoreSell.get() && ftick < open && _2dayPerc > 50 &&
                     (_2dayPerc > HI_PERC_WIDE || pmchy > PMCHY_HI)) {
                 int id = autoTradeID.incrementAndGet();
@@ -1229,7 +1229,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FIRST_TICK));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "1st tick sell", globalIdOrderMap.get(id),
-                        "open FT ftT", r(open), r(ftick), firstTickTime, " bid ask ", bidNow, askNow));
+                        "open/FT/T", r(open), r(ftick), firstTickTime, " bid ask ", bidNow, askNow));
             }
         }
     }
@@ -1319,7 +1319,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         // Aggressive at the open, aggressive when battling around open
         //conservative later when markets are supposed to remain calm.
-        if (lt.isAfter(LocalTime.of(9, 40)) && numOrdersOpenDev % 2 == 0) {
+        //lt.isAfter(LocalTime.of(9, 40)) &&
+        if (numOrdersOpenDev % 2 == 0) {
             buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Long));
             sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(lastIndex, Direction.Short));
             msg = " conservative on opening, even trades ";
@@ -1333,7 +1334,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open dev buy", globalIdOrderMap.get(id),
                         "#", numOrdersOpenDev, "buy limit:", buyPrice,
-                        "indexLast/fut/pd", lastIndex, freshPrice, r10000(freshPrice / lastIndex - 1) * 10000d, "bp",
+                        "indexLast/fut/pd", r(lastIndex), freshPrice,
+                        Math.round(10000d * (freshPrice / lastIndex - 1)), "bp",
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
                         openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
                         "IDX chg: ", r10000(lastIndex / openIndex - 1),
@@ -1346,7 +1348,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "open dev sell", globalIdOrderMap.get(id)
                         , "#:", numOrdersOpenDev, "sell limit: ", sellPrice,
-                        "indexLast/fut/pd", lastIndex, freshPrice, r10000(freshPrice / lastIndex - 1) * 10000d, "bp",
+                        "indexLast/fut/pd", r(lastIndex), freshPrice,
+                        Math.round(10000d * (freshPrice / lastIndex - 1)), "bp",
                         "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
                         openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
                         "IDX chg: ", r10000(lastIndex / openIndex - 1),
@@ -1458,7 +1461,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
                         "#", numOrders, "buy limit: ", buyPrice,
                         "indexLast/fut/pd: ", r(indexLast), freshPrice,
-                        r10000(freshPrice / indexLast - 1) * 10000d, " bp",
+                        Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
                         "waitT, lastTwoTDiff ", hiloWaitTimeSeconds, milliBetweenLast2Trades,
                         "max/min/2dp%/pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
@@ -1472,7 +1475,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
                         "#", numOrders, "sell limit: ", sellPrice,
                         "indexLast/fut/pd: ", r(indexLast), freshPrice,
-                        r10000(freshPrice / indexLast - 1) * 10000d, " bp",
+                        Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
                         "waitT, lastTwoTDiff ", hiloWaitTimeSeconds, milliBetweenLast2Trades,
                         "max/min/2dp%/pmchy ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy));
@@ -2197,13 +2200,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 if (priceMapBarDetail.containsKey(name) && ldt.toLocalDate().equals(LocalDate.now())
                         && ldt.toLocalTime().isAfter(LocalTime.of(8, 59))) {
 
-                    if (priceMapBarDetail.get(name).size() > 0) {
-                        if (ldt.toLocalTime().isBefore(priceMapBarDetail.get(name).firstKey())) {
-                            priceMapBarDetail.get(name).put(ldt.toLocalTime(), close);
-                        }
-                    } else {
-                        priceMapBarDetail.get(name).put(ldt.toLocalTime(), close);
-                    }
+//                    if (priceMapBarDetail.get(name).size() > 0) {
+//                        if (ldt.toLocalTime().isBefore(priceMapBarDetail.get(name).firstKey())) {
+//                            priceMapBarDetail.get(name).put(ldt.toLocalTime(), close);
+//                        }
+//                    } else {
+                    priceMapBarDetail.get(name).put(ldt.toLocalTime(), close);
+//                    }
                 }
             }
         } else {
