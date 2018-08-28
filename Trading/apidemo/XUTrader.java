@@ -48,6 +48,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         ApiController.ITradeReportHandler, ApiController.IOrderHandler, ApiController.ILiveOrderHandler
         , ApiController.IPositionHandler, ApiController.IConnectionHandler {
 
+    static JButton refreshButton;
+    static JButton computeButton;
+    static JButton processTradesButton;
+    static JButton graphButton;
+    static JToggleButton showTradesButton;
+
     private static MASentiment _20DayMA = MASentiment.Directionless;
     public static volatile double currentIBNAV = 0.0;
 
@@ -307,7 +313,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JButton level2Button = new JButton("level2");
         level2Button.addActionListener(l -> requestLevel2Data());
 
-        JButton refreshButton = new JButton("Refresh");
+        refreshButton = new JButton("Refresh");
 
         refreshButton.addActionListener(l -> {
             String time = (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).getSecond() != 0)
@@ -324,7 +330,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             repaint();
         });
 
-        JButton computeButton = new JButton("Compute");
+        computeButton = new JButton("Compute");
         computeButton.addActionListener(l -> {
             try {
                 getAPICon().reqXUDataArray();
@@ -409,7 +415,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JButton execButton = new JButton("Exec");
         execButton.addActionListener(l -> requestExecHistory());
 
-        JButton processTradesButton = new JButton("Process");
+        processTradesButton = new JButton("Process");
         processTradesButton.addActionListener(l -> ses2.scheduleAtFixedRate(() -> {
             SwingUtilities.invokeLater(() -> {
                 XUTrader.clearLog();
@@ -421,7 +427,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JButton getData = new JButton("Data");
         getData.addActionListener(l -> loadXU());
 
-        JButton graphButton = new JButton("graph");
+        graphButton = new JButton("graph");
         graphButton.addActionListener(l -> {
             xuGraph.setNavigableMap(futData.get(ibContractToFutType(activeFuture)), displayPred);
             xuGraph.refresh();
@@ -438,8 +444,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         });
 
-        JToggleButton showGraphButton = new JToggleButton("Show Trades");
-        showGraphButton.addActionListener(l -> showTrades.set(showGraphButton.isSelected()));
+        showTradesButton = new JToggleButton("Show Trades");
+        showTradesButton.addActionListener(l -> showTrades.set(showTradesButton.isSelected()));
 
         JButton cancelAllOrdersButton = new JButton("Cancel Orders");
         cancelAllOrdersButton.addActionListener(l -> {
@@ -558,7 +564,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         controlPanel2.add(processTradesButton);
         controlPanel2.add(getData);
         controlPanel2.add(graphButton);
-        controlPanel2.add(showGraphButton);
+        controlPanel2.add(showTradesButton);
         controlPanel2.add(showTodayOnly);
         controlPanel2.add(connectionLabel);
         controlPanel2.add(cancelAllOrdersButton);
@@ -672,6 +678,25 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         add(outputPanel);
         add(chartScroll);
     }
+
+    void openingProcess() {
+        pr(" xu opening process ");
+        apcon.reqPositions(this);
+        apcon.reqDeepMktData(activeFuture, 10, this);
+        refreshButton.doClick();
+        computeButton.doClick();
+        requestExecHistory();
+        //processTradesButton.doClick();
+        loadXU();
+        graphButton.doClick();
+        showTradesButton.doClick();
+    }
+
+    void openingRefresh() {
+        //refreshButton.doClick();
+        processTradesButton.doClick();
+    }
+
 
     static void set20DayBullBear() {
         String ticker = "sh000016";

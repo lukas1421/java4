@@ -23,6 +23,8 @@ import utility.Utility;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.time.LocalDate;
@@ -139,7 +141,7 @@ public final class ChinaMain implements IConnectionHandler {
         m_tabbedPanel.addTab("Size ytd", csdy);
 
         m_tabbedPanel.addTab("Connection", m_connectionPanel);
-        m_tabbedPanel.select("Data ");
+        m_tabbedPanel.select("Xu trader ");
 
         m_tabbedPanel.addTab(" HK Data", hkdata);
         m_tabbedPanel.addTab(" HK Stock", hkstock);
@@ -371,6 +373,9 @@ public final class ChinaMain implements IConnectionHandler {
         m_frame.setSize(1920, 1080);
         m_frame.setVisible(true);
         m_frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+
+        m_frame.setExtendedState(m_frame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+
         m_frame.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -412,6 +417,7 @@ public final class ChinaMain implements IConnectionHandler {
         m_frame10.setTitle("Pos");
         m_frame10.setSize(1920, 1080);
         m_frame10.setVisible(true);
+        m_frame10.setExtendedState(m_frame10.getExtendedState() | JFrame.MAXIMIZED_BOTH);
 
         JPanel ptfMonitor = new JPanel();
         ptfMonitor.setLayout(new BorderLayout());
@@ -420,7 +426,12 @@ public final class ChinaMain implements IConnectionHandler {
         m_frame11.setTitle("Mon");
         m_frame11.setSize(1920, 1080);
         m_frame11.setVisible(true);
+        m_frame11.setExtendedState(m_frame11.getExtendedState() | JFrame.MAXIMIZED_BOTH);
 
+        SwingUtilities.invokeLater(() -> {
+            m_frame.toFront();
+            m_frame.repaint();
+        });
         // make initial connection to local host, port 7496, client id 0, 4001 is for with IBAPI
         // m_controller.connect( "127.0.0.1", PORT_IBAPI, 0);
         // m_controller.connect( "127.0.0.1", 7496, 0);
@@ -445,35 +456,54 @@ public final class ChinaMain implements IConnectionHandler {
                             , new ApiController.IAccountSummaryHandler.AccountInfoHandler());
                 }, 0, 1, TimeUnit.MINUTES);
 
-                ses.schedule(() -> {
+                //auto process
+                JOptionPane pane = new JOptionPane("do u want auto start? ",
+                        JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION);
 
-                    pr(" fetching data ");
-                    getSinaData.doClick();
-                    loadYesterday.doClick();
-                    startIBHK.doClick();
+                JDialog jd1 = pane.createDialog(" select yes or no ");
+                jd1.addComponentListener(new ComponentAdapter() {
+                    @Override
+                    public void componentShown(ComponentEvent componentEvent) {
+                        super.componentShown(componentEvent);
+                        Timer t = new Timer(3000, ae -> {
+                            jd1.setVisible(false);
+                            jd1.dispose();
+                            if (!pane.getValue().equals(JOptionPane.NO_OPTION)) {
+                                ses.schedule(() -> {
+                                    pr(" fetching data ");
+                                    getSinaData.doClick();
+                                    loadYesterday.doClick();
+                                    startIBHK.doClick();
 
-                    pr(" hib ");
-                    Hibtask.loadHibGenPrice();
-                    ChinaData.loadHibernateYesterday();
+                                    pr(" hib ");
+                                    Hibtask.loadHibGenPrice();
+                                    ChinaData.loadHibernateYesterday();
 
-                    pr(" pos ");
-                    ChinaPosition.getOpenPositionsNormal();
-                    ChinaPosition.getOpenPositionsFromMargin();
-                    CompletableFuture.runAsync(ChinaPosition::updatePosition)
-                            .thenRun(ChinaPosition::getOpenTradePositionForFuture);
+                                    pr(" pos ");
+                                    ChinaPosition.getOpenPositionsNormal();
+                                    ChinaPosition.getOpenPositionsFromMargin();
+                                    CompletableFuture.runAsync(ChinaPosition::updatePosition)
+                                            .thenRun(ChinaPosition::getOpenTradePositionForFuture);
 
-                    pr(" mon ");
-                    ChinaKeyMonitor.refreshButton.doClick();
-                    ChinaKeyMonitor.computeButton.doClick();
-                }, 1, TimeUnit.SECONDS);
+                                    pr(" mon ");
+                                    ChinaKeyMonitor.refreshButton.doClick();
+                                    ChinaKeyMonitor.computeButton.doClick();
+                                    xutrader.openingProcess();
+                                }, 1, TimeUnit.MILLISECONDS);
 
-                ses.schedule(() -> {
-                    refreshButton.doClick();
-                    ChinaPosition.filterButton.doClick();
-                    ChinaPosition.autoUpdateButton.doClick();
-                    pr(" refreshing china pos");
-                }, 5, TimeUnit.SECONDS);
-
+                                ses.schedule(() -> {
+                                    refreshButton.doClick();
+                                    ChinaPosition.filterButton.doClick();
+                                    ChinaPosition.autoUpdateButton.doClick();
+                                    xutrader.openingRefresh();
+                                }, 5, TimeUnit.SECONDS);
+                            }
+                        });
+                        t.setRepeats(false);
+                        t.start();
+                    }
+                });
+                jd1.setVisible(true);
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
             }
