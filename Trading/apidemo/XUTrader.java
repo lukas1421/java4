@@ -1555,7 +1555,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             if (!noMoreBuy.get() && todayPerc < 1 && a50HiLoDirection == Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, 1);
+                int buyQ = 1;
+                if (lt.isAfter(LocalTime.of(13, 0)) && lt.isBefore(LocalTime.of(15, 0))) {
+                    buyQ = 2;
+                }
+                Order o = placeBidLimit(freshPrice, buyQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO_ACCU));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "hilo accu buy", globalIdOrderMap.get(id),
@@ -1743,9 +1747,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
             if (!noMoreBuy.get() && firstTick > open && _2dayFutPerc < 20 && (_2dayFutPerc < 1 || pmchy < PMCHY_LO)
                     && indexLast < open
-                    && lt.isBefore(LocalTime.of(13, 30))) {
+                    && lt.isBefore(LocalTime.of(14, 0))) {
+                int buyQ = 1;
+                if (lt.isAfter(LocalTime.of(13, 0))) {
+                    buyQ = 2;
+                }
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, 1);
+                Order o = placeBidLimit(freshPrice, buyQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday ft accu",
