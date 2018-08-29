@@ -588,19 +588,21 @@ public final class ChinaStock extends JPanel {
             }).thenRunAsync(() -> {
                 GraphIndustry.compute();
                 pureRefreshTable();
-                try {
-                    sorter = (TableRowSorter<BarModel_STOCK>) tab.getRowSorter();
-                    sorter.setRowFilter(null);
-                    List<RowSorter.SortKey> sortKeys = new ArrayList<>();
-                    sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
-                    sorter.setSortKeys(sortKeys);
-                    sorter.sort();
-                    filterOn = false;
-                    tab.setRowSelectionInterval(0, 0);
-                } catch (Exception x) {
-                    x.printStackTrace();
-                    sorter = (TableRowSorter<BarModel_STOCK>) tab.getRowSorter();
-                }
+                SwingUtilities.invokeLater(() -> {
+                    try {
+                        sorter = (TableRowSorter<BarModel_STOCK>) tab.getRowSorter();
+                        sorter.setRowFilter(null);
+                        List<RowSorter.SortKey> sortKeys = new ArrayList<>();
+                        sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
+                        sorter.setSortKeys(sortKeys);
+                        sorter.sort();
+                        filterOn = false;
+                        tab.setRowSelectionInterval(0, 0);
+                    } catch (Exception x) {
+                        x.printStackTrace();
+                        sorter = (TableRowSorter<BarModel_STOCK>) tab.getRowSorter();
+                    }
+                });
             });
         });
 

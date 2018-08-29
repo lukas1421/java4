@@ -94,6 +94,8 @@ public final class ChinaData extends JPanel {
     //    public static JButton btnSave2;
     static ExecutorService es = Executors.newCachedThreadPool();
     private static final Predicate<? super Entry<LocalTime, Double>> IS_OPEN = e -> e.getKey().isAfter(Utility.AM929T) && e.getValue() != 0.0;
+    static JButton unloadHibAllButton;
+
 
     public ChinaData() {
         LocalTime lt = LocalTime.of(9, 19);
@@ -216,7 +218,7 @@ public final class ChinaData extends JPanel {
         //JButton loadStratButton = new JButton("Load Strat");
         JButton loadHibGenPriceButton = new JButton("Load hib");
         JButton loadHibernateY = new JButton("Load hib Y");
-        JButton unloadHibAllButton = new JButton("Unload T");
+        unloadHibAllButton = new JButton("Unload T");
         JButton btnLoadBarYtd = new JButton("Load Bar YTD");
         JButton btnLoadBar = new JButton("Load Bar");
         JButton shcompToText = new JButton("上证");
