@@ -467,17 +467,17 @@ public final class ChinaMain implements IConnectionHandler {
                     public void componentShown(ComponentEvent componentEvent) {
                         super.componentShown(componentEvent);
                         Timer t = new Timer(3000, ae -> {
-                            pr(" place2 ", LocalTime.now(), pane.getValue());
-                            if (!pane.getValue().equals(JOptionPane.NO_OPTION)) {
-                                pr(" place3 ", LocalTime.now(), pane.getValue());
 
+                            jd1.setVisible(false);
+                            jd1.dispose();
+
+                            if (!pane.getValue().equals(JOptionPane.NO_OPTION)) {
                                 ses.schedule(() -> {
                                     SwingUtilities.invokeLater(() -> {
                                         pr(" fetching data ");
                                         getSinaData.doClick();
                                         loadYesterday.doClick();
                                         startIBHK.doClick();
-                                        pr(" place 5 ", LocalTime.now(), pane.getValue());
                                     });
 
                                     pr(" hib ");
@@ -519,17 +519,13 @@ public final class ChinaMain implements IConnectionHandler {
                                     });
                                 }, 10, TimeUnit.SECONDS);
                             }
-                            jd1.setVisible(false);
-                            jd1.dispose();
                         });
                         t.setRepeats(false);
                         t.start();
                         pr(" place4 ", LocalTime.now(), pane.getValue());
                     }
                 });
-                pr(" place1 ", LocalTime.now(), pane.getValue());
                 jd1.setVisible(true);
-                pr(" place Clicking finished ", LocalTime.now(), pane.getValue());
 
 
             } catch (InterruptedException ex) {

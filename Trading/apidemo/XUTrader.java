@@ -156,7 +156,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static volatile AtomicBoolean noMoreBuy = new AtomicBoolean(false);
 
     //detailed UNCON_MA
-    private static AtomicBoolean detailedPrint = new AtomicBoolean(false);
+    private static AtomicBoolean detailedPrint = new AtomicBoolean(true);
 
     //display
     public static volatile Predicate<LocalDateTime> displayPred = e -> true;
