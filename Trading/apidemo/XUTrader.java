@@ -768,7 +768,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         futOpenTrader(ldt, price, pmChgY);
-        intraday1stTickAccumulator(ldt, price, pmChgY);
+
         percentileMATrader(ldt, price, pmChgY);
 
         //firstTickTrader(ldt, price);
@@ -1183,7 +1183,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double bidNow = bidMap.getOrDefault(FutType.FrontFut, 0.0);
         double askNow = askMap.getOrDefault(FutType.FrontFut, 0.0);
 
-        double freshPrice = XUTrader.futPriceMap.get(FutType.FrontFut);
+        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFuture));
 
         if (lt.isBefore(LocalTime.of(9, 28)) || lt.isAfter(LocalTime.of(9, 35))) {
             checkCancelOrders(FIRST_TICK, nowMilli, ORDER_WAIT_TIME);
@@ -1246,7 +1246,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     static void openDeviationTrader(LocalDateTime nowMilli, double lastIndex) {
         LocalTime lt = nowMilli.toLocalTime();
-        double freshPrice = XUTrader.futPriceMap.get(FutType.FrontFut);
+
+        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFuture));
         double atmVol = ChinaOption.getATMVol(ChinaOption.backExpiry);
         int waitTimeInSeconds;
         int defaultWaitTime = 60;
@@ -1387,7 +1388,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static void chinaHiLoTrader(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         int pmchy = getPmchy();
-        double freshPrice = futPriceMap.get(FutType.FrontFut);
+        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFuture));
         int hiloWaitTimeSeconds;
         OrderStatus lastStatus = getLastOrderStatusForType(CHINA_HILO);
 
@@ -1525,7 +1526,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 || a50HiLoDirection == Direction.Flat) {
             return;
         }
-        double freshPrice = futPriceMap.get(FutType.FrontFut);
+        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFuture));
         LocalTime lt = nowMilli.toLocalTime();
         LocalDateTime lastHiLoAccuTradeTime = getLastOrderTime(CHINA_HILO_ACCU);
 
@@ -1561,7 +1562,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     static void firstTickMAProfitTaker(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
-        double freshPrice = futPriceMap.get(FutType.FrontFut);
+        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFuture));
+        //double freshPrice = futPriceMap.get(FutType.FrontFut);
         if (!checkTimeRangeBool(lt, 9, 29, 15, 0)) {
             return;
         }
@@ -1643,7 +1645,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     static void closeProfitTaker(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
-        double freshPrice = futPriceMap.get(FutType.FrontFut);
+        //double freshPrice = futPriceMap.get(FutType.FrontFut);
+        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFuture));
         double currDelta = getNetPtfDelta();
         double deltaTgt = getDeltaTarget(nowMilli, getPmchy());
 
@@ -1686,12 +1689,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * accumulate based on intraday
      *
-     * @param nowMilli   time
-     * @param freshPrice fut price
-     * @param pmchy      ytd pm change in perc
+     * @param nowMilli  time
+     * @param indexLast last index
      */
-    private static void intraday1stTickAccumulator(LocalDateTime nowMilli, double freshPrice, int pmchy) {
+    static void intraday1stTickAccumulator(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
+        int pmchy = getPmchy();
         if (lt.isBefore(LocalTime.of(9, 40)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;
         }
@@ -1700,7 +1703,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
+        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFuture));
+
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFuture));
+
         int _2dayFutPerc = getPercentileForLast(fut);
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29, 0)).getValue();
@@ -1723,6 +1729,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
             if (!noMoreBuy.get() && firstTick > open && _2dayFutPerc < 20 && (_2dayFutPerc < 1 || pmchy < PMCHY_LO)
+                    && indexLast < open
                     && lt.isBefore(LocalTime.of(13, 30))) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
@@ -1731,7 +1738,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "intraday ft accu",
                         globalIdOrderMap.get(id), "open first futP%", open, firstTick, _2dayFutPerc,
                         "ft size ", firstTickSignedQuant));
-            } else if (!noMoreSell.get() && firstTick < open &&
+            } else if (!noMoreSell.get() && firstTick < open && indexLast > open &&
                     _2dayFutPerc > 99 && pmchy > PMCHY_HI && lt.isAfter(LocalTime.of(14, 50))) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
@@ -1753,7 +1760,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static synchronized void intradayMATrader(LocalDateTime nowMilli, double indexLast) {
 
         LocalTime lt = nowMilli.toLocalTime();
-        double freshPrice = futPriceMap.get(FutType.FrontFut);
+        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFuture));
         int pmChgY = getPmchy();
 
         if (!checkTimeRangeBool(lt, 9, 29, 15, 0)) {

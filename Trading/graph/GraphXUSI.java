@@ -16,7 +16,8 @@ import java.util.stream.Collectors;
 
 import static apidemo.ChinaData.ftseCloseMap;
 import static java.util.stream.Collectors.toMap;
-import static utility.Utility.*;
+import static utility.Utility.ibContractToFutType;
+import static utility.Utility.str;
 
 public class GraphXUSI extends JComponent {
 
@@ -60,7 +61,7 @@ public class GraphXUSI extends JComponent {
                     .collect(Collectors.toMap(Map.Entry::getKey, a -> a.getValue().getClose(), (a, b) -> a, ConcurrentSkipListMap::new));
 
             openXU = Optional.ofNullable(xuIn.ceilingEntry(AM900)).map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
-            prevCloseXU = XUTrader.futPrevCloseMap.get(ibContractToFutType(getFrontFutContract()));
+            prevCloseXU = XUTrader.futPrevCloseMap.get(ibContractToFutType(XUTrader.activeFuture));
             openSI = SinaStock.FTSE_OPEN;
             prevCloseSI = ftseCloseMap.lastEntry().getValue();
             ChinaStock.closeMap.put(TradingConstants.FTSE_INDEX, prevCloseSI);
