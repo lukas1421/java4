@@ -1580,7 +1580,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static void firstTickMAProfitTaker(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFuture));
-        //double freshPrice = futPriceMap.get(FutType.FrontFut);
+        int pmchy = getPmchy();
         if (!checkTimeRangeBool(lt, 9, 29, 15, 0)) {
             return;
         }
@@ -1642,7 +1642,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
 
             } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
-                    && todayPerc > HI_PERC_WIDE && firstTick > open && lt.isAfter(LocalTime.of(14, 50))) {
+                    && todayPerc > HI_PERC_WIDE && firstTick > open && lt.isAfter(LocalTime.of(14, 50))
+                    && pmchy > PMCHY_LO) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FTICK_TAKE_PROFIT));
@@ -1746,8 +1747,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
             if (!noMoreBuy.get() && firstTick > open && _2dayFutPerc < 20 && (_2dayFutPerc < 1 || pmchy < PMCHY_LO)
-                    && indexLast < open
-                    && lt.isBefore(LocalTime.of(14, 0))) {
+                    && indexLast < open && lt.isBefore(LocalTime.of(14, 0))) {
                 int buyQ = 1;
                 if (lt.isAfter(LocalTime.of(13, 0))) {
                     buyQ = 2;
