@@ -175,6 +175,18 @@ public class XuTraderHelper {
         return 50;
     }
 
+    static <T extends Temporal> int getPercentileForDoubleX(NavigableMap<T, Double> map, double x) {
+        if (map.size() > 1) {
+            double max = map.entrySet().stream().mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+            double min = map.entrySet().stream().mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+            if (max == min) {
+                return 50;
+            }
+            return (int) Math.round(100d * ((x - min) / (max - min)));
+        }
+        return 50;
+    }
+
     static Order placeOfferLimit(double p, double quantity) {
         return placeOfferLimitTIF(p, quantity, Types.TimeInForce.DAY);
     }
