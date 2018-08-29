@@ -37,7 +37,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
-import static apidemo.ChinaPosition.refreshButton;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
 import static apidemo.XuTraderHelper.checkTimeRangeBool;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -461,19 +460,24 @@ public final class ChinaMain implements IConnectionHandler {
                 JOptionPane pane = new JOptionPane("do u want auto start? ",
                         JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION);
 
-                JDialog jd1 = pane.createDialog(" select yes or no ");
+                JDialog jd1 = pane.createDialog(" AutoStart ");
+
                 jd1.addComponentListener(new ComponentAdapter() {
                     @Override
                     public void componentShown(ComponentEvent componentEvent) {
                         super.componentShown(componentEvent);
                         Timer t = new Timer(3000, ae -> {
+                            pr(" place2 ", LocalTime.now(), pane.getValue());
                             if (!pane.getValue().equals(JOptionPane.NO_OPTION)) {
+                                pr(" place3 ", LocalTime.now(), pane.getValue());
+
                                 ses.schedule(() -> {
                                     SwingUtilities.invokeLater(() -> {
                                         pr(" fetching data ");
                                         getSinaData.doClick();
                                         loadYesterday.doClick();
                                         startIBHK.doClick();
+                                        pr(" place 5 ", LocalTime.now(), pane.getValue());
                                     });
 
                                     pr(" hib ");
@@ -500,10 +504,9 @@ public final class ChinaMain implements IConnectionHandler {
 
                                 ses.schedule(() -> {
                                     SwingUtilities.invokeLater(() -> {
-                                        refreshButton.doClick();
+                                        ChinaPosition.refreshButton.doClick();
                                         ChinaPosition.filterButton.doClick();
                                         ChinaPosition.autoUpdateButton.doClick();
-                                        //stocks
                                         ChinaStock.computeButton.doClick();
                                     });
                                     xutrader.openingRefresh();
@@ -515,17 +518,20 @@ public final class ChinaMain implements IConnectionHandler {
                                         ChinaStock.graphButton.doClick();
                                     });
                                 }, 10, TimeUnit.SECONDS);
-
-
                             }
                             jd1.setVisible(false);
                             jd1.dispose();
                         });
                         t.setRepeats(false);
                         t.start();
+                        pr(" place4 ", LocalTime.now(), pane.getValue());
                     }
                 });
+                pr(" place1 ", LocalTime.now(), pane.getValue());
                 jd1.setVisible(true);
+                pr(" place Clicking finished ", LocalTime.now(), pane.getValue());
+
+
             } catch (InterruptedException ex) {
                 ex.printStackTrace();
             }

@@ -589,6 +589,7 @@ public final class ChinaStock extends JPanel {
                 GraphIndustry.compute();
                 pureRefreshTable();
                 try {
+                    sorter = (TableRowSorter<BarModel_STOCK>) tab.getRowSorter();
                     sorter.setRowFilter(null);
                     List<RowSorter.SortKey> sortKeys = new ArrayList<>();
                     sortKeys.add(new RowSorter.SortKey(0, SortOrder.ASCENDING));
