@@ -1306,7 +1306,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (tSinceLastOrder < 60000) {
                 OPENDEV_BASE_SIZE = 1;
             } else {
-                OPENDEV_BASE_SIZE = 2;
+                OPENDEV_BASE_SIZE = getWeekdayBaseSize(nowMilli.getDayOfWeek());
             }
         }
 
@@ -1382,6 +1382,22 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    static int getWeekdayBaseSize(DayOfWeek w) {
+        switch (w) {
+            case MONDAY:
+                return 2;
+            case TUESDAY:
+                return 2;
+            case WEDNESDAY:
+                return 1;
+            case THURSDAY:
+                return 1;
+            case FRIDAY:
+                return 1;
+        }
+        return 0;
+    }
+
     /**
      * ftse break high low trader
      *
@@ -1438,7 +1454,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (tSinceLastTrade < 60000) {
                 HILO_BASE_SIZE = 1;
             } else {
-                HILO_BASE_SIZE = 2;
+                HILO_BASE_SIZE = getWeekdayBaseSize(nowMilli.getDayOfWeek());
             }
         }
 
