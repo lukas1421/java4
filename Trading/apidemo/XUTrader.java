@@ -720,6 +720,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static int getPmchy(LocalTime lt, String index) {
+        pr(" getting pmchy yest/today", pmchyMap.getOrDefault(index, 0), getPmchyToday(lt, index));
+
         if (lt.isBefore(LocalTime.of(15, 0))) {
             return pmchyMap.getOrDefault(index, 0);
         } else {
@@ -2616,7 +2618,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     + "HK Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isHKStock(e.getKey())))
                     + " China Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isChinaStock(e.getKey()))));
             updateLog(str("2D p%:", percLast, "1D p%", todayPerc,
-                    "pmChgY:", pmChgY, "openY:", openPercY, "closeY:", closePercY, "pmChg", pmChg));
+                    "pmChgY:", pmChgY, "openY:", openPercY, "closeY:", closePercY, "pmChg", pmChg,
+                    "||Index pmchy", getPmchy(LocalTime.now(), "sh000001")));
             updateLog(" expiring delta " + getExpiringDelta());
         });
     }
