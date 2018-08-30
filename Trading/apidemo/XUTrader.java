@@ -1382,7 +1382,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    static int getWeekdayBaseSize(DayOfWeek w) {
+    private static int getWeekdayBaseSize(DayOfWeek w) {
         switch (w) {
             case MONDAY:
                 return 2;

@@ -7,6 +7,8 @@ import client.OrderStatus;
 import controller.ApiController;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.BrokenBarrierException;
@@ -46,7 +48,8 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
 
             if (!filledOrdersSet.contains(defaultID)) {
                 globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
-                String msg = str("||Order||", defaultID, globalIdOrderMap.get(defaultID), orderState.status());
+                String msg = str("||Order||", defaultID, globalIdOrderMap.get(defaultID), orderState.status()
+                        , LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
                 XuTraderHelper.outputToAutoLog(msg);
                 XuTraderHelper.outputPurelyOrders(msg);
                 filledOrdersSet.add(defaultID);
