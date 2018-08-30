@@ -724,6 +724,29 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return getPercentileChgFut(futdata, getPrevTradingDate(futdata));
     }
 
+    private static int getPmchy2(LocalTime t, String ticker) {
+        if (t.isBefore(LocalTime.of(13, 0))) {
+            return 0;
+        }
+        if (priceMapBar.containsKey(ticker) && priceMapBar.get(ticker).size() > 0 &&
+                priceMapBar.get(ticker).lastKey().isAfter(LocalTime.of(13, 0))) {
+            double maxV = priceMapBar.get(ticker).entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max()
+                    .orElse(0.0);
+            double minV = priceMapBar.get(ticker).entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min()
+                    .orElse(0.0);
+            double pmStart = priceMapBar.get(ticker).ceilingEntry(LocalTime.of(13, 0)).getValue().getOpen();
+            double last = priceMapBar.get(ticker).lastEntry().getValue().getClose();
+
+            if (maxV != minV && maxV != 0.0 && minV != 0.0 && pmStart != 0.0 && last != 0.0) {
+                return (int) Math.round(100d * (last - pmStart) / (maxV - minV));
+            } else {
+                return 0;
+            }
+        }
+        return 0;
+    }
+
+
     public static void processMain(LocalDateTime ldt, double price) {
 
         double currDelta = getNetPtfDelta();
