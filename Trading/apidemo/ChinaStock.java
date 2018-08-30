@@ -60,6 +60,8 @@ public final class ChinaStock extends JPanel {
     public static Map<String, String> benchMap = new HashMap<>();
     public static Map<String, String> benchSimpleMap = new HashMap<>();
     public static Map<String, Double> sharpeMap = new HashMap<>();
+    public static Map<String, Integer> pmchyMap = new HashMap<>();
+    public static Map<String, Integer> closePercMap = new HashMap<>();
 
     public static volatile List<String> symbolNames = new ArrayList<>(1000);
     public static volatile List<String> symbolNamesFull = new ArrayList<>(1000);
@@ -306,6 +308,18 @@ public final class ChinaStock extends JPanel {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 sharpeMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "pmchy.txt"), "gbk"))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                pr(" pmchy map " + al1);
+                pmchyMap.put(al1.get(0), Integer.parseInt(al1.get(6)));
+                closePercMap.put(al1.get(0), Integer.parseInt(al1.get(7)));
             }
         } catch (IOException ex) {
             ex.printStackTrace();
