@@ -61,7 +61,7 @@ public final class ChinaStock extends JPanel {
     public static Map<String, String> benchSimpleMap = new HashMap<>();
     public static Map<String, Double> sharpeMap = new HashMap<>();
     public static Map<String, Integer> pmchyMap = new HashMap<>();
-    public static Map<String, Integer> closePercMap = new HashMap<>();
+    public static Map<String, Integer> closePercYMap = new HashMap<>();
 
     public static volatile List<String> symbolNames = new ArrayList<>(1000);
     public static volatile List<String> symbolNamesFull = new ArrayList<>(1000);
@@ -319,7 +319,7 @@ public final class ChinaStock extends JPanel {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 pr(" pmchy map " + al1);
                 pmchyMap.put(al1.get(0), Integer.parseInt(al1.get(6)));
-                closePercMap.put(al1.get(0), Integer.parseInt(al1.get(7)));
+                closePercYMap.put(al1.get(0), Integer.parseInt(al1.get(7)));
             }
         } catch (IOException ex) {
             ex.printStackTrace();
