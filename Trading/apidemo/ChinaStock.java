@@ -591,6 +591,7 @@ public final class ChinaStock extends JPanel {
                     graph4.fillInGraph(tf5.getText());
                     graph5.fillInGraph(tf6.getText());
                     graph6.fillInGraph(tf7.getText());
+                    outputPMBDetailedToTxt(priceMapBarDetail.get(selectedNameStock));
                 } catch (Exception e) {
                     e.printStackTrace();
                     tf3.setText(stock2);
@@ -620,13 +621,9 @@ public final class ChinaStock extends JPanel {
             });
         });
 
-        computeButton = new
-
-                JToggleButton("ComputeT");
+        computeButton = new JToggleButton("ComputeT");
         computeButton.addActionListener((
-                ActionEvent al) ->
-
-        {
+                ActionEvent al) -> {
 
             if (computeButton.isSelected()) {
                 //pr(" begin T ");
@@ -651,9 +648,7 @@ public final class ChinaStock extends JPanel {
 
 
                 //pr(" ChinaIndex.computeAll ");
-
                 ftes.scheduleAtFixedRate(ChinaIndex::computeAll, 0, 5, TimeUnit.SECONDS);
-
 
                 //tested
                 ftes.scheduleAtFixedRate(ChinaIndex::updateIndexTable, 0, 15, TimeUnit.SECONDS);

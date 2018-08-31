@@ -1,9 +1,25 @@
-import static java.lang.System.out;
+import utility.Utility;
+
+import java.time.LocalTime;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 
 public class Test {
 
 
     public static void main(String[] args) {
-        out.println(System.getProperty("os.name"));
+        NavigableMap<LocalTime, Double> m = new TreeMap<>();
+        m.put(LocalTime.of(9, 0), 100.0);
+        m.put(LocalTime.of(10, 0), 100.0);
+        m.put(LocalTime.of(11, 0), 100.0);
+
+        m.entrySet().stream().max((e1, e2) -> e1.getValue() >= e2.getValue() ? 1 : -1).map(e -> e.getKey()).ifPresent(
+                Utility::pr);
+        m.entrySet().stream().max((e1, e2) -> e1.getValue() > e2.getValue() ? 1 : -1).map(e -> e.getKey()).ifPresent(
+                Utility::pr);
+        m.entrySet().stream().min((e1, e2) -> e1.getValue() >= e2.getValue() ? 1 : -1).map(e -> e.getKey()).ifPresent(
+                Utility::pr);
+        m.entrySet().stream().min((e1, e2) -> e1.getValue() > e2.getValue() ? 1 : -1).map(e -> e.getKey()).ifPresent(
+                Utility::pr);
     }
 }

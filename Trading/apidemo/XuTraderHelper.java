@@ -648,6 +648,18 @@ public class XuTraderHelper {
         return (int) Math.floor(Math.abs(delta) / (fx * price));
     }
 
+    static LocalTime getMaxTPred(NavigableMap<LocalTime, Double> mp, Predicate<LocalTime> p) {
+        return mp.entrySet().stream().filter(e -> p.test(e.getKey()))
+                .max((e1, e2) -> e1.getValue() >= e2.getValue() ? 1 : -1)
+                .map(Map.Entry::getKey).orElse(LocalTime.MIN);
+    }
+
+    static LocalTime getMinTPred(NavigableMap<LocalTime, Double> mp, Predicate<LocalTime> p) {
+        return mp.entrySet().stream().filter(e -> p.test(e.getKey()))
+                .min((e1, e2) -> e1.getValue() >= e2.getValue() ? 1 : -1)
+                .map(Map.Entry::getKey).orElse(LocalTime.MIN);
+    }
+
 
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
         @Override

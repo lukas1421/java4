@@ -840,6 +840,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         futOpenTrader(ldt, price, pmChgY);
         futHiloTrader(ldt, price);
+        futHiloAccu(ldt, price);
 
         //percentileMATrader(ldt, price, pmChgY);
         //firstTickTrader(ldt, price);
@@ -1179,6 +1180,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     private static void futHiloTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
+        int pmchy = getPmchY(nowMilli.toLocalTime(), INDEX_000016);
+        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFutureCt));
+        int _2dayP = getPercentileForLast(fut);
+
         if (priceMapBarDetail.get(ibContractToSymbol(activeFutureCt)).size() <= 1) {
             return;
         }
@@ -1200,7 +1205,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         int waitTimeSec = 10;
         if (tBtwnLastTwoOrders < 10000) {
-            waitTimeSec = 60000;
+            waitTimeSec = 300000;
         } else {
             waitTimeSec = 10;
         }
@@ -1215,34 +1220,82 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maxP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
 
+        LocalTime maxTPre10 = getMaxTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
+        LocalTime minTPre10 = getMaxTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
+
+        LocalTime maxT = getMaxTPred(futPrice, t -> true);
+        LocalTime minT = getMaxTPred(futPrice, t -> true);
+
+        double buySize = 1;
+        double sellSize = 1;
+        if (pmchy < PMCHY_LO && _2dayP < LO_PERC_WIDE) {
+            buySize = 2;
+        }
+
+
         double minP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
         double last = futPrice.lastEntry().getValue();
-        if (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat) {
+        if (lt.isAfter(LocalTime.of(10, 0)) &&
+                SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat) {
             if (!noMoreBuy.get() && last > maxP && futHiLoDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(offer, 1, Types.TimeInForce.DAY);
+                Order o = placeBidLimitTIF(offer, buySize, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_HILO));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut hilo buy",
                         globalIdOrderMap.get(id), " max min last", r(maxP), r(minP), r(last),
                         "|bid ask spread", bid, offer, Math.round(10000d * (offer / bid - 1)), "bp",
-                        "last freshprice ", last, freshPrice));
+                        "last freshprice ", last, freshPrice, "pre10:maxT minT ", maxTPre10, minTPre10));
                 futHiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && last < minP && futHiLoDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(bid, 1, Types.TimeInForce.DAY);
+                Order o = placeOfferLimitTIF(bid, sellSize, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_HILO));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut hilo sell",
                         globalIdOrderMap.get(id), "max min last", r(maxP), r(minP), r(last),
                         "|bid ask spread", bid, offer, Math.round(10000d * (offer / bid - 1)), "bp",
-                        "last freshprice", last, freshPrice));
+                        "last freshprice", last, freshPrice, "pre10:maxT minT ", maxTPre10, minTPre10));
                 futHiLoDirection = Direction.Short;
             }
         }
     }
+
+    private static void futHiloAccu(LocalDateTime nowMilli, double freshPrice) {
+        String futSymbol = ibContractToSymbol(activeFutureCt);
+
+        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(futSymbol).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(8, 59)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
+
+        //NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFutureCt));
+
+        LocalDateTime lastOrderTime = getLastOrderTime(FUT_HILO_ACCU);
+        LocalTime maxTPre10 = getMaxTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
+        LocalTime minTPre10 = getMaxTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
+
+        int todayPerc = getPercentileForDoubleX(futPrice, freshPrice);
+
+        if (SECONDS.between(lastOrderTime, nowMilli) >= 900) {
+            if (maxTPre10.isAfter(minTPre10) && todayPerc < 5 && !noMoreBuy.get()) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimitTIF(freshPrice, 1, Types.TimeInForce.DAY);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_HILO_ACCU));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "fut hilo accu", globalIdOrderMap.get(id)));
+            } else if (maxTPre10.isBefore(minTPre10) && todayPerc > 95 && !noMoreSell.get()) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(freshPrice, 1, Types.TimeInForce.DAY);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_HILO_ACCU));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "fut hilo decu", globalIdOrderMap.get(id)));
+            }
+        }
+    }
+
 
     static void futHiloKnockoutTrader(LocalDateTime nowMilli, double freshPrice) {
         double bid = bidMap.get(ibContractToFutType(activeFutureCt));
