@@ -1477,6 +1477,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return 0;
     }
 
+    /**
+     * pm hilo trader
+     *
+     * @param nowMilli  time
+     * @param indexLast last ftse index value
+     */
     static void pmHiLoTrader(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         int pmchy = getRecentPmCh(lt, INDEX_000001);
@@ -1582,8 +1588,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 pmHiLoDirection = Direction.Short;
             }
         }
-
-
     }
 
     /**
