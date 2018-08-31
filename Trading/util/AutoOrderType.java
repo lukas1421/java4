@@ -41,6 +41,7 @@ public enum AutoOrderType {
     INTRADAY_FIRSTTICK_ACCU,
     FUT_OPEN,
     FUT_HILO,
+    FUT_KO,
     OPEN_DEVIATION,
     INDEX_NEW_HILO,
     UNKNOWN

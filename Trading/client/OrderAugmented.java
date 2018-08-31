@@ -10,8 +10,8 @@ import static utility.Utility.str;
 public class OrderAugmented {
 
     private final LocalDateTime orderTime;
-    private final Order order;
-    private final String msg;
+    private Order order;
+    private String msg;
     private final AutoOrderType orderType;
     private OrderStatus status;
     private LocalDateTime finalActionTime;
@@ -43,6 +43,10 @@ public class OrderAugmented {
         orderType = tt;
         status = OrderStatus.Created;
         finalActionTime = LocalDateTime.MIN;
+    }
+
+    public void setMsg(String m) {
+        msg = m;
     }
 
     public OrderAugmented() {

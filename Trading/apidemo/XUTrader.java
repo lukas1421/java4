@@ -1219,7 +1219,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
         double last = futPrice.lastEntry().getValue();
-        if (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec) {
+        if (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat) {
             if (!noMoreBuy.get() && last > maxP && futHiLoDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(offer, 1, Types.TimeInForce.DAY);
@@ -1242,6 +1242,67 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 futHiLoDirection = Direction.Short;
             }
         }
+    }
+
+    static void futHiloKnockoutTrader(LocalDateTime nowMilli, double freshPrice) {
+        double bid = bidMap.get(ibContractToFutType(activeFutureCt));
+        double offer = askMap.get(ibContractToFutType(activeFutureCt));
+        long futHiloOrdersNum = getOrderSizeForTradeType(FUT_HILO);
+        long futKOOrdersNum = getOrderSizeForTradeType(FUT_KO);
+
+        if (futHiloOrdersNum == 0) {
+            return;
+        }
+
+        if (futHiLoDirection == Direction.Flat) {
+            return;
+        }
+
+        OrderStatus lastHiLoOrderStatus = getLastOrderStatusForType(FUT_HILO);
+        if (lastHiLoOrderStatus != OrderStatus.Filled) {
+            return;
+        }
+
+        OrderStatus lastKOOrderStatus = getLastOrderStatusForType(FUT_KO);
+        if (futKOOrdersNum != 0 && lastKOOrderStatus != OrderStatus.Filled) {
+            //getMoreAggressiveFill(FUT_KO, bid, offer);
+            cancelOrdersByType(FUT_KO);
+
+            return;
+        }
+
+        double previousHiloLimit = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue()
+                .getOrderType() == FUT_HILO).max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .map(e -> e.getValue().getOrder().lmtPrice()).orElse(0.0);
+
+        double prevSize = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue()
+                .getOrderType() == FUT_HILO).max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .map(e -> e.getValue().getOrder().totalQuantity()).orElse(0.0);
+
+        if (previousHiloLimit != 0.0 && prevSize != 0.0) {
+            if (futHiLoDirection == Direction.Long) {
+                if (freshPrice < previousHiloLimit) {
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeOfferLimitTIF(freshPrice, prevSize, Types.TimeInForce.DAY);
+                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_KO));
+                    apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                    outputOrderToAutoLog(str(o.orderId(), "fut hilo buy KO", globalIdOrderMap.get(id)));
+                    futHiLoDirection = Direction.Flat;
+                }
+            } else if (futHiLoDirection == Direction.Short) {
+                if (freshPrice > previousHiloLimit) {
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeBidLimitTIF(freshPrice, prevSize, Types.TimeInForce.DAY);
+                    globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_KO));
+                    apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                    outputOrderToAutoLog(str(o.orderId(), "fut hilo sell KO", globalIdOrderMap.get(id)));
+                    futHiLoDirection = Direction.Flat;
+                }
+            }
+        }
+
     }
 
 
@@ -2288,6 +2349,32 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         outputToAutoLog(outputString);
         requestOvernightExecHistory();
+    }
+
+    private static void cancelOrdersByType(AutoOrderType type) {
+        globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().getStatus() != OrderStatus.Filled)
+                .forEach(e -> {
+                    apcon.cancelOrder(e.getValue().getOrder().orderId());
+                    e.getValue().setStatus(OrderStatus.Cancelled);
+                });
+    }
+
+    private static void getMoreAggressiveFill(AutoOrderType type, double bid, double ask) {
+        globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().getStatus() != OrderStatus.Filled)
+                .forEach(e -> {
+                    Order o = e.getValue().getOrder();
+                    if (o.action() == Types.Action.BUY) {
+                        o.lmtPrice(ask);
+                    } else if (o.action() == Types.Action.SELL) {
+                        o.lmtPrice(bid);
+                    }
+                    e.getValue().setMsg(str(" more aggressive price:", o.action(),
+                            o.action() == Types.Action.BUY ? ask : bid));
+                    apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler());
+                    e.getValue().setStatus(OrderStatus.Cancelled);
+                });
     }
 
 
