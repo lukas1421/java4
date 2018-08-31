@@ -83,7 +83,7 @@ public class SinaStock implements Runnable {
                 ).sum();
 
 
-                double currPrice = FTSE_OPEN * (1 + (Math.round(rtn) / 10000d));
+                double currIndexPrice = FTSE_OPEN * (1 + (Math.round(rtn) / 10000d));
                 //pr("curr price ", currPrice, "FTSE OPEN ", FTSE_OPEN, "rtn ", rtn);
 
                 double sinaVol = weightMapA50.entrySet().stream()
@@ -91,21 +91,21 @@ public class SinaStock implements Runnable {
 
                 if (LocalTime.now().isAfter(LocalTime.of(8, 59))
                         && LocalTime.now().isBefore(LocalTime.of(9, 5))) {
-                    currPrice = FTSE_OPEN; //currprice is unstable in the first 5 minutes
+                    currIndexPrice = FTSE_OPEN; //currprice is unstable in the first 5 minutes
                 }
 
 
                 if (indexPriceSina.containsKey(ldtMin.toLocalTime())) {
-                    indexPriceSina.get(ldtMin.toLocalTime()).add(currPrice);
+                    indexPriceSina.get(ldtMin.toLocalTime()).add(currIndexPrice);
                 } else {
-                    indexPriceSina.put(ldtMin.toLocalTime(), new SimpleBar(currPrice));
+                    indexPriceSina.put(ldtMin.toLocalTime(), new SimpleBar(currIndexPrice));
                 }
 
                 if (priceMapBar.containsKey(FTSE_INDEX)) {
                     if (priceMapBar.get(FTSE_INDEX).containsKey(ldtMin.toLocalTime())) {
-                        priceMapBar.get(FTSE_INDEX).get(ldtMin.toLocalTime()).add(currPrice);
+                        priceMapBar.get(FTSE_INDEX).get(ldtMin.toLocalTime()).add(currIndexPrice);
                     } else {
-                        priceMapBar.get(FTSE_INDEX).put(ldtMin.toLocalTime(), new SimpleBar(currPrice));
+                        priceMapBar.get(FTSE_INDEX).put(ldtMin.toLocalTime(), new SimpleBar(currIndexPrice));
                     }
                 } else {
                     priceMapBar.put(FTSE_INDEX, (ConcurrentSkipListMap) indexPriceSina);
@@ -114,15 +114,16 @@ public class SinaStock implements Runnable {
                 if (priceMapBarDetail.containsKey(FTSE_INDEX)) {
                     if (ldt.toLocalTime().isAfter(LocalTime.of(9, 20))
                             && ldt.toLocalTime().isBefore(LocalTime.of(15, 5))) { //change this later
-                        priceMapBarDetail.get(FTSE_INDEX).put(ldt.toLocalTime(), currPrice);
-                        XUTrader.openDeviationTrader(ldt, currPrice);
-                        XUTrader.firstTickTrader(ldt, currPrice);
-                        XUTrader.firstTickMAProfitTaker(ldt, currPrice);
-                        XUTrader.chinaHiLoTrader(ldt, currPrice);
-                        XUTrader.chinaHiloAccumulator(ldt, currPrice);
-                        XUTrader.intradayMATrader(ldt, currPrice);
-                        XUTrader.closeProfitTaker(ldt, currPrice);
-                        XUTrader.intraday1stTickAccumulator(ldt, currPrice);
+                        priceMapBarDetail.get(FTSE_INDEX).put(ldt.toLocalTime(), currIndexPrice);
+                        XUTrader.openDeviationTrader(ldt, currIndexPrice);
+                        XUTrader.firstTickTrader(ldt, currIndexPrice);
+                        XUTrader.firstTickMAProfitTaker(ldt, currIndexPrice);
+                        XUTrader.chinaHiLoTrader(ldt, currIndexPrice);
+                        XUTrader.pmHiLoTrader(ldt, currIndexPrice);
+                        XUTrader.chinaHiloAccumulator(ldt, currIndexPrice);
+                        XUTrader.intradayMATrader(ldt, currIndexPrice);
+                        XUTrader.closeProfitTaker(ldt, currIndexPrice);
+                        XUTrader.intraday1stTickAccumulator(ldt, currIndexPrice);
                     }
                 }
 

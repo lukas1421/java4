@@ -1477,7 +1477,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return 0;
     }
 
-
     static void pmHiLoTrader(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         int pmchy = getRecentPmCh(lt, INDEX_000001);
@@ -1489,14 +1488,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        long numOrders = getOrderSizeForTradeType(PM_HILO);
+        long numPMOrders = getOrderSizeForTradeType(PM_HILO);
 
-        if (numOrders >= 6) {
+        if (numPMOrders >= 6) {
             pr(" pm hilo exceed max");
             return;
         }
 
-        if (numOrders > 0 && lastStatus != OrderStatus.Filled) {
+        if (numPMOrders > 0 && lastStatus != OrderStatus.Filled) {
             pr(" pm order last not filled ");
             return;
         }
@@ -1510,7 +1509,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long tBtwnLast2Trades = lastTwoOrderMilliDiff(PM_HILO);
         long tSinceLastTrade = tSincePrevOrderMilli(PM_HILO, nowMilli);
 
-        if (tSinceLastTrade < 10000) {
+        if (tBtwnLast2Trades < 10000) {
             pmHiloWaitTimeSeconds = 60;
         } else {
             pmHiloWaitTimeSeconds = 10;
@@ -1527,7 +1526,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> e.getKey().isAfter(LocalTime.of(12, 58, 0)))
                 .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
-
 
         if (!manualPMHiloDirection.get()) {
             if (lt.isBefore(LocalTime.of(13, 0))) {
@@ -1564,8 +1562,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PM_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "pm hilo buy", globalIdOrderMap.get(id),
-                        "#", numOrders, "buy limit: ", buyPrice,
-                        "indexLast/fut/pd: ", r(indexLast), freshPrice, HILO_BASE_SIZE,
+                        "#", numPMOrders, "buy limit: ", buyPrice, "indexLast/fut/pd: ", r(indexLast), freshPrice,
                         Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
                         "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, pmHiLoDirection,
                         "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
@@ -1577,8 +1574,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PM_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "pm hilo sell", globalIdOrderMap.get(id),
-                        "#", numOrders, "sell limit: ", sellPrice,
-                        "indexLast/fut/pd: ", r(indexLast), freshPrice,
+                        "#", numPMOrders, "sell limit: ", sellPrice, "indexLast/fut/pd: ", r(indexLast), freshPrice,
                         Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
                         "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, pmHiLoDirection,
                         "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
