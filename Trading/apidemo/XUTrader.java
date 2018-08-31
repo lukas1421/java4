@@ -1496,6 +1496,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
+        if (numOrders > 0 && lastStatus != OrderStatus.Filled) {
+            pr(" pm order last not filled ");
+            return;
+        }
+
         LocalDateTime lastPMHiLoTradeTime = getLastOrderTime(PM_HILO);
         int buyQ = 1;
         int sellQ = 1;
@@ -1558,27 +1563,27 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeBidLimit(buyPrice, buyQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PM_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
+                outputOrderToAutoLog(str(o.orderId(), "pm hilo buy", globalIdOrderMap.get(id),
                         "#", numOrders, "buy limit: ", buyPrice,
                         "indexLast/fut/pd: ", r(indexLast), freshPrice, HILO_BASE_SIZE,
                         Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
                         "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, pmHiLoDirection,
                         "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
                         "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar)));
-                a50HiLoDirection = Direction.Long;
+                pmHiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && indexLast < pmMinSoFar && pmHiLoDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(sellPrice, sellQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PM_HILO));
                 apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
+                outputOrderToAutoLog(str(o.orderId(), "pm hilo sell", globalIdOrderMap.get(id),
                         "#", numOrders, "sell limit: ", sellPrice,
                         "indexLast/fut/pd: ", r(indexLast), freshPrice,
                         Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
                         "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, pmHiLoDirection,
                         "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
                         "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar)));
-                a50HiLoDirection = Direction.Short;
+                pmHiLoDirection = Direction.Short;
             }
         }
 
@@ -1689,7 +1694,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (SECONDS.between(lastHiLoTradeTime, nowMilli) >= hiloWaitTimeSeconds && maxSoFar != 0.0 && minSoFar != 0.0) {
             if (!noMoreBuy.get() && indexLast > maxSoFar && a50HiLoDirection != Direction.Long) {
-                buyQ = ((_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO) ? 3 : 1) * HILO_BASE_SIZE;
+                buyQ = ((_2dayPerc < LO_PERC_WIDE && pmchy < PMCHY_LO) ? 3 : 1) * HILO_BASE_SIZE;
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(buyPrice, buyQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
