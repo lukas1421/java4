@@ -70,7 +70,7 @@ public class SGXFutureReceiver implements LiveHandler {
                             XUTrader.futData.get(f).put(ldtMin, new SimpleBar(price));
                         }
 
-                        String activeFut = Utility.ibContractToFutType(XUTrader.activeFuture).getTicker();
+                        String activeFut = Utility.ibContractToFutType(XUTrader.activeFutureCt).getTicker();
 
                         if (name.equalsIgnoreCase(activeFut) &&
                                 XUTrader.futData.get(f).lastKey().truncatedTo(MINUTES).equals(ldt.truncatedTo(MINUTES))) {

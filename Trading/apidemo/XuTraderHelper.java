@@ -482,7 +482,7 @@ public class XuTraderHelper {
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(
                 priceMapBar.get(anchorIndex), nowMilli.toLocalDate(), e -> e.isBefore(LocalTime.of(11, 30)) &&
                         e.isAfter(LocalTime.of(12, 59)));
-        NavigableMap<LocalDateTime, SimpleBar> fut = XUTrader.futData.get(ibContractToFutType(XUTrader.activeFuture));
+        NavigableMap<LocalDateTime, SimpleBar> fut = XUTrader.futData.get(ibContractToFutType(XUTrader.activeFutureCt));
         double futClose = fut.lowerEntry(LocalDateTime.of(LocalDate.now(), LocalTime.of(15, 0))).getValue().getClose();
         int shorterMA = 5;
         int longerMA = 10;
