@@ -96,14 +96,21 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final double PMCHY_HI = 20;
     private static final double PMCHY_LO = -20;
 
+    //vol
+    private static LocalDate expiryToGet = ChinaOption.frontExpiry;
 
     //china open/firsttick
     private static volatile Direction a50HiLoDirection = Direction.Flat;
-    private static volatile AtomicBoolean manualSetDirection = new AtomicBoolean(false);
+    private static volatile AtomicBoolean manualHiloDirection = new AtomicBoolean(false);
     private static volatile AtomicBoolean manualAccuOn = new AtomicBoolean(false);
     private static final long HILO_ACCU_MAX_SIZE = 2;
     private static final LocalTime HILO_ACCU_DEADLINE = LocalTime.of(9, 40);
     private static final long FT_ACCU_MAX_SIZE = 2;
+
+    //pm hilo
+    private static volatile Direction pmHiLoDirection = Direction.Flat;
+    private static volatile AtomicBoolean manualPMHiloDirection = new AtomicBoolean(false);
+
 
     //open deviation
     private static volatile Direction openDeviationDirection = Direction.Flat;
@@ -1322,7 +1329,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //int pmchy = getPmchY();
         int pmchy = getRecentPmCh(lt, INDEX_000001);
         double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFuture));
-        double atmVol = ChinaOption.getATMVol(ChinaOption.frontExpiry);
+        double atmVol = ChinaOption.getATMVol(expiryToGet);
         int waitTimeInSeconds;
         int defaultWaitTime = 60;
         OrderStatus lastStatus = getLastOrderStatusForType(OPEN_DEVIATION);
@@ -1470,6 +1477,114 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return 0;
     }
 
+
+    static void pmHiLoTrader(LocalDateTime nowMilli, double indexLast) {
+        LocalTime lt = nowMilli.toLocalTime();
+        int pmchy = getRecentPmCh(lt, INDEX_000001);
+        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFuture));
+        int pmHiloWaitTimeSeconds;
+        OrderStatus lastStatus = getLastOrderStatusForType(PM_HILO);
+
+        if (!checkTimeRangeBool(lt, 12, 58, 15, 0)) {
+            return;
+        }
+
+        long numOrders = getOrderSizeForTradeType(PM_HILO);
+
+        if (numOrders >= 6) {
+            pr(" pm hilo exceed max");
+            return;
+        }
+
+        LocalDateTime lastPMHiLoTradeTime = getLastOrderTime(PM_HILO);
+        int buyQ = 1;
+        int sellQ = 1;
+        double buyPrice = freshPrice;
+        double sellPrice = freshPrice;
+
+        long tBtwnLast2Trades = lastTwoOrderMilliDiff(PM_HILO);
+        long tSinceLastTrade = tSincePrevOrderMilli(PM_HILO, nowMilli);
+
+        if (tSinceLastTrade < 10000) {
+            pmHiloWaitTimeSeconds = 60;
+        } else {
+            pmHiloWaitTimeSeconds = 10;
+        }
+
+        double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(12, 58)).getValue();
+
+        double pmFirstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(12, 58, 0)))
+                .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getValue)
+                .orElse(pmOpen);
+
+        LocalTime pmFirstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(12, 58, 0)))
+                .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getKey)
+                .orElse(LocalTime.MIN);
+
+
+        if (!manualPMHiloDirection.get()) {
+            if (lt.isBefore(LocalTime.of(13, 0))) {
+                manualPMHiloDirection.set(true);
+            } else {
+                if (indexLast > pmOpen) {
+                    pmHiLoDirection = Direction.Long;
+                    manualPMHiloDirection.set(true);
+                } else if (indexLast < pmOpen) {
+                    pmHiLoDirection = Direction.Short;
+                    manualPMHiloDirection.set(true);
+                } else {
+                    pmHiLoDirection = Direction.Flat;
+                }
+            }
+        }
+
+
+        LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
+
+        double pmMaxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(12, 58))
+                        && e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+
+        double pmMinSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(12, 58)) &&
+                        e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+
+        if (SECONDS.between(lastPMHiLoTradeTime, nowMilli) >= pmHiloWaitTimeSeconds && pmMaxSoFar != 0.0 && pmMinSoFar != 0.0) {
+            if (!noMoreBuy.get() && indexLast > pmMaxSoFar && pmHiLoDirection != Direction.Long) {
+                buyQ = 1;
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(buyPrice, buyQ);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PM_HILO));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
+                        "#", numOrders, "buy limit: ", buyPrice,
+                        "indexLast/fut/pd: ", r(indexLast), freshPrice, HILO_BASE_SIZE,
+                        Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
+                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, pmHiLoDirection,
+                        "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
+                        "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar)));
+                a50HiLoDirection = Direction.Long;
+            } else if (!noMoreSell.get() && indexLast < pmMinSoFar && pmHiLoDirection != Direction.Short) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(sellPrice, sellQ);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PM_HILO));
+                apcon.placeOrModifyOrder(activeFuture, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
+                        "#", numOrders, "sell limit: ", sellPrice,
+                        "indexLast/fut/pd: ", r(indexLast), freshPrice,
+                        Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
+                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, pmHiLoDirection,
+                        "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
+                        "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar)));
+                a50HiLoDirection = Direction.Short;
+            }
+        }
+
+
+    }
+
     /**
      * ftse break high low trader
      *
@@ -1501,7 +1616,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 28)).getValue();
         int openPerc = getPercentileForDoubleX(priceMapBarDetail.get(FTSE_INDEX), open);
 
-
         double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue)
@@ -1529,16 +1643,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
 
-        if (!manualSetDirection.get()) {
+        if (!manualHiloDirection.get()) {
             if (lt.isBefore(LocalTime.of(9, 30))) {
-                manualSetDirection.set(true);
+                manualHiloDirection.set(true);
             } else {
                 if (indexLast > open) {
                     a50HiLoDirection = Direction.Long;
-                    manualSetDirection.set(true);
+                    manualHiloDirection.set(true);
                 } else if (indexLast < open) {
                     a50HiLoDirection = Direction.Short;
-                    manualSetDirection.set(true);
+                    manualHiloDirection.set(true);
                 } else {
                     a50HiLoDirection = Direction.Flat;
                 }

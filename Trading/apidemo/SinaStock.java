@@ -113,7 +113,7 @@ public class SinaStock implements Runnable {
 
                 if (priceMapBarDetail.containsKey(FTSE_INDEX)) {
                     if (ldt.toLocalTime().isAfter(LocalTime.of(9, 20))
-                            && ldt.toLocalTime().isBefore(LocalTime.of(15, 0))) { //change this later
+                            && ldt.toLocalTime().isBefore(LocalTime.of(15, 5))) { //change this later
                         priceMapBarDetail.get(FTSE_INDEX).put(ldt.toLocalTime(), currPrice);
                         XUTrader.openDeviationTrader(ldt, currPrice);
                         XUTrader.firstTickTrader(ldt, currPrice);

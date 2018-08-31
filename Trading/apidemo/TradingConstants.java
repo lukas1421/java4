@@ -92,7 +92,7 @@ public final class TradingConstants {
             lt -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) &&
                     !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SUNDAY)
                     && ((lt.toLocalTime().isAfter(LocalTime.of(8, 59)) && lt.toLocalTime().isBefore(LocalTime.of(11, 35)))
-                    || (lt.toLocalTime().isAfter(LocalTime.of(12, 58))) && lt.toLocalTime().isBefore(LocalTime.of(15, 30)));
+                    || (lt.toLocalTime().isAfter(LocalTime.of(12, 57))) && lt.toLocalTime().isBefore(LocalTime.of(15, 30)));
 
     public static final Predicate<LocalDateTime> FUT_COLLECTION_TIME =
             ldt -> ldt.toLocalTime().isBefore(LocalTime.of(5, 0)) || ldt.toLocalTime().isAfter(LocalTime.of(8, 59));

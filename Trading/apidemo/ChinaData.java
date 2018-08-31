@@ -101,7 +101,7 @@ public final class ChinaData extends JPanel {
         LocalTime lt = LocalTime.of(9, 19);
         while (lt.isBefore(LocalTime.of(15, 1))) {
             if (lt.getHour() == 11 && lt.getMinute() == 31) {
-                lt = LocalTime.of(13, 0);
+                lt = LocalTime.of(12, 57);
             }
             tradeTime.add(lt);
             if (lt.isAfter(LocalTime.of(9, 29))) {
