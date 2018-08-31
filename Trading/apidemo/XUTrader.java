@@ -1560,6 +1560,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> e.getKey().isAfter(LocalTime.of(12, 58)) &&
                         e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
+        pr(" pm hilo trader: pmOpen, pmFT, T, dir: ", pmOpen, pmFirstTick, pmFirstTickTime
+                , pmHiLoDirection);
+
         if (SECONDS.between(lastPMHiLoTradeTime, nowMilli) >= pmHiloWaitTimeSeconds && pmMaxSoFar != 0.0 && pmMinSoFar != 0.0) {
             if (!noMoreBuy.get() && indexLast > pmMaxSoFar && pmHiLoDirection != Direction.Long) {
                 buyQ = 1;
