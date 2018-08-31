@@ -39,8 +39,7 @@ import static apidemo.ChinaPosition.*;
 import static apidemo.ChinaStock.*;
 import static apidemo.TradingConstants.*;
 import static apidemo.XuTraderHelper.*;
-import static java.time.temporal.ChronoUnit.MINUTES;
-import static java.time.temporal.ChronoUnit.SECONDS;
+import static java.time.temporal.ChronoUnit.*;
 import static util.AutoOrderType.*;
 import static utility.Utility.*;
 
@@ -720,8 +719,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static int getRecentPmCh(LocalTime lt, String index) {
-        pr(" getting pmchy yest/today", pmchyMap.getOrDefault(index, 0), getPmchToday(lt, index));
-        if (lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(15, 0))) {
+        //pr(" getting pmchy yest/today", pmchyMap.getOrDefault(index, 0), getPmchToday(lt, index));
+        if (lt.isAfter(LocalTime.of(5, 0)) && lt.isBefore(LocalTime.of(15, 0))) {
             return getPmchY(lt, index);
         } else {
             return getPmchToday(lt, index);
@@ -729,12 +728,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static int getPmchY(LocalTime lt, String index) {
-        pr(" getting pmchy yest/today", pmchyMap.getOrDefault(index, 0), getPmchToday(lt, index));
+        //pr(" getting pmchy yest/today", pmchyMap.getOrDefault(index, 0), getPmchToday(lt, index));
         return pmchyMap.getOrDefault(index, 0);
     }
 
     private static int getPmchToday(LocalTime t, String ticker) {
-        if (t.isAfter(LocalTime.of(8, 59)) && t.isBefore(LocalTime.of(13, 0))) {
+        if (t.isAfter(LocalTime.of(5, 0)) && t.isBefore(LocalTime.of(13, 0))) {
             return 0;
         }
         if (priceMapBar.containsKey(ticker) && priceMapBar.get(ticker).size() > 0 &&
@@ -1079,19 +1078,31 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     static double getFutDelta() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate frontMonthExpiryDate = LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY,
+                DateTimeFormatter.ofPattern("yyyyMMdd"));
         return currentPosMap.entrySet().stream()
                 .mapToDouble(e -> {
+                    double factor = 1.0;
                     if (e.getKey() == FutType.PreviousFut) {
                         return 0.0;
-                    } else if (e.getKey() == FutType.FrontFut &&
-                            LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd"))
-                                    .equals(LocalDate.now()) && LocalTime.now().isAfter(LocalTime.of(15, 0))) {
+                    } else if (e.getKey() == FutType.FrontFut && frontMonthExpiryDate
+                            .equals(now.toLocalDate()) && now.toLocalTime().isAfter(LocalTime.of(15, 0))) {
                         return 0.0;
                     }
-                    return e.getValue() * futPriceMap.getOrDefault(e.getKey(), SinaStock.FTSE_OPEN)
+
+                    if (now.isAfter(LocalDateTime.of(frontMonthExpiryDate.minusDays(3L), LocalTime.of(15, 0)))) {
+                        factor = HOURS.between(LocalDateTime.of(frontMonthExpiryDate.minusDays(2L),
+                                LocalTime.of(15, 0))
+                                , LocalDateTime.of(frontMonthExpiryDate, LocalTime.of(15, 0))) / 72d;
+                    }
+                    return Math.max(0.0, factor) * e.getValue() * futPriceMap.getOrDefault(e.getKey(), SinaStock.FTSE_OPEN)
                             * ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getTicker()
                             , "CNY"), 1.0);
-                }).sum();
+                }).
+
+                        sum();
+
     }
 
     private static int cancelWaitTime(LocalTime t) {
@@ -1245,7 +1256,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double bidNow = bidMap.getOrDefault(FutType.FrontFut, 0.0);
         double askNow = askMap.getOrDefault(FutType.FrontFut, 0.0);
 
-        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFuture));
+        double freshPrice = futPriceMap.get(ibContractToFutType(activeFuture));
 
         if (lt.isBefore(LocalTime.of(9, 28)) || lt.isAfter(LocalTime.of(9, 35))) {
             checkCancelOrders(FIRST_TICK, nowMilli, ORDER_WAIT_TIME);
