@@ -1209,13 +1209,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(FUT_HILO);
         long tSinceLastOrder = tSincePrevOrderMilli(FUT_HILO, nowMilli);
 
-
         int waitTimeSec = 300;
-//        if (milliBtwnLastTwoOrders < 60000) {
-//            waitTimeSec = 300;
-//        } else {
-//            waitTimeSec = 10;
-//        }
 
         NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(futSymbol).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(8, 59)))
@@ -1251,7 +1245,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_HILO));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut hilo buy",
-                        globalIdOrderMap.get(id), " max min last", r(maxP), r(minP), r(last),
+                        globalIdOrderMap.get(id), " max min last dir", r(maxP), r(minP), r(last), futHiLoDirection,
                         "|bid ask spread", bid, offer, Math.round(10000d * (offer / bid - 1)), "bp",
                         "last freshprice ", last, freshPrice, "pre10:maxT minT ", maxTPre10, minTPre10));
                 futHiLoDirection = Direction.Long;
@@ -1261,7 +1255,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_HILO));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut hilo sell",
-                        globalIdOrderMap.get(id), "max min last", r(maxP), r(minP), r(last),
+                        globalIdOrderMap.get(id), "max min last dir", r(maxP), r(minP), r(last), futHiLoDirection,
                         "|bid ask spread", bid, offer, Math.round(10000d * (offer / bid - 1)), "bp",
                         "last freshprice", last, freshPrice, "pre10:maxT minT ", maxTPre10, minTPre10));
                 futHiLoDirection = Direction.Short;
