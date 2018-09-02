@@ -843,8 +843,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         futOpenTrader(ldt, price, pmChgY);
         futHiloTrader(ldt, price);
         futHiloAccu(ldt, price);
+        percentileMATrader(ldt, price, pmChgY);
 
-        //percentileMATrader(ldt, price, pmChgY);
         //firstTickTrader(ldt, price);
         //openDeviationTrader(ldt, price, pmChgY);
         //chinaHiLoTrader(ldt, price, pmChgY);
@@ -2293,9 +2293,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         } else if (isOvernight(lt)) {
             anchorIndex = "Future";
             index = futData.get(ibContractToFutType(activeFutureCt));
-        } else if (checkTimeRangeBool(lt, 9, 30, 10, 0)) {
-            shorterMA = 1;
-            longerMA = 5;
         }
 
         checkCancelOrders(PERC_MA, nowMilli, 30);
