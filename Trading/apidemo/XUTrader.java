@@ -819,9 +819,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (Math.abs(currDelta) > 2000000d) {
-            if (detailedPrint.get()) {
-                pr("delta too big, exceeding 2mm ");
-            }
             if (currDelta > 2000000d) {
                 noMoreBuy.set(true);
             } else if (currDelta < -2000000d) {
@@ -852,7 +849,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //closeProfitTaker(ldt, price);
 
         if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
-            pr(" curr delta is outside range ");
+            //pr(" curr delta is outside range ");
             return;
         }
 
@@ -1263,8 +1260,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double last = futPrice.lastEntry().getValue();
 
-        pr(" fut hi lo ", "direction ", futHiLoDirection, "#", futHiloOrdersNum, " max min "
+        pr("futhilo ", "dir: ", futHiLoDirection, "#", futHiloOrdersNum, "max min"
                 , maxP, minP, "open/last ", futOpen, futLast, "maxT, minT", maxT, minT);
+
+        //aggressive after market settles down at open
+        if (lt.isAfter(LocalTime.of(9, 40))) {
+            buySize = Math.max(2, buySize);
+            sellSize = Math.max(2, sellSize);
+        }
 
         if (lt.isAfter(LocalTime.of(8, 59)) &&
                 (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat)) {
@@ -1620,7 +1623,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "fut/pd", r(freshPrice), Math.round(10000d * (freshPrice / lastIndex - 1)) + " bp",
                 "openDevDir/vol ", openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
                 "IDX chg: ", r(lastIndex - openIndex), "prevT:", lastOpenDevTradeTime,
-                "wait(s):", waitTimeInSeconds, "last status ", lastStatus);
+                "wait(s):", waitTimeInSeconds, "last status ", lastStatus, "noBuy", noMoreBuy.get(),
+                "noSell", noMoreSell.get());
 
         if (numOrdersOpenDev > 0 && lastStatus != OrderStatus.Filled) {
             pr(" open order last not filled ");
@@ -2034,7 +2038,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
 
         if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            pr("1stTick profit taker:  smashort size long size not enough ");
+            //pr("1stTick profit taker:  smashort size long size not enough ");
             return;
         }
 
@@ -2335,10 +2339,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             //pr(" ma cross 2nd last : ", r(maShortSecLast), r(maLongSecLast), r(maShortSecLast - maLongSecLast));
             boolean bull = maShortLast > maLongLast && maShortSecLast <= maLongSecLast;
             boolean bear = maShortLast < maLongLast && maShortSecLast >= maLongSecLast;
-            pr(" bull/bear cross ", bull, bear);
-            pr(" current PD ", Math.round(10000d * getPD(freshPrice)));
+            pr(" bull/bear cross ", bull, bear, " current PD ", Math.round(10000d * getPD(freshPrice)));
             pr("delta base,pm,weekday,target:", baseDelta, pmchgDelta, weekdayDelta, deltaTarget);
-            pr("perc avg buy sell ", avgBuy, avgSell);
+            //pr("perc avg buy sell ", avgBuy, avgSell);
         }
 
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME) {

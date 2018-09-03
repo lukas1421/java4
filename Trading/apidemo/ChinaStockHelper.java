@@ -134,7 +134,7 @@ public final class ChinaStockHelper {
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, false))) {
             inMap.forEach((k, v) -> {
                 try {
-                    out.append(str(k, "\t", v));
+                    out.append(str(k, "\t", r(v)));
                     out.newLine();
                 } catch (IOException ex) {
                     ex.printStackTrace();
