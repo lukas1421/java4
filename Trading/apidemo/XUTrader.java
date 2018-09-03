@@ -1255,7 +1255,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
 
-
         double buySize = 1;
         double sellSize = 1;
 
@@ -1265,7 +1264,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double last = futPrice.lastEntry().getValue();
 
-        pr("futhilo ", "dir: ", futHiLoDirection, "#", futHiloOrdersNum, "max min"
+        pr("futHilo ", "dir: ", futHiLoDirection, "#", futHiloOrdersNum, "max min"
                 , maxP, minP, "open/last ", futOpen, futLast, "maxT, minT", maxT, minT);
 
         //aggressive after market settles down at open
@@ -1408,6 +1407,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     }
 
+    /**
+     * fut pc deviation trader
+     *
+     * @param nowMilli   time
+     * @param freshPrice fut price
+     */
     private static void futPCDeviationTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         String futSymbol = ibContractToSymbol(activeFutureCt);
@@ -1426,7 +1431,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double lastFut = futPrice.lastEntry().getValue();
         LocalDateTime lastFutPCOrder = getLastOrderTime(FUT_PC_DEV);
         long numOrders = getOrderSizeForTradeType(FUT_PC_DEV);
-        pr(" fut PC dev: ", "#:", numOrders, "PC: ", prevClose, "first En", firstEntry,
+        pr(" fut close dev: ", "#:", numOrders, "PC: ", prevClose, "first En", firstEntry,
                 "last:", lastFut, "dir:", futPCDevDirection);
 
         if (!manualfutPCDirection.get()) {
@@ -2795,7 +2800,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
 
             if (lt.equals(LocalTime.of(4, 44))) {
-                pr(" filling fut am close ", name, close);
+                pr(" filling fut am close ", name, ldt, close);
                 XUTrader.fut5amClose.put(name, close);
             }
 
