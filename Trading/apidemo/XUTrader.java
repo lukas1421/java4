@@ -2333,7 +2333,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             pr("perc avg buy sell ", avgBuy, avgSell);
         }
 
-
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME) {
             if (!noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
                     && _2dayPerc < LO_PERC_WIDE && currDelta < deltaTarget && (freshPrice < avgBuy || avgBuy == 0.0)
