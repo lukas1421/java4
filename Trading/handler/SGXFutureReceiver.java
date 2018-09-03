@@ -45,6 +45,7 @@ public class SGXFutureReceiver implements LiveHandler {
             case CLOSE:
                 //find out what time is the close taken
                 pr(name, " close ", price);
+                ChinaStock.closeMap.put(name, price);
                 break;
 
             case LAST:

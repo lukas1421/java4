@@ -47,11 +47,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         ApiController.ITradeReportHandler, ApiController.IOrderHandler, ApiController.ILiveOrderHandler
         , ApiController.IPositionHandler, ApiController.IConnectionHandler {
 
-    static JButton refreshButton;
-    static JButton computeButton;
-    static JButton processTradesButton;
-    static JButton graphButton;
-    static JToggleButton showTradesButton;
+    private static JButton refreshButton;
+    private static JButton computeButton;
+    private static JButton processTradesButton;
+    private static JButton graphButton;
+    private static JToggleButton showTradesButton;
 
     private static MASentiment _20DayMA = MASentiment.Directionless;
     public static volatile double currentIBNAV = 0.0;
@@ -74,6 +74,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final int HI_PERC_WIDE = 80;
     private static final int LO_PERC_WIDE = 20;
 
+    //fut prev close deviation
+    private static volatile Direction futPrevCloseDevDirection = Direction.Flat;
+    private static volatile AtomicBoolean manualfutPCDirection = new AtomicBoolean(false);
 
     //fut hilo trader
     private static volatile Direction futHiLoDirection = Direction.Flat;
@@ -1397,6 +1400,59 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     }
 
+    private static void futPrevCloseDeviationTrader(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        String futSymbol = ibContractToSymbol(activeFutureCt);
+        if (closeMap.getOrDefault(futSymbol, 0.0) == 0.0) {
+            return;
+        }
+
+        double prevClose = closeMap.get(futSymbol);
+
+        int waitTimeSec = 300;
+        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(futSymbol).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(8, 59)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
+
+        double lastFut = futPrice.lastEntry().getValue();
+        LocalDateTime lastFutPCOrder = getLastOrderTime(FUT_PC_DEV);
+
+        if (!manualfutPCDirection.get()) {
+            if (lt.isBefore(LocalTime.of(8, 59))) {
+                manualfutPCDirection.set(true);
+            } else {
+                if (lastFut > prevClose) {
+                    futPrevCloseDevDirection = Direction.Long;
+                    manualfutPCDirection.set(true);
+                } else if (lastFut < prevClose) {
+                    futPrevCloseDevDirection = Direction.Short;
+                    manualfutPCDirection.set(true);
+                } else {
+                    futPrevCloseDevDirection = Direction.Flat;
+                }
+            }
+        }
+
+        if (SECONDS.between(lastFutPCOrder, nowMilli) > waitTimeSec) {
+            if (!noMoreBuy.get() && lastFut > prevClose && futPrevCloseDevDirection != Direction.Long) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimitTIF(freshPrice, 1, Types.TimeInForce.IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_PC_DEV));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "fut PC dev buy", globalIdOrderMap.get(id)));
+                futPrevCloseDevDirection = Direction.Long;
+            } else if (!noMoreSell.get() && lastFut < prevClose && futPrevCloseDevDirection != Direction.Short) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(freshPrice, 1, Types.TimeInForce.IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_PC_DEV));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "fut PC dev SELL", globalIdOrderMap.get(id)));
+                futPrevCloseDevDirection = Direction.Short;
+            }
+        }
+    }
+
 
     /**
      * fut trades at fut open at 9am
@@ -1558,10 +1614,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int waitTimeInSeconds;
         int defaultWaitTime = 300;
         OrderStatus lastStatus = getLastOrderStatusForType(OPEN_DEVIATION);
-
-//        if (lt.isAfter(LocalTime.of(9, 40))) {
-//            defaultWaitTime = 300;
-//        }
 
         if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;
