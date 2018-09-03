@@ -1302,8 +1302,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * fut hi lo accumulator
      *
-     * @param nowMilli
-     * @param freshPrice
+     * @param nowMilli   time
+     * @param freshPrice futprice
      */
 
     private static void futHiloAccu(LocalDateTime nowMilli, double freshPrice) {
@@ -1425,7 +1425,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double lastFut = futPrice.lastEntry().getValue();
         LocalDateTime lastFutPCOrder = getLastOrderTime(FUT_PC_DEV);
         long numOrders = getOrderSizeForTradeType(FUT_PC_DEV);
-        pr(" fut PC dev: ", "#:", numOrders, "close", prevClose, "first En", firstEntry,
+        pr(" fut PC dev: ", "#:", numOrders, "PC: ", prevClose, "first En", firstEntry,
                 "last:", lastFut, "dir:", futPCDevDirection);
 
         if (!manualfutPCDirection.get()) {
@@ -1821,22 +1821,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
 
-        if (!manualPMHiloDirection.get()) {
-            if (lt.isBefore(LocalTime.of(13, 0))) {
-                manualPMHiloDirection.set(true);
-            } else {
-                if (indexLast > pmOpen) {
-                    pmHiLoDirection = Direction.Long;
-                    manualPMHiloDirection.set(true);
-                } else if (indexLast < pmOpen) {
-                    pmHiLoDirection = Direction.Short;
-                    manualPMHiloDirection.set(true);
-                } else {
-                    pmHiLoDirection = Direction.Flat;
-                }
-            }
-        }
-
         LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
 
         double pmMaxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
@@ -1847,9 +1831,32 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> e.getKey().isAfter(LocalTime.of(12, 58)) &&
                         e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
+        LocalTime pmMaxT = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(12, 58)))
+                .max((e1, e2) -> e1.getValue() >= e2.getValue() ? 1 : -1).map(Map.Entry::getKey).get();
+
+        LocalTime pmMinT = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LocalTime.of(12, 58)))
+                .min((e1, e2) -> e1.getValue() > e2.getValue() ? 1 : -1).map(Map.Entry::getKey).get();
+
+        if (!manualPMHiloDirection.get()) {
+            if (lt.isBefore(LocalTime.of(13, 0))) {
+                manualPMHiloDirection.set(true);
+            } else {
+                if (pmMaxT.isAfter(pmMinT)) {
+                    pmHiLoDirection = Direction.Long;
+                    manualPMHiloDirection.set(true);
+                } else if (pmMaxT.isBefore(pmMinT)) {
+                    pmHiLoDirection = Direction.Short;
+                    manualPMHiloDirection.set(true);
+                } else {
+                    pmHiLoDirection = Direction.Flat;
+                }
+            }
+        }
+
         pr(" pm hilo trader: pmOpen, pmFT, T, dir: ", pmOpen, pmFirstTick, pmFirstTickTime
                 , pmHiLoDirection);
-
         if (SECONDS.between(lastPMHiLoTradeTime, nowMilli) >= pmHiloWaitTimeSeconds && pmMaxSoFar != 0.0 && pmMinSoFar != 0.0) {
             if (!noMoreBuy.get() && indexLast > pmMaxSoFar && pmHiLoDirection != Direction.Long) {
                 buyQ = 1;
