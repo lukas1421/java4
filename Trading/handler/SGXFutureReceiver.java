@@ -41,13 +41,11 @@ public class SGXFutureReceiver implements LiveHandler {
             case ASK:
                 XUTrader.askMap.put(f, price);
                 break;
-
             case CLOSE:
-                //find out what time is the close taken
-                pr(name, " close ", price);
-                ChinaStock.closeMap.put(name, price);
+                pr("fut close in receiver: ", name, " close ", price);
+                //XUTrader.fut5amClose.put(name, price);
+                //XUTrader.futPrevClose3pmMap.put(name, price);
                 break;
-
             case LAST:
                 ChinaStock.priceMap.put(name, price);
                 XUTrader.futPriceMap.put(f, price);
