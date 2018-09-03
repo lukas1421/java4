@@ -127,6 +127,10 @@ public final class ChinaStockHelper {
         //pmbOutput.txt
         pr(" outputting options");
         File output = new File(TradingConstants.GLOBALPATH + "pmbOutput.txt");
+        if (inMap.size() == 0) {
+            return;
+        }
+
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, false))) {
             inMap.forEach((k, v) -> {
                 try {

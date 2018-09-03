@@ -1192,14 +1192,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFutureCt));
         int _2dayP = getPercentileForLast(fut);
 
-        if (priceMapBarDetail.get(ibContractToSymbol(activeFutureCt)).size() <= 1) {
+        String futSymbol = ibContractToSymbol(activeFutureCt);
+        FutType futType = ibContractToFutType(activeFutureCt);
+
+        if (priceMapBarDetail.get(futSymbol).size() <= 1) {
             return;
         }
 
-        double bid = bidMap.get(ibContractToFutType(activeFutureCt));
-        double offer = askMap.get(ibContractToFutType(activeFutureCt));
-
-        String futSymbol = ibContractToSymbol(activeFutureCt);
+        double bid = bidMap.get(futType);
+        double offer = askMap.get(futType);
 
         long futHiloOrdersNum = getOrderSizeForTradeType(FUT_HILO);
         LocalDateTime lastFutHiloTime = getLastOrderTime(FUT_HILO);
@@ -1218,18 +1219,32 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
+
         double futOpen = futPrice.firstEntry().getValue();
         double futLast = futPrice.lastEntry().getValue();
         LocalTime lastKey = futPrice.lastKey();
+
+
+        double maxP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
+                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+
+        double minP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
+                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+
+        LocalTime maxTPre10 = getFirstMaxTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
+        LocalTime minTPre10 = getFirstMinTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
+
+        LocalTime maxT = getFirstMaxTPred(futPrice, t -> true);
+        LocalTime minT = getFirstMinTPred(futPrice, t -> true);
 
         if (!manualFutHiloDirection.get()) {
             if (lt.isBefore(LocalTime.of(8, 59, 0))) {
                 manualFutHiloDirection.set(true);
             } else {
-                if (futLast > futOpen) {
+                if (maxT.isAfter(minT)) {
                     futHiLoDirection = Direction.Long;
                     manualFutHiloDirection.set(true);
-                } else if (futLast < futOpen) {
+                } else if (maxT.isBefore(minT)) {
                     futHiLoDirection = Direction.Short;
                     manualFutHiloDirection.set(true);
                 } else {
@@ -1238,17 +1253,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
 
-        double maxP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
-                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-
-        double minP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
-                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
-
-        LocalTime maxTPre10 = getMaxTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
-        LocalTime minTPre10 = getMinTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
-
-        LocalTime maxT = getMaxTPred(futPrice, t -> true);
-        LocalTime minT = getMinTPred(futPrice, t -> true);
 
         double buySize = 1;
         double sellSize = 1;
@@ -1258,8 +1262,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         double last = futPrice.lastEntry().getValue();
+
+        pr(" fut hi lo ", "direction ", futHiLoDirection, "#", futHiloOrdersNum, " max min "
+                , maxP, minP, "open/last ", futOpen, futLast, "maxT, minT", maxT, minT);
+
         if (lt.isAfter(LocalTime.of(8, 59)) &&
-                SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat) {
+                (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat)) {
             if (!noMoreBuy.get() && last > maxP && futHiLoDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(offer, buySize, Types.TimeInForce.DAY);
@@ -1302,8 +1310,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         //NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFutureCt));
 
         LocalDateTime lastOrderTime = getLastOrderTime(FUT_HILO_ACCU);
-        LocalTime maxTPre10 = getMaxTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
-        LocalTime minTPre10 = getMaxTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
+        LocalTime maxTPre10 = getFirstMaxTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
+        LocalTime minTPre10 = getFirstMaxTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
 
         int todayPerc = getPercentileForDoubleX(futPrice, freshPrice);
 

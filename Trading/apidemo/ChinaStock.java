@@ -591,7 +591,9 @@ public final class ChinaStock extends JPanel {
                     graph4.fillInGraph(tf5.getText());
                     graph5.fillInGraph(tf6.getText());
                     graph6.fillInGraph(tf7.getText());
-                    outputPMBDetailedToTxt(priceMapBarDetail.get(selectedNameStock));
+                    if (selectedNameStock != "" && priceMapBarDetail.containsKey(selectedNameStock)) {
+                        outputPMBDetailedToTxt(priceMapBarDetail.get(selectedNameStock));
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                     tf3.setText(stock2);

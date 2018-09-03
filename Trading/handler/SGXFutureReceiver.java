@@ -45,11 +45,11 @@ public class SGXFutureReceiver implements LiveHandler {
             case CLOSE:
                 //find out what time is the close taken
                 pr(name, " close ", price);
+                break;
 
             case LAST:
                 ChinaStock.priceMap.put(name, price);
                 XUTrader.futPriceMap.put(f, price);
-                //at 9am the price is wrong (ytd's open), make sure first tick is correct
                 priceMapBarDetail.get(name).put(ldt.toLocalTime(), price);
 
                 // need to capture overnight data
