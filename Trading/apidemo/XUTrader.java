@@ -1666,10 +1666,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "wait/last2Diff/tSinceLast:", waitTimeInSeconds, tBtwnLastTwoOrders, tSinceLastOrder,
                         "msg:", msg));
                 openDeviationDirection = Direction.Long;
-            } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short
-                    && pmchy > PMCHY_LO) {
+            } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 int sellQ = sellSize * OPENDEV_BASE_SIZE;
+
+                if (pmchy < PMCHY_LO) {
+                    sellQ = 1;
+                }
+
                 Order o = placeOfferLimit(sellPrice, sellQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, OPEN_DEVIATION));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
@@ -2210,8 +2214,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        int shorterMA = 5;
-        int longerMA = 10;
+        int shorterMA = 2;
+        int longerMA = 5;
 
         int buySize = 1;
         int sellSize = 1;
@@ -2252,7 +2256,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday MA buy", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
-                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc, "pmchg ", pmChgY));
+                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc, "pmchg ", pmChgY
+                        , "total Other Traded ", totalSizeTradedOtherOrders, "total MA", totalMASignedQ));
+
             } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
                     todayPerc > 95 && pmChgY > PMCHY_HI && lt.isAfter(LocalTime.of(14, 50))
                     && (totalSizeTradedOtherOrders > 0 && totalMASignedQ + totalSizeTradedOtherOrders > 0)) {
@@ -2263,7 +2269,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday MA sell", globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
-                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc, "pmchg ", pmChgY));
+                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc, "pmchg ", pmChgY
+                        , "total Other Traded ", totalSizeTradedOtherOrders, "total MA", totalMASignedQ));
             }
         }
     }
