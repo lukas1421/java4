@@ -840,6 +840,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
+        futPCDeviationTrader(ldt, price);
         futOpenTrader(ldt, price, pmChgY);
         futHiloTrader(ldt, price);
         futHiloAccu(ldt, price);
@@ -1397,10 +1398,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
             }
         }
+    }
+
+    private static void futProfitTaker(LocalDateTime nowMilli, double freshPrice) {
+
+        int shortPeriod = 1;
+        int longPeriod = 100;
 
     }
 
-    private static void futPrevCloseDeviationTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static void futPCDeviationTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         String futSymbol = ibContractToSymbol(activeFutureCt);
         if (closeMap.getOrDefault(futSymbol, 0.0) == 0.0) {
@@ -1408,15 +1415,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         double prevClose = closeMap.get(futSymbol);
-
         int waitTimeSec = 300;
         NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(futSymbol).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(8, 59)))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
+        Map.Entry<LocalTime, Double> firstEntry = priceMapBarDetail.get(futSymbol).firstEntry();
         double lastFut = futPrice.lastEntry().getValue();
         LocalDateTime lastFutPCOrder = getLastOrderTime(FUT_PC_DEV);
+        long numOrders = getOrderSizeForTradeType(FUT_PC_DEV);
+        pr(" fut PC dev: ", "#:", numOrders, "close", prevClose, "first En", firstEntry);
 
         if (!manualfutPCDirection.get()) {
             if (lt.isBefore(LocalTime.of(8, 59))) {
@@ -1437,14 +1446,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (SECONDS.between(lastFutPCOrder, nowMilli) > waitTimeSec) {
             if (!noMoreBuy.get() && lastFut > prevClose && futPrevCloseDevDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, 1, Types.TimeInForce.IOC);
+                Order o = placeBidLimitTIF(freshPrice, 1, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_PC_DEV));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut PC dev buy", globalIdOrderMap.get(id)));
                 futPrevCloseDevDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastFut < prevClose && futPrevCloseDevDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, 1, Types.TimeInForce.IOC);
+                Order o = placeOfferLimitTIF(freshPrice, 1, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_PC_DEV));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut PC dev SELL", globalIdOrderMap.get(id)));
