@@ -1867,22 +1867,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 HILO_BASE_SIZE = getWeekdayBaseSize(nowMilli.getDayOfWeek());
             }
         }
-
-        if (!manualHiloDirection.get()) {
-            if (lt.isBefore(LocalTime.of(9, 30))) {
-                manualHiloDirection.set(true);
-            } else {
-                if (indexLast > open) {
-                    a50HiLoDirection = Direction.Long;
-                    manualHiloDirection.set(true);
-                } else if (indexLast < open) {
-                    a50HiLoDirection = Direction.Short;
-                    manualHiloDirection.set(true);
-                } else {
-                    a50HiLoDirection = Direction.Flat;
-                }
-            }
-        }
         if (numOrders >= 6) {
             pr(" china hilo exceed max");
             return;
@@ -1911,6 +1895,26 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double minSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 28)) &&
                         e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+        LocalTime maxT = getFirstMaxTPred(priceMapBarDetail.get(FTSE_INDEX), e -> true);
+        LocalTime minT = getFirstMinTPred(priceMapBarDetail.get(FTSE_INDEX), e -> true);
+
+
+        if (!manualHiloDirection.get()) {
+            if (lt.isBefore(LocalTime.of(9, 30))) {
+                manualHiloDirection.set(true);
+            } else {
+                if (maxT.isAfter(minT)) {
+                    a50HiLoDirection = Direction.Long;
+                    manualHiloDirection.set(true);
+                } else if (maxT.isBefore(minT)) {
+                    a50HiLoDirection = Direction.Short;
+                    manualHiloDirection.set(true);
+                } else {
+                    a50HiLoDirection = Direction.Flat;
+                }
+            }
+        }
+
 
         if (SECONDS.between(lastHiLoOrderTime, nowMilli) >= hiloWaitTimeSeconds && maxSoFar != 0.0 && minSoFar != 0.0) {
             if (!noMoreBuy.get() && indexLast > maxSoFar && a50HiLoDirection != Direction.Long) {
