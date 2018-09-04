@@ -286,7 +286,7 @@ public final class XU extends JPanel {
         saveHib.addActionListener(l -> {
             XU.saveHibXU();
             ChinaMain.updateSystemNotif(Utility.str("存 XU", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
-            System.out.println(str(" done saving ", LocalTime.now()));
+            System.out.println(str(" XU saving done", LocalTime.now()));
         });
 
         JButton loadHib = new JButton("loadHib");

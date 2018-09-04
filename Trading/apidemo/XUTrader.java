@@ -2865,15 +2865,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             int daysToGoBack = currDate.getDayOfWeek().equals(DayOfWeek.MONDAY) ? 4 : 2;
             if (ldt.toLocalDate().isAfter(currDate.minusDays(daysToGoBack)) && FUT_COLLECTION_TIME.test(ldt)) {
+
                 if (lt.equals(LocalTime.of(9, 0))) {
                     futOpenMap.put(FutType.get(name), open);
                     pr(" today open is for " + name + " " + open);
                 }
+
                 futData.get(FutType.get(name)).put(ldt, new SimpleBar(open, high, low, close));
-//                if (priceMapBarDetail.containsKey(name) && ldt.toLocalDate().equals(LocalDate.now())
-//                        && ldt.toLocalTime().isAfter(LocalTime.of(8, 59))) {
-//                    priceMapBarDetail.get(name).put(ldt.toLocalTime(), close);
-//                }
+
+                //if (priceMapBarDetail.containsKey(name) && ldt.toLocalDate().equals(LocalDate.now())
+                //&& ldt.toLocalTime().isAfter(LocalTime.of(8, 59))) {
+                //priceMapBarDetail.get(name).put(ldt.toLocalTime(), close);
+                //}
             }
         } else {
             pr(str(date, open, high, low, close));

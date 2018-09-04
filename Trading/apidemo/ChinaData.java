@@ -545,7 +545,7 @@ public final class ChinaData extends JPanel {
                     ChinaMain.updateSystemNotif(Utility.str("存", saveclass.getSimpleName(),
                             LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
                             SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
-                    System.out.println(str(" done saving ", LocalTime.now()));
+                    pr(saveclass.getSimpleName(), "sav don", LocalTime.now());
                 }
         );
     }
@@ -597,7 +597,7 @@ public final class ChinaData extends JPanel {
         }).thenAccept(
                 v -> {
                     ChinaMain.updateSystemNotif(Utility.str(" 存 OHLC ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
-                    System.out.println(str(" done saving ", LocalTime.now()));
+                    pr("OHLC sav done", LocalTime.now());
                 }
         );
     }
