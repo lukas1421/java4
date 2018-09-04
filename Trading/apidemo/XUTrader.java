@@ -1408,8 +1408,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         String futSymbol = ibContractToSymbol(activeFutureCt);
         FutType futType = ibContractToFutType(activeFutureCt);
 
-        double pcSignedQ = getOrderTotalSignedQForType(FUT_PC_DEV);
-        double ptSignedQ = getOrderTotalSignedQForType(FUT_PC_PROFIT_TAKER);
+        double pcSignedQ = getOrderTotalSignedQForTypeFilled(FUT_PC_DEV, true);
+        double ptSignedQ = getOrderTotalSignedQForTypeFilled(FUT_PC_PROFIT_TAKER, true);
         LocalDateTime lastPTTime = getLastOrderTime(FUT_PC_PROFIT_TAKER);
         int percentile = getPercentileForDouble(priceMapBarDetail.get(futSymbol));
         double lastFut = priceMapBarDetail.get(futSymbol).lastEntry().getValue();
@@ -2268,7 +2268,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         double ftAccuSignedQuant = getOrderTotalSignedQForType(INTRADAY_FIRSTTICK_ACCU);
 
-        pr(" intraday first tick accu: open, firstTick, futP% ", r(open), r(firstTick), _2dayFutPerc);
+        //pr(" intraday first tick accu: open, firstTick, futP% ", r(open), r(firstTick), _2dayFutPerc);
 
         if (firstTickSignedQuant == 0.0 || Math.abs(ftAccuSignedQuant) >= FT_ACCU_MAX_SIZE) {
             return;
@@ -2760,6 +2760,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static double getOrderTotalSignedQForType(AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
+                .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
+                .sum();
+    }
+
+    private static double getOrderTotalSignedQForTypeFilled(AutoOrderType type, boolean filledOnly) {
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> !filledOnly || (e.getValue().getStatus() == OrderStatus.Filled))
                 .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
                 .sum();
     }
