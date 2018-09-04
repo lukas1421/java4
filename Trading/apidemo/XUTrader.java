@@ -1403,6 +1403,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
 
+    /**
+     * take profits of PC trades
+     *
+     * @param nowMilli   time
+     * @param freshPrice last futures price
+     */
     private static void futPCProfitTaker(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         String futSymbol = ibContractToSymbol(activeFutureCt);
@@ -1436,7 +1442,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     /**
-     * fut pc deviation trader
+     * fut pc deviation trader, trade delta based on position relative to last close at 4:44am
      *
      * @param nowMilli   time
      * @param freshPrice fut price
@@ -1461,6 +1467,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 "last:", lastFut, "dir:", futPCDevDirection, " last order T: ", lastFutPCOrderTime
                 , "sinceLastT", SECONDS.between(lastFutPCOrderTime, nowMilli), "no more buy/sell ",
                 noMoreBuy.get(), noMoreSell.get());
+
+        if (numOrders >= 6) {
+            return;
+        }
 
         if (!manualfutPCDirection.get()) {
             if (lt.isBefore(LocalTime.of(9, 0, 0))) {
@@ -2106,6 +2116,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
 
+    /**
+     * first tick ma profit taker
+     *
+     * @param nowMilli  time
+     * @param indexLast price
+     */
     static void firstTickMAProfitTaker(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFutureCt));
