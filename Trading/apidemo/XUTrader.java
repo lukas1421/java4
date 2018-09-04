@@ -878,7 +878,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MAX);
 
-            if (detailedPrint.get()) {
+            if (detailedPrint.get() && LocalTime.now().isBefore(LocalTime.of(10, 0))) {
                 pr(name, "checkf10:max min", maxT, minT);
             }
 
@@ -894,8 +894,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     .filter(e -> checkTimeRangeBool(e.getKey(), 9, 30, 9, 41))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
-            if (detailedPrint.get()) {
-                pr(name, "checkf10max ", f10max, "close", closeMap.get(name));
+            if (detailedPrint.get() && LocalTime.now().isBefore(LocalTime.of(10, 0))) {
+                pr(name, "checkf10max ", f10max, "close", closeMap.get(name)
+                        , "f10max>close", f10max > closeMap.get(name));
             }
             return f10max > closeMap.get(name);
         }
@@ -1240,7 +1241,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime minT = getFirstMinTPred(futPrice, t -> true);
 
         if (!manualFutHiloDirection.get()) {
-            if (lt.isBefore(LocalTime.of(8, 59, 0))) {
+            if (lt.isBefore(LocalTime.of(9, 0, 0))) {
                 manualFutHiloDirection.set(true);
             } else {
                 if (maxT.isAfter(minT)) {
@@ -1407,6 +1408,36 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     }
 
+    private static void futPCProfitTaker(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        String futSymbol = ibContractToSymbol(activeFutureCt);
+        FutType futtype = ibContractToFutType(activeFutureCt);
+
+        double pcSignedQ = getOrderTotalSignedQForType(FUT_PC_DEV);
+        double ptSignedQ = getOrderTotalSignedQForType(FUT_PC_PROFIT_TAKER);
+        LocalDateTime lastPTTime = getLastOrderTime(FUT_PC_PROFIT_TAKER);
+        int percentile = getPercentileForDouble(priceMapBarDetail.get(futSymbol));
+
+        if (SECONDS.between(lastPTTime, nowMilli) > 300) {
+            if (!noMoreBuy.get() && percentile < 5 && futPCDevDirection == Direction.Short
+                    && pcSignedQ < 0 && (pcSignedQ + ptSignedQ) < 0) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimitTIF(freshPrice, 1, Types.TimeInForce.DAY);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_PC_PROFIT_TAKER));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "fut PC PT buy", globalIdOrderMap.get(id)));
+            } else if (!noMoreSell.get() && percentile > 95 && futPCDevDirection == Direction.Long
+                    && pcSignedQ > 0 && (pcSignedQ + ptSignedQ) > 0) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(freshPrice, 1, Types.TimeInForce.DAY);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_PC_PROFIT_TAKER));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "fut PC PT sell", globalIdOrderMap.get(id)));
+            }
+        }
+    }
+
+
     /**
      * fut pc deviation trader
      *
@@ -1435,7 +1466,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 noMoreBuy.get(), noMoreSell.get());
 
         if (!manualfutPCDirection.get()) {
-            if (lt.isBefore(LocalTime.of(9, 0))) {
+            if (lt.isBefore(LocalTime.of(9, 0, 0))) {
                 manualfutPCDirection.set(true);
             } else {
                 if (lastFut > prevClose) {

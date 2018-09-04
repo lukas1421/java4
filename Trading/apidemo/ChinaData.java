@@ -507,7 +507,6 @@ public final class ChinaData extends JPanel {
     private static void saveHibGen(Map<String, ? extends NavigableMap<LocalTime, ?>> mp,
                                    Map<String, ? extends NavigableMap<LocalTime, ?>> mp2,
                                    ChinaSaveInterface2Blob saveclass) {
-
         if (mp.size() == 0) {
             pr(" first map empty, not saving ");
             return;
