@@ -1496,7 +1496,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long futOpenOrdersNum = getOrderSizeForTradeType(FUT_OPEN);
 
         NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(futSymbol).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(LocalTime.of(8, 59)))
+                .filter(e -> e.getKey().isAfter(LocalTime.of(8, 59, 0)))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
@@ -2812,10 +2812,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     pr(" today open is for " + name + " " + open);
                 }
                 futData.get(FutType.get(name)).put(ldt, new SimpleBar(open, high, low, close));
-                if (priceMapBarDetail.containsKey(name) && ldt.toLocalDate().equals(LocalDate.now())
-                        && ldt.toLocalTime().isAfter(LocalTime.of(8, 59))) {
-                    priceMapBarDetail.get(name).put(ldt.toLocalTime(), close);
-                }
+//                if (priceMapBarDetail.containsKey(name) && ldt.toLocalDate().equals(LocalDate.now())
+//                        && ldt.toLocalTime().isAfter(LocalTime.of(8, 59))) {
+//                    priceMapBarDetail.get(name).put(ldt.toLocalTime(), close);
+//                }
             }
         } else {
             pr(str(date, open, high, low, close));

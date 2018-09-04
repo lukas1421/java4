@@ -516,9 +516,6 @@ public final class ChinaMain implements IConnectionHandler {
                                     SwingUtilities.invokeLater(() -> {
                                         ChinaStock.computeButton.doClick();
                                         ChinaStock.graphButton.doClick();
-                                        if (LocalTime.now().isBefore(LocalTime.of(9, 0))) {
-                                            ChinaData.unloadHibAllButton.doClick();
-                                        }
                                     });
                                 }, 10, TimeUnit.SECONDS);
                             }

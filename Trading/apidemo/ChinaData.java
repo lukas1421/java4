@@ -94,8 +94,6 @@ public final class ChinaData extends JPanel {
     //    public static JButton btnSave2;
     static ExecutorService es = Executors.newCachedThreadPool();
     private static final Predicate<? super Entry<LocalTime, Double>> IS_OPEN = e -> e.getKey().isAfter(Utility.AM929T) && e.getValue() != 0.0;
-    static JButton unloadHibAllButton;
-
 
     public ChinaData() {
         LocalTime lt = LocalTime.of(9, 19);
@@ -218,7 +216,7 @@ public final class ChinaData extends JPanel {
         //JButton loadStratButton = new JButton("Load Strat");
         JButton loadHibGenPriceButton = new JButton("Load hib");
         JButton loadHibernateY = new JButton("Load hib Y");
-        unloadHibAllButton = new JButton("Unload T");
+        JButton unloadHibAllButton = new JButton("Unload T");
         JButton btnLoadBarYtd = new JButton("Load Bar YTD");
         JButton btnLoadBar = new JButton("Load Bar");
         JButton shcompToText = new JButton("上证");
@@ -469,11 +467,21 @@ public final class ChinaData extends JPanel {
 
     static void withHibernate() {
         if (priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
+            pr(" saving price map bar detailed ");
             saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());
+        } else {
+            pr(" cannot save price map bar detailed ");
+            pr("max size", priceMapBarDetail.entrySet().stream()
+                    .mapToInt(e -> e.getValue().size()).max().orElse(0));
         }
 
         if (priceMapBar.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) { // && LocalTime.now().isAfter(AM914T)
+            pr(" saving price map bar minute ");
             saveHibGen(priceMapBar, sizeTotalMap, ChinaSave.getInstance());
+        } else {
+            pr(" cannot save price map bar minute ");
+            pr("max size ", priceMapBar.entrySet().stream()
+                    .mapToInt(e -> e.getValue().size()).max().orElse(0));
         }
     }
 
@@ -500,6 +508,11 @@ public final class ChinaData extends JPanel {
                                    Map<String, ? extends NavigableMap<LocalTime, ?>> mp2,
                                    ChinaSaveInterface2Blob saveclass) {
 
+        if (mp.size() == 0) {
+            pr(" first map empty, not saving ");
+            return;
+        }
+
         LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
         CompletableFuture.runAsync(() -> {
@@ -509,18 +522,18 @@ public final class ChinaData extends JPanel {
                     session.createQuery("DELETE from " + saveclass.getClass().getName()).executeUpdate();
                     AtomicLong i = new AtomicLong(0L);
                     mp.keySet().forEach(name -> {
-                        if (mp2.size() == 0 || mp2.containsKey(name)) {
-                            ChinaSaveInterface2Blob cs = saveclass.createInstance(name);
-                            cs.setFirstBlob(blobify(mp.get(name), session));
-                            if (mp2.size() > 0) {
-                                cs.setSecondBlob(blobify(mp2.get(name), session));
-                            }
-                            session.save(cs);
-                            if (i.get() % 100 == 0) {
-                                session.flush();
-                            }
-                            i.incrementAndGet();
+                        //if (mp2.size() == 0 || mp2.containsKey(name)) {
+                        ChinaSaveInterface2Blob cs = saveclass.createInstance(name);
+                        cs.setFirstBlob(blobify(mp.get(name), session));
+                        if (mp2.size() > 0 && mp2.containsKey(name)) {
+                            cs.setSecondBlob(blobify(mp2.get(name), session));
                         }
+                        session.save(cs);
+                        if (i.get() % 100 == 0) {
+                            session.flush();
+                        }
+                        i.incrementAndGet();
+                        //}
                     });
                     session.getTransaction().commit();
                     session.close();
