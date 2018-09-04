@@ -77,7 +77,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //fut prev close deviation
     private static volatile Direction futPCDevDirection = Direction.Flat;
     private static volatile AtomicBoolean manualfutPCDirection = new AtomicBoolean(false);
-    public static volatile HashMap<String, Double> fut5amClose = new HashMap<>();
+    private static volatile EnumMap<FutType, Double> fut5amClose = new EnumMap<>(FutType.class);
 
     //fut hilo trader
     private static volatile Direction futHiLoDirection = Direction.Flat;
@@ -1416,11 +1416,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void futPCDeviationTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         String futSymbol = ibContractToSymbol(activeFutureCt);
-        if (fut5amClose.getOrDefault(futSymbol, 0.0) == 0.0) {
+        FutType futtype = ibContractToFutType(activeFutureCt);
+        if (fut5amClose.getOrDefault(futtype, 0.0) == 0.0) {
             return;
         }
 
-        double prevClose = fut5amClose.get(futSymbol);
+        double prevClose = fut5amClose.get(futtype);
         int waitTimeSec = 300;
         NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(futSymbol).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(8, 59)))
@@ -1431,7 +1432,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double lastFut = futPrice.lastEntry().getValue();
         LocalDateTime lastFutPCOrder = getLastOrderTime(FUT_PC_DEV);
         long numOrders = getOrderSizeForTradeType(FUT_PC_DEV);
-        pr(" fut close dev: ", "#:", numOrders, "PC: ", prevClose, "first En", firstEntry,
+        pr("fut close devi: ", "#:", numOrders, "PC: ", prevClose, "first En", firstEntry,
                 "last:", lastFut, "dir:", futPCDevDirection);
 
         if (!manualfutPCDirection.get()) {
@@ -2801,7 +2802,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             if (lt.equals(LocalTime.of(4, 44))) {
                 pr(" filling fut am close ", name, ldt, close);
-                XUTrader.fut5amClose.put(name, close);
+                XUTrader.fut5amClose.put(FutType.get(name), close);
             }
 
 
@@ -3101,7 +3102,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             updateLog(" Expiry " + activeFutureCt.lastTradeDateOrContractMonth());
             updateLog(" NAV: " + currentIBNAV);
             updateLog(" P " + futPriceMap.getOrDefault(f, 0.0));
-            updateLog(" Close " + futPrevClose3pmMap.getOrDefault(f, 0.0));
+            updateLog(str(" Close3pm ", futPrevClose3pmMap.getOrDefault(f, 0.0),
+                    " Close4am ", fut5amClose.getOrDefault(f, 0.0)));
             updateLog(" Open " + futOpenMap.getOrDefault(f, 0.0));
             updateLog(" Chg " + (Math.round(10000d * (futPriceMap.getOrDefault(f, 0.0) /
                     futPrevClose3pmMap.getOrDefault(f, Double.MAX_VALUE) - 1)) / 100d) + " %");

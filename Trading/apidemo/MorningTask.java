@@ -749,7 +749,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
         if (tt == TickType.CLOSE && name.equals("XINA50")) {
             Utility.simpleWriteToFile("FTSE A50" + "\t" + price, true, output);
         }
-        pr(name, tt, price, t);
+        pr("handle price  ", name, tt, price, t);
     }
 
     @Override
