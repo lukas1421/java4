@@ -40,12 +40,12 @@ public enum AutoOrderType {
     CLOSE_TAKE_PROFIT,
     INTRADAY_FIRSTTICK_ACCU,
     FUT_OPEN,
-    FUT_PC_DEV,
+    FUT_PC_DEVI,
     FUT_PC_PROFIT_TAKER,
     FUT_HILO,
     FUT_HILO_ACCU,
     FUT_KO,
-    OPEN_DEVIATION,
+    OPEN_DEVI,
     INDEX_NEW_HILO,
     UNKNOWN
 }

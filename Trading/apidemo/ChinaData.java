@@ -467,7 +467,7 @@ public final class ChinaData extends JPanel {
 
     static void withHibernate() {
         if (priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
-            pr(" saving price detailed ");
+            pr(" saving price detailed @", LocalTime.now());
             saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());
         } else {
             pr(" cannot save price bar detailed ", "max size", priceMapBarDetail.entrySet().stream()
@@ -475,7 +475,7 @@ public final class ChinaData extends JPanel {
         }
 
         if (priceMapBar.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
-            pr(" saving pmb ");
+            pr(" saving pmb @", LocalTime.now());
             saveHibGen(priceMapBar, sizeTotalMap, ChinaSave.getInstance());
         } else {
             pr(" cannot save price map bar minute ", "max size ", priceMapBar.entrySet().stream()

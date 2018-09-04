@@ -772,16 +772,14 @@ public class ChinaOption extends JPanel implements Runnable {
         sesOption.scheduleAtFixedRate(() -> {
             LocalTime lt = LocalTime.now();
             if (lt.isAfter(LocalTime.of(9, 20)) && lt.isBefore(LocalTime.of(15, 15))) {
-                pr(" saving vols hib ");
+                pr(" saving vols hib @", lt);
                 saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance());
             }
-
             if (!savedVolEOD.get() && checkTimeRangeBool(lt, 15, 0, 15, 15)) {
                 saveVolsCSV();
                 saveHibEOD();
                 savedVolEOD.set(true);
             }
-
         }, 3, 1, TimeUnit.MINUTES);
 
         sesOption.scheduleAtFixedRate(() -> {

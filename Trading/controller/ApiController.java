@@ -486,7 +486,9 @@ public class ApiController implements EWrapper {
             public void accountSummary(String account, AccountSummaryTag tag, String value, String currency) {
                 String output = getStrCheckNull(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
                         , account, tag, value, currency);
-                pr("Account Pnl: ", output, "**********************");
+                if (LocalDateTime.now().toLocalTime().getSecond() < 20) {
+                    pr("Account Pnl: ", output, "**********************");
+                }
                 XUTrader.updateLog(str("Account pnl", output));
                 XUTrader.currentIBNAV = Double.parseDouble(value);
                 if (LocalTime.now().getMinute() < 2) {
@@ -507,9 +509,7 @@ public class ApiController implements EWrapper {
     }
 
     public interface IMarketValueSummaryHandler {
-
         void marketValueSummary(String account, MarketValueTag tag, String value, String currency);
-
         void marketValueSummaryEnd();
     }
 
@@ -530,7 +530,7 @@ public class ApiController implements EWrapper {
         sendEOM();
     }
 
-    public void cancelAccountSummary(IAccountSummaryHandler handler) {
+    private void cancelAccountSummary(IAccountSummaryHandler handler) {
         Integer reqId = getAndRemoveKey(m_acctSummaryHandlers, handler);
         if (reqId != null) {
             m_client.cancelAccountSummary(reqId);
