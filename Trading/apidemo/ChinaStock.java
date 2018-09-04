@@ -671,7 +671,7 @@ public final class ChinaStock extends JPanel {
                 //pr(" end computeT ");
             } else {
                 ftes.shutdown();
-                out.println("computing stopped" + LocalTime.now());
+                out.println("ChinaStock computing stopped: " + LocalTime.now());
             }
         });
 

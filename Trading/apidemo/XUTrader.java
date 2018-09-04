@@ -833,7 +833,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     , "no more buy/sell", noMoreBuy.get(), noMoreSell.get());
         }
 
-
         if (!globalTradingOn.get()) {
             if (detailedPrint.get()) {
                 pr(" global trading off ");
@@ -2868,7 +2867,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
                 if (lt.equals(LocalTime.of(9, 0))) {
                     futOpenMap.put(FutType.get(name), open);
-                    pr(" today open is for " + name + " " + open);
+                    pr(ld, " :open is for " + name + " " + open);
                 }
 
                 futData.get(FutType.get(name)).put(ldt, new SimpleBar(open, high, low, close));

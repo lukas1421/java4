@@ -24,7 +24,7 @@ public class Hibtask {
 
     public static <T extends Temporal> ConcurrentSkipListMap<T, ?> unblob(Blob b) {
 
-        if(b== null) {
+        if (b == null) {
             return new ConcurrentSkipListMap<>();
         }
 
@@ -75,7 +75,7 @@ public class Hibtask {
         CompletableFuture.runAsync(() -> {
             loadHibGen(ChinaSave.getInstance());
             loadHibGen(ChinaSaveDetailed.getInstance());
-            System.out.println(" load finished " + " size is " + ChinaData.priceMapBar.size());
+            //System.out.println(" load finished " + " size is " + ChinaData.priceMapBar.size());
         }).thenAccept(
                 v -> ChinaMain.updateSystemNotif(Utility.str(" LOAD HIB T DONE ",
                         LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
