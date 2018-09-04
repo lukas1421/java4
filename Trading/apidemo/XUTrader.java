@@ -842,6 +842,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         futPCDeviationTrader(ldt, price);
+        futPCProfitTaker(ldt, price);
         futOpenTrader(ldt, price, pmChgY);
         futHiloTrader(ldt, price);
         futHiloAccu(ldt, price);
@@ -1401,33 +1402,29 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static void futProfitTaker(LocalDateTime nowMilli, double freshPrice) {
-
-        int shortPeriod = 1;
-        int longPeriod = 100;
-
-    }
 
     private static void futPCProfitTaker(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         String futSymbol = ibContractToSymbol(activeFutureCt);
-        FutType futtype = ibContractToFutType(activeFutureCt);
+        FutType futType = ibContractToFutType(activeFutureCt);
 
         double pcSignedQ = getOrderTotalSignedQForType(FUT_PC_DEV);
         double ptSignedQ = getOrderTotalSignedQForType(FUT_PC_PROFIT_TAKER);
         LocalDateTime lastPTTime = getLastOrderTime(FUT_PC_PROFIT_TAKER);
         int percentile = getPercentileForDouble(priceMapBarDetail.get(futSymbol));
+        double lastFut = priceMapBarDetail.get(futSymbol).lastEntry().getValue();
+        double pc = fut5amClose.get(futType);
 
-        if (SECONDS.between(lastPTTime, nowMilli) > 300) {
+        if (SECONDS.between(lastPTTime, nowMilli) > 60 * 15) {
             if (!noMoreBuy.get() && percentile < 5 && futPCDevDirection == Direction.Short
-                    && pcSignedQ < 0 && (pcSignedQ + ptSignedQ) < 0) {
+                    && pcSignedQ < 0 && (pcSignedQ + ptSignedQ) < 0 && lastFut < pc) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, 1, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_PC_PROFIT_TAKER));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut PC PT buy", globalIdOrderMap.get(id)));
             } else if (!noMoreSell.get() && percentile > 95 && futPCDevDirection == Direction.Long
-                    && pcSignedQ > 0 && (pcSignedQ + ptSignedQ) > 0) {
+                    && pcSignedQ > 0 && (pcSignedQ + ptSignedQ) > 0 && lastFut > pc) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, 1, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_PC_PROFIT_TAKER));
