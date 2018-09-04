@@ -1428,6 +1428,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         pr(" fut PC profit taker ", "pcQ, ptakeQ,", pcSignedQ, ptSignedQ, "perc", percentile,
                 "last fut/pc", lastFut, pc);
 
+
         if (SECONDS.between(lastPTTime, nowMilli) > 60 * 15) {
             if (!noMoreBuy.get() && percentile < 5 && futPCDevDirection == Direction.Short
                     && pcSignedQ < 0 && (pcSignedQ + ptSignedQ) < 0 && lastFut < pc) {
@@ -1474,7 +1475,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         pr("fut close devi: ", "#:", numOrders, "PC: ", prevClose, "first En", firstEntry,
                 "last:", lastFut, "dir:", futPCDevDirection, " last order T: ", lastFutPCOrderTime
                 , "sinceLastT", SECONDS.between(lastFutPCOrderTime, nowMilli), "no more buy/sell ",
-                noMoreBuy.get(), noMoreSell.get());
+                noMoreBuy.get(), noMoreSell.get(), "manual PC dir:", manualfutPCDirection.get());
 
         if (numOrders >= 6) {
             return;
@@ -1525,9 +1526,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void futOpenTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
         LocalTime lt = nowMilli.toLocalTime();
         String futSymbol = ibContractToSymbol(activeFutureCt);
-        FutType futtype = ibContractToFutType(activeFutureCt);
-        double currentBid = bidMap.get(FutType.FrontFut);
-        double currentAsk = askMap.get(FutType.FrontFut);
+        FutType ft = ibContractToFutType(activeFutureCt);
+        double currentBid = bidMap.get(ft);
+        double currentAsk = askMap.get(ft);
         double deltaTgt = getDeltaTarget(nowMilli, pmchy);
         double currDelta = getNetPtfDelta();
 
@@ -1547,7 +1548,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
-        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(futtype);
+        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ft);
         int _2dayPerc = getPercentileForLast(fut);
 
         pr("fut open trader " + futPrice);
@@ -1568,12 +1569,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (!noMoreBuy.get() && last > maxP && _2dayPerc < 50 && (_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO)
                     && currDelta < deltaTgt) {
                 int id = autoTradeID.incrementAndGet();
-                Order o;
-                if (futOpenOrdersNum == 0L && lt.isBefore(LocalTime.of(9, 0, 10))) {
-                    o = placeBidLimitTIF(freshPrice + 2.5, 1, Types.TimeInForce.IOC);
-                } else {
-                    o = placeBidLimit(freshPrice, 1);
-                }
+                Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut open buy",
@@ -1603,11 +1599,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         LocalTime lt = nowMilli.toLocalTime();
         int pmchy = getRecentPmCh(lt, INDEX_000001);
-        FutType futtype = ibContractToFutType(activeFutureCt);
-        double bidNow = bidMap.getOrDefault(FutType.FrontFut, 0.0);
-        double askNow = askMap.getOrDefault(FutType.FrontFut, 0.0);
-
-        double freshPrice = futPriceMap.get(ibContractToFutType(activeFutureCt));
+        FutType ft = ibContractToFutType(activeFutureCt);
+        double bidNow = bidMap.getOrDefault(ft, 0.0);
+        double askNow = askMap.getOrDefault(ft, 0.0);
+        double freshPrice = futPriceMap.get(ft);
 
         if (lt.isBefore(LocalTime.of(9, 28)) || lt.isAfter(LocalTime.of(9, 35))) {
             checkCancelOrders(FIRST_TICK, nowMilli, ORDER_WAIT_TIME);
@@ -1618,7 +1613,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(futtype);
+        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ft);
         int _2dayPerc = getPercentileForLast(fut);
 
         pr(" detailed ftse index ", priceMapBarDetail.get(FTSE_INDEX));
@@ -1670,9 +1665,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     static void openDeviationTrader(LocalDateTime nowMilli, double lastIndex) {
         LocalTime lt = nowMilli.toLocalTime();
-        //int pmchy = getPmchY();
         int pmchy = getRecentPmCh(lt, INDEX_000001);
-        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFutureCt));
+        FutType ft = ibContractToFutType(activeFutureCt);
+        double freshPrice = futPriceMap.get(ft);
         double atmVol = ChinaOption.getATMVol(expiryToGet);
         int waitTimeInSeconds = 300;
         OrderStatus lastStatus = getLastOrderStatusForType(OPEN_DEVI);
@@ -1733,7 +1728,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     "openDevDir/vol ", openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
                     "IDX chg: ", r(lastIndex - openIndex), "prevT:", lastOpenDevTradeTime,
                     "wait(s):", waitTimeInSeconds, "last status ", lastStatus, "noBuy", noMoreBuy.get(),
-                    "noSell", noMoreSell.get());
+                    "noSell", noMoreSell.get(), "manual set", manualOpenDeviationOn.get());
         }
 
         if (numOrdersOpenDev > 0 && lastStatus != OrderStatus.Filled) {
