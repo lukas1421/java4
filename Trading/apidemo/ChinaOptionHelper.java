@@ -177,7 +177,7 @@ public class ChinaOptionHelper {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-        System.out.println(" get last trading date " + ChinaOption.previousTradingDate);
+        System.out.println(" ChinaOption.PreviousTradingDate: " + ChinaOption.previousTradingDate);
     }
 
     static String getOptionTicker(Map<String, Option> mp, CallPutFlag f, double strike, LocalDate expiry) {

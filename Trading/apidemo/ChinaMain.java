@@ -457,7 +457,7 @@ public final class ChinaMain implements IConnectionHandler {
                 }, 0, 1, TimeUnit.MINUTES);
 
                 //auto process
-                JOptionPane pane = new JOptionPane("do u want auto start? ",
+                JOptionPane pane = new JOptionPane("want auto start? ",
                         JOptionPane.QUESTION_MESSAGE, JOptionPane.YES_NO_OPTION);
 
                 JDialog jd1 = pane.createDialog(" AutoStart ");
@@ -466,7 +466,7 @@ public final class ChinaMain implements IConnectionHandler {
                     @Override
                     public void componentShown(ComponentEvent componentEvent) {
                         super.componentShown(componentEvent);
-                        Timer t = new Timer(3000, ae -> {
+                        Timer t = new Timer(1000, ae -> {
 
                             jd1.setVisible(false);
                             jd1.dispose();

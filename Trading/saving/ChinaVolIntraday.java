@@ -40,7 +40,7 @@ public class ChinaVolIntraday implements ChinaSaveInterface1Blob {
     @SuppressWarnings("unchecked")
     @Override
     public void updateFirstMap(String name, NavigableMap<LocalDateTime, ?> mp) {
-        System.out.println(" updating first map " + name + " mp size " + mp.size());
+        //System.out.println(" updating first map " + name + " mp size " + mp.size());
         if (mp.size() > 0) {
             ChinaOption.todayImpliedVolMap.put(name, (ConcurrentSkipListMap<LocalDateTime, SimpleBar>) mp);
         } else {

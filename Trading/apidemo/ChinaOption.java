@@ -535,7 +535,6 @@ public class ChinaOption extends JPanel implements Runnable {
             loadVolsHib(); // load previous
             loadIntradayVolsHib(ChinaVolIntraday.getInstance()); // load intraday
         }, 15, TimeUnit.SECONDS);
-        pr(" china option constructor done ");
     } // end of constructor
 
     private static void updateOptionSystemInfo(String text) {
@@ -1094,8 +1093,8 @@ public class ChinaOption extends JPanel implements Runnable {
 
                 for (Object o : list) {
                     ChinaVolSave c = (ChinaVolSave) o;
-                    pr(str(c.getVolDate(), c.getCallPut(), c.getStrike(), c.getExpiryDate(),
-                            c.getVol(), c.getMoneyness(), c.getOptionTicker()));
+//                    pr(str(c.getVolDate(), c.getCallPut(), c.getStrike(), c.getExpiryDate(),
+//                            c.getVol(), c.getMoneyness(), c.getOptionTicker()));
                     //pr(" counter is " + i.incrementAndGet());
                     LocalDate volDate = c.getVolDate();
                     LocalDate expiry = c.getExpiryDate();
@@ -1136,7 +1135,7 @@ public class ChinaOption extends JPanel implements Runnable {
             timeLapseMoneynessVolAllExpiries.get(expiry).forEach((k, v) ->
                     timeLapseVolAllExpiries.get(expiry).put(k, ChinaOptionHelper.getVolByMoneyness(v, 100)));
             pr(" expiry is " + expiry);
-            timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(Utility::pr);
+            //timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(Utility::pr);
         }
     }
 

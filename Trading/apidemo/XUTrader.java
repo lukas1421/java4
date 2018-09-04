@@ -225,8 +225,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static volatile JLabel connectionLabel = new JLabel();
 
     XUTrader(ApiController ap) {
-        pr(str(" ****** front fut ******* ", frontFut));
-        pr(str(" ****** back fut ******* ", backFut));
+        pr(str(" ****** front fut ******* ", frontFut.symbol(), frontFut.lastTradeDateOrContractMonth()));
+        pr(str(" ****** back fut ******* ", backFut.symbol(), backFut.lastTradeDateOrContractMonth()));
 
         for (FutType f : FutType.values()) {
             futData.put(f, new ConcurrentSkipListMap<>());
@@ -802,6 +802,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     public static void processMain(LocalDateTime ldt, double price) {
 
+        LocalTime lt = ldt.toLocalTime();
         double currDelta = getNetPtfDelta();
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
         boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000016);
@@ -815,13 +816,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int pmChg = getPmchToday(ldt.toLocalTime(), INDEX_000001);
         int lastPerc = getPreCloseLastPercToday(ldt.toLocalTime(), INDEX_000001);
 
-        if (detailedPrint.get()) {
-            pr("||20DayMA ", _20DayMA, "||maxT>MinT: ", maxAfterMin, "||max>PrevC", maxAbovePrev,
-                    "closeY", closePercY, "openPercY", openPercY, "pmchgy", pmChgY,
-                    "pmch ", pmChg, "lastP", lastPerc, "delta range ", getBearishTarget(), getBullishTarget()
-                    , "currDelta ", Math.round(currDelta), " hilo direction: ", a50HiLoDirection);
-        }
-
         if (Math.abs(currDelta) > 2000000d) {
             if (currDelta > 2000000d) {
                 noMoreBuy.set(true);
@@ -829,6 +823,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 noMoreSell.set(true);
             }
         }
+
+        if (detailedPrint.get() && lt.getSecond() < 10) {
+            pr(lt.truncatedTo(ChronoUnit.SECONDS),
+                    "||20DayMA ", _20DayMA, "||maxT>MinT: ", maxAfterMin, "||max>PrevC", maxAbovePrev,
+                    "closeY", closePercY, "openPercY", openPercY, "pmchgy", pmChgY,
+                    "pmch", pmChg, "lastP", lastPerc, "delta range", getBearishTarget(), getBullishTarget()
+                    , "currDelta ", Math.round(currDelta), "a50 hilo dir: ", a50HiLoDirection
+                    , "no more buy/sell", noMoreBuy.get(), noMoreSell.get());
+        }
+
 
         if (!globalTradingOn.get()) {
             if (detailedPrint.get()) {
@@ -1722,14 +1726,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int buySize = 1;
         int sellSize = 1;
 
-        pr(" open dev: numOrder ", lt.truncatedTo(ChronoUnit.SECONDS), numOrdersOpenDev,
-                "open:", r(openIndex), "ft", r(firstTick), "lastIndex", r(lastIndex),
-                "IDX chg:", r10000(lastIndex / openIndex - 1),
-                "fut/pd", r(freshPrice), Math.round(10000d * (freshPrice / lastIndex - 1)) + " bp",
-                "openDevDir/vol ", openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
-                "IDX chg: ", r(lastIndex - openIndex), "prevT:", lastOpenDevTradeTime,
-                "wait(s):", waitTimeInSeconds, "last status ", lastStatus, "noBuy", noMoreBuy.get(),
-                "noSell", noMoreSell.get());
+        if (lt.isBefore(LocalTime.of(9, 40)) || lt.getSecond() > 50) {
+            pr(" open dev: numOrder ", lt.truncatedTo(ChronoUnit.SECONDS), numOrdersOpenDev,
+                    "open:", r(openIndex), "ft", r(firstTick), "lastIndex", r(lastIndex),
+                    "IDX chg:", r10000(lastIndex / openIndex - 1),
+                    "fut/pd", r(freshPrice), Math.round(10000d * (freshPrice / lastIndex - 1)) + " bp",
+                    "openDevDir/vol ", openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
+                    "IDX chg: ", r(lastIndex - openIndex), "prevT:", lastOpenDevTradeTime,
+                    "wait(s):", waitTimeInSeconds, "last status ", lastStatus, "noBuy", noMoreBuy.get(),
+                    "noSell", noMoreSell.get());
+        }
 
         if (numOrdersOpenDev > 0 && lastStatus != OrderStatus.Filled) {
             pr(" open order last not filled ");
@@ -2460,7 +2466,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double avgSell = getAvgFilledSellPriceForOrderType(PERC_MA);
 
 
-        if (detailedPrint.get()) {
+        if (detailedPrint.get() && lt.getSecond() < 10) {
             pr("*perc MA Time: ", nowMilli.toLocalTime().truncatedTo(ChronoUnit.SECONDS), "next T:",
                     lastIndexMAOrder.plusMinutes(ORDER_WAIT_TIME),
                     "||1D p%: ", todayPerc, "||2D p%", _2dayPerc, "pmchY: ", pmchy);
@@ -2847,9 +2853,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (!ld.equals(currDate) && lt.equals(LocalTime.of(14, 59))) {
                 futPrevClose3pmMap.put(FutType.get(name), close);
             }
-            if (name.equals("SGXA50") && lt.isAfter(LocalTime.of(3, 0)) && lt.isBefore(LocalTime.of(5, 0))) {
-                pr(" handle hist ", name, ldt, open, high, low, close);
-            }
+//            if (name.equals("SGXA50") && lt.isAfter(LocalTime.of(3, 0)) && lt.isBefore(LocalTime.of(5, 0))) {
+//                pr(" handle hist ", name, ldt, open, high, low, close);
+//            }
 
             if (lt.equals(LocalTime.of(4, 44))) {
                 pr(" filling fut am close ", name, ldt, close);
