@@ -246,15 +246,12 @@ public class SinaStock implements Runnable {
     enum BidAsk {
         BID(0), ASK(1);
         int val;
-
         BidAsk(int i) {
             val = i;
         }
-
         int getValue() {
             return val;
         }
-
         void setValue(int i) {
             val = i;
         }

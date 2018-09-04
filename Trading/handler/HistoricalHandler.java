@@ -11,12 +11,9 @@ import java.util.Date;
 import static utility.Utility.pr;
 
 public interface HistoricalHandler extends GeneralHandler {
-    void handleHist(String name, String date, double open,
-                    double high, double low, double close);
 
+    void handleHist(String name, String date, double open, double high, double low, double close);
     void actionUponFinish(String name);
-
-
     class TodayHistHandle implements HistoricalHandler {
 
         public TodayHistHandle() {
