@@ -1929,20 +1929,26 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+
+    /**
+     * liquidate all positions at close
+     *
+     * @param nowMilli   time
+     * @param freshPrice price
+     */
     private static void closeLiqTrader(LocalDateTime nowMilli, double freshPrice) {
 
         LocalTime liqStartTime = LocalTime.of(14, 55);
-        long liqWaitSecs = 60 * 5;
+        long liqWaitSecs = 60;
 
         if (nowMilli.toLocalTime().isBefore(liqStartTime)) {
             return;
         }
         FutType activeFt = ibContractToFutType(activeFutureCt);
-
         LocalDateTime lastOrderTime = getLastOrderTime(CLOSE_LIQ);
         int pos = currentPosMap.getOrDefault(activeFt, 0);
         int absPos = Math.abs(pos);
-        int size = absPos <= 2 ? absPos : Math.floorDiv(absPos, 2);
+        int size = Math.min(4, absPos <= 2 ? absPos : Math.floorDiv(absPos, 2));
 
         if (SECONDS.between(lastOrderTime, nowMilli) > liqWaitSecs) {
             if (pos < 0) {
