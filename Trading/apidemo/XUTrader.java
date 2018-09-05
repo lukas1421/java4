@@ -1998,10 +1998,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         //conservative at open, let opentrader do the job. Aggressive after open (or always passive, depends).
         // but definitely conservative at open
-        if (lt.isBefore(LocalTime.of(9, 40)) && numOrders % 2 == 0) {
-            buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Long));
-            sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Short));
-        }
+        //if (lt.isBefore(LocalTime.of(9, 40)) && numOrders % 2 == 0) {
+        buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Long));
+        sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Short));
+        //}
 
         LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
         double maxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
@@ -2023,7 +2023,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 if (maxT.isAfter(minT)) {
                     a50HiLoDirection = Direction.Long;
                     manualHiloDirection.set(true);
-                } else if (maxT.isBefore(minT)) {
+                } else if (minT.isAfter(maxT)) {
                     a50HiLoDirection = Direction.Short;
                     manualHiloDirection.set(true);
                 } else {
