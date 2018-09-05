@@ -132,7 +132,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
 
     //hilo
-    private static volatile int HILO_BASE_SIZE = 1;
+    //private static volatile int HILO_BASE_SIZE = 1;
 
     //size
     private static final int CONSERVATIVE_SIZE = 1;
@@ -854,7 +854,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         futPCDeviationTrader(ldt, price);
-        futPCProfitTaker(ldt, price);
+        //futPCProfitTaker(ldt, price);
         futOpenTrader(ldt, price, pmChgY);
         futHiloTrader(ldt, price);
         futHiloAccu(ldt, price);
@@ -1206,6 +1206,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int pmchy = getPmchY(nowMilli.toLocalTime(), INDEX_000016);
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(futType);
         int _2dayP = getPercentileForLast(fut);
+        int baseSize = 1;
 
         if (priceMapBarDetail.get(futSymbol).size() <= 1) {
             return;
@@ -1224,7 +1225,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(FUT_HILO);
         long tSinceLastOrder = tSincePrevOrderMilli(FUT_HILO, nowMilli);
 
-        int waitTimeSec = 60 * 15;
+        int waitTimeSec = 60 * 10;
 
         NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(futSymbol).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(8, 58)))
@@ -1235,7 +1236,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double futOpen = futPrice.firstEntry().getValue();
         double futLast = futPrice.lastEntry().getValue();
         LocalTime lastKey = futPrice.lastKey();
-
 
         double maxP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
@@ -1268,20 +1268,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double buySize = 1;
         double sellSize = 1;
 
-        if (pmchy < PMCHY_LO && _2dayP < LO_PERC_WIDE) {
-            buySize = 2;
-        }
+//        if (pmchy < PMCHY_LO && _2dayP < LO_PERC_WIDE) {
+//            buySize = 2;
+//        }
 
         double last = futPrice.lastEntry().getValue();
 
         pr("futHilo dir:", futHiLoDirection, "#", futHiloOrdersNum, "max min"
                 , maxP, minP, "open/last ", futOpen, futLast, "maxT, minT", maxT, minT);
 
-        //aggressive after market settles down at open
-        if (lt.isAfter(LocalTime.of(9, 40))) {
-            buySize = Math.max(2, buySize);
-            sellSize = Math.max(2, sellSize);
-        }
+        buySize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == 5) ? 1 : 2);
+        sellSize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == 5) ? 1 : 2);
 
         if (lt.isAfter(LocalTime.of(8, 59)) &&
                 (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat)) {
@@ -1472,7 +1469,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalDateTime lastFutPCOrderTime = getLastOrderTime(FUT_PC_DEVI);
         long numOrders = getOrderSizeForTradeType(FUT_PC_DEVI);
 
-        pr("fut close devi: ", "#:", numOrders, "PC: ", prevClose, "first En", firstEntry,
+        pr(lt.truncatedTo(ChronoUnit.SECONDS),
+                "fut close devi: ", "#:", numOrders, "PC: ", prevClose, "first En", firstEntry,
                 "futLast:", lastFut, "dir:", futPCDevDirection, " last order T: ", lastFutPCOrderTime
                 , "secSinceLastT", SECONDS.between(lastFutPCOrderTime, nowMilli), "no more buy/sell ",
                 noMoreBuy.get(), noMoreSell.get(), "manual PC dir:", manualfutPCDirection.get());
@@ -1498,8 +1496,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         int baseSize = 1;
-        int buySize = baseSize * (numOrders == 0 ? 1 : 2);
-        int sellSize = baseSize * (numOrders == 0 ? 1 : 2);
+        int buySize = baseSize * ((numOrders == 0 || numOrders == 5) ? 1 : 2);
+        int sellSize = baseSize * ((numOrders == 0 || numOrders == 5) ? 1 : 2);
 
         if (SECONDS.between(lastFutPCOrderTime, nowMilli) > waitTimeSec) {
             if (!noMoreBuy.get() && lastFut > prevClose && futPCDevDirection != Direction.Long) {
@@ -1673,7 +1671,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         FutType ft = ibContractToFutType(activeFutureCt);
         double freshPrice = futPriceMap.get(ft);
         double atmVol = getATMVol(expiryToGet);
-        int waitTimeInSeconds = 60 * 15;
+        int waitTimeInSeconds = 60 * 10;
         OrderStatus lastStatus = getLastOrderStatusForType(OPEN_DEVI);
 
         if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
@@ -1722,8 +1720,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         int baseSize = 1;
-        int buySize = baseSize * (numOrdersOpenDev == 0 ? 1 : 2);
-        int sellSize = baseSize * (numOrdersOpenDev == 0 ? 1 : 2);
+        int buySize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == 5) ? 1 : 2);
+        int sellSize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == 5) ? 1 : 2);
 
         if (lt.isBefore(LocalTime.of(9, 40)) || lt.getSecond() > 50) {
             pr(" open dev: numOrder ", lt.truncatedTo(ChronoUnit.SECONDS), numOrdersOpenDev,
@@ -1843,8 +1841,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         LocalDateTime lastPMHiLoTradeTime = getLastOrderTime(PM_HILO);
 
-        int buyQ = PM_HILO_BASE * (numPMOrders == 0 ? 1 : 2);
-        int sellQ = PM_HILO_BASE * (numPMOrders == 0 ? 1 : 2);
+        int buyQ = PM_HILO_BASE * ((numPMOrders == 0 || numPMOrders == 5) ? 1 : 2);
+        int sellQ = PM_HILO_BASE * ((numPMOrders == 0 || numPMOrders == 5) ? 1 : 2);
         double buyPrice = freshPrice;
         double sellPrice = freshPrice;
 
@@ -1940,10 +1938,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static void chinaHiLoTrader(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         int pmchy = getRecentPmCh(lt, INDEX_000001);
-        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFutureCt));
-        int hiloWaitTimeSeconds;
+        FutType ft = ibContractToFutType(activeFutureCt);
+        double freshPrice = futPriceMap.get(ft);
+        int hiloWaitTimeSeconds = 60 * 5;
         OrderStatus lastStatus = getLastOrderStatusForType(CHINA_HILO);
-        int baseSize = 1;
+        int baseSize = 2;
 
         if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;
@@ -1954,8 +1953,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
         long numOrders = getOrderSizeForTradeType(CHINA_HILO);
         LocalDateTime lastHiLoOrderTime = getLastOrderTime(CHINA_HILO);
-        int buyQ;
-        int sellQ;
+        int buyQ = baseSize * ((numOrders == 0 || numOrders == 5) ? 1 : 2);
+        int sellQ = baseSize * (numOrders == 0 || numOrders == 5 ? 1 : 2);
 
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ibContractToFutType(activeFutureCt));
         int _2dayPerc = getPercentileForLast(fut);
@@ -1976,13 +1975,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long tBtwnLast2Trades = lastTwoOrderMilliDiff(CHINA_HILO);
         long tSinceLastTrade = tSincePrevOrderMilli(CHINA_HILO, nowMilli);
 
-        hiloWaitTimeSeconds = 60 * 15;
 
         if (numOrders % 2 == 0) {
             if (tSinceLastTrade < 60000) {
-                HILO_BASE_SIZE = 1;
+                baseSize = 1;
             } else {
-                HILO_BASE_SIZE = getWeekdayBaseSize(nowMilli.getDayOfWeek());
+                baseSize = getWeekdayBaseSize(nowMilli.getDayOfWeek());
             }
         }
         if (numOrders >= 6) {
@@ -2033,31 +2031,30 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
 
-
         if (SECONDS.between(lastHiLoOrderTime, nowMilli) >= hiloWaitTimeSeconds && maxSoFar != 0.0 && minSoFar != 0.0) {
             if (!noMoreBuy.get() && indexLast > maxSoFar && a50HiLoDirection != Direction.Long) {
-                buyQ = ((_2dayPerc < LO_PERC_WIDE && pmchy < PMCHY_LO) ? 3 : 1) * HILO_BASE_SIZE;
+                //buyQ = Math.max(buyQ, ((_2dayPerc < LO_PERC_WIDE && pmchy < PMCHY_LO) ? 3 : 1) * baseSize);
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(buyPrice, buyQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo buy", globalIdOrderMap.get(id),
                         "#", numOrders, "buy limit: ", buyPrice,
-                        "indexLast/fut/pd/Base Size: ", r(indexLast), freshPrice, HILO_BASE_SIZE,
+                        "indexLast/fut/pd/Base Size: ", r(indexLast), freshPrice, baseSize,
                         Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
                         "waitT, lastTwoTDiff, tSinceLast ", hiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
                         "max/min/2dp%/pmchy/openp% ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, openPerc));
                 a50HiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && indexLast < minSoFar && a50HiLoDirection != Direction.Short) {
-                sellQ = ((_2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI) ? 2 : 1) * HILO_BASE_SIZE;
+                //sellQ = ((_2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI) ? 2 : 1) * baseSize;
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(sellPrice, sellQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CHINA_HILO));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "china hilo sell", globalIdOrderMap.get(id),
                         "#", numOrders, "sell limit: ", sellPrice,
-                        "indexLast/fut/pd/Base size: ", r(indexLast), freshPrice, HILO_BASE_SIZE,
+                        "indexLast/fut/pd/Base size: ", r(indexLast), freshPrice, baseSize,
                         Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, a50HiLoDirection,
                         "waitT, lastTwoTDiff, tSinceLast ", hiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
@@ -2079,7 +2076,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 || a50HiLoDirection == Direction.Flat) {
             return;
         }
-        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFutureCt));
+        double freshPrice = futPriceMap.get(ibContractToFutType(activeFutureCt));
         LocalTime lt = nowMilli.toLocalTime();
         LocalDateTime lastHiLoAccuTradeTime = getLastOrderTime(CHINA_HILO_ACCU);
 
@@ -2135,7 +2132,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         double firstTickTotalQ = getTotalFilledSignedQForType(FIRST_TICK);
-
         double ftProfitTakeQ = getTotalFilledSignedQForType(FTICK_TAKE_PROFIT);
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(9, 29, 0)).getValue();
