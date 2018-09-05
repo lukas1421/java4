@@ -119,7 +119,7 @@ public class SinaStock implements Runnable {
                         XUTrader.firstTickTrader(ldt, currIndexPrice);
                         XUTrader.chinaHiLoTrader(ldt, currIndexPrice);
                         XUTrader.pmHiLoTrader(ldt, currIndexPrice);
-                        XUTrader.intradayMATrader(ldt, currIndexPrice);
+                        //XUTrader.intradayMATrader(ldt, currIndexPrice);
                         XUTrader.closeProfitTaker(ldt, currIndexPrice);
                         //XUTrader.firstTickMAProfitTaker(ldt, currIndexPrice);
                         //XUTrader.chinaHiloAccumulator(ldt, currIndexPrice);
@@ -245,12 +245,15 @@ public class SinaStock implements Runnable {
     enum BidAsk {
         BID(0), ASK(1);
         int val;
+
         BidAsk(int i) {
             val = i;
         }
+
         int getValue() {
             return val;
         }
+
         void setValue(int i) {
             val = i;
         }
