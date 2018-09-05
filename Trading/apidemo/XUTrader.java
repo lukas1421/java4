@@ -1246,8 +1246,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime maxTPre10 = getFirstMaxTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
         LocalTime minTPre10 = getFirstMinTPred(futPrice, t -> t.isBefore(LocalTime.of(10, 0)));
 
-        LocalTime maxT = getFirstMaxTPred(futPrice, t -> true);
-        LocalTime minT = getFirstMinTPred(futPrice, t -> true);
+        LocalTime maxT = getFirstMaxTPred(futPrice, t -> t.isAfter(LocalTime.of(8, 59, 0)));
+        LocalTime minT = getFirstMinTPred(futPrice, t -> t.isAfter(LocalTime.of(8, 59, 0)));
 
         if (!manualFutHiloDirection.get()) {
             if (lt.isBefore(LocalTime.of(9, 0, 0))) {
@@ -1282,7 +1282,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (lt.isAfter(LocalTime.of(8, 59)) &&
                 (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat)) {
-            if (!noMoreBuy.get() && last > maxP && futHiLoDirection != Direction.Long) {
+            if (!noMoreBuy.get() && (last > maxP || maxT.isAfter(minT)) && futHiLoDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(offer, buySize, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_HILO));
@@ -1292,7 +1292,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "|bid ask spread", bid, offer, Math.round(10000d * (offer / bid - 1)), "bp",
                         "last freshprice ", last, freshPrice, "pre10:maxT minT ", maxTPre10, minTPre10));
                 futHiLoDirection = Direction.Long;
-            } else if (!noMoreSell.get() && last < minP && futHiLoDirection != Direction.Short) {
+            } else if (!noMoreSell.get() && (last < minP || minT.isAfter(maxT)) && futHiLoDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(bid, sellSize, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_HILO));
