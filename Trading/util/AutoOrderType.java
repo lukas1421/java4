@@ -35,6 +35,7 @@ public enum AutoOrderType {
     CHINA_HILO,
     CLOSE_LIQ,
     PM_HILO,
+    PM_DEVI,
     CHINA_HILO_ACCU,
     HEDGE_ON_OFF,
     FTICK_TAKE_PROFIT,

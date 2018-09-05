@@ -122,6 +122,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static volatile Direction pmHiLoDirection = Direction.Flat;
     private static volatile AtomicBoolean manualPMHiloDirection = new AtomicBoolean(false);
 
+    //pm dev trader
+    private static volatile Direction pmDevDirection = Direction.Flat;
+    private static volatile AtomicBoolean manualPMDevDirection = new AtomicBoolean(false);
+
 
     //open deviation
     private static volatile Direction openDeviationDirection = Direction.Flat;
@@ -1811,6 +1815,80 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     /**
+     * pm deviation trader
+     *
+     * @param nowMilli  time
+     * @param indexLast index last
+     */
+    static void pmDeviationTrader(LocalDateTime nowMilli, double indexLast) {
+        LocalTime lt = nowMilli.toLocalTime();
+        FutType ft = ibContractToFutType(activeFutureCt);
+        double freshPrice = futPriceMap.get(ft);
+        int pmDevWaitSec = 300;
+        OrderStatus lastPMDevStatus = getLastOrderStatusForType(PM_DEVI);
+        int PM_DEVI_BASE = getWeekdayBaseSize(nowMilli.getDayOfWeek());
+
+        if (!checkTimeRangeBool(lt, 12, 58, 15, 0)) {
+            return;
+        }
+
+        long numPMDeviOrders = getOrderSizeForTradeType(PM_DEVI);
+
+        if (numPMDeviOrders >= 6) {
+            pr(" pm dev exceed max");
+            return;
+        }
+
+        if (numPMDeviOrders > 0 && lastPMDevStatus != OrderStatus.Filled) {
+            pr(" pm devi order last not filled ");
+            return;
+        }
+        double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(12, 58)).getValue();
+
+        if (!manualPMDevDirection.get()) {
+            if (lt.isBefore(LocalTime.of(13, 0, 0))) {
+                manualPMDevDirection.set(true);
+            } else {
+                if (indexLast > pmOpen) {
+                    pmDevDirection = Direction.Long;
+                    manualPMDevDirection.set(true);
+                } else if (indexLast < pmOpen) {
+                    pmDevDirection = Direction.Short;
+                    manualPMDevDirection.set(true);
+                } else {
+                    pmDevDirection = Direction.Flat;
+                }
+            }
+        }
+
+        LocalDateTime lastPMDevTradeTime = getLastOrderTime(PM_DEVI);
+
+        int buyQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == 5) ? 1 : 2);
+        int sellQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == 5) ? 1 : 2);
+        double buyPrice = freshPrice;
+        double sellPrice = freshPrice;
+
+
+        if (SECONDS.between(lastPMDevTradeTime, nowMilli) > pmDevWaitSec) {
+            if (!noMoreBuy.get() && indexLast > pmOpen && pmDevDirection != Direction.Long) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(buyPrice, buyQ);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PM_DEVI));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "pm dev BUY", globalIdOrderMap.get(id)));
+                pmDevDirection = Direction.Long;
+            } else if (!noMoreSell.get() && indexLast < pmOpen && pmDevDirection != Direction.Short) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(sellPrice, sellQ);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, PM_DEVI));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), "pm dev SELL", globalIdOrderMap.get(id)));
+                pmDevDirection = Direction.Short;
+            }
+        }
+    }
+
+    /**
      * pm hilo trader
      *
      * @param nowMilli  time
@@ -1937,15 +2015,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param freshPrice price
      */
     private static void closeLiqTrader(LocalDateTime nowMilli, double freshPrice) {
-
         LocalTime liqStartTime = LocalTime.of(14, 55);
+        LocalTime liqEndTime = LocalTime.of(15, 30);
+
         long liqWaitSecs = 60;
 
-        if (nowMilli.toLocalTime().isBefore(liqStartTime)) {
+        if (nowMilli.toLocalTime().isBefore(liqStartTime) || nowMilli.toLocalTime().isAfter(liqEndTime)) {
             return;
         }
         FutType activeFt = ibContractToFutType(activeFutureCt);
         LocalDateTime lastOrderTime = getLastOrderTime(CLOSE_LIQ);
+
         int pos = currentPosMap.getOrDefault(activeFt, 0);
         int absPos = Math.abs(pos);
         int size = Math.min(4, absPos <= 2 ? absPos : Math.floorDiv(absPos, 2));
