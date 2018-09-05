@@ -1498,15 +1498,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         int baseSize = 1;
-        int buySize;
-        int sellSize;
-        if (numOrders == 0) {
-            buySize = 1 * baseSize;
-            sellSize = 1 * baseSize;
-        } else {
-            buySize = 2 * baseSize;
-            sellSize = 2 * baseSize;
-        }
+        int buySize = baseSize * (numOrders == 0 ? 1 : 2);
+        int sellSize = baseSize * (numOrders == 0 ? 1 : 2);
 
         if (SECONDS.between(lastFutPCOrderTime, nowMilli) > waitTimeSec) {
             if (!noMoreBuy.get() && lastFut > prevClose && futPCDevDirection != Direction.Long) {
@@ -1683,7 +1676,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int waitTimeInSeconds = 60 * 15;
         OrderStatus lastStatus = getLastOrderStatusForType(OPEN_DEVI);
 
-
         if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;
         }
@@ -1850,17 +1842,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         LocalDateTime lastPMHiLoTradeTime = getLastOrderTime(PM_HILO);
-        int buyQ;
-        int sellQ;
 
-        if (numPMOrders == 0) {
-            buyQ = 1 * PM_HILO_BASE;
-            sellQ = 1 * PM_HILO_BASE;
-        } else {
-            buyQ = 2 * PM_HILO_BASE;
-            sellQ = 2 * PM_HILO_BASE;
-        }
-
+        int buyQ = PM_HILO_BASE * (numPMOrders == 0 ? 1 : 2);
+        int sellQ = PM_HILO_BASE * (numPMOrders == 0 ? 1 : 2);
         double buyPrice = freshPrice;
         double sellPrice = freshPrice;
 
@@ -1959,6 +1943,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFutureCt));
         int hiloWaitTimeSeconds;
         OrderStatus lastStatus = getLastOrderStatusForType(CHINA_HILO);
+        int baseSize = 1;
 
         if (lt.isBefore(LocalTime.of(9, 29)) || lt.isAfter(LocalTime.of(15, 0))) {
             return;
