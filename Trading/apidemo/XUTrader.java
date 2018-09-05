@@ -858,6 +858,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         futOpenTrader(ldt, price, pmChgY);
         futHiloTrader(ldt, price);
         futHiloAccu(ldt, price);
+        closeLiqTrader(ldt, price);
         percentileMATrader(ldt, price, pmChgY);
 
         //firstTickTrader(ldt, price);
@@ -1927,6 +1928,41 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             }
         }
     }
+
+    private static void closeLiqTrader(LocalDateTime nowMilli, double freshPrice) {
+
+        LocalTime liqStartTime = LocalTime.of(14, 55);
+        long liqWaitSecs = 60 * 5;
+
+        if (nowMilli.toLocalTime().isBefore(liqStartTime)) {
+            return;
+        }
+        FutType activeFt = ibContractToFutType(activeFutureCt);
+
+        LocalDateTime lastOrderTime = getLastOrderTime(CLOSE_LIQ);
+        int pos = currentPosMap.getOrDefault(activeFt, 0);
+        int absPos = Math.abs(pos);
+        int size = absPos <= 2 ? absPos : Math.floorDiv(absPos, 2);
+
+        if (SECONDS.between(lastOrderTime, nowMilli) > liqWaitSecs) {
+            if (pos < 0) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimit(freshPrice, size);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CLOSE_LIQ));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), " close liq buy", globalIdOrderMap.get(id),
+                        "last order time", lastOrderTime, "currPos", pos, "size", size));
+            } else if (pos > 0) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimit(freshPrice, size);
+                globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CLOSE_LIQ));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                outputOrderToAutoLog(str(o.orderId(), " close liq sell", globalIdOrderMap.get(id),
+                        "last order time", lastOrderTime, "currPos", pos, "size", size));
+            }
+        }
+    }
+
 
     /**
      * ftse break high low trader
