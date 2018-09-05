@@ -1256,7 +1256,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 if (maxT.isAfter(minT)) {
                     futHiLoDirection = Direction.Long;
                     manualFutHiloDirection.set(true);
-                } else if (maxT.isBefore(minT)) {
+                } else if (minT.isAfter(maxT)) {
                     futHiLoDirection = Direction.Short;
                     manualFutHiloDirection.set(true);
                 } else {
@@ -1264,9 +1264,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 }
             }
         }
-
-        double buySize = 1;
-        double sellSize = 1;
 
 //        if (pmchy < PMCHY_LO && _2dayP < LO_PERC_WIDE) {
 //            buySize = 2;
@@ -1277,8 +1274,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         pr("futHilo dir:", futHiLoDirection, "#", futHiloOrdersNum, "max min"
                 , maxP, minP, "open/last ", futOpen, futLast, "maxT, minT", maxT, minT);
 
-        buySize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == 5) ? 1 : 2);
-        sellSize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == 5) ? 1 : 2);
+        int buySize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == 5) ? 1 : 2);
+        int sellSize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == 5) ? 1 : 2);
 
         if (lt.isAfter(LocalTime.of(8, 59)) &&
                 (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat)) {
@@ -1824,7 +1821,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double freshPrice = futPriceMap.get(futtype);
         int pmHiloWaitTimeSeconds = 300;
         OrderStatus lastStatus = getLastOrderStatusForType(PM_HILO);
-        int PM_HILO_BASE = getWeekdayBaseSize(nowMilli.getDayOfWeek());
+        int PM_HILO_BASE = getWeekdayBaseSize(nowMilli.getDayOfWeek()) + 1;
 
         if (!checkTimeRangeBool(lt, 12, 58, 15, 0)) {
             return;
@@ -1853,7 +1850,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long tSinceLastTrade = tSincePrevOrderMilli(PM_HILO, nowMilli);
 
         double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(12, 58)).getValue();
-
         double pmFirstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(12, 58, 0)))
                 .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getValue)
