@@ -1505,14 +1505,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeBidLimitTIF(freshPrice, buySize, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_PC_DEVI));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "fut PC dev buy", globalIdOrderMap.get(id)));
+                outputOrderToAutoLog(str(o.orderId(), "fut PC dev buy", globalIdOrderMap.get(id),
+                        "pc, last ", prevClose, lastFut));
                 futPCDevDirection = Direction.Long;
             } else if (!noMoreSell.get() && lastFut < prevClose && futPCDevDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, sellSize, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_PC_DEVI));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "fut PC dev SELL", globalIdOrderMap.get(id)));
+                outputOrderToAutoLog(str(o.orderId(), "fut PC dev SELL", globalIdOrderMap.get(id),
+                        "pc, last ", prevClose, lastFut));
                 futPCDevDirection = Direction.Short;
             }
         }
@@ -1951,6 +1953,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
             return;
         }
+
         long numOrders = getOrderSizeForTradeType(CHINA_HILO);
         LocalDateTime lastHiLoOrderTime = getLastOrderTime(CHINA_HILO);
         int buyQ = baseSize * ((numOrders == 0 || numOrders == 5) ? 1 : 2);
@@ -2011,8 +2014,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double minSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 28)) &&
                         e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
-        LocalTime maxT = getFirstMaxTPred(priceMapBarDetail.get(FTSE_INDEX), e -> true);
-        LocalTime minT = getFirstMinTPred(priceMapBarDetail.get(FTSE_INDEX), e -> true);
+
+        LocalTime maxT = getFirstMaxTPred(priceMapBarDetail.get(FTSE_INDEX), e -> e.isAfter(LocalTime.of(9, 28)));
+        LocalTime minT = getFirstMinTPred(priceMapBarDetail.get(FTSE_INDEX), e -> e.isAfter(LocalTime.of(9, 28)));
 
 
         if (!manualHiloDirection.get()) {
@@ -2032,7 +2036,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (SECONDS.between(lastHiLoOrderTime, nowMilli) >= hiloWaitTimeSeconds && maxSoFar != 0.0 && minSoFar != 0.0) {
-            if (!noMoreBuy.get() && indexLast > maxSoFar && a50HiLoDirection != Direction.Long) {
+            if (!noMoreBuy.get() && (indexLast > maxSoFar || maxT.isAfter(minT)) && a50HiLoDirection != Direction.Long) {
                 //buyQ = Math.max(buyQ, ((_2dayPerc < LO_PERC_WIDE && pmchy < PMCHY_LO) ? 3 : 1) * baseSize);
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(buyPrice, buyQ);
@@ -2046,7 +2050,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "waitT, lastTwoTDiff, tSinceLast ", hiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
                         "max/min/2dp%/pmchy/openp% ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, openPerc));
                 a50HiLoDirection = Direction.Long;
-            } else if (!noMoreSell.get() && indexLast < minSoFar && a50HiLoDirection != Direction.Short) {
+            } else if (!noMoreSell.get() && (indexLast < minSoFar || minT.isAfter(maxT)) && a50HiLoDirection != Direction.Short) {
                 //sellQ = ((_2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI) ? 2 : 1) * baseSize;
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(sellPrice, sellQ);

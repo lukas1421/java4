@@ -510,6 +510,7 @@ public class ApiController implements EWrapper {
 
     public interface IMarketValueSummaryHandler {
         void marketValueSummary(String account, MarketValueTag tag, String value, String currency);
+
         void marketValueSummaryEnd();
     }
 
@@ -1555,7 +1556,8 @@ public class ApiController implements EWrapper {
                 if (orderState.status() == OrderStatus.Filled) {
                     if (!filledOrderSet.contains(defaultID)) {
                         String msg = str("||Order||", globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                defaultID, globalIdOrderMap.get(defaultID), orderState.status());
+                                defaultID, globalIdOrderMap.get(defaultID), orderState.status(),
+                                LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
                         XuTraderHelper.outputToAutoLog(msg);
                         XuTraderHelper.outputPurelyOrders(msg);
                         filledOrderSet.add(defaultID);
