@@ -2030,6 +2030,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int absPos = Math.abs(pos);
         int size = Math.min(4, absPos <= 2 ? absPos : Math.floorDiv(absPos, 2));
 
+        if (pos == 0) {
+            return;
+        }
+
         if (SECONDS.between(lastOrderTime, nowMilli) > liqWaitSecs) {
             if (pos < 0) {
                 int id = autoTradeID.incrementAndGet();
@@ -2038,7 +2042,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), " close liq buy", globalIdOrderMap.get(id),
                         "last order time", lastOrderTime, "currPos", pos, "size", size));
-            } else if (pos > 0) {
+            } else {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, size);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, CLOSE_LIQ));
