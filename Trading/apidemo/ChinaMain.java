@@ -211,7 +211,7 @@ public final class ChinaMain implements IConnectionHandler {
                     ChinaData.outputRecentTradingDate();
 
                 }
-            }, 10, 5, TimeUnit.MINUTES);
+            }, 5, 5, TimeUnit.MINUTES);
 
             ses.scheduleAtFixedRate(() -> {
                 ChinaBigGraph.setGraph(ChinaStock.selectedNameStock);
