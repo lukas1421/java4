@@ -1820,12 +1820,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int pmDevWaitSec = (milliBtwnLastTwo < 60000) ? 300 : 10;
 
         if (numPMDeviOrders >= 6) {
-            pr(" pm dev exceed max");
+            if (detailedPrint.get()) {
+                pr(" pm dev exceed max");
+            }
             return;
         }
 
         if (numPMDeviOrders > 0 && lastPMDevStatus != OrderStatus.Filled) {
-            pr(" pm devi order last not filled ");
+            if (detailedPrint.get()) {
+                pr(" pm devi order last not filled ");
+            }
             return;
         }
         double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(LocalTime.of(12, 58)).getValue();
