@@ -117,7 +117,7 @@ public class SinaStock implements Runnable {
                         priceMapBarDetail.get(FTSE_INDEX).put(ldt.toLocalTime(), currIndexPrice);
                         XUTrader.openDeviationTrader(ldt, currIndexPrice);
                         XUTrader.firstTickTrader(ldt, currIndexPrice);
-                        XUTrader.chinaHiLoTrader(ldt, currIndexPrice);
+                        XUTrader.indexHiLoTrader(ldt, currIndexPrice);
                         XUTrader.indexPmHiLoTrader(ldt, currIndexPrice);
                         XUTrader.pmDeviationTrader(ldt, currIndexPrice);
 
