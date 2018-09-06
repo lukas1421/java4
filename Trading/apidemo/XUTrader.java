@@ -119,7 +119,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static final long FT_ACCU_MAX_SIZE = 2;
 
     //pm hilo
-    private static volatile Direction pmHiLoDirection = Direction.Flat;
+    private static volatile Direction indexPmHiLoDirection = Direction.Flat;
     private static volatile AtomicBoolean manualPMHiloDirection = new AtomicBoolean(false);
 
     //pm dev trader
@@ -1953,13 +1953,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 manualPMHiloDirection.set(true);
             } else {
                 if (pmMaxT.isAfter(pmMinT)) {
-                    pmHiLoDirection = Direction.Long;
+                    indexPmHiLoDirection = Direction.Long;
                     manualPMHiloDirection.set(true);
                 } else if (pmMaxT.isBefore(pmMinT)) {
-                    pmHiLoDirection = Direction.Short;
+                    indexPmHiLoDirection = Direction.Short;
                     manualPMHiloDirection.set(true);
                 } else {
-                    pmHiLoDirection = Direction.Flat;
+                    indexPmHiLoDirection = Direction.Flat;
                 }
             }
         }
@@ -1967,13 +1967,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (detailedPrint.get()) {
             pr(lt.truncatedTo(ChronoUnit.SECONDS)
                     , "index pm hilo trader: pmOpen, pmFT, T, dir: ", r(pmOpen), r(pmFirstTick), pmFirstTickTime
-                    , pmHiLoDirection, "max min maxT minT ", r(pmMaxSoFar), r(pmMinSoFar), pmMaxT, pmMinT,
+                    , indexPmHiLoDirection, "max min maxT minT ", r(pmMaxSoFar), r(pmMinSoFar), pmMaxT, pmMinT,
                     "milliBtwnLastTwo", milliBtwnLastTwoOrders);
         }
 
         if (SECONDS.between(lastPMHiLoTradeTime, nowMilli) >= pmHiloWaitTimeSeconds
                 && pmMaxSoFar != 0.0 && pmMinSoFar != 0.0) {
-            if (!noMoreBuy.get() && (indexLast > pmMaxSoFar || pmMaxT.isAfter(pmMinT)) && pmHiLoDirection != Direction.Long) {
+            if (!noMoreBuy.get() && (indexLast > pmMaxSoFar || pmMaxT.isAfter(pmMinT)) && indexPmHiLoDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(buyPrice, buyQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_PM_HILO));
@@ -1981,11 +1981,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "index pm hilo buy", globalIdOrderMap.get(id),
                         "#", numPMOrders, "buy limit: ", buyPrice, "indexLast/fut/pd: ", r(indexLast), freshPrice,
                         Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
-                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, pmHiLoDirection,
+                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDirection,
                         "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
                         "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar)));
-                pmHiLoDirection = Direction.Long;
-            } else if (!noMoreSell.get() && (indexLast < pmMinSoFar || pmMinT.isAfter(pmMaxT)) && pmHiLoDirection != Direction.Short) {
+                indexPmHiLoDirection = Direction.Long;
+            } else if (!noMoreSell.get() && (indexLast < pmMinSoFar || pmMinT.isAfter(pmMaxT)) && indexPmHiLoDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(sellPrice, sellQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_PM_HILO));
@@ -1993,10 +1993,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 outputOrderToAutoLog(str(o.orderId(), "index pm hilo sell", globalIdOrderMap.get(id),
                         "#", numPMOrders, "sell limit: ", sellPrice, "indexLast/fut/pd: ", r(indexLast), freshPrice,
                         Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
-                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, pmHiLoDirection,
+                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDirection,
                         "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
                         "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar)));
-                pmHiLoDirection = Direction.Short;
+                indexPmHiLoDirection = Direction.Short;
             }
         }
     }
