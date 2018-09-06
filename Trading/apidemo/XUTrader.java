@@ -2008,12 +2008,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
         FutType activeFt = ibContractToFutType(activeFutureCt);
         LocalDateTime lastOrderTime = getLastOrderTime(CLOSE_LIQ);
+        OrderStatus lastOrderStatus = getLastOrderStatusForType(CLOSE_LIQ);
+        long orderSize = getOrderSizeForTradeType(CLOSE_LIQ);
 
         int pos = currentPosMap.getOrDefault(activeFt, 0);
         int absPos = Math.abs(pos);
         int size = Math.min(4, absPos <= 2 ? absPos : Math.floorDiv(absPos, 2));
 
-        if (pos == 0) {
+        if (absPos <= 1) {
+            return;
+        }
+        if (orderSize > 0.0 && lastOrderStatus != OrderStatus.Filled) {
+            checkCancelOrders(CLOSE_LIQ, nowMilli, 5);
             return;
         }
 
@@ -2697,11 +2703,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     /**
      * cancel order of type
      *
-     * @param type      type of trade to cancel
-     * @param nowMilli  time now
-     * @param timeLimit how long to wait
+     * @param type             type of trade to cancel
+     * @param nowMilli         time now
+     * @param timeLimitMinutes how long to wait
      */
-    private static void checkCancelOrders(AutoOrderType type, LocalDateTime nowMilli, int timeLimit) {
+    private static void checkCancelOrders(AutoOrderType type, LocalDateTime nowMilli, int timeLimitMinutes) {
         long ordersNum = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == type).count();
 
         if (ordersNum != 0) {
@@ -2715,7 +2721,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (lastOrdStatus != OrderStatus.Filled && lastOrdStatus != OrderStatus.Cancelled
                     && lastOrdStatus != OrderStatus.ApiCancelled && lastOrdStatus != OrderStatus.PendingCancel) {
 
-                if (MINUTES.between(lastOTime, nowMilli) > timeLimit) {
+                if (MINUTES.between(lastOTime, nowMilli) > timeLimitMinutes) {
                     globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == type)
                             .forEach(e -> {
                                 if (e.getValue().getStatus() == OrderStatus.Submitted ||
