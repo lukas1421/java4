@@ -662,6 +662,59 @@ public class XuTraderHelper {
                 .map(Map.Entry::getKey).orElse(LocalTime.MIN);
     }
 
+    private static int getClosingPercentile(NavigableMap<LocalDateTime, SimpleBar> futdata, LocalDate dt) {
+        if (futdata.size() <= 2) {
+            return 0;
+        } else if (futdata.lastKey().isAfter(LocalDateTime.of(dt, LocalTime.of(13, 0)))) {
+
+            double prevMax = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
+                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
+                    .map(e -> e.getValue().getHigh()).orElse(0.0);
+
+            double prevMin = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
+                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
+                    .map(e -> e.getValue().getLow()).orElse(0.0);
+
+            double prevClose = futdata.floorEntry(LocalDateTime.of(dt, LocalTime.of(15, 0)))
+                    .getValue().getClose();
+            if (prevMax == 0.0 || prevMin == 0.0 || prevClose == 0.0) {
+                return 0;
+            } else {
+                return (int) Math.round(100d * (prevClose - prevMin) / (prevMax - prevMin));
+            }
+        }
+        return 0;
+    }
+
+    private static int getPDPercentile() {
+        LocalDate d = (LocalTime.now().isBefore(LocalTime.of(5, 0))) ? LocalDate.now().minusDays(1) :
+                LocalDate.now();
+        int candidate = 50;
+        NavigableMap<LocalDateTime, Double> dpMap = new ConcurrentSkipListMap<>();
+        XUTrader.futData.get(ibContractToFutType(XUTrader.activeFutureCt)).entrySet().stream().filter(e -> e.getKey()
+                .isAfter(LocalDateTime.of(d, LocalTime.of(9, 29)))).forEach(e -> {
+            if (priceMapBar.get(FTSE_INDEX).size() > 0 && priceMapBar.get(FTSE_INDEX).
+                    firstKey().isBefore(e.getKey().toLocalTime())) {
+                double index = priceMapBar.get(FTSE_INDEX).floorEntry(e.getKey().toLocalTime())
+                        .getValue().getClose();
+                dpMap.put(e.getKey(), r10000((e.getValue().getClose() / index - 1)));
+            }
+        });
+
+        if (XUTrader.detailedPrint.get()) {
+            if (dpMap.size() > 0) {
+                pr(" PD last: ", dpMap.lastEntry(),
+                        " max: ", dpMap.entrySet().stream().mapToDouble(Map.Entry::getValue).max().orElse(0.0),
+                        " min: ", dpMap.entrySet().stream().mapToDouble(Map.Entry::getValue).min().orElse(0.0),
+                        " map: ", dpMap);
+            }
+        }
+        candidate = XuTraderHelper.getPercentileForDouble(dpMap);
+        return candidate;
+    }
+
 
     static class XUConnectionHandler implements ApiController.IConnectionHandler {
         @Override
