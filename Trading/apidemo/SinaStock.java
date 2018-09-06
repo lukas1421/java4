@@ -118,7 +118,7 @@ public class SinaStock implements Runnable {
                         XUTrader.openDeviationTrader(ldt, currIndexPrice);
                         XUTrader.firstTickTrader(ldt, currIndexPrice);
                         XUTrader.chinaHiLoTrader(ldt, currIndexPrice);
-                        XUTrader.pmHiLoTrader(ldt, currIndexPrice);
+                        XUTrader.indexPmHiLoTrader(ldt, currIndexPrice);
                         XUTrader.pmDeviationTrader(ldt, currIndexPrice);
 
                         //XUTrader.closeProfitTaker(ldt, currIndexPrice);
