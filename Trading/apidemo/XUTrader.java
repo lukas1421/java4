@@ -1440,7 +1440,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int waitTimeSec;
 
         Map.Entry<LocalTime, Double> firstEntry = priceMapBarDetail.get(futSymbol).firstEntry();
-        double lastFut = priceMapBarDetail.get(futSymbol).lastEntry().getValue();
+        //double lastFut = priceMapBarDetail.get(futSymbol).lastEntry().getValue();
 
         LocalDateTime lastFutOpenOrderTime = getLastOrderTime(FUT_OPEN_DEVI);
         long milliLast2 = lastTwoOrderMilliDiff(FUT_OPEN_DEVI);
@@ -1451,7 +1451,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (detailedPrint.get()) {
             pr(lt.truncatedTo(ChronoUnit.SECONDS),
                     "fut pc devi: ", "#:", numOrders, "PC: ", prevClose, "first En", firstEntry,
-                    "futLast:", lastFut, "dir:", futOpenDevDirection, " last order T: ",
+                    "futLast:", freshPrice, "dir:", futOpenDevDirection, " last order T: ",
                     lastFutOpenOrderTime.toLocalTime()
                     , "secSinceLastT", SECONDS.between(lastFutOpenOrderTime, nowMilli),
                     "manual PC dir:", manualfutOpenDevDirection.get());
@@ -1465,10 +1465,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (lt.isBefore(LocalTime.of(9, 0, 0))) {
                 manualfutOpenDevDirection.set(true);
             } else {
-                if (lastFut > futOpen) {
+                if (freshPrice > futOpen) {
                     futOpenDevDirection = Direction.Long;
                     manualfutOpenDevDirection.set(true);
-                } else if (lastFut < futOpen) {
+                } else if (freshPrice < futOpen) {
                     futOpenDevDirection = Direction.Short;
                     manualfutOpenDevDirection.set(true);
                 } else {
@@ -1484,21 +1484,21 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(futOpen, Direction.Short));
 
         if (SECONDS.between(lastFutOpenOrderTime, nowMilli) > waitTimeSec) {
-            if (!noMoreBuy.get() && lastFut > futOpen && futOpenDevDirection != Direction.Long) {
+            if (!noMoreBuy.get() && freshPrice > futOpen && futOpenDevDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(buyPrice, buySize, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN_DEVI));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut PC dev buy", globalIdOrderMap.get(id),
-                        "pc, last ", prevClose, lastFut));
+                        "pc, last ", prevClose, freshPrice));
                 futOpenDevDirection = Direction.Long;
-            } else if (!noMoreSell.get() && lastFut < futOpen && futOpenDevDirection != Direction.Short) {
+            } else if (!noMoreSell.get() && freshPrice < futOpen && futOpenDevDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(sellPrice, sellSize, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN_DEVI));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut PC dev SELL", globalIdOrderMap.get(id),
-                        "pc, last ", prevClose, lastFut));
+                        "pc, last ", prevClose, freshPrice));
                 futOpenDevDirection = Direction.Short;
             }
         }
