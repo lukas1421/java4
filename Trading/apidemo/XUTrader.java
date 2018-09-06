@@ -3190,10 +3190,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int openPercY = getOpenPercentile(futdata, futdata.firstKey().toLocalDate());
         //int pmChg = getPercentileChgFut(futdata, getTradeDate(futdata.lastKey()));
         int pmChg = getPmchToday(lt, INDEX_000001);
-        int percLast = getPreCloseLastPercToday(lt, INDEX_000001);
+        int indexPercLast = getPreCloseLastPercToday(lt, INDEX_000001);
 
-        int todayPerc = getPercentileForLastPred(futdata, e -> e.getKey().toLocalDate()
-                .equals(getTradeDate(LocalDateTime.now())));
+        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
+        int _2dayFutPerc = getPercentileForLast(fut);
+        int _1dayFutPerc = getPercentileForLastPred(futdata, e -> e.getKey().isAfter(
+                LocalDateTime.of(getTradeDate(LocalDateTime.now()), LocalTime.of(8, 59))));
 
         Map<AutoOrderType, Double> quantitySumByOrder = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
@@ -3236,10 +3238,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             updateLog(" net commission " + netTotalCommissions);
             updateLog(" MTM + Trade " + r(netTradePnl + mtmPnl));
             updateLog("pos " + currentPosMap.getOrDefault(f, 0) + " Delta " + r(getNetPtfDelta()) +
-                    " Stock Delta " + r(ChinaPosition.getStockPtfDelta()) + " Fut Delta " + r(XUTrader.getFutDelta())
+                    " Stock Delta " + r(ChinaPosition.getStockPtfDelta()) + " Fut Delta " + r(getFutDelta())
                     + "HK Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isHKStock(e.getKey())))
                     + " China Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isChinaStock(e.getKey()))));
-            updateLog(str("2D p%:", percLast, "1D p%", todayPerc,
+            updateLog(str("2D fut p%:", _2dayFutPerc, "1D fut p%", _1dayFutPerc, "1D idx p%", indexPercLast,
                     "pmChgY:", pmChgY, "openY:", openPercY, "closeY:", closePercY, "pmChg", pmChg,
                     "||Index pmchy", getRecentPmCh(LocalTime.now(), INDEX_000001)));
             updateLog(" expiring delta " + getExpiringDelta());
