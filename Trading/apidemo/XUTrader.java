@@ -2102,21 +2102,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long tBtwnLast2Trades = lastTwoOrderMilliDiff(INDEX_HILO);
         long tSinceLastTrade = tSincePrevOrderMilli(INDEX_HILO, nowMilli);
 
-//        if (numOrders % 2 == 0) {
-//            if (tSinceLastTrade < 60000) {
-//                baseSize = 1;
-//            } else {
-//                baseSize = getWeekdayBaseSize(nowMilli.getDayOfWeek());
-//            }
-//        }
-
         if (numOrders >= 6) {
-            pr(" china hilo exceed max");
+            if (detailedPrint.get()) {
+                pr(" china hilo exceed max");
+            }
             return;
         }
 
         if (numOrders > 0L && lastStatus != OrderStatus.Filled) {
-            pr(lt, " last hilo order not filled ");
+            if (detailedPrint.get()) {
+                pr(lt, " last hilo order not filled ");
+            }
             return;
         }
 
@@ -2167,7 +2163,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "max/min/2dp%/pmchy/openp% ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, openPerc));
                 a50HiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && (indexLast < minSoFar || minT.isAfter(maxT)) && a50HiLoDirection != Direction.Short) {
-                //sellQ = ((_2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI) ? 2 : 1) * baseSize;
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(sellPrice, sellQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_HILO));
@@ -2191,7 +2186,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param indexPrice price
      */
 
-    static void chinaHiloAccumulator(LocalDateTime nowMilli, double indexPrice) {
+    static void indexHiloAccumulator(LocalDateTime nowMilli, double indexPrice) {
         if (!manualAccuOn.get() || nowMilli.toLocalTime().isAfter(HILO_ACCU_DEADLINE)
                 || a50HiLoDirection == Direction.Flat) {
             return;
