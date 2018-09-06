@@ -858,11 +858,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         futOpenDeviationTrader(ldt, price);
         futOpenTrader(ldt, price, pmChgY);
-        //futHiloTrader(ldt, price);
-        //futHiloAccu(ldt, price);
         closeLiqTrader(ldt, price);
         percentileMATrader(ldt, price, pmChgY);
+        futHiloTrader(ldt, price);
 
+        //futHiloAccu(ldt, price);
         //futPCProfitTaker(ldt, price);
         //firstTickTrader(ldt, price);
         //indexOpenDeviationTrader(ldt, price, pmChgY);
@@ -2149,7 +2149,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (SECONDS.between(lastHiLoOrderTime, nowMilli) >= hiloWaitTimeSeconds && maxSoFar != 0.0 && minSoFar != 0.0) {
             if (!noMoreBuy.get() && (indexLast > maxSoFar || maxT.isAfter(minT)) && a50HiLoDirection != Direction.Long) {
-                //buyQ = Math.max(buyQ, ((_2dayPerc < LO_PERC_WIDE && pmchy < PMCHY_LO) ? 3 : 1) * baseSize);
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(buyPrice, buyQ);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_HILO));
