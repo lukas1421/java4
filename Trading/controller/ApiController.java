@@ -1534,7 +1534,7 @@ public class ApiController implements EWrapper {
 
         class DefaultOrderHandler implements IOrderHandler {
             static Set<Integer> filledOrderSet = new HashSet<>();
-            static Set<Integer> unfilledOrderSet = new HashSet<>();
+            static Set<Integer> cancelledOrderSet = new HashSet<>();
             static Set<Integer> submittedOrderSet = new HashSet<>();
             static Set<Integer> elseOrderSet = new HashSet<>();
 
@@ -1577,15 +1577,14 @@ public class ApiController implements EWrapper {
                     }
 
                 } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
-                    if (!unfilledOrderSet.contains(defaultID)) {
+                    if (!cancelledOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||Order||", LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
                                 defaultID, globalIdOrderMap.get(defaultID), orderState.status());
                         outputToAutoLog(msg);
                         outputPurelyOrders(msg);
-                        unfilledOrderSet.add(defaultID);
+                        cancelledOrderSet.add(defaultID);
                     }
-
                 } else {
                     if (!elseOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
