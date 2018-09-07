@@ -147,7 +147,6 @@ public final class ChinaStockHelper {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-
     }
 
     static void outputPMBDetailedToTxt(NavigableMap<LocalTime, Double> inMap) {

@@ -1584,10 +1584,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static void indexFirstTickTrader(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         int pmchy = getRecentPmCh(lt, INDEX_000001);
-        FutType ft = ibContractToFutType(activeFutureCt);
-        double bidNow = bidMap.getOrDefault(ft, 0.0);
-        double askNow = askMap.getOrDefault(ft, 0.0);
-        double freshPrice = futPriceMap.get(ft);
+        FutType f = ibContractToFutType(activeFutureCt);
+        double bidNow = bidMap.getOrDefault(f, 0.0);
+        double askNow = askMap.getOrDefault(f, 0.0);
+        double freshPrice = futPriceMap.get(f);
 
         if (lt.isBefore(LocalTime.of(9, 28)) || lt.isAfter(LocalTime.of(9, 35))) {
             checkCancelOrders(INDEX_FIRST_TICK, nowMilli, ORDER_WAIT_TIME);
@@ -1598,7 +1598,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ft);
+        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
         int _2dayPerc = getPercentileForLast(fut);
 
         if (detailedPrint.get()) {
@@ -1616,9 +1616,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
-
         LocalDateTime lastFTickTime = getLastOrderTime(INDEX_FIRST_TICK);
-
         int buySize = 3;
         int sellSize = 2;
 
