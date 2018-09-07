@@ -15,7 +15,8 @@ public enum OrderStatus {
     PendingSubmit,
     Unknown,
     NoOrder,
-    Created;
+    Created,
+    ConstructedInHandler;
 
     public static OrderStatus get(String apiString) {
         for (OrderStatus type : values()) {

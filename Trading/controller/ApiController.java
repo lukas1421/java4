@@ -1547,7 +1547,7 @@ public class ApiController implements EWrapper {
 
             public DefaultOrderHandler(int i) {
                 defaultID = i;
-                idStatusMap.put(i, OrderStatus.Unknown);
+                idStatusMap.put(i, OrderStatus.ConstructedInHandler);
             }
 
             @Override
@@ -1556,7 +1556,8 @@ public class ApiController implements EWrapper {
                 //new method, records all status changes, time, track IOC orders, one status only once
                 if (orderState.status() != idStatusMap.get(defaultID)) {
                     String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                            "**STATUS CHG**", orderState.status(), now, defaultID, globalIdOrderMap.get(defaultID));
+                            "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
+                            defaultID, globalIdOrderMap.get(defaultID));
                     outputPurelyOrdersDetailed(msg);
                     idStatusMap.put(defaultID, orderState.status());
                 }
@@ -1573,14 +1574,14 @@ public class ApiController implements EWrapper {
                     if (!createdOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        outputPurelyOrders(msg);
+                        outputPurelyOrdersDetailed(msg);
                         createdOrderSet.add(defaultID);
                     }
                 } else if (orderState.status() == OrderStatus.Submitted) {
                     if (!submittedOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        outputPurelyOrders(msg);
+                        outputPurelyOrdersDetailed(msg);
                         submittedOrderSet.add(defaultID);
                     }
                 } else if (orderState.status() == OrderStatus.Filled) {

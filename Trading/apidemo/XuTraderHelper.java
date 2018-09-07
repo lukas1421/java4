@@ -119,6 +119,7 @@ public class XuTraderHelper {
     }
 
     public static void outputPurelyOrders(String s) {
+        outputPurelyOrdersDetailed(s);
         File output = new File(TradingConstants.GLOBALPATH + "orders.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
             out.append(s);
