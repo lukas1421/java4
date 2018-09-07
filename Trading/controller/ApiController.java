@@ -1538,6 +1538,7 @@ public class ApiController implements EWrapper {
             static Set<Integer> cancelledOrderSet = new HashSet<>();
             static Set<Integer> submittedOrderSet = new HashSet<>();
             static Set<Integer> elseOrderSet = new HashSet<>();
+            static Map<Integer, OrderStatus> idStatusMap = new ConcurrentHashMap<>();
 
             int defaultID;
 
@@ -1547,11 +1548,22 @@ public class ApiController implements EWrapper {
 
             public DefaultOrderHandler(int i) {
                 defaultID = i;
+                idStatusMap.put(i, OrderStatus.Unknown);
             }
 
             @Override
             public void orderState(OrderState orderState) {
                 LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
+
+                //new method, records all status changes, time, track IOC orders, one status only once
+                if (orderState.status() != idStatusMap.get(defaultID)) {
+                    String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
+                            "STATUS CHG",
+                            "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
+                    outputPurelyOrders(msg);
+                    idStatusMap.put(defaultID, orderState.status());
+                }
+
                 if (globalIdOrderMap.containsKey(defaultID)) {
                     globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
                     globalIdOrderMap.get(defaultID).setAugmentedOrderStatus(orderState.status());
@@ -1564,7 +1576,6 @@ public class ApiController implements EWrapper {
                     if (!createdOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        outputToAutoLog(msg);
                         outputPurelyOrders(msg);
                         createdOrderSet.add(defaultID);
                     }
