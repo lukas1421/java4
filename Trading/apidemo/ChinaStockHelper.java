@@ -130,8 +130,7 @@ public final class ChinaStockHelper {
         outputPMBDetailedToFile(priceMapBarDetail.get("SGXA50"), futOut);
     }
 
-    static void outputPMBDetailedToFile(NavigableMap<LocalTime, Double> inMap, File outfile) {
-        //File output = new File(TradingConstants.GLOBALPATH + "pmbOutput.txt");
+    private static void outputPMBDetailedToFile(NavigableMap<LocalTime, Double> inMap, File outfile) {
         if (inMap.size() == 0) {
             return;
         }

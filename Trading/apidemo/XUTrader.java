@@ -2211,7 +2211,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 || indexHiLoDirection == Direction.Flat) {
             return;
         }
-        double freshPrice = futPriceMap.get(ibContractToFutType(activeFutureCt));
+        FutType f = ibContractToFutType(activeFutureCt);
+        double freshPrice = futPriceMap.get(f);
         LocalTime lt = nowMilli.toLocalTime();
         LocalDateTime lastHiLoAccuTradeTime = getLastOrderTime(INDEX_HILO_ACCU);
 

@@ -651,8 +651,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
 
     @Override
     public void handleHist(String name, String date, double open, double high, double low, double close) {
-
-
         if (name.equals("USD")) {
             USDCNY = close;
             if (!date.startsWith("finished")) {
