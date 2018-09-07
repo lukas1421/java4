@@ -856,12 +856,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        futOpenDeviationTrader(ldt, price);
-        futOpenTrader(ldt, price, pmChgY);
-        closeLiqTrader(ldt, price);
-        percentileMATrader(ldt, price, pmChgY);
+        futOpenDeviationTrader(ldt, price); // all day
+        futOpenTrader(ldt, price, pmChgY); // until 9:30
+        futHiloTrader(ldt, price); // until 10
+        closeLiqTrader(ldt, price); // after 14:55
+        percentileMATrader(ldt, price, pmChgY); // all day
 
-        //futHiloTrader(ldt, price);
+
         //futHiloAccu(ldt, price);
         //futPCProfitTaker(ldt, price);
         //indexFirstTickTrader(ldt, price);
@@ -1183,6 +1184,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         FutType futType = ibContractToFutType(activeFutureCt);
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(futType);
         int baseSize = 1;
+
+        if (lt.isAfter(LocalTime.of(10, 0))) {
+            return;
+        }
 
         if (priceMapBarDetail.get(futSymbol).size() <= 1) {
             return;
