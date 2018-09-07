@@ -140,7 +140,7 @@ public class XuTraderHelper {
 
     static <T extends Temporal> int getPercentileForLastPred(NavigableMap<T, SimpleBar> mp,
                                                              Predicate<Map.Entry<T, SimpleBar>> p) {
-        if (mp.size() > 1) {
+        if (mp.entrySet().stream().filter(p).count() > 1) {
             double max = mp.entrySet().stream().filter(p).mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
             double min = mp.entrySet().stream().filter(p).mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
             double last = mp.lastEntry().getValue().getClose();
