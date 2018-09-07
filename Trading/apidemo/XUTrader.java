@@ -483,7 +483,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             globalIdOrderMap.entrySet().stream().filter(e -> isInventoryTrade().test(e.getValue().getOrderType()))
                     .filter(e -> e.getValue().getAugmentedOrderStatus() != OrderStatus.Filled)
                     .forEach(e -> {
-                        pr("cancelling ", e.getValue());
+                        pr("cancelling ", e.getValue(), "current status",
+                                e.getValue().getAugmentedOrderStatus());
                         e.getValue().setFinalActionTime(LocalDateTime.now());
                         e.getValue().setAugmentedOrderStatus(OrderStatus.Cancelled);
                     });

@@ -128,6 +128,16 @@ public class XuTraderHelper {
         }
     }
 
+    public static void outputPurelyOrdersDetailed(String s) {
+        File output = new File(TradingConstants.GLOBALPATH + "ordersDetailed.txt");
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
+            out.append(s);
+            out.newLine();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public static <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> mp) {
         if (mp.size() > 1) {
             double max = mp.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);

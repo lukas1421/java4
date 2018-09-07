@@ -33,8 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaMain.*;
 import static apidemo.XUTrader.globalIdOrderMap;
-import static apidemo.XuTraderHelper.outputPurelyOrders;
-import static apidemo.XuTraderHelper.outputToAutoLog;
+import static apidemo.XuTraderHelper.*;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
 
@@ -1554,13 +1553,11 @@ public class ApiController implements EWrapper {
             @Override
             public void orderState(OrderState orderState) {
                 LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
-
                 //new method, records all status changes, time, track IOC orders, one status only once
                 if (orderState.status() != idStatusMap.get(defaultID)) {
                     String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                            "STATUS CHG",
-                            "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                    outputPurelyOrders(msg);
+                            "**STATUS CHG**", orderState.status(), now, defaultID, globalIdOrderMap.get(defaultID));
+                    outputPurelyOrdersDetailed(msg);
                     idStatusMap.put(defaultID, orderState.status());
                 }
 
