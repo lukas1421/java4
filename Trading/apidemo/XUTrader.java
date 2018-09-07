@@ -3186,9 +3186,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         botMap.put(f, unitsBought);
         soldMap.put(f, unitsSold);
 
-        double avgBuy = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream()
+        double avgBuy = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> dateP.test(e.getKey()))
                 .mapToDouble(e -> e.getValue().getCostBasisAllPositive("")).sum() / unitsBought)) / 100d);
-        double avgSell = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream()
+        double avgSell = Math.abs(Math.round(100d * (tradesMap.get(f).entrySet().stream().filter(e -> dateP.test(e.getKey()))
                 .mapToDouble(e -> e.getValue().getCostBasisAllNegative("")).sum() / unitsSold)) / 100d);
         double buyTradePnl = Math.round(100d * (futPriceMap.get(f) - avgBuy) * unitsBought) / 100d;
         double sellTradePnl = Math.round(100d * (futPriceMap.get(f) - avgSell) * unitsSold) / 100d;
@@ -3197,7 +3197,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double mtmPnl = (currentPosMap.getOrDefault(f, 0) - unitsBought - unitsSold) *
                 (futPriceMap.getOrDefault(f, 0.0) - futPrevClose3pmMap.getOrDefault(f, 0.0));
 
-        NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(ibContractToFutType(activeFutureCt)));
+        NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(f));
 
         //int pmChgY = getPercentileChgFut(futdata, futdata.firstKey().toLocalDate());
         int pmChgY = getRecentPmCh(LocalTime.now(), INDEX_000001);
