@@ -1555,9 +1555,9 @@ public class ApiController implements EWrapper {
 
                 if (orderState.status() == OrderStatus.Filled) {
                     if (!filledOrderSet.contains(defaultID)) {
-                        String msg = str("||Order||", globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                defaultID, globalIdOrderMap.get(defaultID), orderState.status(),
-                                LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
+                        String msg = str(LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
+                                "||Order||", globalIdOrderMap.get(defaultID).getOrder().orderId(),
+                                defaultID, globalIdOrderMap.get(defaultID), orderState.status());
                         XuTraderHelper.outputToAutoLog(msg);
                         XuTraderHelper.outputPurelyOrders(msg);
                         filledOrderSet.add(defaultID);
@@ -1569,8 +1569,6 @@ public class ApiController implements EWrapper {
                 } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
                     if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getOrderType())) {
                         pr(" flatten trade IOC cancelled, flatten aggressively ");
-                        //XUTrader.flattenAggressively();
-
                         if (XUTrader.flattenEagerness == Eagerness.Passive) {
                             pr(" in flatten order handler change to aggressive");
                             XUTrader.flattenEagerness = Eagerness.Aggressive;
@@ -1600,7 +1598,6 @@ public class ApiController implements EWrapper {
     }
 
     public void placeOrModifyOrder(Contract contract, final Order order, final IOrderHandler handler) {
-        // when placing new order, assign new order id
         if (order.totalQuantity() == 0.0) {
             return;
         }

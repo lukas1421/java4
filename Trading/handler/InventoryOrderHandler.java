@@ -48,8 +48,8 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
 
             if (!filledOrdersSet.contains(defaultID)) {
                 globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
-                String msg = str("||Order||", defaultID, globalIdOrderMap.get(defaultID), orderState.status()
-                        , LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
+                String msg = str(LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
+                        "||Order||", defaultID, globalIdOrderMap.get(defaultID), orderState.status());
                 XuTraderHelper.outputToAutoLog(msg);
                 XuTraderHelper.outputPurelyOrders(msg);
                 filledOrdersSet.add(defaultID);
