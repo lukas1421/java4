@@ -1533,6 +1533,7 @@ public class ApiController implements EWrapper {
         void handle(int errorCode, String errorMsg);
 
         class DefaultOrderHandler implements IOrderHandler {
+            static Set<Integer> createdOrderSet = new HashSet<>();
             static Set<Integer> filledOrderSet = new HashSet<>();
             static Set<Integer> cancelledOrderSet = new HashSet<>();
             static Set<Integer> submittedOrderSet = new HashSet<>();
@@ -1550,28 +1551,34 @@ public class ApiController implements EWrapper {
 
             @Override
             public void orderState(OrderState orderState) {
+                LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
                 if (globalIdOrderMap.containsKey(defaultID)) {
                     globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
-                    globalIdOrderMap.get(defaultID).setStatus(orderState.status());
+                    globalIdOrderMap.get(defaultID).setAugmentedOrderStatus(orderState.status());
                 } else {
                     throw new IllegalStateException(" global id order map doesn't " +
                             "contain default ID " + defaultID);
                 }
 
-                if (orderState.status() == OrderStatus.Submitted) {
+                if (orderState.status() == OrderStatus.Created) {
+                    if (!createdOrderSet.contains(defaultID)) {
+                        String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
+                                "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
+                        outputToAutoLog(msg);
+                        outputPurelyOrders(msg);
+                        createdOrderSet.add(defaultID);
+                    }
+                } else if (orderState.status() == OrderStatus.Submitted) {
                     if (!submittedOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "||SUBMIT||", LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
-                                defaultID, globalIdOrderMap.get(defaultID), orderState.status());
+                                "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
                         outputPurelyOrders(msg);
                         submittedOrderSet.add(defaultID);
                     }
                 } else if (orderState.status() == OrderStatus.Filled) {
                     if (!filledOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "||FILL||", LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
-                                defaultID, globalIdOrderMap.get(defaultID), orderState.status());
-                        outputToAutoLog(msg);
+                                "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
                         outputPurelyOrders(msg);
                         filledOrderSet.add(defaultID);
                     }
@@ -1579,18 +1586,14 @@ public class ApiController implements EWrapper {
                 } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
                     if (!cancelledOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "||Order||", LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
-                                defaultID, globalIdOrderMap.get(defaultID), orderState.status());
-                        outputToAutoLog(msg);
+                                "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
                         outputPurelyOrders(msg);
                         cancelledOrderSet.add(defaultID);
                     }
                 } else {
                     if (!elseOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "||ELSE||", LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
-                                defaultID, globalIdOrderMap.get(defaultID), orderState.status());
-                        outputToAutoLog(msg);
+                                "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
                         outputPurelyOrders(msg);
                         elseOrderSet.add(defaultID);
                     }

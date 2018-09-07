@@ -223,13 +223,13 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
                 g.setColor(Color.blue);
                 g.drawLine(0, y, getWidth(), y);
                 g.drawString(str("Buy: ", v.totalQuantity(), " at ", v.lmtPrice(),
-                        XUTrader.findOrderByTWSID(k).getOrderType(), XUTrader.findOrderByTWSID(k).getStatus())
+                        XUTrader.findOrderByTWSID(k).getOrderType(), XUTrader.findOrderByTWSID(k).getAugmentedOrderStatus())
                         , Math.round(getWidth() * 7 / 8), y + 10);
             } else if (v.action().equals(Types.Action.SELL)) {
                 g.setColor(Color.red);
                 g.drawLine(0, y, getWidth(), y);
                 g.drawString(str("Sell: ", v.totalQuantity(), " at ", v.lmtPrice()
-                        , XUTrader.findOrderByTWSID(k).getOrderType(), XUTrader.findOrderByTWSID(k).getStatus())
+                        , XUTrader.findOrderByTWSID(k).getOrderType(), XUTrader.findOrderByTWSID(k).getAugmentedOrderStatus())
                         , Math.round(getWidth() * 7 / 8), y + 10);
             }
         });

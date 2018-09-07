@@ -40,7 +40,7 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
 
     @Override
     public void orderState(OrderState orderState) {
-        globalIdOrderMap.get(defaultID).setStatus(orderState.status());
+        globalIdOrderMap.get(defaultID).setAugmentedOrderStatus(orderState.status());
         globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
 
         if (orderState.status() == OrderStatus.Filled) {

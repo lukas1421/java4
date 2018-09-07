@@ -624,7 +624,7 @@ public class XuTraderHelper {
     static double getTotalFilledSignedQForType(AutoOrderType type) {
         return XUTrader.globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
-                .filter(e -> e.getValue().getStatus() == OrderStatus.Filled)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
                 .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
                 .sum();
     }
@@ -640,7 +640,7 @@ public class XuTraderHelper {
         return XUTrader.globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .map(e -> e.getValue().getStatus())
+                .map(e -> e.getValue().getAugmentedOrderStatus())
                 .orElseThrow(() -> new IllegalStateException("no status"));
     }
 

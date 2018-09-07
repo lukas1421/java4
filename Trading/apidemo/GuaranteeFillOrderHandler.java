@@ -26,7 +26,7 @@ public class GuaranteeFillOrderHandler implements ApiController.IOrderHandler {
     public void orderState(OrderState orderState) {
         if (globalIdOrderMap.containsKey(defaultID)) {
             globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
-            globalIdOrderMap.get(defaultID).setStatus(orderState.status());
+            globalIdOrderMap.get(defaultID).setAugmentedOrderStatus(orderState.status());
         } else {
             throw new IllegalStateException(" global id order map doesn't " +
                     "contain default ID " + defaultID);
