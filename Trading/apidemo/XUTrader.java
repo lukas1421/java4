@@ -1512,9 +1512,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void futOpenTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
         LocalTime lt = nowMilli.toLocalTime();
         String futSymbol = ibContractToSymbol(activeFutureCt);
-        FutType ft = ibContractToFutType(activeFutureCt);
-        double currentBid = bidMap.get(ft);
-        double currentAsk = askMap.get(ft);
+        FutType f = ibContractToFutType(activeFutureCt);
+        double currentBid = bidMap.get(f);
+        double currentAsk = askMap.get(f);
         double deltaTgt = getDeltaTarget(nowMilli, pmchy);
         double currDelta = getNetPtfDelta();
 
@@ -1534,7 +1534,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
-        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(ft);
+        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
         int _2dayPerc = getPercentileForLast(fut);
 
         pr("fut open trader " + futPrice);
@@ -1616,6 +1616,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .filter(e -> e.getKey().isAfter(LocalTime.of(9, 29, 0)))
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
+
         LocalDateTime lastFTickTime = getLastOrderTime(INDEX_FIRST_TICK);
         int buySize = 3;
         int sellSize = 2;
@@ -1655,7 +1656,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         FutType ft = ibContractToFutType(activeFutureCt);
         double freshPrice = futPriceMap.get(ft);
         double atmVol = getATMVol(expiryToGet);
-        int waitTimeInSeconds = 60 * 10;
         OrderStatus lastStatus = getLastOrderStatusForType(INDEX_OPEN_DEVI);
 
         if (lt.isBefore(LocalTime.of(9, 29, 0)) || lt.isAfter(LocalTime.of(15, 0))) {
@@ -1695,7 +1695,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(INDEX_OPEN_DEVI);
         long tSinceLastOrder = tSincePrevOrderMilli(INDEX_OPEN_DEVI, nowMilli);
 
-        waitTimeInSeconds = (milliBtwnLastTwoOrders < 60000) ? 300 : 10;
+        int waitTimeInSeconds = (milliBtwnLastTwoOrders < 60000) ? 300 : 10;
 
         int baseSize = getWeekdayBaseSize(nowMilli.getDayOfWeek());
         int buySize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == 5) ? 1 : 2);
@@ -1725,16 +1725,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        double buyPrice = freshPrice;
-        double sellPrice = freshPrice;
         String msg = "";
 
-        // Aggressive at the open, aggressive when battling around open
-        //conservative later when markets are supposed to remain calm.
-        //lt.isAfter(LocalTime.of(9, 40)) &&
-        //if (numOrdersOpenDev % 2 == 0) {
-        buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(openIndex, Direction.Long));
-        sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(openIndex, Direction.Short));
+        double buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(openIndex, Direction.Long));
+        double sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(openIndex, Direction.Short));
         msg = " conservative on all trades ";
 
 

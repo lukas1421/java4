@@ -90,7 +90,6 @@ public class OrderAugmented {
     public String toString() {
         return str("T: ", orderTime.toLocalTime(),
                 "Order:", order, "msg:", msg, "Tradetype", orderType,
-                //order.orderId() == 0 ? "" : order.orderId(),
                 "Status:", status);
     }
 }
