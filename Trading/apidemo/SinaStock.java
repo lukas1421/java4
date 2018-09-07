@@ -66,7 +66,7 @@ public class SinaStock implements Runnable {
             URL urlSZ = new URL(urlStringSZ);
             URLConnection urlconnSH = urlSH.openConnection();
             URLConnection urlconnSZ = urlSZ.openConnection();
-            //LocalTime lt = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+            //LocalTime ltof = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
             LocalDateTime ldt = LocalDateTime.now();
             LocalDateTime ldtMin = ldt.truncatedTo(ChronoUnit.MINUTES);
 
@@ -189,8 +189,8 @@ public class SinaStock implements Runnable {
                                 ex.printStackTrace();
                             }
                         }
-                        //updateBidAskMap(ticker, lt, datalist, BidAsk.BID, bidMap);
-                        //updateBidAskMap(ticker, lt, datalist, BidAsk.ASK, askMap);
+                        //updateBidAskMap(ticker, ltof, datalist, BidAsk.BID, bidMap);
+                        //updateBidAskMap(ticker, ltof, datalist, BidAsk.ASK, askMap);
                     } else {
                         if (priceMapBar.containsKey(ticker) && sizeTotalMap.containsKey(ticker)
                                 && STOCK_COLLECTION_TIME.test(ldt)) {

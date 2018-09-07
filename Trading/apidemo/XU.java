@@ -660,21 +660,21 @@ public final class XU extends JPanel {
                     return lt;
 
                 case 1:
-                    //return round(Optional.ofNullable(lastFutPrice.get(lt)).map(SimpleBar::getClose).orElse(0.0));
+                    //return round(Optional.ofNullable(lastFutPrice.get(ltof)).map(SimpleBar::getClose).orElse(0.0));
                     return round(Optional.ofNullable(priceMapBar.get(ticker).get(lt)).map(SimpleBar::getClose).orElse(0.0));
 
                 case 2:
-                    //return round(Optional.ofNullable(indexPriceSina.get(lt)).map(SimpleBar::getClose).orElse(0.0));
+                    //return round(Optional.ofNullable(indexPriceSina.get(ltof)).map(SimpleBar::getClose).orElse(0.0));
                     return round(Optional.ofNullable(priceMapBar.get(FTSE_INDEX).get(lt)).map(SimpleBar::getClose).orElse(0.0));
 
                 case 3:
-                    //return (lastFutPrice.containsKey(lt) && indexPriceSina.containsKey(lt))?
-                    //     round(1000d*((lastFutPrice.get(lt).getClose()/indexPriceSina.get(lt).getClose())-1))/10d:0.0;
+                    //return (lastFutPrice.containsKey(ltof) && indexPriceSina.containsKey(ltof))?
+                    //     round(1000d*((lastFutPrice.get(ltof).getClose()/indexPriceSina.get(ltof).getClose())-1))/10d:0.0;
                     return (priceMapBar.get(ticker).containsKey(lt) && priceMapBar.get(FTSE_INDEX).containsKey(lt))
                             ? round(1000d * ((priceMapBar.get(ticker).get(lt).getClose() / priceMapBar.get(FTSE_INDEX).get(lt).getClose()) - 1)) / 10d : 0.0;
 
                 case 4:
-                    //return frontFutVol.getOrDefault(lt,0);
+                    //return frontFutVol.getOrDefault(ltof,0);
                     return (int) Math.round(ChinaData.sizeTotalMap.get(ticker).getOrDefault(lt, 0.0));
 
                 case 5:
@@ -725,7 +725,7 @@ public final class XU extends JPanel {
 //    class FrontFutHandler implements ITopMktDataHandler {
 //        @Override
 //        public void tickPrice(TickType tickType, double price, int canAutoExecute) {
-//            LocalTime lt = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+//            LocalTime ltof = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
 //
 //            switch (tickType) {
 //                case BID:
@@ -734,17 +734,17 @@ public final class XU extends JPanel {
 //                    break;
 //                case LAST:
 //                    ChinaStock.priceMap.put("SGXA50", price);
-//                    if (lt.isAfter(LocalTime.of(8, 55))) {
-//                        if (lastFutPrice.containsKey(lt)) {
-//                            lastFutPrice.get(lt).add(price);
+//                    if (ltof.isAfter(LocalTime.of(8, 55))) {
+//                        if (lastFutPrice.containsKey(ltof)) {
+//                            lastFutPrice.get(ltof).add(price);
 //                        } else {
-//                            lastFutPrice.put(lt, new SimpleBar(price));
+//                            lastFutPrice.put(ltof, new SimpleBar(price));
 //                        }
 //
-//                        if (priceMapBar.get("SGXA50").containsKey(lt)) {
-//                            priceMapBar.get("SGXA50").get(lt).add(price);
+//                        if (priceMapBar.get("SGXA50").containsKey(ltof)) {
+//                            priceMapBar.get("SGXA50").get(ltof).add(price);
 //                        } else {
-//                            priceMapBar.get("SGXA50").put(lt, new SimpleBar(price));
+//                            priceMapBar.get("SGXA50").put(ltof, new SimpleBar(price));
 //                        }
 //                    }
 //                    break;
@@ -759,18 +759,18 @@ public final class XU extends JPanel {
 //
 //        @Override
 //        public void tickSize(TickType tickType, int size) {
-//            LocalTime lt = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+//            LocalTime ltof = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
 //            switch (tickType) {
 //                case BID_SIZE:
-////               bidVol.put(lt,size);
+////               bidVol.put(ltof,size);
 //                    break;
 //                case ASK_SIZE:
-////               askVol.put(lt,size);
+////               askVol.put(ltof,size);
 //                    break;
 //                case VOLUME:
-//                    frontFutVol.put(lt, size);
+//                    frontFutVol.put(ltof, size);
 //                    ChinaStock.sizeMap.put("SGXA50", (long) size);
-//                    ChinaData.sizeTotalMap.get("SGXA50").put(lt, 1d * size);
+//                    ChinaData.sizeTotalMap.get("SGXA50").put(ltof, 1d * size);
 //                    break;
 //            }
 //            SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
@@ -794,7 +794,7 @@ public final class XU extends JPanel {
 //    class BackFutHandler implements ITopMktDataHandler {
 //        @Override
 //        public void tickPrice(TickType tickType, double price, int canAutoExecute) {
-//            LocalTime lt = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+//            LocalTime ltof = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
 //
 //            switch (tickType) {
 //                case BID:
@@ -803,17 +803,17 @@ public final class XU extends JPanel {
 //                    break;
 //                case LAST:
 //                    ChinaStock.priceMap.put("SGXA50BM", price);
-//                    if (lt.isAfter(LocalTime.of(8, 55))) {
-////                        if (lastFutPrice.containsKey(lt)) {
-////                            lastFutPrice.get(lt).add(price);
+//                    if (ltof.isAfter(LocalTime.of(8, 55))) {
+////                        if (lastFutPrice.containsKey(ltof)) {
+////                            lastFutPrice.get(ltof).add(price);
 ////                        } else {
-////                            lastFutPrice.put(lt, new SimpleBar(price));
+////                            lastFutPrice.put(ltof, new SimpleBar(price));
 ////                        }
 //
-//                        if (priceMapBar.get("SGXA50BM").containsKey(lt)) {
-//                            priceMapBar.get("SGXA50BM").get(lt).add(price);
+//                        if (priceMapBar.get("SGXA50BM").containsKey(ltof)) {
+//                            priceMapBar.get("SGXA50BM").get(ltof).add(price);
 //                        } else {
-//                            priceMapBar.get("SGXA50BM").put(lt, new SimpleBar(price));
+//                            priceMapBar.get("SGXA50BM").put(ltof, new SimpleBar(price));
 //                        }
 //                    }
 //                    break;
@@ -828,18 +828,18 @@ public final class XU extends JPanel {
 //
 //        @Override
 //        public void tickSize(TickType tickType, int size) {
-//            LocalTime lt = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+//            LocalTime ltof = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
 //            switch (tickType) {
 //                case BID_SIZE:
-////               bidVol.put(lt,size);
+////               bidVol.put(ltof,size);
 //                    break;
 //                case ASK_SIZE:
-////               askVol.put(lt,size);
+////               askVol.put(ltof,size);
 //                    break;
 //                case VOLUME:
-//                    backFutVol.put(lt, size);
+//                    backFutVol.put(ltof, size);
 //                    ChinaStock.sizeMap.put("SGXA50BM", (long) size);
-//                    ChinaData.sizeTotalMap.get("SGXA50BM").put(lt, 1d * size);
+//                    ChinaData.sizeTotalMap.get("SGXA50BM").put(ltof, 1d * size);
 //                    break;
 //            }
 //            SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());

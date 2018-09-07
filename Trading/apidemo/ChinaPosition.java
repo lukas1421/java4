@@ -793,23 +793,23 @@ public class ChinaPosition extends JPanel {
 //            cal.setTime(dt);
 //            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1,
 //                    cal.get(Calendar.DAY_OF_MONTH));
-//            LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+//            LocalTime ltof = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 //
 //            if (name.equalsIgnoreCase("SGXA50PR")) {
-//                if (ld.equals(currentTradingDate) && lt.isAfter(LocalTime.of(8, 59))) {
-//                    priceMapBar.get("SGXA50PR").put(lt, new SimpleBar(open, high, low, close));
+//                if (ld.equals(currentTradingDate) && ltof.isAfter(LocalTime.of(8, 59))) {
+//                    priceMapBar.get("SGXA50PR").put(ltof, new SimpleBar(open, high, low, close));
 //                }
 //            }
 //
-//            if (lt.equals(LocalTime.of(14, 59)) && !ld.equals(currentTradingDate)) {
+//            if (ltof.equals(LocalTime.of(14, 59)) && !ld.equals(currentTradingDate)) {
 //                ChinaStock.closeMap.put(name, close);
 ////                pr(" Trading date " + currentTradingDate
-////                        + " checking close " + lt + " " + name + " " + close);
+////                        + " checking close " + ltof + " " + name + " " + close);
 //            }
 //
-//            if (((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
-//                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
-//                if (lt.equals(LocalTime.of(9, 0))) {
+//            if (((ltof.isAfter(LocalTime.of(8, 59)) && ltof.isBefore(LocalTime.of(11, 31)))
+//                    || (ltof.isAfter(LocalTime.of(12, 59)) && ltof.isBefore(LocalTime.of(15, 1))))) {
+//                if (ltof.equals(LocalTime.of(9, 0))) {
 //                    openMap.put(name, open);
 //                }
 //            }
@@ -1603,7 +1603,7 @@ class ChinaPositionHistHandler implements HistoricalHandler {
             if (lt.equals(LocalTime.of(14, 59)) && !ld.equals(currentTradingDate)) {
                 ChinaStock.closeMap.put(name, close);
 //                pr(" Trading date " + currentTradingDate
-//                        + " checking close " + lt + " " + name + " " + close);
+//                        + " checking close " + ltof + " " + name + " " + close);
             }
 
             if (((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))

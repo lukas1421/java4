@@ -221,9 +221,9 @@ final class Shcomp extends JPanel implements Runnable {
         tab.setAutoCreateRowSorter(true);
     }
 
-//   public static boolean tradingRange(LocalTime lt) {
-//       return ((lt.isAfter(LocalTime.of(9,29)) && lt.isBefore(LocalTime.of(11,30)))
-//               || (lt.isAfter(LocalTime.of(13,0)) && lt.isBefore(LocalTime.of(15,0))));
+//   public static boolean tradingRange(LocalTime ltof) {
+//       return ((ltof.isAfter(LocalTime.of(9,29)) && ltof.isBefore(LocalTime.of(11,30)))
+//               || (ltof.isAfter(LocalTime.of(13,0)) && ltof.isBefore(LocalTime.of(15,0))));
 //   }
     public void saveShcomp() {
         try {

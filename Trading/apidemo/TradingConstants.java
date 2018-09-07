@@ -97,7 +97,7 @@ public final class TradingConstants {
     public static final Predicate<LocalDateTime> FUT_COLLECTION_TIME =
             ldt -> ldt.toLocalTime().isBefore(LocalTime.of(5, 0)) || ldt.toLocalTime().isAfter(LocalTime.of(8, 59));
 
-    //&& lt.toLocalTime().isBefore(LocalTime.of(15, 5))
+    //&& ltof.toLocalTime().isBefore(LocalTime.of(15, 5))
 
 
     private static final Predicate<LocalDateTime> FUT_OPEN_PRED = (lt)

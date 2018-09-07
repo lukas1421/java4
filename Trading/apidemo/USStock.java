@@ -104,7 +104,7 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
             LocalDateTime ldt = LocalDateTime.of(ld, lt);
-//            if (!ld.equals(currDate) && lt.equals(LocalTime.of(14, 59))) {
+//            if (!ld.equals(currDate) && ltof.equals(LocalTime.of(14, 59))) {
 //                futPrevClose3pmMap.put(FutType.get(name), close);
 //            }
 

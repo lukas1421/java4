@@ -156,7 +156,7 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
         LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
         if (ld.equals(LocalDate.now())) {
-            //System.out.println(" CORRECT name ld lt open " + name + " " + ld + " " + lt + " " + open);
+            //System.out.println(" CORRECT name ld ltof open " + name + " " + ld + " " + ltof + " " + open);
             hkPriceBar.get(name).put(lt, new SimpleBar(open, high, low, close));
             if (name.equals("700")) {
                 System.out.println(" outputting tencent");
