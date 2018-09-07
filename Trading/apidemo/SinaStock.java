@@ -124,7 +124,6 @@ public class SinaStock implements Runnable {
                         XUTrader.intradayMATrader(ldt, currIndexPrice);
 
                         //XUTrader.closeProfitTaker(ldt, currIndexPrice);
-
                         //XUTrader.firstTickMAProfitTaker(ldt, currIndexPrice);
                         //XUTrader.indexHiloAccumulator(ldt, currIndexPrice);
                         //XUTrader.intraday1stTickAccumulator(ldt, currIndexPrice);
