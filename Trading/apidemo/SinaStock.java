@@ -116,7 +116,7 @@ public class SinaStock implements Runnable {
                             && ldt.toLocalTime().isBefore(LocalTime.of(15, 5))) { //change this later
                         priceMapBarDetail.get(FTSE_INDEX).put(ldt.toLocalTime(), currIndexPrice);
 
-                        XUTrader.firstTickTrader(ldt, currIndexPrice);
+                        XUTrader.indexFirstTickTrader(ldt, currIndexPrice);
 
                         XUTrader.indexHiLoTrader(ldt, currIndexPrice);
                         XUTrader.indexPmHiLoTrader(ldt, currIndexPrice);

@@ -209,7 +209,7 @@ public final class ChinaMain implements IConnectionHandler {
                     ChinaData.outputPrices();
                     MorningTask.getBOCFX();
                     ChinaData.outputRecentTradingDate();
-
+                    ChinaStockHelper.outputIndexFut();
                 }
             }, 5, 5, TimeUnit.MINUTES);
 

@@ -123,15 +123,20 @@ public final class ChinaStockHelper {
         return outMap;
     }
 
-    static void outputPMBDetailedToTxt(NavigableMap<LocalTime, Double> inMap) {
-        //pmbOutput.txt
-        pr(" outputting options");
-        File output = new File(TradingConstants.GLOBALPATH + "pmbOutput.txt");
+    static void outputIndexFut() {
+        File indexOut = new File(TradingConstants.GLOBALPATH + "pmbFTSEA50.txt");
+        File futOut = new File(TradingConstants.GLOBALPATH + "pmbSGXA50.txt");
+        outputPMBDetailedToFile(priceMapBarDetail.get(FTSE_INDEX), indexOut);
+        outputPMBDetailedToFile(priceMapBarDetail.get("SGXA50"), futOut);
+    }
+
+    static void outputPMBDetailedToFile(NavigableMap<LocalTime, Double> inMap, File outfile) {
+        //File output = new File(TradingConstants.GLOBALPATH + "pmbOutput.txt");
         if (inMap.size() == 0) {
             return;
         }
 
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, false))) {
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(outfile, false))) {
             inMap.forEach((k, v) -> {
                 try {
                     out.append(str(k, "\t", r(v)));
@@ -143,6 +148,17 @@ public final class ChinaStockHelper {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+
+    }
+
+    static void outputPMBDetailedToTxt(NavigableMap<LocalTime, Double> inMap) {
+        //pmbOutput.txt
+        pr(" outputting options");
+        File output = new File(TradingConstants.GLOBALPATH + "pmbOutput.txt");
+        if (inMap.size() == 0) {
+            return;
+        }
+        outputPMBDetailedToFile(inMap, output);
     }
 
 
