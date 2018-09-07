@@ -1987,8 +1987,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     "milliBtwnLastTwo", milliBtwnLastTwoOrders);
         }
 
-        double buyPrice = freshPrice;
-        double sellPrice = freshPrice;
+        double buyPrice;
+        double sellPrice;
 
         if (numPMOrders <= 1) {
             buyPrice = askPrice;
@@ -1998,9 +1998,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             sellPrice = freshPrice;
         }
 
-        if (SECONDS.between(lastPMHiLoTradeTime, nowMilli) >= pmHiloWaitTimeSeconds
-                && pmMaxSoFar != 0.0 && pmMinSoFar != 0.0) {
-            if (!noMoreBuy.get() && (indexLast > pmMaxSoFar || pmMaxT.isAfter(pmMinT)) && indexPmHiLoDirection != Direction.Long) {
+        if (SECONDS.between(lastPMHiLoTradeTime, nowMilli) >= pmHiloWaitTimeSeconds && pmMaxSoFar != 0.0 && pmMinSoFar != 0.0) {
+            if (!noMoreBuy.get() && (indexLast > pmMaxSoFar || pmMaxT.isAfter(pmMinT))
+                    && indexPmHiLoDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(buyPrice, buyQ, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_PM_HILO));
@@ -2013,7 +2013,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar), "pmMaxT,pmMinT", pmMaxT, pmMinT,
                         "bid ask, spread", bidPrice, askPrice, Math.round(10000d * (askPrice / bidPrice - 1)), "bp"));
                 indexPmHiLoDirection = Direction.Long;
-            } else if (!noMoreSell.get() && (indexLast < pmMinSoFar || pmMinT.isAfter(pmMaxT)) && indexPmHiLoDirection != Direction.Short) {
+            } else if (!noMoreSell.get() && (indexLast < pmMinSoFar || pmMinT.isAfter(pmMaxT))
+                    && indexPmHiLoDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(sellPrice, sellQ, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_PM_HILO));
