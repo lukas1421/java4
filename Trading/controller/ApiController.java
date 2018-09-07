@@ -33,6 +33,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaMain.*;
 import static apidemo.XUTrader.globalIdOrderMap;
+import static apidemo.XuTraderHelper.outputPurelyOrders;
+import static apidemo.XuTraderHelper.outputToAutoLog;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
 
@@ -492,10 +494,10 @@ public class ApiController implements EWrapper {
                 XUTrader.updateLog(str("Account pnl", output));
                 XUTrader.currentIBNAV = Double.parseDouble(value);
                 if (LocalTime.now().getMinute() < 2) {
-                    XuTraderHelper.outputToAutoLog(output);
+                    outputToAutoLog(output);
                 }
                 if (LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).getMinute() <= 1) {
-                    XuTraderHelper.outputToAutoLog(output);
+                    outputToAutoLog(output);
                 }
             }
 
@@ -1517,6 +1519,7 @@ public class ApiController implements EWrapper {
 
     // ---------------------------------------- Trading and Option Exercise ----------------------------------------
 
+
     /**
      * This interface is for receiving events for a specific order placed from
      * the API. Compare to ILiveOrderHandler.
@@ -1530,8 +1533,10 @@ public class ApiController implements EWrapper {
         void handle(int errorCode, String errorMsg);
 
         class DefaultOrderHandler implements IOrderHandler {
-
             static Set<Integer> filledOrderSet = new HashSet<>();
+            static Set<Integer> unfilledOrderSet = new HashSet<>();
+            static Set<Integer> submittedOrderSet = new HashSet<>();
+            static Set<Integer> elseOrderSet = new HashSet<>();
 
             int defaultID;
 
@@ -1553,39 +1558,50 @@ public class ApiController implements EWrapper {
                             "contain default ID " + defaultID);
                 }
 
-                if (orderState.status() == OrderStatus.Filled) {
+                if (orderState.status() == OrderStatus.Submitted) {
+                    if (!submittedOrderSet.contains(defaultID)) {
+                        String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
+                                "||SUBMIT||", LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
+                                defaultID, globalIdOrderMap.get(defaultID), orderState.status());
+                        outputPurelyOrders(msg);
+                        submittedOrderSet.add(defaultID);
+                    }
+                } else if (orderState.status() == OrderStatus.Filled) {
                     if (!filledOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "||Order||", LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
+                                "||FILL||", LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
                                 defaultID, globalIdOrderMap.get(defaultID), orderState.status());
-                        XuTraderHelper.outputToAutoLog(msg);
-                        XuTraderHelper.outputPurelyOrders(msg);
+                        outputToAutoLog(msg);
+                        outputPurelyOrders(msg);
                         filledOrderSet.add(defaultID);
                     }
 
-                    if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getOrderType())) {
-                        XUTrader.flattenEagerness = Eagerness.Passive;
-                    }
                 } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
-                    if (XuTraderHelper.isFlattenTrade().test(globalIdOrderMap.get(defaultID).getOrderType())) {
-                        pr(" flatten trade IOC cancelled, flatten aggressively ");
-                        if (XUTrader.flattenEagerness == Eagerness.Passive) {
-                            pr(" in flatten order handler change to aggressive");
-                            XUTrader.flattenEagerness = Eagerness.Aggressive;
-                        }
+                    if (!unfilledOrderSet.contains(defaultID)) {
+                        String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
+                                "||Order||", LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
+                                defaultID, globalIdOrderMap.get(defaultID), orderState.status());
+                        outputToAutoLog(msg);
+                        outputPurelyOrders(msg);
+                        unfilledOrderSet.add(defaultID);
                     }
-                } else if (orderState.status() == OrderStatus.Submitted) {
 
                 } else {
-                    pr(" default order state ELSE: ", orderState.status(),
-                            globalIdOrderMap.get(defaultID));
+                    if (!elseOrderSet.contains(defaultID)) {
+                        String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
+                                "||ELSE||", LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
+                                defaultID, globalIdOrderMap.get(defaultID), orderState.status());
+                        outputToAutoLog(msg);
+                        outputPurelyOrders(msg);
+                        elseOrderSet.add(defaultID);
+                    }
                 }
             }
 
             @Override
             public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
                                     int parentId, double lastFillPrice, int clientId, String whyHeld) {
-                XuTraderHelper.outputToAutoLog(str("||OrderStatus||", defaultID,
+                outputToAutoLog(str("||OrderStatus||", defaultID,
                         globalIdOrderMap.get(defaultID), status, filled,
                         remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));
             }
