@@ -1704,9 +1704,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (detailedPrint.get()) {
             if (lt.isBefore(ltof(9, 40)) || lt.getSecond() > 50) {
                 pr(" open dev #:", numOrdersOpenDev, lt.truncatedTo(SECONDS),
-                        "open:", r(openIndex), "ft", r(firstTick), "lastIndex", r(lastIndex),
-                        "IDX chg:", r10000(lastIndex / openIndex - 1),
-                        "fut/pd", r(freshPrice), Math.round(10000d * (freshPrice / lastIndex - 1)) + " bp",
+                        "lastIndex/fut/pd", r(lastIndex), (freshPrice)
+                        , Math.round(10000d * (freshPrice / lastIndex - 1)) + "bps",
+                        "open:", r(openIndex), "ft", r(firstTick),
+                        "IDX chg:", r10000(lastIndex / openIndex - 1) + "bps",
                         "openDevDir/vol ", openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
                         "IDX chg: ", r(lastIndex - openIndex), "prevT:", lastOpenDevTradeTime,
                         "wait(s):", waitTimeInSeconds, "last status ", lastStatus, "noBuy", noMoreBuy.get(),
@@ -1882,16 +1883,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        long numPMOrders = getOrderSizeForTradeType(INDEX_PM_HILO);
+        long numPMHiloOrders = getOrderSizeForTradeType(INDEX_PM_HILO);
 
-        if (numPMOrders >= 6) {
+        if (numPMHiloOrders >= 6) {
             if (detailedPrint.get()) {
                 pr(" pm hilo exceed max = 6");
             }
             return;
         }
 
-        if (numPMOrders > 0 && lastStatus != OrderStatus.Filled) {
+        if (numPMHiloOrders > 0 && lastStatus != OrderStatus.Filled) {
             pr(" pm order last not filled ");
             return;
         }
@@ -1901,8 +1902,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         int pmHiloWaitTimeSeconds = (milliBtwnLastTwoOrders < 60000) ? 300 : 10;
 
-        int buyQ = PM_HILO_BASE * ((numPMOrders == 0 || numPMOrders == 5) ? 1 : 2);
-        int sellQ = PM_HILO_BASE * ((numPMOrders == 0 || numPMOrders == 5) ? 1 : 2);
+        int buyQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == 5) ? 1 : 2);
+        int sellQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == 5) ? 1 : 2);
 
         long tBtwnLast2Trades = lastTwoOrderMilliDiff(INDEX_PM_HILO);
         long tSinceLastTrade = tSincePrevOrderMilli(INDEX_PM_HILO, nowMilli);
@@ -1957,7 +1958,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double buyPrice;
         double sellPrice;
 
-        if (numPMOrders <= 2) {
+        if (numPMHiloOrders <= 2) {
             buyPrice = askPrice;
             sellPrice = bidPrice;
         } else {
@@ -1974,7 +1975,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 //apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeFillOrderHandler(id, apcon));
 
-                outputOrderToAutoLog(str(o.orderId(), "index pm hilo BUY #:", numPMOrders,
+                outputOrderToAutoLog(str(o.orderId(), "index pm hilo BUY #:", numPMHiloOrders,
                         globalIdOrderMap.get(id), "buy limit: ", buyPrice, "indexLast/fut/pd: ", r(indexLast),
                         freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
                         "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDirection,
@@ -1988,7 +1989,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeOfferLimitTIF(sellPrice, sellQ, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_PM_HILO));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "index pm hilo SELL #:", numPMOrders,
+                outputOrderToAutoLog(str(o.orderId(), "index pm hilo SELL #:", numPMHiloOrders,
                         globalIdOrderMap.get(id), "sell limit: ", sellPrice, "indexLast/fut/pd: ", r(indexLast),
                         freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
                         "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDirection,
@@ -2450,20 +2451,20 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     static synchronized void intradayMAProfitTaker(LocalDateTime nowMilli, double indexLast) {
 
-        LocalTime lt = nowMilli.toLocalTime();
-        FutType ft = ibContractToFutType(activeFutureCt);
-        double freshPrice = futPriceMap.get(ft);
-        int pmChgY = getRecentPmCh(lt, INDEX_000001);
+        LocalTime t = nowMilli.toLocalTime();
+        FutType f = ibContractToFutType(activeFutureCt);
+        double freshPrice = futPriceMap.get(f);
+        int pmChgY = getRecentPmCh(t, INDEX_000001);
 
-        if (!checkTimeRangeBool(lt, 9, 29, 15, 0)) {
+        if (!checkTimeRangeBool(t, 9, 29, 15, 0)) {
             return;
         }
 
         int shorterMA = 5;
         int longerMA = 10;
 
-        int buySize = 1;
-        int sellSize = 1;
+        int buySize;
+        int sellSize;
 
         //checkCancelOrders(INTRADAY_MA, nowMilli, 30);
         LocalDate tTrade = getTradeDate(nowMilli);
@@ -2498,26 +2499,26 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     && totalMASignedQ + totalFilledNonMAOrderSize < 0)) {
                 int id = autoTradeID.incrementAndGet();
                 buySize = (int) Math.min(Math.round((Math.abs(totalMASignedQ + totalFilledNonMAOrderSize) / 2)), 3);
-                Order o = placeBidLimit(freshPrice, buySize);
+                Order o = placeBidLimitTIF(freshPrice, buySize, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_MA));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "intraday MA BUY #:", numOrders, globalIdOrderMap.get(id)
+                outputOrderToAutoLog(str(o.orderId(), "intraday MA BUY#:", numOrders, globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc, "pmchg ", pmChgY
-                        , "total Other Traded ", totalFilledNonMAOrderSize, "total MA", totalMASignedQ));
+                        , " others total:", totalFilledNonMAOrderSize, "MA total:", totalMASignedQ));
 
             } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
                     todayPerc > HI_PERC_WIDE
                     && (totalFilledNonMAOrderSize > 0 && totalMASignedQ + totalFilledNonMAOrderSize > 0)) {
                 sellSize = (int) Math.min(Math.round((totalMASignedQ + totalFilledNonMAOrderSize) / 2), 3);
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, sellSize);
+                Order o = placeOfferLimitTIF(freshPrice, sellSize, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_MA));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "intraday MA SELL #:", numOrders, globalIdOrderMap.get(id)
+                outputOrderToAutoLog(str(o.orderId(), "intraday MA SELL#:", numOrders, globalIdOrderMap.get(id)
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc, "pmchg ", pmChgY
-                        , "total Q Other Filled ", totalFilledNonMAOrderSize, "total Q MA", totalMASignedQ));
+                        , " others total:", totalFilledNonMAOrderSize, "MA total:", totalMASignedQ));
             }
         }
     }
