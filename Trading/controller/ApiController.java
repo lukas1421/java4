@@ -1557,8 +1557,8 @@ public class ApiController implements EWrapper {
                 if (orderState.status() != idStatusMap.get(defaultID)) {
                     String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                             "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
-                            defaultID, globalIdOrderMap.get(defaultID),
-                            globalIdOrderMap.get(defaultID).getOrder().tif());
+                            "ID:", defaultID, globalIdOrderMap.get(defaultID),
+                            "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
                     outputPurelyOrdersDetailed(msg);
                     idStatusMap.put(defaultID, orderState.status());
                 }

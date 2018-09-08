@@ -40,7 +40,8 @@ public class GuaranteeFillOrderHandler implements ApiController.IOrderHandler {
         if (orderState.status() != idStatusMap.get(defaultID)) {
             String msg = str("*MUST FILL*", globalIdOrderMap.get(defaultID).getOrder().orderId(),
                     "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
-                    defaultID, globalIdOrderMap.get(defaultID), globalIdOrderMap.get(defaultID).getOrder().tif());
+                    "ID:", defaultID, globalIdOrderMap.get(defaultID),
+                    "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
             outputPurelyOrdersDetailed(msg);
             //if IOC and cancelled, fill at market price
             if (orderState.status() == OrderStatus.Cancelled &&
