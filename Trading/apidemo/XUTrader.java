@@ -1972,6 +1972,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 Order o = placeBidLimitTIF(buyPrice, buyQ, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_PM_HILO));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                //apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeFillOrderHandler(id, apcon));
+
                 outputOrderToAutoLog(str(o.orderId(), "index pm hilo BUY #:", numPMOrders,
                         globalIdOrderMap.get(id), "buy limit: ", buyPrice, "indexLast/fut/pd: ", r(indexLast),
                         freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",

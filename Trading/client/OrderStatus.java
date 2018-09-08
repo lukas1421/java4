@@ -3,7 +3,6 @@
 package client;
 
 public enum OrderStatus {
-
     ApiPending,
     ApiCancelled,
     PendingCancel,

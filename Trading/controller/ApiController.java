@@ -1557,7 +1557,8 @@ public class ApiController implements EWrapper {
                 if (orderState.status() != idStatusMap.get(defaultID)) {
                     String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                             "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
-                            defaultID, globalIdOrderMap.get(defaultID));
+                            defaultID, globalIdOrderMap.get(defaultID),
+                            globalIdOrderMap.get(defaultID).getOrder().tif());
                     outputPurelyOrdersDetailed(msg);
                     idStatusMap.put(defaultID, orderState.status());
                 }
@@ -1591,7 +1592,6 @@ public class ApiController implements EWrapper {
                         outputPurelyOrders(msg);
                         filledOrderSet.add(defaultID);
                     }
-
                 } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
                     if (!cancelledOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
