@@ -66,11 +66,8 @@ public class GuaranteeFillOrderHandler implements ApiController.IOrderHandler {
                 globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType()));
             }
-
             idStatusMap.put(defaultID, orderState.status());
         }
-
-
     }
 
     @Override
