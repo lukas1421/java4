@@ -121,7 +121,7 @@ public class SinaStock implements Runnable {
                         XUTrader.indexOpenDeviationTrader(ldt, currIndexPrice); // before 12
                         XUTrader.indexPmHiLoTrader(ldt, currIndexPrice); // pm only
                         XUTrader.indexPmOpenDeviationTrader(ldt, currIndexPrice); // pm only
-                        XUTrader.intradayMATrader(ldt, currIndexPrice); //all day
+                        XUTrader.intradayMAProfitTaker(ldt, currIndexPrice); //all day
 
                         //XUTrader.closeProfitTaker(ldt, currIndexPrice);
                         //XUTrader.firstTickMAProfitTaker(ldt, currIndexPrice);

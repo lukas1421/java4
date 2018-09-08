@@ -2448,7 +2448,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param nowMilli  time
      * @param indexLast index last price
      */
-    static synchronized void intradayMATrader(LocalDateTime nowMilli, double indexLast) {
+    static synchronized void intradayMAProfitTaker(LocalDateTime nowMilli, double indexLast) {
 
         LocalTime lt = nowMilli.toLocalTime();
         FutType ft = ibContractToFutType(activeFutureCt);
@@ -2459,8 +2459,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        int shorterMA = 2;
-        int longerMA = 5;
+        int shorterMA = 5;
+        int longerMA = 10;
 
         int buySize = 1;
         int sellSize = 1;
@@ -2491,11 +2491,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongLast = smaLong.lastEntry().getValue();
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
-        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= ORDER_WAIT_TIME) {
+        long maWaitTime = 15;
+        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= maWaitTime) {
             if (!noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
                     && todayPerc < LO_PERC_WIDE && (totalSizeTradedOtherOrders < 0
                     && totalMASignedQ + totalSizeTradedOtherOrders < 0)) {
                 int id = autoTradeID.incrementAndGet();
+                buySize = (int) Math.min(Math.round((Math.abs(totalMASignedQ + totalSizeTradedOtherOrders) / 2)), 3);
                 Order o = placeBidLimit(freshPrice, buySize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_MA));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
@@ -2505,11 +2507,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         , "total Other Traded ", totalSizeTradedOtherOrders, "total MA", totalMASignedQ));
 
             } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
-                    todayPerc > 95 && pmChgY > PMCHY_HI && lt.isAfter(ltof(14, 50))
+                    todayPerc > HI_PERC_WIDE
                     && (totalSizeTradedOtherOrders > 0 && totalMASignedQ + totalSizeTradedOtherOrders > 0)) {
-
+                sellSize = (int) Math.min(Math.round((totalMASignedQ + totalSizeTradedOtherOrders) / 2), 3);
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
+                Order o = placeOfferLimit(freshPrice, sellSize);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INTRADAY_MA));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "intraday MA sell", "#:", numOrders, globalIdOrderMap.get(id)
