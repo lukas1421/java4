@@ -2495,8 +2495,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long maWaitTime = 15;
         if (MINUTES.between(lastIndexMAOrder, nowMilli) >= maWaitTime) {
             if (!noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
-                    && todayPerc < LO_PERC_WIDE && (totalFilledNonMAOrderSize < 0
-                    && totalMASignedQ + totalFilledNonMAOrderSize < 0)) {
+                    && todayPerc < LO_PERC_WIDE && ((totalFilledNonMAOrderSize < 0
+                    && totalMASignedQ + totalFilledNonMAOrderSize < 0) || totalMASignedQ < 0)) {
                 int id = autoTradeID.incrementAndGet();
                 buySize = (int) Math.min(Math.round((Math.abs(totalMASignedQ + totalFilledNonMAOrderSize) / 2)), 3);
                 Order o = placeBidLimitTIF(freshPrice, buySize, Types.TimeInForce.IOC);
@@ -2506,10 +2506,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
                         r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc, "pmchg ", pmChgY
                         , " others total:", totalFilledNonMAOrderSize, "MA total:", totalMASignedQ));
-
             } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
                     todayPerc > HI_PERC_WIDE
-                    && (totalFilledNonMAOrderSize > 0 && totalMASignedQ + totalFilledNonMAOrderSize > 0)) {
+                    && ((totalFilledNonMAOrderSize > 0 && totalMASignedQ + totalFilledNonMAOrderSize > 0) ||
+                    totalMASignedQ > 0)) {
                 sellSize = (int) Math.min(Math.round((totalMASignedQ + totalFilledNonMAOrderSize) / 2), 3);
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, sellSize, Types.TimeInForce.IOC);
