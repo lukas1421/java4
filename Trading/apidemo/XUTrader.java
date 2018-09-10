@@ -1530,6 +1530,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
+        Types.Action lastAction = getLastAction(FUT_DAY_MA);
         int perc = getPercentileForDouble(futPrice);
 
         NavigableMap<LocalTime, Double> smaShort = getMAGenDouble(futPrice, shorterMA);
@@ -1544,14 +1545,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        if (perc < 10 && !noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast) {
+        if (perc < 10 && !noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
+                && lastAction != Types.Action.BUY) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_DAY_MA));
             apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "fut day MA buy #:", numOrder, "perc", perc
                     , "last:shortlong", maShortLast, maLongLast, "secLast", maShortSecLast, maLongSecLast));
-        } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast) {
+        } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
+                && lastAction != Types.Action.SELL) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_DAY_MA));
@@ -1590,7 +1593,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        if (numOrder > 20) {
+        Types.Action lastAction = getLastAction(FUT_FAST_MA);
+
+        if (numOrder > 10) {
             if (detailedPrint.get()) {
                 pr(" fut day ma trader exceeding size 20");
             }
@@ -1602,14 +1607,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongLast = smaLong.lastEntry().getValue();
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
-        if (perc < 10 && !noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast) {
+        if (perc < 10 && !noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast &&
+                lastAction != Types.Action.BUY) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_FAST_MA));
             apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "fut fast MA buy #:", numOrder, "perc", perc
                     , "last:shortlong", maShortLast, maLongLast, "secLast", maShortSecLast, maLongSecLast));
-        } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast) {
+        } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
+                lastAction != Types.Action.SELL) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_FAST_MA));
@@ -2993,6 +3000,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .count();
+    }
+
+    static Types.Action getLastAction(AutoOrderType type) {
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getOrder().action())
+                .orElse(Types.Action.NOACTION);
     }
 
     private static double getOrderTotalSignedQForType(AutoOrderType type) {

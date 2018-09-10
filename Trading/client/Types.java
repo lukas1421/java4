@@ -134,7 +134,7 @@ public class Types {
     }
 
     public static enum Action implements IApiEnum {
-        BUY, SELL, SSHORT;
+        BUY, SELL, SSHORT, NOACTION;
 
         public static Action get(String apiString) {
             return getValueOf(apiString, values(), null);
