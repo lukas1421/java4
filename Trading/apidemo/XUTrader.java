@@ -1523,6 +1523,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int shorterMA = 100;
         int longerMA = 200;
         long numOrder = getOrderSizeForTradeType(FUT_DAY_MA);
+
+        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(isNotMA());
+        double totalFutMASignedQ = getOrderTotalSignedQForTypeFilled(FUT_DAY_MA);
+
         if (numOrder > 20) {
             if (detailedPrint.get()) {
                 pr(" fut day ma trader exceeding size 20");
@@ -1546,21 +1550,25 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         if (perc < 10 && !noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
-                && lastAction != Types.Action.BUY) {
+                && lastAction != Types.Action.BUY && (totalFilledNonMAOrderSize < 0 &&
+                (totalFilledNonMAOrderSize + totalFutMASignedQ < 0))) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_DAY_MA));
             apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "fut day MA buy #:", numOrder, "perc", perc
-                    , "last:shortlong", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast));
+                    , "last:shortlong", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast,
+                    "other size, MA size ", totalFilledNonMAOrderSize, totalFutMASignedQ));
         } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
-                && lastAction != Types.Action.SELL) {
+                && lastAction != Types.Action.SELL && (totalFilledNonMAOrderSize > 0 &&
+                (totalFilledNonMAOrderSize + totalFutMASignedQ > 0))) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_DAY_MA));
             apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "fut day MA sell #:", numOrder, "perc", perc
-                    , "last:shortlong", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast));
+                    , "last:shortlong", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast,
+                    "other size, MA size ", totalFilledNonMAOrderSize, totalFutMASignedQ));
         }
     }
 
@@ -1582,6 +1590,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int shorterMA = 100;
         int longerMA = 200;
         long numOrder = getOrderSizeForTradeType(FUT_FAST_MA);
+
+        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(isNotMA());
+        double totalFutFastMASignedQ = getOrderTotalSignedQForTypeFilled(FUT_FAST_MA);
 
         LocalTime lastKey = futPrice.lastKey();
         int perc = getPercentileForDoublePred(futPrice, e -> e.isAfter(lastKey.minusMinutes(15)));
@@ -1608,21 +1619,25 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
         if (perc < 10 && !noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast &&
-                lastAction != Types.Action.BUY) {
+                lastAction != Types.Action.BUY && (totalFilledNonMAOrderSize < 0 &&
+                (totalFilledNonMAOrderSize + totalFutFastMASignedQ < 0))) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_FAST_MA));
             apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "fut fast MA buy #:", numOrder, "perc", perc
-                    , "last:shortlong", maShortLast, maLongLast, "secLast", maShortSecLast, maLongSecLast));
+                    , "last:shortlong", maShortLast, maLongLast, "secLast", maShortSecLast, maLongSecLast,
+                    "other size, MA size ", totalFilledNonMAOrderSize, totalFutFastMASignedQ));
         } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
-                lastAction != Types.Action.SELL) {
+                lastAction != Types.Action.SELL && (totalFilledNonMAOrderSize > 0 &&
+                (totalFilledNonMAOrderSize + totalFutFastMASignedQ > 0))) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimit(freshPrice, 1);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_FAST_MA));
             apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "fut fast MA sell #:", numOrder, "perc", perc
-                    , "last:shortlong", maShortLast, maLongLast, "secLast", maShortSecLast, maLongSecLast));
+                    , "last:shortlong", maShortLast, maLongLast, "secLast", maShortSecLast, maLongSecLast,
+                    "other size, MA size ", totalFilledNonMAOrderSize, totalFutFastMASignedQ));
         }
     }
 
@@ -3036,7 +3051,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     private static Predicate<AutoOrderType> isNotMA() {
-        return type -> type != INTRADAY_MA && type != PERC_MA;
+        return type -> type != INTRADAY_MA && type != PERC_MA && type != FUT_DAY_MA
+                && type != FUT_FAST_MA;
     }
     //**********************************************Trade types **********************************************
 
