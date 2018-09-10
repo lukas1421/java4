@@ -53,6 +53,22 @@ public class XuTraderHelper {
         return sma;
     }
 
+    static NavigableMap<LocalTime, Double> getMAGenDouble(NavigableMap<LocalTime, Double> mp, int period) {
+        NavigableMap<LocalTime, Double> sma = new ConcurrentSkipListMap<>();
+        for (Map.Entry<LocalTime, Double> e : mp.entrySet()) {
+            long n = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey())).count();
+            if (n > period) {
+                long size = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey())).skip(n - period)
+                        .count();
+                double val = mp.entrySet().stream().filter(e1 -> e1.getKey().isBefore(e.getKey()))
+                        .skip(n - period).mapToDouble(Map.Entry::getValue).sum() / size;
+                sma.put(e.getKey(), val);
+            }
+        }
+        return sma;
+    }
+
+
     public static NavigableMap<LocalTime, Double> getMAGenLT(NavigableMap<LocalTime, SimpleBar> mp, int period) {
         NavigableMap<LocalTime, Double> sma = new ConcurrentSkipListMap<>();
         for (Map.Entry<LocalTime, SimpleBar> e : mp.entrySet()) {
@@ -182,6 +198,22 @@ public class XuTraderHelper {
             double min = map.entrySet().stream().mapToDouble(Map.Entry::getValue).min().orElse(0.0);
             double last = map.lastEntry().getValue();
             return (int) Math.round(100d * ((last - min) / (max - min)));
+        }
+        return 50;
+    }
+
+    static <T extends Temporal> int getPercentileForDoublePred(NavigableMap<T, Double> map, Predicate<T> pred) {
+        if (map.entrySet().stream().filter(e -> pred.test(e.getKey())).count() > 1) {
+            double max = map.entrySet().stream().filter(e -> pred.test(e.getKey()))
+                    .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+            double min = map.entrySet().stream().filter(e -> pred.test(e.getKey()))
+                    .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+            double last = map.lastEntry().getValue();
+            if (max != min) {
+                return (int) Math.round(100d * ((last - min) / (max - min)));
+            } else {
+                return 50;
+            }
         }
         return 50;
     }

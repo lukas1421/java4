@@ -860,6 +860,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         futOpenDeviationTrader(ldt, price); // all day
         futOpenTrader(ldt, price, pmChgY); // until 9:30
         futHiloTrader(ldt, price); // until 10
+        futDayMATrader(ldt, price);
+        futFastMATrader(ldt, price);
         closeLiqTrader(ldt, price); // after 14:55
         percentileMATrader(ldt, price, pmChgY); // all day
 
@@ -1503,9 +1505,106 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static void fut(LocalDateTime nowMilli, double freshPrice) {
+    private static void futDayMATrader(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        String futSymbol = ibContractToSymbol(activeFutureCt);
+        FutType f = ibContractToFutType(activeFutureCt);
 
+        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(futSymbol).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(ltof(8, 59, 0)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
+        int shorterMA = 100;
+        int longerMA = 200;
+        long numOrder = getOrderSizeForTradeType(FUT_DAY_MA);
+        if (numOrder > 20) {
+            if (detailedPrint.get()) {
+                pr(" fut day ma trader exceeding size 20");
+            }
+            return;
+        }
 
+        int perc = getPercentileForDouble(futPrice);
+
+        NavigableMap<LocalTime, Double> smaShort = getMAGenDouble(futPrice, shorterMA);
+        NavigableMap<LocalTime, Double> smaLong = getMAGenDouble(futPrice, longerMA);
+
+        double maShortLast = smaShort.lastEntry().getValue();
+        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
+        double maLongLast = smaLong.lastEntry().getValue();
+        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
+
+        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
+            return;
+        }
+
+        if (perc < 10 && !noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeBidLimit(freshPrice, 1);
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_DAY_MA));
+            apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(str(o.orderId(), "fut day MA buy #:", numOrder, "perc", perc
+                    , "last:shortlong", maShortLast, maLongLast, "secLast", maShortSecLast, maLongSecLast));
+        } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimit(freshPrice, 1);
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_DAY_MA));
+            apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(str(o.orderId(), "fut day MA sell #:", numOrder, "perc", perc
+                    , "last:shortlong", maShortLast, maLongLast, "secLast", maShortSecLast, maLongSecLast));
+        }
+    }
+
+    private static void futFastMATrader(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        String futSymbol = ibContractToSymbol(activeFutureCt);
+        FutType f = ibContractToFutType(activeFutureCt);
+
+        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(futSymbol).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(ltof(8, 59, 0)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
+        int shorterMA = 100;
+        int longerMA = 200;
+        long numOrder = getOrderSizeForTradeType(FUT_FAST_MA);
+
+        LocalTime lastKey = futPrice.lastKey();
+        int perc = getPercentileForDoublePred(futPrice, e -> e.isAfter(lastKey.minusMinutes(15)));
+
+        NavigableMap<LocalTime, Double> smaShort = getMAGenDouble(futPrice, shorterMA);
+        NavigableMap<LocalTime, Double> smaLong = getMAGenDouble(futPrice, longerMA);
+
+        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
+            return;
+        }
+
+        if (numOrder > 20) {
+            if (detailedPrint.get()) {
+                pr(" fut day ma trader exceeding size 20");
+            }
+            return;
+        }
+
+        double maShortLast = smaShort.lastEntry().getValue();
+        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
+        double maLongLast = smaLong.lastEntry().getValue();
+        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
+
+        if (perc < 10 && !noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeBidLimit(freshPrice, 1);
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_FAST_MA));
+            apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(str(o.orderId(), "fut fast MA buy #:", numOrder, "perc", perc
+                    , "last:shortlong", maShortLast, maLongLast, "secLast", maShortSecLast, maLongSecLast));
+        } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimit(freshPrice, 1);
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_FAST_MA));
+            apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLog(str(o.orderId(), "fut fast MA sell #:", numOrder, "perc", perc
+                    , "last:shortlong", maShortLast, maLongLast, "secLast", maShortSecLast, maLongSecLast));
+        }
     }
 
 
@@ -2462,7 +2561,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      * @param indexLast index last price
      */
     static synchronized void intradayMAProfitTaker(LocalDateTime nowMilli, double indexLast) {
-
         LocalTime t = nowMilli.toLocalTime();
         FutType f = ibContractToFutType(activeFutureCt);
         double freshPrice = futPriceMap.get(f);
