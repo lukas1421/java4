@@ -1609,14 +1609,14 @@ public class ApiController implements EWrapper {
                         outputPurelyOrders(msg);
                         apiCancelledOrderSet.add(defaultID);
                     }
-                } else if(orderState.status() == OrderStatus.PendingCancel) {
+                } else if (orderState.status() == OrderStatus.PendingCancel) {
                     if (!pendingCancelledOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
                         outputPurelyOrders(msg);
                         pendingCancelledOrderSet.add(defaultID);
                     }
-                }  else if (orderState.status() == OrderStatus.Cancelled ) {
+                } else if (orderState.status() == OrderStatus.Cancelled) {
                     if (!cancelledOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
@@ -1626,7 +1626,7 @@ public class ApiController implements EWrapper {
                 } else {
                     if (!elseOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
+                                "ELSE||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
                         outputPurelyOrders(msg);
                         elseOrderSet.add(defaultID);
                     }
