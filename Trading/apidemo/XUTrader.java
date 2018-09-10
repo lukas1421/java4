@@ -1489,7 +1489,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN_DEVI));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut Open dev BUY #:", numOrders, globalIdOrderMap.get(id),
-                        "pc, last ", prevClose, freshPrice));
+                        "pc, open, last ", prevClose, futOpen, freshPrice));
                 futOpenDevDirection = Direction.Long;
             } else if (!noMoreSell.get() && freshPrice < futOpen && futOpenDevDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
@@ -1497,7 +1497,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN_DEVI));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut Open dev SELL #:", numOrders, globalIdOrderMap.get(id),
-                        "pc, last ", prevClose, freshPrice));
+                        "pc, open, last ", prevClose, futOpen, freshPrice));
                 futOpenDevDirection = Direction.Short;
             }
         }
