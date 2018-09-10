@@ -1552,7 +1552,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_DAY_MA));
             apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "fut day MA buy #:", numOrder, "perc", perc
-                    , "last:shortlong", maShortLast, maLongLast, "secLast", maShortSecLast, maLongSecLast));
+                    , "last:shortlong", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast));
         } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
                 && lastAction != Types.Action.SELL) {
             int id = autoTradeID.incrementAndGet();
@@ -1560,7 +1560,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_DAY_MA));
             apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "fut day MA sell #:", numOrder, "perc", perc
-                    , "last:shortlong", maShortLast, maLongLast, "secLast", maShortSecLast, maLongSecLast));
+                    , "last:shortlong", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast));
         }
     }
 
@@ -1597,7 +1597,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (numOrder > 10) {
             if (detailedPrint.get()) {
-                pr(" fut day ma trader exceeding size 20");
+                pr(" fut fast ma trader exceeding size 20");
             }
             return;
         }
