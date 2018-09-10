@@ -1505,6 +1505,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    /**
+     * fut day ma trader
+     *
+     * @param nowMilli   now
+     * @param freshPrice price
+     */
     private static void futDayMATrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         String futSymbol = ibContractToSymbol(activeFutureCt);
@@ -1555,6 +1561,12 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
+    /**
+     * fut fast ma trader
+     *
+     * @param nowMilli   now
+     * @param freshPrice price
+     */
     private static void futFastMATrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         String futSymbol = ibContractToSymbol(activeFutureCt);
