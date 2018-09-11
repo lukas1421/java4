@@ -329,9 +329,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         computeMAButton.addActionListener(l -> computeMAStrategy());
 
         JButton getPositionButton = new JButton(" get pos ");
-        getPositionButton.addActionListener(l ->
-        {
-            //currentPosMap.entrySet()
+        getPositionButton.addActionListener(l -> {
+            for (FutType f : FutType.values()) {
+                currentPosMap.put(f, 0);
+            }
             apcon.reqPositions(this);
         });
 
@@ -351,6 +352,9 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             xuGraph.setFut(ibContractToFutType(activeFutureCt));
             xuGraph.setPrevClose(futPrevClose3pmMap.get(ibContractToFutType(activeFutureCt)));
             xuGraph.refresh();
+            for (FutType f : FutType.values()) {
+                currentPosMap.put(f, 0);
+            }
             apcon.reqPositions(getThis());
             repaint();
         });
@@ -374,7 +378,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 for (FutType f : FutType.values()) {
                     currentPosMap.put(f, 0);
                 }
-
                 apcon.reqPositions(getThis());
                 activeFutLiveOrder = new HashMap<>();
                 activeFutLiveIDOrderMap = new HashMap<>();
@@ -1496,7 +1499,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(buyPrice, buySize, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN_DEVI));
-                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeOrderHandler(id, apcon));
                 outputOrderToAutoLog(str(o.orderId(), "fut Open dev BUY #:", numOrders, globalIdOrderMap.get(id),
                         "open, last ", futOpen, freshPrice));
                 futOpenDevDirection = Direction.Long;
@@ -1504,7 +1507,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(sellPrice, sellSize, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN_DEVI));
-                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeOrderHandler(id, apcon));
                 outputOrderToAutoLog(str(o.orderId(), "fut Open dev SELL #:", numOrders, globalIdOrderMap.get(id),
                         "open, last ", futOpen, freshPrice));
                 futOpenDevDirection = Direction.Short;
