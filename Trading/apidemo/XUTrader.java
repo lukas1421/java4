@@ -2128,7 +2128,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double sellPrice;
 
         //guanrantee fill
-        if (numPMHiloOrders <= 2) {
+        if (numPMHiloOrders < 2) {
             buyPrice = freshPrice;
             sellPrice = freshPrice;
         } else {
@@ -3531,7 +3531,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             updateLog(" net pnl " + r(netTradePnl) + " breakdown: " + pnlString);
             updateLog(" net commission " + netTotalCommissions);
             updateLog(" MTM + Trade " + r(netTradePnl + mtmPnl));
-            updateLog("pos " + currentPosMap.getOrDefault(f, 0) + " Delta " + r(getNetPtfDelta()) +
+            updateLog("pos:" + currentPosMap.getOrDefault(f, 0) + " Delta " + r(getNetPtfDelta()) +
                     " Stock Delta " + r(ChinaPosition.getStockPtfDelta()) + " Fut Delta " + r(getFutDelta())
                     + "HK Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isHKStock(e.getKey())))
                     + " China Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isChinaStock(e.getKey()))));
