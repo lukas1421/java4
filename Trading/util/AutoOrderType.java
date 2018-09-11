@@ -6,6 +6,7 @@ public enum AutoOrderType {
     INVENTORY_OPEN,
     INVENTORY_CLOSE,
     OVERNIGHT,
+    TEST,
     PERC_ACC,
     PERC_DECC,
     PERC,

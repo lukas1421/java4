@@ -877,7 +877,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             //pr(" curr delta is outside range ");
             return;
         }
-
+        testTrader(ldt, price);
         overnightTrader(ldt, price);
     }
 
@@ -2861,6 +2861,18 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                         _2dayPerc, "pmChg", pmchy, "|delta Base pmchg weekday target ",
                         baseDelta, pmchgDelta, weekdayDelta, deltaTarget, "avg buy sell ", avgBuy, avgSell));
             }
+        }
+    }
+
+    private static void testTrader(LocalDateTime nowMilli, double freshPrice) {
+        long numTestOrders = getOrderSizeForTradeType(TEST);
+        pr("num test orders ", numTestOrders);
+        if (numTestOrders == 0) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimit(freshPrice + 5.0, 1);
+            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Test ", TEST));
+            apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeOrderHandler(id, apcon));
+            outputOrderToAutoLog(str(o.orderId(), "Test trade ", freshPrice));
         }
     }
 
