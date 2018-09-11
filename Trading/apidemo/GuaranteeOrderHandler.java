@@ -68,14 +68,15 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
                 outputOrderToAutoLog(str(prevOrder.orderId(), "pending cancel resubmit",
                         "->", o.orderId(), "Type, TIF, Action, P, Q", globalIdOrderMap.get(id).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
-                        "current", globalIdOrderMap.get(id), "bid ask ", bid, ask));
+                        "current", globalIdOrderMap.get(id), "bid ask fresh", bid, ask, freshPrice));
             }
             idStatusMap.put(defaultID, orderState.status());
         }
     }
 
     @Override
-    public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
+    public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
+                            int parentId, double lastFillPrice, int clientId, String whyHeld) {
 
     }
 
