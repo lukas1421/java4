@@ -48,13 +48,14 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
                 FutType f = ibContractToFutType(activeFutureCt);
                 double bid = bidMap.get(f);
                 double ask = askMap.get(f);
-                double last = futPriceMap.get(f);
+                double freshPrice = futPriceMap.get(f);
 
                 Order prevOrder = globalIdOrderMap.get(defaultID).getOrder();
                 Order o = new Order();
                 o.action(prevOrder.action());
-                o.lmtPrice(prevOrder.action() == Types.Action.BUY ? ask :
-                        (prevOrder.action() == Types.Action.SELL ? bid : last));
+//                o.lmtPrice(prevOrder.action() == Types.Action.BUY ? ask :
+//                        (prevOrder.action() == Types.Action.SELL ? bid : freshPrice));
+                o.lmtPrice(freshPrice);
                 o.orderType(OrderType.LMT);
                 o.totalQuantity(prevOrder.totalQuantity());
                 o.outsideRth(true);
