@@ -1703,7 +1703,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (!noMoreBuy.get() && last > maxP && _2dayPerc < 50 && (_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO)
                     && currDelta < deltaTgt && maxP != 0.0 && minP != 0.0) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, 1);
+                Order o = placeBidLimitTIF(freshPrice, 1, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut open buy #:", futOpenOrdersNum,
@@ -1712,7 +1712,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             } else if (!noMoreSell.get() && last < minP && _2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI
                     && currDelta > deltaTgt && maxP != 0.0 && minP != 0.0) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, 1);
+                Order o = placeOfferLimitTIF(freshPrice, 1, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut open sell #:", futOpenOrdersNum,
@@ -2015,7 +2015,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "index pm open dev BUY #:", numPMDeviOrders
                         , globalIdOrderMap.get(id), "pm open ", r(pmOpen), "index, price, pd ",
-                        r(indexLast), freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp"));
+                        r(indexLast), freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
+                        "bid ask ", bidPrice, askPrice));
                 indexPmDevDirection = Direction.Long;
             } else if (!noMoreSell.get() && indexLast < pmOpen && indexPmDevDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
@@ -2024,7 +2025,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "index pm open dev SELL #:", numPMDeviOrders
                         , globalIdOrderMap.get(id), "pm open ", r(pmOpen), "index, price, pd ",
-                        r(indexLast), freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp"));
+                        r(indexLast), freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
+                        "bid ask ", bidPrice, askPrice));
                 indexPmDevDirection = Direction.Short;
             }
         }
