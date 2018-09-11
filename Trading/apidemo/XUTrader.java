@@ -402,44 +402,44 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 requestExecHistory();
             }, 0, 1, TimeUnit.MINUTES);
 
-            ses.scheduleAtFixedRate(() -> {
-                globalIdOrderMap.entrySet().stream().filter(e -> isInventoryTrade().test(e.getValue().getOrderType()))
-                        .forEach(e -> pr(str("real order ID", e.getValue().getOrder().orderId(), e.getValue())));
-
-                long invOrderCount = globalIdOrderMap.entrySet().stream()
-                        .filter(e -> isInventoryTrade().test(e.getValue().getOrderType())).count();
-                if (invOrderCount >= 1) {
-                    OrderAugmented o = globalIdOrderMap.entrySet().stream()
-                            .filter(e -> isInventoryTrade().test(e.getValue().getOrderType()))
-                            .max(Comparator.comparing(e -> e.getValue().getOrderTime())).map(Map.Entry::getValue)
-                            .orElseThrow(() -> new IllegalStateException(" nothing in last inventory order "));
-
-                    pr("invOrderCount >=1 : last order ", o);
-                    pr("last order T ", o.getOrderTime(), "status", o.getAugmentedOrderStatus()
-                            , " Cancel wait time ", cancelWaitTime(LocalTime.now()));
-
-                    if (o.getAugmentedOrderStatus() != OrderStatus.Filled &&
-                            timeDiffinMinutes(o.getOrderTime(), LocalDateTime.now()) >= cancelWaitTime(LocalTime.now())) {
-
-                        globalIdOrderMap.entrySet().stream()
-                                .filter(e -> isInventoryTrade().test(e.getValue().getOrderType()))
-                                .skip(invOrderCount - 1).peek(e -> pr(str("last order ", e.getValue())))
-                                .forEach(e -> {
-                                    if (e.getValue().getAugmentedOrderStatus() != OrderStatus.Cancelled) {
-                                        apcon.cancelOrder(e.getValue().getOrder().orderId());
-                                        e.getValue().setFinalActionTime(LocalDateTime.now());
-                                        e.getValue().setAugmentedOrderStatus(OrderStatus.Cancelled);
-                                    } else {
-                                        pr(str(e.getValue().getOrder().orderId(), "already cancelled"));
-                                    }
-                                });
-                        pr(str(LocalTime.now(), " killing last unfilled orders"));
-                        pr(" releasing inv barrier + semaphore ");
-                        inventoryBarrier.reset(); //resetting inventory barrier
-                        inventorySemaphore = new Semaphore(1); // release inv semaphore
-                    }
-                }
-            }, 0, 1, TimeUnit.MINUTES);
+//            ses.scheduleAtFixedRate(() -> {
+//                globalIdOrderMap.entrySet().stream().filter(e -> isInventoryTrade().test(e.getValue().getOrderType()))
+//                        .forEach(e -> pr(str("real order ID", e.getValue().getOrder().orderId(), e.getValue())));
+//
+//                long invOrderCount = globalIdOrderMap.entrySet().stream()
+//                        .filter(e -> isInventoryTrade().test(e.getValue().getOrderType())).count();
+//                if (invOrderCount >= 1) {
+//                    OrderAugmented o = globalIdOrderMap.entrySet().stream()
+//                            .filter(e -> isInventoryTrade().test(e.getValue().getOrderType()))
+//                            .max(Comparator.comparing(e -> e.getValue().getOrderTime())).map(Map.Entry::getValue)
+//                            .orElseThrow(() -> new IllegalStateException(" nothing in last inventory order "));
+//
+//                    pr("invOrderCount >=1 : last order ", o);
+//                    pr("last order T ", o.getOrderTime(), "status", o.getAugmentedOrderStatus()
+//                            , " Cancel wait time ", cancelWaitTime(LocalTime.now()));
+//
+//                    if (o.getAugmentedOrderStatus() != OrderStatus.Filled &&
+//                            timeDiffinMinutes(o.getOrderTime(), LocalDateTime.now()) >= cancelWaitTime(LocalTime.now())) {
+//
+//                        globalIdOrderMap.entrySet().stream()
+//                                .filter(e -> isInventoryTrade().test(e.getValue().getOrderType()))
+//                                .skip(invOrderCount - 1).peek(e -> pr(str("last order ", e.getValue())))
+//                                .forEach(e -> {
+//                                    if (e.getValue().getAugmentedOrderStatus() != OrderStatus.Cancelled) {
+//                                        apcon.cancelOrder(e.getValue().getOrder().orderId());
+//                                        e.getValue().setFinalActionTime(LocalDateTime.now());
+//                                        e.getValue().setAugmentedOrderStatus(OrderStatus.Cancelled);
+//                                    } else {
+//                                        pr(str(e.getValue().getOrder().orderId(), "already cancelled"));
+//                                    }
+//                                });
+//                        pr(str(LocalTime.now(), " killing last unfilled orders"));
+//                        pr(" releasing inv barrier + semaphore ");
+//                        inventoryBarrier.reset(); //resetting inventory barrier
+//                        inventorySemaphore = new Semaphore(1); // release inv semaphore
+//                    }
+//                }
+//            }, 0, 1, TimeUnit.MINUTES);
         });
 
         JButton stopComputeButton = new JButton("Stop Processing");
@@ -483,20 +483,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         JButton cancelAllOrdersButton = new JButton("Cancel Orders");
         cancelAllOrdersButton.addActionListener(l -> {
             apcon.cancelAllOrders();
-            inventorySemaphore = new Semaphore(1);
-            inventoryBarrier.reset();
-            pdSemaphore = new Semaphore(1);
-            pdBarrier.reset();
             activeFutLiveOrder = new HashMap<>();
             activeFutLiveIDOrderMap = new HashMap<>();
-            globalIdOrderMap.entrySet().stream().filter(e -> isInventoryTrade().test(e.getValue().getOrderType()))
-                    .filter(e -> e.getValue().getAugmentedOrderStatus() != OrderStatus.Filled)
-                    .forEach(e -> {
-                        pr("cancelling ", e.getValue(), "current status",
-                                e.getValue().getAugmentedOrderStatus());
-                        e.getValue().setFinalActionTime(LocalDateTime.now());
-                        e.getValue().setAugmentedOrderStatus(OrderStatus.Cancelled);
-                    });
             SwingUtilities.invokeLater(xuGraph::repaint);
         });
 
@@ -821,7 +809,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     }
 
     public static void processMain(LocalDateTime ldt, double price) {
-
         LocalTime lt = ldt.toLocalTime();
         double currDelta = getNetPtfDelta();
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
