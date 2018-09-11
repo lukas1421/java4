@@ -2794,7 +2794,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-
         checkCancelOrders(PERC_MA, nowMilli, 30);
 
         int todayPerc = getPercentileForLastPred(fut,
@@ -2867,12 +2866,16 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static void testTrader(LocalDateTime nowMilli, double freshPrice) {
         long numTestOrders = getOrderSizeForTradeType(TEST);
         pr("num test orders ", numTestOrders);
-        if (numTestOrders == 0) {
+        FutType f = ibContractToFutType(activeFutureCt);
+        double bid = bidMap.get(f);
+        double ask = askMap.get(f);
+
+        if (numTestOrders < 1) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimit(freshPrice + 5.0, 1);
+            Order o = placeOfferLimitTIF(freshPrice + 10.0, 1, Types.TimeInForce.IOC);
             globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, "Test ", TEST));
             apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeOrderHandler(id, apcon));
-            outputOrderToAutoLog(str(o.orderId(), "Test trade ", freshPrice));
+            outputOrderToAutoLog(str(o.orderId(), "Test trade ", freshPrice, "bid ask", bid, ask));
         }
     }
 

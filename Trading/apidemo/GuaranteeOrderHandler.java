@@ -43,7 +43,6 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
                     "ID:", defaultID, globalIdOrderMap.get(defaultID),
                     "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
             outputPurelyOrdersDetailed(msg);
-
             if (orderState.status() == OrderStatus.PendingCancel &&
                     globalIdOrderMap.get(defaultID).getOrder().tif() == Types.TimeInForce.IOC) {
                 FutType f = ibContractToFutType(activeFutureCt);
@@ -66,9 +65,9 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
                 globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType()));
                 outputOrderToAutoLog(str(prevOrder.orderId(), "pending cancel resubmit",
-                        "Type, ID, TIF, Action, P, Q", globalIdOrderMap.get(id).getOrderType(),
-                        o.orderId(), o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
-                        "current", globalIdOrderMap.get(id)));
+                        "->", o.orderId(), "Type, TIF, Action, P, Q", globalIdOrderMap.get(id).getOrderType(),
+                        o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
+                        "current", globalIdOrderMap.get(id), "bid ask ", bid, ask));
             }
             idStatusMap.put(defaultID, orderState.status());
         }
