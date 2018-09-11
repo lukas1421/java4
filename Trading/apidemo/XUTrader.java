@@ -2308,8 +2308,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         long numOrders = getOrderSizeForTradeType(INDEX_HILO);
         LocalDateTime lastHiLoOrderTime = getLastOrderTime(INDEX_HILO);
         long milliLastTwoOrder = lastTwoOrderMilliDiff(INDEX_HILO);
-        int buyQ = baseSize * ((numOrders == 0 || numOrders == 5) ? 1 : 2);
-        int sellQ = baseSize * (numOrders == 0 || numOrders == 5 ? 1 : 2);
+        int buyQ = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
+        int sellQ = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
 
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
         int _2dayPerc = getPercentileForLast(fut);
@@ -2381,13 +2381,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (SECONDS.between(lastHiLoOrderTime, nowMilli) >= hiloWaitTimeSeconds && maxSoFar != 0.0 && minSoFar != 0.0) {
             if (!noMoreBuy.get() && (indexLast > maxSoFar || maxT.isAfter(minT)) && indexHiLoDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(buyPrice, buyQ);
+                Order o = placeBidLimitTIF(buyPrice, buyQ, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_HILO));
-                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeOrderHandler(id, apcon));
                 outputOrderToAutoLog(str(o.orderId(), "index hilo buy #:", numOrders,
                         globalIdOrderMap.get(id), "buy limit: ", buyPrice,
                         "indexLast/fut/pd/Base#:", r(indexLast), freshPrice, baseSize,
-                        Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
+                        Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, indexHiLoDirection,
                         "waitT, lastTwoTDiff, tSinceLast ", hiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
                         "max/min/2dp%/pmchy/openp% ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, openPerc,
@@ -2395,13 +2395,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 indexHiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && (indexLast < minSoFar || minT.isAfter(maxT)) && indexHiLoDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(sellPrice, sellQ);
+                Order o = placeOfferLimitTIF(sellPrice, sellQ, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_HILO));
-                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeOrderHandler(id, apcon));
                 outputOrderToAutoLog(str(o.orderId(), "index hilo sell #:", numOrders,
                         globalIdOrderMap.get(id), "sell limit: ", sellPrice,
                         "indexLast/fut/pd/Base#:", r(indexLast), freshPrice, baseSize,
-                        Math.round(10000d * (freshPrice / indexLast - 1)), " bp",
+                        Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
                         "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, indexHiLoDirection,
                         "waitT, lastTwoTDiff, tSinceLast ", hiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
                         "max/min/2dp%/pmchy/openP%", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, openPerc,
