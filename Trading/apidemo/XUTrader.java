@@ -1523,9 +1523,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int shorterMA = 100;
         int longerMA = 200;
         long numOrder = getOrderSizeForTradeType(FUT_DAY_MA);
-
         double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(isNotMA());
         double totalFutMASignedQ = getOrderTotalSignedQForTypeFilled(FUT_DAY_MA);
+
+        LocalDateTime lastOrderTime = getLastOrderTime(FUT_DAY_MA);
 
         if (numOrder > 20) {
             if (detailedPrint.get()) {
@@ -1540,14 +1541,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalTime, Double> smaShort = getMAGenDouble(futPrice, shorterMA);
         NavigableMap<LocalTime, Double> smaLong = getMAGenDouble(futPrice, longerMA);
 
+        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
+            return;
+        }
+
         double maShortLast = smaShort.lastEntry().getValue();
         double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
         double maLongLast = smaLong.lastEntry().getValue();
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
 
-        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            return;
-        }
 
         if (perc < 10 && !noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
                 && lastAction != Types.Action.BUY && (totalFilledNonMAOrderSize < 0 &&
@@ -1559,7 +1561,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             outputOrderToAutoLog(str(o.orderId(), "fut day MA buy #:", numOrder, "perc", perc
                     , "last:shortlong", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast,
                     "other size, MA size ", totalFilledNonMAOrderSize, totalFutMASignedQ,
-                    "last action ", lastAction));
+                    "last action ", lastAction, "last order T:", lastOrderTime));
         } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
                 && lastAction != Types.Action.SELL && (totalFilledNonMAOrderSize > 0 &&
                 (totalFilledNonMAOrderSize + totalFutMASignedQ > 0))) {
@@ -1570,7 +1572,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             outputOrderToAutoLog(str(o.orderId(), "fut day MA sell #:", numOrder, "perc", perc
                     , "last:shortlong", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast,
                     "other size, MA size ", totalFilledNonMAOrderSize, totalFutMASignedQ,
-                    "last action ", lastAction));
+                    "last action ", lastAction, "last order T", lastOrderTime));
         }
     }
 
@@ -1602,16 +1604,19 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalTime, Double> smaShort = getMAGenDouble(futPrice, shorterMA);
         NavigableMap<LocalTime, Double> smaLong = getMAGenDouble(futPrice, longerMA);
 
-        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            return;
-        }
 
         Types.Action lastAction = getLastAction(FUT_FAST_MA);
+        LocalDateTime lastOrderTime = getLastOrderTime(FUT_FAST_MA);
 
         if (numOrder > 10) {
             if (detailedPrint.get()) {
                 pr(" fut fast ma trader exceeding size 20");
             }
+            return;
+        }
+
+
+        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
             return;
         }
 
@@ -1630,7 +1635,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             outputOrderToAutoLog(str(o.orderId(), "fut fast MA buy #:", numOrder, "perc", perc
                     , "lastSL", maShortLast, maLongLast, "secLast:SL:", maShortSecLast, maLongSecLast,
                     "other size, MA size ", totalFilledNonMAOrderSize, totalFutFastMASignedQ,
-                    "last action ", lastAction));
+                    "last action ", lastAction, "last Action T:", lastOrderTime));
         } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
                 lastAction != Types.Action.SELL && (totalFilledNonMAOrderSize > 0 &&
                 (totalFilledNonMAOrderSize + totalFutFastMASignedQ > 0))) {
@@ -1641,7 +1646,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             outputOrderToAutoLog(str(o.orderId(), "fut fast MA sell #:", numOrder, "perc", perc
                     , "last:SL", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast,
                     "other size, MA size ", totalFilledNonMAOrderSize, totalFutFastMASignedQ,
-                    "last action ", lastAction));
+                    "last action ", lastAction, "last action T:", lastOrderTime));
         }
     }
 
@@ -1697,23 +1702,23 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (SECONDS.between(lastOpenTime, nowMilli) >= 60) {
             if (!noMoreBuy.get() && last > maxP && _2dayPerc < 50 && (_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO)
-                    && currDelta < deltaTgt) {
+                    && currDelta < deltaTgt && maxP != 0.0 && minP != 0.0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut open buy #:", futOpenOrdersNum,
                         globalIdOrderMap.get(id), " max min last fresh 2dp% pmchy ", r(maxP), r(minP), r(last), freshPrice
-                        , _2dayPerc, pmchy, "bid ask ", currentBid, currentAsk, "currDelta/tgt:", currDelta, deltaTgt));
+                        , _2dayPerc, pmchy, "bid ask ", currentBid, currentAsk, "currDelta/tgt:", r(currDelta), r(deltaTgt)));
             } else if (!noMoreSell.get() && last < minP && _2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI
-                    && currDelta > deltaTgt) {
+                    && currDelta > deltaTgt && maxP != 0.0 && minP != 0.0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimit(freshPrice, 1);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_OPEN));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "fut open sell #:", futOpenOrdersNum,
                         globalIdOrderMap.get(id), "max min last fresh 2dp% ", r(maxP), r(minP), r(last), freshPrice
-                        , _2dayPerc, pmchy, "bid ask ", currentBid, currentAsk, "currDelta/tgt:", currDelta, deltaTgt));
+                        , _2dayPerc, pmchy, "bid ask ", currentBid, currentAsk, "currDelta/tgt:", r(currDelta), r(deltaTgt)));
             }
         }
     }
@@ -2631,7 +2636,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
 
         if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            pr(" smashort size long size not enough ");
+            //pr(" smashort size long size not enough ");
             return;
         }
 
@@ -2725,7 +2730,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
 
         if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            pr(" smashort size long size not enough ");
+            //pr(" smashort size long size not enough ");
             return;
         }
 
