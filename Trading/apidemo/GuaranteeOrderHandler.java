@@ -38,7 +38,7 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
         }
 
         if (orderState.status() != idStatusMap.get(defaultID)) {
-            String msg = str("*GUARANTEE FILL*", globalIdOrderMap.get(defaultID).getOrder().orderId(),
+            String msg = str("*GUARANTEE*", globalIdOrderMap.get(defaultID).getOrder().orderId(),
                     "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
                     "ID:", defaultID, globalIdOrderMap.get(defaultID),
                     "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
