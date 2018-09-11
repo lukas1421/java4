@@ -9,17 +9,18 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static apidemo.XUTrader.*;
+import static apidemo.XuTraderHelper.outputOrderToAutoLog;
 import static apidemo.XuTraderHelper.outputPurelyOrdersDetailed;
 import static utility.Utility.ibContractToFutType;
 import static utility.Utility.str;
 
-public class GuaranteeFillOrderHandler implements ApiController.IOrderHandler {
+public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
 
     private static Map<Integer, OrderStatus> idStatusMap = new ConcurrentHashMap<>();
     private int defaultID;
     ApiController controller;
 
-    private GuaranteeFillOrderHandler(int id, ApiController ap) {
+    GuaranteeOrderHandler(int id, ApiController ap) {
         defaultID = id;
         idStatusMap.put(id, OrderStatus.ConstructedInHandler);
         controller = ap;
@@ -27,7 +28,6 @@ public class GuaranteeFillOrderHandler implements ApiController.IOrderHandler {
 
     @Override
     public void orderState(OrderState orderState) {
-
         LocalTime now = LocalTime.now();
         if (globalIdOrderMap.containsKey(defaultID)) {
             globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
@@ -38,13 +38,13 @@ public class GuaranteeFillOrderHandler implements ApiController.IOrderHandler {
         }
 
         if (orderState.status() != idStatusMap.get(defaultID)) {
-            String msg = str("*MUST FILL*", globalIdOrderMap.get(defaultID).getOrder().orderId(),
+            String msg = str("*GUARANTEE FILL*", globalIdOrderMap.get(defaultID).getOrder().orderId(),
                     "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
                     "ID:", defaultID, globalIdOrderMap.get(defaultID),
                     "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
             outputPurelyOrdersDetailed(msg);
             //if IOC and cancelled, fill at market price
-            if (orderState.status() == OrderStatus.Cancelled &&
+            if (orderState.status() == OrderStatus.PendingCancel &&
                     globalIdOrderMap.get(defaultID).getOrder().tif() == Types.TimeInForce.IOC) {
                 FutType f = ibContractToFutType(activeFutureCt);
                 double bid = bidMap.get(f);
@@ -59,12 +59,14 @@ public class GuaranteeFillOrderHandler implements ApiController.IOrderHandler {
                 o.orderType(OrderType.LMT);
                 o.totalQuantity(prevOrder.totalQuantity());
                 o.outsideRth(true);
-                o.tif(Types.TimeInForce.FOK);
+                o.tif(Types.TimeInForce.IOC);
 
                 int id = autoTradeID.incrementAndGet();
-                controller.placeOrModifyOrder(activeFutureCt, o, new GuaranteeFillOrderHandler(id, controller));
+                controller.placeOrModifyOrder(activeFutureCt, o, new GuaranteeOrderHandler(id, controller));
                 globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType()));
+                outputOrderToAutoLog(str(o.orderId(), "guanrantee order: ", o.tif(), o.action(),
+                        globalIdOrderMap.get(id)));
             }
             idStatusMap.put(defaultID, orderState.status());
         }
