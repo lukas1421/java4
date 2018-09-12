@@ -67,10 +67,11 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
                 globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o, AutoOrderType.FORCE_FILL));
                 //globalIdOrderMap.get(defaultID).getOrderType()
                 outputOrderToAutoLog(str(prevOrder.orderId(), "->", o.orderId(),
-                        "pending cancel resubmit",
+                        "Can't fill-resubmit",
                         "Type, TIF, Action, P, Q", globalIdOrderMap.get(id).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
-                        "current", globalIdOrderMap.get(id), "bid ask fresh", bid, ask, freshPrice));
+                        "current", globalIdOrderMap.get(id), "bid ask sp fresh"
+                        , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", freshPrice));
             }
             idStatusMap.put(defaultID, orderState.status());
         }

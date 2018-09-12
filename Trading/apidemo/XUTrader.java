@@ -855,15 +855,14 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        futOpenDeviationTrader(ldt, price); // all day
         futOpenTrader(ldt, price, pmChgY); // until 9:30
         futHiloTrader(ldt, price); // until 10
-        //futDayMATrader(ldt, price);
-        //futFastMATrader(ldt, price);
+        futOpenDeviationTrader(ldt, price); // all day
         closeLiqTrader(ldt, price); // after 14:55
         percentileMATrader(ldt, price, pmChgY); // all day
 
-
+        //futDayMATrader(ldt, price);
+        //futFastMATrader(ldt, price);
         //futHiloAccu(ldt, price);
         //futPCProfitTaker(ldt, price);
         //indexFirstTickTrader(ldt, price);
@@ -1456,7 +1455,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     "manual PC dir:", manualfutOpenDevDirection.get());
         }
 
-        if (numOrders >= 6) {
+        if (numOrders >= MAX_ORDER_SIZE) {
             return;
         }
 
@@ -2129,7 +2128,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, buyQ, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, INDEX_PM_HILO));
-                //apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeOrderHandler(id, apcon));
 
                 outputOrderToAutoLog(str(o.orderId(), "index pm hilo BUY #:", numPMHiloOrders,
