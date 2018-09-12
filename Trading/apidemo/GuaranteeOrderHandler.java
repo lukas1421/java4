@@ -38,7 +38,7 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
         }
 
         if (orderState.status() != idStatusMap.get(defaultID)) {
-            String msg = str("*GUARANTEE*", globalIdOrderMap.get(defaultID).getOrder().orderId(),
+            String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(), "*GUARANTEE*",
                     "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
                     "ID:", defaultID, globalIdOrderMap.get(defaultID),
                     "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
@@ -65,8 +65,8 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
                 controller.placeOrModifyOrder(activeFutureCt, o, new GuaranteeOrderHandler(id, controller));
                 globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType()));
-                outputOrderToAutoLog(str(prevOrder.orderId(), "pending cancel resubmit",
-                        "->", o.orderId(), "Type, TIF, Action, P, Q", globalIdOrderMap.get(id).getOrderType(),
+                outputOrderToAutoLog(str(prevOrder.orderId(), "->", o.orderId(), "pending cancel resubmit",
+                        "Type, TIF, Action, P, Q", globalIdOrderMap.get(id).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
                         "current", globalIdOrderMap.get(id), "bid ask fresh", bid, ask, freshPrice));
             }
