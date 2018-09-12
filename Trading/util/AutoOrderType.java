@@ -54,5 +54,6 @@ public enum AutoOrderType {
     FUT_KO,
     INDEX_OPEN_DEVI,
     INDEX_NEW_HILO,
+    FORCE_FILL,
     UNKNOWN
 }

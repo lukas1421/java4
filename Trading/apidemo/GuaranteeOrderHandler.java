@@ -2,6 +2,7 @@ package apidemo;
 
 import client.*;
 import controller.ApiController;
+import util.AutoOrderType;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -63,9 +64,10 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
 
                 int id = autoTradeID.incrementAndGet();
                 controller.placeOrModifyOrder(activeFutureCt, o, new GuaranteeOrderHandler(id, controller));
-                globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o,
-                        globalIdOrderMap.get(defaultID).getOrderType()));
-                outputOrderToAutoLog(str(prevOrder.orderId(), "->", o.orderId(), "pending cancel resubmit",
+                globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o, AutoOrderType.FORCE_FILL));
+                //globalIdOrderMap.get(defaultID).getOrderType()
+                outputOrderToAutoLog(str(prevOrder.orderId(), "->", o.orderId(),
+                        "pending cancel resubmit",
                         "Type, TIF, Action, P, Q", globalIdOrderMap.get(id).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
                         "current", globalIdOrderMap.get(id), "bid ask fresh", bid, ask, freshPrice));
