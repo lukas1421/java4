@@ -1966,7 +1966,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         int pmDevWaitSec = (milliBtwnLastTwo < 60000) ? 300 : 10;
 
-        if (numPMDeviOrders >= 6) {
+        if (numPMDeviOrders >= MAX_ORDER_SIZE) {
             if (detailedPrint.get()) {
                 pr(" pm dev exceed max");
             }
@@ -1999,8 +1999,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         LocalDateTime lastPMDevTradeTime = getLastOrderTime(INDEX_PM_OPEN_DEVI);
 
-        int buyQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == 5) ? 1 : 1);
-        int sellQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == 5) ? 1 : 1);
+        int buyQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
+        int sellQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
 
         double buyPrice;
         double sellPrice;
