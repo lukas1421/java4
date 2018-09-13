@@ -1843,15 +1843,17 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         long numOrdersOpenDev = getOrderSizeForTradeType(INDEX_OPEN_DEVI);
         LocalDateTime lastOpenDevTradeTime = getLastOrderTime(INDEX_OPEN_DEVI);
-
         long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(INDEX_OPEN_DEVI);
         long tSinceLastOrder = tSincePrevOrderMilli(INDEX_OPEN_DEVI, nowMilli);
+        if (numOrdersOpenDev >= MAX_ORDER_SIZE) {
+            return;
+        }
 
         int waitTimeInSeconds = (milliBtwnLastTwoOrders < 60000) ? 300 : 10;
 
         int baseSize = getWeekdayBaseSize(nowMilli.getDayOfWeek());
-        int buySize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == 5) ? 1 : 1);
-        int sellSize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == 5) ? 1 : 1);
+        int buySize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
+        int sellSize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
 
         if (detailedPrint.get()) {
             if (lt.isBefore(ltof(9, 40)) || lt.getSecond() > 50) {
@@ -1874,9 +1876,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        if (numOrdersOpenDev >= MAX_ORDER_SIZE) {
-            return;
-        }
         String msg = "";
         double buyPrice;
         double sellPrice;
