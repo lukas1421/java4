@@ -813,7 +813,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime lt = ldt.toLocalTime();
         double currDelta = getNetPtfDelta();
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
-        boolean maxAbovePrev = checkf10MaxAbovePrev(INDEX_000016);
+        boolean maxAbovePrev = checkF10MaxAbovePrev(INDEX_000016);
 
         NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(ibContractToFutType(activeFutureCt)));
         //int pmChgY = getPercentileChgFut(futdata, getPrevTradingDate(futdata));
@@ -904,7 +904,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
     }
 
-    private static boolean checkf10MaxAbovePrev(String name) {
+    private static boolean checkF10MaxAbovePrev(String name) {
         if (!closeMap.containsKey(name) || closeMap.get(name) == 0.0) {
             return false;
         } else {
@@ -1203,8 +1203,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(FUT_HILO);
-        long tSinceLastOrder = tSincePrevOrderMilli(FUT_HILO, nowMilli);
+//        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(FUT_HILO);
+//        long tSinceLastOrder = tSincePrevOrderMilli(FUT_HILO, nowMilli);
 
         int waitTimeSec = 60 * 10;
 
@@ -1253,8 +1253,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     , maxP, minP, "open/last ", futOpen, futLast, "maxT, minT", maxT, minT);
         }
 
-        int buySize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == 5) ? 1 : 2);
-        int sellSize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == 5) ? 1 : 2);
+        int buySize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
+        int sellSize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
 
         if (lt.isAfter(ltof(8, 59)) &&
                 (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat)) {
@@ -1476,8 +1476,8 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
         int baseSize = 1;
-        int buySize = baseSize * ((numOrders == 0 || numOrders == 5) ? 1 : 1);
-        int sellSize = baseSize * ((numOrders == 0 || numOrders == 5) ? 1 : 1);
+        int buySize = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
+        int sellSize = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
         double buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(futOpen, Direction.Long));
         double sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(futOpen, Direction.Short));
 
@@ -2235,8 +2235,6 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         int perc = getPercentileForDouble(futPrice);
 
 
-        double buyPrice = freshPrice;
-        double sellPrice = freshPrice;
         double buyQ = 1.0;
         double sellQ = 1.0;
         long numOrders = getOrderSizeForTradeType(FUT_TENTA);
@@ -2251,13 +2249,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         if (lastStatus == OrderStatus.Filled && SECONDS.between(lastFutTentaTime, nowMilli) > 60) {
             if (lastAction == Types.Action.SELL && freshPrice > lastLimit) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(buyPrice, buyQ, Types.TimeInForce.DAY);
+                Order o = placeBidLimitTIF(freshPrice, buyQ, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_TENTA_COVER));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), " fut tenta cover: BUY SHORT #:", numOrders));
             } else if (lastAction == Types.Action.BUY && freshPrice < lastLimit) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(buyPrice, buyQ, Types.TimeInForce.DAY);
+                Order o = placeOfferLimitTIF(freshPrice, buyQ, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_TENTA_COVER));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), " fut tenta cover: SELL LONG #:", numOrders));
@@ -2266,13 +2264,13 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             if (SECONDS.between(lastFutTentaTime, nowMilli) > 300) {
                 if (perc < 20) {
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeBidLimitTIF(buyPrice, buyQ, Types.TimeInForce.DAY);
+                    Order o = placeBidLimitTIF(freshPrice, buyQ, Types.TimeInForce.DAY);
                     globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_TENTA));
                     apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                     outputOrderToAutoLog(str(o.orderId(), " fut tenta buy #:", numOrders));
                 } else if (perc > 80) {
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeOfferLimitTIF(sellPrice, sellQ, Types.TimeInForce.DAY);
+                    Order o = placeOfferLimitTIF(freshPrice, sellQ, Types.TimeInForce.DAY);
                     globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, FUT_TENTA));
                     apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                     outputOrderToAutoLog(str(o.orderId(), " fut tenta sell #:", numOrders));
@@ -3103,7 +3101,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                 .count();
     }
 
-    static Types.Action getLastAction(AutoOrderType type) {
+    private static Types.Action getLastAction(AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))

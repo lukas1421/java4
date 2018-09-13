@@ -3,7 +3,6 @@ package handler;
 import apidemo.*;
 import auxiliary.SimpleBar;
 import client.TickType;
-import utility.Utility;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -13,6 +12,7 @@ import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.pr;
 
 public class SGXFutureReceiver implements LiveHandler {
@@ -69,7 +69,8 @@ public class SGXFutureReceiver implements LiveHandler {
                             XUTrader.futData.get(f).put(ldtMin, new SimpleBar(price));
                         }
 
-                        String activeFut = Utility.ibContractToFutType(XUTrader.activeFutureCt).getTicker();
+                        //String activeFut = Utility.ibContractToFutType(XUTrader.activeFutureCt).getTicker();
+                        String activeFut = ibContractToSymbol(XUTrader.activeFutureCt);
 
                         if (name.equalsIgnoreCase(activeFut) &&
                                 XUTrader.futData.get(f).lastKey().truncatedTo(MINUTES).equals(ldt.truncatedTo(MINUTES))) {

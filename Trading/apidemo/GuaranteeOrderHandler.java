@@ -54,8 +54,6 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
                 Order prevOrder = globalIdOrderMap.get(defaultID).getOrder();
                 Order o = new Order();
                 o.action(prevOrder.action());
-//                o.lmtPrice(prevOrder.action() == Types.Action.BUY ? ask :
-//                        (prevOrder.action() == Types.Action.SELL ? bid : freshPrice));
                 o.lmtPrice(freshPrice);
                 o.orderType(OrderType.LMT);
                 o.totalQuantity(prevOrder.totalQuantity());
@@ -70,7 +68,7 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
                         "Can't fill-resubmit",
                         "Type, TIF, Action, P, Q", globalIdOrderMap.get(id).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
-                        "current", globalIdOrderMap.get(id), "bid ask sp fresh"
+                        "current", globalIdOrderMap.get(id), "bid ask sp last"
                         , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", freshPrice));
             }
             idStatusMap.put(defaultID, orderState.status());
