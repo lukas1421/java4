@@ -126,7 +126,7 @@ public class XuTraderHelper {
 
     static void outputOrderToAutoLog(String s) {
         if (XUTrader.globalIdOrderMap.size() == 1) {
-            outputPurelyOrders(str("***", LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS), "***"));
+            outputPurelyOrders(str("***", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "***"));
         }
         outputToAutoLog("****************ORDER************************");
         outputToAutoLog(s);
