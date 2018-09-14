@@ -856,10 +856,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
             return;
         }
 
-        futOpenTrader(ldt, price, pmChgY); // until 9:30
-        futHiloTrader(ldt, price); // until 10
-        futOpenDeviationTrader(ldt, price); // all day. Day|DefaultOrderhandler
-        closeLiqTrader(ldt, price); // after 14:55
+
+        futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30
+        futOpenDeviationTrader(ldt, price); // 9:00 to 9:30
+        futHiloTrader(ldt, price); // 9:00 to 10:00
+        closeLiqTrader(ldt, price); // 14:55 to 15:30
         percentileMATrader(ldt, price, pmChgY); // all day
 
         //futDayMATrader(ldt, price);
@@ -1433,9 +1434,15 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         LocalTime lt = nowMilli.toLocalTime();
         String futSymbol = ibContractToSymbol(activeFutureCt);
         FutType futtype = ibContractToFutType(activeFutureCt);
+
         if (fut5amClose.getOrDefault(futtype, 0.0) == 0.0) {
             return;
         }
+
+        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(ltof(9, 30))) {
+            return;
+        }
+
 
         double prevClose = fut5amClose.get(futtype);
 
@@ -1967,7 +1974,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         if (numPMDeviOrders >= MAX_ORDER_SIZE) {
             if (detailedPrint.get()) {
-                pr(" pm dev exceed max");
+                pr(" pm dev exceed max", MAX_ORDER_SIZE);
             }
             return;
         }
