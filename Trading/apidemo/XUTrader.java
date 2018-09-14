@@ -857,11 +857,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         }
 
 
-        futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30
-        futOpenDeviationTrader(ldt, price); // 9:00 to 9:30
-        futHiloTrader(ldt, price); // 9:00 to 10:00
-        closeLiqTrader(ldt, price); // 14:55 to 15:30
-        percentileMATrader(ldt, price, pmChgY); // all day
+        futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
+        futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
+        futHiloTrader(ldt, price); // 9:00 to 10:00, guarantee
+        closeLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
+        percentileMATrader(ldt, price, pmChgY); // all day, guarantee
 
         //futDayMATrader(ldt, price);
         //futFastMATrader(ldt, price);
@@ -1817,7 +1817,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double atmVol = getATMVol(expiryToGet);
         OrderStatus lastStatus = getLastOrderStatusForType(INDEX_OPEN_DEVI);
 
-        if (lt.isBefore(ltof(9, 29, 0)) || lt.isAfter(ltof(12, 0))) {
+        if (lt.isBefore(ltof(9, 29, 0)) || lt.isAfter(ltof(10, 0))) {
             return;
         }
 
@@ -1963,7 +1963,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         double bidPrice = bidMap.get(f);
         double askPrice = askMap.get(f);
 
-        if (!checkTimeRangeBool(lt, 12, 58, 15, 0)) {
+        if (!checkTimeRangeBool(lt, 12, 58, 14, 0)) {
             return;
         }
 
