@@ -4,6 +4,7 @@ import TradeType.FutureTrade;
 import util.AutoOrderType;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static utility.Utility.str;
 
@@ -14,6 +15,7 @@ public class OrderAugmented {
     private String msg;
     private final AutoOrderType orderType;
     private OrderStatus augmentedOrderStatus;
+    private AtomicBoolean primaryOrder = new AtomicBoolean(false);
     private LocalDateTime finalActionTime;
 
     public OrderAugmented(LocalDateTime t, Order o, String m, AutoOrderType tt) {
@@ -23,7 +25,9 @@ public class OrderAugmented {
         orderType = tt;
         augmentedOrderStatus = OrderStatus.Created;
         finalActionTime = LocalDateTime.MIN;
+        primaryOrder.set(true);
     }
+
 
     public double getPnl(double currPrice) {
         double tradedPrice = order.lmtPrice();
@@ -43,6 +47,21 @@ public class OrderAugmented {
         orderType = tt;
         augmentedOrderStatus = OrderStatus.Created;
         finalActionTime = LocalDateTime.MIN;
+        primaryOrder.set(true);
+    }
+
+    public OrderAugmented(LocalDateTime t, Order o, AutoOrderType tt, boolean primary) {
+        orderTime = t;
+        order = o;
+        msg = "";
+        orderType = tt;
+        augmentedOrderStatus = OrderStatus.Created;
+        finalActionTime = LocalDateTime.MIN;
+        primaryOrder.set(primary);
+    }
+
+    public boolean isPrimaryOrder() {
+        return primaryOrder.get();
     }
 
     public void setMsg(String m) {

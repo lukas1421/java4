@@ -3110,6 +3110,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     private static long getOrderSizeForTradeType(AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().isPrimaryOrder())
                 .count();
     }
 
