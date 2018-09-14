@@ -1187,7 +1187,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(futType);
         int baseSize = 1;
 
-        if (lt.isAfter(ltof(10, 0))) {
+        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(ltof(10, 0))) {
             return;
         }
 
