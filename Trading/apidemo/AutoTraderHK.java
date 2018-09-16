@@ -40,7 +40,7 @@ public class AutoTraderHK {
     private static volatile ConcurrentHashMap<String, AtomicBoolean> manualHKHiloMap = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, LocalDateTime> lastOrderTime = new ConcurrentHashMap<>();
 
-    public static long MAX_ORDER_HK = 4;
+    private static long MAX_ORDER_HK = 4;
 
     public static List<String> hkNames = new ArrayList<>();
 
@@ -50,11 +50,20 @@ public class AutoTraderHK {
         hkNames.forEach((s) -> {
             manualHKDevMap.put(s, new AtomicBoolean(false));
             manualHKHiloMap.put(s, new AtomicBoolean(false));
+            hkOpenMap.put(s, 0.0);
+            hkBidMap.put(s, 0.0);
+            hkAskMap.put(s, 0.0);
+            hkFreshPriceMap.put(s, 0.0);
         });
     }
 
     public Contract ct = generateHKContract("700");
     private static int hkStockSize = 100;
+
+    public static void processeMainHK(String name, LocalDateTime nowMilli, double freshPrice) {
+        hkOpenDeviationTrader(name, nowMilli, freshPrice);
+        hkHiloTrader(name, nowMilli, freshPrice);
+    }
 
     /**
      * hk open deviation trader
@@ -63,9 +72,10 @@ public class AutoTraderHK {
      * @param nowMilli   time now
      * @param freshPrice last price
      */
-    static void hkOpenDeviationTrader(String name, LocalDateTime nowMilli, double freshPrice) {
+    private static void hkOpenDeviationTrader(String name, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         Contract ct = generateHKContract(name);
+        //persistence is an issue
         NavigableMap<LocalDateTime, Double> prices = hkPriceMapDetail.get(name);
         double open = hkOpenMap.getOrDefault(name, 0.0);
         double last = hkFreshPriceMap.getOrDefault(name, 0.0);
@@ -95,7 +105,7 @@ public class AutoTraderHK {
         LocalDateTime firstTickTime = prices.entrySet().stream()
                 .filter(e -> e.getKey().isAfter(ldtof(thisDate, ltof(9, 20, 0))))
                 .filter(e -> Math.abs(e.getValue() - manualOpen) > 0.01).findFirst().map(Map.Entry::getKey)
-                .orElse(LocalDateTime.MIN);
+                .orElse(ldtof(thisDate, LocalTime.MIN));
 
         pr(" HK open dev, name, price ", nowMilli, name, freshPrice,
                 "open manualopen firsttick, firstticktime",
@@ -153,7 +163,7 @@ public class AutoTraderHK {
      * @param freshPrice last hk price
      */
 
-    static void hkHiloTrader(String name, LocalDateTime nowMilli, double freshPrice) {
+    private static void hkHiloTrader(String name, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         NavigableMap<LocalDateTime, Double> prices = hkPriceMapDetail.get(name);
         Contract ct = generateHKContract(name);

@@ -33,6 +33,7 @@ public class HKReceiver implements LiveHandler {
             case LAST:
                 hkPriceMapDetail.get(name).put(t, price);
                 hkFreshPriceMap.put(name, price);
+                processeMainHK(name, t, price);
                 break;
         }
     }
