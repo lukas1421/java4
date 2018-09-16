@@ -961,7 +961,7 @@ public class ApiController implements EWrapper {
 
     }
 
-    public void req1StockLive(String stock, String exch, String curr, LiveHandler h, boolean snapshot) {
+    private void req1StockLive(String stock, String exch, String curr, LiveHandler h, boolean snapshot) {
         try {
             int reqId = m_reqId.incrementAndGet();
             if (reqId % 90 == 0) {
@@ -1007,8 +1007,8 @@ public class ApiController implements EWrapper {
 
     public void reqHKAutoTrader() {
         AutoTraderHK.hkNames.forEach(k -> {
-            String ticker = k.substring(2);
-            req1StockLive(ticker, "SEHK", "HKD", HKReceiver.getReceiver(), false);
+            //String ticker = k.substring(2);
+            req1StockLive(k, "SEHK", "HKD", HKReceiver.getReceiver(), false);
         });
     }
 
