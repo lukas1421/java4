@@ -35,20 +35,20 @@ public class SGXFutureReceiver implements LiveHandler {
 
         switch (tt) {
             case BID:
-                XUTrader.bidMap.put(f, price);
+                AutoTraderXU.bidMap.put(f, price);
                 break;
 
             case ASK:
-                XUTrader.askMap.put(f, price);
+                AutoTraderXU.askMap.put(f, price);
                 break;
             case CLOSE:
                 pr("fut close in receiver: ", name, " close ", price);
-                //XUTrader.fut5amClose.put(name, price);
-                //XUTrader.futPrevClose3pmMap.put(name, price);
+                //AutoTraderXU.fut5amClose.put(name, price);
+                //AutoTraderXU.futPrevClose3pmMap.put(name, price);
                 break;
             case LAST:
                 ChinaStock.priceMap.put(name, price);
-                XUTrader.futPriceMap.put(f, price);
+                AutoTraderXU.futPriceMap.put(f, price);
                 priceMapBarDetail.get(name).put(ldt.toLocalTime(), price);
 
                 // need to capture overnight data
@@ -63,18 +63,18 @@ public class SGXFutureReceiver implements LiveHandler {
                     }
 
                     if (FUT_COLLECTION_TIME.test(ldt)) {
-                        if (XUTrader.futData.get(f).containsKey(ldtMin)) {
-                            XUTrader.futData.get(f).get(ldtMin).add(price);
+                        if (AutoTraderXU.futData.get(f).containsKey(ldtMin)) {
+                            AutoTraderXU.futData.get(f).get(ldtMin).add(price);
                         } else {
-                            XUTrader.futData.get(f).put(ldtMin, new SimpleBar(price));
+                            AutoTraderXU.futData.get(f).put(ldtMin, new SimpleBar(price));
                         }
 
-                        //String activeFut = Utility.ibContractToFutType(XUTrader.activeFutureCt).getTicker();
-                        String activeFut = ibContractToSymbol(XUTrader.activeFutureCt);
+                        //String activeFut = Utility.ibContractToFutType(AutoTraderXU.activeFutureCt).getTicker();
+                        String activeFut = ibContractToSymbol(AutoTraderXU.activeFutureCt);
 
                         if (name.equalsIgnoreCase(activeFut) &&
-                                XUTrader.futData.get(f).lastKey().truncatedTo(MINUTES).equals(ldt.truncatedTo(MINUTES))) {
-                            XUTrader.processMain(ldt, price);
+                                AutoTraderXU.futData.get(f).lastKey().truncatedTo(MINUTES).equals(ldt.truncatedTo(MINUTES))) {
+                            AutoTraderXU.processMain(ldt, price);
                         }
                     }
                 }

@@ -183,8 +183,8 @@ public class GraphBig extends JComponent implements GraphFillable, MouseMotionLi
 
     @Override
     protected void paintComponent(Graphics g) {
-        NavigableMap<LocalTime, Double> smaShort = getMAGenLT(tm, XUTrader._1_min_ma_short);
-        NavigableMap<LocalTime, Double> smaLong = getMAGenLT(tm, XUTrader._1_min_ma_long);
+        NavigableMap<LocalTime, Double> smaShort = getMAGenLT(tm, AutoTraderXU._1_min_ma_short);
+        NavigableMap<LocalTime, Double> smaLong = getMAGenLT(tm, AutoTraderXU._1_min_ma_long);
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);

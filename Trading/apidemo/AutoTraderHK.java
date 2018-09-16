@@ -6,6 +6,7 @@ import client.OrderAugmented;
 import client.Types;
 import controller.ApiController;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static apidemo.AutoTraderMain.*;
+import static apidemo.AutoTraderXU.ldtof;
 import static apidemo.AutoTraderXU.ltof;
 import static apidemo.XuTraderHelper.*;
 import static historical.HistHKStocks.generateHKContract;
@@ -45,6 +47,9 @@ public class AutoTraderHK {
     private static List<String> hkNames = new ArrayList<>();
 
     AutoTraderHK() {
+        //start with 1 name
+        hkNames.add("700");
+
         hkNames.forEach((s) -> {
             manualHKDevMap.put(s, new AtomicBoolean(false));
             manualHKHiloMap.put(s, new AtomicBoolean(false));
@@ -53,13 +58,17 @@ public class AutoTraderHK {
 
     }
 
-
     public Contract ct = generateHKContract("700");
+    private static int hkStockSize = 100;
 
-    public static int hkStockSize = 100;
-
-
-    static void hkOpenDeviationTrader(LocalDateTime nowMilli, String name, double freshPrice) {
+    /**
+     * hk open deviation trader
+     *
+     * @param name       stock name
+     * @param nowMilli   time now
+     * @param freshPrice last price
+     */
+    static void hkOpenDeviationTrader(String name, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         Contract ct = generateHKContract(name);
         NavigableMap<LocalDateTime, Double> prices = hkPriceMapDetail.get(name);
@@ -85,10 +94,7 @@ public class AutoTraderHK {
             }
         }
 
-        long orderSize = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getTicker().equals(name))
-                .filter(e -> e.getValue().getOrderType() == HK_STOCK_DEV)
-                .filter(e -> e.getValue().isPrimaryOrder())
-                .count();
+        long orderSize = getOrderSizeForTradeType(name, HK_STOCK_DEV);
 
         if (orderSize >= MAX_ORDER_HK) {
             return;
@@ -112,25 +118,33 @@ public class AutoTraderHK {
     }
 
 
-    static void hkHiloTrader(LocalDateTime nowMilli, String name, double freshPrice) {
+    /**
+     * hk hilo trader for hk
+     *
+     * @param name       hk stock name
+     * @param nowMilli   time now
+     * @param freshPrice last hk price
+     */
+
+    static void hkHiloTrader(String name, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         NavigableMap<LocalDateTime, Double> prices = hkPriceMapDetail.get(name);
         Contract ct = generateHKContract(name);
-        //double open = hkOpenMap.getOrDefault(name, 0.0);
-        //double last = hkFreshPriceMap.getOrDefault(name, 0.0);
         Direction currDir = hkHiloDirection.get(name);
 
         pr(" HK hilo, name, price ", nowMilli, name, freshPrice);
 
         LocalDateTime lastKey = prices.lastKey();
+
         double maxSoFar = prices.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
 
         double minSoFar = prices.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        LocalDateTime maxT = getFirstMaxTPredLdt(prices, e -> true);
-        LocalDateTime minT = getFirstMinTPredLdt(prices, e -> true);
+        LocalDate currDate = prices.firstKey().toLocalDate();
+        LocalDateTime maxT = getFirstMaxTPredLdt(prices, e -> e.isAfter(ldtof(currDate, ltof(9, 19))));
+        LocalDateTime minT = getFirstMinTPredLdt(prices, e -> e.isAfter(ldtof(currDate, ltof(9, 19))));
 
         if (!manualHKHiloMap.get(name).get()) {
             if (lt.isBefore(ltof(9, 30))) {
@@ -172,8 +186,5 @@ public class AutoTraderHK {
             outputOrderToAutoLog(str(o.orderId(), "HK hilo sell", globalIdOrderMap.get(id)));
             hkHiloDirection.put(name, Direction.Short);
         }
-
     }
-
-
 }

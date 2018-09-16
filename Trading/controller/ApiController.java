@@ -31,8 +31,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.ChinaMain.*;
-import static apidemo.XUTrader.globalIdOrderMap;
 import static apidemo.XuTraderHelper.*;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
@@ -490,8 +490,8 @@ public class ApiController implements EWrapper {
                 if (LocalDateTime.now().toLocalTime().getSecond() < 20) {
                     pr("Account Pnl: ", output, "**********************");
                 }
-                XUTrader.updateLog(str("Account pnl", output));
-                XUTrader.currentIBNAV = Double.parseDouble(value);
+                AutoTraderXU.updateLog(str("Account pnl", output));
+                AutoTraderXU.currentIBNAV = Double.parseDouble(value);
                 if (LocalTime.now().getMinute() < 2) {
                     outputToAutoLog(output);
                 }
@@ -1934,8 +1934,8 @@ public class ApiController implements EWrapper {
 //            return;
 //        }
 //        if (reqId == 30000) {
-//            pr(" handling sgx data for XUTrader");
-//            XUTrader.handleSGX50HistData(date, open, high, low, close, volume);
+//            pr(" handling sgx data for AutoTraderXU");
+//            AutoTraderXU.handleSGX50HistData(date, open, high, low, close, volume);
 //            return;
 //        }
 //        if (reqId == 40000) {

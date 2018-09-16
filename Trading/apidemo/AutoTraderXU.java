@@ -1194,8 +1194,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double bid = bidMap.get(futType);
         double offer = askMap.get(futType);
 
-        long futHiloOrdersNum = getOrderSizeForTradeType(FUT_HILO);
-        LocalDateTime lastFutHiloTime = getLastOrderTime(FUT_HILO);
+        long futHiloOrdersNum = getOrderSizeForTradeType(futSymbol, FUT_HILO);
+        LocalDateTime lastFutHiloTime = getLastOrderTime(futSymbol, FUT_HILO);
 
         if (futHiloOrdersNum >= MAX_ORDER_SIZE) {
             return;
@@ -1294,7 +1294,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
-        LocalDateTime lastOrderTime = getLastOrderTime(FUT_HILO_ACCU);
+        LocalDateTime lastOrderTime = getLastOrderTime(futSymbol, FUT_HILO_ACCU);
         LocalTime maxTPre10 = getFirstMaxTPred(futPrice, t -> t.isBefore(ltof(10, 0)));
         LocalTime minTPre10 = getFirstMaxTPred(futPrice, t -> t.isBefore(ltof(10, 0)));
 
@@ -1323,8 +1323,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         FutType ft = ibContractToFutType(activeFutureCt);
         double bid = bidMap.get(ft);
         double offer = askMap.get(ft);
-        long futHiloOrdersNum = getOrderSizeForTradeType(FUT_HILO);
-        long futKOOrdersNum = getOrderSizeForTradeType(FUT_KO);
+        long futHiloOrdersNum = getOrderSizeForTradeType(futSymbol, FUT_HILO);
+        long futKOOrdersNum = getOrderSizeForTradeType(futSymbol, FUT_KO);
 
         if (futHiloOrdersNum == 0) {
             return;
@@ -1334,12 +1334,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        OrderStatus lastHiLoOrderStatus = getLastOrderStatusForType(FUT_HILO);
+        OrderStatus lastHiLoOrderStatus = getLastOrderStatusForType(futSymbol, FUT_HILO);
         if (lastHiLoOrderStatus != OrderStatus.Filled) {
             return;
         }
 
-        OrderStatus lastKOOrderStatus = getLastOrderStatusForType(FUT_KO);
+        OrderStatus lastKOOrderStatus = getLastOrderStatusForType(futSymbol, FUT_KO);
         if (futKOOrdersNum != 0 && lastKOOrderStatus != OrderStatus.Filled) {
             //getMoreAggressiveFill(FUT_KO, bid, offer);
             cancelOrdersByType(FUT_KO);
@@ -1391,10 +1391,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         String futSymbol = ibContractToSymbol(activeFutureCt);
         FutType futType = ibContractToFutType(activeFutureCt);
 
-        double pcSignedQ = getOrderTotalSignedQForTypeFilled(FUT_OPEN_DEVI);
-        double ptSignedQ = getOrderTotalSignedQForTypeFilled(FUT_PC_PROFIT_TAKER);
-        LocalDateTime lastPTTime = getLastOrderTime(FUT_PC_PROFIT_TAKER);
-        LocalDateTime lastPCTime = getLastOrderTime(FUT_OPEN_DEVI);
+        double pcSignedQ = getOrderTotalSignedQForTypeFilled(futSymbol, FUT_OPEN_DEVI);
+        double ptSignedQ = getOrderTotalSignedQForTypeFilled(futSymbol, FUT_PC_PROFIT_TAKER);
+        LocalDateTime lastPTTime = getLastOrderTime(futSymbol, FUT_PC_PROFIT_TAKER);
+        LocalDateTime lastPCTime = getLastOrderTime(futSymbol, FUT_OPEN_DEVI);
         int percentile = getPercentileForDouble(priceMapBarDetail.get(futSymbol));
         double lastFut = priceMapBarDetail.get(futSymbol).lastEntry().getValue();
         double pc = fut5amClose.get(futType);
@@ -1446,12 +1446,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         Map.Entry<LocalTime, Double> firstEntry = priceMapBarDetail.get(futSymbol).firstEntry();
         double lastFut = priceMapBarDetail.get(futSymbol).lastEntry().getValue();
 
-        LocalDateTime lastFutOpenOrderTime = getLastOrderTime(FUT_OPEN_DEVI);
-        long milliLast2 = lastTwoOrderMilliDiff(FUT_OPEN_DEVI);
-        long numOrders = getOrderSizeForTradeType(FUT_OPEN_DEVI);
+        LocalDateTime lastFutOpenOrderTime = getLastOrderTime(futSymbol, FUT_OPEN_DEVI);
+        long milliLast2 = lastTwoOrderMilliDiff(futSymbol, FUT_OPEN_DEVI);
+        long numOrders = getOrderSizeForTradeType(futSymbol, FUT_OPEN_DEVI);
         int waitTimeSec = (milliLast2 < 60000) ? 300 : 10;
         double futOpen = firstEntry.getValue();
-        OrderStatus lastStatus = getLastOrderStatusForType(FUT_OPEN_DEVI);
+        OrderStatus lastStatus = getLastOrderStatusForType(futSymbol, FUT_OPEN_DEVI);
 
         if (numOrders != 0 && lastStatus != OrderStatus.Filled) {
             pr(" fut open dev trader: last not filled, status: ", lastStatus);
@@ -1530,11 +1530,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         (a, b) -> a, ConcurrentSkipListMap::new));
         int shorterMA = 100;
         int longerMA = 200;
-        long numOrder = getOrderSizeForTradeType(FUT_DAY_MA);
-        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(isNotMA());
-        double totalFutMASignedQ = getOrderTotalSignedQForTypeFilled(FUT_DAY_MA);
+        long numOrder = getOrderSizeForTradeType(futSymbol, FUT_DAY_MA);
+        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(futSymbol, isNotMA());
+        double totalFutMASignedQ = getOrderTotalSignedQForTypeFilled(futSymbol, FUT_DAY_MA);
 
-        LocalDateTime lastOrderTime = getLastOrderTime(FUT_DAY_MA);
+        LocalDateTime lastOrderTime = getLastOrderTime(futSymbol, FUT_DAY_MA);
 
         if (numOrder > 20) {
             if (detailedPrint.get()) {
@@ -1601,10 +1601,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         (a, b) -> a, ConcurrentSkipListMap::new));
         int shorterMA = 100;
         int longerMA = 200;
-        long numOrder = getOrderSizeForTradeType(FUT_FAST_MA);
+        long numOrder = getOrderSizeForTradeType(futSymbol, FUT_FAST_MA);
 
-        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(isNotMA());
-        double totalFutFastMASignedQ = getOrderTotalSignedQForTypeFilled(FUT_FAST_MA);
+        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(futSymbol, isNotMA());
+        double totalFutFastMASignedQ = getOrderTotalSignedQForTypeFilled(futSymbol, FUT_FAST_MA);
 
         LocalTime lastKey = futPrice.lastKey();
         int perc = getPercentileForDoublePred(futPrice, e -> e.isAfter(lastKey.minusMinutes(15)));
@@ -1614,7 +1614,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
 
         Types.Action lastAction = getLastAction(FUT_FAST_MA);
-        LocalDateTime lastOrderTime = getLastOrderTime(FUT_FAST_MA);
+        LocalDateTime lastOrderTime = getLastOrderTime(futSymbol, FUT_FAST_MA);
 
         if (numOrder > 10) {
             if (detailedPrint.get()) {
@@ -1676,7 +1676,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double currDelta = getNetPtfDelta();
 
         if (lt.isBefore(ltof(8, 59)) || lt.isAfter(ltof(9, 29))) {
-            checkCancelOrders(FUT_OPEN, nowMilli, 5);
+            checkCancelOrders(futSymbol, FUT_OPEN, nowMilli, 5);
             return;
         }
 
@@ -1684,7 +1684,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        long futOpenOrdersNum = getOrderSizeForTradeType(FUT_OPEN);
+        long futOpenOrdersNum = getOrderSizeForTradeType(futSymbol, FUT_OPEN);
 
         NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(futSymbol).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(ltof(8, 59, 0)))
@@ -1706,7 +1706,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         double last = futPrice.lastEntry().getValue();
 
-        LocalDateTime lastOpenTime = getLastOrderTime(FUT_OPEN);
+        LocalDateTime lastOpenTime = getLastOrderTime(futSymbol, FUT_OPEN);
 
         if (SECONDS.between(lastOpenTime, nowMilli) >= 60) {
             if (!noMoreBuy.get() && last > maxP && _2dayPerc < 50 && (_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO)
@@ -1747,7 +1747,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         String futSymbol = ibContractToSymbol(activeFutureCt);
 
         if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(9, 35))) {
-            checkCancelOrders(INDEX_FIRST_TICK, nowMilli, ORDER_WAIT_TIME);
+            checkCancelOrders(futSymbol, INDEX_FIRST_TICK, nowMilli, ORDER_WAIT_TIME);
             return;
         }
 
@@ -1774,7 +1774,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
 
-        LocalDateTime lastFTickTime = getLastOrderTime(INDEX_FIRST_TICK);
+        LocalDateTime lastFTickTime = getLastOrderTime(futSymbol, INDEX_FIRST_TICK);
         int buySize = 3;
         int sellSize = 2;
 
@@ -1814,7 +1814,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         String futSymbol = ibContractToSymbol(activeFutureCt);
         double freshPrice = futPriceMap.get(f);
         double atmVol = getATMVol(expiryToGet);
-        OrderStatus lastStatus = getLastOrderStatusForType(INDEX_OPEN_DEVI);
+        OrderStatus lastStatus = getLastOrderStatusForType(futSymbol, INDEX_OPEN_DEVI);
 
         if (lt.isBefore(ltof(9, 29, 0)) || lt.isAfter(ltof(10, 0))) {
             return;
@@ -1847,10 +1847,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             }
         }
 
-        long numOrdersOpenDev = getOrderSizeForTradeType(INDEX_OPEN_DEVI);
-        LocalDateTime lastOpenDevTradeTime = getLastOrderTime(INDEX_OPEN_DEVI);
-        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(INDEX_OPEN_DEVI);
-        long tSinceLastOrder = tSincePrevOrderMilli(INDEX_OPEN_DEVI, nowMilli);
+        long numOrdersOpenDev = getOrderSizeForTradeType(futSymbol, INDEX_OPEN_DEVI);
+        LocalDateTime lastOpenDevTradeTime = getLastOrderTime(futSymbol, INDEX_OPEN_DEVI);
+        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(futSymbol, INDEX_OPEN_DEVI);
+        long tSinceLastOrder = tSincePrevOrderMilli(futSymbol, INDEX_OPEN_DEVI, nowMilli);
         if (numOrdersOpenDev >= MAX_ORDER_SIZE) {
             return;
         }
@@ -1958,7 +1958,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         FutType f = ibContractToFutType(activeFutureCt);
         String futSymbol = ibContractToSymbol(activeFutureCt);
         double freshPrice = futPriceMap.get(f);
-        OrderStatus lastPMDevStatus = getLastOrderStatusForType(INDEX_PM_OPEN_DEVI);
+        OrderStatus lastPMDevStatus = getLastOrderStatusForType(futSymbol, INDEX_PM_OPEN_DEVI);
         int PM_DEVI_BASE = getWeekdayBaseSize(nowMilli.getDayOfWeek());
         double bidPrice = bidMap.get(f);
         double askPrice = askMap.get(f);
@@ -1967,8 +1967,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        long numPMDeviOrders = getOrderSizeForTradeType(INDEX_PM_OPEN_DEVI);
-        long milliBtwnLastTwo = lastTwoOrderMilliDiff(INDEX_PM_OPEN_DEVI);
+        long numPMDeviOrders = getOrderSizeForTradeType(futSymbol, INDEX_PM_OPEN_DEVI);
+        long milliBtwnLastTwo = lastTwoOrderMilliDiff(futSymbol, INDEX_PM_OPEN_DEVI);
 
         int pmDevWaitSec = (milliBtwnLastTwo < 60000) ? 300 : 10;
 
@@ -2003,7 +2003,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             }
         }
 
-        LocalDateTime lastPMDevTradeTime = getLastOrderTime(INDEX_PM_OPEN_DEVI);
+        LocalDateTime lastPMDevTradeTime = getLastOrderTime(futSymbol, INDEX_PM_OPEN_DEVI);
 
         int buyQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
         int sellQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
@@ -2054,7 +2054,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         FutType f = ibContractToFutType(activeFutureCt);
         String futSymbol = ibContractToSymbol(activeFutureCt);
         double freshPrice = futPriceMap.get(f);
-        OrderStatus lastStatus = getLastOrderStatusForType(INDEX_PM_HILO);
+        OrderStatus lastStatus = getLastOrderStatusForType(futSymbol, INDEX_PM_HILO);
         int PM_HILO_BASE = getWeekdayBaseSize(nowMilli.getDayOfWeek()) + 2;
         double bidPrice = bidMap.get(f);
         double askPrice = askMap.get(f);
@@ -2063,7 +2063,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        long numPMHiloOrders = getOrderSizeForTradeType(INDEX_PM_HILO);
+        long numPMHiloOrders = getOrderSizeForTradeType(futSymbol, INDEX_PM_HILO);
 
         if (numPMHiloOrders >= MAX_ORDER_SIZE) {
             if (detailedPrint.get()) {
@@ -2077,16 +2077,16 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //            return;
 //        }
 
-        LocalDateTime lastPMHiLoTradeTime = getLastOrderTime(INDEX_PM_HILO);
-        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(INDEX_PM_HILO);
+        LocalDateTime lastPMHiLoTradeTime = getLastOrderTime(futSymbol, INDEX_PM_HILO);
+        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(futSymbol, INDEX_PM_HILO);
 
         int pmHiloWaitTimeSeconds = (milliBtwnLastTwoOrders < 60000) ? 300 : 10;
 
         int buyQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
         int sellQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
 
-        long tBtwnLast2Trades = lastTwoOrderMilliDiff(INDEX_PM_HILO);
-        long tSinceLastTrade = tSincePrevOrderMilli(INDEX_PM_HILO, nowMilli);
+        long tBtwnLast2Trades = lastTwoOrderMilliDiff(futSymbol, INDEX_PM_HILO);
+        long tSinceLastTrade = tSincePrevOrderMilli(futSymbol, INDEX_PM_HILO, nowMilli);
 
         double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(12, 58)).getValue();
 
@@ -2170,6 +2170,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
     }
 
+    static LocalDateTime ldtof(LocalDate d, LocalTime t) {
+        return LocalDateTime.of(d, t);
+    }
+
     static LocalTime ltof(int h, int m) {
         return LocalTime.of(h, m);
     }
@@ -2195,9 +2199,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
         FutType activeFt = ibContractToFutType(activeFutureCt);
-        LocalDateTime lastOrderTime = getLastOrderTime(CLOSE_LIQ);
-        OrderStatus lastOrderStatus = getLastOrderStatusForType(CLOSE_LIQ);
-        long numOrderCloseLiq = getOrderSizeForTradeType(CLOSE_LIQ);
+        LocalDateTime lastOrderTime = getLastOrderTime(futSymbol, CLOSE_LIQ);
+        OrderStatus lastOrderStatus = getLastOrderStatusForType(futSymbol, CLOSE_LIQ);
+        long numOrderCloseLiq = getOrderSizeForTradeType(futSymbol, CLOSE_LIQ);
 
         int pos = currentPosMap.getOrDefault(activeFt, 0);
         int absPos = Math.abs(pos);
@@ -2208,7 +2212,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
 
         if (numOrderCloseLiq > 0.0 && lastOrderStatus != OrderStatus.Filled) {
-            checkCancelOrders(CLOSE_LIQ, nowMilli, 5);
+            checkCancelOrders(futSymbol, CLOSE_LIQ, nowMilli, 5);
             return;
         }
 
@@ -2251,14 +2255,14 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         double buyQ = 1.0;
         double sellQ = 1.0;
-        long numOrders = getOrderSizeForTradeType(FUT_TENTA);
+        long numOrders = getOrderSizeForTradeType(futSymbol, FUT_TENTA);
 
-        OrderStatus lastStatus = getLastOrderStatusForType(FUT_TENTA);
+        OrderStatus lastStatus = getLastOrderStatusForType(futSymbol, FUT_TENTA);
         Types.Action lastAction = getLastAction(FUT_TENTA);
         double lastLimit = getLastPrice(FUT_TENTA);
 
-        LocalDateTime lastFutTentaTime = getLastOrderTime(FUT_TENTA);
-        LocalDateTime lastFutTentaCoverTime = getLastOrderTime(FUT_TENTA_COVER);
+        LocalDateTime lastFutTentaTime = getLastOrderTime(futSymbol, FUT_TENTA);
+        LocalDateTime lastFutTentaCoverTime = getLastOrderTime(futSymbol, FUT_TENTA_COVER);
 
         if (lastStatus == OrderStatus.Filled && SECONDS.between(lastFutTentaTime, nowMilli) > 60) {
             if (lastAction == Types.Action.SELL && freshPrice > lastLimit) {
@@ -2306,7 +2310,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         FutType f = ibContractToFutType(activeFutureCt);
         String futSymbol = ibContractToSymbol(activeFutureCt);
         double freshPrice = futPriceMap.get(f);
-        OrderStatus lastStatus = getLastOrderStatusForType(INDEX_HILO);
+        OrderStatus lastStatus = getLastOrderStatusForType(futSymbol, INDEX_HILO);
         int baseSize = getWeekdayBaseSize(nowMilli.getDayOfWeek()) + 1;
 
         if (lt.isBefore(ltof(9, 29)) || lt.isAfter(ltof(10, 0))) {
@@ -2317,9 +2321,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        long numOrders = getOrderSizeForTradeType(INDEX_HILO);
-        LocalDateTime lastHiLoOrderTime = getLastOrderTime(INDEX_HILO);
-        long milliLastTwoOrder = lastTwoOrderMilliDiff(INDEX_HILO);
+        long numOrders = getOrderSizeForTradeType(futSymbol, INDEX_HILO);
+        LocalDateTime lastHiLoOrderTime = getLastOrderTime(futSymbol, INDEX_HILO);
+        long milliLastTwoOrder = lastTwoOrderMilliDiff(futSymbol, INDEX_HILO);
         int buyQ = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
         int sellQ = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
 
@@ -2341,8 +2345,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
 
-        long tBtwnLast2Trades = lastTwoOrderMilliDiff(INDEX_HILO);
-        long tSinceLastTrade = tSincePrevOrderMilli(INDEX_HILO, nowMilli);
+        long tBtwnLast2Trades = lastTwoOrderMilliDiff(futSymbol, INDEX_HILO);
+        long tSinceLastTrade = tSincePrevOrderMilli(futSymbol, INDEX_HILO, nowMilli);
 
         if (numOrders >= MAX_ORDER_SIZE) {
             if (detailedPrint.get()) {
@@ -2439,13 +2443,13 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         String futSymbol = ibContractToSymbol(activeFutureCt);
         double freshPrice = futPriceMap.get(f);
         LocalTime lt = nowMilli.toLocalTime();
-        LocalDateTime lastHiLoAccuTradeTime = getLastOrderTime(INDEX_HILO_ACCU);
+        LocalDateTime lastHiLoAccuTradeTime = getLastOrderTime(futSymbol, INDEX_HILO_ACCU);
 
-        long numOrders = getOrderSizeForTradeType(INDEX_HILO_ACCU);
-        double hiloAccuTotalOrderQ = getOrderTotalSignedQForType(INDEX_HILO_ACCU);
-        double hiloTotalOrderQ = getOrderTotalSignedQForType(INDEX_HILO);
+        long numOrders = getOrderSizeForTradeType(futSymbol, INDEX_HILO_ACCU);
+        double hiloAccuTotalOrderQ = getOrderTotalSignedQForType(futSymbol, INDEX_HILO_ACCU);
+        double hiloTotalOrderQ = getOrderTotalSignedQForType(futSymbol, INDEX_HILO);
 
-        checkCancelOrders(INDEX_HILO_ACCU, nowMilli, ORDER_WAIT_TIME);
+        checkCancelOrders(futSymbol, INDEX_HILO_ACCU, nowMilli, ORDER_WAIT_TIME);
 
         int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
 
@@ -2517,10 +2521,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         int shorterMA = 2;
         int longerMA = 5;
 
-        checkCancelOrders(FTICK_TAKE_PROFIT, nowMilli, ORDER_WAIT_TIME * 2);
+        checkCancelOrders(futSymbol, FTICK_TAKE_PROFIT, nowMilli, ORDER_WAIT_TIME * 2);
         int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
 
-        LocalDateTime lastProfitTakerOrder = getLastOrderTime(FTICK_TAKE_PROFIT);
+        LocalDateTime lastProfitTakerOrder = getLastOrderTime(futSymbol, FTICK_TAKE_PROFIT);
 
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
@@ -2589,7 +2593,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
 
-        LocalDateTime lastCloseProfitTaker = getLastOrderTime(CLOSE_TAKE_PROFIT);
+        LocalDateTime lastCloseProfitTaker = getLastOrderTime(futSymbol, CLOSE_TAKE_PROFIT);
 
         if (MINUTES.between(lastCloseProfitTaker, nowMilli) >= ORDER_WAIT_TIME) {
             if (!noMoreBuy.get() && todayPerc < 5 && firstTick < open && currDelta < deltaTgt) {
@@ -2641,9 +2645,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
                 .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
 
-        LocalDateTime lastOpenTime = getLastOrderTime(INTRADAY_FIRSTTICK_ACCU);
-        double firstTickSignedQuant = getOrderTotalSignedQForType(INDEX_FIRST_TICK);
-        double ftAccuSignedQuant = getOrderTotalSignedQForType(INTRADAY_FIRSTTICK_ACCU);
+        LocalDateTime lastOpenTime = getLastOrderTime(futSymbol, INTRADAY_FIRSTTICK_ACCU);
+        double firstTickSignedQuant = getOrderTotalSignedQForType(futSymbol, INDEX_FIRST_TICK);
+        double ftAccuSignedQuant = getOrderTotalSignedQForType(futSymbol, INTRADAY_FIRSTTICK_ACCU);
         //pr(" intraday first tick accu: open, firstTick, futP% ", r(open), r(firstTick), _2dayFutPerc);
 
         if (firstTickSignedQuant == 0.0 || Math.abs(ftAccuSignedQuant) >= FT_ACCU_MAX_SIZE) {
@@ -2703,15 +2707,15 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         //checkCancelOrders(INTRADAY_MA, nowMilli, 30);
         LocalDate tTrade = getTradeDate(nowMilli);
 
-        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(isNotMA());
-        double totalMASignedQ = getOrderTotalSignedQForTypeFilled(INTRADAY_MA);
-        long numOrders = getOrderSizeForTradeType(INTRADAY_MA);
+        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(futSymbol, isNotMA());
+        double totalMASignedQ = getOrderTotalSignedQForTypeFilled(futSymbol, INTRADAY_MA);
+        long numOrders = getOrderSizeForTradeType(futSymbol, INTRADAY_MA);
 
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
                 , e -> !isStockNoonBreak(e));
 
         int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
-        LocalDateTime lastIndexMAOrder = getLastOrderTime(INTRADAY_MA);
+        LocalDateTime lastIndexMAOrder = getLastOrderTime(futSymbol, INTRADAY_MA);
 
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
@@ -2776,9 +2780,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         String anchorIndex = FTSE_INDEX;
         String futSymbol = ibContractToSymbol(activeFutureCt);
         double currDelta = getNetPtfDelta();
-        double totalSizeTradedOtherOrders = getTotalFilledOrderSignedQPred(isNotMA());
-        double totalMASignedQ = getOrderTotalSignedQForType(PERC_MA);
-        long numOrders = getOrderSizeForTradeType(PERC_MA);
+        double totalSizeTradedOtherOrders = getTotalFilledOrderSignedQPred(futSymbol, isNotMA());
+        double totalMASignedQ = getOrderTotalSignedQForType(futSymbol, PERC_MA);
+        long numOrders = getOrderSizeForTradeType(futSymbol, PERC_MA);
         FutType ft = ibContractToFutType(activeFutureCt);
 
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(anchorIndex), nowMilli.toLocalDate()
@@ -2800,12 +2804,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        checkCancelOrders(PERC_MA, nowMilli, 30);
+        checkCancelOrders(futSymbol, PERC_MA, nowMilli, 30);
 
         int todayPerc = getPercentileForLastPred(fut,
                 e -> e.getKey().isAfter(LocalDateTime.of(getTradeDate(nowMilli), ltof(8, 59))));
 
-        LocalDateTime lastIndexMAOrder = getLastOrderTime(PERC_MA);
+        LocalDateTime lastIndexMAOrder = getLastOrderTime(futSymbol, PERC_MA);
 
         NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
@@ -2819,8 +2823,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
         double maLongLast = smaLong.lastEntry().getValue();
         double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
-        double avgBuy = getAvgFilledBuyPriceForOrderType(PERC_MA);
-        double avgSell = getAvgFilledSellPriceForOrderType(PERC_MA);
+        double avgBuy = getAvgFilledBuyPriceForOrderType(futSymbol, PERC_MA);
+        double avgSell = getAvgFilledSellPriceForOrderType(futSymbol, PERC_MA);
 
 
         if (detailedPrint.get() && lt.getSecond() < 10) {
@@ -2870,8 +2874,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
     private static void testTrader(LocalDateTime nowMilli, double freshPrice) {
-        long numTestOrders = getOrderSizeForTradeType(TEST);
+
         String futSymbol = ibContractToSymbol(activeFutureCt);
+        long numTestOrders = getOrderSizeForTradeType(futSymbol, TEST);
         pr("num test orders ", numTestOrders);
         FutType f = ibContractToFutType(activeFutureCt);
         double bid = bidMap.get(f);
@@ -2906,7 +2911,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         int pmPercChg = getPMPercChg(futPriceMap, TDate);
         int currPerc = getPercentileForLast(futPriceMap);
 
-        LocalDateTime lastOrderTime = getLastOrderTime(OVERNIGHT);
+        LocalDateTime lastOrderTime = getLastOrderTime(futSymbol, OVERNIGHT);
 
         if (checkTimeRangeBool(lt, 3, 0, 5, 0)
                 && MINUTES.between(lastOrderTime, nowMilli) > ORDER_WAIT_TIME) {
@@ -2972,8 +2977,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param nowMilli         time now
      * @param timeLimitMinutes how long to wait
      */
-    private static void checkCancelOrders(AutoOrderType type, LocalDateTime nowMilli, int timeLimitMinutes) {
-        long ordersNum = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == type).count();
+    private static void checkCancelOrders(String name, AutoOrderType type, LocalDateTime nowMilli, int timeLimitMinutes) {
+        long ordersNum = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTicker().equals(name))
+                .filter(e -> e.getValue().getOrderType() == type).count();
 
         if (ordersNum != 0) {
             OrderStatus lastOrdStatus = globalIdOrderMap.entrySet().stream()
@@ -2981,7 +2988,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                     .map(e -> e.getValue().getAugmentedOrderStatus()).orElse(OrderStatus.Unknown);
 
-            LocalDateTime lastOTime = getLastOrderTime(type);
+            LocalDateTime lastOTime = getLastOrderTime(name, type);
 
             if (lastOrdStatus != OrderStatus.Filled && lastOrdStatus != OrderStatus.Cancelled
                     && lastOrdStatus != OrderStatus.ApiCancelled && lastOrdStatus != OrderStatus.PendingCancel) {
@@ -3040,25 +3047,29 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
     }
 
-    private static LocalDateTime getLastOrderTime(AutoOrderType type) {
+    private static LocalDateTime getLastOrderTime(String name, AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                 .map(e -> e.getValue().getOrderTime())
                 .orElse(sessionOpenT());
     }
 
-    private static long lastTwoOrderMilliDiff(AutoOrderType type) {
+    private static long lastTwoOrderMilliDiff(String name, AutoOrderType type) {
         long numOrders = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type).count();
         if (numOrders < 2) {
             return Long.MAX_VALUE;
         } else {
             LocalDateTime last = globalIdOrderMap.entrySet().stream()
+                    .filter(e -> e.getValue().getTicker().equals(name))
                     .filter(e -> e.getValue().getOrderType() == type)
                     .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                     .map(e -> e.getValue().getOrderTime()).orElseThrow(() -> new IllegalArgumentException("no"));
             LocalDateTime secLast = globalIdOrderMap.entrySet().stream()
+                    .filter(e -> e.getValue().getTicker().equals(name))
                     .filter(e -> e.getValue().getOrderType() == type)
                     .map(e -> e.getValue().getOrderTime())
                     .filter(e -> e.isBefore(last))
@@ -3067,13 +3078,15 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
     }
 
-    private static long tSincePrevOrderMilli(AutoOrderType type, LocalDateTime nowMilli) {
+    private static long tSincePrevOrderMilli(String name, AutoOrderType type, LocalDateTime nowMilli) {
         long numOrders = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type).count();
         if (numOrders == 0) {
             return Long.MAX_VALUE;
         } else {
             LocalDateTime last = globalIdOrderMap.entrySet().stream()
+                    .filter(e -> e.getValue().getTicker().equals(name))
                     .filter(e -> e.getValue().getOrderType() == type)
                     .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                     .map(e -> e.getValue().getOrderTime()).orElseThrow(() -> new IllegalArgumentException("no"));
@@ -3082,8 +3095,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
 
-    private static double getAvgFilledBuyPriceForOrderType(AutoOrderType type) {
+    private static double getAvgFilledBuyPriceForOrderType(String name, AutoOrderType type) {
         double botUnits = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getOrder().action() == Types.Action.BUY)
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
@@ -3094,6 +3108,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
 
         return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getOrder().action() == Types.Action.BUY)
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
@@ -3101,8 +3116,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .sum() / botUnits;
     }
 
-    private static double getAvgFilledSellPriceForOrderType(AutoOrderType type) {
+    private static double getAvgFilledSellPriceForOrderType(String name, AutoOrderType type) {
         double soldUnits = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getOrder().action() == Types.Action.SELL)
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
@@ -3112,18 +3128,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return 0.0;
         }
         return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getOrder().action() == Types.Action.SELL)
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
                 .mapToDouble(e -> e.getValue().getOrder().totalQuantity() * e.getValue().getOrder().lmtPrice())
                 .sum() / soldUnits;
-    }
-
-    private static long getOrderSizeForTradeType(AutoOrderType type) {
-        return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == type)
-                .filter(e -> e.getValue().isPrimaryOrder())
-                .count();
     }
 
     private static Types.Action getLastAction(AutoOrderType type) {
@@ -3142,16 +3152,18 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .orElse(0.0);
     }
 
-    private static double getOrderTotalSignedQForType(AutoOrderType type) {
+    private static double getOrderTotalSignedQForType(String name, AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
                 .sum();
     }
 
     //filled order type
-    private static double getOrderTotalSignedQForTypeFilled(AutoOrderType type) {
+    private static double getOrderTotalSignedQForTypeFilled(String name, AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> (e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled))
                 .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
@@ -3159,8 +3171,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
     //filled + pred
-    private static double getTotalFilledOrderSignedQPred(Predicate<AutoOrderType> p) {
+    private static double getTotalFilledOrderSignedQPred(String name, Predicate<AutoOrderType> p) {
         return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> (e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled))
                 .filter(e -> p.test(e.getValue().getOrderType()))
                 .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())

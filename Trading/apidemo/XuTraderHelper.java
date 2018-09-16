@@ -673,8 +673,9 @@ public class XuTraderHelper {
                 .sum();
     }
 
-    static OrderStatus getLastOrderStatusForType(AutoOrderType type) {
+    static OrderStatus getLastOrderStatusForType(String name, AutoOrderType type) {
         long size = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type).count();
 
         if (size == 0L) {

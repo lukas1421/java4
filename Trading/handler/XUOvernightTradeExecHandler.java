@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-import static apidemo.XUTrader.overnightTradesMap;
+import static apidemo.AutoTraderXU.overnightTradesMap;
 import static utility.Utility.ibContractToFutType;
 
 public class XUOvernightTradeExecHandler implements ApiController.ITradeReportHandler {

@@ -10,6 +10,7 @@ import static utility.Utility.str;
 
 public class OrderAugmented {
 
+    private String ticker;
     private final LocalDateTime orderTime;
     private Order order;
     private String msg;
@@ -18,7 +19,8 @@ public class OrderAugmented {
     private AtomicBoolean primaryOrder = new AtomicBoolean(false);
     private LocalDateTime finalActionTime;
 
-    public OrderAugmented(LocalDateTime t, Order o, String m, AutoOrderType tt) {
+    public OrderAugmented(String name, LocalDateTime t, Order o, String m, AutoOrderType tt) {
+        ticker = name;
         orderTime = t;
         order = o;
         msg = m;
@@ -28,6 +30,27 @@ public class OrderAugmented {
         primaryOrder.set(true);
     }
 
+    public OrderAugmented(String name, LocalDateTime t, Order o, AutoOrderType tt) {
+        ticker = name;
+        orderTime = t;
+        order = o;
+        msg = "";
+        orderType = tt;
+        augmentedOrderStatus = OrderStatus.Created;
+        finalActionTime = LocalDateTime.MIN;
+        primaryOrder.set(true);
+    }
+
+    public OrderAugmented(String name, LocalDateTime t, Order o, AutoOrderType tt, boolean primary) {
+        ticker = name;
+        orderTime = t;
+        order = o;
+        msg = "";
+        orderType = tt;
+        augmentedOrderStatus = OrderStatus.Created;
+        finalActionTime = LocalDateTime.MIN;
+        primaryOrder.set(primary);
+    }
 
     public double getPnl(double currPrice) {
         double tradedPrice = order.lmtPrice();
@@ -40,25 +63,6 @@ public class OrderAugmented {
         return 0.0;
     }
 
-    public OrderAugmented(LocalDateTime t, Order o, AutoOrderType tt) {
-        orderTime = t;
-        order = o;
-        msg = "";
-        orderType = tt;
-        augmentedOrderStatus = OrderStatus.Created;
-        finalActionTime = LocalDateTime.MIN;
-        primaryOrder.set(true);
-    }
-
-    public OrderAugmented(LocalDateTime t, Order o, AutoOrderType tt, boolean primary) {
-        orderTime = t;
-        order = o;
-        msg = "";
-        orderType = tt;
-        augmentedOrderStatus = OrderStatus.Created;
-        finalActionTime = LocalDateTime.MIN;
-        primaryOrder.set(primary);
-    }
 
     public boolean isPrimaryOrder() {
         return primaryOrder.get();
@@ -85,6 +89,10 @@ public class OrderAugmented {
         return order;
     }
 
+    public String getTicker() {
+        return ticker;
+    }
+
     public String getMsg() {
         return msg;
     }
@@ -107,7 +115,7 @@ public class OrderAugmented {
 
     @Override
     public String toString() {
-        return str("T: ", orderTime.toLocalTime(),
+        return str(ticker, "T: ", orderTime.toLocalTime(),
                 "Order:", order, "msg:", msg, "Tradetype", orderType,
                 "Status:", augmentedOrderStatus);
     }

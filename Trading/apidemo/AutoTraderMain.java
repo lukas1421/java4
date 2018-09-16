@@ -2,6 +2,7 @@ package apidemo;
 
 import client.OrderAugmented;
 import controller.ApiController;
+import util.AutoOrderType;
 
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -21,6 +22,14 @@ public class AutoTraderMain {
     static volatile AtomicBoolean noMoreBuy = new AtomicBoolean(false);
 
     static ApiController apcon;
+
+    static long getOrderSizeForTradeType(String name, AutoOrderType type) {
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getTicker().equals(name))
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().isPrimaryOrder())
+                .count();
+    }
 }
 
 

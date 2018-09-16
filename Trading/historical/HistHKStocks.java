@@ -272,13 +272,13 @@ public class HistHKStocks extends JPanel {
         return ct;
     }
 
-    static void refreshYtd() {
+    private static void refreshYtd() {
         totalStocksLabelYtd.setText(Long.toString(stocksProcessedYtd.get()) + "/" + Long.toString(hkYtdAll.size()));
         //System.out.println(" refreshing YTD ");
         //m_model.fireTableDataChanged();
     }
 
-    static void refreshWtd() {
+    private static void refreshWtd() {
         totalStocksLabelWtd.setText(Long.toString(stocksProcessedWtd.get()) + "/" + Long.toString(hkWtdAll.size()));
         //System.out.println(" refreshing WTD ");
         //m_model.fireTableDataChanged();
