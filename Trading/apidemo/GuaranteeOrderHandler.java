@@ -8,6 +8,7 @@ import java.time.LocalTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderXU.*;
 import static apidemo.XuTraderHelper.outputOrderToAutoLog;
 import static apidemo.XuTraderHelper.outputPurelyOrdersDetailed;
@@ -59,7 +60,7 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
                 o.outsideRth(true);
                 o.tif(Types.TimeInForce.IOC);
 
-                int id = autoTradeID.incrementAndGet();
+                int id = AutoTraderMain.autoTradeID.incrementAndGet();
                 controller.placeOrModifyOrder(activeFutureCt, o, new GuaranteeOrderHandler(id, controller));
                 globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));

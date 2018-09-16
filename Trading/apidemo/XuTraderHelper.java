@@ -125,7 +125,7 @@ public class XuTraderHelper {
     }
 
     static void outputOrderToAutoLog(String s) {
-        if (AutoTraderXU.globalIdOrderMap.size() == 1) {
+        if (AutoTraderMain.globalIdOrderMap.size() == 1) {
             outputPurelyOrders(str("***", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "***"));
         }
         outputToAutoLog("****************ORDER************************");
@@ -479,11 +479,11 @@ public class XuTraderHelper {
     public static void connectToTWS() {
         out.println(" trying to connect");
         try {
-            AutoTraderXU.apcon.connect("127.0.0.1", 7496, 101, "");
+            AutoTraderMain.apcon.connect("127.0.0.1", 7496, 101, "");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        AutoTraderXU.apcon.client().reqIds(-1);
+        AutoTraderMain.apcon.client().reqIds(-1);
     }
 
     public static boolean orderMakingMoney(Order o, double currPrice) {
@@ -665,7 +665,7 @@ public class XuTraderHelper {
     }
 
     static double getTotalFilledSignedQForType(AutoOrderType type) {
-        return AutoTraderXU.globalIdOrderMap.entrySet().stream()
+        return AutoTraderMain.globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
                 .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
@@ -673,14 +673,14 @@ public class XuTraderHelper {
     }
 
     static OrderStatus getLastOrderStatusForType(AutoOrderType type) {
-        long size = AutoTraderXU.globalIdOrderMap.entrySet().stream()
+        long size = AutoTraderMain.globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type).count();
 
         if (size == 0L) {
             return OrderStatus.NoOrder;
         }
 
-        return AutoTraderXU.globalIdOrderMap.entrySet().stream()
+        return AutoTraderMain.globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                 .map(e -> e.getValue().getAugmentedOrderStatus())

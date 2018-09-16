@@ -32,6 +32,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static apidemo.AutoTraderMain.*;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaDataYesterday.ma20Map;
@@ -60,7 +61,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     public static volatile double currentIBNAV = 0.0;
 
     private static volatile Set<String> uniqueTradeKeySet = new HashSet<>();
-    static ApiController apcon;
     private static XUTraderRoll traderRoll;
     private static final int MAX_ORDER_SIZE = 4;
 
@@ -68,11 +68,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     private static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
     private static volatile MASentiment sentiment = MASentiment.Directionless;
-    //static final int MAX_FUT_LIMIT = 20;
-    //static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
-    //static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
-    public static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
-    public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
     private static final int HI_PERC = 95;
     private static final int LO_PERC = 5;
     private static final int HI_PERC_WIDE = 80;
@@ -169,10 +164,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     //music
     private static EmbeddedSoundPlayer soundPlayer = new EmbeddedSoundPlayer();
-
-    //buy sell only
-    private static volatile AtomicBoolean noMoreSell = new AtomicBoolean(false);
-    private static volatile AtomicBoolean noMoreBuy = new AtomicBoolean(false);
 
     //detailed UNCON_MA
     static AtomicBoolean detailedPrint = new AtomicBoolean(true);

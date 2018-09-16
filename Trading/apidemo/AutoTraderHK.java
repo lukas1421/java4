@@ -8,7 +8,4 @@ public class AutoTraderHK {
     public Contract ct = HistHKStocks.generateHKContract("700");
 
 
-
-
-
 }

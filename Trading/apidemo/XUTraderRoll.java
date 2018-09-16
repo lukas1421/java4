@@ -62,19 +62,19 @@ public class XUTraderRoll extends JPanel {
     }
 
     void shortRoll(double p) {
-        int id = AutoTraderXU.autoTradeID.incrementAndGet();
+        int id = AutoTraderMain.autoTradeID.incrementAndGet();
         Order o = XuTraderHelper.placeOfferLimit(p, 1);
-        AutoTraderXU.globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o, AutoOrderType.SHORT_ROLL));
+        AutoTraderMain.globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o, AutoOrderType.SHORT_ROLL));
         apcon.placeOrModifyOrder(longRollContract(), o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
-        outputOrderToAutoLog(str(o.orderId(), " Short Roll ", AutoTraderXU.globalIdOrderMap.get(id)));
+        outputOrderToAutoLog(str(o.orderId(), " Short Roll ", AutoTraderMain.globalIdOrderMap.get(id)));
     }
 
     public static void longRoll(double p) {
-        int id = AutoTraderXU.autoTradeID.incrementAndGet();
+        int id = AutoTraderMain.autoTradeID.incrementAndGet();
         Order o = XuTraderHelper.placeBidLimit(p, 1);
-        AutoTraderXU.globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o, AutoOrderType.LONG_ROLL));
+        AutoTraderMain.globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o, AutoOrderType.LONG_ROLL));
         apcon.placeOrModifyOrder(longRollContract(), o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
-        outputOrderToAutoLog(str(o.orderId(), " Long Roll ", AutoTraderXU.globalIdOrderMap.get(id)));
+        outputOrderToAutoLog(str(o.orderId(), " Long Roll ", AutoTraderMain.globalIdOrderMap.get(id)));
     }
 
     public static void resetLatch() {
