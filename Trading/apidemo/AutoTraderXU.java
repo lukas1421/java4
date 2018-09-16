@@ -3047,7 +3047,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
     }
 
-    private static LocalDateTime getLastOrderTime(String name, AutoOrderType type) {
+    static LocalDateTime getLastOrderTime(String name, AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
@@ -3056,7 +3056,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .orElse(sessionOpenT());
     }
 
-    private static long lastTwoOrderMilliDiff(String name, AutoOrderType type) {
+    static long lastTwoOrderMilliDiff(String name, AutoOrderType type) {
         long numOrders = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type).count();
@@ -3078,7 +3078,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
     }
 
-    private static long tSincePrevOrderMilli(String name, AutoOrderType type, LocalDateTime nowMilli) {
+    static long tSincePrevOrderMilli(String name, AutoOrderType type, LocalDateTime nowMilli) {
         long numOrders = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type).count();
@@ -3095,7 +3095,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
 
-    private static double getAvgFilledBuyPriceForOrderType(String name, AutoOrderType type) {
+    static double getAvgFilledBuyPriceForOrderType(String name, AutoOrderType type) {
         double botUnits = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
@@ -3116,7 +3116,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .sum() / botUnits;
     }
 
-    private static double getAvgFilledSellPriceForOrderType(String name, AutoOrderType type) {
+    static double getAvgFilledSellPriceForOrderType(String name, AutoOrderType type) {
         double soldUnits = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
@@ -3161,7 +3161,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
     //filled order type
-    private static double getOrderTotalSignedQForTypeFilled(String name, AutoOrderType type) {
+    static double getOrderTotalSignedQForTypeFilled(String name, AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
@@ -3171,7 +3171,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
     //filled + pred
-    private static double getTotalFilledOrderSignedQPred(String name, Predicate<AutoOrderType> p) {
+    static double getTotalFilledOrderSignedQPred(String name, Predicate<AutoOrderType> p) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTicker().equals(name))
                 .filter(e -> (e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled))
