@@ -6,10 +6,7 @@ import apidemo.*;
 import client.*;
 import client.Types.*;
 import controller.ApiConnection.ILogger;
-import handler.HistDataConsumer;
-import handler.HistoricalHandler;
-import handler.LiveHandler;
-import handler.SGXFutureReceiver;
+import handler.*;
 import historical.Request;
 import utility.Utility;
 
@@ -1005,6 +1002,13 @@ public class ApiController implements EWrapper {
         ChinaData.priceMapBar.keySet().stream().filter(e -> e.startsWith("hk")).forEach(k -> {
             String ticker = k.substring(2);
             req1StockLive(ticker, "SEHK", "HKD", new LiveHandler.DefaultLiveHandler(), false);
+        });
+    }
+
+    public void reqHKAutoTrader() {
+        AutoTraderHK.hkNames.forEach(k -> {
+            String ticker = k.substring(2);
+            req1StockLive(ticker, "SEHK", "HKD", HKReceiver.getReceiver(), false);
         });
     }
 

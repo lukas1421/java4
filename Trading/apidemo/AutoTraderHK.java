@@ -27,11 +27,10 @@ import static util.AutoOrderType.HK_STOCK_HILO;
 import static utility.Utility.pr;
 import static utility.Utility.str;
 
-public class AutoTraderHK {
+public class AutoTraderHK  {
 
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalDateTime, Double>> hkPriceMapDetail
             = new ConcurrentHashMap<>();
-
     public static volatile ConcurrentHashMap<String, Double> hkBidMap = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, Double> hkAskMap = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, Double> hkOpenMap = new ConcurrentHashMap<>();
@@ -44,7 +43,7 @@ public class AutoTraderHK {
 
     public static long MAX_ORDER_HK = 4;
 
-    private static List<String> hkNames = new ArrayList<>();
+    public static List<String> hkNames = new ArrayList<>();
 
     AutoTraderHK() {
         //start with 1 name
@@ -77,6 +76,10 @@ public class AutoTraderHK {
         Direction currDir = hkOpenDevDirection.get(name);
 
         pr(" HK open dev, name, price ", nowMilli, name, freshPrice);
+
+        if (lt.isBefore(ltof(9, 20)) || lt.isAfter(ltof(10, 0))) {
+            return;
+        }
 
         if (!manualHKDevMap.get(name).get()) {
             if (lt.isBefore(ltof(9, 20, 0))) {
@@ -134,6 +137,10 @@ public class AutoTraderHK {
 
         pr(" HK hilo, name, price ", nowMilli, name, freshPrice);
 
+        if (lt.isBefore(ltof(9, 20)) || lt.isAfter(ltof(10, 0))) {
+            return;
+        }
+
         LocalDateTime lastKey = prices.lastKey();
 
         double maxSoFar = prices.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
@@ -187,4 +194,6 @@ public class AutoTraderHK {
             hkHiloDirection.put(name, Direction.Short);
         }
     }
+
+
 }
