@@ -12,8 +12,7 @@ import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderXU.*;
 import static apidemo.XuTraderHelper.outputOrderToAutoLog;
 import static apidemo.XuTraderHelper.outputPurelyOrdersDetailed;
-import static utility.Utility.ibContractToFutType;
-import static utility.Utility.str;
+import static utility.Utility.*;
 
 public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
 
@@ -62,7 +61,8 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
 
                 int id = AutoTraderMain.autoTradeID.incrementAndGet();
                 controller.placeOrModifyOrder(activeFutureCt, o, new GuaranteeOrderHandler(id, controller));
-                globalIdOrderMap.put(id, new OrderAugmented(LocalDateTime.now(), o,
+                globalIdOrderMap.put(id, new OrderAugmented(
+                        ibContractToSymbol(activeFutureCt), LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
                 outputOrderToAutoLog(str(prevOrder.orderId(), "->", o.orderId(),

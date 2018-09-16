@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.TradingConstants.FTSE_INDEX;
 import static java.lang.System.out;
@@ -125,7 +126,7 @@ public class XuTraderHelper {
     }
 
     static void outputOrderToAutoLog(String s) {
-        if (AutoTraderMain.globalIdOrderMap.size() == 1) {
+        if (globalIdOrderMap.size() == 1) {
             outputPurelyOrders(str("***", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "***"));
         }
         outputToAutoLog("****************ORDER************************");
@@ -665,7 +666,7 @@ public class XuTraderHelper {
     }
 
     static double getTotalFilledSignedQForType(AutoOrderType type) {
-        return AutoTraderMain.globalIdOrderMap.entrySet().stream()
+        return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
                 .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
@@ -673,14 +674,14 @@ public class XuTraderHelper {
     }
 
     static OrderStatus getLastOrderStatusForType(AutoOrderType type) {
-        long size = AutoTraderMain.globalIdOrderMap.entrySet().stream()
+        long size = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type).count();
 
         if (size == 0L) {
             return OrderStatus.NoOrder;
         }
 
-        return AutoTraderMain.globalIdOrderMap.entrySet().stream()
+        return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                 .map(e -> e.getValue().getAugmentedOrderStatus())

@@ -68,14 +68,14 @@ public class AutoTraderUS {
         if (last > open && usOpenDevDirection.get(name) != Direction.Long) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimitTIF(freshPrice, defaultStockSize, Types.TimeInForce.DAY);
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, US_STOCK_DEV));
+            globalIdOrderMap.put(id, new OrderAugmented(name, nowMilli, o, US_STOCK_DEV));
             apcon.placeOrModifyOrder(ct, o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "US open dev BUY", globalIdOrderMap.get(id)));
             usHiloDirection.put(name, Direction.Long);
         } else if (last < open && usOpenDevDirection.get(name) != Direction.Short) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimitTIF(freshPrice, defaultStockSize, Types.TimeInForce.DAY);
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, US_STOCK_DEV));
+            globalIdOrderMap.put(id, new OrderAugmented(name, nowMilli, o, US_STOCK_DEV));
             apcon.placeOrModifyOrder(ct, o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
             outputOrderToAutoLog(str(o.orderId(), "US open dev SELL", globalIdOrderMap.get(id)));
             usHiloDirection.put(name, Direction.Short);
@@ -96,14 +96,14 @@ public class AutoTraderUS {
         if (last > open && usHiloDirection.get(name) != Direction.Long) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimitTIF(freshPrice, defaultStockSize, Types.TimeInForce.DAY);
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, US_STOCK_DEV));
+            globalIdOrderMap.put(id, new OrderAugmented(name, nowMilli, o, US_STOCK_DEV));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeOrderHandler(id, apcon));
             outputOrderToAutoLog(str(o.orderId(), "US hilo buy", globalIdOrderMap.get(id)));
             usHiloDirection.put(name, Direction.Long);
         } else if (last < open && usHiloDirection.get(name) != Direction.Short) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimitTIF(freshPrice, defaultStockSize, Types.TimeInForce.IOC);
-            globalIdOrderMap.put(id, new OrderAugmented(nowMilli, o, US_STOCK_DEV));
+            globalIdOrderMap.put(id, new OrderAugmented(name, nowMilli, o, US_STOCK_DEV));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeOrderHandler(id, apcon));
             outputOrderToAutoLog(str(o.orderId(), "US hilo sell", globalIdOrderMap.get(id)));
             usHiloDirection.put(name, Direction.Short);
