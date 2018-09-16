@@ -698,11 +698,23 @@ public class XuTraderHelper {
                 .map(Map.Entry::getKey).orElse(LocalTime.MIN);
     }
 
+    static LocalDateTime getFirstMaxTPredLdt(NavigableMap<LocalDateTime, Double> mp, Predicate<LocalDateTime> p) {
+        return mp.entrySet().stream().filter(e -> p.test(e.getKey()))
+                .max((e1, e2) -> e1.getValue() >= e2.getValue() ? 1 : -1)
+                .map(Map.Entry::getKey).orElse(LocalDateTime.MIN);
+    }
+
     //for min, use > for first min
     static LocalTime getFirstMinTPred(NavigableMap<LocalTime, Double> mp, Predicate<LocalTime> p) {
         return mp.entrySet().stream().filter(e -> p.test(e.getKey()))
                 .min((e1, e2) -> e1.getValue() > e2.getValue() ? 1 : -1)
                 .map(Map.Entry::getKey).orElse(LocalTime.MIN);
+    }
+
+    static LocalDateTime getFirstMinTPredLdt(NavigableMap<LocalDateTime, Double> mp, Predicate<LocalDateTime> p) {
+        return mp.entrySet().stream().filter(e -> p.test(e.getKey()))
+                .min((e1, e2) -> e1.getValue() > e2.getValue() ? 1 : -1)
+                .map(Map.Entry::getKey).orElse(LocalDateTime.MIN);
     }
 
     private static int getClosingPercentile(NavigableMap<LocalDateTime, SimpleBar> futdata, LocalDate dt) {
@@ -765,7 +777,7 @@ public class XuTraderHelper {
             System.out.println("connected in XUconnectionhandler");
             AutoTraderXU.connectionStatus = true;
             AutoTraderXU.connectionLabel.setText(Boolean.toString(AutoTraderXU.connectionStatus));
-            //AutoTraderXU.apcon.setConnectionStatus(true);
+            //AutoTraderXU.usApcon.setConnectionStatus(true);
         }
 
         @Override

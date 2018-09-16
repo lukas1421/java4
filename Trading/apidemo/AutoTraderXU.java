@@ -419,7 +419,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //                                .skip(invOrderCount - 1).peek(e -> pr(str("last order ", e.getValue())))
 //                                .forEach(e -> {
 //                                    if (e.getValue().getAugmentedOrderStatus() != OrderStatus.Cancelled) {
-//                                        apcon.cancelOrder(e.getValue().getOrder().orderId());
+//                                        usApcon.cancelOrder(e.getValue().getOrder().orderId());
 //                                        e.getValue().setFinalActionTime(LocalDateTime.now());
 //                                        e.getValue().setAugmentedOrderStatus(OrderStatus.Cancelled);
 //                                    } else {
@@ -2160,11 +2160,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
     }
 
-    private static LocalTime ltof(int h, int m) {
+    static LocalTime ltof(int h, int m) {
         return LocalTime.of(h, m);
     }
 
-    private static LocalTime ltof(int h, int m, int s) {
+    static LocalTime ltof(int h, int m, int s) {
         return LocalTime.of(h, m, s);
     }
 

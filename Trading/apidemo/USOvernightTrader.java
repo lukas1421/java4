@@ -6,7 +6,6 @@ import controller.ApiController;
 import graph.GraphBarTemporal;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -15,7 +14,8 @@ public class USOvernightTrader extends JPanel {
 
     static boolean connectionStatus = true;
     static JLabel connectionLabel;
-    static ApiController apcon = new ApiController(new USConnectionHandler(),
+
+    static ApiController usApcon = new ApiController(new USConnectionHandler(),
             new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
 
     static GraphBarTemporal<LocalDateTime> graph1 = new GraphBarTemporal<>();
@@ -66,17 +66,17 @@ public class USOvernightTrader extends JPanel {
     void connectToTWS(int port) {
         System.out.println(" trying to connect");
         try {
-            apcon.connect("127.0.0.1", port, 101, "");
+            usApcon.connect("127.0.0.1", port, 101, "");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        apcon.client().reqIds(-1);
+        usApcon.client().reqIds(-1);
         //orderIdNo = new AtomicInteger();
     }
 
 
     static ApiController getAPICon() {
-        return apcon;
+        return usApcon;
     }
 
     public static void main(String[] args) {
@@ -99,7 +99,7 @@ class USConnectionHandler implements ApiController.IConnectionHandler {
         System.out.println("connected in US Connection handler");
         USOvernightTrader.connectionStatus = true;
         USOvernightTrader.connectionLabel.setText(Boolean.toString(USOvernightTrader.connectionStatus));
-        USOvernightTrader.apcon.setConnectionStatus(true);
+        USOvernightTrader.usApcon.setConnectionStatus(true);
     }
 
     @Override
