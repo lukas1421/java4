@@ -4,7 +4,6 @@ import client.Contract;
 import client.Order;
 import client.OrderAugmented;
 import client.Types;
-import controller.ApiController;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -72,11 +71,35 @@ public class AutoTraderHK {
         double last = hkFreshPriceMap.getOrDefault(name, 0.0);
         Direction currDir = hkOpenDevDirection.get(name);
 
-        pr(" HK open dev, name, price ", nowMilli, name, freshPrice);
+        if (prices.size() < 1) {
+            return;
+        }
+        LocalDate thisDate = prices.firstKey().toLocalDate();
+
 
         if (lt.isBefore(ltof(9, 20)) || lt.isAfter(ltof(10, 0))) {
             return;
         }
+
+        double manualOpen = prices.ceilingEntry(ldtof(thisDate, ltof(9, 20))).getValue();
+        double firstTick = prices.entrySet().stream().filter(e -> e.getKey().isAfter(ldtof(thisDate, ltof(9, 20, 0))))
+                .filter(e -> Math.abs(e.getValue() - manualOpen) > 0.01).findFirst().map(Map.Entry::getValue).get();
+
+//        double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(12, 58)).getValue();
+//
+//        double pmFirstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(12, 58, 0)))
+//                .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getValue)
+//                .orElse(pmOpen);
+
+        LocalDateTime firstTickTime = prices.entrySet().stream()
+                .filter(e -> e.getKey().isAfter(ldtof(thisDate, ltof(9, 20, 0))))
+                .filter(e -> Math.abs(e.getValue() - manualOpen) > 0.01).findFirst().map(Map.Entry::getKey)
+                .orElse(LocalDateTime.MIN);
+
+        pr(" HK open dev, name, price ", nowMilli, name, freshPrice,
+                "open manualopen firsttick, firstticktime",
+                hkOpenMap.getOrDefault(name, 0.0), manualOpen, firstTick, firstTickTime);
 
         if (!manualHKDevMap.get(name).get()) {
             if (lt.isBefore(ltof(9, 20, 0))) {
@@ -107,14 +130,14 @@ public class AutoTraderHK {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, hkStockSize, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(name, nowMilli, o, HK_STOCK_DEV));
-                apcon.placeOrModifyOrder(ct, o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "HK open dev BUY", globalIdOrderMap.get(id)));
                 hkOpenDevDirection.put(name, Direction.Long);
             } else if (!noMoreSell.get() && last < open && hkOpenDevDirection.get(name) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, hkStockSize, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(name, nowMilli, o, HK_STOCK_DEV));
-                apcon.placeOrModifyOrder(ct, o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLog(str(o.orderId(), "HK open dev SELL", globalIdOrderMap.get(id)));
                 hkOpenDevDirection.put(name, Direction.Short);
             }
@@ -182,14 +205,16 @@ public class AutoTraderHK {
         }
 
         if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && maxSoFar != 0.0 && minSoFar != 0.0) {
-            if (!noMoreBuy.get() && (freshPrice > maxSoFar || maxT.isAfter(minT)) && hkHiloDirection.get(name) != Direction.Long) {
+            if (!noMoreBuy.get() && (freshPrice > maxSoFar || maxT.isAfter(minT))
+                    && hkHiloDirection.get(name) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, hkStockSize, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(name, nowMilli, o, HK_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeOrderHandler(id, apcon));
                 outputOrderToAutoLog(str(o.orderId(), "HK hilo buy", globalIdOrderMap.get(id)));
                 hkHiloDirection.put(name, Direction.Long);
-            } else if (!noMoreSell.get() && (freshPrice < minSoFar || minT.isAfter(maxT)) && hkHiloDirection.get(name) != Direction.Short) {
+            } else if (!noMoreSell.get() && (freshPrice < minSoFar || minT.isAfter(maxT))
+                    && hkHiloDirection.get(name) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, hkStockSize, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(name, nowMilli, o, HK_STOCK_HILO));
