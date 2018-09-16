@@ -48,6 +48,10 @@ public class AutoTraderHK {
         //start with 1 name
         hkNames.add("700");
         hkNames.forEach((s) -> {
+            if (!ChinaData.priceMapBarDetail.containsKey(s)) {
+                ChinaData.priceMapBarDetail.put(s, new ConcurrentSkipListMap<>());
+            }
+
             manualHKDevMap.put(s, new AtomicBoolean(false));
             manualHKHiloMap.put(s, new AtomicBoolean(false));
             hkOpenMap.put(s, 0.0);
@@ -76,7 +80,7 @@ public class AutoTraderHK {
         LocalTime lt = nowMilli.toLocalTime();
         Contract ct = generateHKContract(name);
         //persistence is an issue
-        NavigableMap<LocalDateTime, Double> prices = hkPriceMapDetail.get(name);
+        NavigableMap<LocalTime, Double> prices = ChinaData.priceMapBarDetail.get(name);
         double open = hkOpenMap.getOrDefault(name, 0.0);
         double last = hkFreshPriceMap.getOrDefault(name, 0.0);
         Direction currDir = hkOpenDevDirection.get(name);
@@ -84,15 +88,15 @@ public class AutoTraderHK {
         if (prices.size() < 1) {
             return;
         }
-        LocalDate thisDate = prices.firstKey().toLocalDate();
+        LocalDate thisDate = nowMilli.toLocalDate();
 
 
         if (lt.isBefore(ltof(9, 20)) || lt.isAfter(ltof(10, 0))) {
             return;
         }
 
-        double manualOpen = prices.ceilingEntry(ldtof(thisDate, ltof(9, 20))).getValue();
-        double firstTick = prices.entrySet().stream().filter(e -> e.getKey().isAfter(ldtof(thisDate, ltof(9, 20, 0))))
+        double manualOpen = prices.ceilingEntry(ltof(9, 20)).getValue();
+        double firstTick = prices.entrySet().stream().filter(e -> e.getKey().isAfter(ltof(9, 20, 0)))
                 .filter(e -> Math.abs(e.getValue() - manualOpen) > 0.01).findFirst().map(Map.Entry::getValue).get();
 
 //        double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(12, 58)).getValue();
@@ -102,10 +106,10 @@ public class AutoTraderHK {
 //                .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getValue)
 //                .orElse(pmOpen);
 
-        LocalDateTime firstTickTime = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ldtof(thisDate, ltof(9, 20, 0))))
+        LocalTime firstTickTime = prices.entrySet().stream()
+                .filter(e -> e.getKey().isAfter(ltof(9, 20, 0)))
                 .filter(e -> Math.abs(e.getValue() - manualOpen) > 0.01).findFirst().map(Map.Entry::getKey)
-                .orElse(ldtof(thisDate, LocalTime.MIN));
+                .orElse(LocalTime.MIN);
 
         pr(" HK open dev, name, price ", nowMilli, name, freshPrice,
                 "open manualopen firsttick, firstticktime",
@@ -165,7 +169,7 @@ public class AutoTraderHK {
 
     private static void hkHiloTrader(String name, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
-        NavigableMap<LocalDateTime, Double> prices = hkPriceMapDetail.get(name);
+        NavigableMap<LocalTime, Double> prices = ChinaData.priceMapBarDetail.get(name);
         Contract ct = generateHKContract(name);
         Direction currDir = hkHiloDirection.get(name);
 
@@ -175,7 +179,7 @@ public class AutoTraderHK {
             return;
         }
 
-        LocalDateTime lastKey = prices.lastKey();
+        LocalTime lastKey = prices.lastKey();
 
         double maxSoFar = prices.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
@@ -183,9 +187,10 @@ public class AutoTraderHK {
         double minSoFar = prices.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        LocalDate currDate = prices.firstKey().toLocalDate();
-        LocalDateTime maxT = getFirstMaxTPredLdt(prices, e -> e.isAfter(ldtof(currDate, ltof(9, 19))));
-        LocalDateTime minT = getFirstMinTPredLdt(prices, e -> e.isAfter(ldtof(currDate, ltof(9, 19))));
+        //LocalDate currDate = prices.firstKey().toLocalDate();
+        LocalDate currDate = nowMilli.toLocalDate();
+        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 19)));
+        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(ltof(9, 19)));
 
         pr("hk ", name, " currDate max min maxT minT ", currDate, maxSoFar, minSoFar, maxT, minT);
 
@@ -218,7 +223,7 @@ public class AutoTraderHK {
             if (!noMoreBuy.get() && (freshPrice > maxSoFar || maxT.isAfter(minT))
                     && hkHiloDirection.get(name) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, hkStockSize, Types.TimeInForce.DAY);
+                Order o = placeBidLimitTIF(freshPrice, hkStockSize, Types.TimeInForce.IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(name, nowMilli, o, HK_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeOrderHandler(id, apcon));
                 outputOrderToAutoLog(str(o.orderId(), "HK hilo buy", globalIdOrderMap.get(id)));

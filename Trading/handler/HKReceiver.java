@@ -1,5 +1,6 @@
 package handler;
 
+import apidemo.ChinaData;
 import client.TickType;
 
 import java.time.LocalDateTime;
@@ -32,6 +33,7 @@ public class HKReceiver implements LiveHandler {
                 break;
             case LAST:
                 hkPriceMapDetail.get(name).put(t, price);
+                ChinaData.priceMapBarDetail.get(name).put(t.toLocalTime(), price);
                 hkFreshPriceMap.put(name, price);
                 processeMainHK(name, t, price);
                 break;
