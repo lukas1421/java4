@@ -125,7 +125,7 @@ public class XuTraderHelper {
     }
 
     static void outputOrderToAutoLog(String s) {
-        if (XUTrader.globalIdOrderMap.size() == 1) {
+        if (AutoTraderXU.globalIdOrderMap.size() == 1) {
             outputPurelyOrders(str("***", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "***"));
         }
         outputToAutoLog("****************ORDER************************");
@@ -451,10 +451,10 @@ public class XuTraderHelper {
 //            }
 //            return proposedPos;
 //        } else if (proposedPos * curr > 0) {
-//            if (Math.abs(proposedPos + curr) <= XUTrader.MAX_FUT_LIMIT) {
+//            if (Math.abs(proposedPos + curr) <= AutoTraderXU.MAX_FUT_LIMIT) {
 //                return proposedPos;
 //            } else {
-//                return (curr > 0 ? 1 : -1) * XUTrader.MAX_FUT_LIMIT - curr;
+//                return (curr > 0 ? 1 : -1) * AutoTraderXU.MAX_FUT_LIMIT - curr;
 //            }
 //        }
 //        return proposedPos;
@@ -465,25 +465,25 @@ public class XuTraderHelper {
 
 //    static void setLongShortTradability(int currPos) {
 //        if (currPos > 0) {
-//            XUTrader.canLongGlobal.set(currPos < XUTrader.MAX_FUT_LIMIT);
-//            XUTrader.canShortGlobal.set(true);
+//            AutoTraderXU.canLongGlobal.set(currPos < AutoTraderXU.MAX_FUT_LIMIT);
+//            AutoTraderXU.canShortGlobal.set(true);
 //        } else if (currPos < 0) {
-//            XUTrader.canLongGlobal.set(true);
-//            XUTrader.canShortGlobal.set(Math.abs(currPos) < XUTrader.MAX_FUT_LIMIT);
+//            AutoTraderXU.canLongGlobal.set(true);
+//            AutoTraderXU.canShortGlobal.set(Math.abs(currPos) < AutoTraderXU.MAX_FUT_LIMIT);
 //        } else {
-//            XUTrader.canLongGlobal.set(true);
-//            XUTrader.canShortGlobal.set(true);
+//            AutoTraderXU.canLongGlobal.set(true);
+//            AutoTraderXU.canShortGlobal.set(true);
 //        }
 //    }
 
     public static void connectToTWS() {
         out.println(" trying to connect");
         try {
-            XUTrader.apcon.connect("127.0.0.1", 7496, 101, "");
+            AutoTraderXU.apcon.connect("127.0.0.1", 7496, 101, "");
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        XUTrader.apcon.client().reqIds(-1);
+        AutoTraderXU.apcon.client().reqIds(-1);
     }
 
     public static boolean orderMakingMoney(Order o, double currPrice) {
@@ -525,7 +525,7 @@ public class XuTraderHelper {
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(
                 priceMapBar.get(anchorIndex), nowMilli.toLocalDate(), e -> e.isBefore(LocalTime.of(11, 30)) &&
                         e.isAfter(LocalTime.of(12, 59)));
-        NavigableMap<LocalDateTime, SimpleBar> fut = XUTrader.futData.get(ibContractToFutType(XUTrader.activeFutureCt));
+        NavigableMap<LocalDateTime, SimpleBar> fut = AutoTraderXU.futData.get(ibContractToFutType(AutoTraderXU.activeFutureCt));
         double futClose = fut.lowerEntry(LocalDateTime.of(LocalDate.now(), LocalTime.of(15, 0))).getValue().getClose();
         int shorterMA = 5;
         int longerMA = 10;
@@ -665,7 +665,7 @@ public class XuTraderHelper {
     }
 
     static double getTotalFilledSignedQForType(AutoOrderType type) {
-        return XUTrader.globalIdOrderMap.entrySet().stream()
+        return AutoTraderXU.globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
                 .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
@@ -673,14 +673,14 @@ public class XuTraderHelper {
     }
 
     static OrderStatus getLastOrderStatusForType(AutoOrderType type) {
-        long size = XUTrader.globalIdOrderMap.entrySet().stream()
+        long size = AutoTraderXU.globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type).count();
 
         if (size == 0L) {
             return OrderStatus.NoOrder;
         }
 
-        return XUTrader.globalIdOrderMap.entrySet().stream()
+        return AutoTraderXU.globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getOrderType() == type)
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                 .map(e -> e.getValue().getAugmentedOrderStatus())
@@ -736,7 +736,7 @@ public class XuTraderHelper {
                 LocalDate.now();
         int candidate = 50;
         NavigableMap<LocalDateTime, Double> dpMap = new ConcurrentSkipListMap<>();
-        XUTrader.futData.get(ibContractToFutType(XUTrader.activeFutureCt)).entrySet().stream().filter(e -> e.getKey()
+        AutoTraderXU.futData.get(ibContractToFutType(AutoTraderXU.activeFutureCt)).entrySet().stream().filter(e -> e.getKey()
                 .isAfter(LocalDateTime.of(d, LocalTime.of(9, 29)))).forEach(e -> {
             if (priceMapBar.get(FTSE_INDEX).size() > 0 && priceMapBar.get(FTSE_INDEX).
                     firstKey().isBefore(e.getKey().toLocalTime())) {
@@ -746,7 +746,7 @@ public class XuTraderHelper {
             }
         });
 
-        if (XUTrader.detailedPrint.get()) {
+        if (AutoTraderXU.detailedPrint.get()) {
             if (dpMap.size() > 0) {
                 pr(" PD last: ", dpMap.lastEntry(),
                         " max: ", dpMap.entrySet().stream().mapToDouble(Map.Entry::getValue).max().orElse(0.0),
@@ -763,16 +763,16 @@ public class XuTraderHelper {
         @Override
         public void connected() {
             System.out.println("connected in XUconnectionhandler");
-            XUTrader.connectionStatus = true;
-            XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
-            //XUTrader.apcon.setConnectionStatus(true);
+            AutoTraderXU.connectionStatus = true;
+            AutoTraderXU.connectionLabel.setText(Boolean.toString(AutoTraderXU.connectionStatus));
+            //AutoTraderXU.apcon.setConnectionStatus(true);
         }
 
         @Override
         public void disconnected() {
             System.out.println("disconnected in XUConnectionHandler");
-            XUTrader.connectionStatus = false;
-            XUTrader.connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
+            AutoTraderXU.connectionStatus = false;
+            AutoTraderXU.connectionLabel.setText(Boolean.toString(AutoTraderXU.connectionStatus));
         }
 
         @Override

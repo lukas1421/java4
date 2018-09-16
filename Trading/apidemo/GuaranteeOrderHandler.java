@@ -8,7 +8,7 @@ import java.time.LocalTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static apidemo.XUTrader.*;
+import static apidemo.AutoTraderXU.*;
 import static apidemo.XuTraderHelper.outputOrderToAutoLog;
 import static apidemo.XuTraderHelper.outputPurelyOrdersDetailed;
 import static utility.Utility.ibContractToFutType;

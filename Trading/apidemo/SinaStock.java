@@ -116,18 +116,18 @@ public class SinaStock implements Runnable {
                             && ldt.toLocalTime().isBefore(LocalTime.of(15, 5))) { //change this later
                         priceMapBarDetail.get(FTSE_INDEX).put(ldt.toLocalTime(), currIndexPrice);
 
-                        XUTrader.indexFirstTickTrader(ldt, currIndexPrice); //1 tick, guarantee
-                        XUTrader.indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
-                        XUTrader.indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee
+                        AutoTraderXU.indexFirstTickTrader(ldt, currIndexPrice); //1 tick, guarantee
+                        AutoTraderXU.indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
+                        AutoTraderXU.indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee
 
-                        XUTrader.indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 14:00, guarantee
-                        XUTrader.indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 14pm, no guarantee
-                        XUTrader.intradayMAProfitTaker(ldt, currIndexPrice); //all day, guarantee
+                        AutoTraderXU.indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 14:00, guarantee
+                        AutoTraderXU.indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 14pm, no guarantee
+                        AutoTraderXU.intradayMAProfitTaker(ldt, currIndexPrice); //all day, guarantee
 
-                        //XUTrader.closeProfitTaker(ldt, currIndexPrice);
-                        //XUTrader.firstTickMAProfitTaker(ldt, currIndexPrice);
-                        //XUTrader.indexHiloAccumulator(ldt, currIndexPrice);
-                        //XUTrader.intraday1stTickAccumulator(ldt, currIndexPrice);
+                        //AutoTraderXU.closeProfitTaker(ldt, currIndexPrice);
+                        //AutoTraderXU.firstTickMAProfitTaker(ldt, currIndexPrice);
+                        //AutoTraderXU.indexHiloAccumulator(ldt, currIndexPrice);
+                        //AutoTraderXU.intraday1stTickAccumulator(ldt, currIndexPrice);
                     }
                 }
 

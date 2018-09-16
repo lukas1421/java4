@@ -46,7 +46,7 @@ import static java.time.temporal.ChronoUnit.*;
 import static util.AutoOrderType.*;
 import static utility.Utility.*;
 
-public final class XUTrader extends JPanel implements HistoricalHandler, ApiController.IDeepMktDataHandler,
+public final class AutoTraderXU extends JPanel implements HistoricalHandler, ApiController.IDeepMktDataHandler,
         ApiController.ITradeReportHandler, ApiController.IOrderHandler, ApiController.ILiveOrderHandler
         , ApiController.IPositionHandler, ApiController.IConnectionHandler {
 
@@ -71,7 +71,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     //static final int MAX_FUT_LIMIT = 20;
     //static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
     //static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
-    static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
+    public static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
     private static final int HI_PERC = 95;
     private static final int LO_PERC = 5;
@@ -227,7 +227,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static volatile boolean connectionStatus = false;
     static volatile JLabel connectionLabel = new JLabel();
 
-    XUTrader(ApiController ap) {
+    AutoTraderXU(ApiController ap) {
         pr(str(" ****** front fut ******* ", frontFut.symbol(), frontFut.lastTradeDateOrContractMonth()));
         pr(str(" ****** back fut ******* ", backFut.symbol(), backFut.lastTradeDateOrContractMonth()));
 
@@ -349,7 +349,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                     (LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString() + ":00");
             currTimeLabel.setText(time);
             xuGraph.fillInGraph(futData.get(ibContractToFutType(activeFutureCt)));
-            xuGraph.fillTradesMap(XUTrader.tradesMap.get(ibContractToFutType(activeFutureCt)));
+            xuGraph.fillTradesMap(AutoTraderXU.tradesMap.get(ibContractToFutType(activeFutureCt)));
             xuGraph.setName(ibContractToSymbol(activeFutureCt));
             xuGraph.setFut(ibContractToFutType(activeFutureCt));
             xuGraph.setPrevClose(futPrevClose3pmMap.get(ibContractToFutType(activeFutureCt)));
@@ -453,10 +453,10 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         processTradesButton = new JButton("Process");
         processTradesButton.addActionListener(l -> ses2.scheduleAtFixedRate(() -> {
             SwingUtilities.invokeLater(() -> {
-                XUTrader.clearLog();
-                XUTrader.updateLog("**************************************************************");
+                AutoTraderXU.clearLog();
+                AutoTraderXU.updateLog("**************************************************************");
             });
-            XUTrader.computeTradeMapActive();
+            AutoTraderXU.computeTradeMapActive();
         }, 0, 10, TimeUnit.SECONDS));
 
         JButton getData = new JButton("Data");
@@ -1047,7 +1047,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
         return 0.0;
     }
 
-    public XUTrader getThis() {
+    public AutoTraderXU getThis() {
         return this;
     }
 
@@ -2480,7 +2480,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
      */
     static void firstTickMAProfitTaker(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
-        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFutureCt));
+        double freshPrice = AutoTraderXU.futPriceMap.get(ibContractToFutType(activeFutureCt));
         int pmchy = getRecentPmCh(lt, INDEX_000001);
         if (!checkTimeRangeBool(lt, 9, 29, 15, 0)) {
             return;
@@ -2564,7 +2564,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     static void closeProfitTaker(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         //double freshPrice = futPriceMap.get(FutType.FrontFut);
-        double freshPrice = XUTrader.futPriceMap.get(ibContractToFutType(activeFutureCt));
+        double freshPrice = AutoTraderXU.futPriceMap.get(ibContractToFutType(activeFutureCt));
         double currDelta = getNetPtfDelta();
         double deltaTgt = getDeltaTarget(nowMilli, getRecentPmCh(lt, INDEX_000001));
 
@@ -3212,7 +3212,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
             if (lt.equals(ltof(4, 44))) {
                 pr(" filling fut am close ", name, ldt, close);
-                XUTrader.fut5amClose.put(FutType.get(name), close);
+                AutoTraderXU.fut5amClose.put(FutType.get(name), close);
             }
 
 
@@ -3246,11 +3246,11 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
                                double price, int size) {
         SwingUtilities.invokeLater(() -> {
             if (side.equals(Types.DeepSide.BUY)) {
-                XUTrader.bidLabelList.get(position).setText(Utility.getStrCheckNull(price, "            ", size));
-                XUTrader.bidPriceList.put("bid" + Integer.toString(position + 1), price);
+                AutoTraderXU.bidLabelList.get(position).setText(Utility.getStrCheckNull(price, "            ", size));
+                AutoTraderXU.bidPriceList.put("bid" + Integer.toString(position + 1), price);
             } else {
-                XUTrader.askLabelList.get(position).setText(Utility.getStrCheckNull(price, "            ", size));
-                XUTrader.offerPriceList.put("ask" + Integer.toString(position + 1), price);
+                AutoTraderXU.askLabelList.get(position).setText(Utility.getStrCheckNull(price, "            ", size));
+                AutoTraderXU.offerPriceList.put("ask" + Integer.toString(position + 1), price);
             }
         });
     }
@@ -3368,7 +3368,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
         SwingUtilities.invokeLater(() -> {
             if (ticker.equals("SGXA50")) {
-                XUTrader.outputArea.repaint();
+                AutoTraderXU.outputArea.repaint();
             }
         });
     }
@@ -3382,7 +3382,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
     public void connected() {
         pr("connected in XUconnectionhandler");
         connectionStatus = true;
-        connectionLabel.setText(Boolean.toString(XUTrader.connectionStatus));
+        connectionLabel.setText(Boolean.toString(AutoTraderXU.connectionStatus));
         apcon.setConnectionStatus(true);
     }
 
@@ -3433,7 +3433,7 @@ public final class XUTrader extends JPanel implements HistoricalHandler, ApiCont
 
     @SuppressWarnings("unused")
     static double getNetPnlForAllFuts() {
-        return Arrays.stream(FutType.values()).mapToDouble(XUTrader::getNetPnlFor1Fut).sum();
+        return Arrays.stream(FutType.values()).mapToDouble(AutoTraderXU::getNetPnlFor1Fut).sum();
     }
 
     private static double getNetPnlFor1Fut(FutType f) {

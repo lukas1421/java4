@@ -605,7 +605,7 @@ public class ChinaPosition extends JPanel {
 
 
     static double getNetPtfDelta() {
-        return getStockPtfDelta() + XUTrader.getFutDelta();
+        return getStockPtfDelta() + AutoTraderXU.getFutDelta();
     }
 
     static double getNetPtfDeltaV2() {

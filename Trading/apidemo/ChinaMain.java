@@ -98,7 +98,7 @@ public final class ChinaMain implements IConnectionHandler {
     private static HKStock hkstock = new HKStock();
     private static ChinaOption chinaOption = new ChinaOption();
     private static HistChinaStocks histChina = new HistChinaStocks();
-    private static XUTrader xutrader = new XUTrader(M_CONTROLLER);
+    private static AutoTraderXU xutrader = new AutoTraderXU(M_CONTROLLER);
     private static USStock usstock = new USStock(M_CONTROLLER);
 
     private SinaStock sinastock1 = SinaStock.getInstance();
@@ -216,7 +216,7 @@ public final class ChinaMain implements IConnectionHandler {
             ses.scheduleAtFixedRate(() -> {
                 ChinaBigGraph.setGraph(ChinaStock.selectedNameStock);
                 ChinaBigGraph.refresh();
-                XUTrader.set20DayBullBear();
+                AutoTraderXU.set20DayBullBear();
             }, 0, 1, TimeUnit.SECONDS);
 
             ses.scheduleAtFixedRate(chinaOption, 0, 5, SECONDS);
