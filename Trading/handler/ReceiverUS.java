@@ -1,10 +1,15 @@
 package handler;
 
+import apidemo.ChinaData;
 import client.TickType;
 
 import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
+import static apidemo.AutoTraderMain.chinaZone;
+import static apidemo.AutoTraderMain.nyZone;
 import static apidemo.AutoTraderUS.*;
+import static utility.Utility.pr;
 
 
 public class ReceiverUS implements LiveHandler {
@@ -19,6 +24,12 @@ public class ReceiverUS implements LiveHandler {
 
     @Override
     public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+
+        ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalDateTime usLdt = usZdt.toLocalDateTime();
+        pr(" US handle price ", tt, symbol, price, "ChinaT: ", t, "US T:", usLdt);
+
         switch (tt) {
             case BID:
                 usBidMap.put(symbol, price);
@@ -28,7 +39,8 @@ public class ReceiverUS implements LiveHandler {
                 break;
             case LAST:
                 usFreshPriceMap.put(symbol, price);
-                processMainUS(symbol, t, price);
+                ChinaData.priceMapBarDetail.get(symbol).put(usLdt.toLocalTime(), price);
+                processMainUS(symbol, usLdt, price);
                 break;
             case OPEN:
                 usOpenMap.put(symbol, price);

@@ -1,8 +1,10 @@
 import apidemo.Direction;
-import utility.Utility;
 
-import java.time.LocalTime;
-import java.util.TreeMap;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+
+import static utility.Utility.pr;
 
 public class Test {
 
@@ -11,23 +13,17 @@ public class Test {
     }
 
     public static void main(String[] args) {
-        TreeMap<LocalTime, Double> m = new TreeMap<>();
-        m.put(LocalTime.of(9, 0), 100.0);
-        m.put(LocalTime.of(10, 0), 100.0);
-        m.put(LocalTime.of(11, 0), 100.0);
-        //first max
-        m.entrySet().stream().max((e1, e2) -> e1.getValue() >= e2.getValue() ? 1 : -1).map(e -> e.getKey()).ifPresent(
-                Utility::pr);
-        //last max
-        m.entrySet().stream().max((e1, e2) -> e1.getValue() > e2.getValue() ? 1 : -1).map(e -> e.getKey()).ifPresent(
-                Utility::pr);
-        //first min
-        m.entrySet().stream().min((e1, e2) -> e1.getValue() > e2.getValue() ? 1 : -1).map(e -> e.getKey()).ifPresent(
-                Utility::pr);
-        //last min
-        m.entrySet().stream().min((e1, e2) -> e1.getValue() >= e2.getValue() ? 1 : -1).map(e -> e.getKey()).ifPresent(
-                Utility::pr);
 
+        LocalDateTime t = LocalDateTime.now();
+
+        ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
+        ZoneId nyZone = ZoneId.of("America/New_York");
+
+        ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalDateTime usLdt = usZdt.toLocalDateTime();
+
+        pr(t, usLdt);
 
         //pr(roundToXUPriceAggressive(11279.62, Direction.Short));
     }

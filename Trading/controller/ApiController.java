@@ -1012,6 +1012,13 @@ public class ApiController implements EWrapper {
         });
     }
 
+    public void reqUSAutoTrader() {
+        AutoTraderUS.usSymbols.forEach(k -> {
+            req1StockLive(k, "SMART", "USD", ReceiverUS.getReceiverUS(), false);
+        });
+    }
+
+
     public void reqHoldingsTodayHist() {
         pr(" request holdings today ");
         CompletableFuture.runAsync(() -> {
@@ -1256,7 +1263,7 @@ public class ApiController implements EWrapper {
             LiveHandler lh = (LiveHandler) ChinaMain.globalRequestMap.get(reqId).getHandler();
             try {
                 lh.handlePrice(TickType.get(tickType),
-                        utility.Utility.ibContractToSymbol(r.getContract()), price,
+                        ibContractToSymbol(r.getContract()), price,
                         LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
             } catch (Exception ex) {
                 pr(" handling price has issues ");

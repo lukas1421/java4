@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static apidemo.AutoTraderMain.*;
 import static apidemo.AutoTraderXU.*;
+import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.XuTraderHelper.*;
 import static client.Types.TimeInForce.DAY;
 import static client.Types.TimeInForce.IOC;
@@ -40,7 +41,7 @@ public class AutoTraderUS {
 
     //public static volatile ;
     public static final int MAX_US_ORDERS = 4;
-    List<String> usSymbolList = new ArrayList<>();
+    public static List<String> usSymbols = new ArrayList<>();
     private static final double usStockSize = 100;
     static String ticker = "IQ";
 
@@ -55,11 +56,17 @@ public class AutoTraderUS {
     }
 
     AutoTraderUS() {
-        //Contract nio = generateUSContract("nio");
         Contract iq = generateUSContract("iq");
         String iqSymbol = ibContractToSymbol(iq);
-        usSymbolList.add(iqSymbol);
-        usSymbolList.forEach(s -> {
+        usSymbols.add(iqSymbol);
+        usSymbols.forEach(s -> {
+            if (!priceMapBarDetail.containsKey(s)) {
+                priceMapBarDetail.put(s, new ConcurrentSkipListMap<>());
+            }
+            usBidMap.put(s, 0.0);
+            usAskMap.put(s, 0.0);
+            usOpenMap.put(s, 0.0);
+            usFreshPriceMap.put(s, 0.0);
             usHiloDirection.put(s, Direction.Flat);
             usOpenDevDirection.put(s, Direction.Flat);
             manualUSDevMap.put(s, new AtomicBoolean(false));

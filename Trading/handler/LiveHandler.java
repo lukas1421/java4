@@ -20,6 +20,7 @@ public interface LiveHandler extends GeneralHandler {
         public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
             LocalTime lt = t.toLocalTime().truncatedTo(ChronoUnit.MINUTES);
             //pr(name, tt, price, t.toLocalTime());
+
             if (tt == TickType.LAST) {
                 ChinaStock.priceMap.put(symbol, price);
                 if (ChinaData.priceMapBar.get(symbol).containsKey(lt)) {

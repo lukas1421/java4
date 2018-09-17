@@ -5,6 +5,7 @@ import controller.ApiController;
 import util.AutoOrderType;
 
 import java.io.File;
+import java.time.ZoneId;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,6 +32,9 @@ public class AutoTraderMain {
     static File hkOrderOutput = new File(TradingConstants.GLOBALPATH + "hkorders.txt");
     static File hkDetailOutput = new File(TradingConstants.GLOBALPATH + "hkordersDetailed.txt");
 
+    //zones
+    public static ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
+    public static ZoneId nyZone = ZoneId.of("America/New_York");
     //position
     static volatile Map<String, Double> ibPositionMap = new ConcurrentHashMap<>();
 

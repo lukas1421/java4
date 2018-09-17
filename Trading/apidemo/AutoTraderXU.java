@@ -2019,32 +2019,42 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         int PM_HILO_BASE = getWeekdayBaseSize(nowMilli.getDayOfWeek()) + 2;
         double bidPrice = bidMap.get(f);
         double askPrice = askMap.get(f);
+        LocalTime cutoff = ltof(13, 30);
 
         if (!checkTimeRangeBool(lt, 12, 58, 13, 30)) {
             return;
         }
 
-        long numPMHiloOrders = getOrderSizeForTradeType(futSymbol, INDEX_PM_HILO);
 
+        long numPMHiloOrders = getOrderSizeForTradeType(futSymbol, INDEX_PM_HILO);
         if (numPMHiloOrders >= MAX_ORDER_SIZE) {
             if (detailedPrint.get()) {
                 pr(" pm hilo exceed max ", MAX_ORDER_SIZE);
             }
             return;
         }
+        int buyQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
+        int sellQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
+        int totalFilled = (int) getOrderTotalSignedQForTypeFilled(futSymbol, INDEX_PM_HILO);
 
-//        if (numPMHiloOrders > 0 && lastStatus != OrderStatus.Filled && lastStatus != OrderStatus.PendingCancel) {
-//            pr(" pm order last not filled ", lastStatus);
-//            return;
-//        }
+        if (lt.isAfter(cutoff)) {
+            if (totalFilled > 0) {
+                buyQ = 0;
+                sellQ = totalFilled;
+            } else if (totalFilled < 0) {
+                buyQ = Math.abs(totalFilled);
+                sellQ = 0;
+            } else {
+                return;
+            }
+        }
+
 
         LocalDateTime lastPMHiLoTradeTime = getLastOrderTime(futSymbol, INDEX_PM_HILO);
         long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(futSymbol, INDEX_PM_HILO);
 
         int pmHiloWaitTimeSeconds = (milliBtwnLastTwoOrders < 60000) ? 300 : 10;
 
-        int buyQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
-        int sellQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
 
         long tBtwnLast2Trades = lastTwoOrderMilliDiff(futSymbol, INDEX_PM_HILO);
         long tSinceLastTrade = tSincePrevOrderMilli(futSymbol, INDEX_PM_HILO, nowMilli);
@@ -2111,7 +2121,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDirection,
                         "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
                         "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar), "pmMaxT,pmMinT", pmMaxT, pmMinT,
-                        "bid ask", bidPrice, askPrice, Math.round(10000d * (askPrice / bidPrice - 1)), "bp"));
+                        "bid ask", bidPrice, askPrice, Math.round(10000d * (askPrice / bidPrice - 1)), "bp",
+                        "total Filled", totalFilled));
                 indexPmHiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && (indexLast < pmMinSoFar || pmMinT.isAfter(pmMaxT))
                     && indexPmHiLoDirection != Direction.Short) {
@@ -2125,7 +2136,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDirection,
                         "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
                         "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar), "pmMaxT,pmMinT", pmMaxT, pmMinT,
-                        "bid ask", bidPrice, askPrice, Math.round(10000d * (askPrice / bidPrice - 1)), "bp"));
+                        "bid ask", bidPrice, askPrice, Math.round(10000d * (askPrice / bidPrice - 1)), "bp",
+                        "total Filled", totalFilled));
                 indexPmHiLoDirection = Direction.Short;
             }
         }

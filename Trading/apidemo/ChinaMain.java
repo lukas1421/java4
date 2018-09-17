@@ -140,10 +140,8 @@ public final class ChinaMain implements IConnectionHandler {
         m_tabbedPanel.addTab("Size", chinaSizeData);
         m_tabbedPanel.addTab("Index", chinaindex);
         m_tabbedPanel.addTab("Size ytd", csdy);
-
         m_tabbedPanel.addTab("Connection", m_connectionPanel);
         m_tabbedPanel.select("Xu trader ");
-
         m_tabbedPanel.addTab(" HK Data", hkdata);
         m_tabbedPanel.addTab(" HK Stock", hkstock);
         m_tabbedPanel.addTab("Option", chinaOption);
@@ -451,6 +449,7 @@ public final class ChinaMain implements IConnectionHandler {
                 pr(" ib conn latch finished waiting " + LocalTime.now());
                 M_CONTROLLER.reqXUDataArray();
                 M_CONTROLLER.reqHKAutoTrader();
+                M_CONTROLLER.reqUSAutoTrader();
                 M_CONTROLLER.reqHKInPosLive();
                 ses.scheduleAtFixedRate(() -> {
                     AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
