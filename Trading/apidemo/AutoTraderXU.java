@@ -64,8 +64,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     private static XUTraderRoll traderRoll;
     private static final int MAX_ORDER_SIZE = 4;
 
-    //global
-    private static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
     private static volatile MASentiment sentiment = MASentiment.Directionless;
     private static final int HI_PERC = 95;

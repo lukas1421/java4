@@ -71,22 +71,29 @@ public class AutoTraderHK extends JPanel {
     private static int hkStockSize = 100;
 
     public static void processeMainHK(String symbol, LocalDateTime nowMilli, double freshPrice) {
-        String ticker = symbol.substring(2);
-        hkOpenDeviationTrader(ticker, nowMilli, freshPrice);
-        hkHiloTrader(ticker, nowMilli, freshPrice);
+        if (!globalTradingOn.get()) {
+            return;
+        }
+        hkOpenDeviationTrader(symbol, nowMilli, freshPrice);
+        hkHiloTrader(symbol, nowMilli, freshPrice);
+    }
+
+    private static String hkSymbolToTicker(String symbol) {
+        return symbol.substring(2);
     }
 
     /**
      * hk open deviation trader
      *
-     * @param ticker     stock name
+     * @param symbol     stock name
      * @param nowMilli   time now
      * @param freshPrice last price
      */
-    private static void hkOpenDeviationTrader(String ticker, LocalDateTime nowMilli, double freshPrice) {
+    private static void hkOpenDeviationTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
+        String ticker = hkSymbolToTicker(symbol);
         Contract ct = generateHKContract(ticker);
-        String symbol = ibContractToSymbol(ct);
+        //String symbol = ibContractToSymbol(ct);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double open = hkOpenMap.getOrDefault(symbol, 0.0);
         double last = hkFreshPriceMap.getOrDefault(symbol, 0.0);
@@ -177,16 +184,16 @@ public class AutoTraderHK extends JPanel {
     /**
      * hk hilo trader for hk
      *
-     * @param ticker     hk stock name
+     * @param symbol     hk stock name
      * @param nowMilli   time now
      * @param freshPrice last hk price
      */
 
-    private static void hkHiloTrader(String ticker, LocalDateTime nowMilli, double freshPrice) {
+    private static void hkHiloTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
-
+        String ticker = hkSymbolToTicker(symbol);
         Contract ct = generateHKContract(ticker);
-        String symbol = ibContractToSymbol(ct);
+        //String symbol = ibContractToSymbol(ct);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
 
         if (prices.size() < 1) {

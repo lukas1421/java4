@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class AutoTraderMain {
 
+    //global
+    static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
     //static final int MAX_FUT_LIMIT = 20;
     //static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
     //static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);

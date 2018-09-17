@@ -961,7 +961,8 @@ public class ApiController implements EWrapper {
 
     }
 
-    private void req1StockLive(String ticker, String exch, String curr, LiveHandler h, boolean snapshot) {
+    public void req1StockLive(String ticker, String exch, String curr, LiveHandler h, boolean snapshot) {
+        pr(" requesting 1 stock live ", ticker, exch, curr);
         try {
             int reqId = m_reqId.incrementAndGet();
             if (reqId % 90 == 0) {
@@ -1053,7 +1054,7 @@ public class ApiController implements EWrapper {
         });
     }
 
-    private Contract generateStockContract(String ticker, String ex, String curr) {
+    private static Contract generateStockContract(String ticker, String ex, String curr) {
         Contract ct = new Contract();
         ct.symbol(ticker);
         ct.exchange(ex);
