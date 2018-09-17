@@ -10,8 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderXU.*;
-import static apidemo.XuTraderHelper.outputOrderToAutoLog;
-import static apidemo.XuTraderHelper.outputPurelyOrdersDetailed;
+import static apidemo.XuTraderHelper.outputOrderToAutoLogXU;
+import static apidemo.XuTraderHelper.outputPurelyOrdersDetailedXU;
 import static utility.Utility.*;
 
 public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
@@ -42,7 +42,7 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
                     "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
                     "ID:", defaultID, globalIdOrderMap.get(defaultID),
                     "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
-            outputPurelyOrdersDetailed(msg);
+            outputPurelyOrdersDetailedXU(msg);
             if (orderState.status() == OrderStatus.PendingCancel &&
                     globalIdOrderMap.get(defaultID).getOrder().tif() == Types.TimeInForce.IOC) {
                 FutType f = ibContractToFutType(activeFutureCt);
@@ -65,7 +65,7 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
                         ibContractToSymbol(activeFutureCt), LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
-                outputOrderToAutoLog(str(prevOrder.orderId(), "->", o.orderId(),
+                outputOrderToAutoLogXU(str(prevOrder.orderId(), "->", o.orderId(),
                         "RESUBMIT. Type, TIF, Action, P, Q,isPrimary", globalIdOrderMap.get(id).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), globalIdOrderMap.get(id).isPrimaryOrder(),
                         "current", globalIdOrderMap.get(id), "bid ask sp last"

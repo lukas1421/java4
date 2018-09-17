@@ -139,12 +139,13 @@ public class XuTraderHelper {
     static void outputOrderToAutoLogXU(String s) {
         outputOrderToAutoLog(s, xuOrderOutput, xuDetailOutput);
     }
+
     static void outputOrderToAutoLogHK(String s) {
         outputOrderToAutoLog(s, hkOrderOutput, hkDetailOutput);
     }
 
 
-    public static void outputPurelyOrders(String s, File order, File detailed) {
+    private static void outputPurelyOrders(String s, File order, File detailed) {
         outputPurelyOrdersDetailed(s, detailed);
         //File output = new File(TradingConstants.GLOBALPATH + "orders.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(order, true))) {
@@ -155,6 +156,10 @@ public class XuTraderHelper {
         }
     }
 
+    public static void outputPurelyOrdersXU(String s) {
+        outputPurelyOrders(s, xuOrderOutput, xuDetailOutput);
+    }
+
     public static void outputPurelyOrdersDetailed(String s, File detailed) {
         //File output = new File(TradingConstants.GLOBALPATH + "ordersDetailed.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(detailed, true))) {
@@ -163,6 +168,11 @@ public class XuTraderHelper {
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+    }
+
+    public static void outputPurelyOrdersDetailedXU(String s) {
+        outputPurelyOrdersDetailed(s, xuDetailOutput);
+        //File output = new File(TradingConstants.GLOBALPATH + "ordersDetailed.txt");
     }
 
     public static <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> mp) {
@@ -256,6 +266,20 @@ public class XuTraderHelper {
         o.outsideRth(true);
         return o;
     }
+
+    static Order placeShortSellLimitTIF(double p, double quantity, Types.TimeInForce tif) {
+        if (quantity <= 0) throw new IllegalStateException(" cannot have negative or 0 quantity");
+        System.out.println(" place short sell " + p);
+        Order o = new Order();
+        o.action(Types.Action.SSHORT);
+        o.lmtPrice(p);
+        o.orderType(OrderType.LMT);
+        o.totalQuantity(quantity);
+        o.tif(tif);
+        o.outsideRth(true);
+        return o;
+    }
+
 
     static Order placeBidLimit(double p, double quantity) {
         return placeBidLimitTIF(p, quantity, Types.TimeInForce.DAY);

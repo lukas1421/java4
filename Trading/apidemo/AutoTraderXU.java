@@ -277,9 +277,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             pr(" sell bid ");
             int id = autoTradeID.incrementAndGet();
             Order o = sellAtBid(bidMap.get(ibContractToFutType(activeFutureCt)), 1.0);
-            globalIdOrderMap.put(id, new OrderAugmented(
-                    ibContractToSymbol(activeFutureCt)
-                    , LocalDateTime.now(), o, "hit bid", AutoOrderType.HIT_BID));
+            globalIdOrderMap.put(id, new OrderAugmented(ibContractToSymbol(activeFutureCt)
+                    , LocalDateTime.now(), o, "hit bid", HIT_BID));
             apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
             outputOrderToAutoLogXU(str(o.orderId(), " Hitting bid ", globalIdOrderMap.get(id)));
         });
@@ -399,45 +398,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 observeMATouch();
                 requestExecHistory();
             }, 0, 1, TimeUnit.MINUTES);
-
-//            ses.scheduleAtFixedRate(() -> {
-//                globalIdOrderMap.entrySet().stream().filter(e -> isInventoryTrade().test(e.getValue().getOrderType()))
-//                        .forEach(e -> pr(str("real order ID", e.getValue().getOrder().orderId(), e.getValue())));
-//
-//                long invOrderCount = globalIdOrderMap.entrySet().stream()
-//                        .filter(e -> isInventoryTrade().test(e.getValue().getOrderType())).count();
-//                if (invOrderCount >= 1) {
-//                    OrderAugmented o = globalIdOrderMap.entrySet().stream()
-//                            .filter(e -> isInventoryTrade().test(e.getValue().getOrderType()))
-//                            .max(Comparator.comparing(e -> e.getValue().getOrderTime())).map(Map.Entry::getValue)
-//                            .orElseThrow(() -> new IllegalStateException(" nothing in last inventory order "));
-//
-//                    pr("invOrderCount >=1 : last order ", o);
-//                    pr("last order T ", o.getOrderTime(), "status", o.getAugmentedOrderStatus()
-//                            , " Cancel wait time ", cancelWaitTime(LocalTime.now()));
-//
-//                    if (o.getAugmentedOrderStatus() != OrderStatus.Filled &&
-//                            timeDiffinMinutes(o.getOrderTime(), LocalDateTime.now()) >= cancelWaitTime(LocalTime.now())) {
-//
-//                        globalIdOrderMap.entrySet().stream()
-//                                .filter(e -> isInventoryTrade().test(e.getValue().getOrderType()))
-//                                .skip(invOrderCount - 1).peek(e -> pr(str("last order ", e.getValue())))
-//                                .forEach(e -> {
-//                                    if (e.getValue().getAugmentedOrderStatus() != OrderStatus.Cancelled) {
-//                                        usApcon.cancelOrder(e.getValue().getOrder().orderId());
-//                                        e.getValue().setFinalActionTime(LocalDateTime.now());
-//                                        e.getValue().setAugmentedOrderStatus(OrderStatus.Cancelled);
-//                                    } else {
-//                                        pr(str(e.getValue().getOrder().orderId(), "already cancelled"));
-//                                    }
-//                                });
-//                        pr(str(LocalTime.now(), " killing last unfilled orders"));
-//                        pr(" releasing inv barrier + semaphore ");
-//                        inventoryBarrier.reset(); //resetting inventory barrier
-//                        inventorySemaphore = new Semaphore(1); // release inv semaphore
-//                    }
-//                }
-//            }, 0, 1, TimeUnit.MINUTES);
         });
 
         JButton stopComputeButton = new JButton("Stop Processing");
@@ -3385,15 +3345,21 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     // position
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
-        String ticker = utility.Utility.ibContractToSymbol(contract);
+        String symbol = utility.Utility.ibContractToSymbol(contract);
 
-        if (ticker.startsWith("SGXA50")) {
+        if (symbol.startsWith("SGXA50")) {
             FutType f = ibContractToFutType(contract);
             currentPosMap.put(f, (int) position);
         }
 
+        ibPositionMap.put(symbol, position);
+
+//        if (symbol.startsWith("hk")) {
+//            currentPosMap.put(symbol, (int) position);
+//        }
+
         SwingUtilities.invokeLater(() -> {
-            if (ticker.equals("SGXA50")) {
+            if (symbol.equals("SGXA50")) {
                 AutoTraderXU.outputArea.repaint();
             }
         });

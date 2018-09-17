@@ -5,7 +5,9 @@ import controller.ApiController;
 import util.AutoOrderType;
 
 import java.io.File;
+import java.util.Map;
 import java.util.NavigableMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,6 +32,8 @@ public class AutoTraderMain {
     static File hkOrderOutput = new File(TradingConstants.GLOBALPATH + "hkorders.txt");
     static File hkDetailOutput = new File(TradingConstants.GLOBALPATH + "hkordersDetailed.txt");
 
+    //position
+    static volatile Map<String, Double> ibPositionMap = new ConcurrentHashMap<>();
 
     static long getOrderSizeForTradeType(String name, AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()

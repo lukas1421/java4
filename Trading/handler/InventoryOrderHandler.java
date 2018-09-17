@@ -51,7 +51,7 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
                 String msg = str(LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
                         "||Order||", defaultID, globalIdOrderMap.get(defaultID), orderState.status());
                 XuTraderHelper.outputToAutoLog(msg);
-                XuTraderHelper.outputPurelyOrders(msg);
+                XuTraderHelper.outputPurelyOrdersXU(msg);
                 filledOrdersSet.add(defaultID);
             }
 
@@ -77,7 +77,7 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
                     AutoTraderMain.globalIdOrderMap.get(defaultID).getOrder().orderId(),
                     AutoTraderMain.globalIdOrderMap.get(defaultID).getOrder());
             XuTraderHelper.outputToAutoLog(msg);
-            XuTraderHelper.outputPurelyOrders(msg);
+            XuTraderHelper.outputPurelyOrdersXU(msg);
         }
     }
 
