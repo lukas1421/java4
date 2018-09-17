@@ -100,14 +100,14 @@ public class AutoTraderUS {
             Order o = placeBidLimitTIF(freshPrice, usStockSize, Types.TimeInForce.DAY);
             globalIdOrderMap.put(id, new OrderAugmented(name, nowMilli, o, US_STOCK_DEV));
             apcon.placeOrModifyOrder(ct, o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
-            outputOrderToAutoLog(str(o.orderId(), "US open dev BUY", globalIdOrderMap.get(id)));
+            outputOrderToAutoLogXU(str(o.orderId(), "US open dev BUY", globalIdOrderMap.get(id)));
             usOpenDevDirection.put(name, Direction.Long);
         } else if (!noMoreSell.get() && last < open && usOpenDevDirection.get(name) != Direction.Short) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimitTIF(freshPrice, usStockSize, Types.TimeInForce.DAY);
             globalIdOrderMap.put(id, new OrderAugmented(name, nowMilli, o, US_STOCK_DEV));
             apcon.placeOrModifyOrder(ct, o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
-            outputOrderToAutoLog(str(o.orderId(), "US open dev SELL", globalIdOrderMap.get(id)));
+            outputOrderToAutoLogXU(str(o.orderId(), "US open dev SELL", globalIdOrderMap.get(id)));
             usOpenDevDirection.put(name, Direction.Short);
         }
     }
@@ -157,7 +157,7 @@ public class AutoTraderUS {
                 Order o = placeBidLimitTIF(freshPrice, usStockSize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(name, nowMilli, o, US_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeOrderHandler(id, apcon));
-                outputOrderToAutoLog(str(o.orderId(), "US hilo buy", globalIdOrderMap.get(id)));
+                outputOrderToAutoLogXU(str(o.orderId(), "US hilo buy", globalIdOrderMap.get(id)));
                 usHiloDirection.put(name, Direction.Long);
             } else if (!noMoreSell.get() && (freshPrice < minSoFar || minT.isAfter(maxT))
                     && usHiloDirection.get(name) != Direction.Short) {
@@ -165,7 +165,7 @@ public class AutoTraderUS {
                 Order o = placeOfferLimitTIF(freshPrice, usStockSize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(name, nowMilli, o, US_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeOrderHandler(id, apcon));
-                outputOrderToAutoLog(str(o.orderId(), "US hilo sell", globalIdOrderMap.get(id)));
+                outputOrderToAutoLogXU(str(o.orderId(), "US hilo sell", globalIdOrderMap.get(id)));
                 usHiloDirection.put(name, Direction.Short);
             }
         }

@@ -4,6 +4,7 @@ import client.Contract;
 import client.Order;
 import client.OrderAugmented;
 
+import javax.swing.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -27,7 +28,7 @@ import static util.AutoOrderType.HK_STOCK_DEV;
 import static util.AutoOrderType.HK_STOCK_HILO;
 import static utility.Utility.*;
 
-public class AutoTraderHK {
+public class AutoTraderHK extends JPanel {
 
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalDateTime, Double>> hkPriceMapDetail
             = new ConcurrentHashMap<>();
@@ -59,6 +60,13 @@ public class AutoTraderHK {
             hkAskMap.put(s, 0.0);
             hkFreshPriceMap.put(s, 0.0);
         });
+
+//        JPanel controlPanel1 = new JPanel();
+//        setLayout(new FlowLayout());
+//        add(controlPanel1);
+
+
+
     }
 
 
@@ -138,7 +146,7 @@ public class AutoTraderHK {
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
         pr(" HK open dev: ", nowMilli, ticker, symbol, "price:", freshPrice,
-                "open manualOpen firsttick, firstticktime",
+                "open,manualOpen,ft, ftT",
                 hkOpenMap.getOrDefault(symbol, 0.0), manualOpen, firstTick, firstTickTime,
                 "waitSec", waitSec, "last order ", lastOrderTime, "milliLastTwo", milliLastTwo,
                 "pos ", currPos);
@@ -199,7 +207,6 @@ public class AutoTraderHK {
         double minSoFar = prices.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        //LocalDate currDate = prices.firstKey().toLocalDate();
         LocalDate currDate = nowMilli.toLocalDate();
         LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 19)));
         LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(ltof(9, 19)));
@@ -254,7 +261,6 @@ public class AutoTraderHK {
                 } else {
                     o = placeShortSellLimitTIF(freshPrice, hkStockSize, IOC);
                 }
-                //Order o = placeOfferLimitTIF(freshPrice, hkStockSize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeOrderHandler(id, apcon));
                 outputOrderToAutoLogHK(str(o.orderId(), "HK hilo sell", globalIdOrderMap.get(id)));

@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.concurrent.CountDownLatch;
 
-import static apidemo.XuTraderHelper.outputOrderToAutoLog;
+import static apidemo.XuTraderHelper.outputOrderToAutoLogXU;
 import static utility.Utility.*;
 
 public class XUTraderRoll extends JPanel {
@@ -67,7 +67,7 @@ public class XUTraderRoll extends JPanel {
         AutoTraderMain.globalIdOrderMap.put(id, new OrderAugmented(
                 ibContractToSymbol(AutoTraderXU.activeFutureCt), LocalDateTime.now(), o, AutoOrderType.SHORT_ROLL));
         apcon.placeOrModifyOrder(longRollContract(), o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
-        outputOrderToAutoLog(str(o.orderId(), " Short Roll ", AutoTraderMain.globalIdOrderMap.get(id)));
+        outputOrderToAutoLogXU(str(o.orderId(), " Short Roll ", AutoTraderMain.globalIdOrderMap.get(id)));
     }
 
     public static void longRoll(double p) {
@@ -76,7 +76,7 @@ public class XUTraderRoll extends JPanel {
         AutoTraderMain.globalIdOrderMap.put(id, new OrderAugmented(
                 ibContractToSymbol(AutoTraderXU.activeFutureCt), LocalDateTime.now(), o, AutoOrderType.LONG_ROLL));
         apcon.placeOrModifyOrder(longRollContract(), o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
-        outputOrderToAutoLog(str(o.orderId(), " Long Roll ", AutoTraderMain.globalIdOrderMap.get(id)));
+        outputOrderToAutoLogXU(str(o.orderId(), " Long Roll ", AutoTraderMain.globalIdOrderMap.get(id)));
     }
 
     public static void resetLatch() {
