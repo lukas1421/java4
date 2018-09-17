@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static apidemo.AutoTraderMain.globalIdOrderMap;
+import static apidemo.AutoTraderMain.*;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.TradingConstants.FTSE_INDEX;
 import static java.lang.System.out;
@@ -125,20 +125,29 @@ public class XuTraderHelper {
         }
     }
 
-    static void outputOrderToAutoLog(String s) {
+    static void outputOrderToAutoLog(String s, File order, File detailed) {
         if (globalIdOrderMap.size() == 1) {
-            outputPurelyOrders(str("***", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "***"));
+            outputPurelyOrders(str("***", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "***"),
+                    order, detailed);
         }
         outputToAutoLog("****************ORDER************************");
         outputToAutoLog(s);
         outputToAutoLog("****************ORDER************************");
-        outputPurelyOrders(s);
+        outputPurelyOrders(s, order, detailed);
     }
 
-    public static void outputPurelyOrders(String s) {
-        outputPurelyOrdersDetailed(s);
-        File output = new File(TradingConstants.GLOBALPATH + "orders.txt");
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
+    static void outputOrderToAutoLogXU(String s) {
+        outputOrderToAutoLog(s, xuOrderOutput, xuDetailOutput);
+    }
+    static void outputOrderToAutoLogHK(String s) {
+        outputOrderToAutoLog(s, hkOrderOutput, hkDetailOutput);
+    }
+
+
+    public static void outputPurelyOrders(String s, File order, File detailed) {
+        outputPurelyOrdersDetailed(s, detailed);
+        //File output = new File(TradingConstants.GLOBALPATH + "orders.txt");
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(order, true))) {
             out.append(s);
             out.newLine();
         } catch (IOException ex) {
@@ -146,9 +155,9 @@ public class XuTraderHelper {
         }
     }
 
-    public static void outputPurelyOrdersDetailed(String s) {
-        File output = new File(TradingConstants.GLOBALPATH + "ordersDetailed.txt");
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
+    public static void outputPurelyOrdersDetailed(String s, File detailed) {
+        //File output = new File(TradingConstants.GLOBALPATH + "ordersDetailed.txt");
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(detailed, true))) {
             out.append(s);
             out.newLine();
         } catch (IOException ex) {

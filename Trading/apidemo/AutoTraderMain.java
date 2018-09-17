@@ -4,6 +4,7 @@ import client.OrderAugmented;
 import controller.ApiController;
 import util.AutoOrderType;
 
+import java.io.File;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,6 +24,13 @@ public class AutoTraderMain {
 
     static ApiController apcon;
 
+    //orders
+    static File xuOrderOutput = new File(TradingConstants.GLOBALPATH + "orders.txt");
+    static File xuDetailOutput = new File(TradingConstants.GLOBALPATH + "ordersDetailed.txt");
+    static File hkOrderOutput = new File(TradingConstants.GLOBALPATH + "hkorders.txt");
+    static File hkDetailOutput = new File(TradingConstants.GLOBALPATH + "hkordersDetailed.txt");
+
+
     static long getOrderSizeForTradeType(String name, AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getTicker().equals(name))
@@ -30,6 +38,8 @@ public class AutoTraderMain {
                 .filter(e -> e.getValue().isPrimaryOrder())
                 .count();
     }
+
+
 }
 
 

@@ -144,14 +144,14 @@ public class AutoTraderHK {
                 Order o = placeBidLimitTIF(freshPrice, hkStockSize, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_DEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "HK open dev BUY", globalIdOrderMap.get(id)));
+                outputOrderToAutoLogHK(str(o.orderId(), "HK open dev BUY", globalIdOrderMap.get(id)));
                 hkOpenDevDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && last < open && hkOpenDevDirection.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, hkStockSize, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_DEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLog(str(o.orderId(), "HK open dev SELL", globalIdOrderMap.get(id)));
+                outputOrderToAutoLogHK(str(o.orderId(), "HK open dev SELL", globalIdOrderMap.get(id)));
                 hkOpenDevDirection.put(symbol, Direction.Short);
             }
         }
@@ -229,7 +229,7 @@ public class AutoTraderHK {
                 Order o = placeBidLimitTIF(freshPrice, hkStockSize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeOrderHandler(id, apcon));
-                outputOrderToAutoLog(str(o.orderId(), "HK hilo buy", globalIdOrderMap.get(id)));
+                outputOrderToAutoLogHK(str(o.orderId(), "HK hilo buy", globalIdOrderMap.get(id)));
                 hkHiloDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && (freshPrice < minSoFar || minT.isAfter(maxT))
                     && hkHiloDirection.get(symbol) != Direction.Short) {
@@ -237,7 +237,7 @@ public class AutoTraderHK {
                 Order o = placeOfferLimitTIF(freshPrice, hkStockSize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeOrderHandler(id, apcon));
-                outputOrderToAutoLog(str(o.orderId(), "HK hilo sell", globalIdOrderMap.get(id)));
+                outputOrderToAutoLogHK(str(o.orderId(), "HK hilo sell", globalIdOrderMap.get(id)));
                 hkHiloDirection.put(symbol, Direction.Short);
             }
         }
