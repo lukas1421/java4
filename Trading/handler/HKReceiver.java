@@ -6,6 +6,7 @@ import client.TickType;
 import java.time.LocalDateTime;
 
 import static apidemo.AutoTraderHK.*;
+import static utility.Utility.pr;
 
 
 public class HKReceiver implements LiveHandler {
@@ -22,6 +23,8 @@ public class HKReceiver implements LiveHandler {
     @Override
     // name starts with hk
     public void handlePrice(TickType tt, String name, double price, LocalDateTime t) {
+        pr("hk tt name, price t", tt, name, price, t);
+
         switch (tt) {
             case BID:
                 hkBidMap.put(name, price);

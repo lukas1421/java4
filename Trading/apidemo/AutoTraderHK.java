@@ -43,13 +43,13 @@ public class AutoTraderHK {
 
     private static long MAX_ORDER_HK = 4;
 
-    public static List<String> hkNames = new ArrayList<>();
+    public static List<String> hkSymbols = new ArrayList<>();
 
     AutoTraderHK() {
         Contract ct = generateHKContract("27");
         String symbol = ibContractToSymbol(ct);
-        hkNames.add(symbol);
-        hkNames.forEach((s) -> {
+        hkSymbols.add(symbol);
+        hkSymbols.forEach((s) -> {
             if (!priceMapBarDetail.containsKey(s)) {
                 priceMapBarDetail.put(s, new ConcurrentSkipListMap<>());
             }
@@ -65,8 +65,8 @@ public class AutoTraderHK {
 
     private static int hkStockSize = 100;
 
-    public static void processeMainHK(String name, LocalDateTime nowMilli, double freshPrice) {
-        String ticker = name.substring(2);
+    public static void processeMainHK(String symbol, LocalDateTime nowMilli, double freshPrice) {
+        String ticker = symbol.substring(2);
         hkOpenDeviationTrader(ticker, nowMilli, freshPrice);
         hkHiloTrader(ticker, nowMilli, freshPrice);
     }
@@ -94,7 +94,14 @@ public class AutoTraderHK {
             return;
         }
 
+        pr(" open deviation hk ", prices);
+
+        if (!prices.lastKey().isAfter(ltof(9, 20))) {
+            return;
+        }
+
         double manualOpen = prices.ceilingEntry(ltof(9, 20)).getValue();
+
         double firstTick = prices.entrySet().stream().filter(e -> e.getKey().isAfter(ltof(9, 20, 0)))
                 .filter(e -> Math.abs(e.getValue() - manualOpen) > 0.01).findFirst().map(Map.Entry::getValue).get();
 
@@ -103,12 +110,12 @@ public class AutoTraderHK {
                 .filter(e -> Math.abs(e.getValue() - manualOpen) > 0.01).findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
 
-        pr(" HK open dev, ticker, symbol, price ", nowMilli, ticker, symbol, freshPrice,
-                "open manualopen firsttick, firstticktime",
+        pr(ticker, symbol, " HK open dev, price ", nowMilli, ticker, symbol, freshPrice,
+                "open manualOpen firsttick, firstticktime",
                 hkOpenMap.getOrDefault(symbol, 0.0), manualOpen, firstTick, firstTickTime);
 
         if (!manualHKDevMap.get(symbol).get()) {
-            if (lt.isBefore(ltof(9, 20, 0))) {
+            if (lt.isBefore(ltof(9, 30, 0))) {
                 manualHKDevMap.get(symbol).set(true);
             } else {
                 if (last > open) {

@@ -1183,7 +1183,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(futType);
         int baseSize = 1;
 
-        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(ltof(10, 0))) {
+        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(ltof(9, 30))) {
             return;
         }
 

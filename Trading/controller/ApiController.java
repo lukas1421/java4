@@ -961,13 +961,13 @@ public class ApiController implements EWrapper {
 
     }
 
-    private void req1StockLive(String stock, String exch, String curr, LiveHandler h, boolean snapshot) {
+    private void req1StockLive(String ticker, String exch, String curr, LiveHandler h, boolean snapshot) {
         try {
             int reqId = m_reqId.incrementAndGet();
             if (reqId % 90 == 0) {
                 Thread.sleep(1000);
             }
-            Contract ct = generateStockContract(stock, exch, curr);
+            Contract ct = generateStockContract(ticker, exch, curr);
             ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
             m_client.reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
         } catch (InterruptedException ex) {
@@ -1006,9 +1006,9 @@ public class ApiController implements EWrapper {
     }
 
     public void reqHKAutoTrader() {
-        AutoTraderHK.hkNames.forEach(k -> {
+        AutoTraderHK.hkSymbols.forEach(k -> {
             String ticker = k.substring(2);
-            req1StockLive(k, "SEHK", "HKD", HKReceiver.getReceiver(), false);
+            req1StockLive(ticker, "SEHK", "HKD", HKReceiver.getReceiver(), false);
         });
     }
 
@@ -1046,9 +1046,9 @@ public class ApiController implements EWrapper {
         });
     }
 
-    private Contract generateStockContract(String stock, String ex, String curr) {
+    private Contract generateStockContract(String ticker, String ex, String curr) {
         Contract ct = new Contract();
-        ct.symbol(stock);
+        ct.symbol(ticker);
         ct.exchange(ex);
         ct.currency(curr);
         ct.secType(SecType.STK);
