@@ -61,7 +61,7 @@ public class AutoTraderHK {
         });
     }
 
-    public Contract ct = generateHKContract("700");
+    public Contract ct = generateHKContract("27");
     private static int hkStockSize = 100;
 
     public static void processeMainHK(String name, LocalDateTime nowMilli, double freshPrice) {
@@ -88,8 +88,8 @@ public class AutoTraderHK {
         if (prices.size() < 1) {
             return;
         }
-        LocalDate thisDate = nowMilli.toLocalDate();
 
+        LocalDate thisDate = nowMilli.toLocalDate();
 
         if (lt.isBefore(ltof(9, 20)) || lt.isAfter(ltof(10, 0))) {
             return;
