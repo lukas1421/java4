@@ -120,8 +120,8 @@ public class SinaStock implements Runnable {
                         AutoTraderXU.indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
                         AutoTraderXU.indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee
 
-                        AutoTraderXU.indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 14:00, guarantee
-                        AutoTraderXU.indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 14pm, no guarantee
+                        AutoTraderXU.indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
+                        AutoTraderXU.indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 13:30pm, no guarantee
                         AutoTraderXU.intradayMAProfitTaker(ldt, currIndexPrice); //all day, guarantee
 
                         //AutoTraderXU.closeProfitTaker(ldt, currIndexPrice);

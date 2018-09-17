@@ -1144,7 +1144,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(futType);
         int baseSize = 1;
 
-        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(ltof(9, 30))) {
+        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(ltof(9, 29))) {
             return;
         }
 
@@ -1397,7 +1397,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(ltof(9, 30))) {
+        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(ltof(9, 29))) {
             return;
         }
 
@@ -1636,7 +1636,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double deltaTgt = getDeltaTarget(nowMilli, pmchy);
         double currDelta = getNetPtfDelta();
 
-        if (lt.isBefore(ltof(8, 59)) || lt.isAfter(ltof(9, 29))) {
+        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(ltof(9, 29))) {
             checkCancelOrders(futSymbol, FUT_OPEN, nowMilli, 5);
             return;
         }
@@ -1924,7 +1924,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double bidPrice = bidMap.get(f);
         double askPrice = askMap.get(f);
 
-        if (!checkTimeRangeBool(lt, 12, 58, 14, 0)) {
+        if (!checkTimeRangeBool(lt, 12, 58, 13, 30)) {
             return;
         }
 
@@ -2020,7 +2020,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double bidPrice = bidMap.get(f);
         double askPrice = askMap.get(f);
 
-        if (!checkTimeRangeBool(lt, 12, 58, 14, 0)) {
+        if (!checkTimeRangeBool(lt, 12, 58, 13, 30)) {
             return;
         }
 
