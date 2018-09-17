@@ -1,9 +1,7 @@
 package apidemo;
 
-import client.Contract;
-import client.Order;
-import client.OrderAugmented;
-import client.Types;
+import client.*;
+import handler.GuaranteeUSHandler;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -22,8 +20,7 @@ import static apidemo.XuTraderHelper.*;
 import static client.Types.TimeInForce.DAY;
 import static client.Types.TimeInForce.IOC;
 import static java.time.temporal.ChronoUnit.SECONDS;
-import static util.AutoOrderType.US_STOCK_DEV;
-import static util.AutoOrderType.US_STOCK_HILO;
+import static util.AutoOrderType.*;
 import static utility.Utility.*;
 
 public class AutoTraderUS {
@@ -46,7 +43,7 @@ public class AutoTraderUS {
     static String ticker = "IQ";
 
 
-    private static Contract generateUSContract(String stock) {
+    public static Contract generateUSContract(String stock) {
         Contract ct = new Contract();
         ct.symbol(stock);
         ct.exchange("SMART");
@@ -80,6 +77,7 @@ public class AutoTraderUS {
         }
         usOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usHiloTrader(symbol, nowMilli, freshPrice);
+        USLiqTrader(symbol, nowMilli, freshPrice);
     }
 
     /**
@@ -98,7 +96,7 @@ public class AutoTraderUS {
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
         LocalTime cutoff = ltof(10, 0);
 
-        if (lt.isBefore(ltof(9, 20)) || lt.isAfter(ltof(10, 30))) {
+        if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(10, 30))) {
             return;
         }
         double buySize = US_SIZE;
@@ -189,7 +187,7 @@ public class AutoTraderUS {
         Contract ct = generateUSContract(symbol);
         LocalTime cutoff = ltof(10, 0);
 
-        if (lt.isBefore(ltof(9, 20)) || lt.isAfter(ltof(10, 30))) {
+        if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(10, 30))) {
             return;
         }
 
@@ -258,7 +256,7 @@ public class AutoTraderUS {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_HILO));
-                apcon.placeOrModifyOrder(ct, o, new GuaranteeOrderHandler(id, apcon));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "US hilo buy", globalIdOrderMap.get(id),
                         "buy size/curr pos", buySize, currPos));
                 usHiloDirection.put(symbol, Direction.Long);
@@ -272,11 +270,51 @@ public class AutoTraderUS {
                     o = placeShortSellLimitTIF(freshPrice, sellSize, IOC);
                 }
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_HILO));
-                apcon.placeOrModifyOrder(ct, o, new GuaranteeOrderHandler(id, apcon));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "US hilo sell", globalIdOrderMap.get(id),
                         "sell size/curr pos", sellSize, currPos));
                 usHiloDirection.put(symbol, Direction.Short);
             }
         }
+    }
+
+    private static void USLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+        LocalTime liqStartTime = ltof(15, 50);
+        LocalTime liqEndTime = ltof(16, 0);
+        Contract ct = generateUSContract(symbol);
+        long liqWaitSecs = 60;
+
+        if (nowMilli.toLocalTime().isBefore(liqStartTime) || nowMilli.toLocalTime().isAfter(liqEndTime)) {
+            return;
+        }
+
+        LocalDateTime lastOrderTime = getLastOrderTime(symbol, US_CLOSE);
+        OrderStatus lastOrderStatus = getLastOrderStatusForType(symbol, US_CLOSE);
+        long numOrderCloseLiq = getOrderSizeForTradeType(symbol, US_CLOSE);
+
+        double pos = ibPositionMap.getOrDefault(symbol, 0.0);
+
+        if (numOrderCloseLiq >= 1) {
+            return;
+        }
+
+        if (SECONDS.between(lastOrderTime, nowMilli) > liqWaitSecs) {
+            if (pos < 0) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimitTIF(freshPrice, pos, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_CLOSE));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
+                outputOrderToAutoLogXU(str(o.orderId(), " US close liq buy #:", numOrderCloseLiq,
+                        globalIdOrderMap.get(id), "last order time", lastOrderTime, "currPos", pos, "size", pos));
+            } else if (pos > 0) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(freshPrice, pos, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_CLOSE));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
+                outputOrderToAutoLogXU(str(o.orderId(), " US close liq sell #:", numOrderCloseLiq
+                        , globalIdOrderMap.get(id), "last order time", lastOrderTime, "currPos", pos, "size", pos));
+            }
+        }
+
     }
 }

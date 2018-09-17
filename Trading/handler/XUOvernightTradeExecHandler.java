@@ -15,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 
 import static apidemo.AutoTraderXU.overnightTradesMap;
 import static utility.Utility.ibContractToFutType;
+import static utility.Utility.ibContractToSymbol;
 
 public class XUOvernightTradeExecHandler implements ApiController.ITradeReportHandler {
 
@@ -31,19 +32,17 @@ public class XUOvernightTradeExecHandler implements ApiController.ITradeReportHa
 
         if (ldt.isAfter(LocalDateTime.of(TDate, LocalTime.of(17, 0)))) {
             //System.out.println(" in XUOvernightTradeExecHandler ");
-
-            FutType f = ibContractToFutType(contract);
-//            System.out.println(" exec " + execution.side() + "　" + execution.time() + " " + execution.cumQty()
-//                    + " " + execution.price() + " " + execution.orderRef() + " " + execution.orderId() + " " + execution.permId() + " "
-//                    + execution.shares());
-
-            if (overnightTradesMap.get(f).containsKey(ldt)) {
-                overnightTradesMap.get(f).get(ldt)
-                        .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
-            } else {
-                overnightTradesMap.get(f).put(ldt,
-                        new TradeBlock(new FutureTrade(execution.price(),
-                                (int) Math.round(sign * execution.shares()))));
+            String symbol = ibContractToSymbol(contract);
+            if (symbol.startsWith("SGXA50")) {
+                FutType f = ibContractToFutType(contract);
+                if (overnightTradesMap.get(f).containsKey(ldt)) {
+                    overnightTradesMap.get(f).get(ldt)
+                            .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
+                } else {
+                    overnightTradesMap.get(f).put(ldt,
+                            new TradeBlock(new FutureTrade(execution.price(),
+                                    (int) Math.round(sign * execution.shares()))));
+                }
             }
         }
     }

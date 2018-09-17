@@ -136,7 +136,7 @@ public class XuTraderHelper {
         outputPurelyOrders(s, order, detailed);
     }
 
-    static void outputOrderToAutoLogXU(String s) {
+    public static void outputOrderToAutoLogXU(String s) {
         outputOrderToAutoLog(s, xuOrderOutput, xuDetailOutput);
     }
 
@@ -708,7 +708,7 @@ public class XuTraderHelper {
 
     static OrderStatus getLastOrderStatusForType(String name, AutoOrderType type) {
         long size = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getTicker().equals(name))
+                .filter(e -> e.getValue().getSymbol().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type).count();
 
         if (size == 0L) {

@@ -17,7 +17,7 @@ public class AutoTraderMain {
 
     //global
     static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
-    static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
+    public static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
 
     //buy sell only
@@ -40,7 +40,7 @@ public class AutoTraderMain {
 
     static long getOrderSizeForTradeType(String name, AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getTicker().equals(name))
+                .filter(e -> e.getValue().getSymbol().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().isPrimaryOrder())
                 .count();

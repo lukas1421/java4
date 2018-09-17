@@ -207,6 +207,7 @@ public final class ChinaData extends JPanel {
         //JButton btnSave = new JButton("Save1");
         //JButton btnSaveBar = new JButton("Save Bar");
         JButton saveHibernate = new JButton("save hib");
+        JButton saveDetailed = new JButton("save Detailed");
         JButton saveOHLCButton = new JButton("Save OHLC");
         JButton btnSaveBarYtd = new JButton("Save Bar YTD");
         JButton hibMorning = new JButton("HibMorning");
@@ -239,6 +240,8 @@ public final class ChinaData extends JPanel {
         //buttonUpPanel.add(btnSave);            buttonUpPanel.add(Box.createHorizontalStrut(10));
         //buttonUpPanel.add(btnSaveBar);         buttonUpPanel.add(Box.createHorizontalStrut(10));
         buttonUpPanel.add(saveHibernate);
+        buttonUpPanel.add(Box.createHorizontalStrut(10));
+        buttonUpPanel.add(saveDetailed);
         buttonUpPanel.add(Box.createHorizontalStrut(10));
         buttonUpPanel.add(saveOHLCButton);
         buttonUpPanel.add(Box.createHorizontalStrut(10));
@@ -316,6 +319,7 @@ public final class ChinaData extends JPanel {
         }, es));
 
         saveHibernate.addActionListener(al -> withHibernate());
+        saveDetailed.addActionListener(al -> withHibernateDetailed());
         saveOHLCButton.addActionListener(al -> saveChinaOHLC());
         loadHibGenPriceButton.addActionListener(al -> Hibtask.loadHibGenPrice());
         unloadHibAllButton.addActionListener(al -> {
@@ -478,6 +482,16 @@ public final class ChinaData extends JPanel {
             saveHibGen(priceMapBar, sizeTotalMap, ChinaSave.getInstance());
         } else {
             pr(" cannot save price map bar minute ", "max size ", priceMapBar.entrySet().stream()
+                    .mapToInt(e -> e.getValue().size()).max().orElse(0));
+        }
+    }
+
+    static void withHibernateDetailed() {
+        if (priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
+            pr(" saving price detailed @", LocalTime.now());
+            saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());
+        } else {
+            pr(" cannot save price bar detailed ", "max size", priceMapBarDetail.entrySet().stream()
                     .mapToInt(e -> e.getValue().size()).max().orElse(0));
         }
     }

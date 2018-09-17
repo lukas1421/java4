@@ -1,5 +1,7 @@
-package apidemo;
+package handler;
 
+import apidemo.AutoTraderMain;
+import apidemo.AutoTraderUS;
 import client.*;
 import controller.ApiController;
 
@@ -9,18 +11,18 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static apidemo.AutoTraderMain.globalIdOrderMap;
-import static apidemo.AutoTraderXU.*;
+import static apidemo.AutoTraderUS.generateUSContract;
 import static apidemo.XuTraderHelper.outputOrderToAutoLogXU;
 import static apidemo.XuTraderHelper.outputPurelyOrdersDetailedXU;
-import static utility.Utility.*;
+import static utility.Utility.str;
 
-public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
+public class GuaranteeUSHandler implements ApiController.IOrderHandler {
 
     private static Map<Integer, OrderStatus> idStatusMap = new ConcurrentHashMap<>();
     private int defaultID;
-    ApiController controller;
+    private ApiController controller;
 
-    GuaranteeOrderHandler(int id, ApiController ap) {
+    public GuaranteeUSHandler(int id, ApiController ap) {
         defaultID = id;
         idStatusMap.put(id, OrderStatus.ConstructedInHandler);
         controller = ap;
@@ -38,17 +40,19 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
         }
 
         if (orderState.status() != idStatusMap.get(defaultID)) {
-            String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(), "*GUARANTEE*",
+            String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(), "*GUARANTEE US*",
                     "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
                     "ID:", defaultID, globalIdOrderMap.get(defaultID),
                     "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
             outputPurelyOrdersDetailedXU(msg);
             if (orderState.status() == OrderStatus.PendingCancel &&
                     globalIdOrderMap.get(defaultID).getOrder().tif() == Types.TimeInForce.IOC) {
-                FutType f = ibContractToFutType(activeFutureCt);
-                double bid = bidMap.get(f);
-                double ask = askMap.get(f);
-                double freshPrice = futPriceMap.get(f);
+
+                String symbol = globalIdOrderMap.get(defaultID).getSymbol();
+                double freshPrice = AutoTraderUS.usFreshPriceMap.get(symbol);
+                double bid = AutoTraderUS.usBidMap.get(symbol);
+                double ask = AutoTraderUS.usAskMap.get(symbol);
+                Contract ct = generateUSContract(symbol);
 
                 Order prevOrder = globalIdOrderMap.get(defaultID).getOrder();
                 Order o = new Order();
@@ -60,13 +64,12 @@ public class GuaranteeOrderHandler implements ApiController.IOrderHandler {
                 o.tif(Types.TimeInForce.IOC);
 
                 int id = AutoTraderMain.autoTradeID.incrementAndGet();
-                controller.placeOrModifyOrder(activeFutureCt, o, new GuaranteeOrderHandler(id, controller));
-                globalIdOrderMap.put(id, new OrderAugmented(
-                        ibContractToSymbol(activeFutureCt), LocalDateTime.now(), o,
+                controller.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, controller));
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
                 outputOrderToAutoLogXU(str(prevOrder.orderId(), "->", o.orderId(),
-                        "RESUBMIT. Type, TIF, Action, P, Q,isPrimary", globalIdOrderMap.get(id).getOrderType(),
+                        "RESUBMIT US. Type, TIF, Action, P, Q,isPrimary", globalIdOrderMap.get(id).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), globalIdOrderMap.get(id).isPrimaryOrder(),
                         "current", globalIdOrderMap.get(id), "bid ask sp last"
                         , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", freshPrice));

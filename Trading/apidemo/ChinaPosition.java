@@ -718,7 +718,7 @@ public class ChinaPosition extends JPanel {
         pr(" refreshing future ");
         for (FutType f : FutType.values()) {
 //            if (f == FutType.PreviousFut && currentTradingDate.equals(getExpiredFutDate())) {
-//                currentPositionMap.put(f.getTicker(), getExpiredFutUnits());
+//                currentPositionMap.put(f.getSymbol(), getExpiredFutUnits());
 //                pr(str(" fut expiry units date", getExpiredFutUnits(), getExpiredFutDate()));
 //            }
             String ticker = f.getTicker();
@@ -1702,8 +1702,8 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
         for (FutType ft : FutType.values()) {
             if (ChinaPosition.tradesMap.containsKey(ft.getTicker()) &&
                     ChinaPosition.tradesMap.get(ft.getTicker()).size() > 0) {
-//                pr(str(" tradeReportEnd :: printing trades map ", ft.getTicker(),
-//                        ChinaPosition.tradesMap.get(ft.getTicker())));
+//                pr(str(" tradeReportEnd :: printing trades map ", ft.getSymbol(),
+//                        ChinaPosition.tradesMap.get(ft.getSymbol())));
             }
         }
     }

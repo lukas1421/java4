@@ -10,7 +10,7 @@ import static utility.Utility.str;
 
 public class OrderAugmented {
 
-    private String ticker;
+    private String symbol;
     private final LocalDateTime orderTime;
     private Order order;
     private String msg;
@@ -20,7 +20,7 @@ public class OrderAugmented {
     private LocalDateTime finalActionTime;
 
     public OrderAugmented(String name, LocalDateTime t, Order o, String m, AutoOrderType tt) {
-        ticker = name;
+        symbol = name;
         orderTime = t;
         order = o;
         msg = m;
@@ -31,7 +31,7 @@ public class OrderAugmented {
     }
 
     public OrderAugmented(String name, LocalDateTime t, Order o, AutoOrderType tt) {
-        ticker = name;
+        symbol = name;
         orderTime = t;
         order = o;
         msg = "";
@@ -42,7 +42,7 @@ public class OrderAugmented {
     }
 
     public OrderAugmented(String name, LocalDateTime t, Order o, AutoOrderType tt, boolean primary) {
-        ticker = name;
+        symbol = name;
         orderTime = t;
         order = o;
         msg = "";
@@ -89,8 +89,8 @@ public class OrderAugmented {
         return order;
     }
 
-    public String getTicker() {
-        return ticker;
+    public String getSymbol() {
+        return symbol;
     }
 
     public String getMsg() {
@@ -115,7 +115,7 @@ public class OrderAugmented {
 
     @Override
     public String toString() {
-        return str(ticker, "T: ", orderTime.toLocalTime(),
+        return str(symbol, "T: ", orderTime.toLocalTime(),
                 "Order:", order, "msg:", msg, "Tradetype", orderType,
                 "Status:", augmentedOrderStatus);
     }

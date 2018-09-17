@@ -3,6 +3,7 @@ package apidemo;
 import client.Contract;
 import client.Order;
 import client.OrderAugmented;
+import handler.GuaranteeXUHandler;
 
 import javax.swing.*;
 import java.time.LocalDate;
@@ -253,7 +254,7 @@ public class AutoTraderHK extends JPanel {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, HK_SIZE, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
-                apcon.placeOrModifyOrder(ct, o, new GuaranteeOrderHandler(id, apcon));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeXUHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "HK hilo buy", globalIdOrderMap.get(id)));
                 hkHiloDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && (freshPrice < minSoFar || minT.isAfter(maxT))
@@ -266,7 +267,7 @@ public class AutoTraderHK extends JPanel {
                     o = placeShortSellLimitTIF(freshPrice, HK_SIZE, IOC);
                 }
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
-                apcon.placeOrModifyOrder(ct, o, new GuaranteeOrderHandler(id, apcon));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeXUHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "HK hilo sell", globalIdOrderMap.get(id)));
                 hkHiloDirection.put(symbol, Direction.Short);
             }
