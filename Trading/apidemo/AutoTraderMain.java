@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class AutoTraderMain {
 
-
     //static final int MAX_FUT_LIMIT = 20;
     //static volatile AtomicBoolean canLongGlobal = new AtomicBoolean(true);
     //static volatile AtomicBoolean canShortGlobal = new AtomicBoolean(true);
@@ -42,8 +41,6 @@ public class AutoTraderMain {
                 .filter(e -> e.getValue().isPrimaryOrder())
                 .count();
     }
-
-
 }
 
 

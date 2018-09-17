@@ -65,8 +65,6 @@ public class AutoTraderHK extends JPanel {
 //        setLayout(new FlowLayout());
 //        add(controlPanel1);
 
-
-
     }
 
 

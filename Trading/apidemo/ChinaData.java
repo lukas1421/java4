@@ -289,7 +289,6 @@ public final class ChinaData extends JPanel {
 
         add(jp, BorderLayout.NORTH);
 
-
         btnSaveBarYtd.addActionListener(al -> {
             try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(priceBarYtdSource))) {
                 oos.writeObject(priceMapBarYtd);
