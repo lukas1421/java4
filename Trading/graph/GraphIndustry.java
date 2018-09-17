@@ -189,7 +189,7 @@ public class GraphIndustry extends JComponent {
 
                             CompletableFuture.supplyAsync(()
                                     -> m.entrySet().stream().sorted(LAST_ENTRY_COMPARATOR.reversed())
-                                    .collect(Collectors.toMap(Map.Entry::getKey,
+                                    .collect(Collectors.toMap(e -> e.getKey(),
                                             e -> Optional.ofNullable(e.getValue().lastEntry()).map(Entry::getValue).orElse(0.0),
                                             (a, b) -> a, LinkedHashMap::new)))
                                     .thenAcceptAsync(sm -> {
