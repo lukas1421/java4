@@ -20,6 +20,7 @@ public class HKReceiver implements LiveHandler {
     }
 
     @Override
+    // name starts with hk
     public void handlePrice(TickType tt, String name, double price, LocalDateTime t) {
         switch (tt) {
             case BID:
@@ -32,7 +33,7 @@ public class HKReceiver implements LiveHandler {
                 hkOpenMap.put(name, price);
                 break;
             case LAST:
-                hkPriceMapDetail.get(name).put(t, price);
+                //hkPriceMapDetail.get(name).put(t, price);
                 ChinaData.priceMapBarDetail.get(name).put(t.toLocalTime(), price);
                 hkFreshPriceMap.put(name, price);
                 processeMainHK(name, t, price);

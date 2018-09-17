@@ -1007,7 +1007,7 @@ public class ApiController implements EWrapper {
 
     public void reqHKAutoTrader() {
         AutoTraderHK.hkNames.forEach(k -> {
-            //String ticker = k.substring(2);
+            String ticker = k.substring(2);
             req1StockLive(k, "SEHK", "HKD", HKReceiver.getReceiver(), false);
         });
     }
