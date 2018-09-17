@@ -166,8 +166,8 @@ public class AutoTraderHK extends JPanel {
             } else if (!noMoreSell.get() && last < open && hkOpenDevDirection.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o;
-                if (currPos >= HK_SIZE) {
-                    o = placeOfferLimitTIF(freshPrice, HK_SIZE, DAY);
+                if (currPos > 0) {
+                    o = placeOfferLimitTIF(freshPrice, Math.min(HK_SIZE, currPos), DAY);
                 } else {
                     o = placeShortSellLimitTIF(freshPrice, HK_SIZE, DAY);
                 }
@@ -260,8 +260,8 @@ public class AutoTraderHK extends JPanel {
                     && hkHiloDirection.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o;
-                if (currPos >= HK_SIZE) {
-                    o = placeOfferLimitTIF(freshPrice, HK_SIZE, IOC);
+                if (currPos > 0) {
+                    o = placeOfferLimitTIF(freshPrice, Math.min(HK_SIZE, currPos), IOC);
                 } else {
                     o = placeShortSellLimitTIF(freshPrice, HK_SIZE, IOC);
                 }
