@@ -28,8 +28,8 @@ public class SGXFutureReceiver implements LiveHandler {
 
 
     @Override
-    public void handlePrice(TickType tt, String name, double price, LocalDateTime ldt) {
-        FutType f = FutType.get(name);
+    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime ldt) {
+        FutType f = FutType.get(symbol);
         LocalDateTime ldtMin = ldt.truncatedTo(MINUTES);
         LocalTime t = ldtMin.toLocalTime();
 
@@ -42,23 +42,23 @@ public class SGXFutureReceiver implements LiveHandler {
                 AutoTraderXU.askMap.put(f, price);
                 break;
             case CLOSE:
-                pr("fut close in receiver: ", name, " close ", price);
+                pr("fut close in receiver: ", symbol, " close ", price);
                 //AutoTraderXU.fut5amClose.put(name, price);
                 //AutoTraderXU.futPrevClose3pmMap.put(name, price);
                 break;
             case LAST:
-                ChinaStock.priceMap.put(name, price);
+                ChinaStock.priceMap.put(symbol, price);
                 AutoTraderXU.futPriceMap.put(f, price);
-                priceMapBarDetail.get(name).put(ldt.toLocalTime(), price);
+                priceMapBarDetail.get(symbol).put(ldt.toLocalTime(), price);
 
                 // need to capture overnight data
                 if (t.isAfter(LocalTime.of(8, 55)) || t.isBefore(LocalTime.of(5, 0))) {
                     if (STOCK_COLLECTION_TIME.test(ldtMin)) {
                         ChinaMain.currentTradingDate = ldtMin.toLocalDate();
-                        if (priceMapBar.get(name).containsKey(t)) {
-                            priceMapBar.get(name).get(t).add(price);
+                        if (priceMapBar.get(symbol).containsKey(t)) {
+                            priceMapBar.get(symbol).get(t).add(price);
                         } else {
-                            priceMapBar.get(name).put(t, new SimpleBar(price));
+                            priceMapBar.get(symbol).put(t, new SimpleBar(price));
                         }
                     }
 
@@ -72,7 +72,7 @@ public class SGXFutureReceiver implements LiveHandler {
                         //String activeFut = Utility.ibContractToFutType(AutoTraderXU.activeFutureCt).getTicker();
                         String activeFut = ibContractToSymbol(AutoTraderXU.activeFutureCt);
 
-                        if (name.equalsIgnoreCase(activeFut) &&
+                        if (symbol.equalsIgnoreCase(activeFut) &&
                                 AutoTraderXU.futData.get(f).lastKey().truncatedTo(MINUTES).equals(ldt.truncatedTo(MINUTES))) {
                             AutoTraderXU.processMain(ldt, price);
                         }

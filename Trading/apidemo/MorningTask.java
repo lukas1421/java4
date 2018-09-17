@@ -743,11 +743,11 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
     }
 
     @Override
-    public void handlePrice(TickType tt, String name, double price, LocalDateTime t) {
-        if (tt == TickType.CLOSE && name.equals("XINA50")) {
+    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+        if (tt == TickType.CLOSE && symbol.equals("XINA50")) {
             Utility.simpleWriteToFile("FTSE A50" + "\t" + price, true, output);
         }
-        pr("handle price  ", name, tt, price, t);
+        pr("handle price  ", symbol, tt, price, t);
     }
 
     @Override

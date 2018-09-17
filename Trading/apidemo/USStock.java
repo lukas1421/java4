@@ -127,7 +127,7 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
     }
 
     @Override
-    public void handlePrice(TickType tt, String name, double price, LocalDateTime t) {
+    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
         //vixMap
         LocalDateTime ldt = roundToXLdt(t, 15);
 
@@ -139,7 +139,7 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
             }
         }
 
-        pr("US ", tt, name, price, t);
+        pr("US ", tt, symbol, price, t);
     }
 
     @Override

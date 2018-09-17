@@ -304,8 +304,8 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
     }
 
     @Override
-    public void handlePrice(TickType tt, String name, double price, LocalDateTime t) {
-        pr("handleprice ", name, t, tt, Math.round(10000d / price) / 10000d);
+    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+        pr("handleprice ", symbol, t, tt, Math.round(10000d / price) / 10000d);
         double pr2 = Math.round(10000d / price) / 10000d;
         if (tt == TickType.ASK) {
             offshoreBid = pr2;

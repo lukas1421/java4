@@ -121,20 +121,20 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
     }
 
     @Override
-    public void handlePrice(TickType tt, String name, double price, LocalDateTime ldt) {
+    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime ldt) {
         LocalTime t = ldt.toLocalTime();
         if (tt == TickType.LAST) {
-            HKStock.hkCurrPrice.put(name, price);
+            HKStock.hkCurrPrice.put(symbol, price);
 
-            if (hkPriceBar.containsKey(name)) {
-                if (hkPriceBar.get(name).containsKey(t)) {
-                    hkPriceBar.get(name).get(t).add(price);
+            if (hkPriceBar.containsKey(symbol)) {
+                if (hkPriceBar.get(symbol).containsKey(t)) {
+                    hkPriceBar.get(symbol).get(t).add(price);
                 } else {
-                    hkPriceBar.get(name).put(t, new SimpleBar(price));
+                    hkPriceBar.get(symbol).put(t, new SimpleBar(price));
                 }
             }
         } else if (tt == TickType.CLOSE) {
-            hkPreviousCloseMap.put(name, price);
+            hkPreviousCloseMap.put(symbol, price);
         }
     }
 
