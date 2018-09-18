@@ -29,6 +29,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.AutoTraderMain.globalIdOrderMap;
+import static apidemo.AutoTraderMain.globalTradingOn;
 import static apidemo.ChinaMain.*;
 import static apidemo.XuTraderHelper.*;
 import static java.util.stream.Collectors.toList;
@@ -1660,21 +1661,38 @@ public class ApiController implements EWrapper {
         }
     }
 
-    public void placeOrModifyOrder(Contract contract, final Order order, final IOrderHandler handler) {
-        if (order.totalQuantity() == 0.0) {
+    private double getDeltaImpactCny(Contract ct, Order o) {
+        String curr = ct.currency();
+        double totalQ = o.totalQuantity();
+        double lmtPrice = o.lmtPrice();
+        double xxxCny = ChinaPosition.fxMap.getOrDefault(curr, 1.0);
+        return xxxCny * lmtPrice * totalQ;
+    }
+
+    public void placeOrModifyOrder(Contract ct, final Order o, final IOrderHandler handler) {
+        double impact = getDeltaImpactCny(ct, o);
+        if (Math.abs(impact) > 1000000) {
+            outputOrderToAutoLogXU(str(o.orderId(), "impact too big ", impact, ct.symbol(), o.totalQuantity()));
+            globalTradingOn.set(false);
+            return;
+        } else {
+            outputOrderToAutoLogXU(str(o.orderId(), " Impact OK ", impact, ct.symbol(), o.totalQuantity()));
+        }
+
+        if (o.totalQuantity() == 0.0) {
             return;
         }
 
-        if (order.orderId() == 0) {
-            order.orderId(m_orderId.incrementAndGet());
+        if (o.orderId() == 0) {
+            o.orderId(m_orderId.incrementAndGet());
         }
 
         if (handler != null) {
-            m_orderHandlers.put(order.orderId(), handler);
+            m_orderHandlers.put(o.orderId(), handler);
         } else {
             pr(" handler is null");
         }
-        m_client.placeOrder(contract, order);
+        m_client.placeOrder(ct, o);
         sendEOM();
     }
 

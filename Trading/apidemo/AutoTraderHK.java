@@ -3,7 +3,8 @@ package apidemo;
 import client.Contract;
 import client.Order;
 import client.OrderAugmented;
-import handler.GuaranteeXUHandler;
+import client.Types;
+import handler.GuaranteeHKHandler;
 
 import javax.swing.*;
 import java.time.LocalDate;
@@ -23,7 +24,6 @@ import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.XuTraderHelper.*;
 import static client.Types.TimeInForce.DAY;
 import static client.Types.TimeInForce.IOC;
-import static historical.HistHKStocks.generateHKContract;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static util.AutoOrderType.HK_STOCK_DEV;
 import static util.AutoOrderType.HK_STOCK_HILO;
@@ -54,18 +54,15 @@ public class AutoTraderHK extends JPanel {
             if (!priceMapBarDetail.containsKey(s)) {
                 priceMapBarDetail.put(s, new ConcurrentSkipListMap<>());
             }
-            manualHKDevMap.put(s, new AtomicBoolean(false));
-            manualHKHiloMap.put(s, new AtomicBoolean(false));
             hkOpenMap.put(s, 0.0);
             hkBidMap.put(s, 0.0);
             hkAskMap.put(s, 0.0);
             hkFreshPriceMap.put(s, 0.0);
+            hkOpenDevDirection.put(s, Direction.Flat);
+            hkHiloDirection.put(s, Direction.Flat);
+            manualHKDevMap.put(s, new AtomicBoolean(false));
+            manualHKHiloMap.put(s, new AtomicBoolean(false));
         });
-
-//        JPanel controlPanel1 = new JPanel();
-//        setLayout(new FlowLayout());
-//        add(controlPanel1);
-
     }
 
     private static int HK_SIZE = 100;
@@ -78,7 +75,7 @@ public class AutoTraderHK extends JPanel {
         hkHiloTrader(symbol, nowMilli, freshPrice);
     }
 
-    private static String hkSymbolToTicker(String symbol) {
+    public static String hkSymbolToTicker(String symbol) {
         return symbol.substring(2);
     }
 
@@ -91,8 +88,10 @@ public class AutoTraderHK extends JPanel {
      */
     private static void hkOpenDeviationTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
+        LocalTime cutoff = ltof(10, 0);
         String ticker = hkSymbolToTicker(symbol);
         Contract ct = generateHKContract(ticker);
+
         //String symbol = ibContractToSymbol(ct);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double open = hkOpenMap.getOrDefault(symbol, 0.0);
@@ -105,6 +104,7 @@ public class AutoTraderHK extends JPanel {
         if (lt.isBefore(ltof(9, 19)) || lt.isAfter(ltof(10, 0))) {
             return;
         }
+
 
         pr(" open deviation hk ", prices);
 
@@ -152,9 +152,9 @@ public class AutoTraderHK extends JPanel {
 
         pr(" HK open dev: ", nowMilli, ticker, symbol, "price:", freshPrice,
                 "open,manualOpen,ft, ftT",
-                hkOpenMap.getOrDefault(symbol, 0.0), manualOpen, firstTick, firstTickTime,
+                hkOpenMap.get(symbol), manualOpen, firstTick, firstTickTime,
                 "waitSec", waitSec, "last order ", lastOrderTime, "milliLastTwo", milliLastTwo,
-                "pos ", currPos, "dir:", hkOpenDevDirection.get(symbol));
+                "pos ", currPos, "dir:", hkOpenDevDirection.get(symbol), "manual? ", manualHKDevMap.get(symbol));
 
         if (SECONDS.between(lastOrderTime, nowMilli) > waitSec) {
             if (!noMoreBuy.get() && last > open && hkOpenDevDirection.get(symbol) != Direction.Long) {
@@ -191,9 +191,9 @@ public class AutoTraderHK extends JPanel {
 
     private static void hkHiloTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
+        LocalTime cutoff = ltof(10, 0);
         String ticker = hkSymbolToTicker(symbol);
         Contract ct = generateHKContract(ticker);
-        //String symbol = ibContractToSymbol(ct);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
 
         if (prices.size() < 1) {
@@ -254,7 +254,7 @@ public class AutoTraderHK extends JPanel {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, HK_SIZE, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
-                apcon.placeOrModifyOrder(ct, o, new GuaranteeXUHandler(id, apcon));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "HK hilo buy", globalIdOrderMap.get(id)));
                 hkHiloDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && (freshPrice < minSoFar || minT.isAfter(maxT))
@@ -267,10 +267,19 @@ public class AutoTraderHK extends JPanel {
                     o = placeShortSellLimitTIF(freshPrice, HK_SIZE, IOC);
                 }
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
-                apcon.placeOrModifyOrder(ct, o, new GuaranteeXUHandler(id, apcon));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "HK hilo sell", globalIdOrderMap.get(id)));
                 hkHiloDirection.put(symbol, Direction.Short);
             }
         }
+    }
+
+    public static Contract generateHKContract(String ticker) {
+        Contract ct = new Contract();
+        ct.symbol(ticker);
+        ct.exchange("SEHK");
+        ct.currency("HKD");
+        ct.secType(Types.SecType.STK);
+        return ct;
     }
 }

@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class AutoTraderMain {
 
     //global
-    static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
+    public static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
     public static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
 

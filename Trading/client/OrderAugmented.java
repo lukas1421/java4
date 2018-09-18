@@ -41,8 +41,8 @@ public class OrderAugmented {
         primaryOrder.set(true);
     }
 
-    public OrderAugmented(String name, LocalDateTime t, Order o, AutoOrderType tt, boolean primary) {
-        symbol = name;
+    public OrderAugmented(String symb, LocalDateTime t, Order o, AutoOrderType tt, boolean primary) {
+        symbol = symb;
         orderTime = t;
         order = o;
         msg = "";

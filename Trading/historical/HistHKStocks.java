@@ -1,8 +1,8 @@
 package historical;
 
+import apidemo.AutoTraderHK;
 import apidemo.TradingConstants;
 import auxiliary.SimpleBar;
-import client.Contract;
 import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
@@ -263,15 +263,6 @@ public class HistHKStocks extends JPanel {
     }
 
 
-    public static Contract generateHKContract(String stock) {
-        Contract ct = new Contract();
-        ct.symbol(stock);
-        ct.exchange("SEHK");
-        ct.currency("HKD");
-        ct.secType(Types.SecType.STK);
-        return ct;
-    }
-
     private static void refreshYtd() {
         totalStocksLabelYtd.setText(Long.toString(stocksProcessedYtd.get()) + "/" + Long.toString(hkYtdAll.size()));
         //System.out.println(" refreshing YTD ");
@@ -298,7 +289,7 @@ public class HistHKStocks extends JPanel {
                 System.out.println(" stock is " + stock);
                 //idStockMap.put(uniqueID.incrementAndGet(), stock);
                 System.out.println(" days requested  " + DAYSTOREQUESTYTD);
-                apcon.reqHistoricalDataUSHK(new YtdDataHandler(), uniqueID.incrementAndGet(), generateHKContract(stock), CUTOFFTIME,
+                apcon.reqHistoricalDataUSHK(new YtdDataHandler(), uniqueID.incrementAndGet(), AutoTraderHK.generateHKContract(stock), CUTOFFTIME,
                         DAYSTOREQUESTYTD, Types.DurationUnit.DAY,
                         Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
             } catch (InterruptedException ex) {
@@ -321,7 +312,7 @@ public class HistHKStocks extends JPanel {
                 System.out.println(" stock is " + stock);
                 //idStockMap.put(uniqueID.incrementAndGet(), stock);
                 apcon.reqHistoricalDataUSHK(new WtdDataHandler()
-                        , uniqueID.incrementAndGet(), generateHKContract(stock), CUTOFFTIME,
+                        , uniqueID.incrementAndGet(), AutoTraderHK.generateHKContract(stock), CUTOFFTIME,
                         DAYSTOREQUESTWTD, Types.DurationUnit.DAY,
                         Types.BarSize._5_mins, Types.WhatToShow.TRADES, true);
             } catch (InterruptedException ex) {

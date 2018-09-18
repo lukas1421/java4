@@ -76,7 +76,7 @@ public class ChinaPosition extends JPanel {
     private static volatile NavigableMap<LocalTime, Double> mtmDeltaMap;
     private static volatile NavigableMap<String, Double> benchExposureMap;
     private static volatile Map<String, Double> pureMtmMap;
-    static Map<String, Double> fxMap = new HashMap<>();
+    public static Map<String, Double> fxMap = new HashMap<>();
     private static volatile double mtmDeltaSharpe;
     private static volatile double minuteNetPnlSharpe;
 

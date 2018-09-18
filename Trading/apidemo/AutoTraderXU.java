@@ -317,12 +317,13 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         globalTradingButton.setSelected(false);
         globalTradingButton.addActionListener(l -> {
             globalTradingOn.set(globalTradingButton.isSelected());
-            globalTradingButton.setText("Trading:" + (globalTradingOn.get() ? "ON" : "OFF"));
+            SwingUtilities.invokeLater(() ->
+                    globalTradingButton.setText("Trading:" + (globalTradingOn.get() ? "ON" : "OFF")));
             pr(" global trading set to " + (globalTradingOn.get() ? "ON" : "OFF"));
         });
 
-        JButton computeMAButton = new JButton("ComputeMA");
-        computeMAButton.addActionListener(l -> computeMAStrategy());
+//        JButton computeMAButton = new JButton("ComputeMA");
+//        computeMAButton.addActionListener(l -> computeMAStrategy());
 
         JButton getPositionButton = new JButton(" get pos ");
         getPositionButton.addActionListener(l -> {
@@ -533,7 +534,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         //controlPanel1.add(trimDeltaButton);
         controlPanel1.add(rollButton);
         controlPanel1.add(globalTradingButton);
-        controlPanel1.add(computeMAButton);
+        //controlPanel1.add(computeMAButton);
 
         controlPanel2.add(getPositionButton);
         controlPanel2.add(level2Button);
@@ -3501,6 +3502,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         Collectors.counting()));
 
         String pnlString = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getSymbol().startsWith("SGXA50"))
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
                 .collect(Collectors.collectingAndThen(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType()
                         , Collectors.summingDouble(e -> e.getValue().getPnl(futPriceMap.get(f)))),
