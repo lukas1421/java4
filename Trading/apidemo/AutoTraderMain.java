@@ -38,9 +38,9 @@ public class AutoTraderMain {
     //position
     static volatile Map<String, Double> ibPositionMap = new ConcurrentHashMap<>();
 
-    static long getOrderSizeForTradeType(String name, AutoOrderType type) {
+    static long getOrderSizeForTradeType(String symbol, AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getSymbol().equals(name))
+                .filter(e -> e.getValue().getSymbol().equals(symbol))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().isPrimaryOrder())
                 .count();

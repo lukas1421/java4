@@ -43,9 +43,9 @@ public class AutoTraderUS {
     static String ticker = "IQ";
 
 
-    public static Contract generateUSContract(String stock) {
+    public static Contract tickerToUSContract(String ticker) {
         Contract ct = new Contract();
-        ct.symbol(stock);
+        ct.symbol(ticker);
         ct.exchange("SMART");
         ct.currency("USD");
         ct.secType(Types.SecType.STK);
@@ -53,7 +53,7 @@ public class AutoTraderUS {
     }
 
     AutoTraderUS() {
-        Contract iq = generateUSContract("IQ");
+        Contract iq = tickerToUSContract("IQ");
         String iqSymbol = ibContractToSymbol(iq);
         usSymbols.add(iqSymbol);
         usSymbols.forEach(s -> {
@@ -89,10 +89,9 @@ public class AutoTraderUS {
      */
     private static void usOpenDeviationTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
-        Contract ct = generateUSContract(symbol);
+        Contract ct = tickerToUSContract(symbol);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double open = usOpenMap.getOrDefault(symbol, 0.0);
-        //double last = usFreshPriceMap.getOrDefault(symbol, 0.0);
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
         LocalTime cutoff = ltof(10, 0);
 
@@ -145,7 +144,7 @@ public class AutoTraderUS {
             return;
         }
 
-        pr(" US open dev, name, price ", nowMilli, symbol, freshPrice,
+        pr(" US open dev", lt, nowMilli, "name, price ", symbol, freshPrice,
                 "open/manual open ", usOpenMap.getOrDefault(symbol, 0.0), manualOpen,
                 "last order T/ millilast2/ waitsec", lastOrderTime, milliLastTwo, waitSec,
                 "curr pos ", currPos, "dir: ", usOpenDevDirection.get(symbol));
@@ -191,7 +190,7 @@ public class AutoTraderUS {
     private static void usHiloTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
-        Contract ct = generateUSContract(symbol);
+        Contract ct = tickerToUSContract(symbol);
         LocalTime cutoff = ltof(10, 0);
 
         if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(10, 30))) {
@@ -226,7 +225,6 @@ public class AutoTraderUS {
                 return;
             }
         }
-
 
         if (!manualUSHiloMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
@@ -269,7 +267,7 @@ public class AutoTraderUS {
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "US hilo buy", globalIdOrderMap.get(id),
                         "buy size/curr pos", buySize, currPos,
-                        "last order T, millilast2, waitsec", lastOrderT, milliLastTwo, waitSec,
+                        "last order T, milliLast2, waitsec", lastOrderT, milliLastTwo, waitSec,
                         "dir", usHiloDirection.get(symbol)));
                 usHiloDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && (freshPrice < minSoFar || minT.isAfter(maxT))
@@ -295,7 +293,7 @@ public class AutoTraderUS {
     private static void USLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime liqStartTime = ltof(15, 50);
         LocalTime liqEndTime = ltof(16, 0);
-        Contract ct = generateUSContract(symbol);
+        Contract ct = tickerToUSContract(symbol);
         long liqWaitSecs = 60;
 
         if (nowMilli.toLocalTime().isBefore(liqStartTime) || nowMilli.toLocalTime().isAfter(liqEndTime)) {

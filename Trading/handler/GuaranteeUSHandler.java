@@ -51,7 +51,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
                 double freshPrice = usFreshPriceMap.get(symbol);
                 double bid = usBidMap.get(symbol);
                 double ask = usAskMap.get(symbol);
-                Contract ct = generateUSContract(symbol);
+                Contract ct = tickerToUSContract(symbol);
 
                 Order prevOrder = globalIdOrderMap.get(defaultID).getOrder();
                 Order o = new Order();

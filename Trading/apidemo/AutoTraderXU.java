@@ -3046,9 +3046,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
     }
 
-    static LocalDateTime getLastOrderTime(String name, AutoOrderType type) {
+    static LocalDateTime getLastOrderTime(String symbol, AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getSymbol().equals(name))
+                .filter(e -> e.getValue().getSymbol().equals(symbol))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().isPrimaryOrder())
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
@@ -3056,9 +3056,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .orElse(sessionOpenT());
     }
 
-    static long lastTwoOrderMilliDiff(String name, AutoOrderType type) {
+    static long lastTwoOrderMilliDiff(String symbol, AutoOrderType type) {
         long numOrders = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getSymbol().equals(name))
+                .filter(e -> e.getValue().getSymbol().equals(symbol))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().isPrimaryOrder())
                 .count();
@@ -3066,13 +3066,13 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return Long.MAX_VALUE;
         } else {
             LocalDateTime last = globalIdOrderMap.entrySet().stream()
-                    .filter(e -> e.getValue().getSymbol().equals(name))
+                    .filter(e -> e.getValue().getSymbol().equals(symbol))
                     .filter(e -> e.getValue().getOrderType() == type)
                     .filter(e -> e.getValue().isPrimaryOrder())
                     .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                     .map(e -> e.getValue().getOrderTime()).orElseThrow(() -> new IllegalArgumentException("no"));
             LocalDateTime secLast = globalIdOrderMap.entrySet().stream()
-                    .filter(e -> e.getValue().getSymbol().equals(name))
+                    .filter(e -> e.getValue().getSymbol().equals(symbol))
                     .filter(e -> e.getValue().getOrderType() == type)
                     .filter(e -> e.getValue().isPrimaryOrder())
                     .map(e -> e.getValue().getOrderTime())
