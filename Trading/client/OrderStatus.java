@@ -6,6 +6,7 @@ public enum OrderStatus {
     ApiPending,
     ApiCancelled,
     PendingCancel,
+    DeadlineCancelled,
     Cancelled,
     PreSubmitted,
     Submitted,

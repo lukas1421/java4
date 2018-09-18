@@ -816,7 +816,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
         futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
-        futHiloTrader(ldt, price); // 9:00 to 10:00, guarantee
+        futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
         closeLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
         percentileMATrader(ldt, price, pmChgY); // all day, guarantee
 
@@ -1141,6 +1141,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime lt = nowMilli.toLocalTime();
         String futSymbol = ibContractToSymbol(activeFutureCt);
         FutType futType = ibContractToFutType(activeFutureCt);
+
+        cancelAfterDeadline(lt, futSymbol, FUT_HILO, ltof(9, 29, 50));
+
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(futType);
         int baseSize = 1;
 
@@ -1393,6 +1396,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         String futSymbol = ibContractToSymbol(activeFutureCt);
         FutType futtype = ibContractToFutType(activeFutureCt);
 
+        cancelAfterDeadline(lt, futSymbol, FUT_OPEN_DEVI, ltof(9, 29, 50));
+
         if (fut5amClose.getOrDefault(futtype, 0.0) == 0.0) {
             return;
         }
@@ -1631,6 +1636,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime lt = nowMilli.toLocalTime();
         String futSymbol = ibContractToSymbol(activeFutureCt);
         FutType f = ibContractToFutType(activeFutureCt);
+        cancelAfterDeadline(lt, futSymbol, FUT_OPEN, ltof(9, 29, 50));
         double bidPrice = bidMap.get(f);
         double askPrice = askMap.get(f);
         double deltaTgt = getDeltaTarget(nowMilli, pmchy);
@@ -2941,6 +2947,22 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler());
                     e.getValue().setAugmentedOrderStatus(OrderStatus.Cancelled);
                 });
+    }
+
+    private static void cancelAfterDeadline(LocalTime now, String symbol, AutoOrderType type, LocalTime deadline) {
+        if (now.isAfter(deadline)) {
+            globalIdOrderMap.entrySet().stream()
+                    .filter(e -> e.getValue().getSymbol().equals(symbol))
+                    .filter(e -> e.getValue().getOrderType() == type)
+                    .filter(e -> e.getValue().getAugmentedOrderStatus() != OrderStatus.Filled)
+                    .forEach(e -> {
+                        apcon.cancelOrder(e.getValue().getOrder().orderId());
+                        e.getValue().setFinalActionTime(LocalDateTime.now());
+                        e.getValue().setAugmentedOrderStatus(OrderStatus.DeadlineCancelled);
+                        outputOrderToAutoLogXU(str(now, " Cancel after deadline ",
+                                e.getValue().getOrder().orderId()));
+                    });
+        }
     }
 
     /**
