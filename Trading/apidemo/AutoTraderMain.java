@@ -14,7 +14,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class AutoTraderMain {
-
     //global
     public static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
     public static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
@@ -35,6 +34,7 @@ public class AutoTraderMain {
     //zones
     public static ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
     public static ZoneId nyZone = ZoneId.of("America/New_York");
+
     //position
     static volatile Map<String, Double> ibPositionMap = new ConcurrentHashMap<>();
 
