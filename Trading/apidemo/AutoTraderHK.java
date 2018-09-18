@@ -93,9 +93,8 @@ public class AutoTraderHK extends JPanel {
 
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double open = hkOpenMap.getOrDefault(symbol, 0.0);
-        //double last = hkFreshPriceMap.getOrDefault(symbol, 0.0);
 
-        if (prices.size() < 1 || !prices.lastKey().isAfter(ltof(9, 20))) {
+        if (prices.size() == 0) {
             return;
         }
 
@@ -117,7 +116,7 @@ public class AutoTraderHK extends JPanel {
 
 
         if (!manualHKDevMap.get(symbol).get()) {
-            if (lt.isBefore(ltof(9, 30, 0))) {
+            if (lt.isBefore(ltof(9, 35, 0))) {
                 manualHKDevMap.get(symbol).set(true);
             } else {
                 if (freshPrice > open) {
@@ -135,7 +134,7 @@ public class AutoTraderHK extends JPanel {
         long numOrders = getOrderSizeForTradeType(symbol, HK_STOCK_DEV);
         long milliLastTwo = lastTwoOrderMilliDiff(symbol, HK_STOCK_DEV);
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, HK_STOCK_DEV);
-        long waitSec = (milliLastTwo < 60000) ? 300 : 10;
+        long waitSec = (milliLastTwo < 60000) ? 300 : 0;
         if (numOrders >= MAX_ORDER_HK) {
             return;
         }
