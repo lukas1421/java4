@@ -95,6 +95,8 @@ public class AutoTraderUS {
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
         LocalTime cutoff = ltof(10, 0);
 
+        cancelAfterDeadline(nowMilli.toLocalTime(), symbol, US_STOCK_OPENDEV, cutoff);
+
         if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(10, 30))) {
             return;
         }
@@ -133,9 +135,9 @@ public class AutoTraderUS {
             }
         }
 
-        long numOrders = getOrderSizeForTradeType(symbol, US_STOCK_DEV);
-        LocalDateTime lastOrderTime = getLastOrderTime(symbol, US_STOCK_DEV);
-        long milliLastTwo = lastTwoOrderMilliDiff(symbol, US_STOCK_DEV);
+        long numOrders = getOrderSizeForTradeType(symbol, US_STOCK_OPENDEV);
+        LocalDateTime lastOrderTime = getLastOrderTime(symbol, US_STOCK_OPENDEV);
+        long milliLastTwo = lastTwoOrderMilliDiff(symbol, US_STOCK_OPENDEV);
         int waitSec = (milliLastTwo < 60000) ? 300 : 10;
 
         double manualOpen = prices.ceilingEntry(ltof(9, 20)).getValue();
@@ -154,7 +156,7 @@ public class AutoTraderUS {
             if (!noMoreBuy.get() && freshPrice > open && usOpenDevDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, buySize, Types.TimeInForce.DAY);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_DEV));
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev BUY", globalIdOrderMap.get(id),
                         "buy size/ currpos", buySize, currPos,
@@ -169,7 +171,7 @@ public class AutoTraderUS {
                 } else {
                     o = placeShortSellLimitTIF(freshPrice, sellSize, DAY);
                 }
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_DEV));
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev SELL", globalIdOrderMap.get(id),
                         "sell size/ currpos", sellSize, currPos,
@@ -192,6 +194,9 @@ public class AutoTraderUS {
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         Contract ct = tickerToUSContract(symbol);
         LocalTime cutoff = ltof(10, 0);
+
+        //(symbol,US_STOCK_HILO,nowMilli,);
+        cancelAfterDeadline(nowMilli.toLocalTime(), symbol, US_STOCK_HILO, cutoff);
 
         if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(10, 30))) {
             return;

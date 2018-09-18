@@ -55,7 +55,7 @@ public enum AutoOrderType {
     INDEX_OPEN_DEVI,
     INDEX_NEW_HILO,
     FORCE_FILL,
-    US_STOCK_DEV,
+    US_STOCK_OPENDEV,
     US_STOCK_HILO,
     US_CLOSE,
     HK_STOCK_DEV,
