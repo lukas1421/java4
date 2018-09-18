@@ -1064,7 +1064,7 @@ public class ApiController implements EWrapper {
         return ct;
     }
 
-//    private Contract generateHKContract(String stock) {
+//    private Contract tickerToHKContract(String stock) {
 //        Contract ct = new Contract();
 //        ct.symbol(stock);
 //        ct.exchange("SEHK");
@@ -1137,7 +1137,7 @@ public class ApiController implements EWrapper {
     }
 
     //    public void getHKIntradayHistoricalData(HistoricalHandler hh) {
-//        reqHistoricalDataUSHK(this, uniqueID.get(), generateHKContract(stock), CUTOFFTIME,
+//        reqHistoricalDataUSHK(this, uniqueID.get(), tickerToHKContract(stock), CUTOFFTIME,
 //                DAYSTOREQUEST, Types.DurationUnit.DAY,
 //                Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
 //    }

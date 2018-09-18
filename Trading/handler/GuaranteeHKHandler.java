@@ -1,6 +1,5 @@
 package handler;
 
-import apidemo.AutoTraderMain;
 import client.*;
 import controller.ApiController;
 
@@ -10,9 +9,11 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static apidemo.AutoTraderHK.*;
+import static apidemo.AutoTraderMain.autoTradeID;
 import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.XuTraderHelper.outputOrderToAutoLogXU;
 import static apidemo.XuTraderHelper.outputPurelyOrdersDetailedXU;
+import static client.Types.TimeInForce.IOC;
 import static utility.Utility.str;
 
 public class GuaranteeHKHandler implements ApiController.IOrderHandler {
@@ -44,23 +45,25 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
                     "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
             outputPurelyOrdersDetailedXU(msg);
             if (orderState.status() == OrderStatus.PendingCancel &&
-                    globalIdOrderMap.get(defaultID).getOrder().tif() == Types.TimeInForce.IOC) {
+                    globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {
 
                 String symbol = globalIdOrderMap.get(defaultID).getSymbol();
                 double freshPrice = hkFreshPriceMap.get(symbol);
                 double bid = hkBidMap.get(symbol);
                 double ask = hkAskMap.get(symbol);
-                Contract ct = generateHKContract(hkSymbolToTicker(symbol));
+                Contract ct = tickerToHKContract(hkSymbolToTicker(symbol));
+
                 Order prevOrder = globalIdOrderMap.get(defaultID).getOrder();
+
                 Order o = new Order();
                 o.action(prevOrder.action());
                 o.lmtPrice(freshPrice);
                 o.orderType(OrderType.LMT);
                 o.totalQuantity(prevOrder.totalQuantity());
                 o.outsideRth(true);
-                o.tif(Types.TimeInForce.IOC);
+                o.tif(IOC);
 
-                int id = AutoTraderMain.autoTradeID.incrementAndGet();
+                int id = autoTradeID.incrementAndGet();
                 controller.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, controller));
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));

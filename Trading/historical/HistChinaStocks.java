@@ -624,7 +624,7 @@ public class HistChinaStocks extends JPanel {
                     if (s.startsWith("hk")) {
                         pr("requesting hk ", s.substring(2));
                         ChinaMain.controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                                AutoTraderHK.generateHKContract(s.substring(2)),
+                                AutoTraderHK.tickerToHKContract(s.substring(2)),
                                 HistChinaStocks::handleIBWtdData, 7);
                     }
                 });

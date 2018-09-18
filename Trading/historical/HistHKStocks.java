@@ -289,7 +289,7 @@ public class HistHKStocks extends JPanel {
                 System.out.println(" stock is " + stock);
                 //idStockMap.put(uniqueID.incrementAndGet(), stock);
                 System.out.println(" days requested  " + DAYSTOREQUESTYTD);
-                apcon.reqHistoricalDataUSHK(new YtdDataHandler(), uniqueID.incrementAndGet(), AutoTraderHK.generateHKContract(stock), CUTOFFTIME,
+                apcon.reqHistoricalDataUSHK(new YtdDataHandler(), uniqueID.incrementAndGet(), AutoTraderHK.tickerToHKContract(stock), CUTOFFTIME,
                         DAYSTOREQUESTYTD, Types.DurationUnit.DAY,
                         Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
             } catch (InterruptedException ex) {
@@ -312,7 +312,7 @@ public class HistHKStocks extends JPanel {
                 System.out.println(" stock is " + stock);
                 //idStockMap.put(uniqueID.incrementAndGet(), stock);
                 apcon.reqHistoricalDataUSHK(new WtdDataHandler()
-                        , uniqueID.incrementAndGet(), AutoTraderHK.generateHKContract(stock), CUTOFFTIME,
+                        , uniqueID.incrementAndGet(), AutoTraderHK.tickerToHKContract(stock), CUTOFFTIME,
                         DAYSTOREQUESTWTD, Types.DurationUnit.DAY,
                         Types.BarSize._5_mins, Types.WhatToShow.TRADES, true);
             } catch (InterruptedException ex) {
