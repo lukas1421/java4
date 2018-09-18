@@ -197,7 +197,7 @@ public class AutoTraderHK extends JPanel {
         String ticker = hkSymbolToTicker(symbol);
         Contract ct = tickerToHKContract(ticker);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
-        if (prices.size() == 0) {
+        if (prices.size() <= 1) {
             return;
         }
         if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(10, 0))) {
