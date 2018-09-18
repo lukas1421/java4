@@ -205,27 +205,29 @@ public class AutoTraderHK extends JPanel {
         }
         LocalTime lastKey = prices.lastKey();
         double maxSoFar = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 19)))
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 18)))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
 
         double minSoFar = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 19)))
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 18)))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        //LocalDate currDate = nowMilli.toLocalDate();
-        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 19)));
-        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(ltof(9, 19)));
+        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 18)));
+        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(ltof(9, 18)));
 
         if (!manualHKHiloMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
+                outputOrderToAutoLogXU(str(" setting manual HK hilo: pre 935", lt));
                 manualHKHiloMap.get(symbol).set(true);
             } else {
                 if (maxT.isAfter(minT)) {
+                    outputOrderToAutoLogXU(str(" setting manual HK hilo: maxT>minT", lt));
                     hkHiloDirection.put(symbol, Direction.Long);
                     manualHKHiloMap.get(symbol).set(true);
                 } else if (minT.isAfter(maxT)) {
+                    outputOrderToAutoLogXU(str(" setting manual HK hilo: minT>maxT", lt));
                     hkHiloDirection.put(symbol, Direction.Short);
                     manualHKHiloMap.get(symbol).set(true);
                 } else {
@@ -244,7 +246,7 @@ public class AutoTraderHK extends JPanel {
             return;
         }
 
-        pr(" HK hilo ", nowMilli, ticker, symbol, "price", freshPrice, "pos", currPos,
+        pr(" HK hilo ", lt, ticker, symbol, "price", freshPrice, "pos", currPos,
                 "max min maxT minT", maxSoFar, minSoFar, maxT, minT,
                 "numOrder", numOrders, " last order T", lastOrderTime, " milliLastTwo ", milliLastTwo,
                 "wait Sec", waitSec,
