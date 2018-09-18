@@ -259,7 +259,10 @@ public class AutoTraderHK extends JPanel {
                 Order o = placeBidLimitTIF(freshPrice, HK_SIZE, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
-                outputOrderToAutoLogXU(str(o.orderId(), "HK hilo buy#", numOrders, globalIdOrderMap.get(id)));
+                outputOrderToAutoLogXU(str(o.orderId(), "HK hilo buy#", numOrders, globalIdOrderMap.get(id),
+                        "max min maxT minT ", maxSoFar, minSoFar, maxT, minT,
+                        "last order T, milliLast2, wait Sec", lastOrderTime, milliLastTwo, waitSec,
+                        "dir, manual ", hkHiloDirection.get(symbol), manualHKHiloMap.get(symbol)));
                 hkHiloDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && (freshPrice < minSoFar || minT.isAfter(maxT))
                     && hkHiloDirection.get(symbol) != Direction.Short) {
@@ -272,7 +275,10 @@ public class AutoTraderHK extends JPanel {
                 }
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
-                outputOrderToAutoLogXU(str(o.orderId(), "HK hilo sell#:", numOrders, globalIdOrderMap.get(id)));
+                outputOrderToAutoLogXU(str(o.orderId(), "HK hilo sell#:", numOrders, globalIdOrderMap.get(id),
+                        "max min maxT minT ", maxSoFar, minSoFar, maxT, minT,
+                        "last order T, milliLast2, wait Sec", lastOrderTime, milliLastTwo, waitSec,
+                        "dir, manual ", hkHiloDirection.get(symbol), manualHKHiloMap.get(symbol)));
                 hkHiloDirection.put(symbol, Direction.Short);
             }
         }

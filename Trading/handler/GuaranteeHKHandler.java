@@ -69,7 +69,7 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
                 outputOrderToAutoLogXU(str(prevOrder.orderId(), "->", o.orderId(),
-                        "RESUBMIT HK. Type, TIF, Action, P, Q,isPrimary", globalIdOrderMap.get(id).getOrderType(),
+                        "RESUBMIT HK. Type, TIF, Action, P, Q, Primary?", globalIdOrderMap.get(id).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), globalIdOrderMap.get(id).isPrimaryOrder(),
                         "current", globalIdOrderMap.get(id), "bid ask sp last"
                         , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", freshPrice));
