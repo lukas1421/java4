@@ -42,6 +42,7 @@ import static apidemo.ChinaPosition.*;
 import static apidemo.ChinaStock.*;
 import static apidemo.TradingConstants.*;
 import static apidemo.XuTraderHelper.*;
+import static client.OrderStatus.*;
 import static client.Types.TimeInForce.DAY;
 import static client.Types.TimeInForce.IOC;
 import static java.time.temporal.ChronoUnit.*;
@@ -1299,12 +1300,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
 
         OrderStatus lastHiLoOrderStatus = getLastOrderStatusForType(futSymbol, FUT_HILO);
-        if (lastHiLoOrderStatus != OrderStatus.Filled) {
+        if (lastHiLoOrderStatus != Filled) {
             return;
         }
 
         OrderStatus lastKOOrderStatus = getLastOrderStatusForType(futSymbol, FUT_KO);
-        if (futKOOrdersNum != 0 && lastKOOrderStatus != OrderStatus.Filled) {
+        if (futKOOrdersNum != 0 && lastKOOrderStatus != Filled) {
             //getMoreAggressiveFill(FUT_KO, bid, offer);
             cancelOrdersByType(FUT_KO);
             return;
@@ -1312,12 +1313,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         double previousHiloLimit = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue()
                 .getOrderType() == FUT_HILO).max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .map(e -> e.getValue().getOrder().lmtPrice()).orElse(0.0);
 
         double prevSize = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue()
                 .getOrderType() == FUT_HILO).max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .map(e -> e.getValue().getOrder().totalQuantity()).orElse(0.0);
 
         if (previousHiloLimit != 0.0 && prevSize != 0.0) {
@@ -1419,7 +1420,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double futOpen = firstEntry.getValue();
         OrderStatus lastStatus = getLastOrderStatusForType(futSymbol, FUT_OPEN_DEVI);
 
-        if (numOrders != 0 && lastStatus != OrderStatus.Filled) {
+        if (numOrders != 0 && lastStatus != Filled) {
             pr(" fut open dev trader: last not filled, status: ", lastStatus);
             return;
         }
@@ -1842,7 +1843,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             }
         }
 
-        if (numOrdersOpenDev > 0 && lastStatus != OrderStatus.Filled) {
+        if (numOrdersOpenDev > 0 && lastStatus != Filled) {
             if (detailedPrint.get()) {
                 pr(" open order last not filled, status ", lastStatus);
             }
@@ -1946,7 +1947,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        if (numPMDeviOrders > 0 && lastPMDevStatus != OrderStatus.Filled) {
+        if (numPMDeviOrders > 0 && lastPMDevStatus != Filled) {
             if (detailedPrint.get()) {
                 pr(" pm devi order last not filled, status: ", lastPMDevStatus);
             }
@@ -2190,7 +2191,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        if (numOrderCloseLiq > 0.0 && lastOrderStatus != OrderStatus.Filled) {
+        if (numOrderCloseLiq > 0.0 && lastOrderStatus != Filled) {
             checkCancelOrders(futSymbol, CLOSE_LIQ, nowMilli, 5);
             return;
         }
@@ -2243,7 +2244,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalDateTime lastFutTentaTime = getLastOrderTime(futSymbol, FUT_TENTA);
         LocalDateTime lastFutTentaCoverTime = getLastOrderTime(futSymbol, FUT_TENTA_COVER);
 
-        if (lastStatus == OrderStatus.Filled && SECONDS.between(lastFutTentaTime, nowMilli) > 60) {
+        if (lastStatus == Filled && SECONDS.between(lastFutTentaTime, nowMilli) > 60) {
             if (lastAction == Types.Action.SELL && freshPrice > lastLimit) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, buyQ, Types.TimeInForce.DAY);
@@ -2925,7 +2926,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     private static void cancelOrdersByType(AutoOrderType type) {
         globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == type)
-                .filter(e -> e.getValue().getAugmentedOrderStatus() != OrderStatus.Filled)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() != Filled)
                 .forEach(e -> {
                     apcon.cancelOrder(e.getValue().getOrder().orderId());
                     e.getValue().setAugmentedOrderStatus(OrderStatus.Cancelled);
@@ -2934,7 +2935,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     private static void getMoreAggressiveFill(AutoOrderType type, double bid, double ask) {
         globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == type)
-                .filter(e -> e.getValue().getAugmentedOrderStatus() != OrderStatus.Filled)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() != Filled)
                 .forEach(e -> {
                     Order o = e.getValue().getOrder();
                     if (o.action() == Types.Action.BUY) {
@@ -2954,13 +2955,16 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             globalIdOrderMap.entrySet().stream()
                     .filter(e -> e.getValue().getSymbol().equals(symbol))
                     .filter(e -> e.getValue().getOrderType() == type)
-                    .filter(e -> e.getValue().getAugmentedOrderStatus() != OrderStatus.Filled)
+                    .filter(e -> e.getValue().getAugmentedOrderStatus() != Filled)
                     .forEach(e -> {
-                        apcon.cancelOrder(e.getValue().getOrder().orderId());
-                        e.getValue().setFinalActionTime(LocalDateTime.now());
-                        e.getValue().setAugmentedOrderStatus(OrderStatus.DeadlineCancelled);
-                        outputOrderToAutoLogXU(str(now, " Cancel after deadline ",
-                                e.getValue().getOrder().orderId()));
+                        OrderStatus sta = e.getValue().getAugmentedOrderStatus();
+                        if ((sta != Filled) && (sta != PendingCancel) && (sta != Cancelled)) {
+                            apcon.cancelOrder(e.getValue().getOrder().orderId());
+                            e.getValue().setFinalActionTime(LocalDateTime.now());
+                            e.getValue().setAugmentedOrderStatus(OrderStatus.DeadlineCancelled);
+                            outputOrderToAutoLogXU(str(now, " Cancel after deadline ",
+                                    e.getValue().getOrder().orderId()));
+                        }
                     });
         }
     }
@@ -2985,7 +2989,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
             LocalDateTime lastOTime = getLastOrderTime(name, type);
 
-            if (lastOrdStatus != OrderStatus.Filled && lastOrdStatus != OrderStatus.Cancelled
+            if (lastOrdStatus != Filled && lastOrdStatus != OrderStatus.Cancelled
                     && lastOrdStatus != OrderStatus.ApiCancelled && lastOrdStatus != OrderStatus.PendingCancel) {
 
                 if (MINUTES.between(lastOTime, nowMilli) > timeLimitMinutes) {
@@ -3095,7 +3099,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .filter(e -> e.getValue().getSymbol().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getOrder().action() == Types.Action.BUY)
-                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .mapToDouble(e -> e.getValue().getOrder().totalQuantity()).sum();
 
         if (botUnits == 0.0) {
@@ -3106,7 +3110,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .filter(e -> e.getValue().getSymbol().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getOrder().action() == Types.Action.BUY)
-                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .mapToDouble(e -> e.getValue().getOrder().totalQuantity() * e.getValue().getOrder().lmtPrice())
                 .sum() / botUnits;
     }
@@ -3116,7 +3120,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .filter(e -> e.getValue().getSymbol().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getOrder().action() == Types.Action.SELL)
-                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .mapToDouble(e -> e.getValue().getOrder().totalQuantity()).sum();
 
         if (soldUnits == 0.0) {
@@ -3126,7 +3130,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .filter(e -> e.getValue().getSymbol().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getOrder().action() == Types.Action.SELL)
-                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .mapToDouble(e -> e.getValue().getOrder().totalQuantity() * e.getValue().getOrder().lmtPrice())
                 .sum() / soldUnits;
     }
@@ -3160,7 +3164,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getSymbol().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
-                .filter(e -> (e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled))
+                .filter(e -> (e.getValue().getAugmentedOrderStatus() == Filled))
                 .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
                 .sum();
     }
@@ -3169,7 +3173,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     static double getTotalFilledOrderSignedQPred(String name, Predicate<AutoOrderType> p) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getSymbol().equals(name))
-                .filter(e -> (e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled))
+                .filter(e -> (e.getValue().getAugmentedOrderStatus() == Filled))
                 .filter(e -> p.test(e.getValue().getOrderType()))
                 .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
                 .sum();
@@ -3323,7 +3327,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
                             int parentId, double lastFillPrice, int clientId, String whyHeld) {
         updateLog(str(" status filled remaining avgFillPrice ", status, filled, remaining, avgFillPrice));
-        if (status.equals(OrderStatus.Filled)) {
+        if (status.equals(Filled)) {
             createDialog(str(" status filled remaining avgFillPrice ",
                     status, filled, remaining, avgFillPrice));
         }
@@ -3363,7 +3367,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         updateLog(Utility.str(" status filled remaining avgFillPrice ",
                 status, filled, remaining, avgFillPrice));
 
-        if (status.equals(OrderStatus.Filled)) {
+        if (status.equals(Filled)) {
             createDialog(Utility.str(" status filled remaining avgFillPrice ",
                     status, filled, remaining, avgFillPrice));
         }
@@ -3514,18 +3518,18 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 LocalDateTime.of(getTradeDate(LocalDateTime.now()), ltof(8, 59))));
 
         Map<AutoOrderType, Double> quantitySumByOrder = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .collect(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType(),
                         Collectors.summingDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())));
 
         Map<AutoOrderType, Long> numTradesByOrder = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .collect(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType(),
                         Collectors.counting()));
 
         String pnlString = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getSymbol().startsWith("SGXA50"))
-                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .collect(Collectors.collectingAndThen(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType()
                         , Collectors.summingDouble(e -> e.getValue().getPnl(futPriceMap.get(f)))),
                         e -> e.entrySet().stream().map(e1 -> str("|||", e1.getKey(),

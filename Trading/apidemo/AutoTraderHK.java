@@ -7,7 +7,6 @@ import client.Types;
 import handler.GuaranteeHKHandler;
 
 import javax.swing.*;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -94,7 +93,7 @@ public class AutoTraderHK extends JPanel {
 
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double open = hkOpenMap.getOrDefault(symbol, 0.0);
-        double last = hkFreshPriceMap.getOrDefault(symbol, 0.0);
+        //double last = hkFreshPriceMap.getOrDefault(symbol, 0.0);
 
         if (prices.size() < 1 || !prices.lastKey().isAfter(ltof(9, 20))) {
             return;
@@ -104,14 +103,15 @@ public class AutoTraderHK extends JPanel {
             return;
         }
 
-        double manualOpen = prices.ceilingEntry(ltof(9, 20)).getValue();
+        double manualOpen = prices.ceilingEntry(ltof(9, 19, 0)).getValue();
 
-        double firstTick = prices.entrySet().stream().filter(e -> e.getKey().isAfter(ltof(9, 20, 0)))
+        double firstTick = prices.entrySet().stream()
+                .filter(e -> e.getKey().isAfter(ltof(9, 19, 0)))
                 .filter(e -> Math.abs(e.getValue() - manualOpen) > 0.01).findFirst().map(Map.Entry::getValue)
                 .orElse(0.0);
 
         LocalTime firstTickTime = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(9, 20, 0)))
+                .filter(e -> e.getKey().isAfter(ltof(9, 19, 0)))
                 .filter(e -> Math.abs(e.getValue() - manualOpen) > 0.01).findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
 
@@ -120,10 +120,10 @@ public class AutoTraderHK extends JPanel {
             if (lt.isBefore(ltof(9, 30, 0))) {
                 manualHKDevMap.get(symbol).set(true);
             } else {
-                if (last > open) {
+                if (freshPrice > open) {
                     hkOpenDevDirection.put(symbol, Direction.Long);
                     manualHKDevMap.get(symbol).set(true);
-                } else if (last < open) {
+                } else if (freshPrice < open) {
                     hkOpenDevDirection.put(symbol, Direction.Short);
                     manualHKDevMap.get(symbol).set(true);
                 } else {
@@ -146,19 +146,22 @@ public class AutoTraderHK extends JPanel {
 
         pr(" HK open dev: ", nowMilli, ticker, symbol, "price:", freshPrice,
                 "open,manualOpen,ft, ftT",
-                hkOpenMap.get(symbol), manualOpen, firstTick, firstTickTime, "waitSec", waitSec,
+                open, manualOpen, firstTick, firstTickTime, "waitSec", waitSec,
                 "numOrder", numOrders, "last order T", lastOrderTime, "milliLastTwo", milliLastTwo,
                 "pos", currPos, "dir:", hkOpenDevDirection.get(symbol), "manual? ", manualHKDevMap.get(symbol));
 
         if (SECONDS.between(lastOrderTime, nowMilli) > waitSec) {
-            if (!noMoreBuy.get() && last > open && hkOpenDevDirection.get(symbol) != Direction.Long) {
+            if (!noMoreBuy.get() && freshPrice > open && hkOpenDevDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, HK_SIZE, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_DEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLogXU(str(o.orderId(), "HK open dev BUY#:", numOrders, globalIdOrderMap.get(id)));
+                outputOrderToAutoLogXU(str(o.orderId(), "HK open dev BUY#:", numOrders, globalIdOrderMap.get(id),
+                        "open, manualOpen, ft, ftT", open, manualOpen, firstTick, firstTickTime,
+                        "last Order T, milliLastTwo", lastOrderTime, milliLastTwo,
+                        "pos", currPos, "dir", hkOpenDevDirection.get(symbol), "manual?", manualHKDevMap.get(symbol)));
                 hkOpenDevDirection.put(symbol, Direction.Long);
-            } else if (!noMoreSell.get() && last < open && hkOpenDevDirection.get(symbol) != Direction.Short) {
+            } else if (!noMoreSell.get() && freshPrice < open && hkOpenDevDirection.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o;
                 if (currPos > 0) {
@@ -168,7 +171,10 @@ public class AutoTraderHK extends JPanel {
                 }
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_DEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-                outputOrderToAutoLogXU(str(o.orderId(), "HK open dev SELL#:", numOrders, globalIdOrderMap.get(id)));
+                outputOrderToAutoLogXU(str(o.orderId(), "HK open dev SELL#:", numOrders, globalIdOrderMap.get(id),
+                        "open, manualOpen, ft, ftT", open, manualOpen, firstTick, firstTickTime,
+                        "last Order T, milliLastTwo", lastOrderTime, milliLastTwo,
+                        "pos", currPos, "dir", hkOpenDevDirection.get(symbol), "manual?", manualHKDevMap.get(symbol)));
                 hkOpenDevDirection.put(symbol, Direction.Short);
             }
         }
@@ -210,7 +216,7 @@ public class AutoTraderHK extends JPanel {
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        LocalDate currDate = nowMilli.toLocalDate();
+        //LocalDate currDate = nowMilli.toLocalDate();
         LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 21)));
         LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(ltof(9, 21)));
 
@@ -242,7 +248,7 @@ public class AutoTraderHK extends JPanel {
         }
 
         pr(" HK hilo ", nowMilli, ticker, symbol, "price", freshPrice, "pos", currPos,
-                "currDate max min maxT minT", currDate, maxSoFar, minSoFar, maxT, minT,
+                "max min maxT minT", maxSoFar, minSoFar, maxT, minT,
                 "numOrder", numOrders, " last order T", lastOrderTime, " milliLastTwo ", milliLastTwo,
                 "wait Sec", waitSec,
                 "dir:", hkHiloDirection.get(symbol), "manual?", manualHKHiloMap.get(symbol));
