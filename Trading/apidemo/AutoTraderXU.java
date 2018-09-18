@@ -532,7 +532,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         //controlPanel1.add(dayTraderButton);
         //controlPanel1.add(pdTraderButton);
         //controlPanel1.add(trimDeltaButton);
-        controlPanel1.add(rollButton);
+        //controlPanel1.add(rollButton);
         controlPanel1.add(globalTradingButton);
         //controlPanel1.add(computeMAButton);
 

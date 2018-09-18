@@ -486,7 +486,7 @@ public final class ChinaData extends JPanel {
         }
     }
 
-    static void withHibernateDetailed() {
+    private static void withHibernateDetailed() {
         if (priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
             pr(" saving price detailed @", LocalTime.now());
             saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());

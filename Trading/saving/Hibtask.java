@@ -56,14 +56,13 @@ public class Hibtask {
         try (Session session = sessionF.openSession()) {
 
             symbolNames.forEach((key) -> {
-                if ((!key.startsWith("hk") && !key.equals("IQ")) ||
-                        (saveclass.getSimpleName().equals("PriceMapBarDetailed") && !key.equals("IQ"))) {
-                    ChinaSaveInterface2Blob cs = session.load(saveclass.getClass(), key);
-                    Blob blob1 = cs.getFirstBlob();
-                    Blob blob2 = cs.getSecondBlob();
-                    saveclass.updateFirstMap(key, unblob(blob1));
-                    saveclass.updateSecondMap(key, unblob(blob2));
-                }
+//                if ((!key.startsWith("hk") && !key.equals("IQ")) ||
+//                        (saveclass.getSimpleName().equals("PriceMapBarDetailed") && !key.equals("IQ"))) {
+                ChinaSaveInterface2Blob cs = session.load(saveclass.getClass(), key);
+                Blob blob1 = cs.getFirstBlob();
+                Blob blob2 = cs.getSecondBlob();
+                saveclass.updateFirstMap(key, unblob(blob1));
+                saveclass.updateSecondMap(key, unblob(blob2));
             });
 
         } catch (Exception ex) {
