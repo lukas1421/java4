@@ -3050,6 +3050,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getSymbol().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().isPrimaryOrder())
                 .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                 .map(e -> e.getValue().getOrderTime())
                 .orElse(sessionOpenT());
@@ -3058,18 +3059,22 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     static long lastTwoOrderMilliDiff(String name, AutoOrderType type) {
         long numOrders = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getSymbol().equals(name))
-                .filter(e -> e.getValue().getOrderType() == type).count();
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().isPrimaryOrder())
+                .count();
         if (numOrders < 2) {
             return Long.MAX_VALUE;
         } else {
             LocalDateTime last = globalIdOrderMap.entrySet().stream()
                     .filter(e -> e.getValue().getSymbol().equals(name))
                     .filter(e -> e.getValue().getOrderType() == type)
+                    .filter(e -> e.getValue().isPrimaryOrder())
                     .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                     .map(e -> e.getValue().getOrderTime()).orElseThrow(() -> new IllegalArgumentException("no"));
             LocalDateTime secLast = globalIdOrderMap.entrySet().stream()
                     .filter(e -> e.getValue().getSymbol().equals(name))
                     .filter(e -> e.getValue().getOrderType() == type)
+                    .filter(e -> e.getValue().isPrimaryOrder())
                     .map(e -> e.getValue().getOrderTime())
                     .filter(e -> e.isBefore(last))
                     .max(Comparator.comparing(Function.identity())).orElseThrow(() -> new IllegalArgumentException("no"));
@@ -3077,16 +3082,18 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
     }
 
-    static long tSincePrevOrderMilli(String name, AutoOrderType type, LocalDateTime nowMilli) {
+    private static long tSincePrevOrderMilli(String name, AutoOrderType type, LocalDateTime nowMilli) {
         long numOrders = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getSymbol().equals(name))
-                .filter(e -> e.getValue().getOrderType() == type).count();
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().isPrimaryOrder()).count();
         if (numOrders == 0) {
             return Long.MAX_VALUE;
         } else {
             LocalDateTime last = globalIdOrderMap.entrySet().stream()
                     .filter(e -> e.getValue().getSymbol().equals(name))
                     .filter(e -> e.getValue().getOrderType() == type)
+                    .filter(e -> e.getValue().isPrimaryOrder())
                     .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
                     .map(e -> e.getValue().getOrderTime()).orElseThrow(() -> new IllegalArgumentException("no"));
             return ChronoUnit.MILLIS.between(last, nowMilli);
@@ -3094,7 +3101,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
 
-    static double getAvgFilledBuyPriceForOrderType(String name, AutoOrderType type) {
+    private static double getAvgFilledBuyPriceForOrderType(String name, AutoOrderType type) {
         double botUnits = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getSymbol().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type)
