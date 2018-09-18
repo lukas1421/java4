@@ -159,7 +159,8 @@ public class AutoTraderUS {
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev BUY", globalIdOrderMap.get(id),
                         "buy size/ currpos", buySize, currPos,
-                        "last order T, milliLast2, waitsec", lastOrderTime, milliLastTwo, waitSec));
+                        "last order T, milliLast2, waitsec", lastOrderTime, milliLastTwo, waitSec,
+                        "dir", usOpenDevDirection.get(symbol)));
                 usOpenDevDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && freshPrice < open && usOpenDevDirection.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
@@ -173,7 +174,8 @@ public class AutoTraderUS {
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev SELL", globalIdOrderMap.get(id),
                         "sell size/ currpos", sellSize, currPos,
-                        "last order T, milliLast2, waitsec", lastOrderTime, milliLastTwo, waitSec));
+                        "last order T, milliLast2, waitsec", lastOrderTime, milliLastTwo, waitSec,
+                        "dir", usOpenDevDirection.get(symbol)));
                 usOpenDevDirection.put(symbol, Direction.Short);
             }
     }
