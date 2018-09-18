@@ -117,12 +117,15 @@ public class AutoTraderHK extends JPanel {
 
         if (!manualHKDevMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35, 0))) {
+                outputOrderToAutoLogXU(str("setting manual HK dev:before 935 ", lt));
                 manualHKDevMap.get(symbol).set(true);
             } else {
                 if (freshPrice > open) {
+                    outputOrderToAutoLogXU(str("setting manual HK dev: fresh>open ", lt));
                     hkOpenDevDirection.put(symbol, Direction.Long);
                     manualHKDevMap.get(symbol).set(true);
                 } else if (freshPrice < open) {
+                    outputOrderToAutoLogXU(str("setting manual HK dev: fresh<open", lt));
                     hkOpenDevDirection.put(symbol, Direction.Short);
                     manualHKDevMap.get(symbol).set(true);
                 } else {
@@ -194,34 +197,29 @@ public class AutoTraderHK extends JPanel {
         String ticker = hkSymbolToTicker(symbol);
         Contract ct = tickerToHKContract(ticker);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
-
-        if (prices.size() < 1) {
+        if (prices.size() == 0) {
             return;
         }
-
         if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(10, 0))) {
             return;
         }
-
         LocalTime lastKey = prices.lastKey();
-
         double maxSoFar = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 21)))
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 19)))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
 
         double minSoFar = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 21)))
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 19)))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
         //LocalDate currDate = nowMilli.toLocalDate();
-        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 21)));
-        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(ltof(9, 21)));
-
+        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 19)));
+        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(ltof(9, 19)));
 
         if (!manualHKHiloMap.get(symbol).get()) {
-            if (lt.isBefore(ltof(9, 30))) {
+            if (lt.isBefore(ltof(9, 35))) {
                 manualHKHiloMap.get(symbol).set(true);
             } else {
                 if (maxT.isAfter(minT)) {
