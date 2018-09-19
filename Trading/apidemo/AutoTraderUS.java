@@ -255,7 +255,8 @@ public class AutoTraderUS {
         int waitSec = milliLastTwo < 60000 ? 300 : 10;
 
         pr(" US hilo, name, price ", nowMilli, symbol, freshPrice,
-                "last order T, milliLast2, wait sec", lastOrderT, milliLastTwo, waitSec,
+                "last order T, milliLast2, waitSec", lastOrderT, milliLastTwo, waitSec,
+                lastOrderT.plusSeconds(waitSec),
                 "dir: ", usHiloDirection.get(symbol), "currPos ", currPos);
 
         if (SECONDS.between(lastOrderT, nowMilli) > waitSec && maxSoFar != 0.0 && minSoFar != 0.0) {
@@ -267,8 +268,8 @@ public class AutoTraderUS {
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "US hilo buy", globalIdOrderMap.get(id),
                         "buy size/curr pos", buySize, currPos,
-                        "last order T, milliLast2, waitsec", lastOrderT, milliLastTwo, waitSec,
-                        "dir", usHiloDirection.get(symbol)));
+                        "last order T, milliLast2, waitSec,nexT", lastOrderT, milliLastTwo, waitSec,
+                        lastOrderT.plusSeconds(waitSec), "dir", usHiloDirection.get(symbol)));
                 usHiloDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && (freshPrice < minSoFar || minT.isAfter(maxT))
                     && usHiloDirection.get(symbol) != Direction.Short) {
@@ -283,8 +284,8 @@ public class AutoTraderUS {
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "US hilo sell", globalIdOrderMap.get(id),
                         "sell size/curr pos", sellSize, currPos,
-                        "last order T, millilast2, waitsec", lastOrderT, milliLastTwo, waitSec,
-                        "dir", usHiloDirection.get(symbol)));
+                        "last order T, millilast2, waitSec", lastOrderT, milliLastTwo, waitSec,
+                        lastOrderT.plusSeconds(waitSec), "dir", usHiloDirection.get(symbol)));
                 usHiloDirection.put(symbol, Direction.Short);
             }
         }
