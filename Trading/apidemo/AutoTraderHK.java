@@ -22,7 +22,6 @@ import static apidemo.AutoTraderXU.*;
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.XuTraderHelper.*;
 import static client.Types.TimeInForce.DAY;
-import static client.Types.TimeInForce.IOC;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static util.AutoOrderType.HK_STOCK_DEV;
 import static util.AutoOrderType.HK_STOCK_HILO;
@@ -70,7 +69,7 @@ public class AutoTraderHK extends JPanel {
         if (!globalTradingOn.get()) {
             return;
         }
-        hkOpenDeviationTrader(symbol, nowMilli, freshPrice);
+        //hkOpenDeviationTrader(symbol, nowMilli, freshPrice);
         hkHiloTrader(symbol, nowMilli, freshPrice);
     }
 
@@ -254,7 +253,7 @@ public class AutoTraderHK extends JPanel {
             if (!noMoreBuy.get() && (freshPrice > maxSoFar || maxT.isAfter(minT))
                     && hkHiloDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, HK_SIZE, IOC);
+                Order o = placeBidLimitTIF(freshPrice, HK_SIZE, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "HK hilo buy#:", numOrders, globalIdOrderMap.get(id),
@@ -267,9 +266,9 @@ public class AutoTraderHK extends JPanel {
                 int id = autoTradeID.incrementAndGet();
                 Order o;
                 if (currPos > 0) {
-                    o = placeOfferLimitTIF(freshPrice, Math.min(HK_SIZE, currPos), IOC);
+                    o = placeOfferLimitTIF(freshPrice, Math.min(HK_SIZE, currPos), DAY);
                 } else {
-                    o = placeShortSellLimitTIF(freshPrice, HK_SIZE, IOC);
+                    o = placeShortSellLimitTIF(freshPrice, HK_SIZE, DAY);
                 }
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));

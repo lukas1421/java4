@@ -24,7 +24,6 @@ public class ReceiverUS implements LiveHandler {
 
     @Override
     public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
-
         ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
         ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
         LocalDateTime usLdt = usZdt.toLocalDateTime();

@@ -159,7 +159,7 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev BUY", globalIdOrderMap.get(id),
-                        "open, manual Open", open, manualOpen,
+                        "open, manual Open(9 29 50)", open, manualOpen,
                         "buy size/ currpos", buySize, currPos,
                         "last order T, milliLast2, waitSec", lastOrderTime, milliLastTwo, waitSec,
                         "dir", usOpenDevDirection.get(symbol), "manual?", usOpenDevDirection.get(symbol)));
@@ -175,7 +175,7 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev SELL", globalIdOrderMap.get(id),
-                        "open, manual Open", open, manualOpen,
+                        "open, manual Open(9 29 50)", open, manualOpen,
                         "sell size/ currpos", sellSize, currPos,
                         "last order T, milliLast2, waitSec", lastOrderTime, milliLastTwo, waitSec,
                         "dir", usOpenDevDirection.get(symbol), "manual?", usOpenDevDirection.get(symbol)));

@@ -2950,7 +2950,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
     static void cancelAfterDeadline(LocalTime now, String symbol, AutoOrderType type, LocalTime deadline) {
-        if (now.isAfter(deadline)) {
+        if (now.isAfter(deadline) && now.isBefore(deadline.plusMinutes(10L))) {
             globalIdOrderMap.entrySet().stream()
                     .filter(e -> e.getValue().getSymbol().equals(symbol))
                     .filter(e -> e.getValue().getOrderType() == type)

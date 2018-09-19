@@ -1007,6 +1007,9 @@ public class ApiController implements EWrapper {
         });
     }
 
+    /**
+     * req hk prices for auto trader
+     */
     public void reqHKAutoTrader() {
         AutoTraderHK.hkSymbols.forEach(k -> {
             String ticker = k.substring(2);
@@ -1014,6 +1017,9 @@ public class ApiController implements EWrapper {
         });
     }
 
+    /**
+     * req US prices for auto trading
+     */
     public void reqUSAutoTrader() {
         AutoTraderUS.usSymbols.forEach(k -> {
             req1StockLive(k, "SMART", "USD", ReceiverUS.getReceiverUS(), false);
