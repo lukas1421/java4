@@ -57,7 +57,7 @@ public enum AutoOrderType {
     FORCE_FILL,
     US_STOCK_OPENDEV,
     US_STOCK_HILO,
-    US_CLOSE,
+    US_CLOSE_LIQ,
     US_POST_CUTOFF_LIQ,
     HK_STOCK_DEV,
     HK_STOCK_HILO,

@@ -344,9 +344,9 @@ public class AutoTraderUS {
             return;
         }
 
-        LocalDateTime lastOrderTime = getLastOrderTime(symbol, US_CLOSE);
-        OrderStatus lastOrderStatus = getLastOrderStatusForType(symbol, US_CLOSE);
-        long numOrderCloseLiq = getOrderSizeForTradeType(symbol, US_CLOSE);
+        LocalDateTime lastOrderTime = getLastOrderTime(symbol, US_CLOSE_LIQ);
+        OrderStatus lastOrderStatus = getLastOrderStatusForType(symbol, US_CLOSE_LIQ);
+        long numOrderCloseLiq = getOrderSizeForTradeType(symbol, US_CLOSE_LIQ);
 
         double pos = ibPositionMap.getOrDefault(symbol, 0.0);
 
@@ -358,16 +358,16 @@ public class AutoTraderUS {
             if (pos < 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, pos, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_CLOSE));
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_CLOSE_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputOrderToAutoLogXU(str(o.orderId(), " US close liq buy #:", numOrderCloseLiq,
+                outputOrderToAutoLogXU(str(o.orderId(), " US close liq BUY #:", numOrderCloseLiq,
                         globalIdOrderMap.get(id), "last order time", lastOrderTime, "currPos", pos, "size", pos));
             } else if (pos > 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, pos, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_CLOSE));
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_CLOSE_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputOrderToAutoLogXU(str(o.orderId(), " US close liq sell #:", numOrderCloseLiq
+                outputOrderToAutoLogXU(str(o.orderId(), " US close liq SELL #:", numOrderCloseLiq
                         , globalIdOrderMap.get(id), "last order time", lastOrderTime, "currPos", pos, "size", pos));
             }
         }
