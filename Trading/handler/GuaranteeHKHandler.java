@@ -20,6 +20,7 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
     private static Map<Integer, OrderStatus> idStatusMap = new ConcurrentHashMap<>();
     private int defaultID;
     private ApiController controller;
+    private long maxWaitMilli;
 
     public GuaranteeHKHandler(int id, ApiController ap) {
         defaultID = id;
@@ -27,9 +28,18 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
         controller = ap;
     }
 
+    public GuaranteeHKHandler(int id, ApiController ap, long waitT) {
+        defaultID = id;
+        idStatusMap.put(id, OrderStatus.ConstructedInHandler);
+        controller = ap;
+        maxWaitMilli = waitT;
+    }
+
     @Override
     public void orderState(OrderState orderState) {
         LocalTime now = LocalTime.now();
+        LocalDateTime ldtNow = LocalDateTime.now();
+
         if (globalIdOrderMap.containsKey(defaultID)) {
             globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
             globalIdOrderMap.get(defaultID).setAugmentedOrderStatus(orderState.status());
@@ -43,7 +53,9 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
                     "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
                     "ID:", defaultID, globalIdOrderMap.get(defaultID),
                     "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
+
             outputPurelyOrdersDetailedXU(msg);
+
             if (orderState.status() == OrderStatus.PendingCancel &&
                     globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {
 
@@ -57,11 +69,11 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
 
                 Order o = new Order();
                 o.action(prevOrder.action());
-                o.lmtPrice(freshPrice);
+                o.lmtPrice(prevOrder.action() == Types.Action.BUY ? ask : bid);
                 o.orderType(OrderType.LMT);
                 o.totalQuantity(prevOrder.totalQuantity());
                 o.outsideRth(true);
-                o.tif(Types.TimeInForce.FOK);
+                o.tif(Types.TimeInForce.DAY);
 
                 int id = autoTradeID.incrementAndGet();
                 controller.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, controller));

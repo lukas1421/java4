@@ -2977,7 +2977,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param nowMilli         time now
      * @param timeLimitMinutes how long to wait
      */
-    static void checkCancelOrders(String name, AutoOrderType type, LocalDateTime nowMilli, int timeLimitMinutes) {
+    private static void checkCancelOrders(String name, AutoOrderType type, LocalDateTime nowMilli, int timeLimitMinutes) {
         long ordersNum = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getSymbol().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type).count();
@@ -2986,21 +2986,22 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             OrderStatus lastOrdStatus = globalIdOrderMap.entrySet().stream()
                     .filter(e -> e.getValue().getOrderType() == type)
                     .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                    .map(e -> e.getValue().getAugmentedOrderStatus()).orElse(OrderStatus.Unknown);
+                    .map(e -> e.getValue().getAugmentedOrderStatus()).orElse(Unknown);
 
             LocalDateTime lastOTime = getLastOrderTime(name, type);
 
-            if (lastOrdStatus != Filled && lastOrdStatus != OrderStatus.Cancelled
-                    && lastOrdStatus != OrderStatus.ApiCancelled && lastOrdStatus != OrderStatus.PendingCancel) {
+            if (lastOrdStatus != Filled && lastOrdStatus != Cancelled
+                    && lastOrdStatus != ApiCancelled && lastOrdStatus != PendingCancel
+                    && (lastOrdStatus != DeadlineCancelled)) {
 
                 if (MINUTES.between(lastOTime, nowMilli) > timeLimitMinutes) {
                     globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getOrderType() == type)
                             .forEach(e -> {
-                                if (e.getValue().getAugmentedOrderStatus() == OrderStatus.Submitted ||
-                                        e.getValue().getAugmentedOrderStatus() == OrderStatus.Created) {
+                                if (e.getValue().getAugmentedOrderStatus() == Submitted ||
+                                        e.getValue().getAugmentedOrderStatus() == Created) {
                                     apcon.cancelOrder(e.getValue().getOrder().orderId());
                                     e.getValue().setFinalActionTime(LocalDateTime.now());
-                                    e.getValue().setAugmentedOrderStatus(OrderStatus.Cancelled);
+                                    e.getValue().setAugmentedOrderStatus(Cancelled);
                                 }
                             });
 
