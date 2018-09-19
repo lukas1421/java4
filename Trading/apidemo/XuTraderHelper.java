@@ -125,7 +125,19 @@ public class XuTraderHelper {
         }
     }
 
-    static void outputOrderToAutoLog(String s, File order, File detailed) {
+    static void outputToErrorLog(String s) {
+        pr(s);
+        File output = new File(TradingConstants.GLOBALPATH + "autoError.txt");
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
+            out.append(s);
+            out.newLine();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+
+    private static void outputOrderToAutoLog(String s, File order, File detailed) {
         if (globalIdOrderMap.size() == 1) {
             outputPurelyOrders(str("***", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "***"),
                     order, detailed);

@@ -3342,8 +3342,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
     }
 
+    //orderHandler
     @Override
     public void handle(int errorCode, String errorMsg) {
+        outputToErrorLog("handle error code " + errorCode + " message " + errorMsg);
+        outputOrderToAutoLogXU("handle error code " + errorCode + " message " + errorMsg);
         updateLog(" handle error code " + errorCode + " message " + errorMsg);
     }
 
@@ -3382,8 +3385,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
     }
 
+    //live
     @Override
     public void handle(int orderId, int errorCode, String errorMsg) {
+        outputOrderToAutoLogXU(str("ID:", orderId, "handle error code", errorCode, errorMsg));
+        outputToErrorLog(str("ID:", orderId, "handle error code", errorCode, errorMsg));
         if (errorCode != 504 || LocalTime.now().getSecond() < 5) {
             updateLog(" handle error code " + errorCode + " message " + errorMsg);
         }
