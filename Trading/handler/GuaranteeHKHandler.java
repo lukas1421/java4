@@ -61,7 +61,7 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
                 o.orderType(OrderType.LMT);
                 o.totalQuantity(prevOrder.totalQuantity());
                 o.outsideRth(true);
-                o.tif(IOC);
+                o.tif(Types.TimeInForce.FOK);
 
                 int id = autoTradeID.incrementAndGet();
                 controller.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, controller));

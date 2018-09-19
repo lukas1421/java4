@@ -814,13 +814,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
+        closeLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
+        percentileMATrader(ldt, price, pmChgY); // all day, guarantee
 
         //futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
         //futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
         //futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
-        closeLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
-        percentileMATrader(ldt, price, pmChgY); // all day, guarantee
-
         //futDayMATrader(ldt, price);
         //futFastMATrader(ldt, price);
         //futHiloAccu(ldt, price);
