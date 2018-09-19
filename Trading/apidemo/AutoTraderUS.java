@@ -153,7 +153,7 @@ public class AutoTraderUS {
 
 
         if (SECONDS.between(lastOrderTime, nowMilli) > waitSec)
-            if (!noMoreBuy.get() && freshPrice > open && usOpenDevDirection.get(symbol) != Direction.Long) {
+            if (!noMoreBuy.get() && freshPrice > manualOpen && usOpenDevDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, buySize, Types.TimeInForce.DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
@@ -164,7 +164,7 @@ public class AutoTraderUS {
                         "last order T, milliLast2, waitSec", lastOrderTime, milliLastTwo, waitSec,
                         "dir", usOpenDevDirection.get(symbol), "manual?", usOpenDevDirection.get(symbol)));
                 usOpenDevDirection.put(symbol, Direction.Long);
-            } else if (!noMoreSell.get() && freshPrice < open && usOpenDevDirection.get(symbol) != Direction.Short) {
+            } else if (!noMoreSell.get() && freshPrice < manualOpen && usOpenDevDirection.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o;
                 if (currPos > 0) {
