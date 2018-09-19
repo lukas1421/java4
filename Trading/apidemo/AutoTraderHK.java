@@ -204,17 +204,17 @@ public class AutoTraderHK extends JPanel {
         }
         LocalTime lastKey = prices.lastKey();
         double maxSoFar = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 18)))
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 19,0)))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
 
         double minSoFar = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 18)))
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 19,0)))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 18)));
-        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(ltof(9, 18)));
+        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 19,0)));
+        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(ltof(9, 19,0)));
 
         if (!manualHKHiloMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
@@ -257,7 +257,7 @@ public class AutoTraderHK extends JPanel {
                 Order o = placeBidLimitTIF(freshPrice, HK_SIZE, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
-                outputOrderToAutoLogXU(str(o.orderId(), "HK hilo buy#", numOrders, globalIdOrderMap.get(id),
+                outputOrderToAutoLogXU(str(o.orderId(), "HK hilo buy#:", numOrders, globalIdOrderMap.get(id),
                         "max min maxT minT ", maxSoFar, minSoFar, maxT, minT, "pos", currPos,
                         "last order T, milliLast2, waitSec", lastOrderTime, milliLastTwo, waitSec,
                         "dir, manual ", hkHiloDirection.get(symbol), manualHKHiloMap.get(symbol)));

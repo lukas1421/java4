@@ -97,7 +97,7 @@ public class AutoTraderUS {
 
         cancelAfterDeadline(nowMilli.toLocalTime(), symbol, US_STOCK_OPENDEV, cutoff);
 
-        if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(10, 30))) {
+        if (lt.isBefore(ltof(9, 29, 55)) || lt.isAfter(ltof(10, 30))) {
             return;
         }
         double buySize = US_SIZE;
@@ -140,7 +140,7 @@ public class AutoTraderUS {
         long milliLastTwo = lastTwoOrderMilliDiff(symbol, US_STOCK_OPENDEV);
         int waitSec = (milliLastTwo < 60000) ? 300 : 10;
 
-        double manualOpen = prices.ceilingEntry(ltof(9, 20)).getValue();
+        double manualOpen = prices.ceilingEntry(ltof(9, 29, 50)).getValue();
 
         if (numOrders >= MAX_US_ORDERS) {
             return;
@@ -159,9 +159,10 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev BUY", globalIdOrderMap.get(id),
+                        "open, manual Open", open, manualOpen,
                         "buy size/ currpos", buySize, currPos,
-                        "last order T, milliLast2, waitsec", lastOrderTime, milliLastTwo, waitSec,
-                        "dir", usOpenDevDirection.get(symbol)));
+                        "last order T, milliLast2, waitSec", lastOrderTime, milliLastTwo, waitSec,
+                        "dir", usOpenDevDirection.get(symbol), "manual?", usOpenDevDirection.get(symbol)));
                 usOpenDevDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && freshPrice < open && usOpenDevDirection.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
@@ -174,9 +175,10 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev SELL", globalIdOrderMap.get(id),
+                        "open, manual Open", open, manualOpen,
                         "sell size/ currpos", sellSize, currPos,
-                        "last order T, milliLast2, waitsec", lastOrderTime, milliLastTwo, waitSec,
-                        "dir", usOpenDevDirection.get(symbol)));
+                        "last order T, milliLast2, waitSec", lastOrderTime, milliLastTwo, waitSec,
+                        "dir", usOpenDevDirection.get(symbol), "manual?", usOpenDevDirection.get(symbol)));
                 usOpenDevDirection.put(symbol, Direction.Short);
             }
     }
@@ -195,10 +197,9 @@ public class AutoTraderUS {
         Contract ct = tickerToUSContract(symbol);
         LocalTime cutoff = ltof(10, 0);
 
-        //(symbol,US_STOCK_HILO,nowMilli,);
         cancelAfterDeadline(nowMilli.toLocalTime(), symbol, US_STOCK_HILO, cutoff);
 
-        if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(10, 30))) {
+        if (lt.isBefore(ltof(9, 29, 55)) || lt.isAfter(ltof(10, 30))) {
             return;
         }
 
@@ -207,13 +208,17 @@ public class AutoTraderUS {
         }
 
         LocalTime lastKey = prices.lastKey();
-        double maxSoFar = prices.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
+        double maxSoFar = prices.entrySet().stream()
+                .filter(e -> e.getKey().isAfter(ltof(9, 29, 50)))
+                .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-        double minSoFar = prices.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
+        double minSoFar = prices.entrySet().stream()
+                .filter(e -> e.getKey().isAfter(ltof(9, 29, 50)))
+                .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        LocalTime maxT = getFirstMaxTPred(prices, e -> true);
-        LocalTime minT = getFirstMaxTPred(prices, e -> true);
+        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 29, 50)));
+        LocalTime minT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 29, 50)));
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
         double buySize = US_SIZE;
