@@ -815,9 +815,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
 
 
-        futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
-        futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
-        futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
+        //futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
+        //futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
+        //futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
         closeLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
         percentileMATrader(ldt, price, pmChgY); // all day, guarantee
 
@@ -1663,7 +1663,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         int _2dayPerc = getPercentileForLast(fut);
 
         pr("fut open trader " + futPrice);
-        pr(" curDelta/delta target ", currDelta, deltaTgt);
+        pr(" curDelta/delta target ", r(currDelta), r(deltaTgt));
         LocalTime lastKey = futPrice.lastKey();
 
         double maxP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
@@ -1991,7 +1991,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(buyPrice, buyQ, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(futSymbol, nowMilli, o, INDEX_PM_OPEN_DEVI));
-                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "index pm open dev BUY #:", numPMDeviOrders
                         , globalIdOrderMap.get(id), "pm open ", r(pmOpen), "index, price, pd ",
                         r(indexLast), freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
@@ -2001,7 +2001,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(sellPrice, sellQ, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(futSymbol, nowMilli, o, INDEX_PM_OPEN_DEVI));
-                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "index pm open dev SELL #:", numPMDeviOrders
                         , globalIdOrderMap.get(id), "pm open ", r(pmOpen), "index, price, pd ",
                         r(indexLast), freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
@@ -2958,12 +2958,14 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     .filter(e -> e.getValue().getAugmentedOrderStatus() != Filled)
                     .forEach(e -> {
                         OrderStatus sta = e.getValue().getAugmentedOrderStatus();
-                        if ((sta != Filled) && (sta != PendingCancel) && (sta != Cancelled)) {
+                        if ((sta != Filled) && (sta != PendingCancel) && (sta != Cancelled) &&
+                                (sta != DeadlineCancelled)) {
                             apcon.cancelOrder(e.getValue().getOrder().orderId());
                             e.getValue().setFinalActionTime(LocalDateTime.now());
                             e.getValue().setAugmentedOrderStatus(OrderStatus.DeadlineCancelled);
                             outputOrderToAutoLogXU(str(now, " Cancel after deadline ",
-                                    e.getValue().getOrder().orderId()));
+                                    e.getValue().getOrder().orderId(), "status CHG:",
+                                    sta, "->", e.getValue().getAugmentedOrderStatus()));
                         }
                     });
         }

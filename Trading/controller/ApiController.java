@@ -1672,14 +1672,15 @@ public class ApiController implements EWrapper {
     public void placeOrModifyOrder(Contract ct, final Order o, final IOrderHandler handler) {
         double impact = getDeltaImpactCny(ct, o);
         if (Math.abs(impact) > 1000000) {
-            outputOrderToAutoLogXU(str("impact too big ", impact, ct.symbol(), o.action(),
+            outputOrderToAutoLogXU(str("IMPACT TOO BIG", impact, ct.symbol(), o.action(),
                     o.lmtPrice(), o.totalQuantity()));
             globalTradingOn.set(false);
             return;
-        } else {
-            outputOrderToAutoLogXU(str(" Impact OK ", impact, ct.symbol(), o.action(),
-                    o.lmtPrice(), o.totalQuantity()));
         }
+//        else {
+//            outputOrderToAutoLogXU(str(" Impact OK ", impact, ct.symbol(), o.action(),
+//                    o.lmtPrice(), o.totalQuantity()));
+//        }
 
         if (o.totalQuantity() == 0.0) {
             return;

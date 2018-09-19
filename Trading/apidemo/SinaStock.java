@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static apidemo.AutoTraderXU.*;
 import static apidemo.ChinaData.*;
 import static apidemo.ChinaStock.*;
 import static apidemo.TradingConstants.FTSE_INDEX;
@@ -115,14 +116,12 @@ public class SinaStock implements Runnable {
                     if (ldt.toLocalTime().isAfter(LocalTime.of(9, 20))
                             && ldt.toLocalTime().isBefore(LocalTime.of(15, 5))) { //change this later
                         priceMapBarDetail.get(FTSE_INDEX).put(ldt.toLocalTime(), currIndexPrice);
-
-                        AutoTraderXU.indexFirstTickTrader(ldt, currIndexPrice); //1 tick, guarantee
-                        AutoTraderXU.indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
-                        AutoTraderXU.indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee
-
-                        AutoTraderXU.indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
-                        AutoTraderXU.indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 13:30pm, no guarantee
-                        AutoTraderXU.intradayMAProfitTaker(ldt, currIndexPrice); //all day, guarantee
+                        //AutoTraderXU.indexFirstTickTrader(ldt, currIndexPrice); //1 tick, guarantee (decommission)
+                        indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
+                        indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee
+                        indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
+                        indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 13:30pm, no guarantee
+                        intradayMAProfitTaker(ldt, currIndexPrice); //all day, guarantee
 
                         //AutoTraderXU.closeProfitTaker(ldt, currIndexPrice);
                         //AutoTraderXU.firstTickMAProfitTaker(ldt, currIndexPrice);
