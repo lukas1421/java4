@@ -11,8 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static apidemo.AutoTraderHK.*;
 import static apidemo.AutoTraderMain.autoTradeID;
 import static apidemo.AutoTraderMain.globalIdOrderMap;
-import static apidemo.XuTraderHelper.outputOrderToAutoLogXU;
-import static apidemo.XuTraderHelper.outputPurelyOrdersDetailedXU;
+import static apidemo.XuTraderHelper.*;
 import static client.Types.TimeInForce.IOC;
 import static utility.Utility.str;
 
@@ -97,6 +96,11 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
+        outputOrderToAutoLogXU(str("Guarantee HK handler:","ERROR", defaultID, errorCode, errorMsg
+                , globalIdOrderMap.get(defaultID)));
+        outputToErrorLog(str("Guarantee HK handler:","ERROR", defaultID, errorCode, errorMsg
+                , globalIdOrderMap.get(defaultID)));
+
 
     }
 }

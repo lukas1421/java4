@@ -11,8 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static apidemo.AutoTraderMain.autoTradeID;
 import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderUS.*;
-import static apidemo.XuTraderHelper.outputOrderToAutoLogXU;
-import static apidemo.XuTraderHelper.outputPurelyOrdersDetailedXU;
+import static apidemo.XuTraderHelper.*;
 import static utility.Utility.str;
 
 public class GuaranteeUSHandler implements ApiController.IOrderHandler {
@@ -85,6 +84,9 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-
+        outputOrderToAutoLogXU(str("Guarantee US handler:","ERROR", defaultID, errorCode, errorMsg
+                , globalIdOrderMap.get(defaultID)));
+        outputToErrorLog(str("Guarantee US handler:","ERROR", defaultID, errorCode, errorMsg
+                , globalIdOrderMap.get(defaultID)));
     }
 }

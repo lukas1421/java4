@@ -125,7 +125,7 @@ public class XuTraderHelper {
         }
     }
 
-    static void outputToErrorLog(String s) {
+    public static void outputToErrorLog(String s) {
         pr(s);
         File output = new File(TradingConstants.GLOBALPATH + "autoError.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
