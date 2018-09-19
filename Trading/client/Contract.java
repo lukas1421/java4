@@ -2,11 +2,11 @@
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 package client;
 
-import java.util.ArrayList;
-
 import client.Types.Right;
 import client.Types.SecIdType;
 import client.Types.SecType;
+
+import java.util.ArrayList;
 
 public class Contract implements Cloneable {
 
@@ -44,7 +44,7 @@ public class Contract implements Cloneable {
         return SecIdType.get(m_secIdType);
     }
 
-    public String getSecIdType() {
+    String getSecIdType() {
         return m_secIdType;
     }
 
