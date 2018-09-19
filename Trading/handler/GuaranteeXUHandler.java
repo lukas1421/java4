@@ -88,6 +88,5 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
                 , globalIdOrderMap.get(defaultID)));
         outputToErrorLog(str("Guarantee XU handler:","ERROR", defaultID, errorCode, errorMsg
                 , globalIdOrderMap.get(defaultID)));
-
     }
 }
