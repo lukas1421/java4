@@ -77,6 +77,7 @@ public class AutoTraderUS {
         }
         usOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usHiloTrader(symbol, nowMilli, freshPrice);
+        postCutoffLiqTrader(symbol, nowMilli, freshPrice);
         USLiqTrader(symbol, nowMilli, freshPrice);
     }
 
@@ -93,11 +94,11 @@ public class AutoTraderUS {
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double open = usOpenMap.getOrDefault(symbol, 0.0);
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
-        LocalTime cutoff = ltof(10, 0);
+        LocalTime cutoff = ltof(10, 30);
 
         cancelAfterDeadline(nowMilli.toLocalTime(), symbol, US_STOCK_OPENDEV, cutoff);
 
-        if (lt.isBefore(ltof(9, 29, 55)) || lt.isAfter(ltof(10, 30))) {
+        if (lt.isBefore(ltof(9, 29, 59)) || lt.isAfter(ltof(10, 30))) {
             return;
         }
         double buySize = US_SIZE;
@@ -115,17 +116,18 @@ public class AutoTraderUS {
             }
         }
 
+        double manualOpen = prices.ceilingEntry(ltof(9, 29, 55)).getValue();
 
         if (!manualUSDevMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
                 outputOrderToAutoLogXU(str("Setting manual US Dev 935", lt));
                 manualUSDevMap.get(symbol).set(true);
             } else {
-                if (freshPrice > open) {
+                if (freshPrice > manualOpen) {
                     outputOrderToAutoLogXU(str("Setting manual US Dev: last>open", lt));
                     usOpenDevDirection.put(symbol, Direction.Long);
                     manualUSDevMap.get(symbol).set(true);
-                } else if (freshPrice < open) {
+                } else if (freshPrice < manualOpen) {
                     outputOrderToAutoLogXU(str("Setting manual US Dev: last < open", lt));
                     usOpenDevDirection.put(symbol, Direction.Short);
                     manualUSDevMap.get(symbol).set(true);
@@ -140,8 +142,6 @@ public class AutoTraderUS {
         long milliLastTwo = lastTwoOrderMilliDiff(symbol, US_STOCK_OPENDEV);
         int waitSec = (milliLastTwo < 60000) ? 300 : 10;
 
-        double manualOpen = prices.ceilingEntry(ltof(9, 29, 50)).getValue();
-
         if (numOrders >= MAX_US_ORDERS) {
             return;
         }
@@ -155,13 +155,14 @@ public class AutoTraderUS {
         if (SECONDS.between(lastOrderTime, nowMilli) > waitSec)
             if (!noMoreBuy.get() && freshPrice > manualOpen && usOpenDevDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, buySize, Types.TimeInForce.DAY);
+                Order o = placeBidLimitTIF(freshPrice, buySize, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev BUY", globalIdOrderMap.get(id),
                         "open, manual Open(9 29 50)", open, manualOpen,
                         "buy size/ currpos", buySize, currPos,
-                        "last order T, milliLast2, waitSec", lastOrderTime, milliLastTwo, waitSec,
+                        "last order T, milliLast2, waitSec, next", lastOrderTime, milliLastTwo, waitSec,
+                        lastOrderTime.plusSeconds(waitSec),
                         "dir", usOpenDevDirection.get(symbol), "manual?", usOpenDevDirection.get(symbol)));
                 usOpenDevDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && freshPrice < manualOpen && usOpenDevDirection.get(symbol) != Direction.Short) {
@@ -177,7 +178,8 @@ public class AutoTraderUS {
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev SELL", globalIdOrderMap.get(id),
                         "open, manual Open(9 29 50)", open, manualOpen,
                         "sell size/ currpos", sellSize, currPos,
-                        "last order T, milliLast2, waitSec", lastOrderTime, milliLastTwo, waitSec,
+                        "last order T, milliLast2, waitSec, next", lastOrderTime, milliLastTwo, waitSec,
+                        lastOrderTime.plusSeconds(waitSec),
                         "dir", usOpenDevDirection.get(symbol), "manual?", usOpenDevDirection.get(symbol)));
                 usOpenDevDirection.put(symbol, Direction.Short);
             }
@@ -195,7 +197,7 @@ public class AutoTraderUS {
         LocalTime lt = nowMilli.toLocalTime();
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         Contract ct = tickerToUSContract(symbol);
-        LocalTime cutoff = ltof(10, 0);
+        LocalTime cutoff = ltof(10, 30);
 
         cancelAfterDeadline(nowMilli.toLocalTime(), symbol, US_STOCK_HILO, cutoff);
 
@@ -223,18 +225,6 @@ public class AutoTraderUS {
 
         double buySize = US_SIZE;
         double sellSize = US_SIZE;
-
-        if (lt.isAfter(cutoff)) {
-            if (currPos > 0) {
-                buySize = 0;
-                sellSize = currPos;
-            } else if (currPos < 0) {
-                buySize = Math.abs(currPos);
-                sellSize = 0;
-            } else {
-                return;
-            }
-        }
 
         if (!manualUSHiloMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
@@ -296,6 +286,50 @@ public class AutoTraderUS {
                         "last order T, millilast2, waitsec", lastOrderT, milliLastTwo, waitSec,
                         "dir", usHiloDirection.get(symbol)));
                 usHiloDirection.put(symbol, Direction.Short);
+            }
+        }
+    }
+
+    /**
+     * liquidation after cut off if hit
+     *
+     * @param symbol     symbol
+     * @param nowMilli   time now
+     * @param freshPrice fresh price
+     */
+    private static void postCutoffLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        Contract ct = tickerToUSContract(symbol);
+        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
+        double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
+        LocalTime cutoff = ltof(10, 30);
+
+        if (lt.isBefore(cutoff)) return;
+
+        double manualOpen = prices.ceilingEntry(ltof(9, 29, 55)).getValue();
+
+        long numOrderPostCutoff = getOrderSizeForTradeType(symbol, US_POST_CUTOFF_LIQ);
+        LocalDateTime lastOrderTime = getLastOrderTime(symbol, US_POST_CUTOFF_LIQ);
+
+        if (numOrderPostCutoff >= MAX_US_ORDERS) {
+            return;
+        }
+
+        if (lt.isAfter(cutoff)) {
+            if (currPos < 0 && freshPrice > manualOpen) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimitTIF(freshPrice, currPos, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_POST_CUTOFF_LIQ));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
+                outputOrderToAutoLogXU(str(o.orderId(), " US postCutoff liq sell BUY #:", numOrderPostCutoff
+                        , globalIdOrderMap.get(id), "last order time", lastOrderTime, "currPos", currPos));
+            } else if (currPos > 0 && freshPrice < manualOpen) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_POST_CUTOFF_LIQ));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
+                outputOrderToAutoLogXU(str(o.orderId(), " US postCutoff liq SELL#:", numOrderPostCutoff
+                        , globalIdOrderMap.get(id), "last order time", lastOrderTime, "currPos", currPos));
             }
         }
     }
