@@ -490,7 +490,6 @@ public final class ChinaData extends JPanel {
         if (priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
             pr(" saving price detailed @", LocalTime.now());
             saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());
-
         } else {
             pr(" cannot save price bar detailed ", "max size", priceMapBarDetail.entrySet().stream()
                     .mapToInt(e -> e.getValue().size()).max().orElse(0));

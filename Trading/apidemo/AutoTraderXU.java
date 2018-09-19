@@ -3390,24 +3390,15 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     // position
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
-        String symbol = utility.Utility.ibContractToSymbol(contract);
+        String symbol = ibContractToSymbol(contract);
 
         if (symbol.startsWith("SGXA50")) {
             FutType f = ibContractToFutType(contract);
             currentPosMap.put(f, (int) position);
+            SwingUtilities.invokeLater(() -> AutoTraderXU.outputArea.repaint());
         }
 
         ibPositionMap.put(symbol, position);
-
-//        if (symbol.startsWith("hk")) {
-//            currentPosMap.put(symbol, (int) position);
-//        }
-
-        SwingUtilities.invokeLater(() -> {
-            if (symbol.equals("SGXA50")) {
-                AutoTraderXU.outputArea.repaint();
-            }
-        });
     }
 
     @Override
