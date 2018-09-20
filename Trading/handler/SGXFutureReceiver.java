@@ -28,7 +28,7 @@ public class SGXFutureReceiver implements LiveHandler {
 
 
     @Override
-    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime ldt) {
+    public synchronized void handlePrice(TickType tt, String symbol, double price, LocalDateTime ldt) {
         FutType f = FutType.get(symbol);
         LocalDateTime ldtMin = ldt.truncatedTo(MINUTES);
         LocalTime t = ldtMin.toLocalTime();
@@ -43,8 +43,6 @@ public class SGXFutureReceiver implements LiveHandler {
                 break;
             case CLOSE:
                 pr("fut close in receiver: ", symbol, " close ", price);
-                //AutoTraderXU.fut5amClose.put(name, price);
-                //AutoTraderXU.futPrevClose3pmMap.put(name, price);
                 break;
             case LAST:
                 ChinaStock.priceMap.put(symbol, price);

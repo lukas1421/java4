@@ -839,7 +839,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
         //testTrader(ldt, price);
-        overnightTrader(ldt, price);
+        //overnightTrader(ldt, price);
     }
 
 

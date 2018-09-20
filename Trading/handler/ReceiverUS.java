@@ -23,23 +23,23 @@ public class ReceiverUS implements LiveHandler {
     }
 
     @Override
-    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+    public synchronized void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
         ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
         ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
         LocalDateTime usLdt = usZdt.toLocalDateTime();
         pr(" US handle price ", tt, symbol, price, "ChinaT: ", t, "US T:", usLdt);
 
         switch (tt) {
+            case LAST:
+                usFreshPriceMap.put(symbol, price);
+                ChinaData.priceMapBarDetail.get(symbol).put(usLdt.toLocalTime(), price);
+                processMainUS(symbol, usLdt, price);
+                break;
             case BID:
                 usBidMap.put(symbol, price);
                 break;
             case ASK:
                 usAskMap.put(symbol, price);
-                break;
-            case LAST:
-                usFreshPriceMap.put(symbol, price);
-                ChinaData.priceMapBarDetail.get(symbol).put(usLdt.toLocalTime(), price);
-                processMainUS(symbol, usLdt, price);
                 break;
             case OPEN:
                 usOpenMap.put(symbol, price);

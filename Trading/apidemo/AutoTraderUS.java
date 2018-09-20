@@ -152,12 +152,7 @@ public class AutoTraderUS {
                 usOpenDevDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && freshPrice < manualOpen && usOpenDevDirection.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o;
-                if (currPos > 0) {
-                    o = placeOfferLimitTIF(freshPrice, Math.min(sellSize, currPos), DAY);
-                } else {
-                    o = placeShortSellLimitTIF(freshPrice, sellSize, DAY);
-                }
+                Order o = placeOfferLimitTIF(freshPrice, sellSize, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev SELL", globalIdOrderMap.get(id),
@@ -199,13 +194,14 @@ public class AutoTraderUS {
                 .filter(e -> e.getKey().isAfter(ltof(9, 29, 55)))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+
         double minSoFar = prices.entrySet().stream()
                 .filter(e -> e.getKey().isAfter(ltof(9, 29, 55)))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
         LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 29, 55)));
-        LocalTime minT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 29, 55)));
+        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(ltof(9, 29, 55)));
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
         double buySize = US_SIZE;
@@ -237,10 +233,11 @@ public class AutoTraderUS {
 
         LocalDateTime lastOrderT = getLastOrderTime(symbol, US_STOCK_HILO);
         long milliLastTwo = lastTwoOrderMilliDiff(symbol, US_STOCK_HILO);
-        int waitSec = milliLastTwo < 60000 ? 300 : 10;
+        int waitSec = (milliLastTwo < 60000) ? 300 : 10;
 
         pr(" US hilo#:", numOrders, ", name, price ", nowMilli, symbol, freshPrice,
                 "last order T, milliLast2, waitSec", lastOrderT, milliLastTwo, waitSec,
+                "max min maxt mint ", maxSoFar, minSoFar, maxT, minT,
                 lastOrderT.plusSeconds(waitSec),
                 "dir: ", usHiloDirection.get(symbol), "currPos ", currPos);
 
@@ -261,12 +258,13 @@ public class AutoTraderUS {
             } else if (!noMoreSell.get() && (freshPrice < minSoFar || minT.isAfter(maxT))
                     && usHiloDirection.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o;
-                if (currPos > 0) {
-                    o = placeOfferLimitTIF(freshPrice, Math.min(sellSize, currPos), IOC);
-                } else {
-                    o = placeShortSellLimitTIF(freshPrice, sellSize, IOC);
-                }
+                Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
+
+//                if (currPos > 0) {
+//                    o = placeOfferLimitTIF(freshPrice, Math.min(sellSize, currPos), IOC);
+//                } else {
+//                    o = placeShortSellLimitTIF(freshPrice, sellSize, IOC);
+//                }
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "US hilo sell", globalIdOrderMap.get(id),

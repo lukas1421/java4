@@ -32,8 +32,8 @@ public class AutoTraderMain {
     static File hkDetailOutput = new File(TradingConstants.GLOBALPATH + "hkordersDetailed.txt");
 
     //zones
-    public static ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
-    public static ZoneId nyZone = ZoneId.of("America/New_York");
+    public static final ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
+    public static final ZoneId nyZone = ZoneId.of("America/New_York");
 
     //position
     static volatile Map<String, Double> ibPositionMap = new ConcurrentHashMap<>();
