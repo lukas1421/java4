@@ -143,12 +143,6 @@ public class AutoTraderHK extends JPanel {
 
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
-        pr(" open deviation hk ", prices);
-
-        pr(" HK open dev #: ", numOrders, nowMilli, ticker, symbol, "price:", freshPrice,
-                "open,manualOpen,ft, ftT", open, manualOpen, firstTick, firstTickTime,
-                "last order T", lastOrderTime, "milliLastTwo", milliLastTwo, "waitSec", waitSec,
-                "pos", currPos, "dir:", hkOpenDevDirection.get(symbol), "manual? ", manualHKDevMap.get(symbol));
 
         if (SECONDS.between(lastOrderTime, nowMilli) > waitSec) {
             if (!noMoreBuy.get() && freshPrice > open && hkOpenDevDirection.get(symbol) != Direction.Long) {
@@ -173,6 +167,11 @@ public class AutoTraderHK extends JPanel {
                 hkOpenDevDirection.put(symbol, Direction.Short);
             }
         }
+        pr(" open deviation hk ", prices);
+        pr(" HK open dev #: ", numOrders, nowMilli, ticker, symbol, "price:", freshPrice,
+                "open,manualOpen,ft, ftT", open, manualOpen, firstTick, firstTickTime,
+                "last order T", lastOrderTime, "milliLastTwo", milliLastTwo, "waitSec", waitSec,
+                "pos", currPos, "dir:", hkOpenDevDirection.get(symbol), "manual? ", manualHKDevMap.get(symbol));
     }
 
 
@@ -239,11 +238,6 @@ public class AutoTraderHK extends JPanel {
             return;
         }
 
-        pr(" HK hilo#: ", numOrders, lt, ticker, symbol, "price", freshPrice, "pos", currPos,
-                "max min maxT minT", maxSoFar, minSoFar, maxT, minT,
-                " last order T", lastOrderTime, " milliLastTwo ", milliLastTwo, "wait Sec", waitSec,
-                "dir:", hkHiloDirection.get(symbol), "manual?", manualHKHiloMap.get(symbol));
-
         if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && maxSoFar != 0.0 && minSoFar != 0.0) {
             if (!noMoreBuy.get() && (freshPrice > maxSoFar || maxT.isAfter(minT))
                     && hkHiloDirection.get(symbol) != Direction.Long) {
@@ -269,6 +263,10 @@ public class AutoTraderHK extends JPanel {
                 hkHiloDirection.put(symbol, Direction.Short);
             }
         }
+        pr(" HK hilo#: ", numOrders, lt, ticker, symbol, "price", freshPrice, "pos", currPos,
+                "max min maxT minT", maxSoFar, minSoFar, maxT, minT,
+                " last order T", lastOrderTime, " milliLastTwo ", milliLastTwo, "wait Sec", waitSec,
+                "dir:", hkHiloDirection.get(symbol), "manual?", manualHKHiloMap.get(symbol));
     }
 
     public static Contract tickerToHKContract(String ticker) {

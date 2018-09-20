@@ -9,7 +9,6 @@ import java.time.ZonedDateTime;
 import static apidemo.AutoTraderMain.chinaZone;
 import static apidemo.AutoTraderMain.nyZone;
 import static apidemo.AutoTraderUS.*;
-import static utility.Utility.pr;
 
 
 public class ReceiverUS implements LiveHandler {
@@ -27,7 +26,7 @@ public class ReceiverUS implements LiveHandler {
         ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
         ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
         LocalDateTime usLdt = usZdt.toLocalDateTime();
-        pr(" US handle price ", tt, symbol, price, "ChinaT: ", t, "US T:", usLdt);
+        //pr(" US handle price ", tt, symbol, price, "ChinaT: ", t, "US T:", usLdt);
 
         switch (tt) {
             case LAST:
