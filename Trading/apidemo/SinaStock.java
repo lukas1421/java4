@@ -117,22 +117,20 @@ public class SinaStock implements Runnable {
                     if (ldt.toLocalTime().isAfter(LocalTime.of(9, 20))
                             && ldt.toLocalTime().isBefore(LocalTime.of(15, 5))) { //change this later
                         priceMapBarDetail.get(FTSE_INDEX).put(ldt.toLocalTime(), currIndexPrice);
-                        //AutoTraderXU.indexFirstTickTrader(ldt, currIndexPrice); //1 tick, guarantee (decommission)
 
-
-                        if (!globalTradingOn.get()) {
-                            return;
+                        if (globalTradingOn.get()) {
+                            indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
+                            indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee
+                            indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
+                            indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 13:30pm, no guarantee
+                            intradayMAProfitTaker(ldt, currIndexPrice); //all day, guarantee
+                            //AutoTraderXU.indexFirstTickTrader(ldt, currIndexPrice); //1 tick, guarantee (decommission)
+                            //AutoTraderXU.closeProfitTaker(ldt, currIndexPrice);
+                            //AutoTraderXU.firstTickMAProfitTaker(ldt, currIndexPrice);
+                            //AutoTraderXU.indexHiloAccumulator(ldt, currIndexPrice);
+                            //AutoTraderXU.intraday1stTickAccumulator(ldt, currIndexPrice);
                         }
-                        indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
-                        indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee
-                        indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
-                        indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 13:30pm, no guarantee
-                        intradayMAProfitTaker(ldt, currIndexPrice); //all day, guarantee
 
-                        //AutoTraderXU.closeProfitTaker(ldt, currIndexPrice);
-                        //AutoTraderXU.firstTickMAProfitTaker(ldt, currIndexPrice);
-                        //AutoTraderXU.indexHiloAccumulator(ldt, currIndexPrice);
-                        //AutoTraderXU.intraday1stTickAccumulator(ldt, currIndexPrice);
                     }
                 }
 

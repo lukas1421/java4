@@ -75,7 +75,7 @@ public class AutoTraderUS {
         }
         usOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usHiloTrader(symbol, nowMilli, freshPrice);
-        postCutoffLiqTrader(symbol, nowMilli, freshPrice);
+        postCutoffUSLiqTrader(symbol, nowMilli, freshPrice);
         USLiqTrader(symbol, nowMilli, freshPrice);
     }
 
@@ -296,14 +296,16 @@ public class AutoTraderUS {
      * @param nowMilli   time now
      * @param freshPrice fresh price
      */
-    private static void postCutoffLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+    private static void postCutoffUSLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         Contract ct = tickerToUSContract(symbol);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
         LocalTime cutoff = ltof(10, 30);
 
-        if (lt.isBefore(cutoff)) return;
+        if (lt.isBefore(cutoff)) {
+            return;
+        }
 
         double manualOpen = prices.ceilingEntry(ltof(9, 29, 55)).getValue();
 
@@ -321,14 +323,14 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_POST_CUTOFF_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), " US postCutoff liq sell BUY #:", numOrderPostCutoff
-                        , globalIdOrderMap.get(id), "last order time", lastOrderTime, "currPos", currPos));
+                        , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos));
             } else if (currPos > 0 && freshPrice < manualOpen) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_POST_CUTOFF_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputOrderToAutoLogXU(str(o.orderId(), " US postCutoff liq SELL#:", numOrderPostCutoff
-                        , globalIdOrderMap.get(id), "last order time", lastOrderTime, "currPos", currPos));
+                outputOrderToAutoLogXU(str(o.orderId(), " US postCutoff liq SELL #:", numOrderPostCutoff
+                        , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos));
             }
         }
     }
@@ -360,14 +362,14 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_CLOSE_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), " US close liq BUY #:", numOrderCloseLiq,
-                        globalIdOrderMap.get(id), "last order time", lastOrderTime, "currPos", pos, "size", pos));
+                        globalIdOrderMap.get(id), "last order T", lastOrderTime, "pos", pos));
             } else if (pos > 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, pos, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_CLOSE_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), " US close liq SELL #:", numOrderCloseLiq
-                        , globalIdOrderMap.get(id), "last order time", lastOrderTime, "currPos", pos, "size", pos));
+                        , globalIdOrderMap.get(id), "last order T", lastOrderTime, "pos", pos));
             }
         }
 
