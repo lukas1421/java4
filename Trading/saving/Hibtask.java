@@ -17,8 +17,8 @@ import java.time.temporal.Temporal;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import static apidemo.ChinaStock.symbolNames;
 import static java.time.temporal.ChronoUnit.SECONDS;
+import static utility.Utility.pr;
 
 public class Hibtask {
 
@@ -55,14 +55,19 @@ public class Hibtask {
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
         try (Session session = sessionF.openSession()) {
 
-            symbolNames.forEach((key) -> {
+            //symbolNames
+            ChinaData.priceMapBarDetail.keySet().forEach((key) -> {
 //                if ((!key.startsWith("hk") && !key.equals("IQ")) ||
 //                        (saveclass.getSimpleName().equals("PriceMapBarDetailed") && !key.equals("IQ"))) {
                 ChinaSaveInterface2Blob cs = session.load(saveclass.getClass(), key);
-                Blob blob1 = cs.getFirstBlob();
-                Blob blob2 = cs.getSecondBlob();
-                saveclass.updateFirstMap(key, unblob(blob1));
-                saveclass.updateSecondMap(key, unblob(blob2));
+                if (cs != null) {
+                    Blob blob1 = cs.getFirstBlob();
+                    Blob blob2 = cs.getSecondBlob();
+                    saveclass.updateFirstMap(key, unblob(blob1));
+                    saveclass.updateSecondMap(key, unblob(blob2));
+                } else {
+                    pr(" cs is null");
+                }
             });
 
         } catch (Exception ex) {
@@ -75,9 +80,18 @@ public class Hibtask {
         CompletableFuture.runAsync(() -> {
             loadHibGen(ChinaSave.getInstance());
             loadHibGen(ChinaSaveDetailed.getInstance());
-            //System.out.println(" load finished " + " size is " + ChinaData.priceMapBar.size());
         }).thenAccept(
                 v -> ChinaMain.updateSystemNotif(Utility.str(" LOAD HIB T DONE ",
+                        LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
+                        SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
+                ))
+        );
+    }
+
+    public static void loadHibDetailPrice() {
+        LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
+        CompletableFuture.runAsync(() -> loadHibGen(ChinaSaveDetailed.getInstance())).thenAccept(
+                v -> ChinaMain.updateSystemNotif(Utility.str(" LOAD HIB Detail DONE ",
                         LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
                         SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
                 ))

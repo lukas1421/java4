@@ -216,6 +216,7 @@ public final class ChinaData extends JPanel {
         //JButton saveStratButton = new JButton("Save Strat");
         //JButton loadStratButton = new JButton("Load Strat");
         JButton loadHibGenPriceButton = new JButton("Load hib");
+        JButton loadHibDetailButton = new JButton("Load Detail");
         JButton loadHibernateY = new JButton("Load hib Y");
         JButton unloadHibAllButton = new JButton("Unload T");
         JButton btnLoadBarYtd = new JButton("Load Bar YTD");
@@ -257,6 +258,9 @@ public final class ChinaData extends JPanel {
         buttonUpPanel.add(Box.createHorizontalStrut(150));
 
         buttonDownPanel.add(loadHibGenPriceButton);
+        buttonDownPanel.add(loadHibDetailButton);
+
+
         buttonDownPanel.add(Box.createHorizontalStrut(10));
         buttonDownPanel.add(loadHibernateY);
         buttonDownPanel.add(Box.createHorizontalStrut(20));
@@ -322,6 +326,9 @@ public final class ChinaData extends JPanel {
         saveDetailed.addActionListener(al -> withHibernateDetailed());
         saveOHLCButton.addActionListener(al -> saveChinaOHLC());
         loadHibGenPriceButton.addActionListener(al -> Hibtask.loadHibGenPrice());
+        loadHibDetailButton.addActionListener(al -> Hibtask.loadHibDetailPrice());
+
+
         unloadHibAllButton.addActionListener(al -> {
             priceMapBar.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
             priceMapBarDetail.replaceAll((k, v) -> new ConcurrentSkipListMap<>());

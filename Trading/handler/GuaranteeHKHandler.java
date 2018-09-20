@@ -96,9 +96,9 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-        outputOrderToAutoLogXU(str("Guarantee HK handler:","ERROR", defaultID, errorCode, errorMsg
+        outputOrderToAutoLogXU(str("ERROR", "Guarantee HK handler:", defaultID, errorCode, errorMsg
                 , globalIdOrderMap.get(defaultID)));
-        outputToErrorLog(str("Guarantee HK handler:","ERROR", defaultID, errorCode, errorMsg
+        outputToErrorLog(str("ERROR", "Guarantee HK handler:", defaultID, errorCode, errorMsg
                 , globalIdOrderMap.get(defaultID)));
 
 

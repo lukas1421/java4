@@ -84,9 +84,9 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-        outputOrderToAutoLogXU(str("Guarantee US handler:","ERROR", defaultID, errorCode, errorMsg
+        outputOrderToAutoLogXU(str("ERROR","Guarantee US handler:", defaultID, errorCode, errorMsg
                 , globalIdOrderMap.get(defaultID)));
-        outputToErrorLog(str("Guarantee US handler:","ERROR", defaultID, errorCode, errorMsg
+        outputToErrorLog(str("ERROR","Guarantee US handler:", defaultID, errorCode, errorMsg
                 , globalIdOrderMap.get(defaultID)));
     }
 }

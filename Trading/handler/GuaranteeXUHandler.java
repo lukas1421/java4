@@ -84,9 +84,9 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-        outputOrderToAutoLogXU(str("Guarantee XU handler:","ERROR", defaultID, errorCode, errorMsg
+        outputOrderToAutoLogXU(str("ERROR", "Guarantee XU handler:", defaultID, errorCode, errorMsg
                 , globalIdOrderMap.get(defaultID)));
-        outputToErrorLog(str("Guarantee XU handler:","ERROR", defaultID, errorCode, errorMsg
+        outputToErrorLog(str("ERROR", "Guarantee XU handler:", defaultID, errorCode, errorMsg
                 , globalIdOrderMap.get(defaultID)));
     }
 }

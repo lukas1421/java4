@@ -1988,7 +1988,8 @@ public final class ChinaStock extends JPanel {
 
         @Override
         public int getRowCount() {
-            return symbolNamesFull.size();
+            return priceMapBarDetail.size();
+            //return symbolNamesFull.size();
         }
 
         @Override
@@ -2251,6 +2252,7 @@ public final class ChinaStock extends JPanel {
         public Object getValueAt(int rowIn, int col) {
 
             String name = symbolNamesFull.get(rowIn);
+            //String name = priceMapBarDetail.keySet().stream().collect(toList()).get(rowIn);
 
             switch (col) {
                 //T

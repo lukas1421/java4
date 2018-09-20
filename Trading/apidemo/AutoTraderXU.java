@@ -814,6 +814,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
+
+        //postCutoffLiqTrader(ldt, price);
         closeLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
         percentileMATrader(ldt, price, pmChgY); // all day, guarantee
 
@@ -2161,6 +2163,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return LocalTime.of(h, m, s);
     }
 
+
+    private static void postCutoffLiqTrader(LocalDateTime nowMilli, double freshPrice) {
+
+    }
+
     /**
      * liquidate all positions at close
      *
@@ -2794,7 +2801,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
 
         if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            //pr(" smashort size long size not enough ");
             return;
         }
 
@@ -2853,14 +2859,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
     private static void testTrader(LocalDateTime nowMilli, double freshPrice) {
-
         String futSymbol = ibContractToSymbol(activeFutureCt);
         long numTestOrders = getOrderSizeForTradeType(futSymbol, TEST);
         pr("num test orders ", numTestOrders);
         FutType f = ibContractToFutType(activeFutureCt);
         double bid = bidMap.get(f);
         double ask = askMap.get(f);
-
         if (numTestOrders < 1) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimitTIF(freshPrice + 10.0, 1, IOC);
@@ -2949,6 +2953,14 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 });
     }
 
+    /**
+     * cancel order of type after deadline
+     *
+     * @param now
+     * @param symbol
+     * @param type
+     * @param deadline
+     */
     static void cancelAfterDeadline(LocalTime now, String symbol, AutoOrderType type, LocalTime deadline) {
         if (now.isAfter(deadline) && now.isBefore(deadline.plusMinutes(10L))) {
             globalIdOrderMap.entrySet().stream()
@@ -3347,9 +3359,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     //orderHandler
     @Override
     public void handle(int errorCode, String errorMsg) {
-        outputOrderToAutoLogXU("handle error code " + errorCode + " message " + errorMsg);
-        outputToErrorLog("handle error code " + errorCode + " message " + errorMsg);
-        updateLog(" handle error code " + errorCode + " message " + errorMsg);
+        outputOrderToAutoLogXU("ERROR code " + errorCode + " message " + errorMsg);
+        outputToErrorLog("ERROR code " + errorCode + " message " + errorMsg);
+        updateLog(" ERROR code " + errorCode + " message " + errorMsg);
     }
 
     @Override
@@ -3390,8 +3402,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     //live
     @Override
     public void handle(int orderId, int errorCode, String errorMsg) {
-        outputOrderToAutoLogXU(str("LIVE ERROR ID:", orderId, "code", errorCode, "MSG", errorMsg));
-        outputToErrorLog(str("LIVE ERROR ID:", orderId, "code", errorCode, "MSG", errorMsg));
+        outputOrderToAutoLogXU(str("ERROR LIVE ID:", orderId, "code", errorCode, "MSG", errorMsg));
+        outputToErrorLog(str("ERROR LIVE ID:", orderId, "code", errorCode, "MSG", errorMsg));
         if (errorCode != 504 || LocalTime.now().getSecond() < 5) {
             updateLog(" handle error code " + errorCode + " message " + errorMsg);
         }

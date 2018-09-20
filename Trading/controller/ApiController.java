@@ -1662,7 +1662,10 @@ public class ApiController implements EWrapper {
 
             @Override
             public void handle(int errorCode, String errorMsg) {
-                outputOrderToAutoLogXU(str("Default Order handler:","ERROR", defaultID, errorCode, errorMsg
+                outputOrderToAutoLogXU(str("Default Order handler:", "ERROR", defaultID, errorCode, errorMsg
+                        , globalIdOrderMap.get(defaultID)));
+
+                outputToErrorLog(str("Default Order handler:", "ERROR", defaultID, errorCode, errorMsg
                         , globalIdOrderMap.get(defaultID)));
 
                 pr(" handle error code " + errorCode + " message " + errorMsg);
