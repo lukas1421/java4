@@ -36,11 +36,9 @@ public class AutoTraderUS {
     private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSDevMap = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSHiloMap = new ConcurrentHashMap<>();
 
-    //public static volatile ;
     private static final int MAX_US_ORDERS = 4;
     public static List<String> usSymbols = new ArrayList<>();
     private static final double US_SIZE = 100;
-    static String ticker = "IQ";
 
 
     public static Contract tickerToUSContract(String ticker) {

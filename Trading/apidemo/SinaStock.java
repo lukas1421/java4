@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static apidemo.AutoTraderMain.globalTradingOn;
 import static apidemo.AutoTraderXU.*;
 import static apidemo.ChinaData.*;
 import static apidemo.ChinaStock.*;
@@ -117,6 +118,11 @@ public class SinaStock implements Runnable {
                             && ldt.toLocalTime().isBefore(LocalTime.of(15, 5))) { //change this later
                         priceMapBarDetail.get(FTSE_INDEX).put(ldt.toLocalTime(), currIndexPrice);
                         //AutoTraderXU.indexFirstTickTrader(ldt, currIndexPrice); //1 tick, guarantee (decommission)
+
+
+                        if (!globalTradingOn.get()) {
+                            return;
+                        }
                         indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
                         indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee
                         indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
