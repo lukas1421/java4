@@ -22,10 +22,16 @@ public class ReceiverHK implements LiveHandler {
 
     @Override
     // name starts with hk
-    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+    public synchronized void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
         pr("hk tt name, price t", tt, symbol, price, t);
 
         switch (tt) {
+            case LAST:
+                //hkPriceMapDetail.get(name).put(t, price);
+                ChinaData.priceMapBarDetail.get(symbol).put(t.toLocalTime(), price);
+                hkFreshPriceMap.put(symbol, price);
+                processeMainHK(symbol, t, price);
+                break;
             case BID:
                 hkBidMap.put(symbol, price);
                 break;
@@ -35,12 +41,7 @@ public class ReceiverHK implements LiveHandler {
             case OPEN:
                 hkOpenMap.put(symbol, price);
                 break;
-            case LAST:
-                //hkPriceMapDetail.get(name).put(t, price);
-                ChinaData.priceMapBarDetail.get(symbol).put(t.toLocalTime(), price);
-                hkFreshPriceMap.put(symbol, price);
-                processeMainHK(symbol, t, price);
-                break;
+
         }
     }
 
