@@ -817,6 +817,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         //postCutoffLiqTrader(ldt, price);
         cancelAllAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
+        cancelAllAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
         closeLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
         percentileMATrader(ldt, price, pmChgY); // all day, guarantee
 
@@ -3424,8 +3425,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     //live
     @Override
     public void handle(int orderId, int errorCode, String errorMsg) {
-        outputOrderToAutoLogXU(str("ERROR LIVE ID:", orderId, "code", errorCode, "MSG", errorMsg));
+        //outputOrderToAutoLogXU(str("ERROR LIVE ID:", orderId, "code", errorCode, "MSG", errorMsg));
         outputToErrorLog(str("ERROR LIVE ID:", orderId, "code", errorCode, "MSG", errorMsg));
+
         if (errorCode != 504 || LocalTime.now().getSecond() < 5) {
             updateLog(" handle error code " + errorCode + " message " + errorMsg);
         }
