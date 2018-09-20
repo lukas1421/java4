@@ -137,7 +137,6 @@ public class AutoTraderUS {
                 "last order T/ millilast2/ waitsec", lastOrderTime, milliLastTwo, waitSec,
                 "curr pos ", currPos, "dir: ", usOpenDevDirection.get(symbol));
 
-
         if (SECONDS.between(lastOrderTime, nowMilli) > waitSec)
             if (!noMoreBuy.get() && freshPrice > manualOpen && usOpenDevDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
@@ -304,7 +303,7 @@ public class AutoTraderUS {
         long numOrderPostCutoff = getOrderSizeForTradeType(symbol, US_POST_CUTOFF_LIQ);
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, US_POST_CUTOFF_LIQ);
 
-        if (numOrderPostCutoff >= MAX_US_ORDERS) {
+        if (numOrderPostCutoff >= 1) {
             return;
         }
 
@@ -315,6 +314,7 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_POST_CUTOFF_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), " US postCutoff liq sell BUY #:", numOrderPostCutoff
+                        , "T now", lt, " cut off", cutoff
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos));
             } else if (currPos > 0 && freshPrice < manualOpen) {
                 int id = autoTradeID.incrementAndGet();
@@ -322,11 +322,19 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_POST_CUTOFF_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), " US postCutoff liq SELL #:", numOrderPostCutoff
+                        , "T now", lt, " cut off", cutoff
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos));
             }
         }
     }
 
+    /**
+     * liquidate at US close
+     *
+     * @param symbol     symbol
+     * @param nowMilli   now time
+     * @param freshPrice price
+     */
     private static void USLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime liqStartTime = ltof(15, 50);
         LocalTime liqEndTime = ltof(16, 0);
