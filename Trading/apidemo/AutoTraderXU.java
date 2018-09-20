@@ -1906,9 +1906,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             case MONDAY:
                 return 2;
             case TUESDAY:
-                return 2;
+                return 3;
             case WEDNESDAY:
-                return 1;
+                return 2;
             case THURSDAY:
                 return 1;
             case FRIDAY:

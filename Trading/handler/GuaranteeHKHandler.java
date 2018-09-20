@@ -90,8 +90,8 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
     }
 
     @Override
-    public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
-
+    public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice,
+                            long permId, int parentId, double lastFillPrice, int clientId, String whyHeld) {
     }
 
     @Override
@@ -100,7 +100,5 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
                 , globalIdOrderMap.get(defaultID)));
         outputToErrorLog(str("ERROR", "Guarantee HK handler:", defaultID, errorCode, errorMsg
                 , globalIdOrderMap.get(defaultID)));
-
-
     }
 }
