@@ -12,6 +12,7 @@ import static apidemo.AutoTraderMain.autoTradeID;
 import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderUS.*;
 import static apidemo.XuTraderHelper.*;
+import static client.Types.TimeInForce.IOC;
 import static utility.Utility.str;
 
 public class GuaranteeUSHandler implements ApiController.IOrderHandler {
@@ -44,8 +45,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
                     "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
             outputPurelyOrdersDetailedXU(msg);
             if (orderState.status() == OrderStatus.PendingCancel &&
-                    globalIdOrderMap.get(defaultID).getOrder().tif() == Types.TimeInForce.IOC) {
-
+                    globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {
                 String symbol = globalIdOrderMap.get(defaultID).getSymbol();
                 double freshPrice = usFreshPriceMap.get(symbol);
                 double bid = usBidMap.get(symbol);
@@ -59,7 +59,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
                 o.orderType(OrderType.LMT);
                 o.totalQuantity(prevOrder.totalQuantity());
                 o.outsideRth(true);
-                o.tif(Types.TimeInForce.IOC);
+                o.tif(IOC);
 
                 int id = autoTradeID.incrementAndGet();
                 controller.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, controller));

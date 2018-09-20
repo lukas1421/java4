@@ -144,7 +144,7 @@ public class AutoTraderUS {
             return;
         }
 
-        pr(" US open dev", lt, nowMilli, "name, price ", symbol, freshPrice,
+        pr(" US open dev#:", numOrders, lt, nowMilli, "name, price ", symbol, freshPrice,
                 "open/manual open ", usOpenMap.getOrDefault(symbol, 0.0), manualOpen,
                 "last order T/ millilast2/ waitsec", lastOrderTime, milliLastTwo, waitSec,
                 "curr pos ", currPos, "dir: ", usOpenDevDirection.get(symbol));
@@ -252,7 +252,7 @@ public class AutoTraderUS {
         long milliLastTwo = lastTwoOrderMilliDiff(symbol, US_STOCK_HILO);
         int waitSec = milliLastTwo < 60000 ? 300 : 10;
 
-        pr(" US hilo, name, price ", nowMilli, symbol, freshPrice,
+        pr(" US hilo#:", numOrders, ", name, price ", nowMilli, symbol, freshPrice,
                 "last order T, milliLast2, waitSec", lastOrderT, milliLastTwo, waitSec,
                 lastOrderT.plusSeconds(waitSec),
                 "dir: ", usHiloDirection.get(symbol), "currPos ", currPos);
