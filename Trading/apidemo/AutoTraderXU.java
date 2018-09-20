@@ -768,7 +768,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return 50;
     }
 
-    public static void processMain(LocalDateTime ldt, double price) {
+    public static void processMainXU(LocalDateTime ldt, double price) {
         LocalTime lt = ldt.toLocalTime();
         double currDelta = getNetPtfDelta();
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
@@ -816,6 +816,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
 
         //postCutoffLiqTrader(ldt, price);
+        cancelAllAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
         closeLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
         percentileMATrader(ldt, price, pmChgY); // all day, guarantee
 
@@ -2953,6 +2954,26 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 });
     }
 
+
+    private static void cancelAllAfterDeadline(LocalTime now, LocalTime deadline) {
+        if (now.isAfter(deadline) && now.isBefore(deadline.plusMinutes(10L))) {
+            globalIdOrderMap.entrySet().stream()
+                    .filter(e -> e.getValue().getAugmentedOrderStatus() != Filled)
+                    .forEach(e -> {
+                        OrderStatus sta = e.getValue().getAugmentedOrderStatus();
+                        if ((sta != Filled) && (sta != PendingCancel) && (sta != Cancelled) &&
+                                (sta != DeadlineCancelled)) {
+                            apcon.cancelOrder(e.getValue().getOrder().orderId());
+                            e.getValue().setFinalActionTime(LocalDateTime.now());
+                            e.getValue().setAugmentedOrderStatus(OrderStatus.DeadlineCancelled);
+                            outputOrderToAutoLogXU(str(now, " Cancel ALL after deadline ",
+                                    e.getValue().getOrder().orderId(), "status CHG:",
+                                    sta, "->", e.getValue().getAugmentedOrderStatus()));
+                        }
+                    });
+        }
+    }
+
     /**
      * cancel order of type after deadline
      *
@@ -2989,7 +3010,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param nowMilli         time now
      * @param timeLimitMinutes how long to wait
      */
-    private static void checkCancelOrders(String name, AutoOrderType type, LocalDateTime nowMilli, int timeLimitMinutes) {
+    private static void checkCancelOrders(String name, AutoOrderType type, LocalDateTime nowMilli,
+                                          int timeLimitMinutes) {
         long ordersNum = globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getSymbol().equals(name))
                 .filter(e -> e.getValue().getOrderType() == type).count();

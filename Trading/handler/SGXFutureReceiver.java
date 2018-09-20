@@ -74,7 +74,7 @@ public class SGXFutureReceiver implements LiveHandler {
 
                         if (symbol.equalsIgnoreCase(activeFut) &&
                                 AutoTraderXU.futData.get(f).lastKey().truncatedTo(MINUTES).equals(ldt.truncatedTo(MINUTES))) {
-                            AutoTraderXU.processMain(ldt, price);
+                            AutoTraderXU.processMainXU(ldt, price);
                         }
                     }
                 }
