@@ -163,12 +163,7 @@ public class AutoTraderHK extends JPanel {
                 hkOpenDevDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && freshPrice < open && hkOpenDevDirection.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o;
-                if (currPos > 0) {
-                    o = placeOfferLimitTIF(freshPrice, Math.min(HK_SIZE, currPos), DAY);
-                } else {
-                    o = placeShortSellLimitTIF(freshPrice, HK_SIZE, DAY);
-                }
+                Order o = placeOfferLimitTIF(freshPrice, HK_SIZE, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_DEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "HK open dev SELL#:", numOrders, globalIdOrderMap.get(id),
@@ -203,17 +198,17 @@ public class AutoTraderHK extends JPanel {
         }
         LocalTime lastKey = prices.lastKey();
         double maxSoFar = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 19,0)))
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 19, 0)))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
 
         double minSoFar = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 19,0)))
+                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 19, 0)))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 19,0)));
-        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(ltof(9, 19,0)));
+        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 19, 0)));
+        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(ltof(9, 19, 0)));
 
         if (!manualHKHiloMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
@@ -264,12 +259,7 @@ public class AutoTraderHK extends JPanel {
             } else if (!noMoreSell.get() && (freshPrice < minSoFar || minT.isAfter(maxT))
                     && hkHiloDirection.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o;
-                if (currPos > 0) {
-                    o = placeOfferLimitTIF(freshPrice, Math.min(HK_SIZE, currPos), DAY);
-                } else {
-                    o = placeShortSellLimitTIF(freshPrice, HK_SIZE, DAY);
-                }
+                Order o = placeOfferLimitTIF(freshPrice, HK_SIZE, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "HK hilo sell#:", numOrders, globalIdOrderMap.get(id),
