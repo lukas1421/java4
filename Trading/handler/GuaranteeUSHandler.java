@@ -12,6 +12,7 @@ import static apidemo.AutoTraderMain.autoTradeID;
 import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderUS.*;
 import static apidemo.XuTraderHelper.*;
+import static client.OrderStatus.PendingCancel;
 import static client.Types.TimeInForce.IOC;
 import static utility.Utility.str;
 
@@ -44,8 +45,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
                     "ID:", defaultID, globalIdOrderMap.get(defaultID),
                     "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
             outputPurelyOrdersDetailedXU(msg);
-            if (orderState.status() == OrderStatus.PendingCancel &&
-                    globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {
+            if (orderState.status() == PendingCancel && globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {
                 String symbol = globalIdOrderMap.get(defaultID).getSymbol();
                 double freshPrice = usFreshPriceMap.get(symbol);
                 double bid = usBidMap.get(symbol);
@@ -84,9 +84,9 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-//        outputOrderToAutoLogXU(str("ERROR","Guarantee US handler:", defaultID, errorCode, errorMsg
-//                , globalIdOrderMap.get(defaultID)));
-        outputToErrorLog(str("ERROR","Guarantee US handler:", defaultID, errorCode, errorMsg
+        outputOrderToAutoLogXU(str("ERROR:", "Guarantee US handler:", defaultID, errorCode, errorMsg
+                , globalIdOrderMap.get(defaultID)));
+        outputToErrorLog(str("ERROR:", "Guarantee US handler:", defaultID, errorCode, errorMsg
                 , globalIdOrderMap.get(defaultID)));
     }
 }

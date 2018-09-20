@@ -298,6 +298,10 @@ public class AutoTraderUS {
             return;
         }
 
+        if (prices.lastKey().isBefore(ltof(9, 29, 55))) {
+            return;
+        }
+
         double manualOpen = prices.ceilingEntry(ltof(9, 29, 55)).getValue();
 
         long numOrderPostCutoff = getOrderSizeForTradeType(symbol, US_POST_CUTOFF_LIQ);
