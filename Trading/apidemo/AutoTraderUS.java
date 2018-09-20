@@ -102,18 +102,6 @@ public class AutoTraderUS {
         double buySize = US_SIZE;
         double sellSize = US_SIZE;
 
-        if (lt.isAfter(cutoff)) {
-            if (currPos > 0) {
-                buySize = 0;
-                sellSize = currPos;
-            } else if (currPos < 0) {
-                buySize = Math.abs(currPos);
-                sellSize = 0;
-            } else {
-                return;
-            }
-        }
-
         double manualOpen = prices.ceilingEntry(ltof(9, 29, 55)).getValue();
 
         if (!manualUSDevMap.get(symbol).get()) {
@@ -157,9 +145,9 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev BUY", globalIdOrderMap.get(id),
-                        "open, manual Open(9 29 50)", open, manualOpen,
+                        "open, manual Open(9 29 55)", open, manualOpen,
                         "buy size/ currpos", buySize, currPos,
-                        "last order T, milliLast2, waitSec, next", lastOrderTime, milliLastTwo, waitSec,
+                        "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
                         lastOrderTime.plusSeconds(waitSec),
                         "dir", usOpenDevDirection.get(symbol), "manual?", usOpenDevDirection.get(symbol)));
                 usOpenDevDirection.put(symbol, Direction.Long);
@@ -174,9 +162,9 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev SELL", globalIdOrderMap.get(id),
-                        "open, manual Open(9 29 50)", open, manualOpen,
+                        "open, manual Open(9 29 55)", open, manualOpen,
                         "sell size/ currpos", sellSize, currPos,
-                        "last order T, milliLast2, waitSec, next", lastOrderTime, milliLastTwo, waitSec,
+                        "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
                         lastOrderTime.plusSeconds(waitSec),
                         "dir", usOpenDevDirection.get(symbol), "manual?", usOpenDevDirection.get(symbol)));
                 usOpenDevDirection.put(symbol, Direction.Short);
@@ -199,26 +187,26 @@ public class AutoTraderUS {
 
         cancelAfterDeadline(nowMilli.toLocalTime(), symbol, US_STOCK_HILO, cutoff);
 
-        if (lt.isBefore(ltof(9, 29, 55)) || lt.isAfter(ltof(10, 30))) {
+        if (lt.isBefore(ltof(9, 29, 59)) || lt.isAfter(ltof(10, 30))) {
             return;
         }
 
-        if (prices.size() < 1) {
+        if (prices.size() < 1 || prices.lastKey().isBefore(ltof(9, 29, 55))) {
             return;
         }
 
         LocalTime lastKey = prices.lastKey();
         double maxSoFar = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(9, 29, 50)))
+                .filter(e -> e.getKey().isAfter(ltof(9, 29, 55)))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
         double minSoFar = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(9, 29, 50)))
+                .filter(e -> e.getKey().isAfter(ltof(9, 29, 55)))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 29, 50)));
-        LocalTime minT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 29, 50)));
+        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 29, 55)));
+        LocalTime minT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 29, 55)));
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
         double buySize = US_SIZE;
