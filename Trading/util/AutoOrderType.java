@@ -34,6 +34,7 @@ public enum AutoOrderType {
     DAY_SELLBACK,
     INDEX_FIRST_TICK,
     INDEX_HILO,
+    FUT_POST_AMCUTOFF,
     CLOSE_LIQ,
     INDEX_PM_HILO,
     INDEX_PM_OPEN_DEVI,
@@ -61,6 +62,6 @@ public enum AutoOrderType {
     US_POST_CUTOFF_LIQ,
     HK_STOCK_DEV,
     HK_STOCK_HILO,
-    HK_CLOSE,
+    HK_CLOSE_LIQ,
     UNKNOWN
 }

@@ -23,8 +23,7 @@ import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.XuTraderHelper.*;
 import static client.Types.TimeInForce.DAY;
 import static java.time.temporal.ChronoUnit.SECONDS;
-import static util.AutoOrderType.HK_STOCK_DEV;
-import static util.AutoOrderType.HK_STOCK_HILO;
+import static util.AutoOrderType.*;
 import static utility.Utility.*;
 
 public class AutoTraderHK extends JPanel {
@@ -71,6 +70,7 @@ public class AutoTraderHK extends JPanel {
         }
         hkOpenDeviationTrader(symbol, nowMilli, freshPrice);
         hkHiloTrader(symbol, nowMilli, freshPrice);
+        hkCloseLiqTrader(symbol, nowMilli, freshPrice);
     }
 
     public static String hkSymbolToTicker(String symbol) {
@@ -174,6 +174,36 @@ public class AutoTraderHK extends JPanel {
                 "pos", currPos, "dir:", hkOpenDevDirection.get(symbol), "manual? ", manualHKDevMap.get(symbol));
     }
 
+
+    private static void hkCloseLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        String ticker = hkSymbolToTicker(symbol);
+        Contract ct = tickerToHKContract(ticker);
+        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
+        if (lt.isBefore(ltof(15, 50)) || lt.isAfter(ltof(16, 0))) {
+            return;
+        }
+        double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
+        long numOrders = getOrderSizeForTradeType(symbol, HK_CLOSE_LIQ);
+        if (numOrders >= 1) {
+            return;
+        }
+        if (currPos < 0) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), DAY);
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_CLOSE_LIQ));
+            apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
+            outputOrderToAutoLogXU(str(o.orderId(), "HK close Liq BUY:#:", numOrders, globalIdOrderMap.get(id),
+                    "pos", currPos));
+        } else if (currPos > 0) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimitTIF(freshPrice, currPos, DAY);
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_CLOSE_LIQ));
+            apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
+            outputOrderToAutoLogXU(str(o.orderId(), "HK close Liq SELL:#:", numOrders, globalIdOrderMap.get(id),
+                    "pos", currPos));
+        }
+    }
 
     /**
      * hk hilo trader for hk

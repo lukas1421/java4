@@ -2035,7 +2035,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-
         long numPMHiloOrders = getOrderSizeForTradeType(futSymbol, INDEX_PM_HILO);
         if (numPMHiloOrders >= MAX_ORDER_SIZE) {
             if (detailedPrint.get()) {
@@ -2166,10 +2165,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
 
-    private static void postCutoffLiqTrader(LocalDateTime nowMilli, double freshPrice) {
-
-    }
-
     /**
      * liquidate all positions at close
      *
@@ -2281,6 +2276,48 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                     outputOrderToAutoLogXU(str(o.orderId(), " fut tenta sell #:", numOrders));
                 }
+            }
+        }
+    }
+
+    /**
+     * post am cutoff liquidate trader
+     *
+     * @param nowMilli
+     * @param indexLast
+     */
+    private static void postCutoffLiqTraderXU(LocalDateTime nowMilli, double indexLast) {
+        LocalTime lt = nowMilli.toLocalTime();
+        LocalTime cutoff = ltof(10, 0);
+        String futSymbol = ibContractToSymbol(activeFutureCt);
+        FutType f = ibContractToFutType(activeFutureCt);
+        double freshPrice = futPriceMap.get(f);
+
+        long numOrders = getOrderSizeForTradeType(futSymbol, FUT_POST_AMCUTOFF);
+
+        int currPos = currentPosMap.get(f);
+
+        if (numOrders >= 1) {
+            return;
+        }
+
+        double openIndex = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(9, 28, 0)).getValue();
+
+        if (lt.isAfter(cutoff) && lt.isBefore(ltof(11, 30, 0))) {
+            if (currPos < 0 && indexLast > openIndex) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(futSymbol, nowMilli, o, FUT_POST_AMCUTOFF));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
+                outputOrderToAutoLogXU(str(o.orderId(), " post AM Cutoff BUY#:", numOrders
+                        , globalIdOrderMap.get(id), "index last, open ", indexLast, openIndex));
+            } else if (currPos > 0 && indexLast < openIndex) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(futSymbol, nowMilli, o, FUT_POST_AMCUTOFF));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
+                outputOrderToAutoLogXU(str(o.orderId(), " post AM Cutoff SELL#:", numOrders
+                        , globalIdOrderMap.get(id), "index last, open ", indexLast, openIndex));
             }
         }
     }
