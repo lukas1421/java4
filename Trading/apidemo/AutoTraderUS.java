@@ -92,11 +92,11 @@ public class AutoTraderUS {
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double open = usOpenMap.getOrDefault(symbol, 0.0);
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
-        LocalTime cutoff = ltof(10, 30);
+        LocalTime cutoff = ltof(10, 0);
 
         cancelAfterDeadline(nowMilli.toLocalTime(), symbol, US_STOCK_OPENDEV, cutoff);
 
-        if (lt.isBefore(ltof(9, 29, 59)) || lt.isAfter(ltof(10, 30))) {
+        if (lt.isBefore(ltof(9, 29, 59)) || lt.isAfter(ltof(10, 0))) {
             return;
         }
         double buySize = US_SIZE;
@@ -177,11 +177,11 @@ public class AutoTraderUS {
         LocalTime lt = nowMilli.toLocalTime();
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         Contract ct = tickerToUSContract(symbol);
-        LocalTime cutoff = ltof(10, 30);
+        LocalTime cutoff = ltof(10, 0);
 
         cancelAfterDeadline(nowMilli.toLocalTime(), symbol, US_STOCK_HILO, cutoff);
 
-        if (lt.isBefore(ltof(9, 29, 59)) || lt.isAfter(ltof(10, 30))) {
+        if (lt.isBefore(ltof(9, 29, 59)) || lt.isAfter(ltof(10, 0))) {
             return;
         }
 
@@ -290,7 +290,7 @@ public class AutoTraderUS {
         Contract ct = tickerToUSContract(symbol);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
-        LocalTime cutoff = ltof(10, 30);
+        LocalTime cutoff = ltof(10, 0);
 
         if (lt.isBefore(cutoff)) {
             return;
@@ -305,11 +305,12 @@ public class AutoTraderUS {
         long numOrderPostCutoff = getOrderSizeForTradeType(symbol, US_POST_CUTOFF_LIQ);
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, US_POST_CUTOFF_LIQ);
 
+
         if (numOrderPostCutoff >= 1) {
             return;
         }
 
-        if (lt.isAfter(cutoff)) {
+        if (lt.isAfter(cutoff) && lt.isBefore(ltof(16, 0))) {
             if (currPos < 0 && freshPrice > manualOpen) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, currPos, IOC);

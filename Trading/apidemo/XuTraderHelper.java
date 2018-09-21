@@ -172,7 +172,7 @@ public class XuTraderHelper {
         outputPurelyOrders(s, xuOrderOutput, xuDetailOutput);
     }
 
-    public static void outputPurelyOrdersDetailed(String s, File detailed) {
+    private static void outputPurelyOrdersDetailed(String s, File detailed) {
         //File output = new File(TradingConstants.GLOBALPATH + "ordersDetailed.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(detailed, true))) {
             out.append(s);

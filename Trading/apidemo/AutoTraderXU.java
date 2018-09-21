@@ -819,8 +819,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         cancelAllAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
         cancelAllAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
         closeLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
-        percentileMATrader(ldt, price, pmChgY); // all day, guarantee
 
+        //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
         //futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
         //futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
         //futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
@@ -3027,7 +3027,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
 
     private static void cancelAllAfterDeadline(LocalTime now, LocalTime deadline) {
-        if (now.isAfter(deadline) && now.isBefore(deadline.plusMinutes(10L))) {
+        if (now.isAfter(deadline) && now.isBefore(deadline.plusMinutes(1L))) {
             globalIdOrderMap.entrySet().stream()
                     .filter(e -> e.getValue().getAugmentedOrderStatus() != Filled)
                     .forEach(e -> {
@@ -3048,13 +3048,13 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     /**
      * cancel order of type after deadline
      *
-     * @param now
-     * @param symbol
-     * @param type
-     * @param deadline
+     * @param now      time now
+     * @param symbol   symbol
+     * @param type     order type
+     * @param deadline deadline after which to cut
      */
     static void cancelAfterDeadline(LocalTime now, String symbol, AutoOrderType type, LocalTime deadline) {
-        if (now.isAfter(deadline) && now.isBefore(deadline.plusMinutes(10L))) {
+        if (now.isAfter(deadline) && now.isBefore(deadline.plusMinutes(1L))) {
             globalIdOrderMap.entrySet().stream()
                     .filter(e -> e.getValue().getSymbol().equals(symbol))
                     .filter(e -> e.getValue().getOrderType() == type)
