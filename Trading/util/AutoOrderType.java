@@ -35,6 +35,7 @@ public enum AutoOrderType {
     INDEX_FIRST_TICK,
     INDEX_HILO,
     FUT_POST_AMCUTOFF,
+    FUT_POST_PMCUTOFF,
     CLOSE_LIQ,
     INDEX_PM_HILO,
     INDEX_PM_OPEN_DEVI,
