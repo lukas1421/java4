@@ -1,10 +1,7 @@
+import apidemo.AutoTraderMain;
 import apidemo.Direction;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-
-import static utility.Utility.pr;
+import java.time.LocalDate;
 
 public class Test {
 
@@ -13,18 +10,7 @@ public class Test {
     }
 
     public static void main(String[] args) {
-
-        LocalDateTime t = LocalDateTime.now();
-
-        ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
-        ZoneId nyZone = ZoneId.of("America/New_York");
-
-        ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
-        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
-        LocalDateTime usLdt = usZdt.toLocalDateTime();
-
-        pr(t, usLdt);
-
-        //pr(roundToXUPriceAggressive(11279.62, Direction.Short));
+        AutoTraderMain a = new AutoTraderMain();
+        AutoTraderMain.checkIfHoliday(LocalDate.now());
     }
 }

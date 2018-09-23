@@ -50,6 +50,7 @@ public enum AutoOrderType {
     FUT_OPEN_DEVI,
     FUT_PC_PROFIT_TAKER,
     FUT_HILO,
+    FUT_POST_CUTOFF_LIQ,
     FUT_HILO_ACCU,
     FUT_TENTA,
     FUT_TENTA_COVER,

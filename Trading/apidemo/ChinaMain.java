@@ -98,6 +98,8 @@ public final class ChinaMain implements IConnectionHandler {
     private static HKStock hkstock = new HKStock();
     private static ChinaOption chinaOption = new ChinaOption();
     private static HistChinaStocks histChina = new HistChinaStocks();
+    private static AutoTraderMain autoMain = new AutoTraderMain();
+
     private static AutoTraderXU xutrader = new AutoTraderXU(M_CONTROLLER);
     private static AutoTraderHK hkTrader = new AutoTraderHK();
     private static AutoTraderUS usTrader = new AutoTraderUS();

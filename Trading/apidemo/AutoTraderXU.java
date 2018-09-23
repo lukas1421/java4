@@ -822,8 +822,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
         //futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
-        //futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
-        //futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
+        if (checkIfHoliday(LocalDate.now())) {
+            futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
+            futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
+            postCutoffFutLiqTrader(ldt, price);
+        }
         //futDayMATrader(ldt, price);
         //futFastMATrader(ldt, price);
         //futHiloAccu(ldt, price);
@@ -1245,6 +1248,46 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         "last freshprice", last, freshPrice, "pre10:maxT minT ", maxTPre10, minTPre10));
                 futHiLoDirection = Direction.Short;
             }
+        }
+    }
+
+    /**
+     * only used on china holidays. Cuts XU position if wrong.
+     *
+     * @param nowMilli   time now
+     * @param freshPrice price
+     */
+    private static void postCutoffFutLiqTrader(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        LocalTime cutoff = LocalTime.of(10, 0);
+
+        String futSymbol = ibContractToSymbol(activeFutureCt);
+        FutType f = ibContractToFutType(activeFutureCt);
+
+        long currPos = currentPosMap.get(f);
+        double open = priceMapBarDetail.get(futSymbol).firstEntry().getValue();
+        long numOrders = getOrderSizeForTradeType(futSymbol, FUT_POST_CUTOFF_LIQ);
+
+        if (numOrders >= 1) {
+            return;
+        }
+
+        if (lt.isBefore(cutoff)) {
+            return;
+        }
+
+        if (currPos < 0 & freshPrice > open) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
+            globalIdOrderMap.put(id, new OrderAugmented(futSymbol, nowMilli, o, FUT_POST_CUTOFF_LIQ));
+            apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
+            outputOrderToAutoLogXU(str(o.orderId(), "fut post cutoff liq BUY", globalIdOrderMap.get(id)));
+        } else if (currPos > 0 && freshPrice < open) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimitTIF(freshPrice, Math.abs(currPos), IOC);
+            globalIdOrderMap.put(id, new OrderAugmented(futSymbol, nowMilli, o, FUT_POST_CUTOFF_LIQ));
+            apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
+            outputOrderToAutoLogXU(str(o.orderId(), "fut post cutoff liq SELL", globalIdOrderMap.get(id)));
         }
     }
 
