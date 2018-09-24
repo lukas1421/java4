@@ -79,7 +79,6 @@ public class Hibtask {
         LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         CompletableFuture.runAsync(() -> {
             loadHibGen(ChinaSave.getInstance());
-            loadHibGen(ChinaSaveDetailed.getInstance());
         }).thenAccept(
                 v -> ChinaMain.updateSystemNotif(Utility.str(" LOAD HIB T DONE ",
                         LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
@@ -91,7 +90,7 @@ public class Hibtask {
     public static void loadHibDetailPrice() {
         LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         CompletableFuture.runAsync(() -> loadHibGen(ChinaSaveDetailed.getInstance())).thenAccept(
-                v -> ChinaMain.updateSystemNotif(Utility.str(" LOAD HIB Detail DONE ",
+                v -> ChinaMain.updateSystemNotif(Utility.str(" LOAD Detail DONE ",
                         LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
                         SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
                 ))

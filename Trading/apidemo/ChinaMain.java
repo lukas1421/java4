@@ -487,8 +487,9 @@ public final class ChinaMain implements IConnectionHandler {
                                     });
 
                                     pr(" hib ");
-                                    if (!checkTimeRangeBool(LocalTime.now(), 8, 59, 9, 30)) {
+                                    if (!checkTimeRangeBool(LocalTime.now(), 5, 0, 8, 50)) {
                                         Hibtask.loadHibGenPrice();
+                                        Hibtask.loadHibDetailPrice();
                                     }
                                     ChinaData.loadHibernateYesterday();
 

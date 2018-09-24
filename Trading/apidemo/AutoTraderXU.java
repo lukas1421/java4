@@ -814,7 +814,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-
         //postCutoffLiqTrader(ldt, price);
         cancelAllAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
         cancelAllAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
@@ -823,6 +822,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
         //futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
         if (checkIfHoliday(LocalDate.now())) {
+            //pr(" holiday today ");
             futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
             futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
             XUPostCutoffLiqTrader(ldt, price);
@@ -1148,13 +1148,14 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime lt = nowMilli.toLocalTime();
         String futSymbol = ibContractToSymbol(activeFutureCt);
         FutType futType = ibContractToFutType(activeFutureCt);
+        LocalTime cutoff = ltof(10, 0, 0);
 
-        cancelAfterDeadline(lt, futSymbol, FUT_HILO, ltof(9, 29, 50));
+        cancelAfterDeadline(lt, futSymbol, FUT_HILO, cutoff);
 
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(futType);
         int baseSize = 1;
 
-        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(ltof(9, 29))) {
+        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(cutoff)) {
             return;
         }
 
@@ -1172,10 +1173,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-//        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(FUT_HILO);
-//        long tSinceLastOrder = tSincePrevOrderMilli(FUT_HILO, nowMilli);
+        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(futSymbol, FUT_HILO);
+        long tSinceLastOrder = tSincePrevOrderMilli(futSymbol, FUT_HILO, nowMilli);
 
-        int waitTimeSec = 60 * 10;
+        int waitTimeSec = milliBtwnLastTwoOrders < 60000 ? 300 : 10;
 
         NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(futSymbol).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(ltof(8, 58)))
@@ -1200,13 +1201,16 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime minT = getFirstMinTPred(futPrice, t -> t.isAfter(ltof(8, 59, 0)));
 
         if (!manualFutHiloDirection.get()) {
-            if (lt.isBefore(ltof(9, 0, 0))) {
+            if (lt.isBefore(ltof(9, 5, 0))) {
+                pr(" setting manual fut hilo direction 9:05", lt);
                 manualFutHiloDirection.set(true);
             } else {
                 if (maxT.isAfter(minT)) {
+                    pr(" setting manual fut hilo direction maxT>minT", lt);
                     futHiLoDirection = Direction.Long;
                     manualFutHiloDirection.set(true);
                 } else if (minT.isAfter(maxT)) {
+                    pr(" setting manual fut hilo direction minT>maxT", lt);
                     futHiLoDirection = Direction.Short;
                     manualFutHiloDirection.set(true);
                 } else {
@@ -1440,31 +1444,33 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      */
     private static void futOpenDeviationTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
-        String futSymbol = ibContractToSymbol(activeFutureCt);
-        FutType futtype = ibContractToFutType(activeFutureCt);
+        String symbol = ibContractToSymbol(activeFutureCt);
+        FutType f = ibContractToFutType(activeFutureCt);
+        LocalTime cutoff = ltof(10, 0);
 
-        cancelAfterDeadline(lt, futSymbol, FUT_OPEN_DEVI, ltof(9, 29, 50));
+        cancelAfterDeadline(lt, symbol, FUT_OPEN_DEVI, cutoff);
 
-        if (fut5amClose.getOrDefault(futtype, 0.0) == 0.0) {
+        if (fut5amClose.getOrDefault(f, 0.0) == 0.0) {
             return;
         }
 
-        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(ltof(9, 29))) {
+        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(cutoff)) {
             return;
         }
 
 
-        double prevClose = fut5amClose.get(futtype);
+        double prevClose = fut5amClose.get(f);
 
-        Map.Entry<LocalTime, Double> firstEntry = priceMapBarDetail.get(futSymbol).firstEntry();
-        double lastFut = priceMapBarDetail.get(futSymbol).lastEntry().getValue();
+        Map.Entry<LocalTime, Double> firstEntry = priceMapBarDetail.get(symbol).firstEntry();
+        double lastFut = priceMapBarDetail.get(symbol).lastEntry().getValue();
 
-        LocalDateTime lastFutOpenOrderTime = getLastOrderTime(futSymbol, FUT_OPEN_DEVI);
-        long milliLast2 = lastTwoOrderMilliDiff(futSymbol, FUT_OPEN_DEVI);
-        long numOrders = getOrderSizeForTradeType(futSymbol, FUT_OPEN_DEVI);
+        LocalDateTime lastFutOpenOrderTime = getLastOrderTime(symbol, FUT_OPEN_DEVI);
+        long milliLast2 = lastTwoOrderMilliDiff(symbol, FUT_OPEN_DEVI);
+        long numOrders = getOrderSizeForTradeType(symbol, FUT_OPEN_DEVI);
+
         int waitTimeSec = (milliLast2 < 60000) ? 300 : 10;
         double futOpen = firstEntry.getValue();
-        OrderStatus lastStatus = getLastOrderStatusForType(futSymbol, FUT_OPEN_DEVI);
+        OrderStatus lastStatus = getLastOrderStatusForType(symbol, FUT_OPEN_DEVI);
 
         if (numOrders != 0 && lastStatus != Filled) {
             pr(" fut open dev trader: last not filled, status: ", lastStatus);
@@ -1484,13 +1490,16 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
 
         if (!manualfutOpenDevDirection.get()) {
-            if (lt.isBefore(ltof(9, 0, 0))) {
+            if (lt.isBefore(ltof(9, 5, 0))) {
+                pr(" setting manual fut open dev direction 9:05", lt);
                 manualfutOpenDevDirection.set(true);
             } else {
                 if (freshPrice > futOpen) {
+                    pr(" setting manual fut open dev direction fresh > open", lt);
                     futOpenDevDirection = Direction.Long;
                     manualfutOpenDevDirection.set(true);
                 } else if (freshPrice < futOpen) {
+                    pr(" setting manual fut open dev direction fresh < open", lt);
                     futOpenDevDirection = Direction.Short;
                     manualfutOpenDevDirection.set(true);
                 } else {
@@ -1509,7 +1518,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             if (!noMoreBuy.get() && freshPrice > futOpen && futOpenDevDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(buyPrice, buySize, DAY);
-                globalIdOrderMap.put(id, new OrderAugmented(futSymbol, nowMilli, o, FUT_OPEN_DEVI));
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_OPEN_DEVI));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "fut Open dev BUY #:", numOrders, globalIdOrderMap.get(id),
                         "open, last ", futOpen, freshPrice));
@@ -1517,7 +1526,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             } else if (!noMoreSell.get() && freshPrice < futOpen && futOpenDevDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(sellPrice, sellSize, DAY);
-                globalIdOrderMap.put(id, new OrderAugmented(futSymbol, nowMilli, o, FUT_OPEN_DEVI));
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_OPEN_DEVI));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "fut Open dev SELL #:", numOrders, globalIdOrderMap.get(id),
                         "open, last ", futOpen, freshPrice));
