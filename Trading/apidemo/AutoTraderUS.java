@@ -140,10 +140,20 @@ public class AutoTraderUS {
                 "last order T/ millilast2/ waitsec", lastOrderTime, milliLastTwo, waitSec,
                 "curr pos ", currPos, "dir: ", usOpenDevDirection.get(symbol));
 
+        double buyPrice;
+        double sellPrice;
+        if (numOrders < 2) {
+            buyPrice = freshPrice;
+            sellPrice = freshPrice;
+        } else {
+            buyPrice = Math.min(freshPrice, manualOpen);
+            sellPrice = Math.max(freshPrice, manualOpen);
+        }
+
         if (SECONDS.between(lastOrderTime, nowMilli) > waitSec)
             if (!noMoreBuy.get() && freshPrice > manualOpen && usOpenDevDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, buySize, DAY);
+                Order o = placeBidLimitTIF(buyPrice, buySize, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev BUY", globalIdOrderMap.get(id),
@@ -155,7 +165,7 @@ public class AutoTraderUS {
                 usOpenDevDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && freshPrice < manualOpen && usOpenDevDirection.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, sellSize, DAY);
+                Order o = placeOfferLimitTIF(sellPrice, sellSize, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "US open dev SELL", globalIdOrderMap.get(id),
