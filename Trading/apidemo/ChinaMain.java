@@ -38,7 +38,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
-import static apidemo.XuTraderHelper.checkTimeRangeBool;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static utility.Utility.pr;
 
@@ -487,10 +486,10 @@ public final class ChinaMain implements IConnectionHandler {
                                     });
 
                                     pr(" hib ");
-                                    if (!checkTimeRangeBool(LocalTime.now(), 5, 0, 8, 50)) {
+                                    //if (!checkTimeRangeBool(LocalTime.now(), 5, 0, 8, 50)) {
                                         Hibtask.loadHibGenPrice();
                                         Hibtask.loadHibDetailPrice();
-                                    }
+                                    //
                                     ChinaData.loadHibernateYesterday();
 
                                     pr(" pos ");

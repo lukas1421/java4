@@ -1464,7 +1464,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         Map.Entry<LocalTime, Double> firstEntry = priceMapBarDetail.get(symbol).firstEntry();
         double lastFut = priceMapBarDetail.get(symbol).lastEntry().getValue();
 
-        LocalDateTime lastFutOpenOrderTime = getLastOrderTime(symbol, FUT_OPEN_DEVI);
+        LocalDateTime lastFutDevOrderTime = getLastOrderTime(symbol, FUT_OPEN_DEVI);
         long milliLast2 = lastTwoOrderMilliDiff(symbol, FUT_OPEN_DEVI);
         long numOrders = getOrderSizeForTradeType(symbol, FUT_OPEN_DEVI);
 
@@ -1481,7 +1481,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             pr(lt.truncatedTo(ChronoUnit.SECONDS),
                     "fut open devi: ", "#:", numOrders, "PC: ", prevClose, "first En", firstEntry,
                     "last entry", lastFut, "fresh:", freshPrice, "dir:", futOpenDevDirection, " last order T: ",
-                    lastFutOpenOrderTime.toLocalTime(), "secSinceLastT", SECONDS.between(lastFutOpenOrderTime, nowMilli),
+                    lastFutDevOrderTime.toLocalTime(), "secSinceLastT", SECONDS.between(lastFutDevOrderTime, nowMilli),
                     "manual PC dir:", manualfutOpenDevDirection.get());
         }
 
@@ -1491,15 +1491,15 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         if (!manualfutOpenDevDirection.get()) {
             if (lt.isBefore(ltof(9, 5, 0))) {
-                pr(" setting manual fut open dev direction 9:05", lt);
+                outputOrderToAutoLogXU(str(" setting manual fut open dev direction 9:05", lt));
                 manualfutOpenDevDirection.set(true);
             } else {
                 if (freshPrice > futOpen) {
-                    pr(" setting manual fut open dev direction fresh > open", lt);
+                    outputOrderToAutoLogXU(str(" setting manual fut open dev direction fresh > open", lt));
                     futOpenDevDirection = Direction.Long;
                     manualfutOpenDevDirection.set(true);
                 } else if (freshPrice < futOpen) {
-                    pr(" setting manual fut open dev direction fresh < open", lt);
+                    outputOrderToAutoLogXU(str(" setting manual fut open dev direction fresh < open", lt));
                     futOpenDevDirection = Direction.Short;
                     manualfutOpenDevDirection.set(true);
                 } else {
@@ -1514,14 +1514,15 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(futOpen, Direction.Long));
         double sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(futOpen, Direction.Short));
 
-        if (SECONDS.between(lastFutOpenOrderTime, nowMilli) > waitTimeSec) {
+        if (SECONDS.between(lastFutDevOrderTime, nowMilli) > waitTimeSec) {
             if (!noMoreBuy.get() && freshPrice > futOpen && futOpenDevDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(buyPrice, buySize, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_OPEN_DEVI));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "fut Open dev BUY #:", numOrders, globalIdOrderMap.get(id),
-                        "open, last ", futOpen, freshPrice));
+                        "open, last ", futOpen, freshPrice, "milliLastTwo", milliLast2,
+                        "waitSec", waitTimeSec, "next T", lastFutDevOrderTime.plusSeconds(waitTimeSec)));
                 futOpenDevDirection = Direction.Long;
             } else if (!noMoreSell.get() && freshPrice < futOpen && futOpenDevDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
@@ -1529,7 +1530,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_OPEN_DEVI));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
                 outputOrderToAutoLogXU(str(o.orderId(), "fut Open dev SELL #:", numOrders, globalIdOrderMap.get(id),
-                        "open, last ", futOpen, freshPrice));
+                        "open, last ", futOpen, freshPrice, "milliLast2", milliLast2,
+                        "waitSec", waitTimeSec, "next T", lastFutDevOrderTime.plusSeconds(waitTimeSec)));
                 futOpenDevDirection = Direction.Short;
             }
         }
@@ -3083,6 +3085,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         if (now.isAfter(deadline) && now.isBefore(deadline.plusMinutes(1L))) {
             globalIdOrderMap.entrySet().stream()
                     .filter(e -> e.getValue().getAugmentedOrderStatus() != Filled)
+                    .filter(e -> e.getValue().getAugmentedOrderStatus() != Inactive)
                     .forEach(e -> {
                         OrderStatus sta = e.getValue().getAugmentedOrderStatus();
                         if ((sta != Filled) && (sta != PendingCancel) && (sta != Cancelled) &&
