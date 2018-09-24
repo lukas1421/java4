@@ -70,7 +70,7 @@ public class AutoTraderMain {
     }
 
     public static boolean checkIfHoliday(LocalDate d) {
-        pr("d is a holiday? ", holidaySet.contains(d));
+        pr(d, " is a holiday? ", holidaySet.contains(d), "!");
         return holidaySet.contains(d);
     }
 }
