@@ -44,7 +44,7 @@ public class AutoTraderHK extends JPanel {
     public static List<String> hkSymbols = new ArrayList<>();
 
     AutoTraderHK() {
-        Contract ct = tickerToHKContract("3690");
+        Contract ct = tickerToHKContract("1293");
         String symbol = ibContractToSymbol(ct);
         hkSymbols.add(symbol);
         hkSymbols.forEach((s) -> {

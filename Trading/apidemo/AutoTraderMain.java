@@ -36,7 +36,6 @@ public class AutoTraderMain {
         }
     }
 
-
     //global
     public static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
     public static volatile AtomicInteger autoTradeID = new AtomicInteger(100);

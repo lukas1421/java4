@@ -1094,11 +1094,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return new OrderAugmented();
     }
 
-
-    private static Predicate<AutoOrderType> isInventoryTrade() {
-        return e -> e.equals(INVENTORY_CLOSE) || e.equals(INVENTORY_OPEN);
-    }
-
     /**
      * only output upon a cross
      */
@@ -1152,7 +1147,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         cancelAfterDeadline(lt, futSymbol, FUT_HILO, cutoff);
 
-        //NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(futType);
         int baseSize = 1;
 
         if (lt.isBefore(ltof(8, 50)) || lt.isAfter(cutoff)) {
@@ -1182,7 +1176,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .filter(e -> e.getKey().isAfter(ltof(8, 58)))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
-
 
         double futOpen = futPrice.firstEntry().getValue();
         double futLast = futPrice.lastEntry().getValue();
@@ -1274,9 +1267,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         long currPos = currentPosMap.get(f);
         double open = priceMapBarDetail.get(futSymbol).firstEntry().getValue();
-        long numOrders = getOrderSizeForTradeType(futSymbol, FUT_POST_CUTOFF_LIQ);
+        long numPostCutoffOrders = getOrderSizeForTradeType(futSymbol, FUT_POST_CUTOFF_LIQ);
 
-        if (numOrders >= 1) {
+        if (numPostCutoffOrders >= 1) {
             return;
         }
 
