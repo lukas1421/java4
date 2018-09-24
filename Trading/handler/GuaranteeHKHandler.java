@@ -12,6 +12,8 @@ import static apidemo.AutoTraderHK.*;
 import static apidemo.AutoTraderMain.autoTradeID;
 import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.XuTraderHelper.*;
+import static client.OrderStatus.ConstructedInHandler;
+import static client.OrderStatus.PendingCancel;
 import static client.Types.TimeInForce.IOC;
 import static utility.Utility.str;
 
@@ -23,13 +25,13 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
 
     public GuaranteeHKHandler(int id, ApiController ap) {
         defaultID = id;
-        idStatusMap.put(id, OrderStatus.ConstructedInHandler);
+        idStatusMap.put(id, ConstructedInHandler);
         controller = ap;
     }
 
     public GuaranteeHKHandler(int id, ApiController ap, long waitT) {
         defaultID = id;
-        idStatusMap.put(id, OrderStatus.ConstructedInHandler);
+        idStatusMap.put(id, ConstructedInHandler);
         controller = ap;
         maxWaitMilli = waitT;
     }
@@ -55,8 +57,7 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
 
             outputPurelyOrdersDetailedXU(msg);
 
-            if (orderState.status() == OrderStatus.PendingCancel &&
-                    globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {
+            if (orderState.status() == PendingCancel && globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {
 
                 String symbol = globalIdOrderMap.get(defaultID).getSymbol();
                 double freshPrice = hkFreshPriceMap.get(symbol);

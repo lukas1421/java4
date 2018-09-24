@@ -1152,7 +1152,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         cancelAfterDeadline(lt, futSymbol, FUT_HILO, cutoff);
 
-        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(futType);
+        //NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(futType);
         int baseSize = 1;
 
         if (lt.isBefore(ltof(8, 50)) || lt.isAfter(cutoff)) {
