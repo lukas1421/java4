@@ -1239,7 +1239,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 outputOrderToAutoLogXU(str(o.orderId(), "fut hilo buy #:", futHiloOrdersNum,
                         globalIdOrderMap.get(id), " max min last dir", r(maxP), r(minP), r(last), futHiLoDirection,
                         "|bid ask spread", bid, offer, Math.round(10000d * (offer / bid - 1)), "bp",
-                        "last freshprice ", last, freshPrice, "pre10:maxT minT ", maxTPre10, minTPre10));
+                        "last freshprice ", last, freshPrice, "pre10:maxT minT ", maxTPre10, minTPre10,
+                        "milliLastTwo", milliBtwnLastTwoOrders,
+                        "waitsec", waitTimeSec, "next Order T", lastFutHiloTime.plusSeconds(waitTimeSec)));
                 futHiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && (last < minP || minT.isAfter(maxT)) && futHiLoDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
@@ -1249,7 +1251,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 outputOrderToAutoLogXU(str(o.orderId(), "fut hilo sell #:", futHiloOrdersNum,
                         globalIdOrderMap.get(id), "max min last dir", r(maxP), r(minP), r(last), futHiLoDirection,
                         "|bid ask spread", bid, offer, Math.round(10000d * (offer / bid - 1)), "bp",
-                        "last freshprice", last, freshPrice, "pre10:maxT minT ", maxTPre10, minTPre10));
+                        "last freshprice", last, freshPrice, "pre10:maxT minT ", maxTPre10, minTPre10,
+                        "milliLastTwo", milliBtwnLastTwoOrders,
+                        "waitSec", waitTimeSec, "next Order T", lastFutHiloTime.plusSeconds(waitTimeSec)));
                 futHiLoDirection = Direction.Short;
             }
         }
