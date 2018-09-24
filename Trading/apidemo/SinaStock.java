@@ -121,11 +121,11 @@ public class SinaStock implements Runnable {
                         if (globalTradingOn.get()) {
                             indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
                             indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee
-                            postAMCutoffLiqTraderXU(ldt, currIndexPrice);
+                            indexPostAMCutoffLiqTrader(ldt, currIndexPrice);
 
                             indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
                             indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 13:30pm, no guarantee
-                            postPMCutoffLiqTraderXU(ldt, currIndexPrice);
+                            indexPostPMCutoffLiqTrader(ldt, currIndexPrice);
                             //intradayMAProfitTaker(ldt, currIndexPrice); //all day, guarantee
                             //AutoTraderXU.indexFirstTickTrader(ldt, currIndexPrice); //1 tick, guarantee (decommission)
                             //AutoTraderXU.closeProfitTaker(ldt, currIndexPrice);

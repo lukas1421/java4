@@ -70,12 +70,56 @@ public class AutoTraderHK extends JPanel {
         }
         hkOpenDeviationTrader(symbol, nowMilli, freshPrice);
         hkHiloTrader(symbol, nowMilli, freshPrice);
+        hkPostCutoffLiqTrader(symbol, nowMilli, freshPrice);
         hkCloseLiqTrader(symbol, nowMilli, freshPrice);
     }
 
     public static String hkSymbolToTicker(String symbol) {
         return symbol.substring(2);
     }
+
+    /**
+     * cut pos after cutoff if on the wrong side of manual open
+     *
+     * @param symbol     hk stock symbol (starting with hk)
+     * @param nowMilli   time now in milliseconds
+     * @param freshPrice last stock price
+     */
+    private static void hkPostCutoffLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        LocalTime cutoff = ltof(10, 0);
+
+        if (lt.isBefore(cutoff)) {
+            return;
+        }
+
+        long numOrders = getOrderSizeForTradeType(symbol, HK_POST_CUTOFF_LIQ);
+
+        if (numOrders >= 1) {
+            return;
+        }
+
+        String ticker = hkSymbolToTicker(symbol);
+        Contract ct = tickerToHKContract(ticker);
+        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
+        double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
+        double manualOpen = prices.ceilingEntry(ltof(9, 19, 0)).getValue();
+
+        if (currPos < 0 && freshPrice > manualOpen) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeBidLimitTIF(freshPrice, HK_SIZE, DAY);
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_POST_CUTOFF_LIQ));
+            apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLogXU(str(o.orderId(), "HK post cutoff liq BUY#:", numOrders, globalIdOrderMap.get(id)));
+        } else if (currPos > 0 && freshPrice < manualOpen) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimitTIF(freshPrice, HK_SIZE, DAY);
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_POST_CUTOFF_LIQ));
+            apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
+            outputOrderToAutoLogXU(str(o.orderId(), "HK post cutoff liq SELL#:", numOrders, globalIdOrderMap.get(id)));
+        }
+    }
+
 
     /**
      * hk open deviation trader
@@ -174,7 +218,13 @@ public class AutoTraderHK extends JPanel {
                 "pos", currPos, "dir:", hkOpenDevDirection.get(symbol), "manual? ", manualHKDevMap.get(symbol));
     }
 
-
+    /**
+     * liquidate holdings at hk close
+     *
+     * @param symbol     hk stock
+     * @param nowMilli   time in milliseconds
+     * @param freshPrice last stock price
+     */
     private static void hkCloseLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         String ticker = hkSymbolToTicker(symbol);

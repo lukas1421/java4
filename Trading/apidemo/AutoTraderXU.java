@@ -818,14 +818,14 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         //postCutoffLiqTrader(ldt, price);
         cancelAllAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
         cancelAllAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
-        closeLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
+        XUCloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
 
         //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
         //futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
         if (checkIfHoliday(LocalDate.now())) {
             futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
             futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
-            postCutoffFutLiqTrader(ldt, price);
+            XUPostCutoffLiqTrader(ldt, price);
         }
         //futDayMATrader(ldt, price);
         //futFastMATrader(ldt, price);
@@ -1257,7 +1257,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param nowMilli   time now
      * @param freshPrice price
      */
-    private static void postCutoffFutLiqTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static void XUPostCutoffLiqTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         LocalTime cutoff = LocalTime.of(10, 0);
 
@@ -2214,22 +2214,23 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param nowMilli   time
      * @param freshPrice price
      */
-    private static void closeLiqTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static void XUCloseLiqTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime liqStartTime = ltof(14, 55);
         LocalTime liqEndTime = ltof(15, 30);
         String futSymbol = ibContractToSymbol(activeFutureCt);
+        FutType f = ibContractToFutType(activeFutureCt);
 
         long liqWaitSecs = 60;
 
         if (nowMilli.toLocalTime().isBefore(liqStartTime) || nowMilli.toLocalTime().isAfter(liqEndTime)) {
             return;
         }
-        FutType activeFt = ibContractToFutType(activeFutureCt);
+
         LocalDateTime lastOrderTime = getLastOrderTime(futSymbol, CLOSE_LIQ);
         OrderStatus lastOrderStatus = getLastOrderStatusForType(futSymbol, CLOSE_LIQ);
         long numOrderCloseLiq = getOrderSizeForTradeType(futSymbol, CLOSE_LIQ);
 
-        int pos = currentPosMap.getOrDefault(activeFt, 0);
+        int pos = currentPosMap.getOrDefault(f, 0);
         int absPos = Math.abs(pos);
         int size = Math.min(4, absPos <= 2 ? absPos : Math.floorDiv(absPos, 2));
 
@@ -2248,14 +2249,14 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 Order o = placeBidLimitTIF(freshPrice, size, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(futSymbol, nowMilli, o, CLOSE_LIQ));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
-                outputOrderToAutoLogXU(str(o.orderId(), " close liq buy #:", numOrderCloseLiq,
+                outputOrderToAutoLogXU(str(o.orderId(), " close liq XU buy #:", numOrderCloseLiq,
                         globalIdOrderMap.get(id), "last order time", lastOrderTime, "currPos", pos, "size", size));
             } else if (pos > 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, size, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(futSymbol, nowMilli, o, CLOSE_LIQ));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
-                outputOrderToAutoLogXU(str(o.orderId(), " close liq sell #:", numOrderCloseLiq
+                outputOrderToAutoLogXU(str(o.orderId(), " close liq XU sell #:", numOrderCloseLiq
                         , globalIdOrderMap.get(id), "last order time", lastOrderTime, "currPos", pos, "size", size));
             }
         }
@@ -2329,7 +2330,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param nowMilli  time now
      * @param indexLast last index value
      */
-    static void postAMCutoffLiqTraderXU(LocalDateTime nowMilli, double indexLast) {
+    static void indexPostAMCutoffLiqTrader(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         LocalTime cutoff = ltof(10, 0);
         String futSymbol = ibContractToSymbol(activeFutureCt);
@@ -2366,7 +2367,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param nowMilli  time now
      * @param indexLast last index value
      */
-    static void postPMCutoffLiqTraderXU(LocalDateTime nowMilli, double indexLast) {
+    static void indexPostPMCutoffLiqTrader(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         LocalTime pmCutoff = ltof(13, 30);
         String futSymbol = ibContractToSymbol(activeFutureCt);

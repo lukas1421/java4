@@ -75,7 +75,7 @@ public class AutoTraderUS {
         }
         usOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usHiloTrader(symbol, nowMilli, freshPrice);
-        postCutoffUSLiqTrader(symbol, nowMilli, freshPrice);
+        USPostCutoffLiqTrader(symbol, nowMilli, freshPrice);
         USLiqTrader(symbol, nowMilli, freshPrice);
     }
 
@@ -285,7 +285,7 @@ public class AutoTraderUS {
      * @param nowMilli   time now
      * @param freshPrice fresh price
      */
-    private static void postCutoffUSLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+    private static void USPostCutoffLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         Contract ct = tickerToUSContract(symbol);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);

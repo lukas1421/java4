@@ -65,5 +65,6 @@ public enum AutoOrderType {
     HK_STOCK_DEV,
     HK_STOCK_HILO,
     HK_CLOSE_LIQ,
+    HK_POST_CUTOFF_LIQ,
     UNKNOWN
 }
