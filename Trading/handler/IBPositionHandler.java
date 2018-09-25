@@ -14,8 +14,8 @@ public class IBPositionHandler implements ApiController.IPositionHandler {
 //                Optional.ofNullable(contract.exchange()), Optional.ofNullable(contract.currency())
 //                , Optional.ofNullable(contract.secType()), position, avgCost);
 
-        String ticker = ibContractToSymbol(contract);
-        ChinaPosition.currentPositionMap.put(ticker, (int) position);
+        String symbol = ibContractToSymbol(contract);
+        ChinaPosition.currentPositionMap.put(symbol, (int) position);
     }
 
     @Override

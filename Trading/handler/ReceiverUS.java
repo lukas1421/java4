@@ -1,6 +1,7 @@
 package handler;
 
 import apidemo.ChinaData;
+import apidemo.ChinaStock;
 import client.TickType;
 
 import java.time.LocalDateTime;
@@ -37,6 +38,7 @@ public class ReceiverUS implements LiveHandler {
                 usFreshPriceMap.put(symbol, price);
                 ChinaData.priceMapBarDetail.get(symbol).put(usLdt.toLocalTime(), price);
                 processMainUS(symbol, usLdt, price);
+                ChinaStock.priceMap.put(symbol, price);
                 break;
             case BID:
                 usBidMap.put(symbol, price);

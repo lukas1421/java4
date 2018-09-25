@@ -24,9 +24,11 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaKeyMonitor.dispGran;
 import static apidemo.ChinaStock.NORMAL_STOCK;
 import static apidemo.ChinaStock.closeMap;
+import static graph.GraphBar.pmbDetailToSimpleBar;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.*;
@@ -368,7 +370,11 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
             this.setNavigableMap(priceMapBar.get(name));
             getYtdY2CloseP(name);
         } else {
-            this.setNavigableMap(new ConcurrentSkipListMap<>());
+            if (priceMapBarDetail.get(name).size() > 0) {
+                this.setNavigableMap(pmbDetailToSimpleBar(priceMapBarDetail.get(name)));
+            } else {
+                this.setNavigableMap(new ConcurrentSkipListMap<>());
+            }
         }
     }
 

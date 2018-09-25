@@ -14,6 +14,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -117,6 +118,21 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         this.sharpe = s;
     }
 
+    static NavigableMap<LocalTime, SimpleBar> pmbDetailToSimpleBar(NavigableMap<LocalTime, Double> in) {
+        NavigableMap<LocalTime, SimpleBar> out = new ConcurrentSkipListMap<>();
+        for (Map.Entry<LocalTime, Double> e : in.entrySet()) {
+            LocalTime roundToMin = e.getKey().truncatedTo(ChronoUnit.MINUTES);
+            if (e.getKey().isAfter(LocalTime.of(9, 0)) && e.getKey().isBefore(LocalTime.of(17, 0))) {
+                if (!out.containsKey(roundToMin)) {
+                    out.put(roundToMin, new SimpleBar(e.getValue()));
+                } else {
+                    out.get(roundToMin).add(e.getValue());
+                }
+            }
+        }
+        return out;
+    }
+
     @Override
     public void fillInGraph(String name) {
         this.name = name;
@@ -131,7 +147,11 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
             this.setNavigableMap(priceMapBar.get(name));
             this.computeWtd();
         } else {
-            this.setNavigableMap(new ConcurrentSkipListMap<>());
+            if (priceMapBarDetail.get(name).size() > 0) {
+                this.setNavigableMap(pmbDetailToSimpleBar(priceMapBarDetail.get(name)));
+            } else {
+                this.setNavigableMap(new ConcurrentSkipListMap<>());
+            }
         }
     }
 

@@ -733,7 +733,8 @@ public class ChinaPosition extends JPanel {
         }
 
         currentPositionMap.forEach((k, v) -> {
-            if (k.startsWith("hk")) {
+            //if (k.startsWith("hk")) {
+            if (k.startsWith("hk") || k.startsWith("IQ")) {
                 int bot = ChinaPosition.tradesMap.get(k).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
                         .mapToInt(e -> e.getValue().getSizeAll()).sum();
                 int sold = ChinaPosition.tradesMap.get(k).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
@@ -1649,10 +1650,11 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
             ChinaPosition.uniqueKeySet.add(tradeKey);
         }
 
-        String ticker = ibContractToSymbol(contract);
-        if (!ChinaPosition.tradesMap.containsKey(ticker)) {
-            pr(" inputting new entry for ticker ", ticker);
-            ChinaPosition.tradesMap.put(ticker, new ConcurrentSkipListMap<>());
+        String symbol = ibContractToSymbol(contract);
+
+        if (!ChinaPosition.tradesMap.containsKey(symbol)) {
+            pr(" inputting new entry for ticker ", symbol);
+            ChinaPosition.tradesMap.put(symbol, new ConcurrentSkipListMap<>());
             //symbolNames.add(ticker);
             //symbolNamesFull.add(ticker);
         }
@@ -1664,25 +1666,26 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
         LocalTime t = ldt.toLocalTime();
         LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
 
-        if (ticker.startsWith("SGXA50")) {
+        if (symbol.startsWith("SGXA50")) {
             if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth() && t.isAfter(LocalTime.of(8, 59))) {
 
-                if (ChinaPosition.tradesMap.get(ticker).containsKey(lt)) {
-                    ChinaPosition.tradesMap.get(ticker).get(lt)
+                if (ChinaPosition.tradesMap.get(symbol).containsKey(lt)) {
+                    ChinaPosition.tradesMap.get(symbol).get(lt)
                             .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
                 } else {
-                    ChinaPosition.tradesMap.get(ticker).put(lt,
+                    ChinaPosition.tradesMap.get(symbol).put(lt,
                             new TradeBlock(new FutureTrade(execution.price(),
                                     (int) Math.round(sign * execution.shares()))));
                 }
             }
-        } else if (contract.secType() == Types.SecType.STK && contract.exchange().equals("SEHK")) {
+        } else if (contract.secType() == Types.SecType.STK) {
+            //&& contract.exchange().equals("SEHK")
             if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth()) {
-                if (ChinaPosition.tradesMap.get(ticker).containsKey(lt)) {
-                    ChinaPosition.tradesMap.get(ticker).get(lt)
+                if (ChinaPosition.tradesMap.get(symbol).containsKey(lt)) {
+                    ChinaPosition.tradesMap.get(symbol).get(lt)
                             .addTrade(new HKStockTrade(execution.price(), (int) Math.round(sign * execution.shares())));
                 } else {
-                    ChinaPosition.tradesMap.get(ticker).put(lt,
+                    ChinaPosition.tradesMap.get(symbol).put(lt,
                             new TradeBlock(new HKStockTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
                 }
             }
