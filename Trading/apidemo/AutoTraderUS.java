@@ -374,8 +374,7 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "US hilo buy#:", numOrders, globalIdOrderMap.get(id),
-                        "buy size/curr pos", buySize, currPos,
-                        "max min maxT minT ", maxSoFar, minSoFar, maxT, minT,
+                        "buyQ/curr pos", buySize, currPos, "max min maxT minT ", maxSoFar, minSoFar, maxT, minT,
                         "last order T, milliLast2, waitSec,nexT", lastOrderT, milliLastTwo, waitSec,
                         lastOrderT.plusSeconds(waitSec), "dir", usHiloDirection.get(symbol),
                         "manual?", manualUSHiloMap.get(symbol)));
@@ -387,8 +386,7 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "US hilo sell#:", numOrders, globalIdOrderMap.get(id),
-                        "sell size/curr pos", sellSize, currPos,
-                        "max min maxT minT ", maxSoFar, minSoFar, maxT, minT,
+                        "sellQ/curr pos", sellSize, currPos, "max min maxT minT ", maxSoFar, minSoFar, maxT, minT,
                         "last order T, milliLast2, waitSec, nextT", lastOrderT, milliLastTwo, waitSec,
                         lastOrderT.plusSeconds(waitSec), "dir", usHiloDirection.get(symbol),
                         "manual?", manualUSHiloMap.get(symbol)));
