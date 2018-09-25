@@ -9,6 +9,7 @@ import java.time.ZonedDateTime;
 import static apidemo.AutoTraderMain.chinaZone;
 import static apidemo.AutoTraderMain.nyZone;
 import static apidemo.AutoTraderUS.*;
+import static utility.Utility.pr;
 
 
 public class ReceiverUS implements LiveHandler {
@@ -48,7 +49,19 @@ public class ReceiverUS implements LiveHandler {
     }
 
     @Override
-    public void handleVol(String name, double vol, LocalDateTime t) {
+    public void handleVol(TickType tt, String name, double vol, LocalDateTime t) {
 
+
+    }
+
+    @Override
+    public void handleGeneric(TickType tt, String name, double value, LocalDateTime t) {
+        switch (tt) {
+            case SHORTABLE:
+                pr(tt, name, value, t);
+                usShortableValueMap.put(name, value);
+                break;
+
+        }
     }
 }

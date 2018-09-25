@@ -770,7 +770,12 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
     }
 
     @Override
-    public void handleVol(String name, double vol, LocalDateTime t) {
+    public void handleVol(TickType tt, String symbol, double vol, LocalDateTime t) {
+
+    }
+
+    @Override
+    public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
 
     }
 }

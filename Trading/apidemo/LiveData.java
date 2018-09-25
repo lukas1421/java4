@@ -196,6 +196,8 @@ public final class LiveData extends JPanel implements ITopMktDataHandler1, IInte
             case VOLUME:
                 sizeMap.put(symbol, size);
                 break;
+            case SHORTABLE:
+                break;
         }
     }
 

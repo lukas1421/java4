@@ -46,7 +46,17 @@ public class ReceiverHK implements LiveHandler {
     }
 
     @Override
-    public void handleVol(String name, double vol, LocalDateTime t) {
+    public void handleVol(TickType tt, String name, double vol, LocalDateTime t) {
 
+    }
+
+    @Override
+    public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
+        switch (tt) {
+            case SHORTABLE:
+                pr(tt, symbol, value, t);
+                hkShortableValueMap.put(symbol, value);
+                break;
+        }
     }
 }

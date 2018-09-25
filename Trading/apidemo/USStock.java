@@ -143,7 +143,12 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
     }
 
     @Override
-    public void handleVol(String name, double vol, LocalDateTime t) {
-        pr(" US vol ", name, vol, t);
+    public void handleVol(TickType tt, String name, double vol, LocalDateTime t) {
+        pr(" US vol ", tt, name, vol, t);
+    }
+
+    @Override
+    public void handleGeneric(TickType tt, String name, double value, LocalDateTime t) {
+
     }
 }

@@ -12,7 +12,9 @@ import java.time.temporal.ChronoUnit;
 public interface LiveHandler extends GeneralHandler {
     void handlePrice(TickType tt, String symbol, double price, LocalDateTime t);
 
-    void handleVol(String name, double vol, LocalDateTime t);
+    void handleVol(TickType tt, String symbol, double vol, LocalDateTime t);
+
+    void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t);
 
     class DefaultLiveHandler implements LiveHandler {
 
@@ -43,7 +45,12 @@ public interface LiveHandler extends GeneralHandler {
         }
 
         @Override
-        public void handleVol(String name, double vol, LocalDateTime t) {
+        public void handleVol(TickType tt, String symbol, double vol, LocalDateTime t) {
+        }
+
+        @Override
+        public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
+
         }
     }
 }

@@ -34,6 +34,7 @@ public class AutoTraderUS {
     public static volatile ConcurrentHashMap<String, Double> usAskMap = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, Double> usOpenMap = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, Double> usFreshPriceMap = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, Double> usShortableValueMap = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, Direction> usOpenDevDirection = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, Direction> usHiloDirection = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, Direction> usPMOpenDevDirection = new ConcurrentHashMap<>();
@@ -70,7 +71,6 @@ public class AutoTraderUS {
             usAskMap.put(s, 0.0);
             usOpenMap.put(s, 0.0);
             usFreshPriceMap.put(s, 0.0);
-
 
             usOpenDevDirection.put(s, Direction.Flat);
             usPMOpenDevDirection.put(s, Direction.Flat);

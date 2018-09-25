@@ -139,12 +139,19 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
     }
 
     @Override
-    public void handleVol(String name, double vol, LocalDateTime ldt) {
-        LocalTime t = ldt.toLocalTime();
-        HKStock.hkVol.put(name, vol);
-        if (hkVolMap.containsKey(name)) {
-            hkVolMap.get(name).put(t, vol);
+    public void handleVol(TickType tt, String name, double vol, LocalDateTime ldt) {
+        if (tt == TickType.VOLUME) {
+            LocalTime t = ldt.toLocalTime();
+            HKStock.hkVol.put(name, vol);
+            if (hkVolMap.containsKey(name)) {
+                hkVolMap.get(name).put(t, vol);
+            }
         }
+    }
+
+    @Override
+    public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
+
     }
 
     @Override

@@ -971,7 +971,7 @@ public class ApiController implements EWrapper {
             }
             Contract ct = generateStockContract(ticker, exch, curr);
             ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
-            m_client.reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
+            m_client.reqMktData(reqId, ct, "236", snapshot, Collections.<TagValue>emptyList());
         } catch (InterruptedException ex) {
             ex.printStackTrace();
         }
@@ -1287,10 +1287,11 @@ public class ApiController implements EWrapper {
         ITopMktDataHandler1 handler1;
         int symb;
 
-        if (TickType.get(tickType).equals(TickType.VOLUME) && ChinaMain.globalRequestMap.containsKey(reqId)) {
+        if (ChinaMain.globalRequestMap.containsKey(reqId)) {
+            //TickType.get(tickType).equals(TickType.VOLUME) &&
             Request r = ChinaMain.globalRequestMap.get(reqId);
             LiveHandler lh = (LiveHandler) r.getHandler();
-            lh.handleVol(ibContractToSymbol(r.getContract()), size, LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+            lh.handleVol(TickType.get(tickType),ibContractToSymbol(r.getContract()), size, LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         }
 
         if (handler != null) {
@@ -1310,6 +1311,14 @@ public class ApiController implements EWrapper {
     @Override
     public void tickGeneric(int reqId, int tickType, double value) {
         ITopMktDataHandler handler = m_topMktDataMap.get(reqId);
+        if (ChinaMain.globalRequestMap.containsKey(reqId)) {
+            //TickType.get(tickType).equals(TickType.VOLUME) &&
+            Request r = ChinaMain.globalRequestMap.get(reqId);
+            LiveHandler lh = (LiveHandler) r.getHandler();
+            lh.handleGeneric(TickType.get(tickType),ibContractToSymbol(r.getContract()), value,
+                    LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+        }
+
         if (handler != null) {
             handler.tickPrice(TickType.get(tickType), value, 0);
         }

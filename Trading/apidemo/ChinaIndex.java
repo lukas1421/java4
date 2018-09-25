@@ -249,7 +249,11 @@ final class ChinaIndex extends JPanel {
                     clMap.put(name, last / min - 1);
                     loMap.put(name, min / open - 1);
                     trMap.put(name, ChinaStock.getTrueRange3day(name));
-                    amcoMap.put(name, (industryMapBar.get(name).floorEntry(AMCLOSET).getValue().getClose() / open) - 1);
+                    if (industryMapBar.get(name).firstKey().isBefore(AMCLOSET)) {
+                        amcoMap.put(name, (industryMapBar.get(name).floorEntry(AMCLOSET).getValue().getClose() / open) - 1);
+                    } else {
+                        amcoMap.put(name, 0.0);
+                    }
                     pmcoMap.put(name, lastTime.isAfter(LocalTime.of(12, 59, 59)) ? last / industryMapBar.get(name).floorEntry(AMCLOSET).getValue().getClose() - 1 : 0.0);
                     if (lastTime.isAfter(PMOPENT)) {
                         pmMinTMap.put(name, GETMINT_INDUS.apply(name, PM_PRED));

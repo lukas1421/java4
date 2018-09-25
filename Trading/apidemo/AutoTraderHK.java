@@ -34,6 +34,7 @@ public class AutoTraderHK extends JPanel {
     public static volatile ConcurrentHashMap<String, Double> hkAskMap = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, Double> hkOpenMap = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, Double> hkFreshPriceMap = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, Double> hkShortableValueMap = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, Direction> hkOpenDevDirection = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, Direction> hkHiloDirection = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, AtomicBoolean> manualHKDevMap = new ConcurrentHashMap<>();

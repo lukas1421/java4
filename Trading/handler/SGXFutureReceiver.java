@@ -81,14 +81,21 @@ public class SGXFutureReceiver implements LiveHandler {
     }
 
     @Override
-    public void handleVol(String name, double vol, LocalDateTime ldt) {
+    public void handleVol(TickType tt, String name, double vol, LocalDateTime ldt) {
 
-        LocalTime t = ldt.toLocalTime();
-        ChinaStock.sizeMap.put(name, (long) vol);
+        if (tt == TickType.VOLUME) {
+            LocalTime t = ldt.toLocalTime();
+            ChinaStock.sizeMap.put(name, (long) vol);
 
-        if (STOCK_COLLECTION_TIME.test(ldt)) {
-            XU.frontFutVol.put(t, (int) vol);
-            ChinaData.sizeTotalMap.get(name).put(t, 1d * vol);
+            if (STOCK_COLLECTION_TIME.test(ldt)) {
+                XU.frontFutVol.put(t, (int) vol);
+                ChinaData.sizeTotalMap.get(name).put(t, 1d * vol);
+            }
         }
+    }
+
+    @Override
+    public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
+
     }
 }
