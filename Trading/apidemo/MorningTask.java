@@ -44,6 +44,20 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
     private static volatile double USDCNY = 0.0;
     private static volatile double HKDCNH = 0.0;
+    private static Set<LocalDate> holidaySet = new TreeSet<>();
+
+    private MorningTask() {
+        String line;
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "holidaySchedule.txt"), "gbk"))) {
+            while ((line = reader1.readLine()) != null) {
+                LocalDate d1 = LocalDate.parse(line, DateTimeFormatter.ofPattern("yyyy/M/d"));
+                holidaySet.add(d1);
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
 
     private static void runThis() {
         MorningTask mt = new MorningTask();
@@ -558,7 +572,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
 //        return reqId;
     }
 
-
     @SuppressWarnings({"SpellCheckingInspection", "ConstantConditions"})
     private static void processShcomp() {
         final String tdxPath = TradingConstants.tdxPath;
@@ -572,6 +585,12 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 t = LocalDate.parse(al1.get(0));
                 pr(" current t is " + t);
+                if (holidaySet.contains(t)) {
+                    pr(t, "is a holiday ");
+                    return;
+                } else {
+                    pr("t is not a holiday ");
+                }
             }
         } catch (IOException ex) {
             ex.printStackTrace();

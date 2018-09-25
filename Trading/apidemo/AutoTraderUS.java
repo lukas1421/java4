@@ -303,11 +303,11 @@ public class AutoTraderUS {
         Contract ct = tickerToUSContract(symbol);
         LocalTime amStart = ltof(9, 29, 59);
         LocalTime amObservationStart = ltof(9, 29, 55);
-        LocalTime cutoff = ltof(10, 0);
+        LocalTime amCutoff = ltof(10, 0);
 
-        cancelAfterDeadline(nowMilli.toLocalTime(), symbol, US_STOCK_HILO, cutoff);
+        cancelAfterDeadline(nowMilli.toLocalTime(), symbol, US_STOCK_HILO, amCutoff);
 
-        if (lt.isBefore(amStart) || lt.isAfter(cutoff)) {
+        if (lt.isBefore(amStart) || lt.isAfter(amCutoff)) {
             return;
         }
 
@@ -572,7 +572,7 @@ public class AutoTraderUS {
         Contract ct = tickerToUSContract(symbol);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
-        LocalTime pmStart = ltof(12, 29, 55);
+        LocalTime pmStart = ltof(12, 29, 59);
         LocalTime pmCutoff = ltof(13, 30);
         LocalTime pmClose = ltof(16, 0);
 

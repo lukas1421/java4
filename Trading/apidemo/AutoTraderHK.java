@@ -44,9 +44,9 @@ public class AutoTraderHK extends JPanel {
     public static List<String> hkSymbols = new ArrayList<>();
 
     AutoTraderHK() {
-        Contract ct = tickerToHKContract("1293");
-        String symbol = ibContractToSymbol(ct);
-        hkSymbols.add(symbol);
+//        Contract ct = tickerToHKContract("1293");
+//        String symbol = ibContractToSymbol(ct);
+        hkSymbols.add(ibContractToSymbol(tickerToHKContract("1293")));
         hkSymbols.forEach((s) -> {
             if (!priceMapBarDetail.containsKey(s)) {
                 priceMapBarDetail.put(s, new ConcurrentSkipListMap<>());
