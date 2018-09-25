@@ -971,6 +971,7 @@ public class ApiController implements EWrapper {
             }
             Contract ct = generateStockContract(ticker, exch, curr);
             ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
+            //m_client.reqMktData(reqId, ct, "236,259", snapshot, Collections.<TagValue>emptyList()); for genericTick
             m_client.reqMktData(reqId, ct, "236", snapshot, Collections.<TagValue>emptyList());
         } catch (InterruptedException ex) {
             ex.printStackTrace();
@@ -1288,10 +1289,10 @@ public class ApiController implements EWrapper {
         int symb;
 
         if (ChinaMain.globalRequestMap.containsKey(reqId)) {
-            //TickType.get(tickType).equals(TickType.VOLUME) &&
             Request r = ChinaMain.globalRequestMap.get(reqId);
             LiveHandler lh = (LiveHandler) r.getHandler();
-            lh.handleVol(TickType.get(tickType),ibContractToSymbol(r.getContract()), size, LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
+            lh.handleVol(TickType.get(tickType), ibContractToSymbol(r.getContract()), size,
+                    LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         }
 
         if (handler != null) {
@@ -1311,11 +1312,11 @@ public class ApiController implements EWrapper {
     @Override
     public void tickGeneric(int reqId, int tickType, double value) {
         ITopMktDataHandler handler = m_topMktDataMap.get(reqId);
+
         if (ChinaMain.globalRequestMap.containsKey(reqId)) {
-            //TickType.get(tickType).equals(TickType.VOLUME) &&
             Request r = ChinaMain.globalRequestMap.get(reqId);
             LiveHandler lh = (LiveHandler) r.getHandler();
-            lh.handleGeneric(TickType.get(tickType),ibContractToSymbol(r.getContract()), value,
+            lh.handleGeneric(TickType.get(tickType), ibContractToSymbol(r.getContract()), value,
                     LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
         }
 

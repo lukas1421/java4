@@ -71,6 +71,7 @@ public class AutoTraderUS {
             usAskMap.put(s, 0.0);
             usOpenMap.put(s, 0.0);
             usFreshPriceMap.put(s, 0.0);
+            usShortableValueMap.put(s, 0.0);
 
             usOpenDevDirection.put(s, Direction.Flat);
             usPMOpenDevDirection.put(s, Direction.Flat);
@@ -90,6 +91,11 @@ public class AutoTraderUS {
         if (!globalTradingOn.get()) {
             return;
         }
+
+        if (usShortableValueMap.get(symbol) < 2.5) {
+            return;
+        }
+
         usOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usHiloTrader(symbol, nowMilli, freshPrice);
         usPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);

@@ -720,6 +720,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         if (t.isAfter(ltof(5, 0)) && t.isBefore(ltof(13, 0))) {
             return 0;
         }
+
+        if (priceMapBar.get(ticker).size() < 1 || priceMapBar.get(ticker).firstKey().isAfter(ltof(13, 0))) {
+            return 0;
+        }
+
         if (priceMapBar.containsKey(ticker) && priceMapBar.get(ticker).size() > 0 &&
                 priceMapBar.get(ticker).lastKey().isAfter(ltof(13, 0))) {
             double maxV = priceMapBar.get(ticker).entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max()

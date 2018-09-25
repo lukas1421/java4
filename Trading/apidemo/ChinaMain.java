@@ -488,7 +488,7 @@ public final class ChinaMain implements IConnectionHandler {
                                     pr(" hib ");
                                     Hibtask.loadHibGenPrice();
                                     Hibtask.loadHibDetailPrice();
-                                    ChinaData.loadHibernateYesterday();
+                                    //ChinaData.loadHibernateYesterday();
 
                                     pr(" pos ");
                                     ChinaPosition.getOpenPositionsNormal();
