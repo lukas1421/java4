@@ -52,6 +52,7 @@ public class AutoTraderHK extends JPanel {
             if (!priceMapBarDetail.containsKey(s)) {
                 priceMapBarDetail.put(s, new ConcurrentSkipListMap<>());
             }
+            hkShortableValueMap.put(s, 0.0);
             hkBidMap.put(s, 0.0);
             hkAskMap.put(s, 0.0);
             hkOpenMap.put(s, 0.0);
@@ -132,6 +133,8 @@ public class AutoTraderHK extends JPanel {
     private static void hkOpenDeviationTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         LocalTime cutoff = ltof(10, 0);
+        LocalTime amObservationStart = ltof(9, 19, 0);
+        LocalTime amTradingStart = ltof(9, 28, 0);
         String ticker = hkSymbolToTicker(symbol);
         Contract ct = tickerToHKContract(ticker);
 
@@ -142,19 +145,19 @@ public class AutoTraderHK extends JPanel {
             return;
         }
 
-        if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(10, 0))) {
+        if (lt.isBefore(amTradingStart) || lt.isAfter(cutoff)) {
             return;
         }
 
-        double manualOpen = prices.ceilingEntry(ltof(9, 19, 0)).getValue();
+        double manualOpen = prices.ceilingEntry(amObservationStart).getValue();
 
         double firstTick = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(9, 19, 0)))
+                .filter(e -> e.getKey().isAfter(amObservationStart))
                 .filter(e -> Math.abs(e.getValue() - manualOpen) > 0.01).findFirst().map(Map.Entry::getValue)
                 .orElse(0.0);
 
         LocalTime firstTickTime = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(9, 19, 0)))
+                .filter(e -> e.getKey().isAfter(amObservationStart))
                 .filter(e -> Math.abs(e.getValue() - manualOpen) > 0.01).findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
 
@@ -189,7 +192,7 @@ public class AutoTraderHK extends JPanel {
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
 
-        if (SECONDS.between(lastOrderTime, nowMilli) > waitSec) {
+        if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && hkShortableValueMap.getOrDefault(symbol, 0.0) > 2.5) {
             if (!noMoreBuy.get() && freshPrice > open && hkOpenDevDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, HK_SIZE, DAY);
@@ -216,7 +219,8 @@ public class AutoTraderHK extends JPanel {
         pr(" HK open dev #: ", numOrders, nowMilli, ticker, symbol, "price:", freshPrice,
                 "open,manualOpen,ft, ftT", open, manualOpen, firstTick, firstTickTime,
                 "last order T", lastOrderTime, "milliLastTwo", milliLastTwo, "waitSec", waitSec,
-                "pos", currPos, "dir:", hkOpenDevDirection.get(symbol), "manual? ", manualHKDevMap.get(symbol));
+                "pos", currPos, "dir:", hkOpenDevDirection.get(symbol), "manual? ", manualHKDevMap.get(symbol),
+                "shortable value ", hkShortableValueMap.get(symbol));
     }
 
     /**
@@ -266,29 +270,33 @@ public class AutoTraderHK extends JPanel {
 
     private static void hkHiloTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
+
         LocalTime cutoff = ltof(10, 0);
+        LocalTime amObservationStart = ltof(9, 19, 0);
+        LocalTime amTradingStart = ltof(9, 28);
+
         String ticker = hkSymbolToTicker(symbol);
         Contract ct = tickerToHKContract(ticker);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         if (prices.size() <= 1) {
             return;
         }
-        if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(10, 0))) {
+        if (lt.isBefore(amTradingStart) || lt.isAfter(cutoff)) {
             return;
         }
         LocalTime lastKey = prices.lastKey();
         double maxSoFar = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 19, 0)))
+                .filter(e -> e.getKey().isAfter(amObservationStart))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
 
         double minSoFar = prices.entrySet().stream()
-                .filter(e -> e.getKey().isAfter(LocalTime.of(9, 19, 0)))
+                .filter(e -> e.getKey().isAfter(amObservationStart))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(ltof(9, 19, 0)));
-        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(ltof(9, 19, 0)));
+        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(amObservationStart));
+        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(amObservationStart));
 
         if (!manualHKHiloMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
@@ -319,7 +327,8 @@ public class AutoTraderHK extends JPanel {
             return;
         }
 
-        if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && maxSoFar != 0.0 && minSoFar != 0.0) {
+        if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && maxSoFar != 0.0 && minSoFar != 0.0
+                && hkShortableValueMap.getOrDefault(symbol, 0.0) > 2.5) {
             if (!noMoreBuy.get() && (freshPrice > maxSoFar || maxT.isAfter(minT))
                     && hkHiloDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
@@ -347,7 +356,8 @@ public class AutoTraderHK extends JPanel {
         pr(" HK hilo#: ", numOrders, lt, ticker, symbol, "price", freshPrice, "pos", currPos,
                 "max min maxT minT", maxSoFar, minSoFar, maxT, minT,
                 " last order T", lastOrderTime, " milliLastTwo ", milliLastTwo, "wait Sec", waitSec,
-                "dir:", hkHiloDirection.get(symbol), "manual?", manualHKHiloMap.get(symbol));
+                "dir:", hkHiloDirection.get(symbol), "manual?", manualHKHiloMap.get(symbol),
+                "shortable value?", hkShortableValueMap.get(symbol));
     }
 
     public static Contract tickerToHKContract(String ticker) {
