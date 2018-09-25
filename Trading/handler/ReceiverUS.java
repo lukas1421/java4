@@ -10,7 +10,9 @@ import java.time.ZonedDateTime;
 import static apidemo.AutoTraderMain.chinaZone;
 import static apidemo.AutoTraderMain.nyZone;
 import static apidemo.AutoTraderUS.*;
+import static apidemo.XuTraderHelper.outputOrderToAutoLogXU;
 import static utility.Utility.pr;
+import static utility.Utility.str;
 
 
 public class ReceiverUS implements LiveHandler {
@@ -63,6 +65,7 @@ public class ReceiverUS implements LiveHandler {
     public void handleGeneric(TickType tt, String name, double value, LocalDateTime t) {
         switch (tt) {
             case SHORTABLE:
+                outputOrderToAutoLogXU(str("handle generic", tt, name, value, t));
                 pr(tt, name, value, t);
                 usShortableValueMap.put(name, value);
                 break;

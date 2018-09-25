@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static apidemo.AutoTraderXU.ltof;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
@@ -490,7 +491,7 @@ public final class ChinaMain implements IConnectionHandler {
                                     });
 
                                     pr(" hib ");
-                                    if (LocalTime.now().isBefore(LocalTime.of(15, 0))) {
+                                    if (LocalTime.now().isAfter(ltof(5, 0)) && LocalTime.now().isBefore(ltof(15, 0))) {
                                         Hibtask.loadHibGenPrice();
                                     }
                                     Hibtask.loadHibDetailPrice();

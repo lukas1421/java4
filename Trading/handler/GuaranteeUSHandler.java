@@ -45,7 +45,8 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
 
         if (orderState.status() != idStatusMap.get(defaultID)) {
             if (orderState.status() == Filled) {
-                String msg = str(primaryID, globalIdOrderMap.get(defaultID).getOrder().orderId(),
+                String msg = str(globalIdOrderMap.get(primaryID).getOrder().orderId(),
+                        globalIdOrderMap.get(defaultID).getOrder().orderId(),
                         "*GUARANTEE US FILL*",
                         idStatusMap.get(defaultID), "->", orderState.status(), now,
                         "ID:", defaultID, globalIdOrderMap.get(defaultID),

@@ -1640,8 +1640,8 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
 
-//        pr(" trade report trade key, contract exec ", tradeKey, contract.symbol(), execution.price(),
-//                execution.shares());
+        pr(" IBPosTradeshandler trade report trade key, contract exec ", tradeKey, contract.symbol(), execution.price(),
+                execution.shares());
 
         if (ChinaPosition.uniqueKeySet.contains(tradeKey)) {
             //pr(" duplicate key in china pos trade report ");
@@ -1668,7 +1668,6 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
 
         if (symbol.startsWith("SGXA50")) {
             if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth() && t.isAfter(LocalTime.of(8, 59))) {
-
                 if (ChinaPosition.tradesMap.get(symbol).containsKey(lt)) {
                     ChinaPosition.tradesMap.get(symbol).get(lt)
                             .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));

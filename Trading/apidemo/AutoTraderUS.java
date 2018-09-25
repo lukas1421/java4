@@ -88,26 +88,30 @@ public class AutoTraderUS {
     }
 
     public static void processMainUS(String symbol, LocalDateTime nowMilli, double freshPrice) {
+
         if (!globalTradingOn.get()) {
             return;
         }
 
+        usPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);
+        usPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
+        usCloseLiqTrader(symbol, nowMilli, freshPrice);
+
         if (usShortableValueMap.get(symbol) < 2.5) {
             pr(symbol, "short value ", usShortableValueMap.get(symbol), "unshortable");
-            outputOrderToAutoLogXU(str(LocalTime.now()
+            outputOrderToAutoLogXU(str(symbol, LocalTime.now()
                     , "short value ", usShortableValueMap.get(symbol), "unshortable"));
             return;
         }
 
+
         usOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usHiloTrader(symbol, nowMilli, freshPrice);
-        usPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);
 
         usPMOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usPMHiloTrader(symbol, nowMilli, freshPrice);
-        usPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
 
-        usCloseLiqTrader(symbol, nowMilli, freshPrice);
+
     }
 
     /**
@@ -540,10 +544,11 @@ public class AutoTraderUS {
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
         LocalTime amStart = ltof(9, 29, 59);
         LocalTime amObservationStart = ltof(9, 29, 55);
+        LocalTime amEnd = ltof(12, 0, 0);
         LocalTime amCutoff = ltof(10, 0);
         LocalTime pmClose = ltof(16, 0);
 
-        if (lt.isBefore(amCutoff)) {
+        if (lt.isBefore(amCutoff) || lt.isAfter(amEnd)) {
             return;
         }
 
@@ -561,7 +566,7 @@ public class AutoTraderUS {
             return;
         }
 
-        if (lt.isAfter(amCutoff) && lt.isBefore(pmClose)) {
+        if (lt.isAfter(amCutoff) && lt.isBefore(amEnd)) {
             if (currPos < 0 && freshPrice > manualOpen) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
@@ -569,7 +574,7 @@ public class AutoTraderUS {
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, id, apcon));
                 outputOrderToAutoLogXU("**********");
                 outputOrderToAutoLogXU(str("NEW", o.orderId(), " US postAMCutoff liq sell BUY #:", numOrderPostCutoff
-                        , "T now", lt, " cutoff", amCutoff
+                        , "T now", lt, " cutoff", amCutoff, "price, manualOpen", freshPrice, manualOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos));
             } else if (currPos > 0 && freshPrice < manualOpen) {
                 int id = autoTradeID.incrementAndGet();
@@ -578,7 +583,7 @@ public class AutoTraderUS {
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, id, apcon));
                 outputOrderToAutoLogXU("**********");
                 outputOrderToAutoLogXU(str("NEW", o.orderId(), " US postAMCutoff liq SELL #:", numOrderPostCutoff
-                        , "T now", lt, " cutoff", amCutoff
+                        , "T now", lt, " cutoff", amCutoff, "price, manualOpen", freshPrice, manualOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos));
             }
         }
@@ -601,7 +606,7 @@ public class AutoTraderUS {
         LocalTime pmCutoff = ltof(13, 30);
         LocalTime pmClose = ltof(16, 0);
 
-        if (lt.isBefore(pmCutoff)) {
+        if (lt.isBefore(pmCutoff) || lt.isAfter(pmClose)) {
             return;
         }
 
@@ -627,7 +632,7 @@ public class AutoTraderUS {
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, id, apcon));
                 outputOrderToAutoLogXU("**********");
                 outputOrderToAutoLogXU(str("NEW", o.orderId(), " US postPMCutoff liq sell BUY #:", numOrderPMCutoff
-                        , "T now", lt, " cutoff", pmCutoff
+                        , "T now", lt, " cutoff", pmCutoff, "last, pmOpen", freshPrice, pmOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos));
             } else if (currPos > 0 && freshPrice < pmOpen) {
                 int id = autoTradeID.incrementAndGet();
@@ -636,7 +641,7 @@ public class AutoTraderUS {
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, id, apcon));
                 outputOrderToAutoLogXU("**********");
                 outputOrderToAutoLogXU(str("NEW", o.orderId(), " US postPMCutoff liq SELL #:", numOrderPMCutoff
-                        , "T now", lt, " cutoff", pmCutoff
+                        , "T now", lt, " cutoff", pmCutoff, "last, pmOpen", freshPrice, pmOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos));
             }
         }

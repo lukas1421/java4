@@ -147,7 +147,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
             this.setNavigableMap(priceMapBar.get(name));
             this.computeWtd();
         } else {
-            if (priceMapBarDetail.get(name).size() > 0) {
+            if (priceMapBarDetail.containsKey(name) && priceMapBarDetail.get(name).size() > 0) {
                 this.setNavigableMap(pmbDetailToSimpleBar(priceMapBarDetail.get(name)));
             } else {
                 this.setNavigableMap(new ConcurrentSkipListMap<>());
