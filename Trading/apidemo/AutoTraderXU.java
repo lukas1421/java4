@@ -2661,7 +2661,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
 
         if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            //pr("1stTick profit taker:  smashort size long size not enough ");
             return;
         }
 

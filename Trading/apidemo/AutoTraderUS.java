@@ -58,9 +58,6 @@ public class AutoTraderUS {
     }
 
     AutoTraderUS() {
-//        Contract iq = tickerToUSContract("IQ");
-//        String iqSymbol = ibContractToSymbol(iq);
-//        usSymbols.add(iqSymbol);
         usSymbols.add(ibContractToSymbol(tickerToUSContract("IQ")));
         usSymbols.add(ibContractToSymbol(tickerToUSContract("QTT")));
         usSymbols.add(ibContractToSymbol(tickerToUSContract("NIO")));
@@ -73,10 +70,19 @@ public class AutoTraderUS {
             usAskMap.put(s, 0.0);
             usOpenMap.put(s, 0.0);
             usFreshPriceMap.put(s, 0.0);
-            usHiloDirection.put(s, Direction.Flat);
+
+
             usOpenDevDirection.put(s, Direction.Flat);
+            usPMOpenDevDirection.put(s, Direction.Flat);
+
+            usHiloDirection.put(s, Direction.Flat);
+            usPMHiloDirection.put(s, Direction.Flat);
+
             manualUSDevMap.put(s, new AtomicBoolean(false));
+            manualUSPMDevMap.put(s, new AtomicBoolean(false));
+
             manualUSHiloMap.put(s, new AtomicBoolean(false));
+            manualUSPMHiloMap.put(s, new AtomicBoolean(false));
         });
     }
 
