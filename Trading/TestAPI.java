@@ -42,7 +42,7 @@ public class TestAPI {
 
         // req
         ap.reqUSAutoTrader();
-        ap.req1StockLive("IQ", "SMART", "USD", ReceiverUS.getReceiverUS(), false);
+        ap.req1StockLive("IQ", "SMART", "USD", new ReceiverUS("IQ"), false);
 
     }
 }

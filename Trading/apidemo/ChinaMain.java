@@ -455,11 +455,14 @@ public final class ChinaMain implements IConnectionHandler {
                 M_CONTROLLER.reqHKAutoTrader();
                 M_CONTROLLER.reqUSAutoTrader();
                 M_CONTROLLER.reqHKInPosLive();
-                ses.scheduleAtFixedRate(() -> {
-                    AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
-                    M_CONTROLLER.reqAccountSummary("All", tags
-                            , new ApiController.IAccountSummaryHandler.AccountInfoHandler());
-                }, 0, 1, TimeUnit.MINUTES);
+                AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
+                M_CONTROLLER.reqAccountSummary("All", tags
+                        , new ApiController.IAccountSummaryHandler.AccountInfoHandler());
+//                ses.scheduleAtFixedRate(() -> {
+//                    AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
+//                    M_CONTROLLER.reqAccountSummary("All", tags
+//                            , new ApiController.IAccountSummaryHandler.AccountInfoHandler());
+//                }, 0, 1, TimeUnit.MINUTES);
 
                 //auto process
                 JOptionPane pane = new JOptionPane("want auto start? ",

@@ -501,7 +501,7 @@ public class ApiController implements EWrapper {
             @Override
             public void accountSummaryEnd() {
                 //pr(" account summary end, cancelling acct summary ");
-                ChinaMain.controller().cancelAccountSummary(this);
+                //ChinaMain.controller().cancelAccountSummary(this);
 
             }
         }
@@ -1023,7 +1023,7 @@ public class ApiController implements EWrapper {
      */
     public void reqUSAutoTrader() {
         AutoTraderUS.usSymbols.forEach(k -> {
-            req1StockLive(k, "SMART", "USD", ReceiverUS.getReceiverUS(), false);
+            req1StockLive(k, "SMART", "USD", new ReceiverUS(k), false);
         });
     }
 

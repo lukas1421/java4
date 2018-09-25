@@ -18,14 +18,24 @@ import static utility.Utility.*;
 public class GuaranteeXUHandler implements ApiController.IOrderHandler {
 
     private static Map<Integer, OrderStatus> idStatusMap = new ConcurrentHashMap<>();
+    private int primaryID;
     private int defaultID;
     private ApiController controller;
 
     public GuaranteeXUHandler(int id, ApiController ap) {
+        primaryID = id;
         defaultID = id;
         idStatusMap.put(id, OrderStatus.ConstructedInHandler);
         controller = ap;
     }
+
+    private GuaranteeXUHandler(int prim, int id, ApiController ap) {
+        primaryID = prim;
+        defaultID = id;
+        idStatusMap.put(id, OrderStatus.ConstructedInHandler);
+        controller = ap;
+    }
+
 
     @Override
     public void orderState(OrderState orderState) {
@@ -39,11 +49,14 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
         }
 
         if (orderState.status() != idStatusMap.get(defaultID)) {
-            String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(), "*GUARANTEE*",
-                    "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
-                    "ID:", defaultID, globalIdOrderMap.get(defaultID),
-                    "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
-            outputPurelyOrdersDetailedXU(msg);
+
+            if (orderState.status() == OrderStatus.Filled) {
+                String msg = str(primaryID, globalIdOrderMap.get(defaultID).getOrder().orderId(),
+                        "*GUARANTEE XU FILLS", idStatusMap.get(defaultID), "->", orderState.status(), now,
+                        "ID:", defaultID, globalIdOrderMap.get(defaultID),
+                        "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
+                outputPurelyOrdersDetailedXU(msg);
+            }
             if (orderState.status() == OrderStatus.PendingCancel &&
                     globalIdOrderMap.get(defaultID).getOrder().tif() == Types.TimeInForce.IOC) {
                 FutType f = ibContractToFutType(activeFutureCt);
@@ -61,12 +74,12 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
                 o.tif(Types.TimeInForce.IOC);
 
                 int id = AutoTraderMain.autoTradeID.incrementAndGet();
-                controller.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, controller));
+                controller.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(primaryID, id, controller));
                 globalIdOrderMap.put(id, new OrderAugmented(
                         ibContractToSymbol(activeFutureCt), LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
-                outputOrderToAutoLogXU(str(prevOrder.orderId(), "->", o.orderId(),
+                outputOrderToAutoLogXU(str(primaryID, prevOrder.orderId(), "->", o.orderId(),
                         "RESUBMITXU. Type, TIF, Action, P, Q,isPrimary", globalIdOrderMap.get(id).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), globalIdOrderMap.get(id).isPrimaryOrder(),
                         "||current", globalIdOrderMap.get(id), "bid ask sp last"

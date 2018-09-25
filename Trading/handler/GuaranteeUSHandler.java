@@ -11,7 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import static apidemo.AutoTraderMain.autoTradeID;
 import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderUS.*;
-import static apidemo.XuTraderHelper.*;
+import static apidemo.XuTraderHelper.outputPurelyOrdersDetailedXU;
+import static apidemo.XuTraderHelper.outputToErrorLog;
+import static client.OrderStatus.Filled;
 import static client.OrderStatus.PendingCancel;
 import static client.Types.TimeInForce.IOC;
 import static utility.Utility.str;
@@ -19,10 +21,12 @@ import static utility.Utility.str;
 public class GuaranteeUSHandler implements ApiController.IOrderHandler {
 
     private static Map<Integer, OrderStatus> idStatusMap = new ConcurrentHashMap<>();
+    private int primaryID;
     private int defaultID;
     private ApiController controller;
 
-    public GuaranteeUSHandler(int id, ApiController ap) {
+    public GuaranteeUSHandler(int prim, int id, ApiController ap) {
+        primaryID = prim;
         defaultID = id;
         idStatusMap.put(id, OrderStatus.ConstructedInHandler);
         controller = ap;
@@ -40,11 +44,15 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
         }
 
         if (orderState.status() != idStatusMap.get(defaultID)) {
-            String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(), "*GUARANTEE US*",
-                    "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
-                    "ID:", defaultID, globalIdOrderMap.get(defaultID),
-                    "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
-            outputPurelyOrdersDetailedXU(msg);
+            if (orderState.status() == Filled) {
+                String msg = str(primaryID, globalIdOrderMap.get(defaultID).getOrder().orderId(),
+                        "*GUARANTEE US FILL*",
+                        idStatusMap.get(defaultID), "->", orderState.status(), now,
+                        "ID:", defaultID, globalIdOrderMap.get(defaultID),
+                        "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
+                outputPurelyOrdersDetailedXU(msg);
+            }
+
             if (orderState.status() == PendingCancel && globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {
                 String symbol = globalIdOrderMap.get(defaultID).getSymbol();
                 double freshPrice = usFreshPriceMap.get(symbol);
@@ -61,16 +69,16 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
                 o.outsideRth(true);
                 o.tif(IOC);
 
-                int id = autoTradeID.incrementAndGet();
-                controller.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, controller));
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, LocalDateTime.now(), o,
+                int newID = autoTradeID.incrementAndGet();
+                controller.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(primaryID, newID, controller));
+                globalIdOrderMap.put(newID, new OrderAugmented(symbol, LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
-                outputOrderToAutoLogXU(str(prevOrder.orderId(), "->", o.orderId(),
-                        "RESUBMIT US. Type, TIF, Action, P, Q,isPrimary", globalIdOrderMap.get(id).getOrderType(),
-                        o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), globalIdOrderMap.get(id).isPrimaryOrder(),
-                        "current", globalIdOrderMap.get(id), "bid ask sp last"
-                        , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", freshPrice));
+//                outputOrderToAutoLogXU(str(primaryID, prevOrder.orderId(), "->", o.orderId(),
+//                        "RESUBMIT US. Type, TIF, Action, P, Q,isPrimary", globalIdOrderMap.get(newID).getOrderType(),
+//                        o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), globalIdOrderMap.get(newID).isPrimaryOrder(),
+//                        "current", globalIdOrderMap.get(newID), "bid ask sp last"
+//                        , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", freshPrice));
             }
             idStatusMap.put(defaultID, orderState.status());
         }

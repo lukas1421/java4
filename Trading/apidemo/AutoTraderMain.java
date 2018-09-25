@@ -17,8 +17,6 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static utility.Utility.pr;
-
 public class AutoTraderMain {
 
     private static Set<LocalDate> holidaySet = new TreeSet<>();
@@ -70,8 +68,8 @@ public class AutoTraderMain {
     }
 
     public static boolean checkIfHoliday(LocalDate d) {
-        pr("holiday set is ", holidaySet);
-        pr(d, " is a holiday? ", holidaySet.contains(d), "!");
+        //pr("holiday set is ", holidaySet);
+        //pr(d, " is a holiday? ", holidaySet.contains(d), "!");
         return holidaySet.contains(d);
     }
 }

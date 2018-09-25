@@ -13,21 +13,24 @@ import static utility.Utility.pr;
 
 
 public class ReceiverUS implements LiveHandler {
-    private ReceiverUS() {
+    private String symbolToReceive;
+
+    public ReceiverUS(String symbol) {
+        symbolToReceive = symbol;
     }
 
-    private static final ReceiverUS rec = new ReceiverUS();
-
-    public static ReceiverUS getReceiverUS() {
-        return rec;
-    }
+//    private static final ReceiverUS rec = new ReceiverUS();
+//
+//    public static ReceiverUS getReceiverUS() {
+//        return rec;
+//    }
 
     @Override
     public synchronized void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
         ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
         ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
         LocalDateTime usLdt = usZdt.toLocalDateTime();
-        //pr(" US handle price ", tt, symbol, price, "ChinaT: ", t, "US T:", usLdt);
+        pr(" US handle price ", symbolToReceive, tt, symbol, price, "ChinaT: ", t, "US T:", usLdt);
 
         switch (tt) {
             case LAST:
