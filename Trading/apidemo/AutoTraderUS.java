@@ -109,6 +109,7 @@ public class AutoTraderUS {
         double open = usOpenMap.getOrDefault(symbol, 0.0);
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
         LocalTime amStart = ltof(9, 29, 59);
+        LocalTime amObservationStart = ltof(9, 29, 55);
         LocalTime cutoff = ltof(10, 0);
 
         cancelAfterDeadline(lt, symbol, US_STOCK_OPENDEV, cutoff);
@@ -119,7 +120,7 @@ public class AutoTraderUS {
         double buySize = US_SIZE;
         double sellSize = US_SIZE;
 
-        double manualOpen = prices.ceilingEntry(amStart).getValue();
+        double manualOpen = prices.ceilingEntry(amObservationStart).getValue();
 
         if (!manualUSDevMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
@@ -203,7 +204,7 @@ public class AutoTraderUS {
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
         LocalTime pmStart = ltof(12, 59, 59);
-        LocalTime pmObservationStart = ltof(12, 59, 59);
+        LocalTime pmObservationStart = ltof(12, 59, 55);
         LocalTime pmCutoff = ltof(13, 30);
 
         cancelAfterDeadline(lt, symbol, US_STOCK_PMOPENDEV, pmCutoff);
