@@ -2455,7 +2455,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
 
         long numOrders = getOrderSizeForTradeType(symbol, INDEX_HILO);
-        LocalDateTime lastHiLoOrderTime = getLastOrderTime(symbol, INDEX_HILO);
+        LocalDateTime lastOrderT = getLastOrderTime(symbol, INDEX_HILO);
         long milliLastTwoOrder = lastTwoOrderMilliDiff(symbol, INDEX_HILO);
         int buyQ = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
         int sellQ = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
@@ -2463,19 +2463,21 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
         int _2dayPerc = getPercentileForLast(fut);
 
-        int hiloWaitTimeSeconds = (milliLastTwoOrder < 60000) ? 300 : 10;
+        int waitSec = (milliLastTwoOrder < 60000) ? 300 : 10;
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(amObservationStart).getValue();
         int openPerc = getPercentileForDoubleX(priceMapBarDetail.get(FTSE_INDEX), open);
 
         double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(amStart))
-                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue)
+                .filter(e -> Math.abs(e.getValue() - open) > 0.01)
+                .findFirst().map(Map.Entry::getValue)
                 .orElse(open);
 
         LocalTime firstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(amStart))
-                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
+                .filter(e -> Math.abs(e.getValue() - open) > 0.01)
+                .findFirst().map(Map.Entry::getKey)
                 .orElse(LocalTime.MIN);
 
         long tBtwnLast2Trades = lastTwoOrderMilliDiff(symbol, INDEX_HILO);
@@ -2520,7 +2522,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             }
         }
 
-        if (SECONDS.between(lastHiLoOrderTime, nowMilli) >= hiloWaitTimeSeconds && maxSoFar != 0.0 && minSoFar != 0.0) {
+        if (SECONDS.between(lastOrderT, nowMilli) >= waitSec && maxSoFar != 0.0 && minSoFar != 0.0) {
             if (!noMoreBuy.get() && (indexLast > maxSoFar || maxT.isAfter(minT)) && indexHiLoDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(buyPrice, buyQ, IOC);
@@ -2528,11 +2530,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "index hilo buy #:", numOrders,
                         globalIdOrderMap.get(id), "buy limit: ", buyPrice,
-                        "indexLast/fut/pd/Base#:", r(indexLast), freshPrice, baseSize,
-                        Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
-                        "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, indexHiLoDirection,
-                        "waitT, lastTwoTDiff, tSinceLast, nextT ", hiloWaitTimeSeconds, tBtwnLast2Trades,
-                        tSinceLastTrade, lastHiLoOrderTime.plusSeconds(hiloWaitTimeSeconds),
+                        "index/fut/pd/Base#:", r(indexLast), freshPrice,
+                        Math.round(10000d * (freshPrice / indexLast - 1)), "bp", baseSize,
+                        "open/ft/time/dir ", r(open), r(firstTick), firstTickTime, indexHiLoDirection,
+                        "waitT, lastTwoTDiff, tSinceLast, nextT ", waitSec, tBtwnLast2Trades,
+                        tSinceLastTrade, lastOrderT.plusSeconds(waitSec),
                         "max/min/2dp%/pmchy/openp% ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, openPerc,
                         "max min t", maxT, minT));
                 indexHiLoDirection = Direction.Long;
@@ -2544,11 +2546,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "index hilo sell #:", numOrders,
                         globalIdOrderMap.get(id), "sell limit: ", sellPrice,
-                        "indexLast/fut/pd/Base#:", r(indexLast), freshPrice, baseSize,
-                        Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
-                        "open/ft/time/direction ", r(open), r(firstTick), firstTickTime, indexHiLoDirection,
-                        "waitT, lastTwoTDiff, tSinceLast, nextT ", hiloWaitTimeSeconds, tBtwnLast2Trades,
-                        tSinceLastTrade, lastHiLoOrderTime.plusSeconds(hiloWaitTimeSeconds),
+                        "index/fut/pd/Base#:", r(indexLast), freshPrice,
+                        Math.round(10000d * (freshPrice / indexLast - 1)), "bp", baseSize,
+                        "open/ft/time/dir ", r(open), r(firstTick), firstTickTime, indexHiLoDirection,
+                        "waitT, lastTwoTDiff, tSinceLast, nextT ", waitSec, tBtwnLast2Trades,
+                        tSinceLastTrade, lastOrderT.plusSeconds(waitSec),
                         "max/min/2dp%/pmchy/openP%", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, openPerc,
                         "max min t", maxT, minT));
                 indexHiLoDirection = Direction.Short;

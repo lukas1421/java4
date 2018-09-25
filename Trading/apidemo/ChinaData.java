@@ -576,7 +576,6 @@ public final class ChinaData extends JPanel {
     }
 
     public static void loadHibernateYesterday() {
-
         CompletableFuture.runAsync(() -> Hibtask.loadHibGen(ChinaSaveYest.getInstance())).thenRun(() -> {
             CompletableFuture.runAsync(() -> GraphIndustry.getIndustryPriceYtd(priceMapBarYtd));
             CompletableFuture.runAsync(() -> Utility.getIndustryVolYtd(sizeTotalMapYtd));
