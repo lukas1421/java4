@@ -40,6 +40,8 @@ public class AutoTraderHK extends JPanel {
     private static volatile ConcurrentHashMap<String, AtomicBoolean> manualHKDevMap = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, AtomicBoolean> manualHKHiloMap = new ConcurrentHashMap<>();
 
+    private static final double MIN_SHORT_LEVEL = 1.5;
+
     private static long MAX_ORDER_HK = 4;
 
     public static List<String> hkSymbols = new ArrayList<>();
@@ -68,11 +70,9 @@ public class AutoTraderHK extends JPanel {
 
     public static void processeMainHK(String symbol, LocalDateTime nowMilli, double freshPrice) {
         cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(10, 0, 0));
-
         if (!globalTradingOn.get()) {
             return;
         }
-
         hkOpenDeviationTrader(symbol, nowMilli, freshPrice);
         hkHiloTrader(symbol, nowMilli, freshPrice);
         hkPostCutoffLiqTrader(symbol, nowMilli, freshPrice);
@@ -200,7 +200,8 @@ public class AutoTraderHK extends JPanel {
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
 
-        if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && hkShortableValueMap.getOrDefault(symbol, 0.0) > 2.5) {
+        if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && hkShortableValueMap.getOrDefault(symbol, 0.0) >
+                MIN_SHORT_LEVEL) {
             if (!noMoreBuy.get() && freshPrice > open && hkOpenDevDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, HK_SIZE, DAY);
@@ -338,7 +339,7 @@ public class AutoTraderHK extends JPanel {
         }
 
         if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && maxSoFar != 0.0 && minSoFar != 0.0
-                && hkShortableValueMap.getOrDefault(symbol, 0.0) > 2.5) {
+                && hkShortableValueMap.getOrDefault(symbol, 0.0) > MIN_SHORT_LEVEL) {
             if (!noMoreBuy.get() && (freshPrice > maxSoFar || maxT.isAfter(minT))
                     && hkHiloDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
