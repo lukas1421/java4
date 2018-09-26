@@ -138,7 +138,7 @@ public final class ChinaMain implements IConnectionHandler {
     private void run() {
         m_tabbedPanel.addTab("XU", xu);
         m_tabbedPanel.addTab("Xu trader ", xutrader);
-        m_tabbedPanel.addTab("Auto trader ", autoMain);
+        //m_tabbedPanel.addTab("Auto trader ", autoMain);
         m_tabbedPanel.addTab("Stock ", chinastock);
         m_tabbedPanel.addTab("Ytd", chinaDataYtd);
         m_tabbedPanel.addTab("Data ", chinaData);

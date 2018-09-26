@@ -1640,8 +1640,8 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
 
-        pr(" IBPosTradeshandler trade report trade key, contract exec ", tradeKey, contract.symbol(), execution.price(),
-                execution.shares());
+//        pr(" IBPosTradeshandler trade report trade key, contract exec ", tradeKey, contract.symbol(), execution.price(),
+//                execution.shares());
 
         if (ChinaPosition.uniqueKeySet.contains(tradeKey)) {
             //pr(" duplicate key in china pos trade report ");

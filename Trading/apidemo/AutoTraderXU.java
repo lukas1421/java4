@@ -851,18 +851,18 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
 
-    private static boolean checkf10maxAftermint(String name) {
-        if (!priceMapBar.containsKey(name) || priceMapBar.get(name).size() < 2) {
+    private static boolean checkf10maxAftermint(String symbol) {
+        if (!priceMapBar.containsKey(symbol) || priceMapBar.get(symbol).size() < 2) {
             return false;
-        } else if (priceMapBar.get(name).lastKey().isBefore(ltof(9, 40))) {
+        } else if (priceMapBar.get(symbol).lastKey().isBefore(ltof(9, 40))) {
             return false;
         } else {
-            LocalTime maxT = priceMapBar.get(name).entrySet().stream()
+            LocalTime maxT = priceMapBar.get(symbol).entrySet().stream()
                     .filter(e -> checkTimeRangeBool(e.getKey(), 9, 29, 9, 41))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MIN);
 
-            LocalTime minT = priceMapBar.get(name).entrySet().stream()
+            LocalTime minT = priceMapBar.get(symbol).entrySet().stream()
                     .filter(e -> checkTimeRangeBool(e.getKey(), 9, 29, 9, 41))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MAX);
