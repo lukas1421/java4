@@ -70,13 +70,16 @@ public class AutoTraderHK extends JPanel {
 
     public static void processeMainHK(String symbol, LocalDateTime nowMilli, double freshPrice) {
         cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(10, 0, 0));
+
         if (!globalTradingOn.get()) {
             return;
         }
+
         hkOpenDeviationTrader(symbol, nowMilli, freshPrice);
         hkHiloTrader(symbol, nowMilli, freshPrice);
         hkPostCutoffLiqTrader(symbol, nowMilli, freshPrice);
         hkCloseLiqTrader(symbol, nowMilli, freshPrice);
+
     }
 
     public static String hkSymbolToTicker(String symbol) {
@@ -245,7 +248,6 @@ public class AutoTraderHK extends JPanel {
         LocalTime lt = nowMilli.toLocalTime();
         String ticker = hkSymbolToTicker(symbol);
         Contract ct = tickerToHKContract(ticker);
-        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         if (lt.isBefore(ltof(15, 50)) || lt.isAfter(ltof(16, 0))) {
             return;
         }

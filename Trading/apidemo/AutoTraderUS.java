@@ -89,35 +89,30 @@ public class AutoTraderUS {
         });
     }
 
+    /**
+     * process US traders
+     *
+     * @param symbol     stock name
+     * @param nowMilli   time
+     * @param freshPrice last price
+     */
     public static void processMainUS(String symbol, LocalDateTime nowMilli, double freshPrice) {
 
         cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(10, 0, 0));
         cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(13, 30, 0));
-
+        usCloseLiqTrader(symbol, nowMilli, freshPrice);
 
         if (!globalTradingOn.get()) {
             return;
         }
 
-        usPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);
-        usPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
-        usCloseLiqTrader(symbol, nowMilli, freshPrice);
-
-//        if (usShortableValueMap.get(symbol) < 2.5) {
-//            pr(symbol, "short value ", usShortableValueMap.get(symbol), "unshortable");
-//            outputOrderToAutoLogXU(str(symbol, LocalTime.now()
-//                    , "short value ", usShortableValueMap.get(symbol), "unshortable"));
-//            return;
-//        }
-
-
         usOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usHiloTrader(symbol, nowMilli, freshPrice);
+        usPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);
 
         usPMOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usPMHiloTrader(symbol, nowMilli, freshPrice);
-
-
+        usPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
     }
 
     /**
