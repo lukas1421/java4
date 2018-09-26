@@ -50,15 +50,18 @@ public class AutoTraderHK extends JPanel {
 //        Contract ct = tickerToHKContract("1293");
 //        String symbol = ibContractToSymbol(ct);
         hkSymbols.add(ibContractToSymbol(tickerToHKContract("1293")));
+        hkSymbols.add(ibContractToSymbol(tickerToHKContract("3690")));
         hkSymbols.forEach((s) -> {
             if (!priceMapBarDetail.containsKey(s)) {
                 priceMapBarDetail.put(s, new ConcurrentSkipListMap<>());
             }
-            hkShortableValueMap.put(s, 0.0);
+
             hkBidMap.put(s, 0.0);
             hkAskMap.put(s, 0.0);
             hkOpenMap.put(s, 0.0);
             hkFreshPriceMap.put(s, 0.0);
+            hkShortableValueMap.put(s, 0.0);
+
             hkOpenDevDirection.put(s, Direction.Flat);
             hkHiloDirection.put(s, Direction.Flat);
             manualHKDevMap.put(s, new AtomicBoolean(false));
