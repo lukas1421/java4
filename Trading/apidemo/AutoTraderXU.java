@@ -2406,6 +2406,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double freshPrice = futPriceMap.get(f);
         long numOrdersPMCutoff = getOrderSizeForTradeType(symbol, INDEX_POST_PMCUTOFF);
         int currPos = currentPosMap.get(f);
+        int reverseAddOn = 2;
 
         LocalTime pmObservationStart = ltof(12, 58, 0);
         LocalTime pmCutoff = ltof(13, 30);
@@ -2424,7 +2425,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         if (lt.isAfter(pmCutoff) && lt.isBefore(pmClose)) {
             if (currPos < 0 && indexLast > pmOpen) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
+                Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos) + reverseAddOn, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INDEX_POST_PMCUTOFF));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputOrderToAutoLogXU("**********");
@@ -2432,7 +2433,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         , globalIdOrderMap.get(id), "index last, pmopen ", indexLast, r(pmOpen), "curpos", currPos));
             } else if (currPos > 0 && indexLast < pmOpen) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
+                Order o = placeOfferLimitTIF(freshPrice, currPos + reverseAddOn, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INDEX_POST_PMCUTOFF));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputOrderToAutoLogXU("**********");
