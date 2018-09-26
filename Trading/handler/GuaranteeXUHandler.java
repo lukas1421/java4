@@ -13,6 +13,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderXU.*;
 import static apidemo.XuTraderHelper.*;
+import static client.OrderStatus.Filled;
+import static client.OrderStatus.PendingCancel;
 import static utility.Utility.*;
 
 public class GuaranteeXUHandler implements ApiController.IOrderHandler {
@@ -50,7 +52,7 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
 
         if (orderState.status() != idStatusMap.get(defaultID)) {
 
-            if (orderState.status() == OrderStatus.Filled) {
+            if (orderState.status() == Filled) {
                 String msg = str(globalIdOrderMap.get(primaryID).getOrder().orderId()
                         , globalIdOrderMap.get(defaultID).getOrder().orderId(),
                         "*GUARANTEE XU FILL", idStatusMap.get(defaultID), "->", orderState.status(), now,
@@ -58,7 +60,8 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
                         "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
                 outputPurelyOrdersDetailedXU(msg);
             }
-            if (orderState.status() == OrderStatus.PendingCancel &&
+
+            if (orderState.status() == PendingCancel &&
                     globalIdOrderMap.get(defaultID).getOrder().tif() == Types.TimeInForce.IOC) {
                 FutType f = ibContractToFutType(activeFutureCt);
                 double bid = bidMap.get(f);

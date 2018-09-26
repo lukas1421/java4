@@ -32,7 +32,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
     }
 
 
-    public GuaranteeUSHandler(int prim, int id, ApiController ap) {
+    private GuaranteeUSHandler(int prim, int id, ApiController ap) {
         primaryID = prim;
         defaultID = id;
         idStatusMap.put(id, OrderStatus.ConstructedInHandler);
@@ -84,7 +84,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
 
                 outputOrderToAutoLogXU(str(globalIdOrderMap.get(primaryID).getOrder().orderId(),
                         prevOrder.orderId(), "->", o.orderId(),
-                        "RESUBMIT US:", globalIdOrderMap.get(newID).getOrderType(),
+                        "US RESUBMIT:", globalIdOrderMap.get(newID).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), globalIdOrderMap.get(newID).isPrimaryOrder(),
                         "current", globalIdOrderMap.get(newID), "bid ask sp last"
                         , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", freshPrice));

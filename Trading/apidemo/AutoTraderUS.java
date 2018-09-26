@@ -89,6 +89,10 @@ public class AutoTraderUS {
 
     public static void processMainUS(String symbol, LocalDateTime nowMilli, double freshPrice) {
 
+        cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(10, 0, 0));
+        cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(13, 30, 0));
+
+
         if (!globalTradingOn.get()) {
             return;
         }

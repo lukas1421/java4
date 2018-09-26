@@ -67,9 +67,12 @@ public class AutoTraderHK extends JPanel {
     private static int HK_SIZE = 100;
 
     public static void processeMainHK(String symbol, LocalDateTime nowMilli, double freshPrice) {
+        cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(10, 0, 0));
+
         if (!globalTradingOn.get()) {
             return;
         }
+
         hkOpenDeviationTrader(symbol, nowMilli, freshPrice);
         hkHiloTrader(symbol, nowMilli, freshPrice);
         hkPostCutoffLiqTrader(symbol, nowMilli, freshPrice);

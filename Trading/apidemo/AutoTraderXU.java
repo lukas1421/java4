@@ -799,7 +799,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             noMoreSell.set(false);
         }
 
-        if (detailedPrint.get() && lt.getSecond() < 10) {
+        if (detailedPrint.get() && lt.getSecond() < 2) {
             pr(lt.truncatedTo(ChronoUnit.SECONDS),
                     "||20DayMA ", _20DayMA, "||maxT>MinT: ", maxAfterMin, "||max>PrevC", maxAbovePrev,
                     "closeY", closePercY, "openPercY", openPercY, "pmchgy", pmChgY,
@@ -820,8 +820,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
 
         //postCutoffLiqTrader(ldt, price);
-        cancelAllAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
-        cancelAllAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
+        cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
+        cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
         XUCloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
 
         //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
@@ -3105,11 +3105,20 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
 
-    private static void cancelAllAfterDeadline(LocalTime now, LocalTime deadline) {
+    private static boolean isCutoffOrLiqTrader(AutoOrderType tt) {
+        return (tt == INDEX_POST_AMCUTOFF || tt == INDEX_POST_PMCUTOFF ||
+                tt == HK_POST_CUTOFF_LIQ || tt == FUT_POST_CUTOFF_LIQ ||
+                tt == US_POST_AMCUTOFF_LIQ || tt == US_POST_PMCUTOFF_LIQ ||
+                tt == CLOSE_LIQ || tt == US_CLOSE_LIQ || tt == HK_CLOSE_LIQ);
+    }
+
+    static void cancelAllOrdersAfterDeadline(LocalTime now, LocalTime deadline) {
         if (now.isAfter(deadline) && now.isBefore(deadline.plusMinutes(1L))) {
             globalIdOrderMap.entrySet().stream()
                     .filter(e -> e.getValue().getAugmentedOrderStatus() != Filled)
                     .filter(e -> e.getValue().getAugmentedOrderStatus() != Inactive)
+                    .filter(e -> e.getValue().isPrimaryOrder())
+                    .filter(e -> !isCutoffOrLiqTrader(e.getValue().getOrderType()))
                     .forEach(e -> {
                         OrderStatus sta = e.getValue().getAugmentedOrderStatus();
                         if ((sta != Filled) && (sta != PendingCancel) && (sta != Cancelled) &&
@@ -3118,8 +3127,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                             e.getValue().setFinalActionTime(LocalDateTime.now());
                             e.getValue().setAugmentedOrderStatus(OrderStatus.DeadlineCancelled);
                             outputOrderToAutoLogXU(str(now, " Cancel ALL after deadline ",
-                                    e.getValue().getOrder().orderId(), "status CHG:",
-                                    sta, "->", e.getValue().getAugmentedOrderStatus()));
+                                    e.getValue().getOrder().orderId(), e.getValue().getOrderType(),
+                                    "status CHG:", sta, "->", e.getValue().getAugmentedOrderStatus()));
                         }
                     });
         }
