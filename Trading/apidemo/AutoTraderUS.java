@@ -44,6 +44,8 @@ public class AutoTraderUS {
     private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSPMDevMap = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSPMHiloMap = new ConcurrentHashMap<>();
 
+    private static final double US_MIN_SHORT_LEVEL = 1.5;
+
     private static final int MAX_US_ORDERS = 4;
     public static List<String> usSymbols = new ArrayList<>();
     private static final double US_SIZE = 100;
@@ -188,7 +190,7 @@ public class AutoTraderUS {
             sellPrice = Math.max(freshPrice, manualOpen);
         }
 
-        if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && usShortableValueMap.get(symbol) > 2.5)
+        if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && usShortableValueMap.get(symbol) > US_MIN_SHORT_LEVEL)
             if (!noMoreBuy.get() && freshPrice > manualOpen && usOpenDevDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(buyPrice, buySize, DAY);
@@ -289,7 +291,7 @@ public class AutoTraderUS {
             sellPrice = Math.max(freshPrice, pmOpen);
         }
 
-        if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && usShortableValueMap.get(symbol) > 2.5)
+        if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && usShortableValueMap.get(symbol) > US_MIN_SHORT_LEVEL)
             if (!noMoreBuy.get() && freshPrice > pmOpen && usPMOpenDevDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(buyPrice, buySize, DAY);
@@ -399,7 +401,7 @@ public class AutoTraderUS {
 //                "shortability", usShortableValueMap.get(symbol));
 
         if (SECONDS.between(lastOrderT, nowMilli) > waitSec && maxSoFar != 0.0 && minSoFar != 0.0 &&
-                usShortableValueMap.get(symbol) > 2.5) {
+                usShortableValueMap.get(symbol) > US_MIN_SHORT_LEVEL) {
             if (!noMoreBuy.get() && (freshPrice > maxSoFar || maxT.isAfter(minT))
                     && usHiloDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
@@ -508,7 +510,7 @@ public class AutoTraderUS {
 //                "shortability", usShortableValueMap.get(symbol));
 
         if (SECONDS.between(lastOrderT, nowMilli) > waitSec && maxPMSoFar != 0.0 && minPMSoFar != 0.0
-                && usShortableValueMap.get(symbol) > 2.5) {
+                && usShortableValueMap.get(symbol) > US_MIN_SHORT_LEVEL) {
             if (!noMoreBuy.get() && (freshPrice > maxPMSoFar || maxPMT.isAfter(minPMT))
                     && usPMHiloDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
