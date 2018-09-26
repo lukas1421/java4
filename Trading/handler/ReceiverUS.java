@@ -5,13 +5,14 @@ import apidemo.ChinaStock;
 import client.TickType;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZonedDateTime;
 
 import static apidemo.AutoTraderMain.chinaZone;
 import static apidemo.AutoTraderMain.nyZone;
 import static apidemo.AutoTraderUS.*;
 import static apidemo.XuTraderHelper.outputOrderToAutoLogXU;
-import static utility.Utility.pr;
+import static apidemo.XuTraderHelper.outputToUSPriceTest;
 import static utility.Utility.str;
 
 
@@ -33,14 +34,18 @@ public class ReceiverUS implements LiveHandler {
         ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
         ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
         LocalDateTime usLdt = usZdt.toLocalDateTime();
-        pr(" US handle price ", symbolToReceive, tt, symbol, price, "ChinaT: ", t, "US T:", usLdt);
+        LocalTime usLt = usLdt.toLocalTime();
+
+        //pr(" US handle price ", symbolToReceive, tt, symbol, price, "ChinaT: ", t, "US T:", usLdt);
 
         switch (tt) {
             case LAST:
                 usFreshPriceMap.put(symbol, price);
-                ChinaData.priceMapBarDetail.get(symbol).put(usLdt.toLocalTime(), price);
+                ChinaData.priceMapBarDetail.get(symbol).put(usLt, price);
                 processMainUS(symbol, usLdt, price);
                 ChinaStock.priceMap.put(symbol, price);
+                outputToUSPriceTest(str(" US handle price ", symbolToReceive,
+                        tt, symbol, price, "ChinaT: ", t, "US T:", usLdt));
                 break;
             case BID:
                 usBidMap.put(symbol, price);

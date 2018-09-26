@@ -136,6 +136,17 @@ public class XuTraderHelper {
         }
     }
 
+    public static void outputToUSPriceTest(String s) {
+        pr(s);
+        File output = new File(TradingConstants.GLOBALPATH + "usPriceTest.txt");
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
+            out.append(s);
+            out.newLine();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
 
     private static void outputOrderToAutoLog(String s, File order, File detailed) {
         if (globalIdOrderMap.size() == 1) {
