@@ -3112,6 +3112,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 tt == CLOSE_LIQ || tt == US_CLOSE_LIQ || tt == HK_CLOSE_LIQ);
     }
 
+    /**
+     * cancelling primary orders only (can only cancel 1 min)
+     *
+     * @param now      time now
+     * @param deadline deadeline
+     */
     static void cancelAllOrdersAfterDeadline(LocalTime now, LocalTime deadline) {
         if (now.isAfter(deadline) && now.isBefore(deadline.plusMinutes(1L))) {
             globalIdOrderMap.entrySet().stream()
