@@ -32,6 +32,7 @@ import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderMain.globalTradingOn;
 import static apidemo.ChinaMain.*;
 import static apidemo.XuTraderHelper.*;
+import static client.OrderStatus.Filled;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
 
@@ -1586,7 +1587,7 @@ public class ApiController implements EWrapper {
             public void orderState(OrderState orderState) {
                 LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
                 //new method, records all status changes, time, track IOC orders, one status only once
-                if (orderState.status() != idStatusMap.get(defaultID)) {
+                if (orderState.status() != idStatusMap.get(defaultID) && orderState.status() == Filled) {
                     String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                             "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
                             "ID:", defaultID, globalIdOrderMap.get(defaultID),
@@ -1607,24 +1608,24 @@ public class ApiController implements EWrapper {
                     if (!createdOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        outputPurelyOrdersDetailedXU(msg);
+                        //outputPurelyOrdersDetailedXU(msg);
                         createdOrderSet.add(defaultID);
                     }
                 } else if (orderState.status() == OrderStatus.PreSubmitted) {
                     if (!predSubmittedOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        outputPurelyOrdersDetailedXU(msg);
+                        //outputPurelyOrdersDetailedXU(msg);
                         predSubmittedOrderSet.add(defaultID);
                     }
                 } else if (orderState.status() == OrderStatus.Submitted) {
                     if (!submittedOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        outputPurelyOrdersDetailedXU(msg);
+                        //outputPurelyOrdersDetailedXU(msg);
                         submittedOrderSet.add(defaultID);
                     }
-                } else if (orderState.status() == OrderStatus.Filled) {
+                } else if (orderState.status() == Filled) {
                     if (!filledOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
@@ -1635,28 +1636,28 @@ public class ApiController implements EWrapper {
                     if (!apiCancelledOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        outputPurelyOrdersXU(msg);
+                        //outputPurelyOrdersXU(msg);
                         apiCancelledOrderSet.add(defaultID);
                     }
                 } else if (orderState.status() == OrderStatus.PendingCancel) {
                     if (!pendingCancelledOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        outputPurelyOrdersXU(msg);
+                        //outputPurelyOrdersXU(msg);
                         pendingCancelledOrderSet.add(defaultID);
                     }
                 } else if (orderState.status() == OrderStatus.Cancelled) {
                     if (!cancelledOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        outputPurelyOrdersXU(msg);
+                        //outputPurelyOrdersXU(msg);
                         cancelledOrderSet.add(defaultID);
                     }
                 } else {
                     if (!elseOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "ELSE||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        outputPurelyOrdersXU(msg);
+                        //outputPurelyOrdersXU(msg);
                         elseOrderSet.add(defaultID);
                     }
                 }
