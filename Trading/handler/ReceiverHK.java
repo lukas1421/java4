@@ -6,7 +6,9 @@ import client.TickType;
 import java.time.LocalDateTime;
 
 import static apidemo.AutoTraderHK.*;
+import static apidemo.XuTraderHelper.outputOrderToAutoLogXU;
 import static utility.Utility.pr;
+import static utility.Utility.str;
 
 
 public class ReceiverHK implements LiveHandler {
@@ -54,7 +56,8 @@ public class ReceiverHK implements LiveHandler {
     public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
         switch (tt) {
             case SHORTABLE:
-                pr(tt, symbol, value, t);
+                outputOrderToAutoLogXU(str("HK handle generic", tt, symbol, value, t));
+                //pr(tt, symbol, value, t);
                 hkShortableValueMap.put(symbol, value);
                 break;
         }

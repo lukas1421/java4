@@ -867,9 +867,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MAX);
 
-            if (detailedPrint.get() && LocalTime.now().isBefore(ltof(10, 0))) {
-                pr(name, "checkf10:max min", maxT, minT);
-            }
+//            if (detailedPrint.get() && LocalTime.now().isBefore(ltof(10, 0))) {
+//                pr(name, "checkf10:max min", maxT, minT);
+//            }
 
             return maxT.isAfter(minT);
         }
@@ -883,10 +883,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     .filter(e -> checkTimeRangeBool(e.getKey(), 9, 30, 9, 41))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
-            if (detailedPrint.get() && LocalTime.now().isBefore(ltof(10, 0))) {
-                pr(name, "checkf10max ", f10max, "close", closeMap.get(name)
-                        , "f10max>close", f10max > closeMap.get(name));
-            }
+//            if (detailedPrint.get() && LocalTime.now().isBefore(ltof(10, 0))) {
+//                pr(name, "checkf10max ", f10max, "close", closeMap.get(name)
+//                        , "f10max>close", f10max > closeMap.get(name));
+//            }
             return f10max > closeMap.get(name);
         }
     }
@@ -2355,14 +2355,16 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         long numOrders = getOrderSizeForTradeType(symbol, INDEX_POST_AMCUTOFF);
         int currPos = currentPosMap.get(f);
 
-        if (lt.isBefore(cutoff)) {
+        if (lt.isBefore(cutoff) || lt.isAfter(amClose)) {
             return;
         }
 
         if (numOrders >= 1) {
             return;
         }
+
         double openIndex = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(amObservationStart).getValue();
+
         if (lt.isAfter(cutoff) && lt.isBefore(amClose)) {
             if (currPos < 0 && indexLast > openIndex) {
                 int id = autoTradeID.incrementAndGet();
@@ -2370,7 +2372,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INDEX_POST_AMCUTOFF));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "post AM Cutoff BUY#:", numOrders
-                        , globalIdOrderMap.get(id), "index last, open ", indexLast, openIndex));
+                        , globalIdOrderMap.get(id), "lastprice, open ", indexLast, openIndex));
 
             } else if (currPos > 0 && indexLast < openIndex) {
                 int id = autoTradeID.incrementAndGet();
@@ -2378,7 +2380,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INDEX_POST_AMCUTOFF));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputOrderToAutoLogXU(str(o.orderId(), "post AM Cutoff SELL#:", numOrders
-                        , globalIdOrderMap.get(id), "index last, open ", indexLast, openIndex));
+                        , globalIdOrderMap.get(id), "lastprice, open ", indexLast, openIndex));
             }
         }
     }
@@ -2402,7 +2404,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime pmCutoff = ltof(13, 30);
         LocalTime pmClose = ltof(15, 0, 0);
 
-        if (lt.isBefore(pmCutoff)) {
+        if (lt.isBefore(pmCutoff) || lt.isAfter(pmClose)) {
             return;
         }
 

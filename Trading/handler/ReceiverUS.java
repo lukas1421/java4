@@ -62,12 +62,11 @@ public class ReceiverUS implements LiveHandler {
     }
 
     @Override
-    public void handleGeneric(TickType tt, String name, double value, LocalDateTime t) {
+    public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
         switch (tt) {
             case SHORTABLE:
-                outputOrderToAutoLogXU(str("handle generic", tt, name, value, t));
-                pr(tt, name, value, t);
-                usShortableValueMap.put(name, value);
+                outputOrderToAutoLogXU(str("US handle generic", tt, symbol, value, t));
+                usShortableValueMap.put(symbol, value);
                 break;
 
         }

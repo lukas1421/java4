@@ -51,8 +51,9 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
         if (orderState.status() != idStatusMap.get(defaultID)) {
 
             if (orderState.status() == OrderStatus.Filled) {
-                String msg = str(primaryID, globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                        "*GUARANTEE XU FILLS", idStatusMap.get(defaultID), "->", orderState.status(), now,
+                String msg = str(globalIdOrderMap.get(primaryID).getOrder().orderId()
+                        , globalIdOrderMap.get(defaultID).getOrder().orderId(),
+                        "*GUARANTEE XU FILL", idStatusMap.get(defaultID), "->", orderState.status(), now,
                         "ID:", defaultID, globalIdOrderMap.get(defaultID),
                         "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
                 outputPurelyOrdersDetailedXU(msg);
@@ -79,8 +80,9 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
                         ibContractToSymbol(activeFutureCt), LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
-                outputOrderToAutoLogXU(str(primaryID, prevOrder.orderId(), "->", o.orderId(),
-                        "RESUBMITXU. Type, TIF, Action, P, Q,isPrimary", globalIdOrderMap.get(id).getOrderType(),
+                outputOrderToAutoLogXU(str(globalIdOrderMap.get(primaryID).getOrder().orderId(),
+                        prevOrder.orderId(), "->", o.orderId(),
+                        "XU RESUBMIT:", globalIdOrderMap.get(id).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), globalIdOrderMap.get(id).isPrimaryOrder(),
                         "||current", globalIdOrderMap.get(id), "bid ask sp last"
                         , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", freshPrice));
