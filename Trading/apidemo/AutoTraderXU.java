@@ -2361,6 +2361,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         long numOrders = getOrderSizeForTradeType(symbol, INDEX_POST_AMCUTOFF);
         int currPos = currentPosMap.get(f);
         int reverseAddon = 0;
+        double safetyMargin = 10;
 
         if (lt.isBefore(cutoff) || lt.isAfter(amClose)) {
             return;
@@ -2373,7 +2374,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double openIndex = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(amObservationStart).getValue();
 
         if (lt.isAfter(cutoff) && lt.isBefore(amClose)) {
-            if (currPos < 0 && indexLast > openIndex) {
+            if (currPos < 0 && indexLast > openIndex - safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos) + reverseAddon, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INDEX_POST_AMCUTOFF));
@@ -2381,7 +2382,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 outputOrderToAutoLogXU("**********");
                 outputOrderToAutoLogXU(str("NEW", o.orderId(), "post AM Cutoff BUY#:", numOrders
                         , globalIdOrderMap.get(id), "lastprice, open ", indexLast, r(openIndex)));
-            } else if (currPos > 0 && indexLast < openIndex) {
+            } else if (currPos > 0 && indexLast < openIndex + safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos + reverseAddon, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INDEX_POST_AMCUTOFF));
@@ -2408,6 +2409,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         long numOrdersPMCutoff = getOrderSizeForTradeType(symbol, INDEX_POST_PMCUTOFF);
         int currPos = currentPosMap.get(f);
         int reverseAddOn = 0;
+        double safetyMargin = 10;
 
         LocalTime pmObservationStart = ltof(12, 58, 0);
         LocalTime pmCutoff = ltof(13, 30);
@@ -2424,7 +2426,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(pmObservationStart).getValue();
 
         if (lt.isAfter(pmCutoff) && lt.isBefore(pmClose)) {
-            if (currPos < 0 && indexLast > pmOpen) {
+            if (currPos < 0 && indexLast > pmOpen - safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos) + reverseAddOn, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INDEX_POST_PMCUTOFF));
@@ -2432,7 +2434,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 outputOrderToAutoLogXU("**********");
                 outputOrderToAutoLogXU(str("NEW", o.orderId(), "post PM Cutoff BUY#:", numOrdersPMCutoff
                         , globalIdOrderMap.get(id), "index last, pmopen ", indexLast, r(pmOpen), "curpos", currPos));
-            } else if (currPos > 0 && indexLast < pmOpen) {
+            } else if (currPos > 0 && indexLast < pmOpen + safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos + reverseAddOn, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INDEX_POST_PMCUTOFF));
