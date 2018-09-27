@@ -50,7 +50,7 @@ public final class TradingConstants {
         //pr(" getting fut front expiry this month exp date ", thisMonthExpiryDate);
 
         if (today.isAfter(thisMonthExpiryDate) ||
-                (today.equals(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
+                (today.equals(thisMonthExpiryDate) && time.isAfter(LocalTime.of(15, 0)))) {
             return getFutureExpiryDateString(today.plusMonths(1L));
         } else {
             return getFutureExpiryDateString(today);

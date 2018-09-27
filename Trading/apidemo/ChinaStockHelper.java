@@ -89,7 +89,7 @@ public final class ChinaStockHelper {
                     .map(e -> (Utility.str(" ", e.getKey(), nameMap.get(e.getKey()), BARRTN.applyAsDouble(e.getValue())))).collect(toCollection(LinkedList::new));
 
             LinkedList<String> maxDayRtnList = priceMapBar.entrySet().stream().filter(sectorFilter).filter(normalBar)
-                    .sorted(reverseThis(Entry.comparingByValue(compDayRtn))).limit(3)
+                    .sorted(reverseComp(Entry.comparingByValue(compDayRtn))).limit(3)
                     .map(e -> (Utility.str(" ", e.getKey(), nameMap.get(e.getKey()),
                             round(computeReturn(e.getValue()) * 1000d) / 10d, "%")))
                     .collect(toCollection(LinkedList::new));
@@ -159,8 +159,7 @@ public final class ChinaStockHelper {
         outputPMBDetailedToFile(inMap, output);
     }
 
-
-    public static <T> Comparator<T> reverseThis(Comparator<T> c) {
+    static <T> Comparator<T> reverseComp(Comparator<T> c) {
         return c.reversed();
     }
 

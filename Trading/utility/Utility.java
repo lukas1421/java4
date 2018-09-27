@@ -701,7 +701,7 @@ public class Utility {
         return (a, b) -> bp.test(a, b) ? a : b;
     }
 
-//    public static <T> Comparator<T> reverseThis(Comparator<T> in) {
+//    public static <T> Comparator<T> reverseComp(Comparator<T> in) {
 //        return in.reversed();
 //    }
 

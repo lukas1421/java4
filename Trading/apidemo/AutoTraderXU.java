@@ -40,7 +40,7 @@ import static apidemo.ChinaDataYesterday.ma20Map;
 import static apidemo.ChinaOption.getATMVol;
 import static apidemo.ChinaPosition.*;
 import static apidemo.ChinaStock.*;
-import static apidemo.ChinaStockHelper.reverseThis;
+import static apidemo.ChinaStockHelper.reverseComp;
 import static apidemo.TradingConstants.*;
 import static apidemo.XuTraderHelper.*;
 import static client.OrderStatus.*;
@@ -1022,10 +1022,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
     private static Contract gettingActiveContract() {
-
         long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(),
                 LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd")));
-
         //return frontFut;
         pr(" **********  days until expiry **********", daysUntilFrontExp);
         if (daysUntilFrontExp <= 1) {
@@ -3755,12 +3753,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         Collectors.counting()));
 
         String pnlString = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getSymbol().startsWith("SGXA50"))
+                .filter(e -> e.getValue().getSymbol().equals(ibContractToSymbol(activeFutureCt  )))
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .collect(Collectors.collectingAndThen(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType()
                         , ConcurrentSkipListMap::new
                         , Collectors.summingDouble(e -> e.getValue().getPnl(futPriceMap.get(f)))),
-                        e -> e.entrySet().stream().sorted(reverseThis(Comparator.comparing(Map.Entry::getValue)))
+                        e -> e.entrySet().stream().sorted(reverseComp(Comparator.comparing(Map.Entry::getValue)))
                                 .map(e1 -> str("|||", e1.getKey(),
                                         "#:", numTradesByOrder.getOrDefault(e1.getKey(), 0L),
                                         "Tot Q: ", quantitySumByOrder.getOrDefault(e1.getKey(), 0d), r(e1.getValue())))
