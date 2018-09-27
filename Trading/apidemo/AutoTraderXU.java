@@ -3574,8 +3574,17 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     public void openOrder(Contract contract, Order order, OrderState orderState) {
         //activeFutLiveIDOrderMap.put(order.orderId(), order);
         liveIDOrderMap.put(order.orderId(), order);
+        String symb = ibContractToSymbol(contract);
 
-        if (ibContractToSymbol(contract).equals(ibContractToSymbol(activeFutureCt))) {
+        if (!liveSymbolOrderSet.containsKey(symb)) {
+            liveSymbolOrderSet.put(symb, new TreeSet<>(Comparator.comparing(Order::orderId)));
+            liveSymbolOrderSet.get(symb).add(order);
+        } else {
+            liveSymbolOrderSet.get(symb).add(order);
+        }
+
+
+        if (symb.equals(ibContractToSymbol(activeFutureCt))) {
             double sign = order.action().equals(Types.Action.BUY) ? 1 : -1;
             if (!activeFutLiveOrder.containsKey(order.lmtPrice())) {
                 activeFutLiveOrder.put(order.lmtPrice(), sign * order.totalQuantity());

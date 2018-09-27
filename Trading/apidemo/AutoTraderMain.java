@@ -10,7 +10,10 @@ import java.io.*;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,7 +45,8 @@ public class AutoTraderMain extends JPanel {
     public static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
     public static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
-    public static volatile Map<Integer, Order> liveIDOrderMap = new HashMap<>();
+    public static volatile Map<Integer, Order> liveIDOrderMap = new ConcurrentHashMap<>();
+    public static volatile Map<String, TreeSet<Order>> liveSymbolOrderSet = new ConcurrentHashMap<>();
 
 
     //buy sell only

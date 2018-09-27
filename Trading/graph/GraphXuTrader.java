@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static apidemo.AutoTraderMain.liveIDOrderMap;
 import static apidemo.AutoTraderXU.*;
 import static apidemo.TradingConstants.FTSE_INDEX;
 import static apidemo.XuTraderHelper.getPercentileForLast;
@@ -220,7 +221,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         maxRtn = getMaxRtn();
         last = 0;
 
-        AutoTraderMain.liveIDOrderMap.forEach((k, v) -> {
+        liveIDOrderMap.forEach((k, v) -> {
             OrderAugmented oa = AutoTraderXU.findOrderByTWSID(k);
             OrderStatus s = oa.getAugmentedOrderStatus();
 
