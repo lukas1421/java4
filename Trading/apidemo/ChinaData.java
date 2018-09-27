@@ -345,31 +345,19 @@ public final class ChinaData extends JPanel {
         {
             priceMapBarDetail.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
         });
-        hibMorning.addActionListener(al ->
-
-        {
+        hibMorning.addActionListener(al -> {
             int ans = JOptionPane.showConfirmDialog(null, "are you sure", "", JOptionPane.YES_NO_OPTION);
             if (ans == JOptionPane.YES_OPTION) {
-                Hibtask.hibernateMorningTask();
+                //Hibtask.hibernateMorningTask();
             }
         });
-        saveBidAsk.addActionListener(al ->
-
-                hibSaveGenBidAsk());
-        loadHibBidAsk.addActionListener(al ->
-
-                loadHibGenBidAsk());
+        saveBidAsk.addActionListener(al -> hibSaveGenBidAsk());
+        loadHibBidAsk.addActionListener(al -> loadHibGenBidAsk());
         //saveStratButton.addActionListener(al -> saveHibGen(strategyTotalMap, new ConcurrentHashMap<>(), ChinaSaveStrat.getInstance()));
-        saveHibYtdButton.addActionListener(al ->
+        saveHibYtdButton.addActionListener(al -> hibSaveGenYtd());
+        saveHibY2Button.addActionListener(al -> hibSaveGenY2());
 
-                hibSaveGenYtd());
-        saveHibY2Button.addActionListener(al ->
-
-                hibSaveGenY2());
-
-        btnLoadBarYtd.addActionListener(al -> CompletableFuture.runAsync(() ->
-
-        {
+        btnLoadBarYtd.addActionListener(al -> CompletableFuture.runAsync(() -> {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(priceBarYtdSource))) {
                 //noinspection unchecked
                 priceMapBarYtd = (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>>) ois.readObject();
@@ -621,7 +609,7 @@ public final class ChinaData extends JPanel {
             }
         }).thenAccept(
                 v -> {
-                    ChinaMain.updateSystemNotif(Utility.str("SAV", saveclass.getSimpleName(),
+                    ChinaMain.updateSystemNotif(Utility.str("S", saveclass.getSimpleName(),
                             LocalTime.now().truncatedTo(ChronoUnit.MINUTES)));
                     pr(saveclass.getSimpleName(), "sav don", LocalTime.now());
                 }
