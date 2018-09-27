@@ -36,8 +36,6 @@ public class ReceiverUS implements LiveHandler {
         LocalDateTime usLdt = usZdt.toLocalDateTime();
         LocalTime usLt = usLdt.toLocalTime();
 
-        //pr(" US handle price ", symbolToReceive, tt, symbol, price, "ChinaT: ", t, "US T:", usLdt);
-
         switch (tt) {
             case LAST:
                 usFreshPriceMap.put(symbol, price);
