@@ -185,7 +185,7 @@ public class SinaStock implements Runnable {
                             double last = Utility.pd(datalist, 3);
                             sizeTotalMap.get(ticker).put(lt, Utility.pd(datalist, 9) / 1000000d);
 
-                            if (lt.isBefore(LocalTime.of(10, 0))) {
+                            if (isIndex(ticker) && lt.isAfter(ltof(9, 0)) && lt.isBefore(ltof(15, 5))) {
                                 priceMapBarDetail.get(ticker).put(ldt.toLocalTime(), last);
                             }
 
@@ -219,6 +219,14 @@ public class SinaStock implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    static boolean isIndex(String symbol) {
+        return (symbol.equals("sh000001") ||
+                symbol.equals("sh000016") ||
+                symbol.equals("sh000905") ||
+                symbol.equals("sh000300") ||
+                symbol.equals("sz399006"));
     }
 
     public static double getOpen() {
