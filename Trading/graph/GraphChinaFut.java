@@ -255,7 +255,7 @@ public class GraphChinaFut extends JComponent {
             // g.drawString("SINA " + Double.toString(Math.round(sina.lastEntry().getValue())),getWidth()-280, getHeight()-10);
         }
 
-        //System.out.println("current thread is " + Thread.currentThread().getName());
+        //System.out.println("current thread is " + Thread.currentThread().getSymbol());
         // draw price line
         //g.setColor( Color.black);
         //int y = getY( m_current);

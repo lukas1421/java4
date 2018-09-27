@@ -494,8 +494,8 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
 //            g2.setStroke(new BasicStroke(3));
 //            g2.drawString(Double.toString(minRtn) + "%", getWidth()-40, getHeight()-33);
 //            g2.drawString(Double.toString(maxRtn) + "%",getWidth()-40,15);
-//            g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2); 
-//            if(!Optional.ofNullable(name).orElse("").equals("")) { g2.drawString(name, 5, 15); }
+//            g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(symbol)),getWidth()-40, getHeight()/2);
+//            if(!Optional.ofNullable(symbol).orElse("").equals("")) { g2.drawString(symbol, 5, 15); }
 //            if(!Optional.ofNullable(chineseName).orElse("").equals("")) { g2.drawString(chineseName, getWidth()/7, 15);}
 //            g2.drawString(Double.toString(getLastDouble()), getWidth()/7*2, 15);
 //            g2.drawString("P%:" + Double.toString(getCurrentPercentile()), getWidth()/7*3-30, 15);
@@ -594,10 +594,10 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
     }
 
     //        private double getRangeY() {
-//            if(Optional.ofNullable(minMapY.get(name)).orElse(0.0) !=0.0
-//                    && Optional.ofNullable(maxMapY.get(name)).orElse(0.0) !=0.0
+//            if(Optional.ofNullable(minMapY.get(symbol)).orElse(0.0) !=0.0
+//                    && Optional.ofNullable(maxMapY.get(symbol)).orElse(0.0) !=0.0
 //                    ) {
-//                return Math.round(100d*Math.log(maxMapY.get(name)/minMapY.get(name)))/100d;    
+//                return Math.round(100d*Math.log(maxMapY.get(symbol)/minMapY.get(symbol)))/100d;
 //            } else {
 //                return 0.0;    
 //            }
@@ -678,8 +678,8 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
     }
 
     //        private double getRetOPC() {
-//            if(Optional.ofNullable(ChinaStock.closeMap.get(name)).orElse(0.0)!=0.0 && Optional.ofNullable(ChinaStock.openMap.get(name)).orElse(0.0)!=0.0) {
-//                return Math.round(1000d*Math.log(ChinaStock.openMap.get(name)/ChinaStock.closeMap.get(name)))/10d;
+//            if(Optional.ofNullable(ChinaStock.closeMap.get(symbol)).orElse(0.0)!=0.0 && Optional.ofNullable(ChinaStock.openMap.get(symbol)).orElse(0.0)!=0.0) {
+//                return Math.round(1000d*Math.log(ChinaStock.openMap.get(symbol)/ChinaStock.closeMap.get(symbol)))/10d;
 //            } else {
 //                return 0.0;
 //            }   
@@ -699,23 +699,23 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
     }
 
     //        private int getCurrentMaxMinYP() {
-//            if(Optional.ofNullable(minMapY.get(name)).orElse(0.0) !=0.0
-//                    && Optional.ofNullable(priceMap.get(name)).orElse(0.0)!=0.0) {
-//                return (int) Math.min(100,Math.round(100d*(priceMap.get(name)-minMapY.get(name))/(maxMapY.get(name)-minMapY.get(name))));
+//            if(Optional.ofNullable(minMapY.get(symbol)).orElse(0.0) !=0.0
+//                    && Optional.ofNullable(priceMap.get(symbol)).orElse(0.0)!=0.0) {
+//                return (int) Math.min(100,Math.round(100d*(priceMap.get(symbol)-minMapY.get(symbol))/(maxMapY.get(symbol)-minMapY.get(symbol))));
 //            } else {
 //                return 0;    
 //            }
 //        }
 //        private double getOpenYP() {
-//            if(Optional.ofNullable(minMapY.get(name)).orElse(0.0) !=0.0) {
-//                return (int) Math.min(100,Math.round(100d*(openMapY.get(name)-minMapY.get(name))/(maxMapY.get(name)-minMapY.get(name))));    
+//            if(Optional.ofNullable(minMapY.get(symbol)).orElse(0.0) !=0.0) {
+//                return (int) Math.min(100,Math.round(100d*(openMapY.get(symbol)-minMapY.get(symbol))/(maxMapY.get(symbol)-minMapY.get(symbol))));
 //            } else {
 //                return 0;    
 //            }
 //        }
 //        private int getCloseYP(){
-//            if(Optional.ofNullable(minMapY.get(name)).orElse(0.0) !=0.0) {
-//                return (int) Math.min(100,Math.round(100d*(closeMapY.get(name)-minMapY.get(name))/(maxMapY.get(name)-minMapY.get(name))));    
+//            if(Optional.ofNullable(minMapY.get(symbol)).orElse(0.0) !=0.0) {
+//                return (int) Math.min(100,Math.round(100d*(closeMapY.get(symbol)-minMapY.get(symbol))/(maxMapY.get(symbol)-minMapY.get(symbol))));
 //            } else {
 //                return 0;    
 //            }
@@ -736,56 +736,56 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
 //        }
     //get some 
 //        private double getRetCHY() {
-//            if(Optional.ofNullable(closeMapY.get(name)).orElse(0.0) !=0.0
-//                    && Optional.ofNullable(maxMapY.get(name)).orElse(0.0) !=0.0) {    
-//                //System.out.println("name is " + name + " "+ priceMap.get(name) + " " + maxMap.get(name) + " " +minMap.get(name));
-//                return Math.min(100.0,Math.round(1000d*Math.log(closeMapY.get(name)/maxMapY.get(name))))/10d;
+//            if(Optional.ofNullable(closeMapY.get(symbol)).orElse(0.0) !=0.0
+//                    && Optional.ofNullable(maxMapY.get(symbol)).orElse(0.0) !=0.0) {
+//                //System.out.println("symbol is " + symbol + " "+ priceMap.get(symbol) + " " + maxMap.get(symbol) + " " +minMap.get(symbol));
+//                return Math.min(100.0,Math.round(1000d*Math.log(closeMapY.get(symbol)/maxMapY.get(symbol))))/10d;
 //            } else {    
 //                return 0.0;
 //            }
 //        }
 //        private double getHO() {
-//            return Math.round(1000d*Optional.ofNullable(retHOY.get(name)).orElse(0.0))/10d;
+//            return Math.round(1000d*Optional.ofNullable(retHOY.get(symbol)).orElse(0.0))/10d;
 //        }
 //        
 //        
 //        private double getHOCHRangeRatio() {
-//            if(Optional.ofNullable(retHOY.get(name)).isPresent()
-//                    && Optional.ofNullable(retCHY.get(name)).isPresent()        
-//                    && Optional.ofNullable(minMapY.get(name)).orElse(0.0) !=0.0
-//                    && Optional.ofNullable(maxMapY.get(name)).orElse(0.0) !=0.0
+//            if(Optional.ofNullable(retHOY.get(symbol)).isPresent()
+//                    && Optional.ofNullable(retCHY.get(symbol)).isPresent()
+//                    && Optional.ofNullable(minMapY.get(symbol)).orElse(0.0) !=0.0
+//                    && Optional.ofNullable(maxMapY.get(symbol)).orElse(0.0) !=0.0
 //                    ) {
 //                
-//                double res = (retHOY.get(name)-retCHY.get(name))/((maxMapY.get(name)/minMapY.get(name)-1));
+//                double res = (retHOY.get(symbol)-retCHY.get(symbol))/((maxMapY.get(symbol)/minMapY.get(symbol)-1));
 //                return Math.round(res*10d)/10d;
 //            }
 //            return 0.0;
 //        }
 //        
 //        private double getRetCLY() {
-//            if(Optional.ofNullable(closeMapY.get(name)).orElse(0.0) !=0.0
-//                    && Optional.ofNullable(minMapY.get(name)).orElse(0.0) !=0.0) {    
-//                //System.out.println("name is " + name + " "+ priceMap.get(name) + " " + maxMap.get(name) + " " +minMap.get(name));
-//                return Math.min(100.0,Math.round(1000d*Math.log(closeMapY.get(name)/minMapY.get(name))))/10d;
+//            if(Optional.ofNullable(closeMapY.get(symbol)).orElse(0.0) !=0.0
+//                    && Optional.ofNullable(minMapY.get(symbol)).orElse(0.0) !=0.0) {
+//                //System.out.println("symbol is " + symbol + " "+ priceMap.get(symbol) + " " + maxMap.get(symbol) + " " +minMap.get(symbol));
+//                return Math.min(100.0,Math.round(1000d*Math.log(closeMapY.get(symbol)/minMapY.get(symbol))))/10d;
 //            } else {    
 //                return 0.0;
 //            }
 //        }
 //        
 //        private double getRetCC() {
-//            return Math.round(1000d*Optional.ofNullable(retCCY.get(name)).orElse(0.0))/10d;
+//            return Math.round(1000d*Optional.ofNullable(retCCY.get(symbol)).orElse(0.0))/10d;
 //        }         
 //      
 //        private double getRetCO() {
-//            return Math.round(1000d*Optional.ofNullable(retCOY.get(name)).orElse(0.0))/10d;
+//            return Math.round(1000d*Optional.ofNullable(retCOY.get(symbol)).orElse(0.0))/10d;
 //        }
 //        
 //        private int getMinTY() {
-//            return Optional.ofNullable(minTY.get(name)).orElse(0);
+//            return Optional.ofNullable(minTY.get(symbol)).orElse(0);
 //        }
 //        
 //        private int getMaxTY() {
-//            return Optional.ofNullable(maxTY.get(name)).orElse(0);
+//            return Optional.ofNullable(maxTY.get(symbol)).orElse(0);
 //        }
     private LocalTime getAMMinT() {
 
@@ -831,6 +831,6 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
     }
 
 //    double getRetOPC() {
-//        return (noZeroArrayGen(name,closeMap,openMap))?round(1000d*Math.log(ChinaStock.openMap.get(name)/ChinaStock.closeMap.get(name)))/10d:0.0;
+//        return (noZeroArrayGen(symbol,closeMap,openMap))?round(1000d*Math.log(ChinaStock.openMap.get(symbol)/ChinaStock.closeMap.get(symbol)))/10d:0.0;
 //    }
 }

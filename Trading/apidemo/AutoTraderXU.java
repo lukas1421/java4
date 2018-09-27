@@ -181,11 +181,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     public static volatile DisplayGranularity gran = DisplayGranularity._5MDATA;
     private static volatile Map<Double, Double> activeFutLiveOrder = new HashMap<>();
-    public static volatile Map<Integer, Order> activeFutLiveIDOrderMap = new HashMap<>();
+    //public static volatile Map<Integer, Order> activeFutLiveIDOrderMap = new HashMap<>();
+
     public static volatile EnumMap<FutType, Double> bidMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Double> askMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Double> futPriceMap = new EnumMap<>(FutType.class);
-    static volatile NavigableMap<LocalDateTime, Double> activeLastMinuteMap = new ConcurrentSkipListMap<>();
+    private static volatile NavigableMap<LocalDateTime, Double> activeLastMinuteMap = new ConcurrentSkipListMap<>();
     private static EnumMap<FutType, Double> futOpenMap = new EnumMap<>(FutType.class);
     public static EnumMap<FutType, Double> futPrevClose3pmMap = new EnumMap<>(FutType.class);
 
@@ -379,7 +380,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 }
                 apcon.reqPositions(getThis());
                 activeFutLiveOrder = new HashMap<>();
-                activeFutLiveIDOrderMap = new HashMap<>();
+                //activeFutLiveIDOrderMap = new HashMap<>();
+                //liveIDOrderMap = new HashMap<>();
 
                 apcon.reqLiveOrders(getThis());
 
@@ -443,8 +445,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         JButton cancelAllOrdersButton = new JButton("Cancel Orders");
         cancelAllOrdersButton.addActionListener(l -> {
             apcon.cancelAllOrders();
-            activeFutLiveOrder = new HashMap<>();
-            activeFutLiveIDOrderMap = new HashMap<>();
+            //activeFutLiveOrder = new HashMap<>();
+            //activeFutLiveIDOrderMap = new HashMap<>();
             SwingUtilities.invokeLater(xuGraph::repaint);
         });
 
@@ -3570,7 +3572,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     @Override
     public void openOrder(Contract contract, Order order, OrderState orderState) {
-        activeFutLiveIDOrderMap.put(order.orderId(), order);
+        //activeFutLiveIDOrderMap.put(order.orderId(), order);
+        liveIDOrderMap.put(order.orderId(), order);
+
         if (ibContractToSymbol(contract).equals(ibContractToSymbol(activeFutureCt))) {
             double sign = order.action().equals(Types.Action.BUY) ? 1 : -1;
             if (!activeFutLiveOrder.containsKey(order.lmtPrice())) {
@@ -3753,7 +3757,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         Collectors.counting()));
 
         String pnlString = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getSymbol().equals(ibContractToSymbol(activeFutureCt  )))
+                .filter(e -> e.getValue().getSymbol().equals(ibContractToSymbol(activeFutureCt)))
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .collect(Collectors.collectingAndThen(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType()
                         , ConcurrentSkipListMap::new

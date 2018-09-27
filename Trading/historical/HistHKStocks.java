@@ -277,7 +277,7 @@ public class HistHKStocks extends JPanel {
 
     private void request1StockYtd(String stock) {
         CompletableFuture.runAsync(() -> {
-            //System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
+            //System.out.println(" request stock in completefuture " + Thread.currentThread().getSymbol());
             //System.out.println(" available " + sm.availablePermits());
             //System.out.println(" queue length is " + sm.getQueueLength());
 
@@ -300,7 +300,7 @@ public class HistHKStocks extends JPanel {
 
     private void request1StockWtd(String stock) {
         CompletableFuture.runAsync(() -> {
-            //System.out.println(" request stock in completefuture " + Thread.currentThread().getName());
+            //System.out.println(" request stock in completefuture " + Thread.currentThread().getSymbol());
             //System.out.println(" available " + sm.availablePermits());
             //System.out.println(" queue length is " + sm.getQueueLength());
 

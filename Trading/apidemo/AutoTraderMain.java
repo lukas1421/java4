@@ -1,5 +1,6 @@
 package apidemo;
 
+import client.Order;
 import client.OrderAugmented;
 import controller.ApiController;
 import util.AutoOrderType;
@@ -9,10 +10,7 @@ import java.io.*;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.NavigableMap;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -44,6 +42,7 @@ public class AutoTraderMain extends JPanel {
     public static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
     public static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
+    public static volatile Map<Integer, Order> liveIDOrderMap = new HashMap<>();
 
 
     //buy sell only

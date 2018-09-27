@@ -4,6 +4,8 @@ import TradeType.MAIdea;
 import TradeType.TradeBlock;
 import apidemo.*;
 import auxiliary.SimpleBar;
+import client.OrderAugmented;
+import client.OrderStatus;
 import client.Types;
 import utility.SharpeUtility;
 
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 import static apidemo.AutoTraderXU.*;
 import static apidemo.TradingConstants.FTSE_INDEX;
 import static apidemo.XuTraderHelper.getPercentileForLast;
+import static client.OrderStatus.*;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.*;
@@ -217,20 +220,25 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
         maxRtn = getMaxRtn();
         last = 0;
 
-        AutoTraderXU.activeFutLiveIDOrderMap.forEach((k, v) -> {
-            int y = getY(v.lmtPrice());
-            if (v.action().equals(Types.Action.BUY)) {
-                g.setColor(Color.blue);
-                g.drawLine(0, y, getWidth(), y);
-                g.drawString(str("Buy: ", v.totalQuantity(), " at ", v.lmtPrice(),
-                        AutoTraderXU.findOrderByTWSID(k).getOrderType(), AutoTraderXU.findOrderByTWSID(k).getAugmentedOrderStatus())
-                        , Math.round(getWidth() * 7 / 8), y + 10);
-            } else if (v.action().equals(Types.Action.SELL)) {
-                g.setColor(Color.red);
-                g.drawLine(0, y, getWidth(), y);
-                g.drawString(str("Sell: ", v.totalQuantity(), " at ", v.lmtPrice()
-                        , AutoTraderXU.findOrderByTWSID(k).getOrderType(), AutoTraderXU.findOrderByTWSID(k).getAugmentedOrderStatus())
-                        , Math.round(getWidth() * 7 / 8), y + 10);
+        AutoTraderMain.liveIDOrderMap.forEach((k, v) -> {
+            OrderAugmented oa = AutoTraderXU.findOrderByTWSID(k);
+            OrderStatus s = oa.getAugmentedOrderStatus();
+
+            if (oa.getSymbol().equals(ibContractToSymbol(activeFutureCt))) {
+                if (s != Filled && s != PendingCancel && s != Inactive && s != DeadlineCancelled) {
+                    int y = getY(v.lmtPrice());
+                    if (v.action().equals(Types.Action.BUY)) {
+                        g.setColor(Color.blue);
+                        g.drawLine(0, y, getWidth(), y);
+                        g.drawString(str("Buy: ", v.totalQuantity(), " at ", v.lmtPrice(),
+                                oa.getOrderType(), oa.getAugmentedOrderStatus()), Math.round(getWidth() * 7 / 8), y + 10);
+                    } else if (v.action().equals(Types.Action.SELL)) {
+                        g.setColor(Color.red);
+                        g.drawLine(0, y, getWidth(), y);
+                        g.drawString(str("Sell: ", v.totalQuantity(), " at ", v.lmtPrice()
+                                , oa.getOrderType(), oa.getAugmentedOrderStatus()), Math.round(getWidth() * 7 / 8), y + 10);
+                    }
+                }
             }
         });
 

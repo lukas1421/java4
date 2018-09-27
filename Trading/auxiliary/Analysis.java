@@ -398,7 +398,7 @@ public class Analysis extends JPanel {
                     //add(chartScroll, BorderLayout.CENTER);
                     add(graphPanel, BorderLayout.CENTER);
 
-                    //this.setName("graph");
+                    //this.setSymbol("graph");
                     graphCreated = true;
                     this.repaint();
                     //System.out.println

@@ -149,7 +149,7 @@ public class GraphBarTemporal<T extends Temporal> extends JComponent implements 
 
     @Override
     public void refresh() {
-        //fillInGraphHKGen(name, mainMap);
+        //fillInGraphHKGen(symbol, mainMap);
     }
 
     public void refresh(Consumer<String> cons) {

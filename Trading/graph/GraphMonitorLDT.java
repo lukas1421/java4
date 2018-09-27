@@ -166,7 +166,7 @@ public class GraphMonitorLDT extends JComponent implements GraphFillable {
 
         g2.setColor(Color.black);
 
-        //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2);
+        //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(symbol)),getWidth()-40, getHeight()/2);
         if (!ofNullable(name).orElse("").equals("")) {
             g2.drawString(name, 5, 15);
         }
@@ -199,7 +199,7 @@ public class GraphMonitorLDT extends JComponent implements GraphFillable {
         g2.setColor(Color.RED);
 
         g2.drawString("周 " + Integer.toString(ChinaPosition.getPercentileWrapper(name)), getWidth() * 5 / 6, 95);
-        //g2.drawString("P变 " + Integer.toString(ChinaPosition.getChangeInPercentileToday(name)), getWidth()*5/6, 115);
+        //g2.drawString("P变 " + Integer.toString(ChinaPosition.getChangeInPercentileToday(symbol)), getWidth()*5/6, 115);
         g2.drawString("分夏 " + Double.toString(Math.round(100d * minSharpe) / 100d), getWidth() * 5 / 6, 115);
         g2.drawString("弹 " + Double.toString(ChinaPosition.getPotentialReturnToMid(name)), getWidth() * 5 / 6, 135);
 
@@ -296,7 +296,7 @@ public class GraphMonitorLDT extends JComponent implements GraphFillable {
             price5mWtd.put(name, (ConcurrentSkipListMap<LocalDateTime, SimpleBar>) mergeMaps(HistChinaStocks.chinaWtd.get(name),
                     Utility.map1mTo5m(priceMapBar.get(name))));
             this.setNavigableMap(price5mWtd.get(name));
-            //getYtdY2CloseP(name);
+            //getYtdY2CloseP(symbol);
         } else {
             this.setNavigableMap(new ConcurrentSkipListMap<>());
         }

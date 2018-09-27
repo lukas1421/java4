@@ -193,7 +193,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
                         g.drawString("L:" + ((LocalDateTime) lt).toLocalTime().toString(), x, Math.min(last + 10, getHeight() - 10));
                     }
                 } catch (Exception ex) {
-                    System.out.println(" netmap reducing map for max or min  " + lt + " name " + name + " net map size is " + netMap.size());
+                    System.out.println(" netmap reducing map for max or min  " + lt + " symbol " + name + " net map size is " + netMap.size());
                 }
 
                 try {
@@ -201,7 +201,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
                         g.drawString("Net: " + Math.round(netMap.lastEntry().getValue()), x - 150, 15);
                     }
                 } catch (Exception ex) {
-                    System.out.println(" lt equals net map last key issue " + lt + " name " + name);
+                    System.out.println(" lt equals net map last key issue " + lt + " symbol " + name);
                 }
             }
         }
@@ -278,7 +278,7 @@ public class GraphChinaPnl<T extends Temporal> extends JComponent implements Gra
 
     @Override
     public void refresh() {
-        //fillInGraph(name);
+        //fillInGraph(symbol);
 //        SwingUtilities.invokeLater(()-> {
 //            this.repaint();
 //        });

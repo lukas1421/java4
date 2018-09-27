@@ -306,8 +306,8 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
                 g.drawLine(x, last, x + WIDTH_PNL, close);
                 last = close;
                 x += WIDTH_PNL;
-//                if (ChinaPosition.tradesMapFront.containsKey(name) && ChinaPosition.tradesMapFront.get(name).containsKey(lt)) {
-//                    g.drawString(ChinaStockHelper.str(((Trade) ChinaPosition.tradesMapFront.get(name).get(lt)).getSize()), x - 20, close - (mult * 50));
+//                if (ChinaPosition.tradesMapFront.containsKey(symbol) && ChinaPosition.tradesMapFront.get(symbol).containsKey(lt)) {
+//                    g.drawString(ChinaStockHelper.str(((Trade) ChinaPosition.tradesMapFront.get(symbol).get(lt)).getSize()), x - 20, close - (mult * 50));
 //                    g.drawLine(x, close - (mult * 40), x, close);
 //                    mult = -1 * mult;
 //                }

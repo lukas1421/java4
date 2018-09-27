@@ -35,7 +35,7 @@ public class AnaCompute implements Runnable {
                 //  Backtesting.computeYtd(LiveData.map1);
                 //  System.out.println (" in AnaCompute run method ");
                 //  System.out.println(" active thread count is " + Thread.activeCount());
-                //  System.out.println("current thread name is " +  Thread.currentThread().getName());
+                //  System.out.println("current thread name is " +  Thread.currentThread().getSymbol());
                 timepoint2 = LocalTime.now().plusSeconds(20);
             }
 

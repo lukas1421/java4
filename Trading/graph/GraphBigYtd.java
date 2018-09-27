@@ -180,8 +180,8 @@ public class GraphBigYtd extends JComponent implements GraphFillable, MouseListe
             }
 
             if (priceMapBarYtd.containsKey(name) && priceMapBarYtd.get(name).size() > 0) {
-                //System.out.println( " name " + name);
-                //priceMapBarYtd.get(name).entrySet().forEach(System.out::println);
+                //System.out.println( " symbol " + symbol);
+                //priceMapBarYtd.get(symbol).entrySet().forEach(System.out::println);
 
                 this.setNavigableMapYtd(priceMapBarYtd.get(name));
             } else {
@@ -405,7 +405,7 @@ public class GraphBigYtd extends JComponent implements GraphFillable, MouseListe
 //            System.out.println( " tmd ytd last " + Optional.ofNullable(tmYtd.lastEntry()));
 //        }
 //        if(mainMap.size()>0) {
-//            System.out.println(" stock " + name);
+//            System.out.println(" stock " + symbol);
 //            System.out.println( " tmd today " + Optional.ofNullable(mainMap.firstEntry()));
 //            System.out.println( " tmd today all " + Optional.ofNullable(mainMap));
 //        }

@@ -51,7 +51,7 @@ public class GraphHelper {
 
     public static <T> double getLast(NavigableMap<T, SimpleBar> tm) {
         return r(tm.size() > 0 ? tm.lastEntry().getValue().getClose() : 0.0);
-        //return round(100d * priceMap.getOrDefault(name, (tm.size() > 0) ? tm.lastEntry().getValue().getClose() : 0.0)) / 100d;
+        //return round(100d * priceMap.getOrDefault(symbol, (tm.size() > 0) ? tm.lastEntry().getValue().getClose() : 0.0)) / 100d;
     }
 
 }

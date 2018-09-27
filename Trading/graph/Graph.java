@@ -315,8 +315,8 @@ public class Graph extends JComponent implements GraphFillable {
     }
 
 //    public Double getSizeSizeY() {
-//        return (Utility.noZeroArrayGen(name, ChinaStock.sizeMap, ChinaDataYesterday.sizeY))
-//                ? Math.round(10d * ChinaStock.sizeMap.get(name) / ChinaDataYesterday.sizeY.get(name)) / 10d : 0.0;
+//        return (Utility.noZeroArrayGen(symbol, ChinaStock.sizeMap, ChinaDataYesterday.sizeY))
+//                ? Math.round(10d * ChinaStock.sizeMap.get(symbol) / ChinaDataYesterday.sizeY.get(symbol)) / 10d : 0.0;
 //    }
 
     private Double getSizeSizeYT() {

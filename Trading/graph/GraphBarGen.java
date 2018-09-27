@@ -88,8 +88,8 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
         rtn = getRtn(tm);
 
         int x = INITIAL_X_OFFSET;
-//        if (!name.equals("")) {
-//            g.drawString(name, 5, 5);
+//        if (!symbol.equals("")) {
+//            g.drawString(symbol, 5, 5);
 //        }
 
         for (LocalDateTime lt : tm.keySet()) {
@@ -155,7 +155,7 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
 
         g2.drawString(Double.toString(minRtn) + "%", getWidth() - 40, getHeight() - 33);
         g2.drawString(Double.toString(maxRtn) + "%", getWidth() - 40, 15);
-        //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2);
+        //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(symbol)),getWidth()-40, getHeight()/2);
 
         if (!ofNullable(name).orElse("").equals("")) {
             g2.drawString(name, 5, 15);

@@ -156,7 +156,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
     }
 
     public void fillInGraphHK(String name) {
-        //System.out.println(" filling HK " + name);
+        //System.out.println(" filling HK " + symbol);
         this.name = name;
         setName(name);
         setChineseName(HKStock.hkNameMap.getOrDefault(name, ""));
@@ -251,7 +251,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
 
         g2.drawString(Double.toString(minRtn) + "%", getWidth() - 40, getHeight() - 33);
         g2.drawString(Double.toString(maxRtn) + "%", getWidth() - 40, 15);
-        //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2);
+        //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(symbol)),getWidth()-40, getHeight()/2);
         g2.drawString("周" + Integer.toString(wtdP), getWidth() - 40, getHeight() / 2);
 
         if (!ofNullable(name).orElse("").equals("")) {
@@ -471,7 +471,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
     }
 
 //    Double getSizeSizeY() {
-//        return (Utility.noZeroArrayGen(name, ChinaStock.sizeMap, sizeY)) ? round(10d * sizeMap.get(name) / sizeY.get(name)) / 10d : 0.0;
+//        return (Utility.noZeroArrayGen(symbol, ChinaStock.sizeMap, sizeY)) ? round(10d * sizeMap.get(symbol) / sizeY.get(symbol)) / 10d : 0.0;
 //    }
 
     private Double getSizeSizeYT() {

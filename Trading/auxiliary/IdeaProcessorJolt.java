@@ -4,28 +4,18 @@ import apidemo.ChinaIdeaTimeCompute;
 import apidemo.ChinaStock;
 import graph.Graph;
 
-import static apidemo.ChinaStockHelper.getRange;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.time.LocalTime;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
-import javax.swing.*;
+
+import static apidemo.ChinaStockHelper.getRange;
 
 final class IdeaProcessorJolt extends JPanel {
 
@@ -359,7 +349,7 @@ final class IdeaProcessorJolt extends JPanel {
 
 //        chartScroll.addMouseListener(new MouseAdapter() {
 //            @Override public void mouseClicked(MouseEvent e) {
-//                selectedNameIP1 = graph1.getName();
+//                selectedNameIP1 = graph1.getSymbol();
 //                ChinaSizeRatio.setGraph3(selectedNameIP1);
 //                System.out.println(" clicked " + LocalTime.now());
 //            }
@@ -368,7 +358,7 @@ final class IdeaProcessorJolt extends JPanel {
 //                
 //        chartScroll7.addMouseListener(new MouseAdapter() {
 //            @Override public void mouseClicked(MouseEvent e) {
-//                selectedNameIP1 = graph1.getName();
+//                selectedNameIP1 = graph1.getSymbol();
 //                ChinaSizeRatio.setGraph4(selectedNameIP2);
 //                System.out.println(" clicked " + LocalTime.now());
 //            }
@@ -377,7 +367,7 @@ final class IdeaProcessorJolt extends JPanel {
 //       
 //        chartScroll13.addMouseListener(new MouseAdapter() {
 //            @Override public void mouseClicked(MouseEvent e) {
-//                selectedNameIP1 = graph1.getName();
+//                selectedNameIP1 = graph1.getSymbol();
 //                ChinaSizeRatio.setGraph5(selectedNameIP3);
 //                System.out.println(" clicked " + LocalTime.now());
 //            }

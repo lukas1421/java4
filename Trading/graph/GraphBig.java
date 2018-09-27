@@ -167,14 +167,14 @@ public class GraphBig extends JComponent implements GraphFillable, MouseMotionLi
 
             minuteSharpe = Math.round(100d * ChinaData.priceMinuteSharpe.getOrDefault(name, 0.0)) / 100d;
             ytdSharpe = sharpeMap.getOrDefault(name, 0.0);
-//            if(priceMapBarYtd.containsKey(name) && priceMapBarYtd.get(name).size()>2) {
-//                this.setNavigableMapYtd(priceMapBarYtd.get(name));
+//            if(priceMapBarYtd.containsKey(symbol) && priceMapBarYtd.get(symbol).size()>2) {
+//                this.setNavigableMapYtd(priceMapBarYtd.get(symbol));
 //            } else {
 //                this.setNavigableMapYtd(new ConcurrentSkipListMap<>());
 //            }
 //
-//            if(sizeTotalMapYtd.containsKey(name) && sizeTotalMapYtd.get(name).size() >2){
-//                this.setNavigableMapVolYtd(sizeTotalMapYtd.get(name));
+//            if(sizeTotalMapYtd.containsKey(symbol) && sizeTotalMapYtd.get(symbol).size() >2){
+//                this.setNavigableMapVolYtd(sizeTotalMapYtd.get(symbol));
 //            } else {
 //                this.setNavigableMapVolYtd(new ConcurrentSkipListMap<>());
 //            }

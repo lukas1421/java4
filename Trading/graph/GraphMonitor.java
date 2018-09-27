@@ -1,11 +1,11 @@
 package graph;
 
 import TradeType.TradeBlock;
-import apidemo.ChinaData;
-import apidemo.ChinaMain;
-import apidemo.ChinaPosition;
-import apidemo.ChinaStock;
+import apidemo.*;
 import auxiliary.SimpleBar;
+import client.OrderAugmented;
+import client.OrderStatus;
+import client.Types;
 import historical.HistChinaStocks;
 import utility.Utility;
 
@@ -28,6 +28,7 @@ import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaKeyMonitor.dispGran;
 import static apidemo.ChinaStock.NORMAL_STOCK;
 import static apidemo.ChinaStock.closeMap;
+import static client.OrderStatus.*;
 import static graph.GraphBar.pmbDetailToSimpleBar;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
@@ -36,7 +37,7 @@ import static utility.Utility.*;
 public class GraphMonitor extends JComponent implements GraphFillable, MouseListener, MouseMotionListener {
 
     private static final int WIDTH_MON = 2;
-    String name;
+    String symbol;
     String chineseName;
     private volatile NavigableMap<LocalDateTime, SimpleBar> tm;
     private NavigableMap<LocalDateTime, TradeBlock> trades = new ConcurrentSkipListMap<>();
@@ -68,7 +69,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
 
 
     GraphMonitor() {
-        name = "";
+        symbol = "";
         chineseName = "";
         this.tm = new ConcurrentSkipListMap<>();
         addMouseListener(this);
@@ -76,13 +77,12 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         //this.tmLDT = new ConcurrentSkipListMap<>();
     }
 
-    @Override
-    public String getName() {
-        return name;
+    public String getSymbol() {
+        return symbol;
     }
 
-    public void setName(String s) {
-        this.name = s;
+    public void setSymbol(String s) {
+        this.symbol = s;
     }
 
     public void setChineseName(String s) {
@@ -95,6 +95,27 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
+
+        AutoTraderMain.liveIDOrderMap.forEach((k, v) -> {
+            OrderAugmented oa = AutoTraderXU.findOrderByTWSID(k);
+            OrderStatus s = oa.getAugmentedOrderStatus();
+            if (oa.getSymbol().equals(symbol)) {
+                if (s != Filled && s != PendingCancel && s != Inactive && s != DeadlineCancelled) {
+                    int y = getY(v.lmtPrice());
+                    if (v.action().equals(Types.Action.BUY)) {
+                        g.setColor(Color.blue);
+                        g.drawLine(0, y, getWidth(), y);
+                        g.drawString(str("B ", v.totalQuantity(), " at ", v.lmtPrice(),
+                                oa.getOrderType(), oa.getAugmentedOrderStatus()), Math.round(getWidth() * 7 / 8), y + 10);
+                    } else if (v.action().equals(Types.Action.SELL)) {
+                        g.setColor(Color.red);
+                        g.drawLine(0, y, getWidth(), y);
+                        g.drawString(str("S ", v.totalQuantity(), " at ", v.lmtPrice()
+                                , oa.getOrderType(), oa.getAugmentedOrderStatus()), Math.round(getWidth() * 7 / 8), y + 10);
+                    }
+                }
+            }
+        });
 
         height = getHeight() - 70;
         minToday = getMin();
@@ -127,7 +148,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
                 for (Map.Entry e : trades.subMap(lt, true, lt.plusMinutes(dispGran.getMinuteDiff()),
                         false).entrySet()) {
                     TradeBlock t = (TradeBlock) e.getValue();
-                    //System.out.println(str(" trades in graph monitor margin%" +"", name, t, t.hasMargin()));
+                    //System.out.println(str(" trades in graph monitor margin%" +"", symbol, t, t.hasMargin()));
 
                     if (t.getSizeAll() > 0) {
                         g.setColor(Color.blue);
@@ -213,16 +234,16 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
 
         g2.setColor(Color.black);
 
-        //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(name)),getWidth()-40, getHeight()/2);
-        if (!ofNullable(name).orElse("").equals("")) {
-            g2.drawString(name, 5, 15);
+        //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(symbol)),getWidth()-40, getHeight()/2);
+        if (!ofNullable(symbol).orElse("").equals("")) {
+            g2.drawString(symbol, 5, 15);
         }
         if (!ofNullable(chineseName).orElse("").equals("")) {
             g2.drawString(chineseName, getWidth() / 6, 15);
         }
 
-        if (!ChinaStock.shortIndustryMap.getOrDefault(name, "").equals("")) {
-            g2.drawString(ChinaStock.shortIndustryMap.get(name), 7 * getWidth() / 24, 15);
+        if (!ChinaStock.shortIndustryMap.getOrDefault(symbol, "").equals("")) {
+            g2.drawString(ChinaStock.shortIndustryMap.get(symbol), 7 * getWidth() / 24, 15);
         }
 
         if (bench != null && !Optional.of(bench).orElse("").equals("")) {
@@ -233,10 +254,10 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
 
         g2.drawString(Double.toString(getReturn()) + "%", getWidth() * 4 / 6, 15);
 
-        g2.drawString(Integer.toString(ChinaPosition.getCurrentDelta(name)) + " k", getWidth() * 5 / 6, 15);
+        g2.drawString(Integer.toString(ChinaPosition.getCurrentDelta(symbol)) + " k", getWidth() * 5 / 6, 15);
 
-        double mtmPnl = Math.round(ChinaPosition.getMtmPnl(name) / 100d) / 10d;
-        double trPnl = Math.round(ChinaPosition.getTradePnl(name) / 100d) / 10d;
+        double mtmPnl = Math.round(ChinaPosition.getMtmPnl(symbol) / 100d) / 10d;
+        double trPnl = Math.round(ChinaPosition.getTradePnl(symbol) / 100d) / 10d;
 
         g2.setColor(mtmPnl > 0 ? new Color(30, 150, 0) : Color.red);
         g2.drawString("M " + Double.toString(mtmPnl) + "k", getWidth() * 5 / 6, 45);
@@ -245,10 +266,10 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         g2.drawString("T " + Double.toString(trPnl) + " k", getWidth() * 5 / 6, 75);
         g2.setColor(Color.RED);
 
-        g2.drawString("周 " + Integer.toString(ChinaPosition.getPercentileWrapper(name)), getWidth() * 5 / 6, 95);
-        //g2.drawString("P变 " + Integer.toString(ChinaPosition.getChangeInPercentileToday(name)), getWidth()*5/6, 115);
+        g2.drawString("周 " + Integer.toString(ChinaPosition.getPercentileWrapper(symbol)), getWidth() * 5 / 6, 95);
+        //g2.drawString("P变 " + Integer.toString(ChinaPosition.getChangeInPercentileToday(symbol)), getWidth()*5/6, 115);
         g2.drawString("分夏 " + Double.toString(Math.round(100d * minSharpe) / 100d), getWidth() * 5 / 6, 115);
-        g2.drawString("弹 " + Double.toString(ChinaPosition.getPotentialReturnToMid(name)), getWidth() * 5 / 6, 135);
+        g2.drawString("弹 " + Double.toString(ChinaPosition.getPotentialReturnToMid(symbol)), getWidth() * 5 / 6, 135);
 
         g2.drawString("年夏" + Double.toString(ytdSharpe), getWidth() * 5 / 6 + 10, getHeight() - 5);
 
@@ -308,7 +329,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         if (tm.size() > 0) {
             double initialP = 0.0;
             if (dispGran == DisplayGranularity._1MDATA) {
-                initialP = closeMap.getOrDefault(name,
+                initialP = closeMap.getOrDefault(symbol,
                         tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0));
             } else {
                 initialP = tm.entrySet().stream().findFirst().map(Map.Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
@@ -322,8 +343,8 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
 
     @SuppressWarnings("Duplicates")
     void clearGraph() {
-        this.name = "";
-        setName("");
+        this.symbol = "";
+        setSymbol("");
         setChineseName("");
         setBench("");
         setYtdSharpe(0.0);
@@ -334,44 +355,44 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
     }
 
     @Override
-    public void fillInGraph(String name) {
-        this.name = name;
-        setName(name);
-        setChineseName(ChinaStock.nameMap.get(name));
-        setBench(ChinaStock.benchMap.getOrDefault(name, ""));
-        setYtdSharpe(ChinaStock.sharpeMap.getOrDefault(name, 0.0));
-        setMinSharpe(ChinaData.priceMinuteSharpe.getOrDefault(name, 0.0));
-        setWtdSharpe(ChinaData.wtdSharpe.getOrDefault(name, 0.0));
-        setSize1(ChinaStock.sizeMap.getOrDefault(name, 0L));
+    public void fillInGraph(String symb) {
+        this.symbol = symb;
+        setSymbol(symb);
+        setChineseName(ChinaStock.nameMap.get(symb));
+        setBench(ChinaStock.benchMap.getOrDefault(symb, ""));
+        setYtdSharpe(ChinaStock.sharpeMap.getOrDefault(symb, 0.0));
+        setMinSharpe(ChinaData.priceMinuteSharpe.getOrDefault(symb, 0.0));
+        setWtdSharpe(ChinaData.wtdSharpe.getOrDefault(symb, 0.0));
+        setSize1(ChinaStock.sizeMap.getOrDefault(symb, 0L));
 
 
-//        if(HistChinaStocks.chinaTradeMap.containsKey(name)) {
-//            trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(name),
-//                    ChinaPosition.tradesMapFront.containsKey(name)?
-//                    ChinaPosition.tradesMapFront.get(name) : new ConcurrentSkipListMap<>());
+//        if(HistChinaStocks.chinaTradeMap.containsKey(symbol)) {
+//            trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(symbol),
+//                    ChinaPosition.tradesMapFront.containsKey(symbol)?
+//                    ChinaPosition.tradesMapFront.get(symbol) : new ConcurrentSkipListMap<>());
 //        } else {
 
 
-        trades = priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
-                ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate);
+        trades = priceMapToLDT(ChinaPosition.tradesMap.containsKey(symb) ?
+                ChinaPosition.tradesMap.get(symb) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate);
 
-        //System.out.println(str("graph monitor name trade ", name, trades));
+        //System.out.println(str("graph monitor symbol trade ", symbol, trades));
 
-        if (HistChinaStocks.chinaTradeMap.containsKey(name) && HistChinaStocks.chinaTradeMap.get(name).size() > 0) {
+        if (HistChinaStocks.chinaTradeMap.containsKey(symb) && HistChinaStocks.chinaTradeMap.get(symb).size() > 0) {
             //LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
-            trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(name).headMap(
+            trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(symb).headMap(
                     LocalDateTime.of(ChinaMain.currentTradingDate, LocalTime.MIN), false),
-                    priceMapToLDT(ChinaPosition.tradesMap.containsKey(name) ?
-                            ChinaPosition.tradesMap.get(name) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate));
+                    priceMapToLDT(ChinaPosition.tradesMap.containsKey(symb) ?
+                            ChinaPosition.tradesMap.get(symb) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate));
             //System.out.println(" merged trade is " + trades);
         }
 
-        if (NORMAL_STOCK.test(name)) {
-            this.setNavigableMap(priceMapBar.get(name));
-            getYtdY2CloseP(name);
+        if (NORMAL_STOCK.test(symb)) {
+            this.setNavigableMap(priceMapBar.get(symb));
+            getYtdY2CloseP(symb);
         } else {
-            if (priceMapBarDetail.get(name).size() > 0) {
-                this.setNavigableMap(pmbDetailToSimpleBar(priceMapBarDetail.get(name)));
+            if (priceMapBarDetail.get(symb).size() > 0) {
+                this.setNavigableMap(pmbDetailToSimpleBar(priceMapBarDetail.get(symb)));
             } else {
                 this.setNavigableMap(new ConcurrentSkipListMap<>());
             }
@@ -380,7 +401,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
 
     @Override
     public void refresh() {
-        fillInGraph(name);
+        fillInGraph(symbol);
     }
 
     void setNavigableMap(NavigableMap<LocalTime, SimpleBar> tmIn) {
@@ -390,8 +411,8 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         if (dispGran == DisplayGranularity._1MDATA) {
             res = priceMapToLDT(tmIn, ChinaMain.currentTradingDate);
         } else if (dispGran == DisplayGranularity._5MDATA) {
-            if (HistChinaStocks.chinaWtd.containsKey(name) && HistChinaStocks.chinaWtd.get(name).size() > 0) {
-                res = trimMapWithLocalTimePred(mergeMaps(HistChinaStocks.chinaWtd.get(name)
+            if (HistChinaStocks.chinaWtd.containsKey(symbol) && HistChinaStocks.chinaWtd.get(symbol).size() > 0) {
+                res = trimMapWithLocalTimePred(mergeMaps(HistChinaStocks.chinaWtd.get(symbol)
                         , Utility.map1mTo5m(tmIn)), chinaTradingTimePred);
             } else {
                 res = trimMapWithLocalTimePred(priceMapToLDT(map1mTo5m(tmIn), ChinaMain.currentTradingDate), chinaTradingTimePred);
@@ -462,8 +483,8 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
             wtdP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name,
                     Double.MAX_VALUE))) / (Utility.reduceDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
                     - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, Double.MAX_VALUE))));
-//            System.out.println(" name " + name + " current max min wtd wtdMax wtdMin "+ str(current,maxT,minT,wtdP,
-//                    ChinaPosition.wtdMinMap.getOrDefault(name,Double.MAX_VALUE), ChinaPosition.wtdMinMap.getOrDefault(name, Double.MAX_VALUE)));
+//            System.out.println(" symbol " + symbol + " current max min wtd wtdMax wtdMin "+ str(current,maxT,minT,wtdP,
+//                    ChinaPosition.wtdMinMap.getOrDefault(symbol,Double.MAX_VALUE), ChinaPosition.wtdMinMap.getOrDefault(symbol, Double.MAX_VALUE)));
         }
     }
 

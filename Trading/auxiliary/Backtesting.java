@@ -79,9 +79,9 @@ public class Backtesting extends JPanel {
                     if (this.getParent().getParent().getParent().getComponentCount() == 3) {
                         // System.out.print(" get component count " + this.getParent().getComponentCount());
                         //  System.out.print(" get parent component count " + this.getParent().getParent().getComponentCount());
-                        // System.out.print(" get name of compoent 0 " + this.getParent().getParent().getParent().getComponent(0).getName());
-                        //   System.out.print(" get name of compoent 1 " + this.getParent().getParent().getParent().getComponent(1).getName());
-                        //  System.out.print(" get name of compoent 2 " + this.getParent().getParent().getParent().getComponent(2).getName());
+                        // System.out.print(" get name of compoent 0 " + this.getParent().getParent().getParent().getComponent(0).getSymbol());
+                        //   System.out.print(" get name of compoent 1 " + this.getParent().getParent().getParent().getComponent(1).getSymbol());
+                        //  System.out.print(" get name of compoent 2 " + this.getParent().getParent().getParent().getComponent(2).getSymbol());
 
                         this.getParent().getParent().getParent().getComponent(2).repaint();
                         //this.getpa

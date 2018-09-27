@@ -724,11 +724,11 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                     jv = (JViewport) p.getComponent(0);
                     if (jv.getComponent(0) instanceof GraphMonitor) {
                         GraphMonitor g = (GraphMonitor) jv.getComponent(0);
-                        //System.out.println(" name is " + g.getName());
+                        //System.out.println(" name is " + g.getSymbol());
                         //System.out.println(" clicked " + LocalTime.now());
                         //ChinaStock.pureRefreshTable();
-                        //System.out.println(g.getName());
-                        String selectedNameGraph = g.getName();
+                        //System.out.println(g.getSymbol());
+                        String selectedNameGraph = g.getSymbol();
                         //System.out.println(" name is " + selectedNameGraph);
                         if (!industryNameMap.getOrDefault(selectedNameGraph, "").equals("板块")) {
                             //ChinaBigGraph.setGraph(industryNameMap.get(selectedNameGraph));
