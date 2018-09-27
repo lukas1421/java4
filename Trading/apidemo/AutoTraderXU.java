@@ -40,6 +40,7 @@ import static apidemo.ChinaDataYesterday.ma20Map;
 import static apidemo.ChinaOption.getATMVol;
 import static apidemo.ChinaPosition.*;
 import static apidemo.ChinaStock.*;
+import static apidemo.ChinaStockHelper.reverseThis;
 import static apidemo.TradingConstants.*;
 import static apidemo.XuTraderHelper.*;
 import static client.OrderStatus.*;
@@ -2359,7 +2360,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double freshPrice = futPriceMap.get(f);
         long numOrders = getOrderSizeForTradeType(symbol, INDEX_POST_AMCUTOFF);
         int currPos = currentPosMap.get(f);
-        int reverseAddon = 2;
+        int reverseAddon = 0;
 
         if (lt.isBefore(cutoff) || lt.isAfter(amClose)) {
             return;
@@ -2406,7 +2407,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double freshPrice = futPriceMap.get(f);
         long numOrdersPMCutoff = getOrderSizeForTradeType(symbol, INDEX_POST_PMCUTOFF);
         int currPos = currentPosMap.get(f);
-        int reverseAddOn = 2;
+        int reverseAddOn = 0;
 
         LocalTime pmObservationStart = ltof(12, 58, 0);
         LocalTime pmCutoff = ltof(13, 30);
@@ -3755,10 +3756,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .filter(e -> e.getValue().getSymbol().startsWith("SGXA50"))
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .collect(Collectors.collectingAndThen(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType()
+                        , ConcurrentSkipListMap::new
                         , Collectors.summingDouble(e -> e.getValue().getPnl(futPriceMap.get(f)))),
-                        e -> e.entrySet().stream().map(e1 -> str("|||", e1.getKey(),
-                                "#:", numTradesByOrder.getOrDefault(e1.getKey(), 0L),
-                                "Tot Q: ", quantitySumByOrder.getOrDefault(e1.getKey(), 0d), r(e1.getValue())))
+                        e -> e.entrySet().stream().sorted(reverseThis(Comparator.comparing(Map.Entry::getValue)))
+                                .map(e1 -> str("|||", e1.getKey(),
+                                        "#:", numTradesByOrder.getOrDefault(e1.getKey(), 0L),
+                                        "Tot Q: ", quantitySumByOrder.getOrDefault(e1.getKey(), 0d), r(e1.getValue())))
                                 .collect(Collectors.joining(","))));
 
         SwingUtilities.invokeLater(() -> {
