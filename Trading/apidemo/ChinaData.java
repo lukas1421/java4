@@ -37,7 +37,6 @@ import static apidemo.ChinaStock.*;
 import static apidemo.ChinaStockHelper.fixYtdSuspendedStocks;
 import static apidemo.TradingConstants.FTSE_INDEX;
 import static historical.HistChinaStocks.chinaWtd;
-import static java.time.temporal.ChronoUnit.SECONDS;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.*;
 
@@ -325,48 +324,76 @@ public final class ChinaData extends JPanel {
         }, es));
 
         saveHibernate.addActionListener(al -> withHibernate());
-        saveDetailed.addActionListener(al -> withHibernateDetailed());
+        saveDetailed.addActionListener(al -> {
+                    withHibernateDetailed();
+                }
+        );
+
         saveOHLCButton.addActionListener(al -> saveChinaOHLC());
         loadHibGenPriceButton.addActionListener(al -> Hibtask.loadHibGenPrice());
         loadHibDetailButton.addActionListener(al -> Hibtask.loadHibDetailPrice());
 
 
-        unloadHibPMBButton.addActionListener(al -> {
+        unloadHibPMBButton.addActionListener(al ->
+
+        {
             priceMapBar.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
         });
 
-        unloadHibDetailButton.addActionListener(al -> {
+        unloadHibDetailButton.addActionListener(al ->
+
+        {
             priceMapBarDetail.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
         });
-        hibMorning.addActionListener(al -> {
+        hibMorning.addActionListener(al ->
+
+        {
             int ans = JOptionPane.showConfirmDialog(null, "are you sure", "", JOptionPane.YES_NO_OPTION);
             if (ans == JOptionPane.YES_OPTION) {
                 Hibtask.hibernateMorningTask();
             }
         });
-        saveBidAsk.addActionListener(al -> hibSaveGenBidAsk());
-        loadHibBidAsk.addActionListener(al -> loadHibGenBidAsk());
-        //saveStratButton.addActionListener(al -> saveHibGen(strategyTotalMap, new ConcurrentHashMap<>(), ChinaSaveStrat.getInstance()));
-        saveHibYtdButton.addActionListener(al -> hibSaveGenYtd());
-        saveHibY2Button.addActionListener(al -> hibSaveGenY2());
+        saveBidAsk.addActionListener(al ->
 
-        btnLoadBarYtd.addActionListener(al -> CompletableFuture.runAsync(() -> {
+                hibSaveGenBidAsk());
+        loadHibBidAsk.addActionListener(al ->
+
+                loadHibGenBidAsk());
+        //saveStratButton.addActionListener(al -> saveHibGen(strategyTotalMap, new ConcurrentHashMap<>(), ChinaSaveStrat.getInstance()));
+        saveHibYtdButton.addActionListener(al ->
+
+                hibSaveGenYtd());
+        saveHibY2Button.addActionListener(al ->
+
+                hibSaveGenY2());
+
+        btnLoadBarYtd.addActionListener(al -> CompletableFuture.runAsync(() ->
+
+        {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(priceBarYtdSource))) {
                 //noinspection unchecked
                 priceMapBarYtd = (ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>>) ois.readObject();
             } catch (IOException | ClassNotFoundException e3) {
                 e3.printStackTrace();
             }
-        }, es).whenComplete((ok, ex) -> System.out.println("loading Bar done" + LocalTime.now())));
+        }, es).
 
-        loadHibernateY.addActionListener(al -> loadHibernateYesterday());
+                whenComplete((ok, ex) -> System.out.println("loading Bar done" + LocalTime.now())));
 
-        shcompToText.addActionListener(al -> writeShcomp2());
+        loadHibernateY.addActionListener(al ->
+
+                loadHibernateYesterday());
+
+        shcompToText.addActionListener(al ->
+
+                writeShcomp2());
         closeHib.addActionListener(al -> Hibtask.closeHibSessionFactory());
 
         getFXButton.addActionListener(al -> ChinaStockHelper.getHistoricalFX());
 
-        buildA50Button.addActionListener(al -> {
+        buildA50Button.addActionListener(al ->
+
+        {
             System.out.println(" building A50 ");
             System.out.println(" date map " + dateMap);
             System.out.println(" ftse open map " + ftseOpenMap);
@@ -378,31 +405,53 @@ public final class ChinaData extends JPanel {
             //ChinaStockHelper.buildA50FromSSYtdY2();
         });
 
-        getSGXA50HistButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
+        getSGXA50HistButton.addActionListener(l -> CompletableFuture.runAsync(() ->
+
+        {
             controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                     getFrontFutContract(), ChinaData::handleSGX50HistData, 7);
             controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                     getBackFutContract(), ChinaData::handleSGX50HistData, 7);
         }));
 
-        getSGXA50TodayButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
+        getSGXA50TodayButton.addActionListener(l -> CompletableFuture.runAsync(() ->
+
+        {
             controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                     getFrontFutContract(), ChinaData::handleSGXDataToday, 2);
             controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                     getBackFutContract(), ChinaData::handleSGXDataToday, 2);
         }));
 
-        tdxButton.addActionListener(l -> getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0)));
+        tdxButton.addActionListener(l ->
 
-        retrieveAllButton.addActionListener(l -> retrieveDataAll());
+                getFromTDX(dateMap.get(2), dateMap.
 
-        retrieveTodayButton.addActionListener(l -> getTodayTDX(ChinaMain.currentTradingDate));
+                        get(1), dateMap.
 
-        outputPricesButton.addActionListener(l -> outputPrices());
+                        get(0)));
 
-        fixYtdZeroButton.addActionListener(l -> fixYtdSuspendedStocks());
+        retrieveAllButton.addActionListener(l ->
 
-        getIBChinaButton.addActionListener(l -> controller().reqHoldingsTodayHist());
+                retrieveDataAll());
+
+        retrieveTodayButton.addActionListener(l ->
+
+                getTodayTDX(ChinaMain.currentTradingDate));
+
+        outputPricesButton.addActionListener(l ->
+
+                outputPrices());
+
+        fixYtdZeroButton.addActionListener(l ->
+
+                fixYtdSuspendedStocks());
+
+        getIBChinaButton.addActionListener(l ->
+
+                controller().
+
+                        reqHoldingsTodayHist());
     }
 
     static void outputPrices() {
@@ -470,7 +519,8 @@ public final class ChinaData extends JPanel {
     }
 
     @SuppressWarnings("unused")
-    static ConcurrentHashMap<String, TreeMap<LocalTime, Double>> convertMap(ConcurrentHashMap<String, TreeMap<LocalTime, Long>> mapFrom) {
+    static ConcurrentHashMap<String, TreeMap<LocalTime, Double>> convertMap
+            (ConcurrentHashMap<String, TreeMap<LocalTime, Long>> mapFrom) {
         ConcurrentHashMap<String, TreeMap<LocalTime, Double>> mpTo = new ConcurrentHashMap<>();
 
         mapFrom.keySet().forEach(key -> {
@@ -481,48 +531,52 @@ public final class ChinaData extends JPanel {
     }
 
     static void withHibernate() {
-        if (priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
-            pr(" saving price detailed @", LocalTime.now());
-            saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());
-        } else {
-            pr(" cannot save price bar detailed ", "max size", priceMapBarDetail.entrySet().stream()
-                    .mapToInt(e -> e.getValue().size()).max().orElse(0));
-        }
+        CompletableFuture.runAsync(() -> {
+//            if (priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
+//                pr(" saving price detailed @", LocalTime.now());
+//                saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());
+//            } else {
+//                pr(" cannot save price bar detailed ", "max size", priceMapBarDetail.entrySet().stream()
+//                        .mapToInt(e -> e.getValue().size()).max().orElse(0));
+//            }
 
-        if (priceMapBar.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
-            pr(" saving pmb @", LocalTime.now());
-            saveHibGen(priceMapBar, sizeTotalMap, ChinaSave.getInstance());
-        } else {
-            pr(" cannot save price map bar minute ", "max size ", priceMapBar.entrySet().stream()
-                    .mapToInt(e -> e.getValue().size()).max().orElse(0));
-        }
+            if (priceMapBar.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
+                pr(" saving pmb @", LocalTime.now());
+                saveHibGen(priceMapBar, sizeTotalMap, ChinaSave.getInstance());
+            } else {
+                pr(" cannot save price map bar minute ", "max size ", priceMapBar.entrySet().stream()
+                        .mapToInt(e -> e.getValue().size()).max().orElse(0));
+            }
+        });
     }
 
     private static void withHibernateDetailed() {
-        if (priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
-            pr(" saving price detailed @", LocalTime.now());
-            saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());
-        } else {
-            pr(" cannot save price bar detailed ", "max size", priceMapBarDetail.entrySet().stream()
-                    .mapToInt(e -> e.getValue().size()).max().orElse(0));
-        }
+        CompletableFuture.runAsync(() -> {
+            if (priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
+                pr(" saving price detailed @", LocalTime.now());
+                saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());
+            } else {
+                pr(" cannot save price bar detailed ", "max size", priceMapBarDetail.entrySet().stream()
+                        .mapToInt(e -> e.getValue().size()).max().orElse(0));
+            }
+        });
     }
 
     //static void hibSave
     private void hibSaveGenYtd() {
-        saveHibGen(priceMapBarYtd, sizeTotalMapYtd, ChinaSaveYest.getInstance());
+        //saveHibGen(priceMapBarYtd, sizeTotalMapYtd, ChinaSaveYest.getInstance());
     }
 
     private void hibSaveGenY2() {
-        saveHibGen(priceMapBarY2, sizeTotalMapY2, ChinaSaveY2.getInstance());
+        //saveHibGen(priceMapBarY2, sizeTotalMapY2, ChinaSaveY2.getInstance());
     }
 
     private void hibSaveGenBidAsk() {
-        saveHibGen(bidMap, askMap, ChinaSaveBidAsk.getInstance());
+        //saveHibGen(bidMap, askMap, ChinaSaveBidAsk.getInstance());
     }
 
     private void loadHibGenBidAsk() {
-        Hibtask.loadHibGen(ChinaSaveBidAsk.getInstance());
+        //Hibtask.loadHibGen(ChinaSaveBidAsk.getInstance());
     }
 
     //private static void saveHib
@@ -567,9 +621,8 @@ public final class ChinaData extends JPanel {
             }
         }).thenAccept(
                 v -> {
-                    ChinaMain.updateSystemNotif(Utility.str("存", saveclass.getSimpleName(),
-                            LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
-                            SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
+                    ChinaMain.updateSystemNotif(Utility.str("SAV", saveclass.getSimpleName(),
+                            LocalTime.now().truncatedTo(ChronoUnit.MINUTES)));
                     pr(saveclass.getSimpleName(), "sav don", LocalTime.now());
                 }
         );
@@ -684,7 +737,8 @@ public final class ChinaData extends JPanel {
         return 0.0;
     }
 
-    private static void handleSGX50HistData(Contract c, String date, double open, double high, double low, double close, int volume) {
+    private static void handleSGX50HistData(Contract c, String date, double open, double high, double low,
+                                            double close, int volume) {
 
         String ticker = ibContractToSymbol(c);
         LocalDate currDate = ChinaData.dateMap.get(2);
@@ -743,7 +797,8 @@ public final class ChinaData extends JPanel {
         }
     }
 
-    private static void handleSGXDataToday(Contract c, String date, double open, double high, double low, double close, int volume) {
+    private static void handleSGXDataToday(Contract c, String date, double open, double high, double low,
+                                           double close, int volume) {
         String ticker = utility.Utility.ibContractToSymbol(c);
 
         if (!date.startsWith("finished")) {

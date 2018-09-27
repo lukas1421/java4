@@ -697,13 +697,15 @@ public final class ChinaMain implements IConnectionHandler {
     }
 
     public static void updateSystemNotif(String text) {
-        systemNotif.setText(text);
-        systemNotif.setBackground(Utility.shiftColor(systemNotif.getBackground()));
-        ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
-        es.schedule(() -> {
-            systemNotif.setText("");
-            systemNotif.setBackground(Color.orange);
-        }, 10, TimeUnit.SECONDS);
+        SwingUtilities.invokeLater(() -> {
+            systemNotif.setText(text);
+        });
+        //systemNotif.setBackground(Utility.shiftColor(systemNotif.getBackground()));
+        //ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
+//        es.schedule(() -> {
+//            systemNotif.setText("");
+//            systemNotif.setBackground(Color.orange);
+//        }, 10, TimeUnit.SECONDS);
     }
 
     static void updateSystemTime(String text) {
