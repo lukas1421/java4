@@ -19,9 +19,11 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static apidemo.AutoTraderMain.XU_AUTO_VOL_THRESH;
 import static apidemo.AutoTraderMain.globalTradingOn;
 import static apidemo.AutoTraderXU.*;
 import static apidemo.ChinaData.*;
+import static apidemo.ChinaOption.getATMVol;
 import static apidemo.ChinaStock.*;
 import static apidemo.TradingConstants.FTSE_INDEX;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
@@ -91,7 +93,6 @@ public class SinaStock implements Runnable {
 
 
                 double currIndexPrice = FTSE_OPEN * (1 + (Math.round(rtn) / 10000d));
-                //pr("curr price ", currPrice, "FTSE OPEN ", FTSE_OPEN, "rtn ", rtn);
 
                 double sinaVol = weightMapA50.entrySet().stream()
                         .mapToDouble(a -> sizeMap.getOrDefault(a.getKey(), 0L).doubleValue() * a.getValue() / 100d)
@@ -125,13 +126,16 @@ public class SinaStock implements Runnable {
                         priceMapBarDetail.get(FTSE_INDEX).put(ldt.toLocalTime(), currIndexPrice);
 
                         if (globalTradingOn.get()) {
-                            indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
-                            indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee, same size
-                            indexPostAMCutoffLiqTrader(ldt, currIndexPrice);
-
-                            indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
-                            indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 13:30pm, no guarantee, same size
-                            indexPostPMCutoffLiqTrader(ldt, currIndexPrice);
+                            double atmVol = getATMVol(expiryToGet);
+                            //pr(" atm vol is ", expiryToGet, atmVol);
+                            if (atmVol > XU_AUTO_VOL_THRESH) {
+                                indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
+                                indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee, same size
+                                indexPostAMCutoffLiqTrader(ldt, currIndexPrice);
+                                indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
+                                indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 13:30pm, no guarantee, same size
+                                indexPostPMCutoffLiqTrader(ldt, currIndexPrice);
+                            }
                             //intradayMAProfitTaker(ldt, currIndexPrice); //all day, guarantee
                             //AutoTraderXU.indexFirstTickTrader(ldt, currIndexPrice); //1 tick, guarantee (decommission)
                             //AutoTraderXU.closeProfitTaker(ldt, currIndexPrice);

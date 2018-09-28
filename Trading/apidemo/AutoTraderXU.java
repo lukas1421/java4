@@ -106,7 +106,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     private static final double PMCHY_LO = -20;
 
     //vol
-    private static LocalDate expiryToGet = ChinaOption.frontExpiry;
+    static LocalDate expiryToGet = ChinaOption.frontExpiry;
     private static volatile AtomicBoolean manualFutHiloDirection = new AtomicBoolean(false);
 
 
@@ -3592,8 +3592,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 activeFutLiveOrder.put(order.lmtPrice(),
                         activeFutLiveOrder.get(order.lmtPrice()) + sign * order.totalQuantity());
             }
-        } else {
-            pr(" contract not equal to activefuture ");
         }
     }
 
@@ -3779,6 +3777,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         SwingUtilities.invokeLater(() -> {
             updateLog(" Expiry " + activeFutureCt.lastTradeDateOrContractMonth());
+            updateLog(str("ATM vol ",expiryToGet, getATMVol(expiryToGet)));
             updateLog(" NAV: " + currentIBNAV);
             updateLog(" P " + futPriceMap.getOrDefault(f, 0.0));
             updateLog(str(" Close3pm ", futPrevClose3pmMap.getOrDefault(f, 0.0),

@@ -1685,7 +1685,8 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
                             .addTrade(new HKStockTrade(execution.price(), (int) Math.round(sign * execution.shares())));
                 } else {
                     ChinaPosition.tradesMap.get(symbol).put(lt,
-                            new TradeBlock(new HKStockTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
+                            new TradeBlock(new HKStockTrade(execution.price(),
+                                    (int) Math.round(sign * execution.shares()))));
                 }
             }
         }
@@ -1694,7 +1695,6 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
     @Override
     public void tradeReportEnd() {
 
-        //pr("trade report end: printing trades ");
         ChinaPosition.tradesMap.forEach((k, v) -> {
             if (v.size() > 0) {
                 //pr("trade report ", k, v);
