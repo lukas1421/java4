@@ -537,7 +537,6 @@ public final class ChinaMain implements IConnectionHandler {
                         });
                         t.setRepeats(false);
                         t.start();
-                        //pr(" place4 ", LocalTime.now(), pane.getValue());
                     }
                 });
                 jd1.setVisible(true);

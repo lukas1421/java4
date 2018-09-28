@@ -53,7 +53,7 @@ public class ChinaPosition extends JPanel {
     static JButton filterButton;
     static JButton refreshButton;
     static JToggleButton autoUpdateButton;
-    static volatile Set<String> uniqueKeySet = new HashSet<>();
+    static volatile Set<String> uniqueTradeSet = new HashSet<>();
     static String line;
     private static AtomicBoolean includeExpired = new AtomicBoolean(true);
     public volatile static Map<String, Integer> openPositionMap = new HashMap<>();
@@ -195,16 +195,17 @@ public class ChinaPosition extends JPanel {
         JButton getCurrentButton = new JButton("getCurrent");
         //JButton getWtdMaxMinButton = new JButton("getWtdMaxMin");
 
-        refreshButton.addActionListener((ActionEvent l) -> CompletableFuture.runAsync(() -> {
-            //updatePosition();
-            //getCurrentPositionNormal();
-            //getCurrentPositionMargin();
-            refreshIBPosition();
-            mtmPnlCompute(GEN_MTM_PRED, "all");
-        }).thenRun(() -> SwingUtilities.invokeLater(() -> {
-            m_model.fireTableDataChanged();
-            gPnl.repaint();
-        })));
+        refreshButton.addActionListener((ActionEvent l) ->
+                CompletableFuture.runAsync(() -> {
+                    //updatePosition();
+                    //getCurrentPositionNormal();
+                    //getCurrentPositionMargin();
+                    refreshIBPosition();
+                    mtmPnlCompute(GEN_MTM_PRED, "all");
+                }).thenRun(() -> SwingUtilities.invokeLater(() -> {
+                    m_model.fireTableDataChanged();
+                    gPnl.repaint();
+                })));
 
         getOpenButton.addActionListener(l -> {
             getOpenPositionsNormal();
@@ -213,8 +214,7 @@ public class ChinaPosition extends JPanel {
 
         getCurrentButton.addActionListener(l -> {
             //symbolNames.forEach((String name) -> tradesMap.put(name, new ConcurrentSkipListMap<>()));
-            CompletableFuture.runAsync(ChinaPosition::updatePosition)
-                    .thenRun(ChinaPosition::getOpenTradePositionForFuture);
+            CompletableFuture.runAsync(ChinaPosition::updatePosition).thenRun(ChinaPosition::getOpenTradePositionForFuture);
             //getCurrentPositionNormal();
             //getCurrentPositionMargin();
         });
@@ -574,27 +574,28 @@ public class ChinaPosition extends JPanel {
                                                     ChinaStock.closeMap.getOrDefault(e.getKey(), 0.0)) * (e.getValue()))))
             ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setMtmBenchMap(a)));
 
-        }).thenRun(() -> SwingUtilities.invokeLater(() -> {
-            gPnl.repaint();
-            //netPNLMap = Utility.mapCombinerGen(Double::sum, mtmPNLMap, tradePNLMap);
-            //gPnl.setNavigableMap(mtmPNLMap, tradePNLMap, netPNLMap);
-            //gPnl.setNetDeltaMap(netDeltaMap);
-            //gPnl.setBuySellPnlMap(boughtPNLMap, soldPNLMap);
-            //gPnl.setMtmPnl(Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0));
-            //gPnl.setNetPnlYtd(netYtdPnl);
-            //gPnl.setTodayPnl(todayNetPnl);
-            //gPnl.setBuyPnl(Optional.ofNullable(boughtPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0));
-            //gPnl.setSellPnl(Optional.ofNullable(soldPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0));
-            //gPnl.setBoughtDelta(boughtDelta);
-            //gPnl.setOpenDelta(openDelta);
-            //gPnl.setCurrentDelta(netDelta);
-            //gPnl.setSoldDelta(soldDelta);
-            //gPnl.setBenchMap(benchExposureMap);
-            //gPnl.setMtmBenchMap(pureMtmMap);
-            //gPnl.setNavigableMap(mtmPNLMap, tradePNLMap, netPNLMap);
-            //gPnl.setMinuteNetPnlSharpe(minuteNetPnlSharpe);
-            //gPnl.setMtmDeltaSharpe(mtmDeltaSharpe);
-        }));
+        }).thenRun(() ->
+                SwingUtilities.invokeLater(() -> {
+                    gPnl.repaint();
+                    //netPNLMap = Utility.mapCombinerGen(Double::sum, mtmPNLMap, tradePNLMap);
+                    //gPnl.setNavigableMap(mtmPNLMap, tradePNLMap, netPNLMap);
+                    //gPnl.setNetDeltaMap(netDeltaMap);
+                    //gPnl.setBuySellPnlMap(boughtPNLMap, soldPNLMap);
+                    //gPnl.setMtmPnl(Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0));
+                    //gPnl.setNetPnlYtd(netYtdPnl);
+                    //gPnl.setTodayPnl(todayNetPnl);
+                    //gPnl.setBuyPnl(Optional.ofNullable(boughtPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0));
+                    //gPnl.setSellPnl(Optional.ofNullable(soldPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0));
+                    //gPnl.setBoughtDelta(boughtDelta);
+                    //gPnl.setOpenDelta(openDelta);
+                    //gPnl.setCurrentDelta(netDelta);
+                    //gPnl.setSoldDelta(soldDelta);
+                    //gPnl.setBenchMap(benchExposureMap);
+                    //gPnl.setMtmBenchMap(pureMtmMap);
+                    //gPnl.setNavigableMap(mtmPNLMap, tradePNLMap, netPNLMap);
+                    //gPnl.setMinuteNetPnlSharpe(minuteNetPnlSharpe);
+                    //gPnl.setMtmDeltaSharpe(mtmDeltaSharpe);
+                }));
 
         CompletableFuture.runAsync(() -> gPnl.setBigKiyodoMap(topPnlKiyodoList()))
                 .thenRunAsync(() -> SwingUtilities.invokeLater(gPnl::repaint));
@@ -633,15 +634,13 @@ public class ChinaPosition extends JPanel {
     static double getStockPtfDelta() {
         double openDelta = openPositionMap.entrySet().stream()
                 .filter(e -> !e.getKey().startsWith("SGXA50"))
-                .mapToDouble(e ->
-                        fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
-                                * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum();
+                .mapToDouble(e -> fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                        * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum();
         double tradedDelta = tradesMap.entrySet().stream()
                 .filter(e -> !e.getKey().startsWith("SGXA50"))
-                .mapToDouble(e ->
-                        fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
-                                * priceMap.getOrDefault(e.getKey(), 0.0)
-                                * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum();
+                .mapToDouble(e -> fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                        * priceMap.getOrDefault(e.getKey(), 0.0)
+                        * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum();
 
         return openDelta + tradedDelta;
     }
@@ -687,22 +686,12 @@ public class ChinaPosition extends JPanel {
     }
 
     static void getOpenTradePositionForFuture() {
-        //pr(" get open trade position for future " + LocalTime.now());
-        uniqueKeySet = new HashSet<>();
-
-        for (FutType f : FutType.values()) {
-            if (ChinaPosition.tradesMap.containsKey(f.getSymbol())) {
-                ChinaPosition.tradesMap.put(f.getSymbol(), new ConcurrentSkipListMap<>());
-            }
-        }
-
-//        ChinaPosition.tradesMap.put("SGXA50", new ConcurrentSkipListMap<>());
-//        ChinaPosition.tradesMap.put("SGXA50BM", new ConcurrentSkipListMap<>());
+        uniqueTradeSet = new HashSet<>();
 
         ChinaMain.controller().reqPositions(new IBPositionHandler());
         ChinaMain.controller().reqExecutions(new ExecutionFilter(), new IBPosTradesHandler());
-        ChinaMain.GLOBAL_REQ_ID.addAndGet(5);
-        ChinaMain.controller().getSGXA50Historical2(ChinaMain.GLOBAL_REQ_ID.get(), posHandler);
+        //ChinaMain.GLOBAL_REQ_ID.addAndGet(5);
+        //ChinaMain.controller().getSGXA50Historical2(ChinaMain.GLOBAL_REQ_ID.get(), posHandler);
 
 //        ChinaPosition.xuBotPos = ChinaPosition.tradesMapFront.get("SGXA50").entrySet().stream().filter(e -> ((Trade) e.getValue()).getSize() > 0).collect(Collectors.summingInt(e
 //                -> ((Trade) e.getValue()).getSize()));
@@ -1107,7 +1096,7 @@ public class ChinaPosition extends JPanel {
     }
 
     static void updatePosition() {
-        ChinaData.priceMapBar.keySet().forEach((String name) -> tradesMap.put(name, new ConcurrentSkipListMap<>()));
+        ChinaData.priceMapBar.keySet().forEach(s -> tradesMap.put(s, new ConcurrentSkipListMap<>()));
         getOpenPositionsNormal();
         getCurrentPositionNormal();
         getCurrentPositionMargin();
@@ -1635,23 +1624,19 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
 
-//        pr(" IBPosTradeshandler trade report trade key, contract exec ", tradeKey, contract.symbol(), execution.price(),
-//                execution.shares());
-
-        if (ChinaPosition.uniqueKeySet.contains(tradeKey)) {
-            //pr(" duplicate key in china pos trade report ");
+        if (ChinaPosition.uniqueTradeSet.contains(tradeKey)) {
+            XuTraderHelper.outputToError(str(" tradeKey already in the set ", tradeKey));
             return;
         } else {
-            ChinaPosition.uniqueKeySet.add(tradeKey);
+            ChinaPosition.uniqueTradeSet.add(tradeKey);
         }
 
         String symbol = ibContractToSymbol(contract);
 
         if (!ChinaPosition.tradesMap.containsKey(symbol)) {
             pr(" inputting new entry for ticker ", symbol);
-            ChinaPosition.tradesMap.put(symbol, new ConcurrentSkipListMap<>());
-            //symbolNames.add(ticker);
-            //symbolNamesFull.add(ticker);
+            XuTraderHelper.outputToError(str(" trade map does not include symbol ", symbol));
+            throw new IllegalStateException(str(" trade map does not include symbol ", symbol));
         }
 
         int sign = (execution.side().equals("BOT")) ? 1 : -1;
@@ -1668,20 +1653,17 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
                             .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
                 } else {
                     ChinaPosition.tradesMap.get(symbol).put(lt,
-                            new TradeBlock(new FutureTrade(execution.price(),
-                                    (int) Math.round(sign * execution.shares()))));
+                            new TradeBlock(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
                 }
             }
         } else if (contract.secType() == Types.SecType.STK) {
-            //&& contract.exchange().equals("SEHK")
             if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth()) {
                 if (ChinaPosition.tradesMap.get(symbol).containsKey(lt)) {
                     ChinaPosition.tradesMap.get(symbol).get(lt)
                             .addTrade(new IBStockTrade(execution.price(), (int) Math.round(sign * execution.shares())));
                 } else {
-                    ChinaPosition.tradesMap.get(symbol).put(lt,
-                            new TradeBlock(new IBStockTrade(execution.price(),
-                                    (int) Math.round(sign * execution.shares()))));
+                    ChinaPosition.tradesMap.get(symbol).put(lt, new TradeBlock(new IBStockTrade(execution.price(),
+                            (int) Math.round(sign * execution.shares()))));
                 }
             }
         }
@@ -1689,20 +1671,6 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReportEnd() {
-
-        ChinaPosition.tradesMap.forEach((k, v) -> {
-            if (v.size() > 0) {
-                //pr("trade report ", k, v);
-            }
-        });
-
-        for (FutType ft : FutType.values()) {
-            if (ChinaPosition.tradesMap.containsKey(ft.getSymbol()) &&
-                    ChinaPosition.tradesMap.get(ft.getSymbol()).size() > 0) {
-//                pr(str(" tradeReportEnd :: printing trades map ", ft.getSymbol(),
-//                        ChinaPosition.tradesMap.get(ft.getSymbol())));
-            }
-        }
     }
 
     @Override
