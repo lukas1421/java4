@@ -3766,7 +3766,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         SwingUtilities.invokeLater(() -> {
             updateLog(" Expiry " + activeFutureCt.lastTradeDateOrContractMonth());
-            updateLog(str("ATM vol ", expiryToGet, getATMVol(expiryToGet)));
+            updateLog(str("ATM vol ", expiryToGet, getATMVol(expiryToGet),
+                    "Thresh", XU_AUTO_VOL_THRESH));
             updateLog(" NAV: " + currentIBNAV);
             updateLog(" P " + futPriceMap.getOrDefault(f, 0.0));
             updateLog(str(" Close3pm ", futPrevClose3pmMap.getOrDefault(f, 0.0),

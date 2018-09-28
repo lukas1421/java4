@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import static apidemo.AutoTraderMain.*;
 import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaStock.currencyMap;
 import static apidemo.TradingConstants.FTSE_INDEX;
 import static java.lang.System.out;
 import static utility.Utility.*;
@@ -163,6 +164,16 @@ public class XuTraderHelper {
         outputDetailedXU(s);
         outputDetailedHK(s);
         outputDetailedUS(s);
+    }
+
+    public static void outputSymbolMsg(String symbol, String s) {
+        if (symbol.startsWith("hk")) {
+            outputDetailedHK(s);
+        } else if (symbol.startsWith("SGXA50")) {
+            outputDetailedXU(s);
+        } else if (currencyMap.getOrDefault(s, "CNY").equals("USD")) {
+            outputDetailedUS(s);
+        }
     }
 
 //    private static void outputPurelyOrders(String s, File order, File detailed) {

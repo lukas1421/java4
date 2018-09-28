@@ -1583,10 +1583,11 @@ public class ApiController implements EWrapper {
                 //new method, records all status changes, time, track IOC orders, one status only once
                 if (orderState.status() != idStatusMap.get(defaultID) && orderState.status() == Filled) {
                     String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                            "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
+                            "**FILLS**", idStatusMap.get(defaultID), "->", orderState.status(), now,
                             "ID:", defaultID, globalIdOrderMap.get(defaultID),
                             "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
-                    outputDetailedXU(msg);
+                    String symbol = globalIdOrderMap.get(defaultID).getSymbol();
+                    outputSymbolMsg(symbol, msg);
                     idStatusMap.put(defaultID, orderState.status());
                 }
 
@@ -1669,7 +1670,6 @@ public class ApiController implements EWrapper {
             public void handle(int errorCode, String errorMsg) {
                 outputToError(str("Default Order handler:", "ERROR", defaultID, errorCode, errorMsg
                         , globalIdOrderMap.get(defaultID)));
-
                 pr(" handle error code " + errorCode + " message " + errorMsg);
             }
         }

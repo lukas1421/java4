@@ -22,19 +22,11 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
     private static Map<Integer, OrderStatus> idStatusMap = new ConcurrentHashMap<>();
     private int defaultID;
     private ApiController controller;
-    private long maxWaitMilli;
 
     public GuaranteeHKHandler(int id, ApiController ap) {
         defaultID = id;
         idStatusMap.put(id, ConstructedInHandler);
         controller = ap;
-    }
-
-    public GuaranteeHKHandler(int id, ApiController ap, long waitT) {
-        defaultID = id;
-        idStatusMap.put(id, ConstructedInHandler);
-        controller = ap;
-        maxWaitMilli = waitT;
     }
 
     @Override
@@ -98,8 +90,6 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-//        outputDetailedHK(str("ERROR", "Guarantee HK handler:", defaultID, errorCode, errorMsg
-//                , globalIdOrderMap.get(defaultID)));
         outputToError(str("ERROR", "Guarantee HK handler:", defaultID, errorCode, errorMsg
                 , globalIdOrderMap.get(defaultID)));
     }

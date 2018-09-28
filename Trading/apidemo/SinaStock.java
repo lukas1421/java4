@@ -29,7 +29,6 @@ import static apidemo.TradingConstants.FTSE_INDEX;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
 import static apidemo.XU.indexPriceSina;
 import static apidemo.XU.indexVol;
-import static utility.Utility.pr;
 
 public class SinaStock implements Runnable {
     public static Map<String, Double> weightMapA50 = new HashMap<>();
@@ -52,16 +51,11 @@ public class SinaStock implements Runnable {
             List<String> dataA50;
             while ((line = reader1.readLine()) != null) {
                 dataA50 = Arrays.asList(line.split("\t"));
-                pr("data a 50 ", dataA50);
                 weightMapA50.put(dataA50.get(0), Utility.pd(dataA50, 1));
-
             }
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-        weightMapA50.forEach((k, v) -> {
-            pr(k, v, nameMap.getOrDefault(k, ""));
-        });
     }
 
     @SuppressWarnings("unchecked")

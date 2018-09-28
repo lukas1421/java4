@@ -47,7 +47,7 @@ public class AutoTraderMain extends JPanel {
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
     public static volatile Map<Integer, Order> liveIDOrderMap = new ConcurrentHashMap<>();
     public static volatile Map<String, TreeSet<Order>> liveSymbolOrderSet = new ConcurrentHashMap<>();
-    public static final double XU_AUTO_VOL_THRESH = 0.25;
+    static final double XU_AUTO_VOL_THRESH = 0.25;
 
 
     //buy sell only
