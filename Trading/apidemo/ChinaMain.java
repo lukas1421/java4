@@ -487,19 +487,19 @@ public final class ChinaMain implements IConnectionHandler {
 
                             if (!pane.getValue().equals(JOptionPane.NO_OPTION)) {
                                 ses.schedule(() -> {
-                                    SwingUtilities.invokeLater(() -> {
-                                        pr(" fetching data ");
-                                        getSinaData.doClick();
-                                        loadYesterday.doClick();
-                                        startIBHK.doClick();
-                                    });
 
                                     pr(" hib ");
                                     if (LocalTime.now().isAfter(ltof(5, 0)) && LocalTime.now().isBefore(ltof(15, 0))) {
                                         Hibtask.loadHibGenPrice();
                                     }
                                     Hibtask.loadHibDetailPrice();
-                                    //ChinaData.loadHibernateYesterday();
+
+                                    SwingUtilities.invokeLater(() -> {
+                                        pr(" fetching data ");
+                                        getSinaData.doClick();
+                                        loadYesterday.doClick();
+                                        startIBHK.doClick();
+                                    });
 
                                     pr(" pos ");
                                     ChinaPosition.getOpenPositionsNormal();

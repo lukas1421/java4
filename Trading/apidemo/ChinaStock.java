@@ -354,13 +354,17 @@ public final class ChinaStock extends JPanel {
                                 selectedNameStock = symbolNamesFull.get(modelRow);
                                 selectedBench = benchSimpleMap.getOrDefault(selectedNameStock, "");
 
-                                if(priceMapBar.containsKey(selectedNameStock)) {
-                                    pr("pmb ", selectedNameStock, priceMapBar.get(selectedNameStock));
+                                if (priceMapBar.containsKey(selectedNameStock)) {
+                                    if (priceMapBar.get(selectedNameStock).size() > 0) {
+                                        pr("pmb ", selectedNameStock, priceMapBar.get(selectedNameStock));
+                                    }
                                 }
 
                                 if (priceMapBarDetail.containsKey(selectedNameStock)) {
-                                    pr(" pmb detailed ", selectedNameStock,
-                                            trimTo3DP(priceMapBarDetail.get(selectedNameStock)));
+                                    if (priceMapBarDetail.get(selectedNameStock).size() > 0) {
+                                        pr(" pmb detailed ", selectedNameStock,
+                                                trimTo3DP(priceMapBarDetail.get(selectedNameStock)));
+                                    }
                                     //outputPMBDetailedToTxt(trimTo3DP(priceMapBarDetail.get(selectedNameStock)));
                                 }
 

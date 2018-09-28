@@ -69,7 +69,13 @@ public class ChinaSaveDetailed implements Serializable, ChinaSaveInterface2Blob 
             Utility.pr(" LOADING: china save detailed SGXA50 ", mp);
         }
         if (mp.size() > 0) {
-            priceMapBarDetail.put(name, (ConcurrentSkipListMap<LocalTime, Double>) mp);
+            ConcurrentSkipListMap<LocalTime, Double> mp1 = (ConcurrentSkipListMap<LocalTime, Double>) mp;
+            mp1.forEach((k, v) -> {
+                if (!priceMapBarDetail.get(name).containsKey(k)) {
+                    priceMapBarDetail.get(name).put(k, v);
+                }
+            });
+            //priceMapBarDetail.put(name, (ConcurrentSkipListMap<LocalTime, Double>) mp);
         }
     }
 
