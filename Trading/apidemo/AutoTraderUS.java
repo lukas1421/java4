@@ -384,10 +384,10 @@ public class AutoTraderUS {
 
         LocalDateTime lastOrderT = getLastOrderTime(symbol, US_STOCK_HILO);
         long milliLastTwo = lastTwoOrderMilliDiff(symbol, US_STOCK_HILO);
-        int waitSec = (milliLastTwo < 60000) ? 300 : 10;
+        int waitSec = (milliLastTwo < 10000) ? 60 : 10;
 
-        double buySize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 2);
-        double sellSize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 2);
+        double buySize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 1);
+        double sellSize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 1);
 
 //        pr(" US hilo#:", numOrders, ", name, price ", nowMilli, symbol, freshPrice,
 //                "last order T, milliLast2, waitSec", lastOrderT, milliLastTwo, waitSec,
@@ -495,12 +495,12 @@ public class AutoTraderUS {
             return;
         }
 
-        double buySize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 2);
-        double sellSize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 2);
+        double buySize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 1);
+        double sellSize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 1);
 
         LocalDateTime lastOrderT = getLastOrderTime(symbol, US_STOCK_PMHILO);
         long milliLastTwo = lastTwoOrderMilliDiff(symbol, US_STOCK_PMHILO);
-        int waitSec = (milliLastTwo < 60000) ? 300 : 10;
+        int waitSec = (milliLastTwo < 10000) ? 60 : 10;
 
 //        pr(" US PM hilo#:", numOrders, ", name, price ", nowMilli, symbol, freshPrice,
 //                "last order T, milliLast2, waitSec", lastOrderT, milliLastTwo, waitSec,
