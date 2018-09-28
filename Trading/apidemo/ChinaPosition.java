@@ -1495,9 +1495,6 @@ public class ChinaPosition extends JPanel {
                     return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, "CNY"), 1.0) *
                             (currPrice - costMap.getOrDefault(symbol, 0.0)) * openpos);
                 case 13:
-//                    if (name.equalsIgnoreCase("SGXA50")) {
-//                        pr("getting A50 Bot in Trades map " + tradesMap.get("SGXA50"));
-//                    }
                     return getTotalTodayBought(symbol);
                 case 14:
                     return Math.round(getTotalDeltaBought(symbol) / 1000d);
@@ -1587,8 +1584,6 @@ class ChinaPositionHistHandler implements HistoricalHandler {
 
             if (lt.equals(LocalTime.of(14, 59)) && !ld.equals(currentTradingDate)) {
                 ChinaStock.closeMap.put(name, close);
-//                pr(" Trading date " + currentTradingDate
-//                        + " checking close " + ltof + " " + name + " " + close);
             }
 
             if (((lt.isAfter(LocalTime.of(8, 59)) && lt.isBefore(LocalTime.of(11, 31)))
@@ -1605,8 +1600,6 @@ class ChinaPositionHistHandler implements HistoricalHandler {
     @Override
     public void actionUponFinish(String name) {
         costMap.put(name, closeMap.getOrDefault(name, 0.0));
-//        pr(str(" finished in china pos + costmap just updated is ", name, costMap.get(name)
-//                , closeMap.getOrDefault(name, 0.0)));
     }
 }
 
@@ -1623,7 +1616,6 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
-
         if (ChinaPosition.uniqueTradeSet.contains(tradeKey)) {
             XuTraderHelper.outputToError(str(" tradeKey already in the set ", tradeKey));
             return;
