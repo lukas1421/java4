@@ -59,8 +59,9 @@ public class AutoTraderMain extends JPanel {
     //orders
     static File xuOrderOutput = new File(TradingConstants.GLOBALPATH + "orders.txt");
     static File xuDetailOutput = new File(TradingConstants.GLOBALPATH + "ordersDetailed.txt");
-    static File hkOrderOutput = new File(TradingConstants.GLOBALPATH + "hkorders.txt");
-    static File hkDetailOutput = new File(TradingConstants.GLOBALPATH + "hkordersDetailed.txt");
+    //static File hkOrderOutput = new File(TradingConstants.GLOBALPATH + "hkorders.txt");
+    static File hkDetailOutput = new File(TradingConstants.GLOBALPATH + "hkOrdersDetailed.txt");
+    static File usDetailOutput = new File(TradingConstants.GLOBALPATH + "usOrdersDetailed.txt");
 
     //zones
     public static final ZoneId chinaZone = ZoneId.of("Asia/Shanghai");

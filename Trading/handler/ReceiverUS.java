@@ -11,7 +11,7 @@ import java.time.ZonedDateTime;
 import static apidemo.AutoTraderMain.chinaZone;
 import static apidemo.AutoTraderMain.nyZone;
 import static apidemo.AutoTraderUS.*;
-import static apidemo.XuTraderHelper.outputDetailed;
+import static apidemo.XuTraderHelper.outputDetailedUS;
 import static apidemo.XuTraderHelper.outputToUSPriceTest;
 import static utility.Utility.str;
 
@@ -68,7 +68,7 @@ public class ReceiverUS implements LiveHandler {
     public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
         switch (tt) {
             case SHORTABLE:
-                outputDetailed(str("US handle generic", tt, symbol, value, t));
+                outputDetailedUS(str("US handle generic", tt, symbol, value, t));
                 usShortableValueMap.put(symbol, value);
                 break;
 

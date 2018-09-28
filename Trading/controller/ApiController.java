@@ -1592,7 +1592,7 @@ public class ApiController implements EWrapper {
                             "**STATUS CHG**", idStatusMap.get(defaultID), "->", orderState.status(), now,
                             "ID:", defaultID, globalIdOrderMap.get(defaultID),
                             "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
-                    outputPurelyOrdersDetailedXU(msg);
+                    outputDetailedXU(msg);
                     idStatusMap.put(defaultID, orderState.status());
                 }
 
@@ -1608,28 +1608,28 @@ public class ApiController implements EWrapper {
                     if (!createdOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        //outputPurelyOrdersDetailedXU(msg);
+                        //outputDetailedXU(msg);
                         createdOrderSet.add(defaultID);
                     }
                 } else if (orderState.status() == OrderStatus.PreSubmitted) {
                     if (!predSubmittedOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        //outputPurelyOrdersDetailedXU(msg);
+                        //outputDetailedXU(msg);
                         predSubmittedOrderSet.add(defaultID);
                     }
                 } else if (orderState.status() == OrderStatus.Submitted) {
                     if (!submittedOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        //outputPurelyOrdersDetailedXU(msg);
+                        //outputDetailedXU(msg);
                         submittedOrderSet.add(defaultID);
                     }
                 } else if (orderState.status() == Filled) {
                     if (!filledOrderSet.contains(defaultID)) {
                         String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                                 "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        outputPurelyOrdersXU(msg);
+                        //outputPurelyOrdersXU(msg);
                         filledOrderSet.add(defaultID);
                     }
                 } else if (orderState.status() == OrderStatus.ApiCancelled) {
@@ -1673,9 +1673,6 @@ public class ApiController implements EWrapper {
 
             @Override
             public void handle(int errorCode, String errorMsg) {
-//                outputOrderToAutoLogXU(str("Default Order handler:", "ERROR", defaultID, errorCode, errorMsg
-//                        , globalIdOrderMap.get(defaultID)));
-
                 outputToErrorLog(str("Default Order handler:", "ERROR", defaultID, errorCode, errorMsg
                         , globalIdOrderMap.get(defaultID)));
 
@@ -1700,17 +1697,17 @@ public class ApiController implements EWrapper {
             globalTradingOn.set(false);
             return;
         }
-//        else {
-//            outputOrderToAutoLogXU(str(" Impact OK ", impact, ct.symbol(), o.action(),
-//                    o.lmtPrice(), o.totalQuantity()));
-//        }
 
         if (o.totalQuantity() == 0.0) {
-            return;
+            outputOrderToAutoLogXU(str(" quantity is 0 ", ct.symbol(), o.action(),
+                    o.lmtPrice(), o.totalQuantity()));
+            throw new IllegalStateException(" quantity is 0 ");
         }
 
         if (o.orderId() == 0) {
-            o.orderId(m_orderId.incrementAndGet());
+            outputOrderToAutoLogXU(str("order id is 0 ", ct.symbol(), o.action(),
+                    o.lmtPrice(), o.totalQuantity()));
+            throw new IllegalStateException(" order id is 0");
         }
 
         if (handler != null) {

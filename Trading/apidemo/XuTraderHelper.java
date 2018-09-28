@@ -148,52 +148,46 @@ public class XuTraderHelper {
     }
 
 
-    private static void outputOrderToAutoLog(String s, File order, File detailed) {
-        if (globalIdOrderMap.size() == 1) {
-            outputPurelyOrders(str("***", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "***"),
-                    order, detailed);
-        }
-        outputToAutoLog("****************ORDER************************");
-        outputToAutoLog(s);
-        outputToAutoLog("****************ORDER************************");
-        outputPurelyOrders(s, order, detailed);
-    }
+//    private static void outputOrderToAutoLog(String s, File order, File detailed) {
+//        if (globalIdOrderMap.size() == 1) {
+//            outputPurelyOrders(str("***", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "***"),
+//                    order, detailed);
+//        }
+//        outputToAutoLog("****************ORDER************************");
+//        outputToAutoLog(s);
+//        outputToAutoLog("****************ORDER************************");
+//        outputPurelyOrders(s, order, detailed);
+//    }
 
     public static void outputOrderToAutoLogXU(String s) {
-        outputOrderToAutoLog(s, xuOrderOutput, xuDetailOutput);
+        outputDetailedXU(s);
+        //outputOrderToAutoLog(s, xuOrderOutput, xuDetailOutput);
     }
 
-    static void outputOrderToAutoLogHK(String s) {
-        outputOrderToAutoLog(s, hkOrderOutput, hkDetailOutput);
-    }
+//    private static void outputPurelyOrders(String s, File order, File detailed) {
+//        outputDetailed(s, detailed);
+//        try (BufferedWriter out = new BufferedWriter(new FileWriter(order, true))) {
+//            out.append(s);
+//            out.newLine();
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//    }
 
+//    public static void outputPurelyOrdersXU(String s) {
+//        outputPurelyOrders(s, xuOrderOutput, xuDetailOutput);
+//    }
 
-    private static void outputPurelyOrders(String s, File order, File detailed) {
-        outputDetailedXU(s, detailed);
-        //File output = new File(TradingConstants.GLOBALPATH + "orders.txt");
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(order, true))) {
-            out.append(s);
-            out.newLine();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
+//    public static void outputDetailed(String s) {
+//        try (BufferedWriter out = new BufferedWriter(new FileWriter(xuDetailOutput, true))) {
+//            out.append(s);
+//            out.newLine();
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//    }
 
-    public static void outputPurelyOrdersXU(String s) {
-        outputPurelyOrders(s, xuOrderOutput, xuDetailOutput);
-    }
-
-    public static void outputDetailed(String s) {
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(xuDetailOutput, true))) {
-            out.append(s);
-            out.newLine();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    static void outputDetailedXU(String s, File detailed) {
-        //File output = new File(TradingConstants.GLOBALPATH + "ordersDetailed.txt");
+    private static void outputDetailedGen(String s, File detailed) {
         try (BufferedWriter out = new BufferedWriter(new FileWriter(detailed, true))) {
             out.append(s);
             out.newLine();
@@ -202,9 +196,16 @@ public class XuTraderHelper {
         }
     }
 
-    public static void outputPurelyOrdersDetailedXU(String s) {
-        outputDetailedXU(s, xuDetailOutput);
-        //File output = new File(TradingConstants.GLOBALPATH + "ordersDetailed.txt");
+    public static void outputDetailedXU(String s) {
+        outputDetailedGen(s, xuDetailOutput);
+    }
+
+    public static void outputDetailedHK(String s) {
+        outputDetailedGen(s, hkDetailOutput);
+    }
+
+    public static void outputDetailedUS(String s) {
+        outputDetailedGen(s, usDetailOutput);
     }
 
     public static <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> mp) {

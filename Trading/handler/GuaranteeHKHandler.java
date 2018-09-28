@@ -55,7 +55,7 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
                     "ID:", defaultID, globalIdOrderMap.get(defaultID),
                     "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
 
-            outputPurelyOrdersDetailedXU(msg);
+            outputDetailedXU(msg);
 
             if (orderState.status() == PendingCancel && globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {
 

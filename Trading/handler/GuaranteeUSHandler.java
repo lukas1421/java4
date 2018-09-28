@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static apidemo.AutoTraderMain.autoTradeID;
 import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderUS.*;
-import static apidemo.XuTraderHelper.outputPurelyOrdersDetailedXU;
+import static apidemo.XuTraderHelper.outputDetailedXU;
 import static apidemo.XuTraderHelper.outputToErrorLog;
 import static client.OrderStatus.Filled;
 import static client.OrderStatus.PendingCancel;
@@ -58,7 +58,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
                         "*GUARANTEE US FILL*", idStatusMap.get(defaultID), "->", orderState.status(), now,
                         "ID:", defaultID, globalIdOrderMap.get(defaultID),
                         "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
-                outputPurelyOrdersDetailedXU(msg);
+                outputDetailedXU(msg);
             }
 
             if (orderState.status() == PendingCancel && globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {

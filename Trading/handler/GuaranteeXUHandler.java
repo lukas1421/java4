@@ -58,7 +58,7 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
                         "*GUARANTEE XU FILL", idStatusMap.get(defaultID), "->", orderState.status(), now,
                         "ID:", defaultID, globalIdOrderMap.get(defaultID),
                         "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
-                outputPurelyOrdersDetailedXU(msg);
+                outputDetailedXU(msg);
             }
 
             if (orderState.status() == PendingCancel &&
