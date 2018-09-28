@@ -147,7 +147,7 @@ public final class ChinaMain implements IConnectionHandler {
         m_tabbedPanel.addTab("Index", chinaindex);
         m_tabbedPanel.addTab("Size ytd", csdy);
         m_tabbedPanel.addTab("Connection", m_connectionPanel);
-        m_tabbedPanel.select("Xu trader ");
+        m_tabbedPanel.select("Stock ");
         m_tabbedPanel.addTab(" HK Data", hkdata);
         m_tabbedPanel.addTab(" HK Stock", hkstock);
         m_tabbedPanel.addTab("Option", chinaOption);
@@ -163,21 +163,22 @@ public final class ChinaMain implements IConnectionHandler {
         JScrollPane inLogScroll = new JScrollPane(m_inLog);
         inLogScroll.setPreferredSize(new Dimension(10000, 50));
 
-        systemTime.setFont(systemTime.getFont().deriveFont(25F));
-        systemTime.setBackground(Color.orange);
-        systemTime.setForeground(Color.black);
-        twsTime.setFont(systemTime.getFont().deriveFont(25F));
-        twsTime.setBackground(Color.orange);
-        twsTime.setForeground(Color.black);
-        systemNotif.setOpaque(true);
-        systemNotif.setBackground(Color.orange);
-        systemNotif.setForeground(Color.black);
-        systemNotif.setFont(systemNotif.getFont().deriveFont(25F));
-        connectionIndicator.setOpaque(true);
-        connectionIndicator.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        connectionIndicator.setBackground(Color.red);
-        connectionIndicator.setFont(connectionIndicator.getFont().deriveFont(30F));
-
+        SwingUtilities.invokeLater(() -> {
+            systemTime.setFont(systemTime.getFont().deriveFont(25F));
+            systemTime.setBackground(Color.orange);
+            systemTime.setForeground(Color.black);
+            twsTime.setFont(systemTime.getFont().deriveFont(25F));
+            twsTime.setBackground(Color.orange);
+            twsTime.setForeground(Color.black);
+            systemNotif.setOpaque(true);
+            systemNotif.setBackground(Color.orange);
+            systemNotif.setForeground(Color.black);
+            systemNotif.setFont(systemNotif.getFont().deriveFont(25F));
+            connectionIndicator.setOpaque(true);
+            connectionIndicator.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            connectionIndicator.setBackground(Color.red);
+            connectionIndicator.setFont(connectionIndicator.getFont().deriveFont(30F));
+        });
         JPanel threadManager = new JPanel() {
             @Override
             public Dimension getPreferredSize() {
@@ -435,8 +436,10 @@ public final class ChinaMain implements IConnectionHandler {
         m_frame11.setExtendedState(m_frame11.getExtendedState() | JFrame.MAXIMIZED_BOTH);
 
         SwingUtilities.invokeLater(() -> {
-            m_frame.toFront();
-            m_frame.repaint();
+//            m_frame.toFront();
+//            m_frame.repaint();
+            m_frame10.toFront();
+            m_frame10.repaint();
         });
         // make initial connection to local host, port 7496, client id 0, 4001 is for with IBAPI
         // m_controller.connect( "127.0.0.1", PORT_IBAPI, 0);

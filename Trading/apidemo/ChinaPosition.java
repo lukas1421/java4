@@ -7,7 +7,6 @@ import controller.ApiController;
 import graph.GraphPnl;
 import handler.HistoricalHandler;
 import handler.IBPositionHandler;
-import historical.HistChinaStocks;
 import utility.SharpeUtility;
 import utility.Utility;
 
@@ -40,6 +39,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaMain.currentTradingDate;
 import static apidemo.ChinaPosition.costMap;
 import static apidemo.ChinaStock.*;
@@ -193,7 +193,7 @@ public class ChinaPosition extends JPanel {
         refreshButton = new JButton("Refresh");
         JButton getOpenButton = new JButton("getOpen");
         JButton getCurrentButton = new JButton("getCurrent");
-        JButton getWtdMaxMinButton = new JButton("getWtdMaxMin");
+        //JButton getWtdMaxMinButton = new JButton("getWtdMaxMin");
 
         refreshButton.addActionListener((ActionEvent l) -> CompletableFuture.runAsync(() -> {
             //updatePosition();
@@ -219,7 +219,7 @@ public class ChinaPosition extends JPanel {
             //getCurrentPositionMargin();
         });
 
-        getWtdMaxMinButton.addActionListener(l -> getWtdMaxMin());
+        //getWtdMaxMinButton.addActionListener(l -> getWtdMaxMin());
         filterButton = new JButton("Active Only");
         sorter = (TableRowSorter<BarModel_POS>) tab.getRowSorter();
 
@@ -325,7 +325,7 @@ public class ChinaPosition extends JPanel {
         controlPanel.add(filterButton);
         controlPanel.add(getOpenButton);
         controlPanel.add(getCurrentButton);
-        controlPanel.add(getWtdMaxMinButton);
+        //controlPanel.add(getWtdMaxMinButton);
         controlPanel.add(rb1);
         controlPanel.add(rb2);
         controlPanel.add(autoUpdateButton);
@@ -356,7 +356,7 @@ public class ChinaPosition extends JPanel {
         tab.setAutoCreateRowSorter(true);
 
         sorter = (TableRowSorter<BarModel_POS>) tab.getRowSorter();
-        getWtdMaxMin();
+        //getWtdMaxMin();
     }
 
     static void refreshTable() {
@@ -738,7 +738,7 @@ public class ChinaPosition extends JPanel {
 //            }
 //        });
 //
-        tradesMap.keySet().forEach(k->{
+        tradesMap.keySet().forEach(k -> {
             int bot = ChinaPosition.tradesMap.get(k).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
             int sold = ChinaPosition.tradesMap.get(k).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
@@ -1410,20 +1410,20 @@ public class ChinaPosition extends JPanel {
                     return "T   Total Pnl";
                 case 24:
                     return "P%";
-                case 25:
-                    return "1m动";
-                case 26:
-                    return "Bench";
-                case 27:
-                    return "wkPerc";
-                case 28:
-                    return "wkMax";
-                case 29:
-                    return "wkMin";
-                case 30:
-                    return "dev";
-                case 31:
-                    return "Total pnl";
+//                case 25:
+//                    return "1m动";
+//                case 26:
+//                    return "Bench";
+//                case 27:
+//                    return "wkPerc";
+//                case 28:
+//                    return "wkMax";
+//                case 29:
+//                    return "wkMin";
+//                case 30:
+//                    return "dev";
+//                case 31:
+//                    return "Total pnl";
 
                 default:
                     return null;
@@ -1451,10 +1451,10 @@ public class ChinaPosition extends JPanel {
                     return Integer.class;
                 case 24:
                     return Integer.class;
-                case 26:
-                    return String.class;
-                case 27:
-                    return Integer.class;
+//                case 26:
+//                    return String.class;
+//                case 27:
+//                    return Integer.class;
                 default:
                     return Double.class;
             }
@@ -1462,104 +1462,96 @@ public class ChinaPosition extends JPanel {
 
         @Override
         public Object getValueAt(int rowIn, int col) {
-            String name = symbolNames.get(rowIn);
-            int openpos = openPositionMap.getOrDefault(name, 0);
+            String symbol = symbolNames.get(rowIn);
+            int openpos = openPositionMap.getOrDefault(symbol, 0);
             double defaultPrice = 0.0;
-            if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
-                defaultPrice = priceMapBar.get(name).lastEntry().getValue().getClose();
+            if (priceMapBarDetail.containsKey(symbol) && priceMapBarDetail.get(symbol).size() > 0) {
+                defaultPrice = priceMapBarDetail.get(symbol).lastEntry().getValue();
             }
-            double currPrice = ChinaStock.priceMap.getOrDefault(name, 0.0) == 0.0 ?
-                    ChinaStock.closeMap.getOrDefault(name, defaultPrice) : ChinaStock.priceMap.get(name);
-
-            double wkMaxHist = Double.MIN_VALUE;
-            double wkMinHist = Double.MAX_VALUE;
-            if (HistChinaStocks.chinaWtd.containsKey(name) && HistChinaStocks.chinaWtd.get(name).size() > 0) {
-                wkMaxHist = reduceMapToDouble(HistChinaStocks.chinaWtd.get(name), SimpleBar::getHigh, Math::max);
-                wkMinHist = reduceMapToDouble(HistChinaStocks.chinaWtd.get(name), SimpleBar::getLow, Math::min);
-            }
+            double currPrice = ChinaStock.priceMap.getOrDefault(symbol, 0.0) == 0.0 ?
+                    ChinaStock.closeMap.getOrDefault(symbol, defaultPrice) : ChinaStock.priceMap.get(symbol);
 
             switch (col) {
                 case 0:
-                    return name;
+                    return symbol;
                 case 1:
-                    return ChinaStock.nameMap.get(name);
+                    return ChinaStock.nameMap.get(symbol);
                 case 2:
                     return openpos;
                 case 3:
-                    return costMap.getOrDefault(name, 0.0);
+                    return costMap.getOrDefault(symbol, 0.0);
                 case 4:
-                    return Math.round(fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0)
-                            * currPrice * getNetPosition(name) / 1000d) * 1.0d;
+                    return Math.round(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, "CNY"), 1.0)
+                            * currPrice * getNetPosition(symbol) / 1000d) * 1.0d;
                 case 5:
-                    return ChinaStock.closeMap.getOrDefault(name, 0.0);
+                    return ChinaStock.closeMap.getOrDefault(symbol, 0.0);
                 case 6:
-                    return ChinaStock.openMap.getOrDefault(name, 0.0);
+                    return ChinaStock.openMap.getOrDefault(symbol, 0.0);
                 case 7:
                     return r(currPrice);
                 case 8:
-                    return closeMap.getOrDefault(name, 0.0) == 0.0 ? 0
-                            : Math.round(1000d * (currPrice / closeMap.getOrDefault(name, 0.0) - 1)) / 10d;
+                    return closeMap.getOrDefault(symbol, 0.0) == 0.0 ? 0
+                            : Math.round(1000d * (currPrice / closeMap.getOrDefault(symbol, 0.0) - 1)) / 10d;
                 case 9:
-                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0) *
-                            (openMap.getOrDefault(name, 0.0) - closeMap.getOrDefault(name, 0.0)) * openpos);
+                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, "CNY"), 1.0) *
+                            (openMap.getOrDefault(symbol, 0.0) - closeMap.getOrDefault(symbol, 0.0)) * openpos);
                 case 10:
-                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0) *
-                            (currPrice - closeMap.getOrDefault(name, 0.0)) * openpos);
+                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, "CNY"), 1.0) *
+                            (currPrice - closeMap.getOrDefault(symbol, 0.0)) * openpos);
                 case 11:
-                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0) *
-                            (closeMap.getOrDefault(name, 0.0)
-                                    - costMap.getOrDefault(name, 0.0)) * openpos);
+                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, "CNY"), 1.0) *
+                            (closeMap.getOrDefault(symbol, 0.0)
+                                    - costMap.getOrDefault(symbol, 0.0)) * openpos);
                 case 12:
-                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0) *
-                            (currPrice - costMap.getOrDefault(name, 0.0)) * openpos);
+                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, "CNY"), 1.0) *
+                            (currPrice - costMap.getOrDefault(symbol, 0.0)) * openpos);
                 case 13:
 //                    if (name.equalsIgnoreCase("SGXA50")) {
 //                        pr("getting A50 Bot in Trades map " + tradesMap.get("SGXA50"));
 //                    }
-                    return getTotalTodayBought(name);
+                    return getTotalTodayBought(symbol);
                 case 14:
-                    return Math.round(getTotalDeltaBought(name) / 1000d);
+                    return Math.round(getTotalDeltaBought(symbol) / 1000d);
                 case 15:
-                    return r(getAvgBCost(name));
+                    return r(getAvgBCost(symbol));
                 case 16:
-                    return r(getBuyTradePnl(name));
+                    return r(getBuyTradePnl(symbol));
                 case 17:
-                    return getTotalTodaySold(name);
+                    return getTotalTodaySold(symbol);
                 case 18:
-                    return Math.round(getTotalDeltaSold(name) / 1000d);
+                    return Math.round(getTotalDeltaSold(symbol) / 1000d);
                 case 19:
-                    return r(getAvgSCost(name));
+                    return r(getAvgSCost(symbol));
                 case 20:
-                    return r(getSellTradePnl(name));
+                    return r(getSellTradePnl(symbol));
                 case 21:
-                    return getNetPosition(name);
+                    return getNetPosition(symbol);
                 case 22:
-                    return r(getBuyTradePnl(name) + getSellTradePnl(name));
+                    return r(getBuyTradePnl(symbol) + getSellTradePnl(symbol));
                 case 23:
-                    return r(getTodayTotalPnl(name));
+                    return r(getTodayTotalPnl(symbol));
                 case 24:
-                    return ChinaStock.getPercentileBar(name);
-                case 25:
-                    return r(getPnLChange5m(name));
-                case 26:
-                    return ChinaStock.benchMap.getOrDefault(name, "");
-                case 27:
-                    return getPercentileWrapper(name);
-                case 28:
-                    return r(maxGen(wtdMaxMap.getOrDefault(name, 0.0), ChinaStock.maxMap.getOrDefault(name,
-                            wtdMaxMap.getOrDefault(name, 0.0)), wkMaxHist));
-                case 29:
-                    return r(minGen(wtdMinMap.getOrDefault(name, 0.0), ChinaStock.minMap.getOrDefault(name,
-                            wtdMinMap.getOrDefault(name, 0.0)), wkMinHist));
-                case 30:
-                    return (currPrice != 0.0) ? Math.round((((maxGen(wtdMaxMap.getOrDefault(name, 0.0),
-                            ChinaStock.maxMap.getOrDefault(name,
-                                    wtdMaxMap.getOrDefault(name, 0.0)), wkMaxHist)
-                            + minGen(wtdMinMap.getOrDefault(name, 0.0), ChinaStock.minMap.getOrDefault(name,
-                            wtdMinMap.getOrDefault(name, 0.0)), wkMinHist)) / 2) / currPrice - 1) * 1000d) / 10d : 0.0;
-                case 31:
-                    return r(getNetPnl(name));
-
+                    return ChinaStock.getPercentileBar(symbol);
+//                case 25:
+//                    return r(getPnLChange5m(symbol));
+//                case 26:
+//                    return ChinaStock.benchMap.getOrDefault(name, "");
+//                case 27:
+//                    return getPercentileWrapper(name);
+//                case 28:
+//                    return r(maxGen(wtdMaxMap.getOrDefault(name, 0.0), ChinaStock.maxMap.getOrDefault(name,
+//                            wtdMaxMap.getOrDefault(name, 0.0)), wkMaxHist));
+//                case 29:
+//                    return r(minGen(wtdMinMap.getOrDefault(name, 0.0), ChinaStock.minMap.getOrDefault(name,
+//                            wtdMinMap.getOrDefault(name, 0.0)), wkMinHist));
+//                case 30:
+//                    return (currPrice != 0.0) ? Math.round((((maxGen(wtdMaxMap.getOrDefault(name, 0.0),
+//                            ChinaStock.maxMap.getOrDefault(name,
+//                                    wtdMaxMap.getOrDefault(name, 0.0)), wkMaxHist)
+//                            + minGen(wtdMinMap.getOrDefault(name, 0.0), ChinaStock.minMap.getOrDefault(name,
+//                            wtdMinMap.getOrDefault(name, 0.0)), wkMinHist)) / 2) / currPrice - 1) * 1000d) / 10d : 0.0;
+//                case 31:
+//                    return r(getNetPnl(name));
                 default:
                     return null;
             }
