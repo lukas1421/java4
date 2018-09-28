@@ -105,7 +105,7 @@ public class Hibtask {
                 " HIB Today -> YTD DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)))
         ).thenAccept(v -> {
             CompletableFuture.runAsync(Hibtask::loadHibGenPrice);
-            CompletableFuture.runAsync(ChinaData::loadHibernateYesterday);
+            //CompletableFuture.runAsync(ChinaData::loadHibernateYesterday);
         }).thenAccept(v -> {
             ChinaMain.updateSystemNotif(str(" Loading done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
         });

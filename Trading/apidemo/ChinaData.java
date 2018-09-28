@@ -4,7 +4,6 @@ import auxiliary.SimpleBar;
 import auxiliary.Strategy;
 import auxiliary.VolBar;
 import client.Contract;
-import graph.GraphIndustry;
 import historical.HistChinaStocks;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -362,9 +361,7 @@ public final class ChinaData extends JPanel {
 
                 whenComplete((ok, ex) -> System.out.println("loading Bar done" + LocalTime.now())));
 
-        loadHibernateY.addActionListener(al ->
-
-                loadHibernateYesterday());
+//        loadHibernateY.addActionListener(al ->loadHibernateYesterday());
 
         shcompToText.addActionListener(al ->
 
@@ -641,14 +638,14 @@ public final class ChinaData extends JPanel {
 
     public static void loadHibernateYesterday() {
         CompletableFuture.runAsync(() -> Hibtask.loadHibGen(ChinaSaveYest.getInstance())).thenRun(() -> {
-            CompletableFuture.runAsync(() -> GraphIndustry.getIndustryPriceYtd(priceMapBarYtd));
-            CompletableFuture.runAsync(() -> Utility.getIndustryVolYtd(sizeTotalMapYtd));
+            //CompletableFuture.runAsync(() -> GraphIndustry.getIndustryPriceYtd(priceMapBarYtd));
+            //CompletableFuture.runAsync(() -> Utility.getIndustryVolYtd(sizeTotalMapYtd));
         }).thenAccept(
                 v -> ChinaMain.updateSystemNotif(Utility.str(" Loading HIB-Y done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)))
         );
 
         CompletableFuture.runAsync(() -> Hibtask.loadHibGen(ChinaSaveY2.getInstance())).thenRun(() -> {
-            CompletableFuture.runAsync(() -> GraphIndustry.getIndustryPriceYtd(priceMapBarY2));
+            //CompletableFuture.runAsync(() -> GraphIndustry.getIndustryPriceYtd(priceMapBarY2));
             CompletableFuture.runAsync(() -> Utility.getIndustryVolYtd(sizeTotalMapY2));
         }).thenAccept(v -> ChinaMain.updateSystemNotif(Utility.str(" Loading HIB-Y2 done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
     }

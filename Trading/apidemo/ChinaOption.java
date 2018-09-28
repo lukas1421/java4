@@ -350,7 +350,7 @@ public class ChinaOption extends JPanel implements Runnable {
         graphPanel3.add(scrollIntraday);
         graphPanel3.add(scrollTS2);
 
-        p.select("Graph Intraday");
+        p.select("Graph1");
         rightPanel.add(p, BorderLayout.SOUTH);
 
         JButton saveVolsButton = new JButton(" Save Vols ");

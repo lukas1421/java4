@@ -1,9 +1,7 @@
 package apidemo;
 
-import auxiliary.AnaCompute;
 import auxiliary.Analysis;
 import auxiliary.Dividends;
-import auxiliary.StratCompute;
 import client.ExecutionFilter;
 import client.Types.NewsType;
 import controller.AccountSummaryTag;
@@ -82,13 +80,13 @@ public final class ChinaMain implements IConnectionHandler {
     public static volatile JLabel connectionIndicator = new JLabel("CONN");
     private final XU xu = new XU();
     private final ChinaStock chinastock = new ChinaStock();
-    private final ChinaIndex chinaindex = new ChinaIndex();
+    //private final ChinaIndex chinaindex = new ChinaIndex();
     private final ChinaKeyMonitor keyMon = new ChinaKeyMonitor();
     private final ChinaData chinaData = new ChinaData();
-    private final ChinaDataMapYtd chinadatamapytd = new ChinaDataMapYtd();
+    //private final ChinaDataMapYtd chinadatamapytd = new ChinaDataMapYtd();
     private final ChinaDataYesterday chinaDataYtd = new ChinaDataYesterday();
-    private final ChinaSizeDataYtd csdy = new ChinaSizeDataYtd();
-    private final ChinaSizeData chinaSizeData = new ChinaSizeData();
+    //private final ChinaSizeDataYtd csdy = new ChinaSizeDataYtd();
+    //private final ChinaSizeData chinaSizeData = new ChinaSizeData();
     private final ChinaPosition chinaPos = new ChinaPosition();
 
     private final ChinaBigGraph bg = new ChinaBigGraph();
@@ -99,7 +97,6 @@ public final class ChinaMain implements IConnectionHandler {
     private static ChinaOption chinaOption = new ChinaOption();
     private static HistChinaStocks histChina = new HistChinaStocks();
     private static AutoTraderMain autoMain = new AutoTraderMain();
-
     private static AutoTraderXU xutrader = new AutoTraderXU(M_CONTROLLER);
     private static AutoTraderHK hkTrader = new AutoTraderHK();
     private static AutoTraderUS usTrader = new AutoTraderUS();
@@ -109,8 +106,8 @@ public final class ChinaMain implements IConnectionHandler {
 
     private SinaStock sinastock1 = SinaStock.getInstance();
     private ExecutorService pool;
-    private volatile AnaCompute anacompute = new AnaCompute();
-    private volatile StratCompute stratcompute = new StratCompute();
+    //private volatile AnaCompute anacompute = new AnaCompute();
+    //private volatile StratCompute stratcompute = new StratCompute();
     private final ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
 
     public ArrayList<String> accountList() {
@@ -136,24 +133,25 @@ public final class ChinaMain implements IConnectionHandler {
     }
 
     private void run() {
+        m_tabbedPanel.addTab("Stock ", chinastock);
         m_tabbedPanel.addTab("XU", xu);
         m_tabbedPanel.addTab("Xu trader ", xutrader);
         //m_tabbedPanel.addTab("Auto trader ", autoMain);
-        m_tabbedPanel.addTab("Stock ", chinastock);
         m_tabbedPanel.addTab("Ytd", chinaDataYtd);
         m_tabbedPanel.addTab("Data ", chinaData);
-        m_tabbedPanel.addTab("Data ytd", chinadatamapytd);
-        m_tabbedPanel.addTab("Size", chinaSizeData);
-        m_tabbedPanel.addTab("Index", chinaindex);
-        m_tabbedPanel.addTab("Size ytd", csdy);
+        //m_tabbedPanel.addTab("Data ytd", chinadatamapytd);
+        //m_tabbedPanel.addTab("Size", chinaSizeData);
+        //m_tabbedPanel.addTab("Index", chinaindex);
+        //m_tabbedPanel.addTab("Size ytd", csdy);
         m_tabbedPanel.addTab("Connection", m_connectionPanel);
-        m_tabbedPanel.select("Stock ");
-        m_tabbedPanel.addTab(" HK Data", hkdata);
-        m_tabbedPanel.addTab(" HK Stock", hkstock);
+
+        //m_tabbedPanel.addTab(" HK Data", hkdata);
+        //m_tabbedPanel.addTab(" HK Stock", hkstock);
         m_tabbedPanel.addTab("Option", chinaOption);
         m_tabbedPanel.addTab("Hist China", histChina);
         m_tabbedPanel.addTab("US", usstock);
 
+        m_tabbedPanel.select("Stock ");
         m_msg.setEditable(false);
         m_msg.setLineWrap(true);
         JScrollPane msgScroll = new JScrollPane(m_msg);
@@ -191,7 +189,7 @@ public final class ChinaMain implements IConnectionHandler {
         JButton runAnalysis = new JButton("Run Analysis");
         runAnalysis.addActionListener((ae) -> Analysis.compute(LiveData.map1));
 
-        JButton startPool = new JButton("start Analysis");
+        //JButton startPool = new JButton("start Analysis");
         JButton startPool2 = new JButton("start Backtesting");
         JButton startXU = new JButton("ON XU");
         JButton startHK = new JButton("ON HK");
@@ -307,15 +305,15 @@ public final class ChinaMain implements IConnectionHandler {
         JButton roundDataButton = new JButton("Round");
         roundDataButton.addActionListener(l -> ChinaStockHelper.roundAllData());
 
-        startPool.addActionListener((ae) -> {
-            pool = Executors.newCachedThreadPool();
-            pool.execute(anacompute);
-        });
-
-        startPool2.addActionListener((ae) -> {
-            pool = Executors.newCachedThreadPool();
-            pool.execute(stratcompute);
-        });
+//        startPool.addActionListener((ae) -> {
+//            pool = Executors.newCachedThreadPool();
+//            pool.execute(anacompute);
+//        });
+//
+//        startPool2.addActionListener((ae) -> {
+//            pool = Executors.newCachedThreadPool();
+//            pool.execute(stratcompute);
+//        });
 
         startXU.addActionListener((ae) -> M_CONTROLLER.reqXUDataArray());
 
@@ -333,9 +331,9 @@ public final class ChinaMain implements IConnectionHandler {
 //            M_CONTROLLER.cancelTopMktData(xu.getBackfutHandler());
         });
 
-        JButton stopAnalysis = new JButton("Stop Analysis");
-        stopAnalysis.addActionListener((ae) -> pool.shutdownNow());
-        offShcomp.addActionListener((ae) -> ses.shutdown());
+        //JButton stopAnalysis = new JButton("Stop Analysis");
+        //stopAnalysis.addActionListener((ae) -> pool.shutdownNow());
+        //offShcomp.addActionListener((ae) -> ses.shutdown());
         saveAll.addActionListener((al) -> XU.saveXU());
         threadManager.add(getSinaData);
         threadManager.add(loadYesterday);
@@ -515,6 +513,10 @@ public final class ChinaMain implements IConnectionHandler {
 
                                     pr(" xu ");
                                     xutrader.openingProcess();
+
+                                    pr("options");
+                                    ChinaOption.model.fireTableDataChanged();
+
                                 }, 1, TimeUnit.MILLISECONDS);
 
                                 ses.schedule(() -> {
