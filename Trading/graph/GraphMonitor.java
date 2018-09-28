@@ -374,18 +374,8 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         setWtdSharpe(ChinaData.wtdSharpe.getOrDefault(symb, 0.0));
         setSize1(ChinaStock.sizeMap.getOrDefault(symb, 0L));
 
-
-//        if(HistChinaStocks.chinaTradeMap.containsKey(symbol)) {
-//            trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(symbol),
-//                    ChinaPosition.tradesMapFront.containsKey(symbol)?
-//                    ChinaPosition.tradesMapFront.get(symbol) : new ConcurrentSkipListMap<>());
-//        } else {
-
-
         trades = priceMapToLDT(ChinaPosition.tradesMap.containsKey(symb) ?
                 ChinaPosition.tradesMap.get(symb) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate);
-
-        //System.out.println(str("graph monitor symbol trade ", symbol, trades));
 
         if (HistChinaStocks.chinaTradeMap.containsKey(symb) && HistChinaStocks.chinaTradeMap.get(symb).size() > 0) {
             //LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
@@ -393,7 +383,6 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
                     LocalDateTime.of(ChinaMain.currentTradingDate, LocalTime.MIN), false),
                     priceMapToLDT(ChinaPosition.tradesMap.containsKey(symb) ?
                             ChinaPosition.tradesMap.get(symb) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate));
-            //System.out.println(" merged trade is " + trades);
         }
 
         if (NORMAL_STOCK.test(symb)) {
@@ -401,7 +390,6 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
             getYtdY2CloseP(symb);
         } else {
             if (priceMapBarDetail.get(symb).size() > 0) {
-                pr(" graph monitor ", symb, "pmbd size > 0 ");
                 this.setNavigableMap(pmbDetailToSimpleBar(priceMapBarDetail.get(symb)));
             } else {
                 this.setNavigableMap(new ConcurrentSkipListMap<>());
