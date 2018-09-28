@@ -323,8 +323,8 @@ public final class ChinaData extends JPanel {
             }
         }, es));
 
-        saveHibernate.addActionListener(al -> withHibernate());
-        saveDetailed.addActionListener(al -> withHibernateDetailed());
+        saveHibernate.addActionListener(al -> withHibernateManual());
+        saveDetailed.addActionListener(al -> withHibernateDetailedManual());
 
         saveOHLCButton.addActionListener(al -> saveChinaOHLC());
         loadHibGenPriceButton.addActionListener(al -> Hibtask.loadHibGenPrice());
@@ -512,7 +512,7 @@ public final class ChinaData extends JPanel {
         return mpTo;
     }
 
-    static void withHibernate() {
+    static void withHibernateManual() {
         CompletableFuture.runAsync(() -> {
             int maxSize = priceMapBar.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0);
             if (maxSize > 0) {
@@ -530,7 +530,7 @@ public final class ChinaData extends JPanel {
         });
     }
 
-    static void withHibernateDetailed() {
+    static void withHibernateDetailedManual() {
         CompletableFuture.runAsync(() -> {
             int maxSize = priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0);
             if (maxSize > 0) {
@@ -547,6 +547,31 @@ public final class ChinaData extends JPanel {
             }
         });
     }
+
+    static void withHibernateAuto() {
+        CompletableFuture.runAsync(() -> {
+            int maxSize = priceMapBar.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0);
+            if (maxSize > 0) {
+                pr(" saving pmb @", LocalTime.now());
+                saveHibGen(priceMapBar, sizeTotalMap, ChinaSave.getInstance());
+            } else {
+                pr(" cannot save price map bar minute ", "max size ", maxSize, "manual override");
+            }
+        });
+    }
+
+    static void withHibernateDetailedAuto() {
+        CompletableFuture.runAsync(() -> {
+            int maxSize = priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0);
+            if (maxSize > 0) {
+                pr(" saving price detailed @", LocalTime.now());
+                saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());
+            } else {
+                pr(" cannot save price bar detailed ", "max size", maxSize, "manual override");
+            }
+        });
+    }
+
 
     //static void hibSave
     private void hibSaveGenYtd() {

@@ -42,6 +42,7 @@ public class ReceiverUS implements LiveHandler {
                 usFreshPriceMap.put(symbol, price);
                 if (usLt.isAfter(ltof(3, 0)) && usLt.isBefore(ltof(17, 0))) {
                     ChinaData.priceMapBarDetail.get(symbol).put(usLt, price);
+                    outputToUSPriceTest("***********");
                     outputToUSPriceTest(str(" US -> PMB Detailed, SYMB, tt, symb, price,lastEntry "
                             , symbolToReceive, tt, symbol, price, ChinaData.priceMapBarDetail.get(symbol).lastEntry()));
                 }

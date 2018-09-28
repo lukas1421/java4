@@ -210,8 +210,8 @@ public final class ChinaMain implements IConnectionHandler {
             ses.scheduleAtFixedRate(() -> {
                 if (STOCK_COLLECTION_TIME.test(LocalDateTime.now())) {
                     XU.saveHibXU();
-                    ChinaData.withHibernate();
-                    ChinaData.withHibernateDetailed();
+                    ChinaData.withHibernateAuto();
+                    ChinaData.withHibernateDetailedAuto();
                     ChinaData.saveChinaOHLC();
                     ChinaData.outputPrices();
                     MorningTask.getBOCFX();
