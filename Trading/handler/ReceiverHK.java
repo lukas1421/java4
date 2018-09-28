@@ -24,7 +24,7 @@ public class ReceiverHK implements LiveHandler {
 
     @Override
     // name starts with hk
-    public synchronized void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
         pr("hk tt name, price t", tt, symbol, price, t);
 
         switch (tt) {

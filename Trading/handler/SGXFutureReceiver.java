@@ -28,7 +28,7 @@ public class SGXFutureReceiver implements LiveHandler {
 
 
     @Override
-    public synchronized void handlePrice(TickType tt, String symbol, double price, LocalDateTime ldt) {
+    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime ldt) {
         FutType f = FutType.get(symbol);
         LocalDateTime ldtMin = ldt.truncatedTo(MINUTES);
         LocalTime t = ldtMin.toLocalTime();

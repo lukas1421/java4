@@ -31,7 +31,7 @@ public class ReceiverUS implements LiveHandler {
 //    }
 
     @Override
-    public synchronized void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
         ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
         ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
         LocalDateTime usLdt = usZdt.toLocalDateTime();
@@ -40,9 +40,10 @@ public class ReceiverUS implements LiveHandler {
         switch (tt) {
             case LAST:
                 usFreshPriceMap.put(symbol, price);
-
-                if (usLt.isAfter(ltof(7, 0)) && usLt.isBefore(ltof(21, 0))) {
+                if (usLt.isAfter(ltof(3, 0)) && usLt.isBefore(ltof(21, 0))) {
                     ChinaData.priceMapBarDetail.get(symbol).put(usLt, price);
+                    outputToUSPriceTest(str(" US -> PMB Detailed, SYMB, tt, symb, price,lastEntry "
+                            , symbolToReceive, tt, symbol, price, ChinaData.priceMapBarDetail.get(symbol).lastEntry()));
                 }
                 processMainUS(symbol, usLdt, price);
                 ChinaStock.priceMap.put(symbol, price);
