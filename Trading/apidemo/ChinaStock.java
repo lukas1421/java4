@@ -815,14 +815,12 @@ public final class ChinaStock extends JPanel {
             } else {
                 List<RowFilter<Object, Object>> filters = new ArrayList<>(2);
                 filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, 0.0, A50_WEIGHT_COL));
-
                 List<RowSorter.SortKey> keys = new ArrayList<>();
                 RowSorter.SortKey sortkey = new RowSorter.SortKey(A50_WEIGHT_COL, SortOrder.DESCENDING);
                 keys.add(sortkey);
                 sorter.setSortKeys(keys);
                 sorter.setRowFilter(RowFilter.orFilter(filters));
                 sorter.sort();
-
                 filterOn = true;
             }
         });

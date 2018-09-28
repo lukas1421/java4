@@ -93,11 +93,13 @@ public final class ChinaMain implements IConnectionHandler {
     private final ChinaGraphIndustry gi = new ChinaGraphIndustry();
 
     public static HKData hkdata = new HKData();
-    private static HKStock hkstock = new HKStock();
+
     private static ChinaOption chinaOption = new ChinaOption();
     private static HistChinaStocks histChina = new HistChinaStocks();
     private static AutoTraderMain autoMain = new AutoTraderMain();
     private static AutoTraderXU xutrader = new AutoTraderXU(M_CONTROLLER);
+
+    private static HKStock hkstock = new HKStock();
     private static AutoTraderHK hkTrader = new AutoTraderHK();
     private static AutoTraderUS usTrader = new AutoTraderUS();
 
@@ -247,11 +249,11 @@ public final class ChinaMain implements IConnectionHandler {
         JButton showPMGraphs = new JButton("Show PM");
         showPMGraphs.addActionListener((ae) -> m_frame6.setVisible(!m_frame6.isVisible()));
 
-        JButton vrPageToggle = new JButton("Show VR");
-        vrPageToggle.addActionListener((ae) -> m_frame3.setVisible(!m_frame3.isVisible()));
-
-        JButton computeVR = new JButton("Compute VR");
-        computeVR.addActionListener((ae) -> ChinaSizeRatio.computeSizeRatio());
+//        JButton vrPageToggle = new JButton("Show VR");
+//        vrPageToggle.addActionListener((ae) -> m_frame3.setVisible(!m_frame3.isVisible()));
+//
+//        JButton computeVR = new JButton("Compute VR");
+//        computeVR.addActionListener((ae) -> ChinaSizeRatio.computeSizeRatio());
 
         JButton showBigGraph = new JButton("Big Graph");
         showBigGraph.addActionListener((ae) -> m_frame7.setVisible(!m_frame7.isVisible()));
