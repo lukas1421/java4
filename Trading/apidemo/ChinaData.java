@@ -333,17 +333,14 @@ public final class ChinaData extends JPanel {
         loadHibGenPriceButton.addActionListener(al -> Hibtask.loadHibGenPrice());
         loadHibDetailButton.addActionListener(al -> Hibtask.loadHibDetailPrice());
 
-
-        unloadHibPMBButton.addActionListener(al ->
-
-        {
+        unloadHibPMBButton.addActionListener(al -> {
             priceMapBar.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
+            SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
         });
 
-        unloadHibDetailButton.addActionListener(al ->
-
-        {
+        unloadHibDetailButton.addActionListener(al -> {
             priceMapBarDetail.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
+            SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
         });
         hibMorning.addActionListener(al -> {
             int ans = JOptionPane.showConfirmDialog(null, "are you sure", "", JOptionPane.YES_NO_OPTION);
