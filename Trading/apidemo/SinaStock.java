@@ -127,7 +127,6 @@ public class SinaStock implements Runnable {
 
                         if (globalTradingOn.get()) {
                             double atmVol = getATMVol(expiryToGet);
-                            //pr(" atm vol is ", expiryToGet, atmVol);
                             if (atmVol > XU_AUTO_VOL_THRESH) {
                                 indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
                                 indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee, same size
@@ -140,7 +139,7 @@ public class SinaStock implements Runnable {
                             //AutoTraderXU.indexFirstTickTrader(ldt, currIndexPrice); //1 tick, guarantee (decommission)
                             //AutoTraderXU.closeProfitTaker(ldt, currIndexPrice);
                             //AutoTraderXU.firstTickMAProfitTaker(ldt, currIndexPrice);
-                            //AutoTraderXU.indexHiloAccumulator(ldt, currIndexPrice);
+                            AutoTraderXU.indexHiloAccumulator(ldt, currIndexPrice);
                             //AutoTraderXU.intraday1stTickAccumulator(ldt, currIndexPrice);
                         }
                     }

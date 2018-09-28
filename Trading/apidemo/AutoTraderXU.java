@@ -804,10 +804,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         if (detailedPrint.get() && lt.getSecond() < 2) {
             pr(lt.truncatedTo(ChronoUnit.SECONDS),
-                    "||20DayMA ", _20DayMA, "||maxT>MinT: ", maxAfterMin, "||max>PrevC", maxAbovePrev,
+                    "||20DayMA ", _20DayMA, "vol ", getATMVol(expiryToGet),
+                    "||maxT>MinT: ", maxAfterMin, "||max>PrevC", maxAbovePrev,
                     "closeY", closePercY, "openPercY", openPercY, "pmchgy", pmChgY,
-                    "pmch", pmChg, "lastP", lastPerc, "delta range", getBearishTarget(), getBullishTarget()
-                    , "currDelta ", Math.round(currDelta), "a50 hilo dir: ", indexHiLoDirection
+                    "pmch", pmChg, "lastP", lastPerc,
+                    "delta range", getBearishTarget(), getBullishTarget()
+                    , "currDelta ", Math.round(currDelta)
                     , "no more buy/sell", noMoreBuy.get(), noMoreSell.get());
         }
 
@@ -1050,7 +1052,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //                                SinaStock.FTSE_OPEN), ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getSymbol(),
 //                                "CNY"), 1.0));
                         return e.getValue() * futPriceMap.getOrDefault(e.getKey(), SinaStock.FTSE_OPEN)
-                                * ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getTicker(),
+                                * ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getSymbol(),
                                 "CNY"), 1.0);
                     } else {
                         return 0.0;
@@ -1078,7 +1080,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                                 , LocalDateTime.of(frontMonthExpiryDate, ltof(15, 0))) / 72d;
                     }
                     return Math.max(0.0, factor) * e.getValue() * futPriceMap.getOrDefault(e.getKey(), SinaStock.FTSE_OPEN)
-                            * ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getTicker()
+                            * ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getSymbol()
                             , "CNY"), 1.0);
                 }).sum();
     }
@@ -3706,7 +3708,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         if (tradesMap.containsKey(f) && tradesMap.get(f).size() > 0) {
             return tradesMap.get(f).entrySet().stream()
                     .mapToDouble(e -> e.getValue().getSizeAll() * futPriceMap.getOrDefault(f, 0.0)
-                            + e.getValue().getCostBasisAll(f.getTicker())).sum();
+                            + e.getValue().getCostBasisAll(f.getSymbol())).sum();
         }
         return 0.0;
     }
@@ -3777,7 +3779,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         SwingUtilities.invokeLater(() -> {
             updateLog(" Expiry " + activeFutureCt.lastTradeDateOrContractMonth());
-            updateLog(str("ATM vol ",expiryToGet, getATMVol(expiryToGet)));
+            updateLog(str("ATM vol ", expiryToGet, getATMVol(expiryToGet)));
             updateLog(" NAV: " + currentIBNAV);
             updateLog(" P " + futPriceMap.getOrDefault(f, 0.0));
             updateLog(str(" Close3pm ", futPrevClose3pmMap.getOrDefault(f, 0.0),

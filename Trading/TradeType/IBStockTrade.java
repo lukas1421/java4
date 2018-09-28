@@ -1,8 +1,8 @@
 package TradeType;
 
-public class HKStockTrade extends Trade {
+public class IBStockTrade extends Trade {
 
-    public HKStockTrade(double p, int s) {
+    public IBStockTrade(double p, int s) {
         super(p, s);
     }
 

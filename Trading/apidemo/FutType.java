@@ -6,34 +6,36 @@ import java.util.Map;
 @SuppressWarnings("SpellCheckingInspection")
 public enum FutType {
     PreviousFut("SGXA50PR"), FrontFut("SGXA50"), BackFut("SGXA50BM");
-    private String tickerName;
-    FutType(String t) {
-        tickerName = t;
+    private String symbol;
+
+    FutType(String symb) {
+        symbol = symb;
     }
 
     private static final Map<String, FutType> lookup = new HashMap<>();
+
     static {
-        for(FutType t: FutType.values()) {
-            lookup.put(t.getTicker(),t);
+        for (FutType t : FutType.values()) {
+            lookup.put(t.getSymbol(), t);
         }
     }
 
-    public static FutType get(String ticker) {
-        if(lookup.containsKey(ticker)) {
-            return lookup.get(ticker);
+    public static FutType get(String symb) {
+        if (lookup.containsKey(symb)) {
+            return lookup.get(symb);
         }
-        throw new IllegalArgumentException(" cannot find ticker ");
+        throw new IllegalArgumentException(" cannot find symbol ");
     }
 
     /**
      * @return tickername
      */
-    public String getTicker() {
-        return tickerName;
+    public String getSymbol() {
+        return symbol;
     }
 
     @Override
     public String toString() {
-        return " fut type is " + getTicker();
+        return " fut type is " + getSymbol();
     }
 }

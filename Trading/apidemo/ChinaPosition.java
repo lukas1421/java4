@@ -241,7 +241,6 @@ public class ChinaPosition extends JPanel {
         JRadioButton rb2 = new JRadioButton("Buy Sell", false);
 
         autoUpdateButton = new JToggleButton("Auto Update");
-        //autoUpdateButton.setSelected(true);
 
         autoUpdateButton.addActionListener(l -> {
             if (autoUpdateButton.isSelected()) {
@@ -692,8 +691,8 @@ public class ChinaPosition extends JPanel {
         uniqueKeySet = new HashSet<>();
 
         for (FutType f : FutType.values()) {
-            if (ChinaPosition.tradesMap.containsKey(f.getTicker())) {
-                ChinaPosition.tradesMap.put(f.getTicker(), new ConcurrentSkipListMap<>());
+            if (ChinaPosition.tradesMap.containsKey(f.getSymbol())) {
+                ChinaPosition.tradesMap.put(f.getSymbol(), new ConcurrentSkipListMap<>());
             }
         }
 
@@ -714,34 +713,38 @@ public class ChinaPosition extends JPanel {
 //        openPositionMap.put("SGXA50", xuOpenPostion);
     }
 
-    static void refreshIBPosition() {
-        pr(" refreshing future ");
-        for (FutType f : FutType.values()) {
-//            if (f == FutType.PreviousFut && currentTradingDate.equals(getExpiredFutDate())) {
-//                currentPositionMap.put(f.getSymbol(), getExpiredFutUnits());
-//                pr(str(" fut expiry units date", getExpiredFutUnits(), getExpiredFutDate()));
+    private static void refreshIBPosition() {
+//        pr(" refreshing future ");
+//        for (FutType f : FutType.values()) {
+//            String symb = f.getSymbol();
+//            int xuBotPos = ChinaPosition.tradesMap.get(symb).entrySet().stream()
+//                    .filter(e -> e.getValue().getSizeAll() > 0)
+//                    .mapToInt(e -> e.getValue().getSizeAll()).sum();
+//            int xuSoldPos = ChinaPosition.tradesMap.get(symb).entrySet().stream()
+//                    .filter(e -> e.getValue().getSizeAll() < 0)
+//                    .mapToInt(e -> e.getValue().getSizeAll()).sum();
+//            int xuOpenPosition = currentPositionMap.getOrDefault(symb, 0) - xuBotPos - xuSoldPos;
+//            openPositionMap.put(symb, xuOpenPosition);
+//        }
+//
+//        currentPositionMap.forEach((k, v) -> {
+//            if (k.startsWith("hk") || k.startsWith("IQ")) {
+//                int bot = ChinaPosition.tradesMap.get(k).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
+//                        .mapToInt(e -> e.getValue().getSizeAll()).sum();
+//                int sold = ChinaPosition.tradesMap.get(k).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
+//                        .mapToInt(e -> e.getValue().getSizeAll()).sum();
+//                int openPos = currentPositionMap.getOrDefault(k, 0) - bot - sold;
+//                openPositionMap.put(k, openPos);
 //            }
-            String ticker = f.getTicker();
-            int xuBotPos = ChinaPosition.tradesMap.get(ticker).entrySet().stream()
-                    .filter(e -> e.getValue().getSizeAll() > 0)
+//        });
+//
+        tradesMap.keySet().forEach(k->{
+            int bot = ChinaPosition.tradesMap.get(k).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
-            int xuSoldPos = ChinaPosition.tradesMap.get(ticker).entrySet().stream()
-                    .filter(e -> e.getValue().getSizeAll() < 0)
+            int sold = ChinaPosition.tradesMap.get(k).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
-            int xuOpenPosition = currentPositionMap.getOrDefault(ticker, 0) - xuBotPos - xuSoldPos;
-            openPositionMap.put(ticker, xuOpenPosition);
-        }
-
-        currentPositionMap.forEach((k, v) -> {
-            //if (k.startsWith("hk")) {
-            if (k.startsWith("hk") || k.startsWith("IQ")) {
-                int bot = ChinaPosition.tradesMap.get(k).entrySet().stream().filter(e -> e.getValue().getSizeAll() > 0)
-                        .mapToInt(e -> e.getValue().getSizeAll()).sum();
-                int sold = ChinaPosition.tradesMap.get(k).entrySet().stream().filter(e -> e.getValue().getSizeAll() < 0)
-                        .mapToInt(e -> e.getValue().getSizeAll()).sum();
-                int hkOpenPos = currentPositionMap.getOrDefault(k, 0) - bot - sold;
-                openPositionMap.put(k, hkOpenPos);
-            }
+            int openPos = currentPositionMap.getOrDefault(k, 0) - bot - sold;
+            openPositionMap.put(k, openPos);
         });
     }
 
@@ -1682,10 +1685,10 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
             if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth()) {
                 if (ChinaPosition.tradesMap.get(symbol).containsKey(lt)) {
                     ChinaPosition.tradesMap.get(symbol).get(lt)
-                            .addTrade(new HKStockTrade(execution.price(), (int) Math.round(sign * execution.shares())));
+                            .addTrade(new IBStockTrade(execution.price(), (int) Math.round(sign * execution.shares())));
                 } else {
                     ChinaPosition.tradesMap.get(symbol).put(lt,
-                            new TradeBlock(new HKStockTrade(execution.price(),
+                            new TradeBlock(new IBStockTrade(execution.price(),
                                     (int) Math.round(sign * execution.shares()))));
                 }
             }
@@ -1702,8 +1705,8 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
         });
 
         for (FutType ft : FutType.values()) {
-            if (ChinaPosition.tradesMap.containsKey(ft.getTicker()) &&
-                    ChinaPosition.tradesMap.get(ft.getTicker()).size() > 0) {
+            if (ChinaPosition.tradesMap.containsKey(ft.getSymbol()) &&
+                    ChinaPosition.tradesMap.get(ft.getSymbol()).size() > 0) {
 //                pr(str(" tradeReportEnd :: printing trades map ", ft.getSymbol(),
 //                        ChinaPosition.tradesMap.get(ft.getSymbol())));
             }

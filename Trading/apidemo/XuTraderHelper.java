@@ -169,7 +169,7 @@ public class XuTraderHelper {
 
 
     private static void outputPurelyOrders(String s, File order, File detailed) {
-        outputPurelyOrdersDetailed(s, detailed);
+        outputDetailedXU(s, detailed);
         //File output = new File(TradingConstants.GLOBALPATH + "orders.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(order, true))) {
             out.append(s);
@@ -183,7 +183,16 @@ public class XuTraderHelper {
         outputPurelyOrders(s, xuOrderOutput, xuDetailOutput);
     }
 
-    private static void outputPurelyOrdersDetailed(String s, File detailed) {
+    public static void outputDetailed(String s) {
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(xuDetailOutput, true))) {
+            out.append(s);
+            out.newLine();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    static void outputDetailedXU(String s, File detailed) {
         //File output = new File(TradingConstants.GLOBALPATH + "ordersDetailed.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(detailed, true))) {
             out.append(s);
@@ -194,7 +203,7 @@ public class XuTraderHelper {
     }
 
     public static void outputPurelyOrdersDetailedXU(String s) {
-        outputPurelyOrdersDetailed(s, xuDetailOutput);
+        outputDetailedXU(s, xuDetailOutput);
         //File output = new File(TradingConstants.GLOBALPATH + "ordersDetailed.txt");
     }
 

@@ -937,7 +937,7 @@ public class HistChinaStocks extends JPanel {
 
     private static NavigableMap<LocalDateTime, Double> computeWtdMtmPnl(Predicate<? super Map.Entry<String, ?>> p) {
         for (FutType f : FutType.values()) {
-            String ticker = f.getTicker();
+            String ticker = f.getSymbol();
             weekOpenPositionMap.put(ticker, currentPositionMap.getOrDefault(ticker, 0)
                     - wtdChgInPosition.getOrDefault(ticker, 0));
         }

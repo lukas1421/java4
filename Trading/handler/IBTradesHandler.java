@@ -30,7 +30,7 @@ public class IBTradesHandler implements ApiController.ITradeReportHandler {
         LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
         LocalDateTime ldtRoundTo5 = Utility.roundTo5Ldt(ldt);
         if (ldt.toLocalDate().isAfter(Utility.getMondayOfWeek(ldt).minusDays(1L))) {
-            Class c = ticker.startsWith("hk") ? HKStockTrade.class : ticker.startsWith("SGXA50") ?
+            Class c = ticker.startsWith("hk") ? IBStockTrade.class : ticker.startsWith("SGXA50") ?
                     FutureTrade.class : NormalTrade.class;
 
             pr(ticker, execution.time(), execution.shares(), c.getName());
@@ -67,8 +67,8 @@ public class IBTradesHandler implements ApiController.ITradeReportHandler {
     public void tradeReportEnd() {
 
         for (FutType f : FutType.values()) {
-            pr(" type is " + f + " ticker is " + f.getTicker());
-            String ticker = f.getTicker();
+            pr(" type is " + f + " ticker is " + f.getSymbol());
+            String ticker = f.getSymbol();
             if (ticker.equalsIgnoreCase("SGXA50PR")) {
                 chinaTradeMap.get(ticker).put(LocalDateTime.of(LocalDate
                                 .parse(TradingConstants.A50_LAST_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd")),
