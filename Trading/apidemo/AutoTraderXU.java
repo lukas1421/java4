@@ -1214,8 +1214,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     , maxP, minP, "open/last ", futOpen, futLast, "maxT, minT", maxT, minT);
         }
 
-        int buySize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
-        int sellSize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
+        int buySize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
+        int sellSize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
 
         if (lt.isAfter(ltof(8, 59)) &&
                 (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat)) {
@@ -2092,8 +2092,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             }
             return;
         }
-        int buyQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
-        int sellQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
+        int buyQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
+        int sellQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
         int totalFilled = (int) getOrderTotalSignedQForTypeFilled(futSymbol, INDEX_PM_HILO);
 
         if (lt.isAfter(cutoff)) {
@@ -2207,7 +2207,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return LocalDateTime.of(d, t);
     }
 
-    static LocalTime ltof(int h, int m) {
+    public static LocalTime ltof(int h, int m) {
         return LocalTime.of(h, m);
     }
 
@@ -2466,8 +2466,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         long numOrders = getOrderSizeForTradeType(symbol, INDEX_HILO);
         LocalDateTime lastOrderT = getLastOrderTime(symbol, INDEX_HILO);
         long milliLastTwoOrder = lastTwoOrderMilliDiff(symbol, INDEX_HILO);
-        int buyQ = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
-        int sellQ = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 2);
+        int buyQ = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
+        int sellQ = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
 
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
         int _2dayPerc = getPercentileForLast(fut);

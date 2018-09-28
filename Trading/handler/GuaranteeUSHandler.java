@@ -82,7 +82,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
                 globalIdOrderMap.put(newID, new OrderAugmented(symbol, LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
-//                outputToAll(str(globalIdOrderMap.get(primaryID).getOrder().orderId(),
+//                outputDetailedUS(str(globalIdOrderMap.get(primaryID).getOrder().orderId(),
 //                        prevOrder.orderId(), "->", o.orderId(),
 //                        "US RESUBMIT:", globalIdOrderMap.get(newID).getOrderType(),
 //                        o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), globalIdOrderMap.get(newID).isPrimaryOrder(),

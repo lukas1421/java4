@@ -4,7 +4,6 @@ import apidemo.ChinaData;
 import apidemo.ChinaMain;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import utility.Utility;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -17,8 +16,8 @@ import java.time.temporal.Temporal;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import static java.time.temporal.ChronoUnit.SECONDS;
 import static utility.Utility.pr;
+import static utility.Utility.str;
 
 public class Hibtask {
 
@@ -76,25 +75,13 @@ public class Hibtask {
     }
 
     public static void loadHibGenPrice() {
-        LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
-        CompletableFuture.runAsync(() -> {
-            loadHibGen(ChinaSave.getInstance());
-        }).thenAccept(
-                v -> ChinaMain.updateSystemNotif(Utility.str(" LOAD HIB T DONE ",
-                        LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
-                        SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
-                ))
-        );
+        CompletableFuture.runAsync(() -> loadHibGen(ChinaSave.getInstance()))
+                .thenAccept(v -> ChinaMain.updateSystemNotif(str(" LOAD HIB T DONE ")));
     }
 
     public static void loadHibDetailPrice() {
-        LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
-        CompletableFuture.runAsync(() -> loadHibGen(ChinaSaveDetailed.getInstance())).thenAccept(
-                v -> ChinaMain.updateSystemNotif(Utility.str(" LOAD Detail DONE ",
-                        LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
-                        SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))
-                ))
-        );
+        CompletableFuture.runAsync(() -> loadHibGen(ChinaSaveDetailed.getInstance()))
+                .thenAccept(v -> ChinaMain.updateSystemNotif(str(" LOAD Detail DONE ")));
     }
 
     public static void hibernateMorningTask() {
@@ -114,13 +101,13 @@ public class Hibtask {
                 }
                 session.getTransaction().commit();
             }
-        }).thenAccept(v -> ChinaMain.updateSystemNotif(Utility.str(
+        }).thenAccept(v -> ChinaMain.updateSystemNotif(str(
                 " HIB Today -> YTD DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)))
         ).thenAccept(v -> {
             CompletableFuture.runAsync(Hibtask::loadHibGenPrice);
             CompletableFuture.runAsync(ChinaData::loadHibernateYesterday);
         }).thenAccept(v -> {
-            ChinaMain.updateSystemNotif(Utility.str(" Loading done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+            ChinaMain.updateSystemNotif(str(" Loading done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
         });
     }
 

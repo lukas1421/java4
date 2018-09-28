@@ -1,6 +1,7 @@
+import apidemo.AutoTraderHK;
+import client.Contract;
 import controller.ApiConnection;
 import controller.ApiController;
-import handler.ReceiverUS;
 
 import java.time.LocalTime;
 import java.util.concurrent.CountDownLatch;
@@ -41,8 +42,11 @@ public class TestAPI {
         pr(" Time after latch released " + LocalTime.now());
 
         // req
-        ap.reqUSAutoTrader();
-        ap.req1StockLive("IQ", "SMART", "USD", new ReceiverUS("IQ"), false);
+        //ap.reqUSAutoTrader();
+        //ap.req1StockLive("IQ", "SMART", "USD", new ReceiverUS("IQ"), false);
+        Contract hkTestCont = AutoTraderHK.tickerToHKContract("5");
+        ap.reqContractDetails(hkTestCont, new ApiController.IContractDetailsHandler.DefaultContractDetailsHandler());
+
 
     }
 }

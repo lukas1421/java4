@@ -1699,9 +1699,7 @@ public class ApiController implements EWrapper {
         }
 
         if (o.orderId() == 0) {
-            outputToAll(str("order id is 0 ", ct.symbol(), o.action(),
-                    o.lmtPrice(), o.totalQuantity()));
-            throw new IllegalStateException(" order id is 0");
+            o.orderId(m_orderId.incrementAndGet());
         }
 
         if (handler != null) {

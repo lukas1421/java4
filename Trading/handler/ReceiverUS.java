@@ -11,6 +11,7 @@ import java.time.ZonedDateTime;
 import static apidemo.AutoTraderMain.chinaZone;
 import static apidemo.AutoTraderMain.nyZone;
 import static apidemo.AutoTraderUS.*;
+import static apidemo.AutoTraderXU.ltof;
 import static apidemo.XuTraderHelper.outputDetailedUS;
 import static apidemo.XuTraderHelper.outputToUSPriceTest;
 import static utility.Utility.str;
@@ -39,7 +40,10 @@ public class ReceiverUS implements LiveHandler {
         switch (tt) {
             case LAST:
                 usFreshPriceMap.put(symbol, price);
-                ChinaData.priceMapBarDetail.get(symbol).put(usLt, price);
+
+                if (usLt.isAfter(ltof(7, 0)) && usLt.isBefore(ltof(21, 0))) {
+                    ChinaData.priceMapBarDetail.get(symbol).put(usLt, price);
+                }
                 processMainUS(symbol, usLdt, price);
                 ChinaStock.priceMap.put(symbol, price);
                 outputToUSPriceTest(str(" US handle price ", symbolToReceive,

@@ -210,6 +210,7 @@ public final class ChinaMain implements IConnectionHandler {
                 if (STOCK_COLLECTION_TIME.test(LocalDateTime.now())) {
                     XU.saveHibXU();
                     ChinaData.withHibernate();
+                    ChinaData.withHibernateDetailed();
                     ChinaData.saveChinaOHLC();
                     ChinaData.outputPrices();
                     MorningTask.getBOCFX();

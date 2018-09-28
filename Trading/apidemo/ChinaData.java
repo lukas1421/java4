@@ -348,8 +348,8 @@ public final class ChinaData extends JPanel {
                 //Hibtask.hibernateMorningTask();
             }
         });
-        saveBidAsk.addActionListener(al -> hibSaveGenBidAsk());
-        loadHibBidAsk.addActionListener(al -> loadHibGenBidAsk());
+        //saveBidAsk.addActionListener(al -> hibSaveGenBidAsk());
+        //loadHibBidAsk.addActionListener(al -> loadHibGenBidAsk());
         //saveStratButton.addActionListener(al -> saveHibGen(strategyTotalMap, new ConcurrentHashMap<>(), ChinaSaveStrat.getInstance()));
         saveHibYtdButton.addActionListener(al -> hibSaveGenYtd());
         saveHibY2Button.addActionListener(al -> hibSaveGenY2());
@@ -517,14 +517,6 @@ public final class ChinaData extends JPanel {
 
     static void withHibernate() {
         CompletableFuture.runAsync(() -> {
-//            if (priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
-//                pr(" saving price detailed @", LocalTime.now());
-//                saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());
-//            } else {
-//                pr(" cannot save price bar detailed ", "max size", priceMapBarDetail.entrySet().stream()
-//                        .mapToInt(e -> e.getValue().size()).max().orElse(0));
-//            }
-
             if (priceMapBar.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
                 pr(" saving pmb @", LocalTime.now());
                 saveHibGen(priceMapBar, sizeTotalMap, ChinaSave.getInstance());
@@ -535,7 +527,7 @@ public final class ChinaData extends JPanel {
         });
     }
 
-    private static void withHibernateDetailed() {
+    static void withHibernateDetailed() {
         CompletableFuture.runAsync(() -> {
             if (priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
                 pr(" saving price detailed @", LocalTime.now());
