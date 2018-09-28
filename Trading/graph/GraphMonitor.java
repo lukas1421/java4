@@ -401,6 +401,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
             getYtdY2CloseP(symb);
         } else {
             if (priceMapBarDetail.get(symb).size() > 0) {
+                pr(" graph monitor ", symb, "pmbd size > 0 ");
                 this.setNavigableMap(pmbDetailToSimpleBar(priceMapBarDetail.get(symb)));
             } else {
                 this.setNavigableMap(new ConcurrentSkipListMap<>());
@@ -422,9 +423,10 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         } else if (dispGran == DisplayGranularity._5MDATA) {
             if (HistChinaStocks.chinaWtd.containsKey(symbol) && HistChinaStocks.chinaWtd.get(symbol).size() > 0) {
                 res = trimMapWithLocalTimePred(mergeMaps(HistChinaStocks.chinaWtd.get(symbol)
-                        , Utility.map1mTo5m(tmIn)), chinaTradingTimePred);
+                        , Utility.map1mTo5m(tmIn)), e -> true);
             } else {
-                res = trimMapWithLocalTimePred(priceMapToLDT(map1mTo5m(tmIn), ChinaMain.currentTradingDate), chinaTradingTimePred);
+                res = trimMapWithLocalTimePred(priceMapToLDT(map1mTo5m(tmIn), ChinaMain.currentTradingDate), e -> true);
+                //res = trimMapWithLocalTimePred(priceMapToLDT(map1mTo5m(tmIn), ChinaMain.currentTradingDate), chinaTradingTimePred);
             }
         }
         NavigableMap<LocalDateTime, SimpleBar> finalRes = res;
