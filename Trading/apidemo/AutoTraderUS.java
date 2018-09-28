@@ -386,9 +386,6 @@ public class AutoTraderUS {
         long milliLastTwo = lastTwoOrderMilliDiff(symbol, US_STOCK_HILO);
         int waitSec = (milliLastTwo < 60000) ? 300 : 10;
 
-//        double buySize = US_SIZE;
-//        double sellSize = US_SIZE;
-
         double buySize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 2);
         double sellSize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 2);
 

@@ -52,13 +52,18 @@ public class OrderAugmented {
         primaryOrder.set(primary);
     }
 
-    public double getPnl(double currPrice) {
+    public double getPnl(String symb, double currPrice) {
+        double costPerUnit = 0.0;
+        if (symb.startsWith("SGXA50")) {
+            costPerUnit = FutureTrade.COST_PER_LOT;
+        }
+
         double tradedPrice = order.lmtPrice();
         double size = order.totalQuantity();
         if (order.action() == Types.Action.BUY) {
-            return Math.round(100d * (currPrice - tradedPrice - FutureTrade.COST_PER_LOT) * size) / 100d;
+            return Math.round(100d * (currPrice - tradedPrice - costPerUnit) * size) / 100d;
         } else if (order.action() == Types.Action.SELL) {
-            return Math.round(100d * (tradedPrice - currPrice - FutureTrade.COST_PER_LOT) * size) / 100d;
+            return Math.round(100d * (tradedPrice - currPrice - costPerUnit) * size) / 100d;
         }
         return 0.0;
     }

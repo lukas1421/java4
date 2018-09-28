@@ -162,7 +162,7 @@ public final class ChinaStock extends JPanel {
     private static volatile int vrMinTCeiling;
     private static volatile double ratioBreakFloor;
     private static volatile double rangeBreakFloor;
-    static volatile String selectedNameStock = "";
+    private static volatile String selectedNameStock = "";
     private static volatile String selectedIndustry = "";
     private static volatile String selectedBench = "";
 

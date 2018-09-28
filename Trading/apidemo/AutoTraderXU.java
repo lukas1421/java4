@@ -3704,6 +3704,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         //pr(" compute trade map active ", ibContractToFutType(activeFutureCt));
         FutType f = ibContractToFutType(activeFutureCt);
         LocalTime lt = LocalTime.now();
+        String symbol = ibContractToSymbol(activeFutureCt);
 
         Predicate<LocalDateTime> dateP = t -> t.isAfter(LocalDateTime.of(getTradeDate(LocalDateTime.now()),
                 ltof(8, 59)));
@@ -3743,21 +3744,23 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 LocalDateTime.of(getTradeDate(LocalDateTime.now()), ltof(8, 59))));
 
         Map<AutoOrderType, Double> quantitySumByOrder = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getSymbol().equals(symbol))
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .collect(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType(),
                         Collectors.summingDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())));
 
         Map<AutoOrderType, Long> numTradesByOrder = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getSymbol().equals(symbol))
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .collect(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType(),
                         Collectors.counting()));
 
         String pnlString = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getSymbol().equals(ibContractToSymbol(activeFutureCt)))
+                .filter(e -> e.getValue().getSymbol().equals(symbol))
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .collect(Collectors.collectingAndThen(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType()
                         , ConcurrentSkipListMap::new
-                        , Collectors.summingDouble(e -> e.getValue().getPnl(futPriceMap.get(f)))),
+                        , Collectors.summingDouble(e -> e.getValue().getPnl(symbol, futPriceMap.get(f)))),
                         e -> e.entrySet().stream().sorted(reverseComp(Comparator.comparing(Map.Entry::getValue)))
                                 .map(e1 -> str("|||", e1.getKey(),
                                         "#:", numTradesByOrder.getOrDefault(e1.getKey(), 0L),

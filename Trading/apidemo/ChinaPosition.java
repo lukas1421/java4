@@ -7,6 +7,7 @@ import controller.ApiController;
 import graph.GraphPnl;
 import handler.HistoricalHandler;
 import handler.IBPositionHandler;
+import util.AutoOrderType;
 import utility.SharpeUtility;
 import utility.Utility;
 
@@ -39,16 +40,20 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static apidemo.AutoTraderMain.chinaZone;
-import static apidemo.AutoTraderMain.nyZone;
+import static apidemo.AutoTraderMain.*;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaMain.currentTradingDate;
 import static apidemo.ChinaPosition.costMap;
 import static apidemo.ChinaStock.*;
+import static apidemo.ChinaStockHelper.reverseComp;
+import static client.OrderStatus.Filled;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
+
+//import static apidemo.ChinaStock.priceMap;
+//import static apidemo.ChinaStock.symbolNames;
 
 public class ChinaPosition extends JPanel {
 
@@ -66,7 +71,7 @@ public class ChinaPosition extends JPanel {
     private static Map<String, ConcurrentSkipListMap<LocalTime, Double>> tradePnlMap = new ConcurrentHashMap<>();
     public static volatile HashMap<String, Double> wtdMaxMap = new HashMap<>();
     public static volatile HashMap<String, Double> wtdMinMap = new HashMap<>();
-    private static String selectedNameStock;
+    private static String selected;
     private static volatile NavigableMap<LocalTime, Double> mtmPNLMap;
     private static volatile NavigableMap<LocalTime, Double> tradePNLMap = new ConcurrentSkipListMap<>();
     private static volatile NavigableMap<LocalTime, Double> netPNLMap;
@@ -147,9 +152,37 @@ public class ChinaPosition extends JPanel {
                 Component comp = super.prepareRenderer(renderer, Index_row, Index_col);
                 if (isCellSelected(Index_row, Index_col)) {
                     modelRow = this.convertRowIndexToModel(Index_row);
-                    selectedNameStock = ChinaStock.symbolNames.get(modelRow);
-                    mtmPnlCompute(e -> e.getKey().equals(selectedNameStock), selectedNameStock);
-                    CompletableFuture.runAsync(() -> ChinaBigGraph.setGraph(selectedNameStock));
+                    selected = ChinaStock.symbolNames.get(modelRow);
+                    mtmPnlCompute(e -> e.getKey().equals(selected), selected);
+                    CompletableFuture.runAsync(() -> ChinaBigGraph.setGraph(selected));
+
+                    CompletableFuture.runAsync(() -> {
+                        Map<AutoOrderType, Double> quantitySumByOrder = globalIdOrderMap.entrySet().stream()
+                                .filter(e -> e.getValue().getSymbol().equals(selected))
+                                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
+                                .collect(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType(),
+                                        Collectors.summingDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())));
+
+                        Map<AutoOrderType, Long> numTradesByOrder = globalIdOrderMap.entrySet().stream()
+                                .filter(e -> e.getValue().getSymbol().equals(selected))
+                                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
+                                .collect(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType(),
+                                        Collectors.counting()));
+
+                        String pnlString = globalIdOrderMap.entrySet().stream()
+                                .filter(e -> e.getValue().getSymbol().equals(selected))
+                                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
+                                .collect(Collectors.collectingAndThen(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType()
+                                        , ConcurrentSkipListMap::new
+                                        , Collectors.summingDouble(e -> e.getValue()
+                                                .getPnl(selected, priceMap.getOrDefault(selected, 0.0)))),
+                                        e -> e.entrySet().stream().sorted(reverseComp(Comparator.comparing(Map.Entry::getValue)))
+                                                .map(e1 -> str("|||", e1.getKey(),
+                                                        "#:", numTradesByOrder.getOrDefault(e1.getKey(), 0L),
+                                                        "Tot Q: ", quantitySumByOrder.getOrDefault(e1.getKey(), 0d), r(e1.getValue())))
+                                                .collect(Collectors.joining(","))));
+                        pr(selected, pnlString);
+                    });
                 }
                 return comp;
             }

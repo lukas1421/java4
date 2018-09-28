@@ -223,7 +223,7 @@ public class XuTraderHelper {
         outputDetailedGen(msg, usDetailOutput);
     }
 
-    public static void outputDetailedUSSymbol(String symbol, String msg) {
+    private static void outputDetailedUSSymbol(String symbol, String msg) {
         outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
 
     }
