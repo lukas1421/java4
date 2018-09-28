@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
 
 import static apidemo.AutoTraderXU.findOrderByTWSID;
+import static apidemo.AutoTraderXU.ltof;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaKeyMonitor.dispGran;
@@ -38,7 +39,7 @@ import static utility.Utility.*;
 
 public class GraphMonitor extends JComponent implements GraphFillable, MouseListener, MouseMotionListener {
 
-    private static final int WIDTH_MON = 2;
+    //private static final int WIDTH_MON = 2;
     String symbol;
     String chineseName;
     private volatile NavigableMap<LocalDateTime, SimpleBar> tm;
@@ -202,7 +203,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
                 }
             }
 
-            if (roundDownToN(mouseXCord, WIDTH_MON) == x - 5) {
+            if (roundDownToN(mouseXCord, ChinaKeyMonitor.displayWidth) == x - 5) {
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2F));
                 g.drawString(lt.toLocalTime().toString() + " " + Math.round(100d * tm.floorEntry(lt).getValue().getClose()) / 100d,
                         (mouseXCord <= (getWidth() / 2)) ? x : x - (getWidth() / 3),
@@ -212,7 +213,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
             }
 
-            x += WIDTH_MON;
+            x += ChinaKeyMonitor.displayWidth;
         }
 
         if (mouseXCord > x && mouseXCord < getWidth() && tm.size() > 0) {
@@ -409,13 +410,15 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         NavigableMap<LocalDateTime, SimpleBar> res = new ConcurrentSkipListMap<>();
 
         if (dispGran == DisplayGranularity._1MDATA) {
-            res = priceMapToLDT(tmIn, ChinaMain.currentTradingDate);
+            res = trimMapWithLocalTimePred(priceMapToLDT(tmIn, ChinaMain.currentTradingDate),
+                    e -> e.isAfter(ltof(8, 59)));
         } else if (dispGran == DisplayGranularity._5MDATA) {
             if (HistChinaStocks.chinaWtd.containsKey(symbol) && HistChinaStocks.chinaWtd.get(symbol).size() > 0) {
                 res = trimMapWithLocalTimePred(mergeMaps(HistChinaStocks.chinaWtd.get(symbol)
-                        , Utility.map1mTo5m(tmIn)), e -> true);
+                        , Utility.map1mTo5m(tmIn)), e -> e.isAfter(ltof(8, 59)));
             } else {
-                res = trimMapWithLocalTimePred(priceMapToLDT(map1mTo5m(tmIn), ChinaMain.currentTradingDate), e -> true);
+                res = trimMapWithLocalTimePred(priceMapToLDT(map1mTo5m(tmIn), ChinaMain.currentTradingDate),
+                        e -> e.isAfter(ltof(8, 59)));
                 //res = trimMapWithLocalTimePred(priceMapToLDT(map1mTo5m(tmIn), ChinaMain.currentTradingDate), chinaTradingTimePred);
             }
         }

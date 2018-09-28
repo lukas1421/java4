@@ -55,6 +55,8 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 
     public static volatile DisplayGranularity dispGran = DisplayGranularity._1MDATA;
 
+    public static volatile int displayWidth = 2;
+
     private static volatile ToDoubleFunction<Entry<String, Integer>> positionComparingFunc =
             e -> Math.abs(fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
                     * e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0));
@@ -708,8 +710,11 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
             SwingUtilities.invokeLater(() -> jp.repaint());
         });
 
-        JButton minSharpeButton = new JButton("MinSharpe");
-        minSharpeButton.addActionListener(al -> ChinaStockHelper.computeMinuteSharpeAll());
+        JButton changeDisplaySizeButton = new JButton("DispWidth");
+        changeDisplaySizeButton.addActionListener(al -> {
+            displayWidth = (displayWidth == 2) ? 1 : 2;
+            //ChinaStockHelper.computeMinuteSharpeAll();
+        });
 
         paneList.forEach((JScrollPane p) -> p.addMouseListener(new MouseAdapter() {
             @Override
@@ -745,7 +750,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         northPanel.add(computeButton);
         northPanel.add(stopComputeButton);
         northPanel.add(refreshButton);
-        northPanel.add(minSharpeButton);
+        northPanel.add(changeDisplaySizeButton);
 
         northPanel.add(Box.createHorizontalStrut(20));
         northPanel.add(displayWhatLabel);
