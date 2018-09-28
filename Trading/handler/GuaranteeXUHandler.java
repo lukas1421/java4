@@ -83,7 +83,7 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
                         ibContractToSymbol(activeFutureCt), LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
-                outputOrderToAutoLogXU(str(globalIdOrderMap.get(primaryID).getOrder().orderId(),
+                outputToAll(str(globalIdOrderMap.get(primaryID).getOrder().orderId(),
                         prevOrder.orderId(), "->", o.orderId(),
                         "XU RESUBMIT:", globalIdOrderMap.get(id).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), globalIdOrderMap.get(id).isPrimaryOrder(),
@@ -102,9 +102,7 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-//        outputOrderToAutoLogXU(str("ERROR", "Guarantee XU handler: defaultID", defaultID, "error code",
-//                errorCode, errorMsg, globalIdOrderMap.get(defaultID)));
-        outputToErrorLog(str("ERROR", "Guarantee XU handler: defaultID", defaultID, "error code",
+        outputToError(str("ERROR", "Guarantee XU handler: defaultID", defaultID, "error code",
                 errorCode, errorMsg, globalIdOrderMap.get(defaultID)));
     }
 }

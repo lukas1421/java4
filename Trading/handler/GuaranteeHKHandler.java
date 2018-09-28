@@ -11,7 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import static apidemo.AutoTraderHK.*;
 import static apidemo.AutoTraderMain.autoTradeID;
 import static apidemo.AutoTraderMain.globalIdOrderMap;
-import static apidemo.XuTraderHelper.*;
+import static apidemo.XuTraderHelper.outputDetailedHK;
+import static apidemo.XuTraderHelper.outputToError;
 import static client.OrderStatus.ConstructedInHandler;
 import static client.OrderStatus.PendingCancel;
 import static client.Types.TimeInForce.IOC;
@@ -55,7 +56,7 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
                     "ID:", defaultID, globalIdOrderMap.get(defaultID),
                     "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
 
-            outputDetailedXU(msg);
+            outputDetailedHK(msg);
 
             if (orderState.status() == PendingCancel && globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {
 
@@ -80,7 +81,7 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
-                outputOrderToAutoLogXU(str(prevOrder.orderId(), "->", o.orderId(),
+                outputDetailedHK(str(prevOrder.orderId(), "->", o.orderId(),
                         "RESUBMIT HK. Type, TIF, Action, P, Q, Primary?", globalIdOrderMap.get(id).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), globalIdOrderMap.get(id).isPrimaryOrder(),
                         "current", globalIdOrderMap.get(id), "bid ask sp last"
@@ -97,9 +98,9 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-//        outputOrderToAutoLogXU(str("ERROR", "Guarantee HK handler:", defaultID, errorCode, errorMsg
+//        outputDetailedHK(str("ERROR", "Guarantee HK handler:", defaultID, errorCode, errorMsg
 //                , globalIdOrderMap.get(defaultID)));
-        outputToErrorLog(str("ERROR", "Guarantee HK handler:", defaultID, errorCode, errorMsg
+        outputToError(str("ERROR", "Guarantee HK handler:", defaultID, errorCode, errorMsg
                 , globalIdOrderMap.get(defaultID)));
     }
 }

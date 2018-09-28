@@ -11,8 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import static apidemo.AutoTraderMain.autoTradeID;
 import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderUS.*;
-import static apidemo.XuTraderHelper.outputDetailedXU;
-import static apidemo.XuTraderHelper.outputToErrorLog;
+import static apidemo.XuTraderHelper.outputDetailedUS;
+import static apidemo.XuTraderHelper.outputToError;
 import static client.OrderStatus.Filled;
 import static client.OrderStatus.PendingCancel;
 import static client.Types.TimeInForce.IOC;
@@ -58,7 +58,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
                         "*GUARANTEE US FILL*", idStatusMap.get(defaultID), "->", orderState.status(), now,
                         "ID:", defaultID, globalIdOrderMap.get(defaultID),
                         "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
-                outputDetailedXU(msg);
+                outputDetailedUS(msg);
             }
 
             if (orderState.status() == PendingCancel && globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {
@@ -82,7 +82,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
                 globalIdOrderMap.put(newID, new OrderAugmented(symbol, LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
-//                outputOrderToAutoLogXU(str(globalIdOrderMap.get(primaryID).getOrder().orderId(),
+//                outputToAll(str(globalIdOrderMap.get(primaryID).getOrder().orderId(),
 //                        prevOrder.orderId(), "->", o.orderId(),
 //                        "US RESUBMIT:", globalIdOrderMap.get(newID).getOrderType(),
 //                        o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), globalIdOrderMap.get(newID).isPrimaryOrder(),
@@ -101,11 +101,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-/*
-        outputOrderToAutoLogXU(str("ERROR:", "Guarantee US handler:", defaultID, errorCode, errorMsg
-                , globalIdOrderMap.get(defaultID)));
-*/
-        outputToErrorLog(str("ERROR:", "Guarantee US handler:", defaultID, errorCode, errorMsg
+        outputToError(str("ERROR:", "Guarantee US handler:", defaultID, errorCode, errorMsg
                 , globalIdOrderMap.get(defaultID)));
     }
 }

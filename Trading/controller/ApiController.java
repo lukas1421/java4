@@ -491,12 +491,6 @@ public class ApiController implements EWrapper {
                 }
                 AutoTraderXU.updateLog(str("Account pnl", output));
                 AutoTraderXU.currentIBNAV = Double.parseDouble(value);
-                if (LocalTime.now().getMinute() < 2) {
-                    outputToAutoLog(output);
-                }
-                if (LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES).getMinute() <= 1) {
-                    outputToAutoLog(output);
-                }
             }
 
             @Override
@@ -1666,14 +1660,14 @@ public class ApiController implements EWrapper {
             @Override
             public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
                                     int parentId, double lastFillPrice, int clientId, String whyHeld) {
-                outputToAutoLog(str("||OrderStatus||", defaultID,
+                outputDetailedXU(str("||OrderStatus||", defaultID,
                         globalIdOrderMap.get(defaultID), status, filled,
                         remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));
             }
 
             @Override
             public void handle(int errorCode, String errorMsg) {
-                outputToErrorLog(str("Default Order handler:", "ERROR", defaultID, errorCode, errorMsg
+                outputToError(str("Default Order handler:", "ERROR", defaultID, errorCode, errorMsg
                         , globalIdOrderMap.get(defaultID)));
 
                 pr(" handle error code " + errorCode + " message " + errorMsg);
@@ -1692,20 +1686,20 @@ public class ApiController implements EWrapper {
     public void placeOrModifyOrder(Contract ct, final Order o, final IOrderHandler handler) {
         double impact = getDeltaImpactCny(ct, o);
         if (Math.abs(impact) > 1000000) {
-            outputOrderToAutoLogXU(str("IMPACT TOO BIG", impact, ct.symbol(), o.action(),
+            outputToAll(str("IMPACT TOO BIG", impact, ct.symbol(), o.action(),
                     o.lmtPrice(), o.totalQuantity()));
             globalTradingOn.set(false);
             return;
         }
 
         if (o.totalQuantity() == 0.0) {
-            outputOrderToAutoLogXU(str(" quantity is 0 ", ct.symbol(), o.action(),
+            outputToAll(str(" quantity is 0 ", ct.symbol(), o.action(),
                     o.lmtPrice(), o.totalQuantity()));
             throw new IllegalStateException(" quantity is 0 ");
         }
 
         if (o.orderId() == 0) {
-            outputOrderToAutoLogXU(str("order id is 0 ", ct.symbol(), o.action(),
+            outputToAll(str("order id is 0 ", ct.symbol(), o.action(),
                     o.lmtPrice(), o.totalQuantity()));
             throw new IllegalStateException(" order id is 0");
         }

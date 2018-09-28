@@ -114,18 +114,18 @@ public class XuTraderHelper {
         return res;
     }
 
-    public static void outputToAutoLog(String s) {
-        pr(s);
-        File output = new File(TradingConstants.GLOBALPATH + "autoLog.txt");
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
-            out.append(s);
-            out.newLine();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
+//    public static void outputDetailedXU(String s) {
+//        pr(s);
+//        File output = new File(TradingConstants.GLOBALPATH + "autoLog.txt");
+//        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
+//            out.append(s);
+//            out.newLine();
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//    }
 
-    public static void outputToErrorLog(String s) {
+    public static void outputToError(String s) {
         pr(s);
         File output = new File(TradingConstants.GLOBALPATH + "autoError.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
@@ -153,15 +153,16 @@ public class XuTraderHelper {
 //            outputPurelyOrders(str("***", LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES), "***"),
 //                    order, detailed);
 //        }
-//        outputToAutoLog("****************ORDER************************");
-//        outputToAutoLog(s);
-//        outputToAutoLog("****************ORDER************************");
+//        outputDetailedXU("****************ORDER************************");
+//        outputDetailedXU(s);
+//        outputDetailedXU("****************ORDER************************");
 //        outputPurelyOrders(s, order, detailed);
 //    }
 
-    public static void outputOrderToAutoLogXU(String s) {
+    public static void outputToAll(String s) {
         outputDetailedXU(s);
-        //outputOrderToAutoLog(s, xuOrderOutput, xuDetailOutput);
+        outputDetailedHK(s);
+        outputDetailedUS(s);
     }
 
 //    private static void outputPurelyOrders(String s, File order, File detailed) {
@@ -438,9 +439,9 @@ public class XuTraderHelper {
             return;
         }
         double totalProfit = l.stream().mapToDouble(t -> t.getIdeaSize() * (lastPrice - t.getIdeaPrice())).sum();
-        outputToAutoLog(" computeMAProfit total " + Math.round(100d * totalProfit) / 100d);
+        outputDetailedXU(" computeMAProfit total " + Math.round(100d * totalProfit) / 100d);
         for (MAIdea t : l) {
-            outputToAutoLog(str(t, " PnL: ", Math.round(100d * t.getIdeaSize() * (lastPrice - t.getIdeaPrice())) / 100d));
+            outputDetailedXU(str(t, " PnL: ", Math.round(100d * t.getIdeaSize() * (lastPrice - t.getIdeaPrice())) / 100d));
         }
     }
 
@@ -449,11 +450,11 @@ public class XuTraderHelper {
             return false;
         }
         if (secLastBar.strictIncludes(sma) && secLastBar.getBarReturn() >= 0.0 && lastBar.getOpen() > sma) {
-            //outputToAutoLog(" bullish cross ");
+            //outputDetailedXU(" bullish cross ");
             return true;
         }
         if (sma > secLastBar.getHigh() && secLastBar.getBarReturn() >= 0.0 && lastBar.getOpen() > sma) {
-            //outputToAutoLog(" bullish jump through ");
+            //outputDetailedXU(" bullish jump through ");
             return true;
         }
         return false;
@@ -464,11 +465,11 @@ public class XuTraderHelper {
             return false;
         }
         if (secLastBar.strictIncludes(sma) && secLastBar.getBarReturn() <= 0.0 && lastBar.getOpen() < sma) {
-            //outputToAutoLog(" bearish cross");
+            //outputDetailedXU(" bearish cross");
             return true;
         }
         if (sma < secLastBar.getLow() && secLastBar.getBarReturn() <= 0.0 && lastBar.getOpen() < sma) {
-            //outputToAutoLog(" bearish jump through ");
+            //outputDetailedXU(" bearish jump through ");
             return true;
         }
 

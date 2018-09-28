@@ -141,19 +141,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     private static final int CONSERVATIVE_SIZE = 1;
     private static final int AGGRESSIVE_SIZE = 3;
 
-    //inventory market making
-    private static volatile Semaphore inventorySemaphore = new Semaphore(1);
-    private static volatile CyclicBarrier inventoryBarrier = new CyclicBarrier(2, () -> {
-        outputToAutoLog(str(LocalTime.now(), "inventory barrier reached 2",
-                "Trading Cycle Ends"));
-    });
-
-    //pd market making
-    private static volatile Semaphore pdSemaphore = new Semaphore(2);
-    private static volatile CyclicBarrier pdBarrier = new CyclicBarrier(2, () -> {
-        outputToAutoLog(str(LocalTime.now(), " PD barrier reached 2, Trading cycle ends"));
-    });
-
     //ma
     private static volatile int shortMAPeriod = 60;
     private static volatile int longMAPeriod = 80;
@@ -1102,44 +1089,44 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return new OrderAugmented();
     }
 
-    /**
-     * only output upon a cross
-     */
-    private void observeMATouch() {
-        NavigableMap<LocalDateTime, SimpleBar> futprice1m = (futData.get(ibContractToFutType(activeFutureCt)));
-
-        if (futprice1m.size() < 2) return;
-
-        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(futprice1m, 10);
-        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(futprice1m, 20);
-
-        double maShortLast = smaShort.lastEntry().getValue();
-        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
-        double maLongLast = smaLong.lastEntry().getValue();
-        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
-
-        double pd = getPD(futprice1m.lastEntry().getValue().getClose());
-        int percentile = getPercentileForLast(futData.get(ibContractToFutType(activeFutureCt)));
-        soundPlayer.stopIfPlaying();
-        if (smaShort.size() > 0) {
-            String msg = str("**MA CROSS**"
-                    , "20day", get20DayBullBear()
-                    , "||T:", LocalTime.now().truncatedTo(MINUTES)
-                    , "||Last Short Long:", r(maShortLast), r(maLongLast)
-                    , "||seclast shortlong:", r(maShortSecLast), r(maLongSecLast)
-                    , "||Index:", r(getIndexPrice())
-                    , "||PD:", r10000(pd)
-                    , "||2 Day P%", percentile);
-
-            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast) {
-                outputToAutoLog(" bullish cross ");
-                outputToAutoLog(msg);
-            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast) {
-                outputToAutoLog(" bearish cross ");
-                outputToAutoLog(msg);
-            }
-        }
-    }
+//    /**
+//     * only output upon a cross
+//     */
+//    private void observeMATouch() {
+//        NavigableMap<LocalDateTime, SimpleBar> futprice1m = (futData.get(ibContractToFutType(activeFutureCt)));
+//
+//        if (futprice1m.size() < 2) return;
+//
+//        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(futprice1m, 10);
+//        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(futprice1m, 20);
+//
+//        double maShortLast = smaShort.lastEntry().getValue();
+//        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
+//        double maLongLast = smaLong.lastEntry().getValue();
+//        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
+//
+//        double pd = getPD(futprice1m.lastEntry().getValue().getClose());
+//        int percentile = getPercentileForLast(futData.get(ibContractToFutType(activeFutureCt)));
+//        soundPlayer.stopIfPlaying();
+//        if (smaShort.size() > 0) {
+//            String msg = str("**MA CROSS**"
+//                    , "20day", get20DayBullBear()
+//                    , "||T:", LocalTime.now().truncatedTo(MINUTES)
+//                    , "||Last Short Long:", r(maShortLast), r(maLongLast)
+//                    , "||seclast shortlong:", r(maShortSecLast), r(maLongSecLast)
+//                    , "||Index:", r(getIndexPrice())
+//                    , "||PD:", r10000(pd)
+//                    , "||2 Day P%", percentile);
+//
+//            if (maShortLast > maLongLast && maShortSecLast <= maLongSecLast) {
+//                outputToAutoLog(" bullish cross ");
+//                outputToAutoLog(msg);
+//            } else if (maShortLast < maLongLast && maShortSecLast >= maLongSecLast) {
+//                outputToAutoLog(" bearish cross ");
+//                outputToAutoLog(msg);
+//            }
+//        }
+//    }
 
     /**
      * fut hilo trader
@@ -3091,7 +3078,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 askMap.getOrDefault(ibContractToFutType(activeFutureCt), 0.0),
                 "pmPercChg", pmPercChg);
 
-        outputToAutoLog(outputString);
+        outputDetailedXU(outputString);
         requestOvernightExecHistory();
     }
 
@@ -3568,7 +3555,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     @Override
     public void handle(int errorCode, String errorMsg) {
         outputDetailedXU("ERROR code " + errorCode + " message " + errorMsg);
-        outputToErrorLog("ERROR code " + errorCode + " message " + errorMsg);
+        outputToError("ERROR code " + errorCode + " message " + errorMsg);
         updateLog(" ERROR code " + errorCode + " message " + errorMsg);
     }
 
@@ -3620,7 +3607,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     @Override
     public void handle(int orderId, int errorCode, String errorMsg) {
         //outputDetailedXU(str("ERROR LIVE ID:", orderId, "code", errorCode, "MSG", errorMsg));
-        outputToErrorLog(str("ERROR LIVE ID:", orderId, "code", errorCode, "MSG", errorMsg));
+        outputToError(str("ERROR LIVE ID:", orderId, "code", errorCode, "MSG", errorMsg));
 
         if (errorCode != 504 || LocalTime.now().getSecond() < 5) {
             updateLog(" handle error code " + errorCode + " message " + errorMsg);

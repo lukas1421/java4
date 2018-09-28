@@ -57,9 +57,10 @@ public class AutoTraderMain extends JPanel {
     static ApiController apcon;
 
     //orders
-    static File xuOrderOutput = new File(TradingConstants.GLOBALPATH + "orders.txt");
-    static File xuDetailOutput = new File(TradingConstants.GLOBALPATH + "ordersDetailed.txt");
-    //static File hkOrderOutput = new File(TradingConstants.GLOBALPATH + "hkorders.txt");
+    //static File xuOrderOutput = new File(TradingConstants.GLOBALPATH + "orders.txt");
+    ////static File hkOrderOutput = new File(TradingConstants.GLOBALPATH + "hkorders.txt");
+
+    static File xuDetailOutput = new File(TradingConstants.GLOBALPATH + "xuOrdersDetailed.txt");
     static File hkDetailOutput = new File(TradingConstants.GLOBALPATH + "hkOrdersDetailed.txt");
     static File usDetailOutput = new File(TradingConstants.GLOBALPATH + "usOrdersDetailed.txt");
 

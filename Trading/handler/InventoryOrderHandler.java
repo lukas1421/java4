@@ -50,7 +50,6 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
                 globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
                 String msg = str(LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
                         "||Order||", defaultID, globalIdOrderMap.get(defaultID), orderState.status());
-                XuTraderHelper.outputToAutoLog(msg);
                 XuTraderHelper.outputDetailedXU(msg);
                 filledOrdersSet.add(defaultID);
             }
@@ -76,7 +75,6 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
             String msg = str(" order cancelled ", defaultID,
                     AutoTraderMain.globalIdOrderMap.get(defaultID).getOrder().orderId(),
                     AutoTraderMain.globalIdOrderMap.get(defaultID).getOrder());
-            XuTraderHelper.outputToAutoLog(msg);
             XuTraderHelper.outputDetailedXU(msg);
         }
     }
