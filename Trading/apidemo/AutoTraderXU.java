@@ -399,7 +399,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             }, 0, 1, TimeUnit.SECONDS);
 
             ses.scheduleAtFixedRate(() -> {
-                observeMATouch();
+                //observeMATouch();
                 requestExecHistory();
             }, 0, 1, TimeUnit.MINUTES);
         });
