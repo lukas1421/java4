@@ -47,6 +47,7 @@ import static apidemo.ChinaMain.currentTradingDate;
 import static apidemo.ChinaPosition.costMap;
 import static apidemo.ChinaStock.*;
 import static apidemo.ChinaStockHelper.reverseComp;
+import static apidemo.XuTraderHelper.getTradeDate;
 import static client.OrderStatus.Filled;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
@@ -181,7 +182,7 @@ public class ChinaPosition extends JPanel {
                                                         "#:", numTradesByOrder.getOrDefault(e1.getKey(), 0L),
                                                         "Tot Q: ", quantitySumByOrder.getOrDefault(e1.getKey(), 0d), r(e1.getValue())))
                                                 .collect(Collectors.joining(","))));
-                        pr(selected, pnlString);
+                        pr("pnl string ", selected, pnlString);
                     });
                 }
                 return comp;
@@ -1677,6 +1678,8 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
         LocalTime t = ldt.toLocalTime();
         LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
 
+        LocalDate tradeDate = getTradeDate(LocalDateTime.now());
+
         if (contract.secType() == Types.SecType.STK && currencyMap.getOrDefault(symbol, "CNY").equals("USD")) {
             ZonedDateTime chinaZdt = ZonedDateTime.of(ldt, chinaZone);
             ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
@@ -1685,7 +1688,7 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
         }
 
         if (symbol.startsWith("SGXA50")) {
-            if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth() && t.isAfter(LocalTime.of(8, 59))) {
+            if (ldt.getDayOfMonth() == tradeDate.getDayOfMonth() && t.isAfter(LocalTime.of(8, 59))) {
                 if (ChinaPosition.tradesMap.get(symbol).containsKey(lt)) {
                     ChinaPosition.tradesMap.get(symbol).get(lt)
                             .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
@@ -1695,7 +1698,7 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
                 }
             }
         } else if (contract.secType() == Types.SecType.STK) {
-            if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth()) {
+            if (ldt.getDayOfMonth() == tradeDate.getDayOfMonth()) {
                 if (ChinaPosition.tradesMap.get(symbol).containsKey(lt)) {
                     ChinaPosition.tradesMap.get(symbol).get(lt)
                             .addTrade(new IBStockTrade(execution.price(), (int) Math.round(sign * execution.shares())));
