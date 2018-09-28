@@ -324,10 +324,7 @@ public final class ChinaData extends JPanel {
         }, es));
 
         saveHibernate.addActionListener(al -> withHibernate());
-        saveDetailed.addActionListener(al -> {
-                    withHibernateDetailed();
-                }
-        );
+        saveDetailed.addActionListener(al -> withHibernateDetailed());
 
         saveOHLCButton.addActionListener(al -> saveChinaOHLC());
         loadHibGenPriceButton.addActionListener(al -> Hibtask.loadHibGenPrice());
@@ -351,8 +348,8 @@ public final class ChinaData extends JPanel {
         //saveBidAsk.addActionListener(al -> hibSaveGenBidAsk());
         //loadHibBidAsk.addActionListener(al -> loadHibGenBidAsk());
         //saveStratButton.addActionListener(al -> saveHibGen(strategyTotalMap, new ConcurrentHashMap<>(), ChinaSaveStrat.getInstance()));
-        saveHibYtdButton.addActionListener(al -> hibSaveGenYtd());
-        saveHibY2Button.addActionListener(al -> hibSaveGenY2());
+        //saveHibYtdButton.addActionListener(al -> hibSaveGenYtd());
+        //saveHibY2Button.addActionListener(al -> hibSaveGenY2());
 
         btnLoadBarYtd.addActionListener(al -> CompletableFuture.runAsync(() -> {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(priceBarYtdSource))) {
@@ -517,24 +514,36 @@ public final class ChinaData extends JPanel {
 
     static void withHibernate() {
         CompletableFuture.runAsync(() -> {
-            if (priceMapBar.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
+            int maxSize = priceMapBar.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0);
+            if (maxSize > 0) {
                 pr(" saving pmb @", LocalTime.now());
                 saveHibGen(priceMapBar, sizeTotalMap, ChinaSave.getInstance());
             } else {
-                pr(" cannot save price map bar minute ", "max size ", priceMapBar.entrySet().stream()
-                        .mapToInt(e -> e.getValue().size()).max().orElse(0));
+                int ans = JOptionPane.showConfirmDialog(null, "PMB is empty, save?", "", JOptionPane.YES_NO_OPTION);
+                if (ans == JOptionPane.YES_OPTION) {
+                    pr(" saving pmb @", LocalTime.now());
+                    saveHibGen(priceMapBar, sizeTotalMap, ChinaSave.getInstance());
+                } else if (ans == JOptionPane.NO_OPTION) {
+                    pr(" cannot save price map bar minute ", "max size ", maxSize);
+                }
             }
         });
     }
 
     static void withHibernateDetailed() {
         CompletableFuture.runAsync(() -> {
-            if (priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0) > 0) {
+            int maxSize = priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0);
+            if (maxSize > 0) {
                 pr(" saving price detailed @", LocalTime.now());
                 saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());
             } else {
-                pr(" cannot save price bar detailed ", "max size", priceMapBarDetail.entrySet().stream()
-                        .mapToInt(e -> e.getValue().size()).max().orElse(0));
+                int ans = JOptionPane.showConfirmDialog(null, "PMBD is empty, save?", "", JOptionPane.YES_NO_OPTION);
+                if (ans == JOptionPane.YES_OPTION) {
+                    pr(" saving price detailed @", LocalTime.now());
+                    saveHibGen(priceMapBarDetail, new ConcurrentSkipListMap<>(), ChinaSaveDetailed.getInstance());
+                } else if (ans == JOptionPane.NO_OPTION) {
+                    pr(" cannot save price bar detailed ", "max size", maxSize);
+                }
             }
         });
     }

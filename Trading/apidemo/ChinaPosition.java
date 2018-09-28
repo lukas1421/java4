@@ -1354,7 +1354,7 @@ public class ChinaPosition extends JPanel {
 
         @Override
         public int getColumnCount() {
-            return 35;
+            return 25;
         }
 
         @Override
