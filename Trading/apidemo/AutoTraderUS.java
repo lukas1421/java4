@@ -46,7 +46,7 @@ public class AutoTraderUS {
 
     private static final double US_MIN_SHORT_LEVEL = 1.5;
 
-    private static final int MAX_US_ORDERS = 4;
+    private static final int MAX_US_ORDERS = 6;
     public static List<String> usSymbols = new ArrayList<>();
     private static final double US_SIZE = 100;
 
@@ -438,9 +438,9 @@ public class AutoTraderUS {
         LocalTime lt = nowMilli.toLocalTime();
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         Contract ct = tickerToUSContract(symbol);
-        LocalTime pmStart = ltof(12, 59, 59);
-        LocalTime pmObservationStart = ltof(12, 59, 55);
-        LocalTime pmCutoff = ltof(13, 30);
+        LocalTime pmStart = ltof(11, 59, 59);
+        LocalTime pmObservationStart = ltof(11, 59, 55);
+        LocalTime pmCutoff = ltof(12, 30);
 
         cancelAfterDeadline(nowMilli.toLocalTime(), symbol, US_STOCK_PMHILO, pmCutoff);
 
@@ -467,12 +467,9 @@ public class AutoTraderUS {
         LocalTime minPMT = getFirstMinTPred(prices, e -> e.isAfter(pmObservationStart));
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
-//        double buySize = US_SIZE;
-//        double sellSize = US_SIZE;
-
 
         if (!manualUSPMHiloMap.get(symbol).get()) {
-            if (lt.isBefore(ltof(13, 5))) {
+            if (lt.isBefore(ltof(12, 5))) {
                 manualUSPMHiloMap.get(symbol).set(true);
                 outputDetailedUS(symbol, str("Setting manual US PM Hilo 1305", symbol, lt));
             } else {
@@ -562,7 +559,7 @@ public class AutoTraderUS {
         LocalTime pmClose = ltof(16, 0);
         double safetyMargin = freshPrice * 0.002;
 
-        if (lt.isBefore(amCutoff) || lt.isAfter(amEnd)) {
+        if (lt.isBefore(amCutoff) || lt.isAfter(pmClose)) {
             return;
         }
 

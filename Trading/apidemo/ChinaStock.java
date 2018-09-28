@@ -36,6 +36,7 @@ import static apidemo.ChinaData.*;
 import static apidemo.ChinaDataYesterday.*;
 import static apidemo.ChinaSizeRatio.*;
 import static apidemo.ChinaStockHelper.*;
+import static apidemo.XU.graphBarWidth;
 import static java.lang.Double.max;
 import static java.lang.Double.min;
 import static java.lang.Math.log;
@@ -65,6 +66,9 @@ public final class ChinaStock extends JPanel {
 
     public static volatile List<String> symbolNames = new ArrayList<>(1000);
     public static volatile List<String> symbolNamesFull = new ArrayList<>(1000);
+
+
+
 
     String line;
     private static volatile String listNames;
@@ -764,48 +768,47 @@ public final class ChinaStock extends JPanel {
 
         jpMiddle.add(jpRight);
         JPanel jpMiddleBottom = new JPanel();
-        JButton customFilter = new JButton("滤");
-        JToggleButton benchToggle = new JToggleButton("参");
-        JToggleButton interestToggle = new JToggleButton("趣");
-        JToggleButton industryToggle = new JToggleButton("业");
+        JButton barWidthUp = new JButton("UP");
+        JButton barWidthDown = new JButton("DOWN");
 
-        JToggleButton sizeToggle = new JToggleButton("V");
-        JToggleButton amYToggle = new JToggleButton("amY");
-        JToggleButton pmYToggle = new JToggleButton("pmY");
-        JToggleButton coYToggle = new JToggleButton("COY-");
-        JToggleButton firstYToggle = new JToggleButton("F1Y/F10Y");
-        JToggleButton openPYToggle = new JToggleButton("o%Y<");
-        JToggleButton percentileYToggle = new JToggleButton("p%Y<");
-        JToggleButton maxTYToggle = new JToggleButton("MaxTY>");
-        JToggleButton ma20Toggle = new JToggleButton("ma20R");
-        JToggleButton amReturnToggle = new JToggleButton("am+");
-        JToggleButton rangeToggle = new JToggleButton("Rng");
-        JToggleButton first1Toggle = new JToggleButton("F1");
-        JToggleButton first10Toggle = new JToggleButton("F10");
-
-        JToggleButton opcToggle = new JToggleButton("OPC-");
-        JToggleButton pmF10Toggle = new JToggleButton("pmF10+");
-        //JToggleButton openYPToggle = new JToggleButton("openYP");
-        //JToggleButton minTYToggle = new JToggleButton("minTY");
-
-        JToggleButton amMinTToggle = new JToggleButton("aMnT<");
-        JToggleButton vrAmMinTToggle = new JToggleButton("vrMn<Mx");
-        JToggleButton vr930MaxComp = new JToggleButton("VR930");
-        JToggleButton vr935MaxComp = new JToggleButton("VR935");
-        JToggleButton vr940MaxComp = new JToggleButton("VR940");
-        JToggleButton vr940Gen = new JToggleButton("VRGen");
-        JToggleButton vrToggle = new JToggleButton("VR");
-        JToggleButton vrPM10Toggle = new JToggleButton("vPM10");
-        JToggleButton vrPMToggle = new JToggleButton("VRPM");
-        JToggleButton vrPToggle = new JToggleButton("VRP%");
-        JToggleButton vrMinTToggle = new JToggleButton("VRMinT<");
-        JToggleButton pmReturnToggle = new JToggleButton("pm+");
+//        JToggleButton interestToggle = new JToggleButton("趣");
+//        JToggleButton industryToggle = new JToggleButton("业");
+//        JToggleButton sizeToggle = new JToggleButton("V");
+//        JToggleButton amYToggle = new JToggleButton("amY");
+//        JToggleButton pmYToggle = new JToggleButton("pmY");
+//        JToggleButton coYToggle = new JToggleButton("COY-");
+//        JToggleButton firstYToggle = new JToggleButton("F1Y/F10Y");
+//        JToggleButton openPYToggle = new JToggleButton("o%Y<");
+//        JToggleButton percentileYToggle = new JToggleButton("p%Y<");
+//        JToggleButton maxTYToggle = new JToggleButton("MaxTY>");
+//        JToggleButton ma20Toggle = new JToggleButton("ma20R");
+//        JToggleButton amReturnToggle = new JToggleButton("am+");
+//        JToggleButton rangeToggle = new JToggleButton("Rng");
+//        JToggleButton first1Toggle = new JToggleButton("F1");
+//        JToggleButton first10Toggle = new JToggleButton("F10");
+//        JToggleButton opcToggle = new JToggleButton("OPC-");
+//        JToggleButton pmF10Toggle = new JToggleButton("pmF10+");
+//        //JToggleButton openYPToggle = new JToggleButton("openYP");
+//        //JToggleButton minTYToggle = new JToggleButton("minTY");
+//
+//        JToggleButton amMinTToggle = new JToggleButton("aMnT<");
+//        JToggleButton vrAmMinTToggle = new JToggleButton("vrMn<Mx");
+//        JToggleButton vr930MaxComp = new JToggleButton("VR930");
+//        JToggleButton vr935MaxComp = new JToggleButton("VR935");
+//        JToggleButton vr940MaxComp = new JToggleButton("VR940");
+//        JToggleButton vr940Gen = new JToggleButton("VRGen");
+//        JToggleButton vrToggle = new JToggleButton("VR");
+//        JToggleButton vrPM10Toggle = new JToggleButton("vPM10");
+//        JToggleButton vrPMToggle = new JToggleButton("VRPM");
+//        JToggleButton vrPToggle = new JToggleButton("VRP%");
+//        JToggleButton vrMinTToggle = new JToggleButton("VRMinT<");
+//        JToggleButton pmReturnToggle = new JToggleButton("pm+");
         JButton a50OnlyButton = new JButton("A50 Only");
 
 
-        JToggleButton peakToggle = new JToggleButton("PeakNo>1");
-        JToggleButton ratioBreakToggle = new JToggleButton("ratioBreakT");
-        JToggleButton rangeBreakToggle = new JToggleButton("rngBreakT");
+//        JToggleButton peakToggle = new JToggleButton("PeakNo>1");
+//        JToggleButton ratioBreakToggle = new JToggleButton("ratioBreakT");
+//        JToggleButton rangeBreakToggle = new JToggleButton("rngBreakT");
 
         a50OnlyButton.addActionListener(l ->
 
@@ -828,186 +831,197 @@ public final class ChinaStock extends JPanel {
             }
         });
 
-        customFilter.addActionListener((
-                ActionEvent al) ->
 
-        {
-            if (!filterOn) {
-                List<RowFilter<Object, Object>> filters = new ArrayList<>();
-                if (sizeToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, sizeThresh, SIZECOL));
-                } //size today
-
-                if (benchToggle.isSelected()) {
-                    filters.add(RowFilter.regexFilter(benchSimpleMap.get(selectedNameStock), BENCHCOL));
-                    benchFilterOn = true;
-                } else {
-                    benchFilterOn = false;
-                }
-                if (industryToggle.isSelected()) {
-                    filters.add(RowFilter.regexFilter(industryNameMap.get(selectedNameStock), INDUSTRYCOL));
-                }
-
-                if (amYToggle.isSelected()) {
-                    filters.add(new RowFilter<Object, Object>() {
-                        @Override
-                        public boolean include(RowFilter.Entry<?, ?> entry) {
-                            return ((double) entry.getValue(AMCOYCOL) > 0);
-                        }
-                    });
-                }
-
-                if (pmYToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, 0.0, PMCOYCOL));
-                }
-
-                if (coYToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, 0.0, COYCOL));
-                }
-                if (firstYToggle.isSelected()) {
-                    filters.add(new RowFilter<Object, Object>() {
-                        @Override
-                        public boolean include(RowFilter.Entry<?, ?> entry) {
-                            return ((double) entry.getValue(FIRST1YCOL) > 0 && (double) entry.getValue(FIRST10YCOL) > 0);
-                        }
-                    });
-                }
-                if (openPYToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, openPCeiling, OPENPYCOL));
-                }
-                if (percentileYToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, percentileYCeiling, PERCENTILEYCOL));
-                }
-                if (maxTYToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, maxTYFloor, MAXTYCOL));
-                }
-                if (ma20Toggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, 1.0, MA20COL));
-                }
-                if (amReturnToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, rtnThresh, AMCOCOL));
-                }
-                if (rangeToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, rangeThresh, RANGECOL));
-                }
-                if (first1Toggle.isSelected()) {
-                    filters.add(new RowFilter<Object, Object>() {
-                        @Override
-                        public boolean include(RowFilter.Entry<?, ?> entry) {
-                            return ((double) entry.getValue(FIRST1COL) >= -0.0001 && (int) entry.getValue(FIRST1CPCOL) > 80
-                                    && (int) entry.getValue(FIRST1OPCOL) < 20 && (double) entry.getValue(FIRST1OPCRATIOCOL) > 0.3);
-                        }
-                    });
-                }
-                if (first10Toggle.isSelected()) {
-                    filters.add(new RowFilter<Object, Object>() {
-                        @Override
-                        public boolean include(RowFilter.Entry<?, ?> entry) {
-                            return ((double) entry.getValue(FIRST10COL) >= first10Thresh && (long) entry.getValue(FIRST10MAXMINDIFFCOL) > 3L);
-                        }
-                    });
-                }
-
-                if (opcToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, 0.0, OPCCOL));
-                }
-                if (pmF10Toggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, -0.00001, PMFIRST10COL));
-                }
-                if (amMinTToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, amMinTCeiling, AMMINTCOL));
-                }
-
-                if (vrAmMinTToggle.isSelected()) {
-                    filters.add(new RowFilter<Object, Object>() {
-                        @Override
-                        public boolean include(Entry<?, ?> entry) {
-                            return (int) entry.getValue(VRMAXTCOL) >= (int) entry.getValue(VRMINTCOL);
-                        }
-                    });
-                }
-                if (vr930MaxComp.isSelected()) {
-                    filters.add(new RowFilter<Object, Object>() {
-                        @Override
-                        public boolean include(Entry<?, ?> entry) {
-                            return ((double) entry.getValue(VR930COL) >= (double) entry.getValue(VR925COL) && (double) entry.getValue(VR930COL) > 1.0);
-                        }
-                    });
-                }
-                if (vr935MaxComp.isSelected()) {
-                    filters.add(new RowFilter<Object, Object>() {
-                        @Override
-                        public boolean include(RowFilter.Entry<?, ?> entry) {
-                            return ((double) entry.getValue(VR935COL) >= (double) entry.getValue(VR930COL)
-                                    && (double) entry.getValue(VR930COL) >= (double) entry.getValue(VR925COL)
-                                    && (double) entry.getValue(VR935COL) >= 1.0);
-                        }
-                    });
-                }
-
-                if (vr940MaxComp.isSelected()) {
-                    filters.add(new RowFilter<Object, Object>() {
-                        @Override
-                        public boolean include(RowFilter.Entry<?, ?> entry) {
-                            return ((double) entry.getValue(VR940COL) >= (double) entry.getValue(VR935COL)
-                                    && (double) entry.getValue(VR935COL) >= (double) entry.getValue(VR930COL)
-                                    && (double) entry.getValue(VR930COL) >= (double) entry.getValue(VR925COL)
-                                    && (double) entry.getValue(VR940COL) >= 1.0);
-                        }
-                    });
-                }
-
-                if (vr940Gen.isSelected()) {
-                    filters.add(new RowFilter<Object, Object>() {
-                        @Override
-                        public boolean include(RowFilter.Entry<?, ?> entry) {
-                            return ((((double) entry.getValue(VR940COL) >= (double) entry.getValue(19) && (double) entry.getValue(VR935COL) >= (double) entry.getValue(VR930COL) && (double) entry.getValue(VR930COL) >= (double) entry.getValue(VR925COL))
-                                    || ((double) entry.getValue(VR935COL) >= (double) entry.getValue(VR930COL) && (double) entry.getValue(VR930COL) >= (double) entry.getValue(VR925COL))
-                                    || ((double) entry.getValue(VR930COL) >= (double) entry.getValue(VR925COL)))
-                                    && ((double) entry.getValue(VR925COL) >= 1.0 || (double) entry.getValue(VR930COL) > 1.0));
-                        }
-                    });
-                }
-
-                if (vrToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, vrFloor, VRCOL));
-                }
-                if (vrPM10Toggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, vrPM10Floor, VRPM10COL));
-                }
-                //if(vrPMToggle.isSelected()){filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, vrPM10Floor,VRPM10COL));}
-                if (vrPToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, vrpFloor, VRPCOL));
-                }
-                if (vrMinTToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, vrMinTCeiling, VRMINTCOL));
-                }
-                if (pmReturnToggle.isSelected()) {
-                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, -0.0001, PMCOCOL));
-                }
-
-                if (interestToggle.isSelected()) {
-                    filters.add(new RowFilter<Object, Object>() {
-                        @Override
-                        public boolean include(RowFilter.Entry<?, ?> entry) {
-                            return (interestedName.getOrDefault(entry.getValue(0), false));
-                        }
-                    });
-                }
-
-                if (industryToggle.isSelected()) {
-                    filters.add(RowFilter.regexFilter(industryNameMap.get(selectedNameStock), INDUSTRYCOL));
-                }
-
-                pr(" filters are " + filters.toString());
-                sorter.setRowFilter(RowFilter.andFilter(filters));
-                filterOn = true;
-            } else {
-                sorter.setRowFilter(null);
-                filterOn = false;
-                //benchFilterOn = false;
-            }
+        barWidthUp.addActionListener(l -> {
+            graphBarWidth.incrementAndGet();
+            SwingUtilities.invokeLater(graphPanel::repaint);
         });
+
+        barWidthDown.addActionListener(l -> {
+            graphBarWidth.set(Math.max(1, graphBarWidth.decrementAndGet()));
+            SwingUtilities.invokeLater(graphPanel::repaint);
+        });
+
+//        barWidthUp.addActionListener((
+//                ActionEvent al) ->
+//
+//        {
+//            if (!filterOn) {
+//                List<RowFilter<Object, Object>> filters = new ArrayList<>();
+//                if (sizeToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, sizeThresh, SIZECOL));
+//                } //size today
+//
+//                if (barWidthDown.isSelected()) {
+//                    filters.add(RowFilter.regexFilter(benchSimpleMap.get(selectedNameStock), BENCHCOL));
+//                    benchFilterOn = true;
+//                } else {
+//                    benchFilterOn = false;
+//                }
+//                if (industryToggle.isSelected()) {
+//                    filters.add(RowFilter.regexFilter(industryNameMap.get(selectedNameStock), INDUSTRYCOL));
+//                }
+//
+//                if (amYToggle.isSelected()) {
+//                    filters.add(new RowFilter<Object, Object>() {
+//                        @Override
+//                        public boolean include(RowFilter.Entry<?, ?> entry) {
+//                            return ((double) entry.getValue(AMCOYCOL) > 0);
+//                        }
+//                    });
+//                }
+//
+//                if (pmYToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, 0.0, PMCOYCOL));
+//                }
+//
+//                if (coYToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, 0.0, COYCOL));
+//                }
+//                if (firstYToggle.isSelected()) {
+//                    filters.add(new RowFilter<Object, Object>() {
+//                        @Override
+//                        public boolean include(RowFilter.Entry<?, ?> entry) {
+//                            return ((double) entry.getValue(FIRST1YCOL) > 0 && (double) entry.getValue(FIRST10YCOL) > 0);
+//                        }
+//                    });
+//                }
+//                if (openPYToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, openPCeiling, OPENPYCOL));
+//                }
+//                if (percentileYToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, percentileYCeiling, PERCENTILEYCOL));
+//                }
+//                if (maxTYToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, maxTYFloor, MAXTYCOL));
+//                }
+//                if (ma20Toggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, 1.0, MA20COL));
+//                }
+//                if (amReturnToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, rtnThresh, AMCOCOL));
+//                }
+//                if (rangeToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, rangeThresh, RANGECOL));
+//                }
+//                if (first1Toggle.isSelected()) {
+//                    filters.add(new RowFilter<Object, Object>() {
+//                        @Override
+//                        public boolean include(RowFilter.Entry<?, ?> entry) {
+//                            return ((double) entry.getValue(FIRST1COL) >= -0.0001 && (int) entry.getValue(FIRST1CPCOL) > 80
+//                                    && (int) entry.getValue(FIRST1OPCOL) < 20 && (double) entry.getValue(FIRST1OPCRATIOCOL) > 0.3);
+//                        }
+//                    });
+//                }
+//                if (first10Toggle.isSelected()) {
+//                    filters.add(new RowFilter<Object, Object>() {
+//                        @Override
+//                        public boolean include(RowFilter.Entry<?, ?> entry) {
+//                            return ((double) entry.getValue(FIRST10COL) >= first10Thresh && (long) entry.getValue(FIRST10MAXMINDIFFCOL) > 3L);
+//                        }
+//                    });
+//                }
+//
+//                if (opcToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, 0.0, OPCCOL));
+//                }
+//                if (pmF10Toggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, -0.00001, PMFIRST10COL));
+//                }
+//                if (amMinTToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, amMinTCeiling, AMMINTCOL));
+//                }
+//
+//                if (vrAmMinTToggle.isSelected()) {
+//                    filters.add(new RowFilter<Object, Object>() {
+//                        @Override
+//                        public boolean include(Entry<?, ?> entry) {
+//                            return (int) entry.getValue(VRMAXTCOL) >= (int) entry.getValue(VRMINTCOL);
+//                        }
+//                    });
+//                }
+//                if (vr930MaxComp.isSelected()) {
+//                    filters.add(new RowFilter<Object, Object>() {
+//                        @Override
+//                        public boolean include(Entry<?, ?> entry) {
+//                            return ((double) entry.getValue(VR930COL) >= (double) entry.getValue(VR925COL) && (double) entry.getValue(VR930COL) > 1.0);
+//                        }
+//                    });
+//                }
+//                if (vr935MaxComp.isSelected()) {
+//                    filters.add(new RowFilter<Object, Object>() {
+//                        @Override
+//                        public boolean include(RowFilter.Entry<?, ?> entry) {
+//                            return ((double) entry.getValue(VR935COL) >= (double) entry.getValue(VR930COL)
+//                                    && (double) entry.getValue(VR930COL) >= (double) entry.getValue(VR925COL)
+//                                    && (double) entry.getValue(VR935COL) >= 1.0);
+//                        }
+//                    });
+//                }
+//
+//                if (vr940MaxComp.isSelected()) {
+//                    filters.add(new RowFilter<Object, Object>() {
+//                        @Override
+//                        public boolean include(RowFilter.Entry<?, ?> entry) {
+//                            return ((double) entry.getValue(VR940COL) >= (double) entry.getValue(VR935COL)
+//                                    && (double) entry.getValue(VR935COL) >= (double) entry.getValue(VR930COL)
+//                                    && (double) entry.getValue(VR930COL) >= (double) entry.getValue(VR925COL)
+//                                    && (double) entry.getValue(VR940COL) >= 1.0);
+//                        }
+//                    });
+//                }
+//
+//                if (vr940Gen.isSelected()) {
+//                    filters.add(new RowFilter<Object, Object>() {
+//                        @Override
+//                        public boolean include(RowFilter.Entry<?, ?> entry) {
+//                            return ((((double) entry.getValue(VR940COL) >= (double) entry.getValue(19) && (double) entry.getValue(VR935COL) >= (double) entry.getValue(VR930COL) && (double) entry.getValue(VR930COL) >= (double) entry.getValue(VR925COL))
+//                                    || ((double) entry.getValue(VR935COL) >= (double) entry.getValue(VR930COL) && (double) entry.getValue(VR930COL) >= (double) entry.getValue(VR925COL))
+//                                    || ((double) entry.getValue(VR930COL) >= (double) entry.getValue(VR925COL)))
+//                                    && ((double) entry.getValue(VR925COL) >= 1.0 || (double) entry.getValue(VR930COL) > 1.0));
+//                        }
+//                    });
+//                }
+//
+//                if (vrToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, vrFloor, VRCOL));
+//                }
+//                if (vrPM10Toggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, vrPM10Floor, VRPM10COL));
+//                }
+//                //if(vrPMToggle.isSelected()){filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, vrPM10Floor,VRPM10COL));}
+//                if (vrPToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, vrpFloor, VRPCOL));
+//                }
+//                if (vrMinTToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.BEFORE, vrMinTCeiling, VRMINTCOL));
+//                }
+//                if (pmReturnToggle.isSelected()) {
+//                    filters.add(RowFilter.numberFilter(RowFilter.ComparisonType.AFTER, -0.0001, PMCOCOL));
+//                }
+//
+//                if (interestToggle.isSelected()) {
+//                    filters.add(new RowFilter<Object, Object>() {
+//                        @Override
+//                        public boolean include(RowFilter.Entry<?, ?> entry) {
+//                            return (interestedName.getOrDefault(entry.getValue(0), false));
+//                        }
+//                    });
+//                }
+//
+//                if (industryToggle.isSelected()) {
+//                    filters.add(RowFilter.regexFilter(industryNameMap.get(selectedNameStock), INDUSTRYCOL));
+//                }
+//
+//                pr(" filters are " + filters.toString());
+//                sorter.setRowFilter(RowFilter.andFilter(filters));
+//                filterOn = true;
+//            } else {
+//                sorter.setRowFilter(null);
+//                filterOn = false;
+//                //benchFilterOn = false;
+//            }
+//        });
 
 //      benchToggle.addActionListener(->{    
 //        if(benchToggle.isSelected()) {    
@@ -1016,37 +1030,37 @@ public final class ChinaStock extends JPanel {
 //        }
 //    });
 //  
-        jpMiddleBottom.add(customFilter);
-        jpMiddleBottom.add(benchToggle);
-        jpMiddleBottom.add(interestToggle);
-        jpMiddleBottom.add(industryToggle);
-        jpMiddleBottom.add(sizeToggle);
-        jpMiddleBottom.add(amYToggle);
-        jpMiddleBottom.add(pmYToggle);
-        jpMiddleBottom.add(coYToggle);
-        jpMiddleBottom.add(firstYToggle);
-        jpMiddleBottom.add(openPYToggle);
-        jpMiddleBottom.add(percentileYToggle);
-        jpMiddleBottom.add(maxTYToggle);
-        jpMiddleBottom.add(ma20Toggle);
-        jpMiddleBottom.add(amReturnToggle);
-        jpMiddleBottom.add(rangeToggle);
-        jpMiddleBottom.add(first1Toggle);
-        jpMiddleBottom.add(first10Toggle);
-        jpMiddleBottom.add(opcToggle);
-
-        //jpMiddleBottom.add(openYPToggle);
-        //jpMiddleBottom.add(minTYToggle);
-        //jpMiddleBottom.add(amMinTToggle); jpMiddleBottom.add(vrAmMinTToggle); jpMiddleBottom.add(vr930MaxComp);
-        //jpMiddleBottom.add(vr935MaxComp); jpMiddleBottom.add(vr940MaxComp);   jpMiddleBottom.add(vr940Gen);
-        jpMiddleBottom.add(pmF10Toggle);
-        jpMiddleBottom.add(vrToggle);
-        jpMiddleBottom.add(vrPM10Toggle);
-        //jpMiddleBottom.add(vrPMToggle);
-        jpMiddleBottom.add(vrPToggle);
-        jpMiddleBottom.add(vrMinTToggle);
-        jpMiddleBottom.add(pmReturnToggle);
-        jpMiddleBottom.add(a50OnlyButton);
+        jpMiddleBottom.add(barWidthUp);
+        jpMiddleBottom.add(barWidthDown);
+//        jpMiddleBottom.add(interestToggle);
+//        jpMiddleBottom.add(industryToggle);
+//        jpMiddleBottom.add(sizeToggle);
+//        jpMiddleBottom.add(amYToggle);
+//        jpMiddleBottom.add(pmYToggle);
+//        jpMiddleBottom.add(coYToggle);
+//        jpMiddleBottom.add(firstYToggle);
+//        jpMiddleBottom.add(openPYToggle);
+//        jpMiddleBottom.add(percentileYToggle);
+//        jpMiddleBottom.add(maxTYToggle);
+//        jpMiddleBottom.add(ma20Toggle);
+//        jpMiddleBottom.add(amReturnToggle);
+//        jpMiddleBottom.add(rangeToggle);
+//        jpMiddleBottom.add(first1Toggle);
+//        jpMiddleBottom.add(first10Toggle);
+//        jpMiddleBottom.add(opcToggle);
+//
+//        //jpMiddleBottom.add(openYPToggle);
+//        //jpMiddleBottom.add(minTYToggle);
+//        //jpMiddleBottom.add(amMinTToggle); jpMiddleBottom.add(vrAmMinTToggle); jpMiddleBottom.add(vr930MaxComp);
+//        //jpMiddleBottom.add(vr935MaxComp); jpMiddleBottom.add(vr940MaxComp);   jpMiddleBottom.add(vr940Gen);
+//        jpMiddleBottom.add(pmF10Toggle);
+//        jpMiddleBottom.add(vrToggle);
+//        jpMiddleBottom.add(vrPM10Toggle);
+//        //jpMiddleBottom.add(vrPMToggle);
+//        jpMiddleBottom.add(vrPToggle);
+//        jpMiddleBottom.add(vrMinTToggle);
+//        jpMiddleBottom.add(pmReturnToggle);
+//        jpMiddleBottom.add(a50OnlyButton);
 
         //jpMiddleBottom.add(peakToggle);
         //jpMiddleBottom.add(ratioBreakToggle); jpMiddleBottom.add(rangeBreakToggle);

@@ -407,7 +407,7 @@ public final class XU extends JPanel {
 //        currentExpiryLabel.
 //    }
 
-    public void startIndex() {
+    void startIndex() {
         ftes = Executors.newScheduledThreadPool(10);
 
         ftes.scheduleAtFixedRate(() -> {
