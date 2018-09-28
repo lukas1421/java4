@@ -74,7 +74,7 @@ public class ReceiverUS implements LiveHandler {
     public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
         switch (tt) {
             case SHORTABLE:
-                outputDetailedUS(str("US handle generic", tt, symbol, value, t));
+                outputDetailedUS(symbol, str("US handle generic", tt, symbol, value, t));
                 usShortableValueMap.put(symbol, value);
                 break;
 

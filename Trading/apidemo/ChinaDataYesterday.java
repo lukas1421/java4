@@ -26,7 +26,8 @@ import java.util.concurrent.*;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
-import static apidemo.ChinaStock.*;
+import static apidemo.ChinaStock.nameMap;
+import static apidemo.ChinaStock.symbolNamesFull;
 import static apidemo.TradingConstants.FTSE_INDEX;
 import static java.lang.Double.min;
 import static java.lang.Math.log;
@@ -147,13 +148,13 @@ public final class ChinaDataYesterday extends JPanel {
                     modelRow = this.convertRowIndexToModel(Index_row);
                     comp.setBackground(Color.GREEN);
 
-                    CompletableFuture.runAsync(() -> {
-                        selectedNameStock = symbolNamesFull.get(modelRow);
-                        if (setGraph) {
-                            ChinaBigGraph.setGraph(selectedNameStock);
-                            ChinaIndex.setGraph(selectedNameStock);
-                        }
-                    });
+//                    CompletableFuture.runAsync(() -> {
+//                        selectedNameStock = symbolNamesFull.get(modelRow);
+//                        if (setGraph) {
+//                            ChinaBigGraph.setGraph(selectedNameStock);
+//                            ChinaIndex.setGraph(selectedNameStock);
+//                        }
+//                    });
                 } else {
                     comp.setBackground((Index_row % 2 == 0) ? Color.lightGray : Color.white);
                 }
@@ -287,9 +288,9 @@ public final class ChinaDataYesterday extends JPanel {
             setGraph = linkGraphButton.isSelected();
         });
 
-        indexButton.addActionListener(l -> {
-            ChinaDataYesterday.setYtdIndustryFilter(ChinaStock.industryNameMap.get(selectedNameStock));
-        });
+//        indexButton.addActionListener(l -> {
+//            ChinaDataYesterday.setYtdIndustryFilter(ChinaStock.industryNameMap.get(selectedNameStock));
+//        });
 
         btnSave.addActionListener(al -> CompletableFuture.runAsync(() -> {
             try {

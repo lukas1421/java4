@@ -58,7 +58,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
                         "*GUARANTEE US FILL*", idStatusMap.get(defaultID), "->", orderState.status(), now,
                         "ID:", defaultID, globalIdOrderMap.get(defaultID),
                         "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
-                outputDetailedUS(msg);
+                outputDetailedUS(globalIdOrderMap.get(primaryID).getSymbol(), msg);
             }
 
             if (orderState.status() == PendingCancel && globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {
