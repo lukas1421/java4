@@ -326,7 +326,6 @@ public final class ChinaMain implements IConnectionHandler {
 
 
         stopXU.addActionListener((ae) -> {
-
 //            M_CONTROLLER.cancelTopMktData(SGXFutureReceiver.getReceiverHK());
 //            M_CONTROLLER.cancelTopMktData(xu.getFrontfutHandler());
 //            M_CONTROLLER.cancelTopMktData(xu.getBackfutHandler());

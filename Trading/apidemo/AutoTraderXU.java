@@ -811,18 +811,19 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        //postCutoffLiqTrader(ldt, price);
-        cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
-        cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
-        XUCloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
+        double atmVol = getATMVol(expiryToGet);
 
-        //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
-        //futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
-        if (checkIfHoliday(LocalDate.now())) {
-            //pr(" holiday today ");
-            futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
-            futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
-            XUPostCutoffLiqTrader(ldt, price);
+        if (atmVol > XU_AUTO_VOL_THRESH) {
+            cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
+            cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
+            XUCloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
+            if (checkIfHoliday(LocalDate.now())) {
+                futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
+                futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
+                XUPostCutoffLiqTrader(ldt, price);
+            }
+            //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
+            //futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
         }
         //futDayMATrader(ldt, price);
         //futFastMATrader(ldt, price);
@@ -835,7 +836,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         //closeProfitTaker(ldt, price);
 
         if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
-            //pr(" curr delta is outside range ");
             return;
         }
         //testTrader(ldt, price);
