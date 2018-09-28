@@ -377,6 +377,8 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         trades = priceMapToLDT(ChinaPosition.tradesMap.containsKey(symb) ?
                 ChinaPosition.tradesMap.get(symb) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate);
 
+        //pr("graph monitor trades", symbol, trades);
+
         if (HistChinaStocks.chinaTradeMap.containsKey(symb) && HistChinaStocks.chinaTradeMap.get(symb).size() > 0) {
             //LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
             trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(symb).headMap(

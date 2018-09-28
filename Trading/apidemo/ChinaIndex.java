@@ -172,10 +172,10 @@ final class ChinaIndex extends JPanel {
 
         JButton refreshTableButton = new JButton("refresh");
 
-        refreshTableButton.addActionListener(l -> {
-            updateIndexTable();
-            repaintGraph();
-        });
+//        refreshTableButton.addActionListener(l -> {
+//            updateIndexTable();
+//            repaintGraph();
+//        });
 
         controlPanel.add(refreshTableButton);
 
@@ -271,16 +271,16 @@ final class ChinaIndex extends JPanel {
         }
     }
 
-    static void updateIndexTable() {
-        SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
-    }
+//    static void updateIndexTable() {
+//        SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
+//    }
 
-    static void repaintGraph() {
-        SwingUtilities.invokeLater(() -> {
-            gYtd.refresh();
-            graphPanel.repaint();
-        });
-    }
+//    static void repaintGraph() {
+//        SwingUtilities.invokeLater(() -> {
+//            gYtd.refresh();
+//            graphPanel.repaint();
+//        });
+//    }
 
     public static void setGraph(String nam) {
         if (nam != null) {

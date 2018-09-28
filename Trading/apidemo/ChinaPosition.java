@@ -22,6 +22,7 @@ import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
@@ -38,6 +39,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static apidemo.AutoTraderMain.chinaZone;
+import static apidemo.AutoTraderMain.nyZone;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaMain.currentTradingDate;
@@ -1108,7 +1111,10 @@ public class ChinaPosition extends JPanel {
                     .collect(Collectors.toMap(Entry::getKey, e -> (Integer) e.getValue().entrySet().stream()
                             .mapToInt(e1 -> e1.getValue().getSizeAll()).sum()));
 
-            return Stream.of(openPositionMap, trades).flatMap(e -> e.entrySet().stream()).filter(e -> e.getValue() != 0)
+            Map<String, Integer> nonEmptyOpenPosMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0)
+                    .collect(Collectors.toMap(Entry::getKey, Entry::getValue, (a, b) -> a, HashMap::new));
+
+            return Stream.of(nonEmptyOpenPosMap, trades).flatMap(e -> e.entrySet().stream())
                     .collect(Collectors.groupingBy(Entry::getKey, Collectors.summingInt(Entry::getValue)));
         }
         return new HashMap<>();
@@ -1637,6 +1643,13 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
         LocalDate d = ldt.toLocalDate();
         LocalTime t = ldt.toLocalTime();
         LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
+
+        if (contract.secType() == Types.SecType.STK && currencyMap.getOrDefault(symbol, "CNY").equals("USD")) {
+            ZonedDateTime chinaZdt = ZonedDateTime.of(ldt, chinaZone);
+            ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+            LocalDateTime usLdt = usZdt.toLocalDateTime();
+            lt = usLdt.toLocalTime();
+        }
 
         if (symbol.startsWith("SGXA50")) {
             if (ldt.getDayOfMonth() == currentTradingDate.getDayOfMonth() && t.isAfter(LocalTime.of(8, 59))) {

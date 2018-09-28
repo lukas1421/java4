@@ -106,11 +106,11 @@ public class AutoTraderUS {
             return;
         }
 
-        usOpenDeviationTrader(symbol, nowMilli, freshPrice);
+        //usOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usHiloTrader(symbol, nowMilli, freshPrice);
         usPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);
 
-        usPMOpenDeviationTrader(symbol, nowMilli, freshPrice);
+        //usPMOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usPMHiloTrader(symbol, nowMilli, freshPrice);
         usPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
     }
@@ -144,15 +144,15 @@ public class AutoTraderUS {
 
         if (!manualUSDevMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
-                outputDetailedUS(str("Setting manual US Dev 935", lt));
+                outputDetailedUS(symbol, str("Setting manual US Dev 935", lt));
                 manualUSDevMap.get(symbol).set(true);
             } else {
                 if (freshPrice > manualOpen) {
-                    outputDetailedUS(str("Setting manual US Dev: last>open", lt));
+                    outputDetailedUS(symbol, str("Setting manual US Dev: last>open", lt));
                     usOpenDevDirection.put(symbol, Direction.Long);
                     manualUSDevMap.get(symbol).set(true);
                 } else if (freshPrice < manualOpen) {
-                    outputDetailedUS(str("Setting manual US Dev: last < open", lt));
+                    outputDetailedUS(symbol, str("Setting manual US Dev: last < open", lt));
                     usOpenDevDirection.put(symbol, Direction.Short);
                     manualUSDevMap.get(symbol).set(true);
                 } else {
@@ -191,8 +191,8 @@ public class AutoTraderUS {
                 Order o = placeBidLimitTIF(buyPrice, buySize, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), "US open dev BUY#", numOrders, globalIdOrderMap.get(id),
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US open dev BUY#", numOrders, globalIdOrderMap.get(id),
                         "open, manual Open(9 29 55)", open, manualOpen, "buy size/ currpos", buySize, currPos,
                         "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
                         lastOrderTime.plusSeconds(waitSec),
@@ -204,8 +204,8 @@ public class AutoTraderUS {
                 Order o = placeOfferLimitTIF(sellPrice, sellSize, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), "US open dev SELL#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US open dev SELL#:", numOrders, globalIdOrderMap.get(id),
                         "open, manual Open(9 29 55)", open, manualOpen, "sell size/ currpos", sellSize, currPos,
                         "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
                         lastOrderTime.plusSeconds(waitSec),
@@ -243,15 +243,15 @@ public class AutoTraderUS {
 
         if (!manualUSPMDevMap.get(symbol).get()) {
             if (lt.isBefore(ltof(13, 5))) {
-                outputDetailedUS(str("Setting manual US PM Dev 1305", lt));
+                outputDetailedUS(symbol, str("Setting manual US PM Dev 1305", lt));
                 manualUSPMDevMap.get(symbol).set(true);
             } else {
                 if (freshPrice > pmOpen) {
-                    outputDetailedUS(str("Setting manual US PM Dev: last > open", lt));
+                    outputDetailedUS(symbol, str("Setting manual US PM Dev: last > open", lt));
                     usPMOpenDevDirection.put(symbol, Direction.Long);
                     manualUSPMDevMap.get(symbol).set(true);
                 } else if (freshPrice < pmOpen) {
-                    outputDetailedUS(str("Setting manual US PM Dev: last < open", lt));
+                    outputDetailedUS(symbol, str("Setting manual US PM Dev: last < open", lt));
                     usPMOpenDevDirection.put(symbol, Direction.Short);
                     manualUSPMDevMap.get(symbol).set(true);
                 } else {
@@ -292,8 +292,8 @@ public class AutoTraderUS {
                 Order o = placeBidLimitTIF(buyPrice, buySize, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_PMOPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), "US PM open dev BUY#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US PM open dev BUY#:", numOrders, globalIdOrderMap.get(id),
                         "pm Open(12 59 59)", pmOpen, "buy size/ currpos", buySize, currPos,
                         "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
                         lastOrderTime.plusSeconds(waitSec),
@@ -305,8 +305,8 @@ public class AutoTraderUS {
                 Order o = placeOfferLimitTIF(sellPrice, sellSize, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_PMOPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), "US PM open dev SELL#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US PM open dev SELL#:", numOrders, globalIdOrderMap.get(id),
                         "pm Open(12 59 59)", pmOpen, "sell size/ currpos", sellSize, currPos,
                         "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
                         lastOrderTime.plusSeconds(waitSec),
@@ -358,20 +358,17 @@ public class AutoTraderUS {
         LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(amObservationStart));
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
-        double buySize = US_SIZE;
-        double sellSize = US_SIZE;
-
         if (!manualUSHiloMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
                 manualUSHiloMap.get(symbol).set(true);
-                outputDetailedUS(str("Setting manual US Hilo 935", lt));
+                outputDetailedUS(symbol, str("Setting manual US Hilo 935", symbol, lt));
             } else {
                 if (maxT.isAfter(minT)) {
-                    outputDetailedUS(str("Setting manual US Hilo: maxT>minT", lt));
+                    outputDetailedUS(symbol, str("Setting manual US Hilo: maxT>minT", symbol, lt));
                     usHiloDirection.put(symbol, Direction.Long);
                     manualUSHiloMap.get(symbol).set(true);
                 } else if (minT.isAfter(maxT)) {
-                    outputDetailedUS(str("Setting manual US Hilo: minT>maxT", lt));
+                    outputDetailedUS(symbol, str("Setting manual US Hilo: minT>maxT", symbol, lt));
                     usHiloDirection.put(symbol, Direction.Short);
                     manualUSHiloMap.get(symbol).set(true);
                 } else {
@@ -389,6 +386,12 @@ public class AutoTraderUS {
         long milliLastTwo = lastTwoOrderMilliDiff(symbol, US_STOCK_HILO);
         int waitSec = (milliLastTwo < 60000) ? 300 : 10;
 
+//        double buySize = US_SIZE;
+//        double sellSize = US_SIZE;
+
+        double buySize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 2);
+        double sellSize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 2);
+
 //        pr(" US hilo#:", numOrders, ", name, price ", nowMilli, symbol, freshPrice,
 //                "last order T, milliLast2, waitSec", lastOrderT, milliLastTwo, waitSec,
 //                "max min maxt mint ", maxSoFar, minSoFar, maxT, minT,
@@ -403,8 +406,8 @@ public class AutoTraderUS {
                 Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), "US hilo buy#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US hilo buy#:", numOrders, globalIdOrderMap.get(id),
                         "buyQ/curr pos", buySize, currPos, "max min maxT minT ", maxSoFar, minSoFar, maxT, minT,
                         "last order T, milliLast2, waitSec,nexT", lastOrderT, milliLastTwo, waitSec,
                         lastOrderT.plusSeconds(waitSec), "dir", usHiloDirection.get(symbol),
@@ -416,8 +419,8 @@ public class AutoTraderUS {
                 Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), "US hilo sell#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US hilo sell#:", numOrders, globalIdOrderMap.get(id),
                         "sellQ/curr pos", sellSize, currPos, "max min maxT minT ", maxSoFar, minSoFar, maxT, minT,
                         "last order T, milliLast2, waitSec, nextT", lastOrderT, milliLastTwo, waitSec,
                         lastOrderT.plusSeconds(waitSec), "dir", usHiloDirection.get(symbol),
@@ -467,20 +470,21 @@ public class AutoTraderUS {
         LocalTime minPMT = getFirstMinTPred(prices, e -> e.isAfter(pmObservationStart));
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
-        double buySize = US_SIZE;
-        double sellSize = US_SIZE;
+//        double buySize = US_SIZE;
+//        double sellSize = US_SIZE;
+
 
         if (!manualUSPMHiloMap.get(symbol).get()) {
             if (lt.isBefore(ltof(13, 5))) {
                 manualUSPMHiloMap.get(symbol).set(true);
-                outputDetailedUS(str("Setting manual US PM Hilo 1305", lt));
+                outputDetailedUS(symbol, str("Setting manual US PM Hilo 1305", symbol, lt));
             } else {
                 if (maxPMT.isAfter(minPMT)) {
-                    outputDetailedUS(str("Setting manual US PM Hilo: maxT>minT", lt));
+                    outputDetailedUS(symbol, str("Setting manual US PM Hilo: maxT>minT", symbol, lt));
                     usPMHiloDirection.put(symbol, Direction.Long);
                     manualUSPMHiloMap.get(symbol).set(true);
                 } else if (minPMT.isAfter(maxPMT)) {
-                    outputDetailedUS(str("Setting manual US PM Hilo: minT>maxT", lt));
+                    outputDetailedUS(symbol, str("Setting manual US PM Hilo: minT>maxT", symbol, lt));
                     usPMHiloDirection.put(symbol, Direction.Short);
                     manualUSPMHiloMap.get(symbol).set(true);
                 } else {
@@ -493,6 +497,9 @@ public class AutoTraderUS {
         if (numOrders >= MAX_US_ORDERS) {
             return;
         }
+
+        double buySize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 2);
+        double sellSize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 2);
 
         LocalDateTime lastOrderT = getLastOrderTime(symbol, US_STOCK_PMHILO);
         long milliLastTwo = lastTwoOrderMilliDiff(symbol, US_STOCK_PMHILO);
@@ -512,8 +519,8 @@ public class AutoTraderUS {
                 Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_PMHILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), "US PM hilo buy#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US PM hilo buy#:", numOrders, globalIdOrderMap.get(id),
                         "buy size/curr pos", buySize, currPos,
                         "max min maxT minT ", maxPMSoFar, minPMSoFar, maxPMT, minPMT,
                         "last order T, milliLast2, waitSec,nexT", lastOrderT, milliLastTwo, waitSec,
@@ -526,8 +533,8 @@ public class AutoTraderUS {
                 Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_PMHILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), "US PM hilo sell#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US PM hilo sell#:", numOrders, globalIdOrderMap.get(id),
                         "sell size/curr pos", sellSize, currPos,
                         "max min maxT minT ", maxPMSoFar, minPMSoFar, maxPMT, minPMT,
                         "last order T, milliLast2, waitSec, nextT", lastOrderT, milliLastTwo, waitSec,
@@ -556,6 +563,7 @@ public class AutoTraderUS {
         LocalTime amEnd = ltof(12, 0, 0);
         LocalTime amCutoff = ltof(10, 0);
         LocalTime pmClose = ltof(16, 0);
+        double safetyMargin = freshPrice * 0.002;
 
         if (lt.isBefore(amCutoff) || lt.isAfter(amEnd)) {
             return;
@@ -576,22 +584,22 @@ public class AutoTraderUS {
         }
 
         if (lt.isAfter(amCutoff) && lt.isBefore(amEnd)) {
-            if (currPos < 0 && freshPrice > manualOpen) {
+            if (currPos < 0 && freshPrice > manualOpen - safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_POST_AMCUTOFF_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), " US postAMCutoff liq sell BUY #:", numOrderPostCutoff
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), " US postAMCutoff liq sell BUY #:", numOrderPostCutoff
                         , "T now", lt, " cutoff", amCutoff, "price, manualOpen", freshPrice, manualOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos));
-            } else if (currPos > 0 && freshPrice < manualOpen) {
+            } else if (currPos > 0 && freshPrice < manualOpen + safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_POST_AMCUTOFF_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), " US postAMCutoff liq SELL #:", numOrderPostCutoff
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), " US postAMCutoff liq SELL #:", numOrderPostCutoff
                         , "T now", lt, " cutoff", amCutoff, "price, manualOpen", freshPrice, manualOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos));
             }
@@ -614,6 +622,7 @@ public class AutoTraderUS {
         LocalTime pmObservationStart = ltof(12, 59, 55);
         LocalTime pmCutoff = ltof(13, 30);
         LocalTime pmClose = ltof(16, 0);
+        double safetyMargin = freshPrice * 0.002;
 
         if (lt.isBefore(pmCutoff) || lt.isAfter(pmClose)) {
             return;
@@ -634,22 +643,22 @@ public class AutoTraderUS {
         }
 
         if (lt.isAfter(pmCutoff) && lt.isBefore(pmClose)) {
-            if (currPos < 0 && freshPrice > pmOpen) {
+            if (currPos < 0 && freshPrice > pmOpen - safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_POST_PMCUTOFF_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), " US postPMCutoff liq sell BUY #:", numOrderPMCutoff
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), " US postPMCutoff liq sell BUY #:", numOrderPMCutoff
                         , "T now", lt, " cutoff", pmCutoff, "last, pmOpen", freshPrice, pmOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos));
-            } else if (currPos > 0 && freshPrice < pmOpen) {
+            } else if (currPos > 0 && freshPrice < pmOpen + safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_POST_PMCUTOFF_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), " US postPMCutoff liq SELL #:", numOrderPMCutoff
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), " US postPMCutoff liq SELL #:", numOrderPMCutoff
                         , "T now", lt, " cutoff", pmCutoff, "last, pmOpen", freshPrice, pmOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos));
             }
@@ -688,16 +697,16 @@ public class AutoTraderUS {
                 Order o = placeBidLimitTIF(freshPrice, Math.abs(pos), IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_CLOSE_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), " US close liq BUY #:", numOrderCloseLiq,
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), " US close liq BUY #:", numOrderCloseLiq,
                         globalIdOrderMap.get(id), "last order T", lastOrderTime, "pos", pos));
             } else if (pos > 0) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, pos, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_CLOSE_LIQ));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedUS("**********");
-                outputDetailedUS(str("NEW", o.orderId(), " US close liq SELL #:", numOrderCloseLiq
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), " US close liq SELL #:", numOrderCloseLiq
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "pos", pos));
             }
         }

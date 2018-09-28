@@ -645,7 +645,7 @@ public final class ChinaStock extends JPanel {
 
 
                 //pr(" computeing graph industry ");
-                ftes.scheduleAtFixedRate(GraphIndustry::compute, 0, 1000, TimeUnit.MILLISECONDS);
+                //ftes.scheduleAtFixedRate(GraphIndustry::compute, 0, 1000, TimeUnit.MILLISECONDS);
 
                 //above is tested
 
@@ -654,16 +654,16 @@ public final class ChinaStock extends JPanel {
                 ftes.scheduleAtFixedRate(ChinaGraphIndustry::refresh, 0, 3000, TimeUnit.MILLISECONDS);
 
                 //pr(" ChinaSizeRatio.computeSizeRatio ");
-                ftes.scheduleAtFixedRate(ChinaSizeRatio::computeSizeRatio, 0, 1, TimeUnit.SECONDS);
+                //ftes.scheduleAtFixedRate(ChinaSizeRatio::computeSizeRatio, 0, 1, TimeUnit.SECONDS);
 
 
                 //pr(" ChinaIndex.computeAll ");
-                ftes.scheduleAtFixedRate(ChinaIndex::computeAll, 0, 5, TimeUnit.SECONDS);
+                //ftes.scheduleAtFixedRate(ChinaIndex::computeAll, 0, 5, TimeUnit.SECONDS);
 
                 //tested
-                ftes.scheduleAtFixedRate(ChinaIndex::updateIndexTable, 0, 15, TimeUnit.SECONDS);
+                //ftes.scheduleAtFixedRate(ChinaIndex::updateIndexTable, 0, 15, TimeUnit.SECONDS);
 
-                ftes.scheduleAtFixedRate(ChinaIndex::repaintGraph, 0, 5, TimeUnit.SECONDS);
+                //ftes.scheduleAtFixedRate(ChinaIndex::repaintGraph, 0, 5, TimeUnit.SECONDS);
 
                 //ChinaBigGraph.refresh();
                 ftes.scheduleAtFixedRate(ChinaStock::refreshGraphs, 0, 1, TimeUnit.SECONDS);

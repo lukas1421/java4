@@ -3136,7 +3136,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                             apcon.cancelOrder(e.getValue().getOrder().orderId());
                             e.getValue().setFinalActionTime(LocalDateTime.now());
                             e.getValue().setAugmentedOrderStatus(OrderStatus.DeadlineCancelled);
-                            outputDetailedXU(str(now, " Cancel ALL after deadline ",
+                            outputToAll(str(now, " Cancel ALL after deadline ",
                                     e.getValue().getOrder().orderId(), e.getValue().getSymbol(),
                                     e.getValue().getOrderType(),
                                     "status CHG:", sta, "->", e.getValue().getAugmentedOrderStatus()));
