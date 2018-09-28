@@ -68,8 +68,6 @@ public final class ChinaStock extends JPanel {
     public static volatile List<String> symbolNamesFull = new ArrayList<>(1000);
 
 
-
-
     String line;
     private static volatile String listNames;
     static volatile String listNameSH;
@@ -810,9 +808,7 @@ public final class ChinaStock extends JPanel {
 //        JToggleButton ratioBreakToggle = new JToggleButton("ratioBreakT");
 //        JToggleButton rangeBreakToggle = new JToggleButton("rngBreakT");
 
-        a50OnlyButton.addActionListener(l ->
-
-        {
+        a50OnlyButton.addActionListener(l -> {
             if (filterOn) {
                 sorter.setRowFilter(null);
                 filterOn = false;

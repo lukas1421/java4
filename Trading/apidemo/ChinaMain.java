@@ -137,19 +137,18 @@ public final class ChinaMain implements IConnectionHandler {
         m_tabbedPanel.addTab("XU", xu);
         m_tabbedPanel.addTab("Xu trader ", xutrader);
         //m_tabbedPanel.addTab("Auto trader ", autoMain);
-        m_tabbedPanel.addTab("Ytd", chinaDataYtd);
+        //m_tabbedPanel.addTab("Ytd", chinaDataYtd);
         m_tabbedPanel.addTab("Data ", chinaData);
         //m_tabbedPanel.addTab("Data ytd", chinadatamapytd);
         //m_tabbedPanel.addTab("Size", chinaSizeData);
         //m_tabbedPanel.addTab("Index", chinaindex);
         //m_tabbedPanel.addTab("Size ytd", csdy);
-        m_tabbedPanel.addTab("Connection", m_connectionPanel);
-
         //m_tabbedPanel.addTab(" HK Data", hkdata);
         //m_tabbedPanel.addTab(" HK Stock", hkstock);
         m_tabbedPanel.addTab("Option", chinaOption);
         m_tabbedPanel.addTab("Hist China", histChina);
-        m_tabbedPanel.addTab("US", usstock);
+        m_tabbedPanel.addTab("Connection", m_connectionPanel);
+        //m_tabbedPanel.addTab("US", usstock);
 
         m_tabbedPanel.select("Stock ");
         m_msg.setEditable(false);
