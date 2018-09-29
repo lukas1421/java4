@@ -162,13 +162,13 @@ public class XuTraderHelper {
 
     public static void outputToAll(String s) {
         outputDetailedXU(s);
-        outputDetailedHK(s);
+        outputDetailedHK("", s);
         outputDetailedUS("", s);
     }
 
     public static void outputSymbolMsg(String symbol, String msg) {
         if (symbol.startsWith("hk")) {
-            outputDetailedHK(msg);
+            outputDetailedHK(symbol, msg);
         } else if (symbol.startsWith("SGXA50")) {
             outputDetailedXU(msg);
         } else if (currencyMap.getOrDefault(symbol, "CNY").equals("USD")) {
@@ -212,8 +212,15 @@ public class XuTraderHelper {
         outputDetailedGen(s, xuDetailOutput);
     }
 
-    public static void outputDetailedHK(String s) {
-        outputDetailedGen(s, hkDetailOutput);
+    public static void outputDetailedHK(String symbol, String msg) {
+        if (!symbol.equals("")) {
+            outputDetailedHKSymbol(symbol, msg);
+        }
+        outputDetailedGen(msg, hkDetailOutput);
+    }
+
+    private static void outputDetailedHKSymbol(String symbol, String msg) {
+        outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
     }
 
     public static void outputDetailedUS(String symbol, String msg) {
@@ -225,7 +232,6 @@ public class XuTraderHelper {
 
     private static void outputDetailedUSSymbol(String symbol, String msg) {
         outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
-
     }
 
     public static <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> mp) {

@@ -1580,7 +1580,6 @@ public class ApiController implements EWrapper {
             @Override
             public void orderState(OrderState orderState) {
                 LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
-                //new method, records all status changes, time, track IOC orders, one status only once
                 if (orderState.status() != idStatusMap.get(defaultID) && orderState.status() == Filled) {
                     String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
                             "**FILLS**", idStatusMap.get(defaultID), "->", orderState.status(), now,

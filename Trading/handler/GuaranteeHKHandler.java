@@ -33,10 +33,11 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
     public void orderState(OrderState orderState) {
         LocalTime now = LocalTime.now();
         LocalDateTime ldtNow = LocalDateTime.now();
-
+        String symbol = "";
         if (globalIdOrderMap.containsKey(defaultID)) {
             globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
             globalIdOrderMap.get(defaultID).setAugmentedOrderStatus(orderState.status());
+            symbol = globalIdOrderMap.get(defaultID).getSymbol();
         } else {
             throw new IllegalStateException(" global id order map doesn't " +
                     "contain default ID " + defaultID);
@@ -48,11 +49,10 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
                     "ID:", defaultID, globalIdOrderMap.get(defaultID),
                     "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
 
-            outputDetailedHK(msg);
+            outputDetailedHK(symbol, msg);
 
             if (orderState.status() == PendingCancel && globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {
-
-                String symbol = globalIdOrderMap.get(defaultID).getSymbol();
+                symbol = globalIdOrderMap.get(defaultID).getSymbol();
                 double freshPrice = hkFreshPriceMap.get(symbol);
                 double bid = hkBidMap.get(symbol);
                 double ask = hkAskMap.get(symbol);
@@ -73,7 +73,7 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
-                outputDetailedHK(str(prevOrder.orderId(), "->", o.orderId(),
+                outputDetailedHK(symbol, str(prevOrder.orderId(), "->", o.orderId(),
                         "RESUBMIT HK. Type, TIF, Action, P, Q, Primary?", globalIdOrderMap.get(id).getOrderType(),
                         o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), globalIdOrderMap.get(id).isPrimaryOrder(),
                         "current", globalIdOrderMap.get(id), "bid ask sp last"

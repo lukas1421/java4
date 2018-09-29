@@ -56,7 +56,7 @@ public class ReceiverHK implements LiveHandler {
     public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
         switch (tt) {
             case SHORTABLE:
-                outputDetailedHK(str("HK handle generic", tt, symbol, value, t));
+                outputDetailedHK(symbol,str("HK handle generic", tt, symbol, value, t));
                 hkShortableValueMap.put(symbol, value);
                 break;
         }
