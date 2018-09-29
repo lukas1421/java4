@@ -3111,7 +3111,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     private static boolean isCutoffOrLiqTrader(AutoOrderType tt) {
         return (tt == INDEX_POST_AMCUTOFF || tt == INDEX_POST_PMCUTOFF ||
-                tt == HK_POST_CUTOFF_LIQ || tt == FUT_POST_CUTOFF_LIQ ||
+                tt == HK_POST_AMCUTOFF_LIQ || tt == FUT_POST_CUTOFF_LIQ ||
                 tt == US_POST_AMCUTOFF_LIQ || tt == US_POST_PMCUTOFF_LIQ ||
                 tt == CLOSE_LIQ || tt == US_CLOSE_LIQ || tt == HK_CLOSE_LIQ);
     }
