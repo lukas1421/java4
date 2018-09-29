@@ -95,6 +95,7 @@ public class AutoTraderHK extends JPanel {
 
         hkPMHiloTrader(symbol, nowMilli, freshPrice);
         hkPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
+
         hkCloseLiqTrader(symbol, nowMilli, freshPrice);
 
     }
@@ -138,8 +139,8 @@ public class AutoTraderHK extends JPanel {
             Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), DAY);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_POST_AMCUTOFF_LIQ));
             apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-            outputDetailedHK(symbol,"**********");
-            outputDetailedHK(symbol,str("NEW", o.orderId(), "HK post AM cutoff liq BUY#:", numOrders,
+            outputDetailedHK(symbol, "**********");
+            outputDetailedHK(symbol, str("NEW", o.orderId(), "HK post AM cutoff liq BUY#:", numOrders,
                     globalIdOrderMap.get(id), "freshPrice, manualOpen", freshPrice, manualOpen,
                     "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin));
         } else if (currPos > 0 && freshPrice < manualOpen) {
@@ -147,8 +148,8 @@ public class AutoTraderHK extends JPanel {
             Order o = placeOfferLimitTIF(freshPrice, currPos, DAY);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_POST_AMCUTOFF_LIQ));
             apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-            outputDetailedHK(symbol,"**********");
-            outputDetailedHK(symbol,str("NEW", o.orderId(), "HK post AM cutoff liq SELL#:", numOrders,
+            outputDetailedHK(symbol, "**********");
+            outputDetailedHK(symbol, str("NEW", o.orderId(), "HK post AM cutoff liq SELL#:", numOrders,
                     globalIdOrderMap.get(id), "freshPrice, manualOpen", freshPrice, manualOpen,
                     "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin));
         }
@@ -181,8 +182,8 @@ public class AutoTraderHK extends JPanel {
             Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), DAY);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_POST_PMCUTOFF_LIQ));
             apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-            outputDetailedHK(symbol,"**********");
-            outputDetailedHK(symbol,str("NEW", o.orderId(), "HK PM post cutoff liq BUY#:", numOrders,
+            outputDetailedHK(symbol, "**********");
+            outputDetailedHK(symbol, str("NEW", o.orderId(), "HK PM post cutoff liq BUY#:", numOrders,
                     globalIdOrderMap.get(id), "freshPrice, manualPMOpen", freshPrice, manualPMOpen,
                     "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin));
         } else if (currPos > 0 && freshPrice < manualPMOpen + safetyMargin) {
@@ -190,8 +191,8 @@ public class AutoTraderHK extends JPanel {
             Order o = placeOfferLimitTIF(freshPrice, currPos, DAY);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_POST_PMCUTOFF_LIQ));
             apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-            outputDetailedHK(symbol,"**********");
-            outputDetailedHK(symbol,str("NEW", o.orderId(), "HK PM post cutoff liq SELL#:", numOrders,
+            outputDetailedHK(symbol, "**********");
+            outputDetailedHK(symbol, str("NEW", o.orderId(), "HK PM post cutoff liq SELL#:", numOrders,
                     globalIdOrderMap.get(id), "freshPrice, manualPMOpen", freshPrice, manualPMOpen,
                     "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin));
         }
@@ -239,15 +240,15 @@ public class AutoTraderHK extends JPanel {
 
         if (!manualHKDevMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35, 0))) {
-                outputDetailedHK(symbol,str("setting manual HK dev:before 935 ",symbol, lt));
+                outputDetailedHK(symbol, str("setting manual HK dev:before 935 ", symbol, lt));
                 manualHKDevMap.get(symbol).set(true);
             } else {
                 if (freshPrice > open) {
-                    outputDetailedHK(symbol,str("setting manual HK dev: fresh>open ",symbol, lt));
+                    outputDetailedHK(symbol, str("setting manual HK dev: fresh>open ", symbol, lt));
                     hkOpenDevDirection.put(symbol, Direction.Long);
                     manualHKDevMap.get(symbol).set(true);
                 } else if (freshPrice < open) {
-                    outputDetailedHK(symbol,str("setting manual HK dev: fresh<open",symbol, lt));
+                    outputDetailedHK(symbol, str("setting manual HK dev: fresh<open", symbol, lt));
                     hkOpenDevDirection.put(symbol, Direction.Short);
                     manualHKDevMap.get(symbol).set(true);
                 } else {
@@ -274,8 +275,8 @@ public class AutoTraderHK extends JPanel {
                 Order o = placeBidLimitTIF(freshPrice, size, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_DEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-                outputDetailedHK(symbol,"**********");
-                outputDetailedHK(symbol,str("NEW", o.orderId(), "HK open dev BUY#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedHK(symbol, "**********");
+                outputDetailedHK(symbol, str("NEW", o.orderId(), "HK open dev BUY#:", numOrders, globalIdOrderMap.get(id),
                         "open, manualOpen, ft, ftT", open, manualOpen, firstTick, firstTickTime,
                         "last Order T, milliLastTwo", lastOrderTime, milliLastTwo,
                         "pos", currPos, "dir", hkOpenDevDirection.get(symbol), "manual?", manualHKDevMap.get(symbol),
@@ -286,8 +287,8 @@ public class AutoTraderHK extends JPanel {
                 Order o = placeOfferLimitTIF(freshPrice, size, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_DEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
-                outputDetailedHK(symbol,"**********");
-                outputDetailedHK(symbol,str("NEW", o.orderId(), "HK open dev SELL#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedHK(symbol, "**********");
+                outputDetailedHK(symbol, str("NEW", o.orderId(), "HK open dev SELL#:", numOrders, globalIdOrderMap.get(id),
                         "open, manualOpen, ft, ftT", open, manualOpen, firstTick, firstTickTime,
                         "last Order T, milliLastTwo", lastOrderTime, milliLastTwo,
                         "pos", currPos, "dir", hkOpenDevDirection.get(symbol), "manual?", manualHKDevMap.get(symbol),
@@ -327,17 +328,17 @@ public class AutoTraderHK extends JPanel {
             Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), DAY);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_CLOSE_LIQ));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
-            outputDetailedHK(symbol,"**********");
-            outputDetailedHK(symbol,str("NEW", o.orderId(), "HK close Liq BUY:#:", numOrders, globalIdOrderMap.get(id),
-                    "pos", currPos));
+            outputDetailedHK(symbol, "**********");
+            outputDetailedHK(symbol, str("NEW", o.orderId(), "HK close Liq BUY:#:", numOrders,
+                    globalIdOrderMap.get(id), "pos", currPos, "time", lt));
         } else if (currPos > 0) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimitTIF(freshPrice, currPos, DAY);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_CLOSE_LIQ));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
-            outputDetailedHK(symbol,"**********");
-            outputDetailedHK(symbol,str("NEW", o.orderId(), "HK close Liq SELL:#:", numOrders, globalIdOrderMap.get(id),
-                    "pos", currPos));
+            outputDetailedHK(symbol, "**********");
+            outputDetailedHK(symbol, str("NEW", o.orderId(), "HK close Liq SELL:#:", numOrders,
+                    globalIdOrderMap.get(id), "pos", currPos, "time", lt));
         }
     }
 
@@ -384,15 +385,15 @@ public class AutoTraderHK extends JPanel {
 
         if (!manualHKHiloMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
-                outputDetailedHK(symbol,str(" setting manual HK hilo: pre 935", lt));
+                outputDetailedHK(symbol, str(" setting manual HK hilo: pre 935", symbol, lt));
                 manualHKHiloMap.get(symbol).set(true);
             } else {
                 if (maxT.isAfter(minT)) {
-                    outputDetailedHK(symbol,str(" setting manual HK hilo: maxT>minT", lt));
+                    outputDetailedHK(symbol, str(" setting manual HK hilo: maxT>minT", symbol, lt));
                     hkHiloDirection.put(symbol, Direction.Long);
                     manualHKHiloMap.get(symbol).set(true);
                 } else if (minT.isAfter(maxT)) {
-                    outputDetailedHK(symbol,str(" setting manual HK hilo: minT>maxT", lt));
+                    outputDetailedHK(symbol, str(" setting manual HK hilo: minT>maxT", symbol, lt));
                     hkHiloDirection.put(symbol, Direction.Short);
                     manualHKHiloMap.get(symbol).set(true);
                 } else {
@@ -419,8 +420,8 @@ public class AutoTraderHK extends JPanel {
                 Order o = placeBidLimitTIF(freshPrice, size, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
-                outputDetailedHK(symbol,"**********");
-                outputDetailedHK(symbol,str("NEW", o.orderId(), "HK hilo buy#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedHK(symbol, "**********");
+                outputDetailedHK(symbol, str("NEW", o.orderId(), "HK hilo buy#:", numOrders, globalIdOrderMap.get(id),
                         "max min maxT minT ", maxSoFar, minSoFar, maxT, minT, "pos", currPos,
                         "last order T, milliLast2, waitSec", lastOrderTime, milliLastTwo, waitSec,
                         "dir, manual ", hkHiloDirection.get(symbol), manualHKHiloMap.get(symbol),
@@ -432,8 +433,8 @@ public class AutoTraderHK extends JPanel {
                 Order o = placeOfferLimitTIF(freshPrice, size, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_HILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
-                outputDetailedHK(symbol,"**********");
-                outputDetailedHK(symbol,str("NEW", o.orderId(), "HK hilo sell#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedHK(symbol, "**********");
+                outputDetailedHK(symbol, str("NEW", o.orderId(), "HK hilo sell#:", numOrders, globalIdOrderMap.get(id),
                         "max min maxT minT ", maxSoFar, minSoFar, maxT, minT, "pos", currPos,
                         "last order T, milliLast2, wait Sec", lastOrderTime, milliLastTwo, waitSec,
                         "dir, manual ", hkHiloDirection.get(symbol), manualHKHiloMap.get(symbol),
@@ -459,7 +460,7 @@ public class AutoTraderHK extends JPanel {
     private static void hkPMHiloTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
 
-        LocalTime cutoff = ltof(13, 30);
+        LocalTime pmCutoff = ltof(13, 30);
         LocalTime pmObservationStart = ltof(12, 58, 0);
         LocalTime pmTradingStart = ltof(12, 58);
 
@@ -472,7 +473,7 @@ public class AutoTraderHK extends JPanel {
         if (prices.size() <= 1) {
             return;
         }
-        if (lt.isBefore(pmTradingStart) || lt.isAfter(cutoff)) {
+        if (lt.isBefore(pmTradingStart) || lt.isAfter(pmCutoff)) {
             return;
         }
         LocalTime lastKey = prices.lastKey();
@@ -491,15 +492,15 @@ public class AutoTraderHK extends JPanel {
 
         if (!manualHKPMHiloMap.get(symbol).get()) {
             if (lt.isBefore(ltof(13, 5))) {
-                outputDetailedHK(symbol,str(" setting manual HK PM hilo: pre 13:05", lt));
+                outputDetailedHK(symbol, str(" setting manual HK PM hilo: pre 13:05", lt));
                 manualHKPMHiloMap.get(symbol).set(true);
             } else {
                 if (maxPMT.isAfter(minPMT)) {
-                    outputDetailedHK(symbol,str(" setting manual HK PM hilo: maxT>minT", lt));
+                    outputDetailedHK(symbol, str(" setting manual HK PM hilo: maxT>minT", lt));
                     hkPMHiloDirection.put(symbol, Direction.Long);
                     manualHKPMHiloMap.get(symbol).set(true);
                 } else if (minPMT.isAfter(maxPMT)) {
-                    outputDetailedHK(symbol,str(" setting manual HK PM hilo: minT>maxT", lt));
+                    outputDetailedHK(symbol, str(" setting manual HK PM hilo: minT>maxT", lt));
                     hkPMHiloDirection.put(symbol, Direction.Short);
                     manualHKPMHiloMap.get(symbol).set(true);
                 } else {
@@ -526,8 +527,8 @@ public class AutoTraderHK extends JPanel {
                 Order o = placeBidLimitTIF(freshPrice, size, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_PMHILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
-                outputDetailedHK(symbol,"**********");
-                outputDetailedHK(symbol,str("NEW", o.orderId(), "HK PM hilo buy#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedHK(symbol, "**********");
+                outputDetailedHK(symbol, str("NEW", o.orderId(), "HK PM hilo buy#:", numOrders, globalIdOrderMap.get(id),
                         "max min maxT minT ", maxPMSoFar, minPMSoFar, maxPMT, minPMT, "pos", currPos,
                         "last order T, milliLast2, waitSec", lastOrderTime, milliLastTwo, waitSec,
                         "dir, manual ", hkPMHiloDirection.get(symbol), manualHKPMHiloMap.get(symbol),
@@ -539,8 +540,8 @@ public class AutoTraderHK extends JPanel {
                 Order o = placeOfferLimitTIF(freshPrice, size, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_PMHILO));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
-                outputDetailedHK(symbol,"**********");
-                outputDetailedHK(symbol,str("NEW", o.orderId(), "HK PM hilo sell#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedHK(symbol, "**********");
+                outputDetailedHK(symbol, str("NEW", o.orderId(), "HK PM hilo sell#:", numOrders, globalIdOrderMap.get(id),
                         "max min maxT minT ", maxPMSoFar, minPMSoFar, maxPMT, minPMT, "pos", currPos,
                         "last order T, milliLast2, wait Sec", lastOrderTime, milliLastTwo, waitSec,
                         "dir, manual ", hkPMHiloDirection.get(symbol), manualHKPMHiloMap.get(symbol),
