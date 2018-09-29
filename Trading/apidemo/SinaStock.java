@@ -123,17 +123,18 @@ public class SinaStock implements Runnable {
                             double atmVol = getATMVol(expiryToGet);
                             if (atmVol > XU_AUTO_VOL_THRESH) {
                                 indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
-                                indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee, same size
                                 indexPostAMCutoffLiqTrader(ldt, currIndexPrice);
                                 indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
-                                indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 13:30pm, no guarantee, same size
                                 indexPostPMCutoffLiqTrader(ldt, currIndexPrice);
                             }
+
+                            //indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee, same size
+                            //indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 13:30pm, no guarantee, same size
                             //intradayMAProfitTaker(ldt, currIndexPrice); //all day, guarantee
                             //AutoTraderXU.indexFirstTickTrader(ldt, currIndexPrice); //1 tick, guarantee (decommission)
                             //AutoTraderXU.closeProfitTaker(ldt, currIndexPrice);
                             //AutoTraderXU.firstTickMAProfitTaker(ldt, currIndexPrice);
-                            AutoTraderXU.indexHiloAccumulator(ldt, currIndexPrice);
+                            //AutoTraderXU.indexHiloAccumulator(ldt, currIndexPrice);
                             //AutoTraderXU.intraday1stTickAccumulator(ldt, currIndexPrice);
                         }
                     }

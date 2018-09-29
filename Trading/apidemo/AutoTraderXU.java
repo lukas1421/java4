@@ -2345,12 +2345,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime amObservationStart = ltof(9, 28, 0);
         LocalTime cutoff = ltof(10, 0);
         LocalTime amClose = ltof(11, 30, 0);
+        double safetyMargin = indexLast * 0.001;
 
         double freshPrice = futPriceMap.get(f);
         long numOrders = getOrderSizeForTradeType(symbol, INDEX_POST_AMCUTOFF);
         int currPos = currentPosMap.get(f);
         int reverseAddon = 0;
-        double safetyMargin = 10;
 
         if (lt.isBefore(cutoff) || lt.isAfter(amClose)) {
             return;
@@ -2370,7 +2370,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU("**********");
                 outputDetailedXU(str("NEW", o.orderId(), "post AM Cutoff BUY#:", numOrders
-                        , globalIdOrderMap.get(id), "lastprice, open ", indexLast, r(openIndex)));
+                        , globalIdOrderMap.get(id), "lastprice, open ", indexLast, r(openIndex),
+                        "safetymargin ", safetyMargin));
             } else if (currPos > 0 && indexLast < openIndex + safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos + reverseAddon, IOC);
@@ -2378,7 +2379,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU("**********");
                 outputDetailedXU(str("NEW", o.orderId(), "post AM Cutoff SELL#:", numOrders
-                        , globalIdOrderMap.get(id), "lastprice, open ", indexLast, r(openIndex)));
+                        , globalIdOrderMap.get(id), "lastprice, open ", indexLast, r(openIndex),
+                        "safetymargin ", safetyMargin));
             }
         }
     }
@@ -2398,7 +2400,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         long numOrdersPMCutoff = getOrderSizeForTradeType(symbol, INDEX_POST_PMCUTOFF);
         int currPos = currentPosMap.get(f);
         int reverseAddOn = 0;
-        double safetyMargin = 10;
+        double safetyMargin = indexLast * 0.001;
 
         LocalTime pmObservationStart = ltof(12, 58, 0);
         LocalTime pmCutoff = ltof(13, 30);
@@ -2422,7 +2424,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU("**********");
                 outputDetailedXU(str("NEW", o.orderId(), "post PM Cutoff BUY#:", numOrdersPMCutoff
-                        , globalIdOrderMap.get(id), "index last, pmopen ", indexLast, r(pmOpen), "curpos", currPos));
+                        , globalIdOrderMap.get(id), "index last, pmopen ", indexLast, r(pmOpen), "curpos", currPos,
+                        "safetymargin ", safetyMargin));
             } else if (currPos > 0 && indexLast < pmOpen + safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos + reverseAddOn, IOC);
@@ -2430,7 +2433,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU("**********");
                 outputDetailedXU(str("NEW", o.orderId(), "post PM Cutoff SELL#:", numOrdersPMCutoff
-                        , globalIdOrderMap.get(id), "index last, pmopen ", indexLast, r(pmOpen), "curpos", currPos));
+                        , globalIdOrderMap.get(id), "index last, pmopen ", indexLast, r(pmOpen), "curpos", currPos,
+                        "safetymargin ", safetyMargin));
             }
         }
     }
