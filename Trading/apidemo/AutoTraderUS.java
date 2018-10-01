@@ -50,7 +50,6 @@ public class AutoTraderUS {
     public static List<String> usSymbols = new ArrayList<>();
     private static final double US_SIZE = 100;
 
-
     public static Contract tickerToUSContract(String ticker) {
         Contract ct = new Contract();
         ct.symbol(ticker);
@@ -61,10 +60,12 @@ public class AutoTraderUS {
     }
 
     AutoTraderUS() {
-        usSymbols.add(ibContractToSymbol(tickerToUSContract("BILI")));
-        usSymbols.add(ibContractToSymbol(tickerToUSContract("IQ")));
         usSymbols.add(ibContractToSymbol(tickerToUSContract("QTT")));
         usSymbols.add(ibContractToSymbol(tickerToUSContract("NIO")));
+        usSymbols.add(ibContractToSymbol(tickerToUSContract("PDD")));
+        //usSymbols.add(ibContractToSymbol(tickerToUSContract("RYAAY")));
+        usSymbols.add(ibContractToSymbol(tickerToUSContract("TLRY"))); // cannot short as of 10/2
+
 
         usSymbols.forEach(s -> {
             if (!priceMapBarDetail.containsKey(s)) {
@@ -107,7 +108,7 @@ public class AutoTraderUS {
             return;
         }
 
-        //usOpenDeviationTrader(symbol, nowMilli, freshPrice);
+        usOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usHiloTrader(symbol, nowMilli, freshPrice);
         usPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);
 
@@ -145,15 +146,15 @@ public class AutoTraderUS {
 
         if (!manualUSDevMap.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
-                outputDetailedUS(symbol, str("Setting manual US Dev 935", lt));
+                outputDetailedUS(symbol, str("Setting manual US Dev 935", symbol, lt));
                 manualUSDevMap.get(symbol).set(true);
             } else {
                 if (freshPrice > manualOpen) {
-                    outputDetailedUS(symbol, str("Setting manual US Dev: last>open", lt));
+                    outputDetailedUS(symbol, str("Setting manual US Dev: last>open", symbol, lt));
                     usOpenDevDirection.put(symbol, Direction.Long);
                     manualUSDevMap.get(symbol).set(true);
                 } else if (freshPrice < manualOpen) {
-                    outputDetailedUS(symbol, str("Setting manual US Dev: last < open", lt));
+                    outputDetailedUS(symbol, str("Setting manual US Dev: last < open", symbol, lt));
                     usOpenDevDirection.put(symbol, Direction.Short);
                     manualUSDevMap.get(symbol).set(true);
                 } else {
@@ -171,10 +172,10 @@ public class AutoTraderUS {
             return;
         }
 
-        pr(" US open dev#:", numOrders, lt, nowMilli, "name, price ", symbol, freshPrice,
-                "open/manual open ", usOpenMap.getOrDefault(symbol, 0.0), manualOpen,
-                "last order T/ millilast2/ waitsec", lastOrderTime, milliLastTwo, waitSec,
-                "curr pos ", currPos, "dir: ", usOpenDevDirection.get(symbol));
+//        pr(" US open dev#:", numOrders, lt, nowMilli, "name, price ", symbol, freshPrice,
+//                "open/manual open ", usOpenMap.getOrDefault(symbol, 0.0), manualOpen,
+//                "last order T/ millilast2/ waitsec", lastOrderTime, milliLastTwo, waitSec,
+//                "curr pos ", currPos, "dir: ", usOpenDevDirection.get(symbol));
 
         double buyPrice;
         double sellPrice;
@@ -193,7 +194,8 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputDetailedUS(symbol, "**********");
-                outputDetailedUS(symbol, str("NEW", o.orderId(), "US open dev BUY#", numOrders, globalIdOrderMap.get(id),
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US open dev BUY#", numOrders,
+                        globalIdOrderMap.get(id),
                         "open, manual Open(9 29 55)", open, manualOpen, "buy size/ currpos", buySize, currPos,
                         "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
                         lastOrderTime.plusSeconds(waitSec),
@@ -206,7 +208,8 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputDetailedUS(symbol, "**********");
-                outputDetailedUS(symbol, str("NEW", o.orderId(), "US open dev SELL#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US open dev SELL#:", numOrders,
+                        globalIdOrderMap.get(id),
                         "open, manual Open(9 29 55)", open, manualOpen, "sell size/ currpos", sellSize, currPos,
                         "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
                         lastOrderTime.plusSeconds(waitSec),

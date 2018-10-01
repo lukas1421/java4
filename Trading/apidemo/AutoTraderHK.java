@@ -50,11 +50,13 @@ public class AutoTraderHK extends JPanel {
     public static List<String> hkSymbols = new ArrayList<>();
 
     AutoTraderHK() {
-//        Contract ct = tickerToHKContract("1293");
-//        String symbol = ibContractToSymbol(ct);
+
         hkSymbols.add(ibContractToSymbol(tickerToHKContract("1293")));
-        hkSymbols.add(ibContractToSymbol(tickerToHKContract("3690")));
         hkSymbols.add(ibContractToSymbol(tickerToHKContract("3333")));
+
+        //Contract ct = tickerToHKContract("1293");
+        //String symbol = ibContractToSymbol(ct);
+        //hkSymbols.add(ibContractToSymbol(tickerToHKContract("3690")));
 
         hkSymbols.forEach((s) -> {
             if (!priceMapBarDetail.containsKey(s)) {
@@ -276,7 +278,8 @@ public class AutoTraderHK extends JPanel {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_DEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputDetailedHK(symbol, "**********");
-                outputDetailedHK(symbol, str("NEW", o.orderId(), "HK open dev BUY#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedHK(symbol, str("NEW", o.orderId(), "HK open dev BUY#:", numOrders,
+                        globalIdOrderMap.get(id),
                         "open, manualOpen, ft, ftT", open, manualOpen, firstTick, firstTickTime,
                         "last Order T, milliLastTwo", lastOrderTime, milliLastTwo,
                         "pos", currPos, "dir", hkOpenDevDirection.get(symbol), "manual?", manualHKDevMap.get(symbol),
@@ -288,7 +291,8 @@ public class AutoTraderHK extends JPanel {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_DEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputDetailedHK(symbol, "**********");
-                outputDetailedHK(symbol, str("NEW", o.orderId(), "HK open dev SELL#:", numOrders, globalIdOrderMap.get(id),
+                outputDetailedHK(symbol, str("NEW", o.orderId(), "HK open dev SELL#:", numOrders,
+                        globalIdOrderMap.get(id),
                         "open, manualOpen, ft, ftT", open, manualOpen, firstTick, firstTickTime,
                         "last Order T, milliLastTwo", lastOrderTime, milliLastTwo,
                         "pos", currPos, "dir", hkOpenDevDirection.get(symbol), "manual?", manualHKDevMap.get(symbol),
