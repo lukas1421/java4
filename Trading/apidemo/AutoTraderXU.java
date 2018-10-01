@@ -821,6 +821,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             XUCloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
 
             //futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
+            cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(10, 0));
             futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
             futPostCutoffLiqTrader(ldt, price);
         }
@@ -1263,7 +1264,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         long currPos = currentPosMap.get(f);
         double open = priceMapBarDetail.get(symbol).firstEntry().getValue();
         long numPostCutoffOrders = getOrderSizeForTradeType(symbol, FUT_POST_CUTOFF_LIQ);
-        double safetyMargin = freshPrice * 0.001;
+        double safetyMargin = freshPrice * 0.002;
 
         if (numPostCutoffOrders >= 1) {
             return;
