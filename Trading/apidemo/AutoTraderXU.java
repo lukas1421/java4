@@ -813,18 +813,20 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         double atmVol = getATMVol(expiryToGet);
 
-        if (atmVol > XU_AUTO_VOL_THRESH) {
+        //if (atmVol > XU_AUTO_VOL_THRESH) {
+
+        if (checkIfHoliday(LocalDate.now()) || atmVol > XU_AUTO_VOL_THRESH) {
             cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
             cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
             XUCloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
-            if (checkIfHoliday(LocalDate.now())) {
-                futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
-                futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
-                XUPostCutoffLiqTrader(ldt, price);
-            }
-            //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
-            //futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
+
+            //futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
+            futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
+            XUPostCutoffLiqTrader(ldt, price);
         }
+        //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
+        //futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
+        //}
         //futDayMATrader(ldt, price);
         //futFastMATrader(ldt, price);
         //futHiloAccu(ldt, price);
@@ -3171,9 +3173,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                             apcon.cancelOrder(e.getValue().getOrder().orderId());
                             e.getValue().setFinalActionTime(LocalDateTime.now());
                             e.getValue().setAugmentedOrderStatus(OrderStatus.DeadlineCancelled);
-                            outputDetailedXU(str(now, " Cancel after deadline ",
+                            String msg = str(now, " Cancel after deadline ",
                                     e.getValue().getOrder().orderId(), "status CHG:",
-                                    sta, "->", e.getValue().getAugmentedOrderStatus()));
+                                    sta, "->", e.getValue().getAugmentedOrderStatus());
+                            outputSymbolMsg(e.getValue().getSymbol(), msg);
+                            outputToAll(msg);
                         }
                     });
         }

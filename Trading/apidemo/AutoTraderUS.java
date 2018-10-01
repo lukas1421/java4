@@ -389,12 +389,6 @@ public class AutoTraderUS {
         double buySize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 1);
         double sellSize = US_SIZE * ((numOrders == 0 || numOrders == (MAX_US_ORDERS - 1)) ? 1 : 1);
 
-//        pr(" US hilo#:", numOrders, ", name, price ", nowMilli, symbol, freshPrice,
-//                "last order T, milliLast2, waitSec", lastOrderT, milliLastTwo, waitSec,
-//                "max min maxt mint ", maxSoFar, minSoFar, maxT, minT,
-//                lastOrderT.plusSeconds(waitSec), "dir: ", usHiloDirection.get(symbol), "currPos ", currPos,
-//                "shortability", usShortableValueMap.get(symbol));
-
         if (SECONDS.between(lastOrderT, nowMilli) > waitSec && maxSoFar != 0.0 && minSoFar != 0.0 &&
                 usShortableValueMap.get(symbol) > US_MIN_SHORT_LEVEL) {
             if (!noMoreBuy.get() && (freshPrice > maxSoFar || maxT.isAfter(minT))

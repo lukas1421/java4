@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaStock.*;
+import static utility.Utility.pr;
 
 public class AutoTraderMain extends JPanel {
 
@@ -81,7 +82,7 @@ public class AutoTraderMain extends JPanel {
 
     public static boolean checkIfHoliday(LocalDate d) {
         //pr("holiday set is ", holidaySet);
-        //pr(d, " is a holiday? ", holidaySet.contains(d), "!");
+        pr(d, " is a holiday? ", holidaySet.contains(d), "!");
         return holidaySet.contains(d);
     }
 
