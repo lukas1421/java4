@@ -551,7 +551,7 @@ public class AutoTraderUS {
         LocalTime amEnd = ltof(12, 0, 0);
         LocalTime amCutoff = ltof(10, 0);
         LocalTime pmClose = ltof(16, 0);
-        double safetyMargin = freshPrice * 0.002;
+        double safetyMargin = freshPrice * 0.01;
 
         if (lt.isBefore(amCutoff) || lt.isAfter(pmClose)) {
             return;
@@ -581,7 +581,7 @@ public class AutoTraderUS {
                 outputDetailedUS(symbol, str("NEW", o.orderId(), " US postAMCutoff liq sell BUY #:", numOrderPostCutoff
                         , "T now", lt, " cutoff", amCutoff, "price, manualOpen", freshPrice, manualOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos,
-                        "safety margin ", safetyMargin));
+                        "safety margin ", safetyMargin, "safety level ", manualOpen - safetyMargin));
             } else if (currPos > 0 && freshPrice < manualOpen + safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
@@ -591,7 +591,7 @@ public class AutoTraderUS {
                 outputDetailedUS(symbol, str("NEW", o.orderId(), " US postAMCutoff liq SELL #:", numOrderPostCutoff
                         , "T now", lt, " cutoff", amCutoff, "price, manualOpen", freshPrice, manualOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos,
-                        "safety margin ", safetyMargin));
+                        "safety margin ", safetyMargin, "safety level", manualOpen + safetyMargin));
             }
         }
     }
@@ -612,7 +612,7 @@ public class AutoTraderUS {
         LocalTime pmObservationStart = ltof(11, 59, 55);
         LocalTime pmCutoff = ltof(12, 30);
         LocalTime pmClose = ltof(16, 0);
-        double safetyMargin = freshPrice * 0.003;
+        double safetyMargin = freshPrice * 0.01;
 
         if (lt.isBefore(pmCutoff) || lt.isAfter(pmClose)) {
             return;
@@ -642,7 +642,7 @@ public class AutoTraderUS {
                 outputDetailedUS(symbol, str("NEW", o.orderId(), " US postPMCutoff liq sell BUY #:", numOrderPMCutoff
                         , "T now", lt, " cutoff", pmCutoff, "last, pmOpen", freshPrice, pmOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos,
-                        "safety margin ", safetyMargin));
+                        "safety margin ", safetyMargin, "safety level ", pmOpen - safetyMargin));
             } else if (currPos > 0 && freshPrice < pmOpen + safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
@@ -652,7 +652,7 @@ public class AutoTraderUS {
                 outputDetailedUS(symbol, str("NEW", o.orderId(), " US postPMCutoff liq SELL #:", numOrderPMCutoff
                         , "T now", lt, " cutoff", pmCutoff, "last, pmOpen", freshPrice, pmOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos,
-                        "safety margin ", safetyMargin));
+                        "safety margin ", safetyMargin, "safety level ", pmOpen + safetyMargin));
             }
         }
     }
