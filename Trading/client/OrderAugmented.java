@@ -86,6 +86,7 @@ public class OrderAugmented {
         orderType = AutoOrderType.UNKNOWN;
         augmentedOrderStatus = OrderStatus.Created;
         finalActionTime = LocalDateTime.MIN;
+        primaryOrder.set(true);
     }
 
     public LocalDateTime getOrderTime() {
