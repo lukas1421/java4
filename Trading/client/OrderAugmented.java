@@ -19,6 +19,7 @@ public class OrderAugmented {
     private AtomicBoolean primaryOrder = new AtomicBoolean(false);
     private LocalDateTime finalActionTime;
 
+
     public OrderAugmented(String name, LocalDateTime t, Order o, String m, AutoOrderType tt) {
         symbol = name;
         orderTime = t;
@@ -78,6 +79,7 @@ public class OrderAugmented {
     }
 
     public OrderAugmented() {
+        symbol = "";
         orderTime = LocalDateTime.MIN;
         order = new Order();
         msg = "";

@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.stream.Collectors;
 
 import static apidemo.AutoTraderXU.findOrderByTWSID;
 import static apidemo.AutoTraderXU.ltof;
@@ -99,17 +98,17 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
 
-        AutoTraderMain.liveSymbolOrderSet.entrySet().stream().filter(e -> e.getKey().equals(symbol)).forEach(e -> {
-            pr("symbol, liveOrders", e.getKey(), e.getValue().stream()
-                    .map(e1 -> str(e1.orderId(), e1.action(), e1.lmtPrice(), e1.totalQuantity(),
-                            findOrderByTWSID(e1.orderId()).getAugmentedOrderStatus()))
-                    .collect(Collectors.joining(",")));
-        });
+//        AutoTraderMain.liveSymbolOrderSet.entrySet().stream().filter(e -> e.getKey().equals(symbol)).forEach(e -> {
+//            pr("symbol, liveOrders", e.getKey(), e.getValue().stream()
+//                    .map(e1 -> str(e1.orderId(), e1.action(), e1.lmtPrice(), e1.totalQuantity(),
+//                            findOrderByTWSID(e1.orderId()).getAugmentedOrderStatus()))
+//                    .collect(Collectors.joining(",")));
+//        });
 
         AutoTraderMain.liveIDOrderMap.forEach((k, v) -> {
             OrderAugmented oa = findOrderByTWSID(k);
             OrderStatus s = oa.getAugmentedOrderStatus();
-            if (oa.getSymbol().equals(symbol)) {
+            if (oa.getSymbol() != null && oa.getSymbol().equals(symbol)) {
                 if (s != Filled && s != PendingCancel && s != Inactive && s != DeadlineCancelled) {
                     int y = getY(v.lmtPrice());
                     if (v.action().equals(Types.Action.BUY)) {

@@ -1263,6 +1263,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         long currPos = currentPosMap.get(f);
         double open = priceMapBarDetail.get(symbol).firstEntry().getValue();
         long numPostCutoffOrders = getOrderSizeForTradeType(symbol, FUT_POST_CUTOFF_LIQ);
+        double safetyMargin = freshPrice * 0.001;
 
         if (numPostCutoffOrders >= 1) {
             return;
@@ -1272,14 +1273,14 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        if (currPos < 0 & freshPrice > open) {
+        if (currPos < 0 & freshPrice > open - safetyMargin) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_POST_CUTOFF_LIQ));
             apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(str(o.orderId(), "fut post cutoff liq BUY#:", numPostCutoffOrders
                     , globalIdOrderMap.get(id)));
-        } else if (currPos > 0 && freshPrice < open) {
+        } else if (currPos > 0 && freshPrice < open + safetyMargin) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimitTIF(freshPrice, Math.abs(currPos), IOC);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_POST_CUTOFF_LIQ));
