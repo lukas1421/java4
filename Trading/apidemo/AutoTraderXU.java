@@ -822,7 +822,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
             //futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
             futHiloTrader(ldt, price); // 9:00 to 9:30, guarantee
-            XUPostCutoffLiqTrader(ldt, price);
+            futPostCutoffLiqTrader(ldt, price);
         }
         //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
         //futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
@@ -1255,9 +1255,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param nowMilli   time now
      * @param freshPrice price
      */
-    private static void XUPostCutoffLiqTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static void futPostCutoffLiqTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
-        LocalTime cutoff = LocalTime.of(10, 0);
+        LocalTime amCutoff = LocalTime.of(10, 0);
         String symbol = ibContractToSymbol(activeFutureCt);
         FutType f = ibContractToFutType(activeFutureCt);
         long currPos = currentPosMap.get(f);
@@ -1269,7 +1269,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        if (lt.isBefore(cutoff)) {
+        if (lt.isBefore(amCutoff)) {
             return;
         }
 
@@ -1279,14 +1279,16 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_POST_CUTOFF_LIQ));
             apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(str(o.orderId(), "fut post cutoff liq BUY#:", numPostCutoffOrders
-                    , globalIdOrderMap.get(id)));
+                    , globalIdOrderMap.get(id),
+                    "last", freshPrice, "safetymargin", safetyMargin, "cutoff level", open - safetyMargin));
         } else if (currPos > 0 && freshPrice < open + safetyMargin) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimitTIF(freshPrice, Math.abs(currPos), IOC);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_POST_CUTOFF_LIQ));
             apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(str(o.orderId(), "fut post cutoff liq SELL#:", numPostCutoffOrders
-                    , globalIdOrderMap.get(id)));
+                    , globalIdOrderMap.get(id),
+                    "last", freshPrice, "safetymargin", safetyMargin, "cutoff level", open + safetyMargin));
         }
     }
 
