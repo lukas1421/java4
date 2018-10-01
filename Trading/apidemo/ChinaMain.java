@@ -104,7 +104,7 @@ public final class ChinaMain implements IConnectionHandler {
     private static AutoTraderUS usTrader = new AutoTraderUS();
 
 
-    private static USStock usstock = new USStock(M_CONTROLLER);
+    //private static USStock usstock = new USStock(M_CONTROLLER);
 
     private SinaStock sinastock1 = SinaStock.getInstance();
     private ExecutorService pool;
