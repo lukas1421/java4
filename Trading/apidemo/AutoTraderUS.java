@@ -112,8 +112,8 @@ public class AutoTraderUS {
         usPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);
 
         //usPMOpenDeviationTrader(symbol, nowMilli, freshPrice);
-        usPMHiloTrader(symbol, nowMilli, freshPrice);
-        usPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
+        //usPMHiloTrader(symbol, nowMilli, freshPrice);
+        //usPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
     }
 
     /**
