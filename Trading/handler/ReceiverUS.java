@@ -25,7 +25,6 @@ public class ReceiverUS implements LiveHandler {
     }
 
 //    private static final ReceiverUS rec = new ReceiverUS();
-//
 //    public static ReceiverUS getReceiverUS() {
 //        return rec;
 //    }

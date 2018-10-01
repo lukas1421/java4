@@ -61,6 +61,7 @@ public class AutoTraderUS {
     }
 
     AutoTraderUS() {
+        usSymbols.add(ibContractToSymbol(tickerToUSContract("BILI")));
         usSymbols.add(ibContractToSymbol(tickerToUSContract("IQ")));
         usSymbols.add(ibContractToSymbol(tickerToUSContract("QTT")));
         usSymbols.add(ibContractToSymbol(tickerToUSContract("NIO")));
