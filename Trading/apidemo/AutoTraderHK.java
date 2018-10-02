@@ -148,9 +148,11 @@ public class AutoTraderHK extends JPanel {
             apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
             outputDetailedHK(symbol, "**********");
             outputDetailedHK(symbol, str("NEW", o.orderId(), "HK post AM cutoff liq BUY#:", numOrders,
-                    globalIdOrderMap.get(id), "freshPrice, manualOpen", freshPrice, manualOpen,
-                    "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin,
-                    "safety price", manualOpen - safetyMargin));
+                    globalIdOrderMap.get(id), "shortability ", hkShortableValueMap.get(symbol),
+                    "freshPrice, manualOpen", freshPrice, manualOpen,
+                    "safety ratio ", HK_SAFETY_RATIO,
+                    "safety margin ", safetyMargin,
+                    "safety level", manualOpen - safetyMargin));
         } else if (currPos > 0 && freshPrice < manualOpen + safetyMargin) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimitTIF(freshPrice, currPos, DAY);
@@ -158,9 +160,11 @@ public class AutoTraderHK extends JPanel {
             apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
             outputDetailedHK(symbol, "**********");
             outputDetailedHK(symbol, str("NEW", o.orderId(), "HK post AM cutoff liq SELL#:", numOrders,
-                    globalIdOrderMap.get(id), "freshPrice, manualOpen", freshPrice, manualOpen,
-                    "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin,
-                    "safety price", manualOpen + safetyMargin));
+                    globalIdOrderMap.get(id), "shortability ", hkShortableValueMap.get(symbol),
+                    "freshPrice, manualOpen", freshPrice, manualOpen,
+                    "safety ratio", HK_SAFETY_RATIO,
+                    "safety margin", safetyMargin,
+                    "safety level", manualOpen + safetyMargin));
         }
     }
 
@@ -193,8 +197,10 @@ public class AutoTraderHK extends JPanel {
             apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
             outputDetailedHK(symbol, "**********");
             outputDetailedHK(symbol, str("NEW", o.orderId(), "HK PM post cutoff liq BUY#:", numOrders,
-                    globalIdOrderMap.get(id), "freshPrice, manualPMOpen", freshPrice, manualPMOpen,
-                    "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin,
+                    globalIdOrderMap.get(id),"shortability ", hkShortableValueMap.get(symbol),
+                    "freshPrice, manualPMOpen", freshPrice, manualPMOpen,
+                    "safety ratio", HK_SAFETY_RATIO,
+                    "safety margin ", safetyMargin,
                     " safety level ", manualPMOpen - safetyMargin));
 
         } else if (currPos > 0 && freshPrice < manualPMOpen + safetyMargin) {
@@ -204,8 +210,10 @@ public class AutoTraderHK extends JPanel {
             apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
             outputDetailedHK(symbol, "**********");
             outputDetailedHK(symbol, str("NEW", o.orderId(), "HK PM post cutoff liq SELL#:", numOrders,
-                    globalIdOrderMap.get(id), "freshPrice, manualPMOpen", freshPrice, manualPMOpen,
-                    "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin,
+                    globalIdOrderMap.get(id),"shortability ", hkShortableValueMap.get(symbol),
+                    "freshPrice, manualPMOpen", freshPrice, manualPMOpen,
+                    "safety ratio ", HK_SAFETY_RATIO,
+                    "safety margin ", safetyMargin,
                     " safety level ", manualPMOpen + safetyMargin));
         }
     }

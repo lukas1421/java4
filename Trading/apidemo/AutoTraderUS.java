@@ -47,7 +47,7 @@ public class AutoTraderUS {
 
     private static final double US_MIN_SHORT_LEVEL = 1.5;
 
-    private static final int MAX_US_ORDERS = 6;
+    private static final int MAX_US_ORDERS = 4;
     public static List<String> usSymbols = new ArrayList<>();
     private static final double US_SIZE = 100;
     private static final double US_SAFETY_RATIO = 0.02;
@@ -65,7 +65,7 @@ public class AutoTraderUS {
         usSymbols.add(ibContractToSymbol(tickerToUSContract("QTT")));
         usSymbols.add(ibContractToSymbol(tickerToUSContract("NIO")));
         usSymbols.add(ibContractToSymbol(tickerToUSContract("PDD")));
-        usSymbols.add(ibContractToSymbol(tickerToUSContract("NBEV")));
+        //usSymbols.add(ibContractToSymbol(tickerToUSContract("NBEV")));
 
 
         usSymbols.forEach(s -> {
@@ -111,7 +111,7 @@ public class AutoTraderUS {
 
         //usOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usHiloTrader(symbol, nowMilli, freshPrice);
-        usPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);
+        usPostCutoffLiqTrader(symbol, nowMilli, freshPrice);
 
         //usPMOpenDeviationTrader(symbol, nowMilli, freshPrice);
         //usPMHiloTrader(symbol, nowMilli, freshPrice);
@@ -553,19 +553,19 @@ public class AutoTraderUS {
      * @param nowMilli   time now
      * @param freshPrice fresh price
      */
-    private static void usPostAMCutoffLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+    private static void usPostCutoffLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         Contract ct = tickerToUSContract(symbol);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
         LocalTime amStart = ltof(9, 29, 59);
         LocalTime amObservationStart = ltof(9, 29, 55);
-        LocalTime amEnd = ltof(12, 0, 0);
-        LocalTime amCutoff = ltof(10, 0);
+        //LocalTime amEnd = ltof(12, 0, 0);
+        LocalTime cutoff = ltof(10, 0);
         LocalTime pmClose = ltof(16, 0);
         double safetyMargin = freshPrice * US_SAFETY_RATIO;
 
-        if (lt.isBefore(amCutoff) || lt.isAfter(pmClose)) {
+        if (lt.isBefore(cutoff) || lt.isAfter(pmClose)) {
             return;
         }
 
@@ -583,7 +583,7 @@ public class AutoTraderUS {
             return;
         }
 
-        if (lt.isAfter(amCutoff) && lt.isBefore(pmClose)) {
+        if (lt.isAfter(cutoff) && lt.isBefore(pmClose)) {
             if (currPos < 0 && freshPrice > manualOpen - safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
@@ -591,10 +591,10 @@ public class AutoTraderUS {
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedUS(symbol, "**********");
                 outputDetailedUS(symbol, str("NEW", o.orderId(), " US postAMCutoff liq sell BUY #:",
-                        numOrderPostCutoff, "T now", lt, " cutoff", amCutoff,
+                        numOrderPostCutoff, "T now", lt, " cutoff", cutoff,
                         "price, manualOpen", freshPrice, manualOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos,
-                        "open ", manualOpen,
+                        "open ", manualOpen, "safety ratio ", US_SAFETY_RATIO,
                         "safety margin ", safetyMargin, "safety level ", manualOpen - safetyMargin));
             } else if (currPos > 0 && freshPrice < manualOpen + safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
@@ -603,10 +603,10 @@ public class AutoTraderUS {
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedUS(symbol, "**********");
                 outputDetailedUS(symbol, str("NEW", o.orderId(), " US postAMCutoff liq SELL #:",
-                        numOrderPostCutoff, "T now", lt, " cutoff", amCutoff,
+                        numOrderPostCutoff, "T now", lt, " cutoff", cutoff,
                         "price, manualOpen", freshPrice, manualOpen
                         , globalIdOrderMap.get(id), "last order T", lastOrderTime, "currPos", currPos,
-                        "open ", manualOpen,
+                        "open ", manualOpen, "safety ratio ", US_SAFETY_RATIO,
                         "safety margin ", safetyMargin, "safety level", manualOpen + safetyMargin));
             }
         }
