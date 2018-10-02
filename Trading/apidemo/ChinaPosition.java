@@ -315,9 +315,9 @@ public class ChinaPosition extends JPanel {
             }
         });
 
-        JToggleButton includeHKToggle = new JToggleButton(" Include HK");
-        includeHKToggle.addActionListener(l -> {
-            if (includeHKToggle.isSelected()) {
+        JToggleButton includeAllToggle = new JToggleButton(" Include All");
+        includeAllToggle.addActionListener(l -> {
+            if (includeAllToggle.isSelected()) {
                 GEN_MTM_PRED = m -> true;
             } else {
                 GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
@@ -368,7 +368,7 @@ public class ChinaPosition extends JPanel {
         controlPanel.add(autoUpdateButton);
         controlPanel.add(noFutToggle);
         controlPanel.add(onlyFutToggle);
-        controlPanel.add(includeHKToggle);
+        controlPanel.add(includeAllToggle);
         controlPanel.add(includeExpiredButton);
         controlPanel.add(updateFreqLabel);
         controlPanel.add(_1secButton);

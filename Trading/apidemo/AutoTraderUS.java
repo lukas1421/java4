@@ -24,7 +24,8 @@ import static client.Types.TimeInForce.DAY;
 import static client.Types.TimeInForce.IOC;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static util.AutoOrderType.*;
-import static utility.Utility.*;
+import static utility.Utility.ibContractToSymbol;
+import static utility.Utility.str;
 
 public class AutoTraderUS {
 
@@ -65,7 +66,7 @@ public class AutoTraderUS {
         usSymbols.add(ibContractToSymbol(tickerToUSContract("NIO")));
         usSymbols.add(ibContractToSymbol(tickerToUSContract("PDD")));
         //usSymbols.add(ibContractToSymbol(tickerToUSContract("RYAAY")));
-        usSymbols.add(ibContractToSymbol(tickerToUSContract("TLRY"))); // cannot short as of 10/2
+        usSymbols.add(ibContractToSymbol(tickerToUSContract("NBEV")));
 
 
         usSymbols.forEach(s -> {
@@ -109,7 +110,7 @@ public class AutoTraderUS {
             return;
         }
 
-        usOpenDeviationTrader(symbol, nowMilli, freshPrice);
+        //usOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usHiloTrader(symbol, nowMilli, freshPrice);
         usPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);
 
@@ -232,9 +233,9 @@ public class AutoTraderUS {
         Contract ct = tickerToUSContract(symbol);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
-        LocalTime pmStart = ltof(12, 59, 59);
-        LocalTime pmObservationStart = ltof(12, 59, 55);
-        LocalTime pmCutoff = ltof(13, 30);
+        LocalTime pmStart = ltof(11, 59, 59);
+        LocalTime pmObservationStart = ltof(11, 59, 55);
+        LocalTime pmCutoff = ltof(12, 30);
 
         cancelAfterDeadline(lt, symbol, US_STOCK_PMOPENDEV, pmCutoff);
 
@@ -247,16 +248,16 @@ public class AutoTraderUS {
         double pmOpen = prices.ceilingEntry(pmObservationStart).getValue();
 
         if (!manualUSPMDevMap.get(symbol).get()) {
-            if (lt.isBefore(ltof(13, 5))) {
-                outputDetailedUS(symbol, str("Setting manual US PM Dev 1305", lt));
+            if (lt.isBefore(ltof(12, 5))) {
+                outputDetailedUS(symbol, str("Setting manual US PM Dev 1205", symbol, lt));
                 manualUSPMDevMap.get(symbol).set(true);
             } else {
                 if (freshPrice > pmOpen) {
-                    outputDetailedUS(symbol, str("Setting manual US PM Dev: last > open", lt));
+                    outputDetailedUS(symbol, str("Setting manual US PM Dev: last > open", symbol, lt));
                     usPMOpenDevDirection.put(symbol, Direction.Long);
                     manualUSPMDevMap.get(symbol).set(true);
                 } else if (freshPrice < pmOpen) {
-                    outputDetailedUS(symbol, str("Setting manual US PM Dev: last < open", lt));
+                    outputDetailedUS(symbol, str("Setting manual US PM Dev: last < open", symbol, lt));
                     usPMOpenDevDirection.put(symbol, Direction.Short);
                     manualUSPMDevMap.get(symbol).set(true);
                 } else {
@@ -274,11 +275,11 @@ public class AutoTraderUS {
             return;
         }
 
-        pr(" US pm open dev#:", numOrders, lt, nowMilli, "name, price ", symbol, freshPrice,
-                "open/manual open ", usOpenMap.getOrDefault(symbol, 0.0), pmOpen,
-                "last order T/ millilast2/ waitsec", lastOrderTime, milliLastTwo, waitSec,
-                "curr pos ", currPos, "dir: ", usPMOpenDevDirection.get(symbol)
-                , "manual:", manualUSPMDevMap.get(symbol));
+//        pr(" US pm open dev#:", numOrders, lt, nowMilli, "name, price ", symbol, freshPrice,
+//                "open/manual open ", usOpenMap.getOrDefault(symbol, 0.0), pmOpen,
+//                "last order T/ millilast2/ waitsec", lastOrderTime, milliLastTwo, waitSec,
+//                "curr pos ", currPos, "dir: ", usPMOpenDevDirection.get(symbol)
+//                , "manual:", manualUSPMDevMap.get(symbol));
 
         double buyPrice;
         double sellPrice;
@@ -298,8 +299,9 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_PMOPENDEV));
                 apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
                 outputDetailedUS(symbol, "**********");
-                outputDetailedUS(symbol, str("NEW", o.orderId(), "US PM open dev BUY#:", numOrders, globalIdOrderMap.get(id),
-                        "pm Open(12 59 59)", pmOpen, "buy size/ currpos", buySize, currPos,
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US PM open dev BUY#:", numOrders,
+                        globalIdOrderMap.get(id),
+                        "pm Open(11 59 59)", pmOpen, "buy size/ currpos", buySize, currPos,
                         "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
                         lastOrderTime.plusSeconds(waitSec),
                         "dir", usPMOpenDevDirection.get(symbol), "manual?", manualUSPMDevMap.get(symbol)
