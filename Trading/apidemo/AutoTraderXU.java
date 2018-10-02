@@ -65,7 +65,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     private static volatile Set<String> uniqueTradeKeySet = new HashSet<>();
     private static XUTraderRoll traderRoll;
-    private static final int MAX_ORDER_SIZE = 4;
+    private static final int MAX_XU_SIZE = 4;
 
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
     private static volatile MASentiment sentiment = MASentiment.Directionless;
@@ -1161,7 +1161,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         long futHiloOrdersNum = getOrderSizeForTradeType(futSymbol, FUT_HILO);
         LocalDateTime lastFutHiloTime = getLastOrderTime(futSymbol, FUT_HILO);
 
-        if (futHiloOrdersNum >= MAX_ORDER_SIZE) {
+        if (futHiloOrdersNum >= MAX_XU_SIZE) {
             return;
         }
 
@@ -1217,8 +1217,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     , maxP, minP, "open/last ", futOpen, futLast, "maxT, minT", maxT, minT);
         }
 
-        int buySize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
-        int sellSize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
+        int buySize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_XU_SIZE - 1)) ? 1 : 1);
+        int sellSize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_XU_SIZE - 1)) ? 1 : 1);
 
         if (lt.isAfter(ltof(8, 59)) &&
                 (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat)) {
@@ -1264,7 +1264,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         long currPos = currentPosMap.get(f);
         double open = priceMapBarDetail.get(symbol).firstEntry().getValue();
         long numPostCutoffOrders = getOrderSizeForTradeType(symbol, FUT_POST_CUTOFF_LIQ);
-        double safetyMargin = freshPrice * 0.002;
+        double safetyMargin = freshPrice * 0.003;
 
         if (numPostCutoffOrders >= 1) {
             return;
@@ -1483,7 +1483,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     "manual PC dir:", manualfutOpenDevDirection.get());
         }
 
-        if (numOrders >= MAX_ORDER_SIZE) {
+        if (numOrders >= MAX_XU_SIZE) {
             return;
         }
 
@@ -1507,8 +1507,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
 
         int baseSize = 1;
-        int buySize = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
-        int sellSize = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
+        int buySize = baseSize * ((numOrders == 0 || numOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
+        int sellSize = baseSize * ((numOrders == 0 || numOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
         double buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(futOpen, Direction.Long));
         double sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(futOpen, Direction.Short));
 
@@ -1874,15 +1874,15 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalDateTime lastOpenDevTradeTime = getLastOrderTime(futSymbol, INDEX_OPEN_DEVI);
         long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(futSymbol, INDEX_OPEN_DEVI);
         long tSinceLastOrder = tSincePrevOrderMilli(futSymbol, INDEX_OPEN_DEVI, nowMilli);
-        if (numOrdersOpenDev >= MAX_ORDER_SIZE) {
+        if (numOrdersOpenDev >= MAX_XU_SIZE) {
             return;
         }
 
         int waitTimeInSeconds = (milliBtwnLastTwoOrders < 60000) ? 300 : 10;
 
         int baseSize = getWeekdayBaseSize(nowMilli.getDayOfWeek());
-        int buySize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
-        int sellSize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
+        int buySize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == (MAX_XU_SIZE - 1)) ? 1 : 1);
+        int sellSize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == (MAX_XU_SIZE - 1)) ? 1 : 1);
 
         if (detailedPrint.get()) {
             if (lt.isBefore(ltof(9, 40)) || lt.getSecond() > 50) {
@@ -1997,9 +1997,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         int pmDevWaitSec = (milliBtwnLastTwo < 60000) ? 300 : 10;
 
-        if (numPMDeviOrders >= MAX_ORDER_SIZE) {
+        if (numPMDeviOrders >= MAX_XU_SIZE) {
             if (detailedPrint.get()) {
-                pr(" pm dev exceed max", MAX_ORDER_SIZE);
+                pr(" pm dev exceed max", MAX_XU_SIZE);
             }
             return;
         }
@@ -2030,8 +2030,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         LocalDateTime lastPMDevTradeTime = getLastOrderTime(futSymbol, INDEX_PM_OPEN_DEVI);
 
-        int buyQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
-        int sellQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
+        int buyQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
+        int sellQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
 
         double buyPrice;
         double sellPrice;
@@ -2092,14 +2092,14 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
 
         long numPMHiloOrders = getOrderSizeForTradeType(futSymbol, INDEX_PM_HILO);
-        if (numPMHiloOrders >= MAX_ORDER_SIZE) {
+        if (numPMHiloOrders >= MAX_XU_SIZE) {
             if (detailedPrint.get()) {
-                pr(" pm hilo exceed max ", MAX_ORDER_SIZE);
+                pr(" pm hilo exceed max ", MAX_XU_SIZE);
             }
             return;
         }
-        int buyQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
-        int sellQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
+        int buyQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
+        int sellQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
         int totalFilled = (int) getOrderTotalSignedQForTypeFilled(futSymbol, INDEX_PM_HILO);
 
         if (lt.isAfter(cutoff)) {
@@ -2351,7 +2351,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime amObservationStart = ltof(9, 28, 0);
         LocalTime cutoff = ltof(10, 0);
         LocalTime amClose = ltof(11, 30, 0);
-        double safetyMargin = indexLast * 0.001;
+        double safetyMargin = indexLast * 0.003;
 
         double freshPrice = futPriceMap.get(f);
         long numOrders = getOrderSizeForTradeType(symbol, INDEX_POST_AMCUTOFF);
@@ -2406,7 +2406,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         long numOrdersPMCutoff = getOrderSizeForTradeType(symbol, INDEX_POST_PMCUTOFF);
         int currPos = currentPosMap.get(f);
         int reverseAddOn = 0;
-        double safetyMargin = indexLast * 0.001;
+        double safetyMargin = indexLast * 0.003;
 
         LocalTime pmObservationStart = ltof(12, 58, 0);
         LocalTime pmCutoff = ltof(13, 30);
@@ -2476,8 +2476,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         long numOrders = getOrderSizeForTradeType(symbol, INDEX_HILO);
         LocalDateTime lastOrderT = getLastOrderTime(symbol, INDEX_HILO);
         long milliLastTwoOrder = lastTwoOrderMilliDiff(symbol, INDEX_HILO);
-        int buyQ = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
-        int sellQ = baseSize * ((numOrders == 0 || numOrders == (MAX_ORDER_SIZE - 1)) ? 1 : 1);
+        int buyQ = baseSize * ((numOrders == 0 || numOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
+        int sellQ = baseSize * ((numOrders == 0 || numOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
 
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
         int _2dayPerc = getPercentileForLast(fut);
@@ -2502,7 +2502,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         long tBtwnLast2Trades = lastTwoOrderMilliDiff(symbol, INDEX_HILO);
         long tSinceLastTrade = tSincePrevOrderMilli(symbol, INDEX_HILO, nowMilli);
 
-        if (numOrders >= MAX_ORDER_SIZE) {
+        if (numOrders >= MAX_XU_SIZE) {
             if (detailedPrint.get()) {
                 pr(" china hilo exceed max");
             }
