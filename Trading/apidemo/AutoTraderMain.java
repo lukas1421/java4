@@ -2,12 +2,15 @@ package apidemo;
 
 import client.Order;
 import client.OrderAugmented;
+import client.OrderStatus;
 import controller.ApiController;
 import util.AutoOrderType;
 
 import javax.swing.*;
 import java.io.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -21,7 +24,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaStock.*;
+import static apidemo.XuTraderHelper.outputToAll;
+import static client.OrderStatus.*;
+import static util.AutoOrderType.*;
 import static utility.Utility.pr;
+import static utility.Utility.str;
 
 public class AutoTraderMain extends JPanel {
 
@@ -47,8 +54,8 @@ public class AutoTraderMain extends JPanel {
     public static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
     public static volatile Map<Integer, Order> liveIDOrderMap = new ConcurrentHashMap<>();
-    public static volatile Map<String, TreeSet<Order>> liveSymbolOrderSet = new ConcurrentHashMap<>();
-    static final double XU_AUTO_VOL_THRESH = 0.25;
+    static volatile Map<String, TreeSet<Order>> liveSymbolOrderSet = new ConcurrentHashMap<>();
+    static final double SGXA50_AUTO_VOL_THRESH = 0.25;
 
 
     //buy sell only
@@ -84,6 +91,43 @@ public class AutoTraderMain extends JPanel {
         //pr("holiday set is ", holidaySet);
         pr(d, " is a holiday? ", holidaySet.contains(d), "!");
         return holidaySet.contains(d);
+    }
+
+    /**
+     * cancelling primary orders only (can only cancel 1 min)
+     *
+     * @param now      time now
+     * @param deadline deadeline
+     */
+    static void cancelAllOrdersAfterDeadline(LocalTime now, LocalTime deadline) {
+        if (now.isAfter(deadline) && now.isBefore(deadline.plusMinutes(1L))) {
+            globalIdOrderMap.entrySet().stream()
+                    .filter(e -> e.getValue().getAugmentedOrderStatus() != Filled)
+                    .filter(e -> e.getValue().getAugmentedOrderStatus() != Inactive)
+                    .filter(e -> e.getValue().isPrimaryOrder())
+                    .filter(e -> !isCutoffOrLiqTrader(e.getValue().getOrderType()))
+                    .forEach(e -> {
+                        OrderStatus sta = e.getValue().getAugmentedOrderStatus();
+                        if ((sta != Filled) && (sta != PendingCancel) && (sta != Cancelled) &&
+                                (sta != DeadlineCancelled)) {
+                            apcon.cancelOrder(e.getValue().getOrder().orderId());
+                            e.getValue().setFinalActionTime(LocalDateTime.now());
+                            e.getValue().setAugmentedOrderStatus(OrderStatus.DeadlineCancelled);
+                            outputToAll(str(now, " Cancel ALL after deadline ",
+                                    e.getValue().getOrder().orderId(), e.getValue().getSymbol(),
+                                    e.getValue().getOrderType(),
+                                    "status CHG:", sta, "->", e.getValue().getAugmentedOrderStatus()));
+                        }
+                    });
+        }
+    }
+
+    private static boolean isCutoffOrLiqTrader(AutoOrderType tt) {
+        return (tt == FTSEA50_POST_AMCUTOFF || tt == FTSEA50_POST_PMCUTOFF ||
+                tt == HK_POST_AMCUTOFF_LIQ || tt == HK_POST_PMCUTOFF_LIQ ||
+                tt == SGXA50_POST_CUTOFF_LIQ || tt == US_POST_AMCUTOFF_LIQ ||
+                tt == US_POST_PMCUTOFF_LIQ || tt == SGXA50_CLOSE_LIQ
+                || tt == US_CLOSE_LIQ || tt == HK_CLOSE_LIQ);
     }
 
     private class BarModel_AUTO extends javax.swing.table.AbstractTableModel {

@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static apidemo.AutoTraderMain.XU_AUTO_VOL_THRESH;
+import static apidemo.AutoTraderMain.SGXA50_AUTO_VOL_THRESH;
 import static apidemo.AutoTraderMain.globalTradingOn;
 import static apidemo.AutoTraderXU.*;
 import static apidemo.ChinaData.*;
@@ -121,7 +121,7 @@ public class SinaStock implements Runnable {
 
                         if (globalTradingOn.get()) {
                             double atmVol = getATMVol(expiryToGet);
-                            if (atmVol > XU_AUTO_VOL_THRESH) {
+                            if (atmVol > SGXA50_AUTO_VOL_THRESH) {
                                 indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
                                 indexPostAMCutoffLiqTrader(ldt, currIndexPrice);
                                 indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
