@@ -56,17 +56,11 @@ public class AutoTraderMain extends JPanel {
     public static volatile Map<Integer, Order> liveIDOrderMap = new ConcurrentHashMap<>();
     static volatile Map<String, TreeSet<Order>> liveSymbolOrderSet = new ConcurrentHashMap<>();
     static final double SGXA50_AUTO_VOL_THRESH = 0.25;
-
-
-    //buy sell only
+    
     static volatile AtomicBoolean noMoreSell = new AtomicBoolean(false);
     static volatile AtomicBoolean noMoreBuy = new AtomicBoolean(false);
 
     static ApiController apcon;
-
-    //orders
-    //static File xuOrderOutput = new File(TradingConstants.GLOBALPATH + "orders.txt");
-    ////static File hkOrderOutput = new File(TradingConstants.GLOBALPATH + "hkorders.txt");
 
     static File xuDetailOutput = new File(TradingConstants.GLOBALPATH + "xuOrdersDetailed.txt");
     static File hkDetailOutput = new File(TradingConstants.GLOBALPATH + "hkOrdersDetailed.txt");

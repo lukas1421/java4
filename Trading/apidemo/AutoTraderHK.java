@@ -152,7 +152,7 @@ public class AutoTraderHK extends JPanel {
                     "freshPrice, manualOpen", freshPrice, manualOpen,
                     "safety ratio ", HK_SAFETY_RATIO,
                     "safety margin ", safetyMargin,
-                    "safety level", manualOpen - safetyMargin));
+                    "cut level", manualOpen - safetyMargin));
         } else if (currPos > 0 && freshPrice < manualOpen + safetyMargin) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimitTIF(freshPrice, currPos, DAY);
@@ -164,7 +164,7 @@ public class AutoTraderHK extends JPanel {
                     "freshPrice, manualOpen", freshPrice, manualOpen,
                     "safety ratio", HK_SAFETY_RATIO,
                     "safety margin", safetyMargin,
-                    "safety level", manualOpen + safetyMargin));
+                    "cut level", manualOpen + safetyMargin));
         }
     }
 
