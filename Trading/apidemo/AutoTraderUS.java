@@ -49,6 +49,7 @@ public class AutoTraderUS {
     private static final int MAX_US_ORDERS = 4;
     public static List<String> usSymbols = new ArrayList<>();
     private static final double US_SIZE = 100;
+    private static final double US_SAFETY_RATIO = 0.01;
 
     public static Contract tickerToUSContract(String ticker) {
         Contract ct = new Contract();
@@ -555,7 +556,7 @@ public class AutoTraderUS {
         LocalTime amEnd = ltof(12, 0, 0);
         LocalTime amCutoff = ltof(10, 0);
         LocalTime pmClose = ltof(16, 0);
-        double safetyMargin = freshPrice * 0.01;
+        double safetyMargin = freshPrice * US_SAFETY_RATIO;
 
         if (lt.isBefore(amCutoff) || lt.isAfter(pmClose)) {
             return;
@@ -618,7 +619,7 @@ public class AutoTraderUS {
         LocalTime pmObservationStart = ltof(11, 59, 55);
         LocalTime pmCutoff = ltof(12, 30);
         LocalTime pmClose = ltof(16, 0);
-        double safetyMargin = freshPrice * 0.01;
+        double safetyMargin = freshPrice * US_SAFETY_RATIO;
 
         if (lt.isBefore(pmCutoff) || lt.isAfter(pmClose)) {
             return;

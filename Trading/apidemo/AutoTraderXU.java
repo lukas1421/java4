@@ -74,6 +74,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     private static final int HI_PERC_WIDE = 80;
     private static final int LO_PERC_WIDE = 20;
 
+    // post cutoff
+    private static final double XU_SAFETY_RATIO = 0.003;
+
 
     //fut prev close deviation
     private static volatile Direction futOpenDevDirection = Direction.Flat;
@@ -144,12 +147,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     //ma
     private static volatile int shortMAPeriod = 60;
     private static volatile int longMAPeriod = 80;
-
-    //open/fast trading
-    private static LocalDateTime lastFastOrderTime = LocalDateTime.now();
-    private static AtomicInteger fastTradeSignals = new AtomicInteger(0);
-    private static NavigableMap<LocalDateTime, Order> fastOrderMap = new ConcurrentSkipListMap<>();
-    private static final long MAX_OPEN_TRADE_ORDERS = 10;
 
     //music
     private static EmbeddedSoundPlayer soundPlayer = new EmbeddedSoundPlayer();
@@ -2351,7 +2348,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime amObservationStart = ltof(9, 28, 0);
         LocalTime cutoff = ltof(10, 0);
         LocalTime amClose = ltof(11, 30, 0);
-        double safetyMargin = indexLast * 0.003;
+        double safetyMargin = indexLast * XU_SAFETY_RATIO;
 
         double freshPrice = futPriceMap.get(f);
         long numOrders = getOrderSizeForTradeType(symbol, INDEX_POST_AMCUTOFF);
@@ -2377,7 +2374,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 outputDetailedXU("**********");
                 outputDetailedXU(str("NEW", o.orderId(), "post AM Cutoff BUY#:", numOrders
                         , globalIdOrderMap.get(id), "lastprice, open ", indexLast, r(openIndex),
-                        "safetymargin ", safetyMargin));
+                        "safetymargin ", safetyMargin, "safety level ", openIndex - safetyMargin));
             } else if (currPos > 0 && indexLast < openIndex + safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos + reverseAddon, IOC);
@@ -2386,7 +2383,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 outputDetailedXU("**********");
                 outputDetailedXU(str("NEW", o.orderId(), "post AM Cutoff SELL#:", numOrders
                         , globalIdOrderMap.get(id), "lastprice, open ", indexLast, r(openIndex),
-                        "safetymargin ", safetyMargin));
+                        "safetymargin ", safetyMargin, "safety level", openIndex + safetyMargin));
             }
         }
     }
@@ -2406,7 +2403,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         long numOrdersPMCutoff = getOrderSizeForTradeType(symbol, INDEX_POST_PMCUTOFF);
         int currPos = currentPosMap.get(f);
         int reverseAddOn = 0;
-        double safetyMargin = indexLast * 0.003;
+        double safetyMargin = indexLast * XU_SAFETY_RATIO;
 
         LocalTime pmObservationStart = ltof(12, 58, 0);
         LocalTime pmCutoff = ltof(13, 30);
@@ -2431,7 +2428,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 outputDetailedXU("**********");
                 outputDetailedXU(str("NEW", o.orderId(), "post PM Cutoff BUY#:", numOrdersPMCutoff
                         , globalIdOrderMap.get(id), "index last, pmopen ", indexLast, r(pmOpen), "curpos", currPos,
-                        "safetymargin ", safetyMargin));
+                        "safetymargin ", safetyMargin, "safety level", pmOpen - safetyMargin));
             } else if (currPos > 0 && indexLast < pmOpen + safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos + reverseAddOn, IOC);
@@ -2440,7 +2437,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 outputDetailedXU("**********");
                 outputDetailedXU(str("NEW", o.orderId(), "post PM Cutoff SELL#:", numOrdersPMCutoff
                         , globalIdOrderMap.get(id), "index last, pmopen ", indexLast, r(pmOpen), "curpos", currPos,
-                        "safetymargin ", safetyMargin));
+                        "safetymargin ", safetyMargin, "safety level", pmOpen + safetyMargin));
             }
         }
     }

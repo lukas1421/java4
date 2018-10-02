@@ -47,6 +47,8 @@ public class AutoTraderHK extends JPanel {
 
     private static long MAX_ORDER_HK = 4;
 
+    private static final double HK_SAFETY_RATIO = 0.005;
+
     public static List<String> hkSymbols = new ArrayList<>();
 
     AutoTraderHK() {
@@ -123,7 +125,7 @@ public class AutoTraderHK extends JPanel {
         LocalTime amCutoff = ltof(10, 0);
         LocalTime amObservationStart = ltof(9, 19, 0);
 
-        double safetyMargin = freshPrice * 0.01;
+        double safetyMargin = freshPrice * HK_SAFETY_RATIO;
 
         if (lt.isBefore(amCutoff)) {
             return;
@@ -149,7 +151,8 @@ public class AutoTraderHK extends JPanel {
             outputDetailedHK(symbol, "**********");
             outputDetailedHK(symbol, str("NEW", o.orderId(), "HK post AM cutoff liq BUY#:", numOrders,
                     globalIdOrderMap.get(id), "freshPrice, manualOpen", freshPrice, manualOpen,
-                    "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin));
+                    "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin,
+                    "safety price", manualOpen - safetyMargin));
         } else if (currPos > 0 && freshPrice < manualOpen + safetyMargin) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimitTIF(freshPrice, currPos, DAY);
@@ -158,7 +161,8 @@ public class AutoTraderHK extends JPanel {
             outputDetailedHK(symbol, "**********");
             outputDetailedHK(symbol, str("NEW", o.orderId(), "HK post AM cutoff liq SELL#:", numOrders,
                     globalIdOrderMap.get(id), "freshPrice, manualOpen", freshPrice, manualOpen,
-                    "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin));
+                    "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin,
+                    "safety price", manualOpen + safetyMargin));
         }
     }
 
@@ -166,7 +170,7 @@ public class AutoTraderHK extends JPanel {
         LocalTime lt = nowMilli.toLocalTime();
         LocalTime pmCutoff = ltof(13, 30);
         LocalTime pmObservationStart = ltof(12, 58, 0);
-        double safetyMargin = freshPrice * 0.01;
+        double safetyMargin = freshPrice * HK_SAFETY_RATIO;
 
         if (lt.isBefore(pmCutoff)) {
             return;
@@ -193,7 +197,7 @@ public class AutoTraderHK extends JPanel {
             outputDetailedHK(symbol, str("NEW", o.orderId(), "HK PM post cutoff liq BUY#:", numOrders,
                     globalIdOrderMap.get(id), "freshPrice, manualPMOpen", freshPrice, manualPMOpen,
                     "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin,
-                    " liq level ", manualPMOpen - safetyMargin));
+                    " safety level ", manualPMOpen - safetyMargin));
 
         } else if (currPos > 0 && freshPrice < manualPMOpen + safetyMargin) {
             int id = autoTradeID.incrementAndGet();
@@ -204,7 +208,7 @@ public class AutoTraderHK extends JPanel {
             outputDetailedHK(symbol, str("NEW", o.orderId(), "HK PM post cutoff liq SELL#:", numOrders,
                     globalIdOrderMap.get(id), "freshPrice, manualPMOpen", freshPrice, manualPMOpen,
                     "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin,
-                    " liq level ", manualPMOpen - safetyMargin));
+                    " safety level ", manualPMOpen + safetyMargin));
         }
     }
 
