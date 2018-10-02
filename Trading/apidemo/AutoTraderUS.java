@@ -49,7 +49,7 @@ public class AutoTraderUS {
     private static final int MAX_US_ORDERS = 4;
     public static List<String> usSymbols = new ArrayList<>();
     private static final double US_SIZE = 100;
-    private static final double US_SAFETY_RATIO = 0.01;
+    private static final double US_SAFETY_RATIO = 0.005;
 
     public static Contract tickerToUSContract(String ticker) {
         Contract ct = new Contract();

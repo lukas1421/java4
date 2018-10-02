@@ -53,11 +53,9 @@ public class AutoTraderHK extends JPanel {
 
     AutoTraderHK() {
 
-        hkSymbols.add(ibContractToSymbol(tickerToHKContract("1293")));
+        hkSymbols.add(ibContractToSymbol(tickerToHKContract("2688")));
         hkSymbols.add(ibContractToSymbol(tickerToHKContract("1548")));
-        hkSymbols.add(ibContractToSymbol(tickerToHKContract("3333")));
-
-        //Contract ct = tickerToHKContract("1293");
+        //hkSymbols.add(ibContractToSymbol(tickerToHKContract("3333")));
         //String symbol = ibContractToSymbol(ct);
         //hkSymbols.add(ibContractToSymbol(tickerToHKContract("3690")));
 
