@@ -13,7 +13,6 @@ import static apidemo.AutoTraderMain.nyZone;
 import static apidemo.AutoTraderUS.*;
 import static apidemo.AutoTraderXU.ltof;
 import static apidemo.XuTraderHelper.outputDetailedUS;
-import static apidemo.XuTraderHelper.outputToUSPriceTest;
 import static utility.Utility.str;
 
 
@@ -47,8 +46,8 @@ public class ReceiverUS implements LiveHandler {
                 }
                 processMainUS(symbol, usLdt, price);
                 ChinaStock.priceMap.put(symbol, price);
-                outputToUSPriceTest(str(" US handle price ", symbolToReceive,
-                        tt, symbol, price, "ChinaT: ", t, "US T:", usLdt));
+//                outputToUSPriceTest(str(" US handle price ", symbolToReceive,
+//                        tt, symbol, price, "ChinaT: ", t, "US T:", usLdt));
                 break;
             case BID:
                 usBidMap.put(symbol, price);
