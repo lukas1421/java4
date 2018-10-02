@@ -65,7 +65,6 @@ public class AutoTraderUS {
         usSymbols.add(ibContractToSymbol(tickerToUSContract("QTT")));
         usSymbols.add(ibContractToSymbol(tickerToUSContract("NIO")));
         usSymbols.add(ibContractToSymbol(tickerToUSContract("PDD")));
-        //usSymbols.add(ibContractToSymbol(tickerToUSContract("RYAAY")));
         usSymbols.add(ibContractToSymbol(tickerToUSContract("NBEV")));
 
 
@@ -80,15 +79,15 @@ public class AutoTraderUS {
             usShortableValueMap.put(s, 0.0);
 
             usOpenDevDirection.put(s, Direction.Flat);
-            usPMOpenDevDirection.put(s, Direction.Flat);
-
             usHiloDirection.put(s, Direction.Flat);
+
+            usPMOpenDevDirection.put(s, Direction.Flat);
             usPMHiloDirection.put(s, Direction.Flat);
 
             manualUSDevMap.put(s, new AtomicBoolean(false));
-            manualUSPMDevMap.put(s, new AtomicBoolean(false));
-
             manualUSHiloMap.put(s, new AtomicBoolean(false));
+
+            manualUSPMDevMap.put(s, new AtomicBoolean(false));
             manualUSPMHiloMap.put(s, new AtomicBoolean(false));
         });
     }
@@ -103,14 +102,14 @@ public class AutoTraderUS {
     public static void processMainUS(String symbol, LocalDateTime nowMilli, double freshPrice) {
 
         cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(10, 0, 0));
-        cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(13, 30, 0));
+        cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(12, 30, 0));
         usCloseLiqTrader(symbol, nowMilli, freshPrice);
 
         if (!globalTradingOn.get()) {
             return;
         }
 
-        //usOpenDeviationTrader(symbol, nowMilli, freshPrice);
+        usOpenDeviationTrader(symbol, nowMilli, freshPrice);
         usHiloTrader(symbol, nowMilli, freshPrice);
         usPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);
 
