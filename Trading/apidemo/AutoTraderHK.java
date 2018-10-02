@@ -141,7 +141,7 @@ public class AutoTraderHK extends JPanel {
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
         double manualOpen = prices.ceilingEntry(amObservationStart).getValue();
 
-        if (currPos < 0 && freshPrice > manualOpen) {
+        if (currPos < 0 && freshPrice > manualOpen - safetyMargin) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), DAY);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_POST_AMCUTOFF_LIQ));
@@ -150,7 +150,7 @@ public class AutoTraderHK extends JPanel {
             outputDetailedHK(symbol, str("NEW", o.orderId(), "HK post AM cutoff liq BUY#:", numOrders,
                     globalIdOrderMap.get(id), "freshPrice, manualOpen", freshPrice, manualOpen,
                     "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin));
-        } else if (currPos > 0 && freshPrice < manualOpen) {
+        } else if (currPos > 0 && freshPrice < manualOpen + safetyMargin) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimitTIF(freshPrice, currPos, DAY);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_POST_AMCUTOFF_LIQ));
@@ -192,7 +192,9 @@ public class AutoTraderHK extends JPanel {
             outputDetailedHK(symbol, "**********");
             outputDetailedHK(symbol, str("NEW", o.orderId(), "HK PM post cutoff liq BUY#:", numOrders,
                     globalIdOrderMap.get(id), "freshPrice, manualPMOpen", freshPrice, manualPMOpen,
-                    "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin));
+                    "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin,
+                    " liq level ", manualPMOpen - safetyMargin));
+
         } else if (currPos > 0 && freshPrice < manualPMOpen + safetyMargin) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimitTIF(freshPrice, currPos, DAY);
@@ -201,7 +203,8 @@ public class AutoTraderHK extends JPanel {
             outputDetailedHK(symbol, "**********");
             outputDetailedHK(symbol, str("NEW", o.orderId(), "HK PM post cutoff liq SELL#:", numOrders,
                     globalIdOrderMap.get(id), "freshPrice, manualPMOpen", freshPrice, manualPMOpen,
-                    "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin));
+                    "shortability ", hkShortableValueMap.get(symbol), "safety margin ", safetyMargin,
+                    " liq level ", manualPMOpen - safetyMargin));
         }
     }
 
