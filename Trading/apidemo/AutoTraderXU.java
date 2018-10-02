@@ -1278,15 +1278,19 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(str(o.orderId(), "fut post cutoff liq BUY#:", numPostCutoffOrders
                     , globalIdOrderMap.get(id),
-                    "last", freshPrice, "safetymargin", safetyMargin, "cutoff level", open - safetyMargin));
+                    "last", freshPrice, "open", open,
+                    "safety ratio ", XU_SAFETY_RATIO,
+                    "safetymargin", safetyMargin, "cut level", open - safetyMargin));
         } else if (currPos > 0 && freshPrice < open + safetyMargin) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimitTIF(freshPrice, Math.abs(currPos), IOC);
+            Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_POST_CUTOFF_LIQ));
             apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(str(o.orderId(), "fut post cutoff liq SELL#:", numPostCutoffOrders
                     , globalIdOrderMap.get(id),
-                    "last", freshPrice, "safetymargin", safetyMargin, "cutoff level", open + safetyMargin));
+                    "last", freshPrice, "open", open,
+                    "safety ratio ", XU_SAFETY_RATIO,
+                    "safety margin", safetyMargin, "cut level", open + safetyMargin));
         }
     }
 
