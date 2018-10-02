@@ -1217,8 +1217,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     , maxP, minP, "open/last ", futOpen, futLast, "maxT, minT", maxT, minT);
         }
 
-        int buySize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_XU_SIZE - 1)) ? 1 : 1);
-        int sellSize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_XU_SIZE - 1)) ? 1 : 1);
+        int buySize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_XU_SIZE - 1)) ? 1 : 2);
+        int sellSize = baseSize * ((futHiloOrdersNum == 0 || futHiloOrdersNum == (MAX_XU_SIZE - 1)) ? 1 : 2);
 
         if (lt.isAfter(ltof(8, 59)) &&
                 (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat)) {

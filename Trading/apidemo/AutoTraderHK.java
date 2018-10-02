@@ -82,7 +82,7 @@ public class AutoTraderHK extends JPanel {
     }
 
     private static int getMinimumSizeHK(double price) {
-        if (price < 10) {
+        if (price < 20.0) {
             return 2000;
         } else {
             return 1000;
