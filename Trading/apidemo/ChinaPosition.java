@@ -62,6 +62,7 @@ public class ChinaPosition extends JPanel {
     static JButton filterButton;
     static JButton refreshButton;
     static JToggleButton autoUpdateButton;
+    private static JTextArea outputArea;
     static volatile Set<String> uniqueTradeSet = new HashSet<>();
     static String line;
     private static AtomicBoolean includeExpired = new AtomicBoolean(true);
@@ -103,7 +104,7 @@ public class ChinaPosition extends JPanel {
     //static volatile LinkedList<String> chg5m = new LinkedList<>();
     //static volatile LinkedList<String> topKiyodo = new LinkedList<>();
 
-    static GraphPnl gPnl = new GraphPnl();
+    private static GraphPnl gPnl = new GraphPnl();
 
     private final int OPEN_POS_COL = 2;
     private final int BOT_POS_COL = 13;
@@ -217,7 +218,7 @@ public class ChinaPosition extends JPanel {
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
                 d.width = 900;
-                d.height = 650;
+                d.height = 450;
                 return d;
             }
         };
@@ -284,6 +285,7 @@ public class ChinaPosition extends JPanel {
                 ex = Executors.newScheduledThreadPool(20);
                 ex.scheduleAtFixedRate(this::refreshAll, 0, updateFreq.getFreq(), TimeUnit.SECONDS);
                 ex.scheduleAtFixedRate(this::refreshPositions, 0, 30, TimeUnit.SECONDS);
+                ex.scheduleAtFixedRate(ChinaPosition::outputPnlString, 0, 5, TimeUnit.SECONDS);
             } else {
                 ex.shutdown();
             }
@@ -375,6 +377,10 @@ public class ChinaPosition extends JPanel {
         controlPanel.add(_5secButton);
         controlPanel.add(_10secButton);
 
+        //add text area
+        outputArea = new JTextArea(10, 1);
+        JScrollPane outputPane = new JScrollPane(outputArea);
+
         //JPanel graphPanel = new JPanel();
         JScrollPane graphPane = new JScrollPane(gPnl) {
             @Override
@@ -386,15 +392,52 @@ public class ChinaPosition extends JPanel {
             }
         };
 
-        setLayout(new BorderLayout());
-        add(controlPanel, BorderLayout.NORTH);
-        add(scroll, BorderLayout.CENTER);
-        add(graphPane, BorderLayout.SOUTH);
+//        JPanel upperPanel = new JPanel();
+//        upperPanel.setLayout(new FlowLayout());
+//        upperPanel.add(controlPanel);
+//        upperPanel.add(scroll);
+
+        //setLayout(new FlowLayout());
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        add(controlPanel);
+        add(scroll);
+        //add(upperPanel, BorderLayout.NORTH);
+        add(outputPane);
+        add(graphPane);
         tab.setAutoCreateRowSorter(true);
 
         sorter = (TableRowSorter<BarModel_POS>) tab.getRowSorter();
         //getWtdMaxMin();
     }
+
+    private static String getPnlString(String symb) {
+        Map<AutoOrderType, Double> quantitySumByOrder = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getSymbol().equals(symb))
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
+                .collect(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType(),
+                        Collectors.summingDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())));
+
+        Map<AutoOrderType, Long> numTradesByOrder = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getSymbol().equals(symb))
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
+                .collect(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType(),
+                        Collectors.counting()));
+
+        String pnlString = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getSymbol().equals(symb))
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
+                .collect(Collectors.collectingAndThen(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType()
+                        , ConcurrentSkipListMap::new
+                        , Collectors.summingDouble(e -> e.getValue()
+                                .getPnl(selected, priceMap.getOrDefault(symb, 0.0)))),
+                        e -> e.entrySet().stream().sorted(reverseComp(Comparator.comparing(Map.Entry::getValue)))
+                                .map(e1 -> str("|||", e1.getKey(),
+                                        "#:", numTradesByOrder.getOrDefault(e1.getKey(), 0L),
+                                        "Tot Q: ", quantitySumByOrder.getOrDefault(e1.getKey(), 0d), r(e1.getValue())))
+                                .collect(Collectors.joining(","))));
+        return str("pnl String", symb, pnlString);
+    }
+
 
     static void refreshTable() {
         m_model.fireTableDataChanged();
@@ -1371,6 +1414,23 @@ public class ChinaPosition extends JPanel {
                 .collect(Collectors.toCollection(LinkedList::new));
         //pr(" top kiyodo list " + res);
         return res;
+    }
+
+    private static void updateLog(String s) {
+        SwingUtilities.invokeLater(() -> {
+            outputArea.append(s);
+            outputArea.append("\n");
+            outputArea.repaint();
+        });
+    }
+
+    private static void outputPnlString() {
+        globalIdOrderMap.entrySet().stream().map(e -> e.getValue().getSymbol())
+                .collect(toList())
+                .forEach(s -> CompletableFuture.runAsync(() -> {
+                    String res = getPnlString(s);
+                    SwingUtilities.invokeLater(() -> updateLog(getPnlString(res)));
+                }));
     }
 
 

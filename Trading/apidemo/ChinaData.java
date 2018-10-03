@@ -221,7 +221,7 @@ public final class ChinaData extends JPanel {
         JButton btnLoadBarYtd = new JButton("Load Bar YTD");
         JButton btnLoadBar = new JButton("Load Bar");
         JButton shcompToText = new JButton("上证");
-        JButton closeHib = new JButton("Close Hib");
+        //JButton closeHib = new JButton("Close Hib");
         JButton getFXButton = new JButton("FX");
         JButton buildA50Button = new JButton("build A50");
         JButton getSGXA50HistButton = new JButton("SGXA50");
@@ -277,7 +277,7 @@ public final class ChinaData extends JPanel {
         buttonDownPanel.add(Box.createHorizontalStrut(10));
         buttonDownPanel.add(hibMorning);
         buttonDownPanel.add(Box.createHorizontalStrut(10));
-        buttonDownPanel.add(closeHib);
+        //buttonDownPanel.add(closeHib);
         buttonDownPanel.add(Box.createHorizontalStrut(10));
         buttonDownPanel.add(getFXButton);
         buttonDownPanel.add(Box.createHorizontalStrut(10));
@@ -370,7 +370,7 @@ public final class ChinaData extends JPanel {
         shcompToText.addActionListener(al ->
 
                 writeShcomp2());
-        closeHib.addActionListener(al -> Hibtask.closeHibSessionFactory());
+        //closeHib.addActionListener(al -> Hibtask.closeHibSessionFactory());
 
         getFXButton.addActionListener(al -> ChinaStockHelper.getHistoricalFX());
 

@@ -631,12 +631,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         for (JLabel j : Arrays.asList(bid1, ask1, bid2, ask2, bid3, ask3, bid4, ask4, bid5, ask5)) {
             deepPanel.add(j);
         }
-        JScrollPane outputPanel = new JScrollPane(outputArea);
+        JScrollPane outputScrollPane = new JScrollPane(outputArea);
         controlPanel1.setLayout(new FlowLayout());
         add(controlPanel1);
         add(controlPanel2);
         add(deepPanel);
-        add(outputPanel);
+        add(outputScrollPane);
         add(chartScroll);
     }
 
@@ -3729,6 +3729,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                                         "#:", numTradesByOrder.getOrDefault(e1.getKey(), 0L),
                                         "Tot Q: ", quantitySumByOrder.getOrDefault(e1.getKey(), 0d), r(e1.getValue())))
                                 .collect(Collectors.joining(","))));
+
 
         SwingUtilities.invokeLater(() -> {
             updateLog(" Expiry " + activeFutureCt.lastTradeDateOrContractMonth());
