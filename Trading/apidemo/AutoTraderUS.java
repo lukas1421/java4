@@ -118,6 +118,7 @@ public class AutoTraderUS {
         if (globalTradingOn.get()) {
             usOpenDeviationTrader(symbol, nowMilli, freshPrice);
             usRelativeProfitTaker(symbol, nowMilli, freshPrice);
+            usHalfHourDevTrader(symbol, nowMilli, freshPrice);
             //usHiloTrader(symbol, nowMilli, freshPrice);
         }
 
@@ -128,25 +129,25 @@ public class AutoTraderUS {
         //usPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
     }
 
-    private static void usHalfHourTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+    private static void usHalfHourDevTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         Contract ct = tickerToUSContract(symbol);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
 
-        if (lt.isBefore(LocalTime.of(9, 29, 59)) || lt.isAfter(ltof(12, 0, 0))) {
+        if (lt.isBefore(LocalTime.of(9, 29, 59)) || lt.isAfter(ltof(11, 0, 0))) {
             return;
         }
 
-        LocalTime halfHourStart = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
-        double halfHourOpen = prices.ceilingEntry(halfHourStart).getValue();
+        LocalTime halfHourStartTime = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
+        double halfHourOpen = prices.ceilingEntry(halfHourStartTime).getValue();
 
-        double halfHourMax = prices.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
+        double halfHourMax = prices.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStartTime))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
 
-        double halfHourMin = prices.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
+        double halfHourMin = prices.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStartTime))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        HalfHour h = HalfHour.get(halfHourStart);
+        HalfHour h = HalfHour.get(halfHourStartTime);
         AutoOrderType ot = getOrderTypeByHalfHour(h);
 
         long halfHourOrderNum = getOrderSizeForTradeType(symbol, ot);

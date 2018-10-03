@@ -1226,7 +1226,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
 
         LocalTime halfHourStart = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
-        double halfHourStartPrice = futPrice.ceilingEntry(halfHourStart).getValue();
+        double halfHourOpen = futPrice.ceilingEntry(halfHourStart).getValue();
 
         double halfHourMax = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
@@ -1240,24 +1240,23 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         HalfHour h = HalfHour.get(halfHourStart);
         AutoOrderType ot = getOrderTypeByHalfHour(h);
 
-
         long halfHourOrderNum = getOrderSizeForTradeType(symbol, ot);
 
-        pr("half hour trader ", "start", halfHourStart, "halfHour", h, "startValue", halfHourStartPrice,
+        pr("half hour trader ", "start", halfHourStart, "halfHour", h, "startValue", halfHourOpen,
                 "max min maxt mint ", halfHourMax, halfHourMin, halfHourMaxT, halfHourMinT,
                 "type", ot, "#:", halfHourOrderNum);
 
         if (!manualHalfHourDev.get(h).get()) {
             if (lt.isBefore(h.getStartTime())) {
-                outputDetailedXU(symbol, str(" setting manual halfhour dev direction", symbol, h, lt));
+                outputDetailedXU(symbol, str(" setting manual XU halfhour dev direction", symbol, h, lt));
                 manualHalfHourDev.get(h).set(true);
             } else {
-                if (freshPrice > halfHourStartPrice) {
-                    outputDetailedXU(symbol, str(" setting manual halfhour dev fresh>start", symbol, h, lt));
+                if (freshPrice > halfHourOpen) {
+                    outputDetailedXU(symbol, str(" setting manual XU halfhour dev fresh>start", symbol, h, lt));
                     halfHourDevDirection.put(h, Direction.Long);
                     manualHalfHourDev.get(h).set(true);
-                } else if (freshPrice < halfHourStartPrice) {
-                    outputDetailedXU(symbol, str(" setting manual halfhour dev dir fresh<start", symbol, h, lt));
+                } else if (freshPrice < halfHourOpen) {
+                    outputDetailedXU(symbol, str(" setting manual XU halfhour dev dir fresh<start", symbol, h, lt));
                     halfHourDevDirection.put(h, Direction.Short);
                     manualHalfHourDev.get(h).set(true);
                 } else {
@@ -1265,7 +1264,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 }
             }
         }
-
 
         if (halfHourOrderNum >= MAX_HALFHOUR_SIZE) {
             return;
@@ -1275,14 +1273,14 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         int waitTimeSec = (milliLast2 < 60000) ? 300 : 10;
 
         if (SECONDS.between(lastOrderTime, nowMilli) > waitTimeSec) {
-            if (freshPrice > halfHourStartPrice && !noMoreBuy.get() && halfHourDevDirection.get(h) != Direction.Long) {
+            if (freshPrice > halfHourOpen && !noMoreBuy.get() && halfHourDevDirection.get(h) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, 1, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "half hr dev buy #:", h));
                 halfHourDevDirection.put(h, Direction.Long);
-            } else if (freshPrice < halfHourStartPrice && !noMoreSell.get() && halfHourDevDirection.get(h) != Direction.Short) {
+            } else if (freshPrice < halfHourOpen && !noMoreSell.get() && halfHourDevDirection.get(h) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, 1, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));

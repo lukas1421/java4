@@ -127,31 +127,31 @@ public class AutoTraderMain extends JPanel {
     static AutoOrderType getOrderTypeByHalfHour(HalfHour h) {
         switch (h) {
             case H900:
-                return H9_DEV;
+                return H900_DEV;
             case H930:
                 return H930_DEV;
             case H1000:
-                return H10_DEV;
+                return H1000_DEV;
             case H1030:
                 return H1030_DEV;
             case H1100:
-                return H11_DEV;
+                return H1100_DEV;
             case H1130:
                 return H1130_DEV;
             case H1200:
-                return H12_DEV;
+                return H1200_DEV;
             case H1230:
                 return H1230_DEV;
             case H1300:
-                return H13_DEV;
+                return H1300_DEV;
             case H1330:
                 return H1330_DEV;
             case H1400:
-                return H14_DEV;
+                return H1400_DEV;
             case H1430:
                 return H1430_DEV;
             case H1500:
-                return H15_DEV;
+                return H1500_DEV;
             case H1530:
                 return H1530_DEV;
         }

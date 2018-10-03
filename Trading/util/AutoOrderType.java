@@ -52,19 +52,19 @@ public enum AutoOrderType {
     FUT_PC_PROFIT_TAKER,
     SGXA50_HILO,
 
-    H9_DEV, //9
+    H900_DEV, //9:00
     H930_DEV, //9:30
-    H10_DEV, //10
+    H1000_DEV, //10:00
     H1030_DEV, //10:30
-    H11_DEV, //11:00
+    H1100_DEV, //11:00
     H1130_DEV, //11:30
-    H12_DEV, //12:00
+    H1200_DEV, //12:00
     H1230_DEV, //12:30
-    H13_DEV, //13:00
+    H1300_DEV, //13:00
     H1330_DEV, //13:30
-    H14_DEV, //14:00
+    H1400_DEV, //14:00
     H1430_DEV, //14:30
-    H15_DEV, //15:00
+    H1500_DEV, //15:00
     H1530_DEV, //15:30
 
     SGXA50_POST_CUTOFF_LIQ,
