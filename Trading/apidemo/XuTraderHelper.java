@@ -764,9 +764,29 @@ public class XuTraderHelper {
                 .sum();
     }
 
-    static OrderStatus getLastOrderStatusForType(String name, AutoOrderType type) {
+    static OrderStatus getLastPrimaryOrderStatus(String symbol, AutoOrderType type) {
         long size = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getSymbol().equals(name))
+                .filter(e -> e.getValue().getSymbol().equals(symbol))
+                .filter(e -> e.getValue().isPrimaryOrder())
+                .filter(e -> e.getValue().getOrderType() == type).count();
+
+        if (size == 0L) {
+            return OrderStatus.NoOrder;
+        }
+
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getSymbol().equals(symbol))
+                .filter(e -> e.getValue().isPrimaryOrder())
+                .filter(e -> e.getValue().getOrderType() == type)
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getAugmentedOrderStatus())
+                .orElseThrow(() -> new IllegalStateException("no status"));
+
+    }
+
+    static OrderStatus getLastOrderStatusForType(String symbol, AutoOrderType type) {
+        long size = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getSymbol().equals(symbol))
                 .filter(e -> e.getValue().getOrderType() == type).count();
 
         if (size == 0L) {

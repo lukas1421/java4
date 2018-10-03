@@ -1,9 +1,6 @@
 package apidemo;
 
-import client.Contract;
-import client.Order;
-import client.OrderAugmented;
-import client.Types;
+import client.*;
 import controller.ApiController;
 import handler.GuaranteeUSHandler;
 import util.AutoOrderType;
@@ -258,6 +255,13 @@ public class AutoTraderUS {
         double retreatDownThresh = downThresh * 0.3;
 
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, US_RELATIVE_TAKE_PROFIT);
+
+        OrderStatus lastStatus = getLastPrimaryOrderStatus(symbol, US_RELATIVE_TAKE_PROFIT);
+
+        if (lastStatus != OrderStatus.Filled && lastStatus != OrderStatus.NoOrder) {
+            pr(" us relative profit taker, status: ", symbol, lt, lastStatus);
+            return;
+        }
 
         if (SECONDS.between(lastOrderTime, nowMilli) > 10) {
             if (currPos < 0) {

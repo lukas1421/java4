@@ -1169,6 +1169,13 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, SGXA50_RELATIVE_TAKE_PROFIT);
 
+        OrderStatus lastStatus = getLastOrderStatusForType(symbol, SGXA50_RELATIVE_TAKE_PROFIT);
+
+        if (lastStatus != OrderStatus.Filled && lastStatus != OrderStatus.NoOrder) {
+            pr(" XU relative profit taker, status: ", symbol, lt, lastStatus);
+            return;
+        }
+
         if (SECONDS.between(lastOrderTime, nowMilli) > 10) {
             if (currPos < 0) {
                 if ((halfHourMin / halfHourOpen - 1 < downThresh) && (freshPrice / halfHourMin - 1 > retreatUpThresh)) {
