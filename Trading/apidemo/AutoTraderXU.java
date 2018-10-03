@@ -1132,6 +1132,64 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //        }
 //    }
 
+
+    private static void xuRelativeProfitTaker(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        String symbol = ibContractToSymbol(activeFutureCt);
+        FutType f = ibContractToFutType(activeFutureCt);
+        LocalTime amObservationStart = ltof(8, 59, 59);
+        long currPos = currentPosMap.get(f);
+
+        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(amObservationStart))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
+
+        if (lt.isBefore(LocalTime.of(8, 59, 29)) || lt.isAfter(ltof(15, 0, 0))) {
+            return;
+        }
+
+        if (lt.isAfter(ltof(11, 30, 0)) && lt.isBefore(ltof(13, 0, 0))) {
+            return;
+        }
+
+        double upThresh = 0.01;
+        double downThresh = -0.01;
+        double retreatUpThresh = 0.005;
+        double retreatDownThresh = -0.005;
+
+        LocalTime halfHourStart = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
+        double halfHourStartPrice= futPrice.ceilingEntry(halfHourStart).getValue();
+
+        double halfHourMax = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
+                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+
+        double halfHourMin = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
+                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+
+        if (halfHourMin / halfHourStartPrice - 1 < downThresh) {
+            if (freshPrice / halfHourMin - 1 > retreatUpThresh && currPos < 0) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
+                outputDetailedXU(symbol, "**********");
+                outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit BUY#"));
+            }
+        } else if (halfHourMax / halfHourStartPrice - 1 > upThresh) {
+            if (freshPrice / halfHourMax - 1 < retreatDownThresh && currPos > 0) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
+                outputDetailedXU(symbol, "**********");
+                outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit SELL#"));
+            }
+        }
+
+
+    }
+
     /**
      * @param nowMilli   time now
      * @param freshPrice last fut price
