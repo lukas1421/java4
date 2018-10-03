@@ -22,8 +22,7 @@ import static client.Types.TimeInForce.DAY;
 import static client.Types.TimeInForce.IOC;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static util.AutoOrderType.*;
-import static utility.Utility.ibContractToSymbol;
-import static utility.Utility.str;
+import static utility.Utility.*;
 
 //import static apidemo.AutoTraderXU.*;
 
@@ -132,6 +131,13 @@ public class AutoTraderUS {
         //usPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
     }
 
+    /**
+     * half hour US traders
+     *
+     * @param symbol     US name
+     * @param nowMilli   time now
+     * @param freshPrice fresh price
+     */
     private static void usHalfHourDevTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         Contract ct = tickerToUSContract(symbol);
@@ -144,11 +150,11 @@ public class AutoTraderUS {
         LocalTime halfHourStartTime = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
         double halfHourOpen = prices.ceilingEntry(halfHourStartTime).getValue();
 
-        double halfHourMax = prices.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStartTime))
-                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-
-        double halfHourMin = prices.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStartTime))
-                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+//        double halfHourMax = prices.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStartTime))
+//                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+//
+//        double halfHourMin = prices.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStartTime))
+//                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
         HalfHour h = HalfHour.get(halfHourStartTime);
         AutoOrderType ot = getOrderTypeByHalfHour(h);
@@ -174,12 +180,12 @@ public class AutoTraderUS {
             }
         }
 
+        pr("US half hour trader ", "start", halfHourStartTime, "halfHour", h, "startValue", halfHourOpen,
+                "type", ot, "#:", halfHourOrderNum);
+
         if (halfHourOrderNum >= MAX_US_HALFHOUR_ORDERS) {
             return;
         }
-
-        double buySize = US_SIZE;
-        double sellSize = US_SIZE;
 
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, ot);
         long milliLast2 = lastTwoOrderMilliDiff(symbol, ot);
@@ -188,7 +194,7 @@ public class AutoTraderUS {
         if (SECONDS.between(lastOrderTime, nowMilli) > waitTimeSec) {
             if (freshPrice > halfHourOpen && !noMoreBuy.get() && halfHourUSDevDirection.get(h) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
+                Order o = placeBidLimitTIF(freshPrice, US_SIZE, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "half hr US dev buy #:", h, "type", ot,
@@ -197,7 +203,7 @@ public class AutoTraderUS {
             } else if (freshPrice < halfHourOpen && !noMoreSell.get() &&
                     halfHourUSDevDirection.get(h) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
+                Order o = placeOfferLimitTIF(freshPrice, US_SIZE, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "half hr US dev sell #:", h, "type", ot,
@@ -235,8 +241,8 @@ public class AutoTraderUS {
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(amObservationStart));
-        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(amObservationStart));
+//        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(amObservationStart));
+//        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(amObservationStart));
 
         double upThresh = 0.02;
         double downThresh = -0.02;

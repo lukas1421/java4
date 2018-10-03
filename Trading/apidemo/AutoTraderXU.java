@@ -163,7 +163,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     public static volatile EnumMap<FutType, Double> bidMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Double> askMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Double> futPriceMap = new EnumMap<>(FutType.class);
-    private static volatile NavigableMap<LocalDateTime, Double> activeLastMinuteMap = new ConcurrentSkipListMap<>();
+    // private static volatile NavigableMap<LocalDateTime, Double> activeLastMinuteMap = new ConcurrentSkipListMap<>();
     private static EnumMap<FutType, Double> futOpenMap = new EnumMap<>(FutType.class);
     public static EnumMap<FutType, Double> futPrevClose3pmMap = new EnumMap<>(FutType.class);
 
@@ -290,21 +290,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             musicOn.set(!musicOn.get());
             musicPlayableButton.setText("Music:" + (musicOn.get() ? "ON" : "OFF"));
         });
-
-//        JButton rollButton = new JButton("Roll");
-//        rollButton.addActionListener(l -> {
-//            CompletableFuture.runAsync(() -> {
-//                XUTraderRoll.resetLatch();
-//                XUTraderRoll.getContractDetails();
-//                try {
-//                    XUTraderRoll.latch.await();
-//                    pr("xu trader roll wait finished, short rolling ", LocalTime.now());
-//                    traderRoll.shortRoll(0);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//            });
-//        });
 
         JToggleButton globalTradingButton = new JToggleButton("Trading:" + (globalTradingOn.get() ? "ON" : "OFF"));
         globalTradingButton.setSelected(false);
@@ -817,13 +802,16 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         if (checkIfHoliday(LocalDate.now()) || atmVol > SGXA50_AUTO_VOL_THRESH) {
             cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
             cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
+
             sgxA50CloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
             sgxA50PostCutoffLiqTrader(ldt, price);
             sgxA50RelativeProfitTaker(ldt, price);
-            //futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
+            //sgxA50OpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
             if (globalTradingOn.get()) {
-                sgxA50HiloTrader(ldt, price); // 9:00 to 9:30, guarantee
+                //sgxA50HiloTrader(ldt, price); // 9:00 to 9:30, guarantee
                 sgxA50HalfHourDevTrader(ldt, price);
+                sgxA50OpenDeviationTrader(ldt, price);
+
             }
         }
         //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
@@ -838,10 +826,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         //indexHiLoTrader(ldt, price, pmChgY);
         //firstTickMAProfitTaker(ldt, price);
         //closeProfitTaker(ldt, price);
-
-        if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
-            return;
-        }
+//        if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
+//            return;
+//        }
         //testTrader(ldt, price);
         //overnightTrader(ldt, price);
     }
@@ -978,19 +965,19 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
 
-    static void updateLastMinuteMap(LocalDateTime ldt, double freshPrice) {
-        activeLastMinuteMap.entrySet().removeIf(e -> e.getKey().isBefore(ldt.minusMinutes(3)));
-        activeLastMinuteMap.put(ldt, freshPrice);
-
-        if (activeLastMinuteMap.size() > 1) {
-            double lastV = activeLastMinuteMap.lastEntry().getValue();
-            double secLastV = activeLastMinuteMap.lowerEntry(activeLastMinuteMap.lastKey()).getValue();
-            long milliLapsed = ChronoUnit.MILLIS.between(activeLastMinuteMap.lowerKey(activeLastMinuteMap.lastKey()),
-                    activeLastMinuteMap.lastKey());
-        } else {
-            pr(str(" last minute map ", activeLastMinuteMap));
-        }
-    }
+//    static void updateLastMinuteMap(LocalDateTime ldt, double freshPrice) {
+//        activeLastMinuteMap.entrySet().removeIf(e -> e.getKey().isBefore(ldt.minusMinutes(3)));
+//        activeLastMinuteMap.put(ldt, freshPrice);
+//
+//        if (activeLastMinuteMap.size() > 1) {
+//            double lastV = activeLastMinuteMap.lastEntry().getValue();
+//            double secLastV = activeLastMinuteMap.lowerEntry(activeLastMinuteMap.lastKey()).getValue();
+//            long milliLapsed = ChronoUnit.MILLIS.between(activeLastMinuteMap.lowerKey(activeLastMinuteMap.lastKey()),
+//                    activeLastMinuteMap.lastKey());
+//        } else {
+//            pr(str(" last minute map ", activeLastMinuteMap));
+//        }
+//    }
 
     private static double getBullishTarget() {
         switch (_20DayMA) {
@@ -1227,22 +1214,21 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime halfHourStart = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
         double halfHourOpen = futPrice.ceilingEntry(halfHourStart).getValue();
 
-        double halfHourMax = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
-                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-
-        double halfHourMin = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
-                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
-
-        LocalTime halfHourMaxT = getFirstMaxTPred(futPrice, t -> t.isAfter(halfHourStart));
-        LocalTime halfHourMinT = getFirstMinTPred(futPrice, t -> t.isAfter(halfHourStart));
+//        double halfHourMax = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
+//                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+//
+//        double halfHourMin = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
+//                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+//
+//        LocalTime halfHourMaxT = getFirstMaxTPred(futPrice, t -> t.isAfter(halfHourStart));
+//        LocalTime halfHourMinT = getFirstMinTPred(futPrice, t -> t.isAfter(halfHourStart));
 
         HalfHour h = HalfHour.get(halfHourStart);
         AutoOrderType ot = getOrderTypeByHalfHour(h);
 
         long halfHourOrderNum = getOrderSizeForTradeType(symbol, ot);
 
-        pr("half hour trader ", "start", halfHourStart, "halfHour", h, "startValue", halfHourOpen,
-                "max min maxt mint ", halfHourMax, halfHourMin, halfHourMaxT, halfHourMinT,
+        pr("XU half hour trader ", "start", halfHourStart, "halfHour", h, "startValue", halfHourOpen,
                 "type", ot, "#:", halfHourOrderNum);
 
         if (!manualHalfHourDev.get(h).get()) {
@@ -1607,7 +1593,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param nowMilli   time
      * @param freshPrice fut price
      */
-    private static void futOpenDeviationTrader(LocalDateTime nowMilli, double freshPrice) {
+    private static void sgxA50OpenDeviationTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         String symbol = ibContractToSymbol(activeFutureCt);
         FutType f = ibContractToFutType(activeFutureCt);
@@ -1676,24 +1662,26 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         int baseSize = 1;
         int buySize = baseSize * ((numOrders == 0 || numOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
         int sellSize = baseSize * ((numOrders == 0 || numOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
-        double buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(futOpen, Direction.Long));
-        double sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(futOpen, Direction.Short));
+        //double buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(futOpen, Direction.Long));
+        //double sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(futOpen, Direction.Short));
+        double buyPrice = freshPrice;
+        double sellPrice = freshPrice;
 
         if (SECONDS.between(lastFutDevOrderTime, nowMilli) > waitTimeSec) {
             if (!noMoreBuy.get() && freshPrice > futOpen && futOpenDevDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(buyPrice, buySize, DAY);
+                Order o = placeBidLimitTIF(buyPrice, buySize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_OPEN_DEVI));
-                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "fut Open dev BUY #:", numOrders, globalIdOrderMap.get(id),
                         "open, last ", futOpen, freshPrice, "milliLastTwo", milliLast2,
                         "waitSec", waitTimeSec, "next T", lastFutDevOrderTime.plusSeconds(waitTimeSec)));
                 futOpenDevDirection = Direction.Long;
             } else if (!noMoreSell.get() && freshPrice < futOpen && futOpenDevDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(sellPrice, sellSize, DAY);
+                Order o = placeOfferLimitTIF(sellPrice, sellSize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_OPEN_DEVI));
-                apcon.placeOrModifyOrder(activeFutureCt, o, new DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "fut Open dev SELL #:", numOrders, globalIdOrderMap.get(id),
                         "open, last ", futOpen, freshPrice, "milliLast2", milliLast2,
                         "waitSec", waitTimeSec, "next T", lastFutDevOrderTime.plusSeconds(waitTimeSec)));
