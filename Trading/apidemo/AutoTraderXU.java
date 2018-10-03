@@ -812,12 +812,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             sgxA50CloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
             sgxA50PostCutoffLiqTrader(ldt, price);
             sgxA50RelativeProfitTaker(ldt, price);
-            //sgxA50OpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
             if (globalTradingOn.get()) {
-                //sgxA50HiloTrader(ldt, price); // 9:00 to 9:30, guarantee
                 sgxA50HalfHourDevTrader(ldt, price);
                 sgxA50OpenDeviationTrader(ldt, price);
-
             }
         }
         //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
