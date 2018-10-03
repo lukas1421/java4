@@ -199,6 +199,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     static volatile boolean connectionStatus = false;
     static volatile JLabel connectionLabel = new JLabel();
 
+    //half hour
+    private static volatile EnumMap<HalfHour, AtomicBoolean> manualHalfHourHilo = new EnumMap<>(HalfHour.class);
+    private static volatile EnumMap<HalfHour, Direction> halfHourHiloDirection = new EnumMap<>(HalfHour.class);
+    private static final int MAX_HALFHOUR_SIZE = 2;
+
     AutoTraderXU(ApiController ap) {
         pr(str(" ****** front fut ******* ", frontFut.symbol(), frontFut.lastTradeDateOrContractMonth()));
         pr(str(" ****** back fut ******* ", backFut.symbol(), backFut.lastTradeDateOrContractMonth()));
@@ -209,6 +214,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             overnightTradesMap.put(f, new ConcurrentSkipListMap<>());
             futOpenMap.put(f, 0.0);
             futPrevClose3pmMap.put(f, 0.0);
+        }
+
+        for (HalfHour h : HalfHour.values()) {
+            halfHourHiloDirection.put(h, Direction.Flat);
+            manualHalfHourHilo.put(h, new AtomicBoolean(false));
         }
 
         apcon = ap;
@@ -1120,6 +1130,110 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //            }
 //        }
 //    }
+
+    private static void sgxA50HalfHourTrader(LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        String symbol = ibContractToSymbol(activeFutureCt);
+        FutType f = ibContractToFutType(activeFutureCt);
+        LocalTime amObservationStart = ltof(8, 59, 59);
+        long currPos = currentPosMap.get(f);
+
+        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(amObservationStart))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
+
+        if (lt.isBefore(LocalTime.of(9, 29, 29)) || lt.isAfter(ltof(15, 0, 0))) {
+            return;
+        }
+        if (lt.isAfter(ltof(11, 30, 0)) && lt.isBefore(ltof(13, 0))) {
+            return;
+        }
+
+        LocalTime halfHourStart = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
+        double halfHourStartValue = futPrice.ceilingEntry(halfHourStart).getValue();
+
+        double halfHourMax = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
+                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+
+        double halfHourMin = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
+                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+
+        LocalTime halfHourMaxT = getFirstMaxTPred(futPrice, t -> t.isAfter(halfHourStart));
+        LocalTime halfHourMinT = getFirstMinTPred(futPrice, t -> t.isAfter(halfHourStart));
+
+        HalfHour h = HalfHour.get(halfHourStart);
+        AutoOrderType ot = getOrderTypeByHalfHour(h);
+        long halfHourOrderNum = getOrderSizeForTradeType(symbol, ot);
+
+        if (!manualHalfHourHilo.get(h).get()) {
+            if (lt.isBefore(h.getStartTime())) {
+                outputDetailedXU(symbol, str(" setting manual halfhour hilo direction", symbol, h, lt));
+                manualHalfHourHilo.get(h).set(true);
+            } else {
+                if (halfHourMaxT.isAfter(halfHourMinT)) {
+                    outputDetailedXU(symbol, str(" setting manual halfhour hilo dir maxT>minT", symbol, h, lt));
+                    halfHourHiloDirection.put(h, Direction.Long);
+                    manualHalfHourHilo.get(h).set(true);
+                } else if (halfHourMinT.isAfter(halfHourMaxT)) {
+                    outputDetailedXU(symbol, str(" setting manual halfhour hilo dir minT>maxT", symbol, h, lt));
+                    halfHourHiloDirection.put(h, Direction.Short);
+                    manualHalfHourHilo.get(h).set(true);
+                } else {
+                    halfHourHiloDirection.put(h, Direction.Flat);
+                }
+            }
+        }
+
+        if (halfHourOrderNum >= MAX_HALFHOUR_SIZE) {
+            return;
+        }
+        long tSinceLastOrder = tSincePrevOrderMilli(symbol, ot, nowMilli);
+
+        if (tSinceLastOrder < 10000) {
+            return;
+        }
+
+        if (freshPrice > halfHourMax && !noMoreBuy.get() && halfHourHiloDirection.get(h) != Direction.Long) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeBidLimitTIF(freshPrice, 1, IOC);
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+            apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
+            outputDetailedXU(symbol, str(o.orderId(), "half hr hilo buy #:", h));
+            halfHourHiloDirection.put(h, Direction.Long);
+        } else if (freshPrice < halfHourMin && !noMoreSell.get() && halfHourHiloDirection.get(h) != Direction.Short) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimitTIF(freshPrice, 1, IOC);
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+            apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
+            outputDetailedXU(symbol, str(o.orderId(), "half hr hilo sell #:", h));
+            halfHourHiloDirection.put(h, Direction.Short);
+        }
+
+    }
+
+    private static AutoOrderType getOrderTypeByHalfHour(HalfHour h) {
+        switch (h) {
+            case H1:
+                return H1_HILO;
+            case H2:
+                return H2_HILO;
+            case H3:
+                return H3_HILO;
+            case H4:
+                return H4_HILO;
+            case H5:
+                return H5_HILO;
+            case H6:
+                return H6_HILO;
+            case H7:
+                return H7_HILO;
+            case H8:
+                return H8_HILO;
+        }
+        throw new IllegalStateException(" not found");
+    }
+
 
     /**
      * fut hilo trader
