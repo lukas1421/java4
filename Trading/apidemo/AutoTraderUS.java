@@ -108,10 +108,11 @@ public class AutoTraderUS {
 //        if (!globalTradingOn.get()) {
 //            return;
 //        }
-        //usOpenDeviationTrader(symbol, nowMilli, freshPrice);
+
 
         if (globalTradingOn.get()) {
-            usHiloTrader(symbol, nowMilli, freshPrice);
+            usOpenDeviationTrader(symbol, nowMilli, freshPrice);
+            //usHiloTrader(symbol, nowMilli, freshPrice);
         }
 
         usPostCutoffLiqTrader(symbol, nowMilli, freshPrice);
@@ -120,6 +121,68 @@ public class AutoTraderUS {
         //usPMHiloTrader(symbol, nowMilli, freshPrice);
         //usPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
     }
+
+    private static void usHalfHourTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+
+    }
+
+    private static void usRelativeProfitTaker(String symbol, LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        Contract ct = tickerToUSContract(symbol);
+        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
+        //double open = usOpenMap.getOrDefault(symbol, 0.0);
+
+        double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
+        LocalTime amStart = ltof(9, 29, 59);
+        LocalTime amObservationStart = ltof(9, 29, 55);
+
+        if (lt.isBefore(amStart)) {
+            return;
+        }
+
+        LocalTime lastKey = prices.lastKey();
+
+        double manualOpen = prices.ceilingEntry(amObservationStart).getValue();
+        double maxSoFar = prices.entrySet().stream()
+                .filter(e -> e.getKey().isAfter(amObservationStart))
+                .filter(e -> e.getKey().isBefore(lastKey))
+                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+
+        double minSoFar = prices.entrySet().stream()
+                .filter(e -> e.getKey().isAfter(amObservationStart))
+                .filter(e -> e.getKey().isBefore(lastKey))
+                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+
+        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(amObservationStart));
+        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(amObservationStart));
+
+        double upThresh = 0.02;
+        double downThresh = -0.02;
+        double retreatThresh = 0.005;
+
+        if (maxSoFar / manualOpen - 1 > upThresh) {
+            if (freshPrice / maxSoFar - 1 < -1 * retreatThresh && currPos > 0) {
+                //sell
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_RELATIVE_TAKE_PROFIT));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit SELL#"));
+            }
+        } else if (minSoFar / manualOpen - 1 < downThresh) {
+            if (freshPrice / minSoFar - 1 > retreatThresh && currPos < 0) {
+                //buy back
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_RELATIVE_TAKE_PROFIT));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
+                outputDetailedUS(symbol, "**********");
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit BUY#"));
+            }
+        }
+    }
+
 
     /**
      * us open deviation trader
@@ -177,23 +240,15 @@ public class AutoTraderUS {
             return;
         }
 
-
-        double buyPrice;
-        double sellPrice;
-        if (numOrders < 2) {
-            buyPrice = freshPrice;
-            sellPrice = freshPrice;
-        } else {
-            buyPrice = Math.min(freshPrice, manualOpen);
-            sellPrice = Math.max(freshPrice, manualOpen);
-        }
+        double buyPrice = freshPrice;
+        double sellPrice = freshPrice;
 
         if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && usShortableValueMap.get(symbol) > US_MIN_SHORT_LEVEL)
             if (!noMoreBuy.get() && freshPrice > manualOpen && usOpenDevDirection.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(buyPrice, buySize, DAY);
+                Order o = placeBidLimitTIF(buyPrice, buySize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
-                apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedUS(symbol, "**********");
                 outputDetailedUS(symbol, str("NEW", o.orderId(), "US open dev BUY#", numOrders,
                         globalIdOrderMap.get(id),
@@ -206,9 +261,9 @@ public class AutoTraderUS {
                 usOpenDevDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && freshPrice < manualOpen && usOpenDevDirection.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(sellPrice, sellSize, DAY);
+                Order o = placeOfferLimitTIF(sellPrice, sellSize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_OPENDEV));
-                apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedUS(symbol, "**********");
                 outputDetailedUS(symbol, str("NEW", o.orderId(), "US open dev SELL#:", numOrders,
                         globalIdOrderMap.get(id),
