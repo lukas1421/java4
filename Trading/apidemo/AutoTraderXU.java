@@ -1152,6 +1152,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double retreatDownThresh = 0.3 * downThresh;
 
         LocalTime halfHourStart = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
+
         double halfHourOpen = futPrice.ceilingEntry(halfHourStart).getValue();
 
         double halfHourMax = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
@@ -1161,7 +1162,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
         if (currPos < 0) {
-            if (halfHourMin / halfHourOpen - 1 < downThresh && freshPrice / halfHourMin - 1 > retreatUpThresh) {
+            if ((halfHourMin / halfHourOpen - 1 < downThresh) && (freshPrice / halfHourMin - 1 > retreatUpThresh)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
@@ -1169,11 +1170,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 outputDetailedXU(symbol, "**********");
                 outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit BUY#",
                         "min, open, fresh ", halfHourMin, halfHourOpen, freshPrice,
-                        "min/open", halfHourMin / halfHourOpen - 1,
-                        "p/min", freshPrice / halfHourMin - 1));
+                        "min/open", halfHourMin / halfHourOpen - 1, "downThresh", downThresh,
+                        "p/min", freshPrice / halfHourMin - 1, "retreatUpThresh", retreatUpThresh));
             }
         } else if (currPos > 0) {
-            if (halfHourMax / halfHourOpen - 1 > upThresh && freshPrice / halfHourMax - 1 < retreatDownThresh) {
+            if ((halfHourMax / halfHourOpen - 1 > upThresh) && (freshPrice / halfHourMax - 1 < retreatDownThresh)) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
@@ -1181,8 +1182,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 outputDetailedXU(symbol, "**********");
                 outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit SELL#",
                         "max, open, fresh ", halfHourMax, halfHourOpen, freshPrice,
-                        "max/open", halfHourMax / halfHourOpen - 1,
-                        "p/max", freshPrice / halfHourMax - 1));
+                        "max/open", halfHourMax / halfHourOpen - 1, "upthresh", upThresh,
+                        "p/max", freshPrice / halfHourMax - 1, "retreatThresh", retreatDownThresh));
             }
         }
     }
@@ -1216,10 +1217,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
 //        double halfHourMax = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
 //                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-//
 //        double halfHourMin = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
 //                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
-//
 //        LocalTime halfHourMaxT = getFirstMaxTPred(futPrice, t -> t.isAfter(halfHourStart));
 //        LocalTime halfHourMinT = getFirstMinTPred(futPrice, t -> t.isAfter(halfHourStart));
 
