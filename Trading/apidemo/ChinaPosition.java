@@ -427,7 +427,7 @@ public class ChinaPosition extends JPanel {
                                         "Tot Q: ", quantitySumByOrder.getOrDefault(e1.getKey(), 0d), r(e1.getValue())))
                                 .collect(Collectors.joining(","))));
 
-        return str("pnl String", symb, pnlString);
+        return str(LocalTime.now(), symb, pnlString);
     }
 
 
