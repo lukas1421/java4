@@ -1,7 +1,6 @@
 package apidemo;
 
 import TradeType.FutureTrade;
-import TradeType.MAIdea;
 import auxiliary.SimpleBar;
 import client.Order;
 import client.OrderStatus;
@@ -21,12 +20,16 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static apidemo.AutoTraderMain.*;
+import static apidemo.AutoTraderXU.activeFutureCt;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaStock.currencyMap;
 import static apidemo.TradingConstants.FTSE_INDEX;
@@ -161,7 +164,7 @@ public class XuTraderHelper {
 //    }
 
     public static void outputToAll(String s) {
-        outputDetailedXU(s);
+        outputDetailedXU("", s);
         outputDetailedHK("", s);
         outputDetailedUS("", s);
     }
@@ -170,7 +173,7 @@ public class XuTraderHelper {
         if (symbol.startsWith("hk")) {
             outputDetailedHK(symbol, msg);
         } else if (symbol.startsWith("SGXA50")) {
-            outputDetailedXU(msg);
+            outputDetailedXU(symbol, msg);
         } else if (currencyMap.getOrDefault(symbol, "CNY").equals("USD")) {
             outputDetailedUS(symbol, msg);
         }
@@ -208,8 +211,19 @@ public class XuTraderHelper {
         }
     }
 
-    public static void outputDetailedXU(String s) {
-        outputDetailedGen(s, xuDetailOutput);
+    public static void outputDetailedXU(String symbol, String msg) {
+        if (!symbol.equals("")) {
+            outputDetailedXUSymbol(symbol, msg);
+        }
+        outputDetailedGen(msg, xuDetailOutput);
+    }
+
+    private static void outputDetailedXUSymbol(String symbol, String msg) {
+        if (globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getSymbol().equals(symbol)).count() <= 1) {
+            outputDetailedGen(LocalDateTime.now().toString()
+                    , new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
+        }
+        outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
     }
 
     public static void outputDetailedHK(String symbol, String msg) {
@@ -220,6 +234,10 @@ public class XuTraderHelper {
     }
 
     private static void outputDetailedHKSymbol(String symbol, String msg) {
+        if (globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getSymbol().equals(symbol)).count() <= 1) {
+            outputDetailedGen(LocalDateTime.now().toString()
+                    , new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
+        }
         outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
     }
 
@@ -231,6 +249,10 @@ public class XuTraderHelper {
     }
 
     private static void outputDetailedUSSymbol(String symbol, String msg) {
+        if (globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getSymbol().equals(symbol)).count() <= 1) {
+            outputDetailedGen(LocalDateTime.now().toString()
+                    , new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
+        }
         outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
     }
 
@@ -459,16 +481,16 @@ public class XuTraderHelper {
         return (Math.round(x * 10) - Math.round(x * 10) % 25) / 10d;
     }
 
-    static void computeMAProfit(Set<MAIdea> l, double lastPrice) {
-        if (l.size() <= 1) {
-            return;
-        }
-        double totalProfit = l.stream().mapToDouble(t -> t.getIdeaSize() * (lastPrice - t.getIdeaPrice())).sum();
-        outputDetailedXU(" computeMAProfit total " + Math.round(100d * totalProfit) / 100d);
-        for (MAIdea t : l) {
-            outputDetailedXU(str(t, " PnL: ", Math.round(100d * t.getIdeaSize() * (lastPrice - t.getIdeaPrice())) / 100d));
-        }
-    }
+//    static void computeMAProfit(Set<MAIdea> l, double lastPrice) {
+//        if (l.size() <= 1) {
+//            return;
+//        }
+//        double totalProfit = l.stream().mapToDouble(t -> t.getIdeaSize() * (lastPrice - t.getIdeaPrice())).sum();
+//        outputDetailedXU(" computeMAProfit total " + Math.round(100d * totalProfit) / 100d);
+//        for (MAIdea t : l) {
+//            outputDetailedXU(str(t, " PnL: ", Math.round(100d * t.getIdeaSize() * (lastPrice - t.getIdeaPrice())) / 100d));
+//        }
+//    }
 
     static boolean bullishTouchMet(SimpleBar secLastBar, SimpleBar lastBar, double sma) {
         if (secLastBar.containsZero() || lastBar.containsZero() || sma == 0.0) {
@@ -618,7 +640,7 @@ public class XuTraderHelper {
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(
                 priceMapBar.get(anchorIndex), nowMilli.toLocalDate(), e -> e.isBefore(LocalTime.of(11, 30)) &&
                         e.isAfter(LocalTime.of(12, 59)));
-        NavigableMap<LocalDateTime, SimpleBar> fut = AutoTraderXU.futData.get(ibContractToFutType(AutoTraderXU.activeFutureCt));
+        NavigableMap<LocalDateTime, SimpleBar> fut = AutoTraderXU.futData.get(ibContractToFutType(activeFutureCt));
         double futClose = fut.lowerEntry(LocalDateTime.of(LocalDate.now(), LocalTime.of(15, 0))).getValue().getClose();
         int shorterMA = 5;
         int longerMA = 10;
@@ -842,7 +864,7 @@ public class XuTraderHelper {
                 LocalDate.now();
         int candidate = 50;
         NavigableMap<LocalDateTime, Double> dpMap = new ConcurrentSkipListMap<>();
-        AutoTraderXU.futData.get(ibContractToFutType(AutoTraderXU.activeFutureCt)).entrySet().stream().filter(e -> e.getKey()
+        AutoTraderXU.futData.get(ibContractToFutType(activeFutureCt)).entrySet().stream().filter(e -> e.getKey()
                 .isAfter(LocalDateTime.of(d, LocalTime.of(9, 29)))).forEach(e -> {
             if (priceMapBar.get(FTSE_INDEX).size() > 0 && priceMapBar.get(FTSE_INDEX).
                     firstKey().isBefore(e.getKey().toLocalTime())) {

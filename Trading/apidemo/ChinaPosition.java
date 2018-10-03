@@ -113,12 +113,11 @@ public class ChinaPosition extends JPanel {
     private static TableRowSorter<BarModel_POS> sorter;
     static ScheduledExecutorService ex = Executors.newScheduledThreadPool(10);
 
-
     private static final Predicate<Map.Entry<String, ?>> CHINA_STOCK_PRED = m -> isChinaStock(m.getKey());
     private static final Predicate<Map.Entry<String, ?>> FUT_PRED = m -> m.getKey().startsWith("SGXA50");
     private static final Predicate<Map.Entry<String, ?>> HK_PRED = e -> isHKStock(e.getKey());
 
-    static volatile Predicate<Map.Entry<String, ?>> GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
+    private static volatile Predicate<Map.Entry<String, ?>> GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
     private static volatile UpdateFrequency updateFreq = UpdateFrequency.oneSec;
 
     @Override
@@ -392,22 +391,14 @@ public class ChinaPosition extends JPanel {
             }
         };
 
-//        JPanel upperPanel = new JPanel();
-//        upperPanel.setLayout(new FlowLayout());
-//        upperPanel.add(controlPanel);
-//        upperPanel.add(scroll);
-
-        //setLayout(new FlowLayout());
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         add(controlPanel);
         add(scroll);
-        //add(upperPanel, BorderLayout.NORTH);
         add(outputPane);
         add(graphPane);
         tab.setAutoCreateRowSorter(true);
 
         sorter = (TableRowSorter<BarModel_POS>) tab.getRowSorter();
-        //getWtdMaxMin();
     }
 
     private static String getPnlString(String symb) {

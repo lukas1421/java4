@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderMain.globalTradingOn;
+import static apidemo.AutoTraderXU.activeFutureCt;
 import static apidemo.ChinaMain.*;
 import static apidemo.XuTraderHelper.*;
 import static client.OrderStatus.Filled;
@@ -1660,9 +1661,10 @@ public class ApiController implements EWrapper {
             @Override
             public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
                                     int parentId, double lastFillPrice, int clientId, String whyHeld) {
-                outputDetailedXU(str("||OrderStatus||", defaultID,
-                        globalIdOrderMap.get(defaultID), status, filled,
-                        remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));
+                outputDetailedXU(ibContractToSymbol(activeFutureCt)
+                        , str("||OrderStatus||", defaultID,
+                                globalIdOrderMap.get(defaultID), status, filled,
+                                remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));
             }
 
             @Override

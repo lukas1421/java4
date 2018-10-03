@@ -37,6 +37,7 @@ import static apidemo.AutoTraderXU.ltof;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
+import static apidemo.XuTraderHelper.outputToAll;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static utility.Utility.pr;
 
@@ -485,6 +486,7 @@ public final class ChinaMain implements IConnectionHandler {
 
                             if (!pane.getValue().equals(JOptionPane.NO_OPTION)) {
                                 ses.schedule(() -> {
+                                    outputToAll(LocalDateTime.now().toString());
 
                                     pr(" hib ");
                                     if (LocalTime.now().isAfter(ltof(5, 0)) && LocalTime.now().isBefore(ltof(15, 0))) {
