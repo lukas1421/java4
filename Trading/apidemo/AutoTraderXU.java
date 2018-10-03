@@ -621,7 +621,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //                                    , offerPrice, " Checking order ", checkIfOrderPriceMakeSense(offerPrice)));
                             outputDetailedXU(ibContractToSymbol(activeFutureCt)
                                     , str(o.orderId(), " Manual Offer Limit ",
-                                    l.getName(), globalIdOrderMap.get(id)));
+                                            l.getName(), globalIdOrderMap.get(id)));
 
                         } else {
                             throw new IllegalArgumentException("price out of bound");
@@ -1214,7 +1214,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat)) {
             if (!noMoreBuy.get() && (last > maxP || maxT.isAfter(minT)) && futHiLoDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(offer, buySize, IOC);
+                Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_HILO));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "fut hilo buy #:", futHiloOrdersNum,
@@ -1226,7 +1226,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 futHiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && (last < minP || minT.isAfter(maxT)) && futHiLoDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(bid, sellSize, IOC);
+                Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_HILO));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "fut hilo sell #:", futHiloOrdersNum,

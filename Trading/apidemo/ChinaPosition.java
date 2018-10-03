@@ -426,6 +426,7 @@ public class ChinaPosition extends JPanel {
                                         "#:", numTradesByOrder.getOrDefault(e1.getKey(), 0L),
                                         "Tot Q: ", quantitySumByOrder.getOrDefault(e1.getKey(), 0d), r(e1.getValue())))
                                 .collect(Collectors.joining(","))));
+
         return str("pnl String", symb, pnlString);
     }
 
@@ -1418,9 +1419,9 @@ public class ChinaPosition extends JPanel {
     private static void outputPnlString() {
         globalIdOrderMap.entrySet().stream().map(e -> e.getValue().getSymbol())
                 .collect(toList())
-                .forEach(s -> CompletableFuture.runAsync(() -> {
-                    String res = getPnlString(s);
-                    SwingUtilities.invokeLater(() -> updateLog(getPnlString(res)));
+                .forEach(symb -> CompletableFuture.runAsync(() -> {
+                    String res = getPnlString(symb);
+                    SwingUtilities.invokeLater(() -> updateLog(res));
                 }));
     }
 

@@ -179,29 +179,6 @@ public class XuTraderHelper {
         }
     }
 
-//    private static void outputPurelyOrders(String s, File order, File detailed) {
-//        outputDetailed(s, detailed);
-//        try (BufferedWriter out = new BufferedWriter(new FileWriter(order, true))) {
-//            out.append(s);
-//            out.newLine();
-//        } catch (IOException ex) {
-//            ex.printStackTrace();
-//        }
-//    }
-
-//    public static void outputPurelyOrdersXU(String s) {
-//        outputPurelyOrders(s, xuOrderOutput, xuDetailOutput);
-//    }
-
-//    public static void outputDetailed(String s) {
-//        try (BufferedWriter out = new BufferedWriter(new FileWriter(xuDetailOutput, true))) {
-//            out.append(s);
-//            out.newLine();
-//        } catch (IOException ex) {
-//            ex.printStackTrace();
-//        }
-//    }
-
     private static void outputDetailedGen(String s, File detailed) {
         try (BufferedWriter out = new BufferedWriter(new FileWriter(detailed, true))) {
             out.append(s);
