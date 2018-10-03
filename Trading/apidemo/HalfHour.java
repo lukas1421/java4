@@ -4,7 +4,7 @@ import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import static apidemo.AutoTraderXU.ltof;
+import static apidemo.AutoTraderMain.ltof;
 
 public enum HalfHour {
 

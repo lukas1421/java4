@@ -32,7 +32,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -2381,14 +2380,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return LocalDateTime.of(d, t);
     }
 
-    public static LocalTime ltof(int h, int m) {
-        return LocalTime.of(h, m);
-    }
-
-    static LocalTime ltof(int h, int m, int s) {
-        return LocalTime.of(h, m, s);
-    }
-
 
     /**
      * liquidate all positions at close
@@ -3288,38 +3279,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
 
     /**
-     * cancel order of type after deadline
-     *
-     * @param now      time now
-     * @param symbol   symbol
-     * @param type     order type
-     * @param deadline deadline after which to cut
-     */
-    static void cancelAfterDeadline(LocalTime now, String symbol, AutoOrderType type, LocalTime deadline) {
-        if (now.isAfter(deadline) && now.isBefore(deadline.plusMinutes(1L))) {
-            globalIdOrderMap.entrySet().stream()
-                    .filter(e -> e.getValue().getSymbol().equals(symbol))
-                    .filter(e -> e.getValue().getOrderType() == type)
-                    .filter(e -> e.getValue().getAugmentedOrderStatus() != Filled)
-                    .filter(e -> e.getValue().getAugmentedOrderStatus() != Inactive)
-                    .forEach(e -> {
-                        OrderStatus sta = e.getValue().getAugmentedOrderStatus();
-                        if ((sta != Filled) && (sta != PendingCancel) && (sta != Cancelled) &&
-                                (sta != DeadlineCancelled)) {
-                            apcon.cancelOrder(e.getValue().getOrder().orderId());
-                            e.getValue().setFinalActionTime(LocalDateTime.now());
-                            e.getValue().setAugmentedOrderStatus(OrderStatus.DeadlineCancelled);
-                            String msg = str(now, " Cancel after deadline ",
-                                    e.getValue().getOrder().orderId(), "status CHG:",
-                                    sta, "->", e.getValue().getAugmentedOrderStatus());
-                            outputSymbolMsg(e.getValue().getSymbol(), msg);
-                            outputToAll(msg);
-                        }
-                    });
-        }
-    }
-
-    /**
      * cancel order of type
      *
      * @param type             type of trade to cancel
@@ -3398,42 +3357,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         NavigableMap<LocalDateTime, Double> sma = getMAGen(price5, shortMAPeriod);
         return sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
-    }
-
-    static LocalDateTime getLastOrderTime(String symbol, AutoOrderType type) {
-        return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getSymbol().equals(symbol))
-                .filter(e -> e.getValue().getOrderType() == type)
-                .filter(e -> e.getValue().isPrimaryOrder())
-                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .map(e -> e.getValue().getOrderTime())
-                .orElse(sessionOpenT());
-    }
-
-    static long lastTwoOrderMilliDiff(String symbol, AutoOrderType type) {
-        long numOrders = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getSymbol().equals(symbol))
-                .filter(e -> e.getValue().getOrderType() == type)
-                .filter(e -> e.getValue().isPrimaryOrder())
-                .count();
-        if (numOrders < 2) {
-            return Long.MAX_VALUE;
-        } else {
-            LocalDateTime last = globalIdOrderMap.entrySet().stream()
-                    .filter(e -> e.getValue().getSymbol().equals(symbol))
-                    .filter(e -> e.getValue().getOrderType() == type)
-                    .filter(e -> e.getValue().isPrimaryOrder())
-                    .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                    .map(e -> e.getValue().getOrderTime()).orElseThrow(() -> new IllegalArgumentException("no"));
-            LocalDateTime secLast = globalIdOrderMap.entrySet().stream()
-                    .filter(e -> e.getValue().getSymbol().equals(symbol))
-                    .filter(e -> e.getValue().getOrderType() == type)
-                    .filter(e -> e.getValue().isPrimaryOrder())
-                    .map(e -> e.getValue().getOrderTime())
-                    .filter(e -> e.isBefore(last))
-                    .max(Comparator.comparing(Function.identity())).orElseThrow(() -> new IllegalArgumentException("no"));
-            return ChronoUnit.MILLIS.between(secLast, last);
-        }
     }
 
     private static long tSincePrevOrderMilli(String name, AutoOrderType type, LocalDateTime nowMilli) {

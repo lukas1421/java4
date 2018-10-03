@@ -8,10 +8,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 
-import static apidemo.AutoTraderMain.chinaZone;
-import static apidemo.AutoTraderMain.nyZone;
+import static apidemo.AutoTraderMain.*;
 import static apidemo.AutoTraderUS.*;
-import static apidemo.AutoTraderXU.ltof;
 import static apidemo.XuTraderHelper.outputDetailedUS;
 import static utility.Utility.str;
 

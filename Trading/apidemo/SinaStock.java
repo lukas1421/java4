@@ -183,7 +183,7 @@ public class SinaStock implements Runnable {
                             double last = Utility.pd(datalist, 3);
                             sizeTotalMap.get(ticker).put(lt, Utility.pd(datalist, 9) / 1000000d);
 
-                            if (isIndex(ticker) && lt.isAfter(ltof(9, 0)) && lt.isBefore(ltof(15, 5))) {
+                            if (isIndex(ticker) && lt.isAfter(AutoTraderMain.ltof(9, 0)) && lt.isBefore(AutoTraderMain.ltof(15, 5))) {
                                 priceMapBarDetail.get(ticker).put(ldt.toLocalTime(), last);
                             }
 

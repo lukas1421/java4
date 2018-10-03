@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static apidemo.AutoTraderXU.ltof;
+import static apidemo.AutoTraderMain.ltof;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;

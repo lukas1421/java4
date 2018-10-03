@@ -4,6 +4,7 @@ import client.Contract;
 import client.Order;
 import client.OrderAugmented;
 import client.Types;
+import controller.ApiController;
 import handler.GuaranteeUSHandler;
 import util.AutoOrderType;
 
@@ -15,7 +16,6 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static apidemo.AutoTraderMain.*;
-import static apidemo.AutoTraderXU.*;
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.XuTraderHelper.*;
 import static client.Types.TimeInForce.DAY;
@@ -24,6 +24,8 @@ import static java.time.temporal.ChronoUnit.SECONDS;
 import static util.AutoOrderType.*;
 import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.str;
+
+//import static apidemo.AutoTraderXU.*;
 
 public class AutoTraderUS {
 
@@ -49,6 +51,7 @@ public class AutoTraderUS {
     private static final double US_MIN_SHORT_LEVEL = 1.5;
 
     private static final int MAX_US_ORDERS = 4;
+    private static final int MAX_US_HALFHOUR_ORDERS = 2;
     public static List<String> usSymbols = new ArrayList<>();
     private static final double US_SIZE = 100;
     private static final double US_SAFETY_RATIO = 0.02;
@@ -171,7 +174,7 @@ public class AutoTraderUS {
             }
         }
 
-        if (halfHourOrderNum >= MAX_US_ORDERS) {
+        if (halfHourOrderNum >= MAX_US_HALFHOUR_ORDERS) {
             return;
         }
 
@@ -187,7 +190,7 @@ public class AutoTraderUS {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
-                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeUSHandler(id, apcon));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "half hr US dev buy #:", h, "type", ot,
                         "dir", halfHourUSDevDirection.get(h)));
                 halfHourUSDevDirection.put(h, Direction.Long);
@@ -196,10 +199,11 @@ public class AutoTraderUS {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
-                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeUSHandler(id, apcon));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "half hr US dev sell #:", h, "type", ot,
                         "dir", halfHourUSDevDirection.get(h)));
                 halfHourUSDevDirection.put(h, Direction.Short);
+
             }
         }
     }
@@ -434,7 +438,7 @@ public class AutoTraderUS {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(buyPrice, buySize, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_PMOPENDEV));
-                apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(ct, o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
                 outputDetailedUS(symbol, "**********");
                 outputDetailedUS(symbol, str("NEW", o.orderId(), "US PM open dev BUY#:", numOrders,
                         globalIdOrderMap.get(id),
@@ -448,7 +452,7 @@ public class AutoTraderUS {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(sellPrice, sellSize, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_PMOPENDEV));
-                apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(ct, o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
                 outputDetailedUS(symbol, "**********");
                 outputDetailedUS(symbol, str("NEW", o.orderId(), "US PM open dev SELL#:", numOrders, globalIdOrderMap.get(id),
                         "pm Open(12 59 59)", pmOpen, "sell size/ currpos", sellSize, currPos,
