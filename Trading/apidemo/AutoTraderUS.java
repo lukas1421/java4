@@ -73,11 +73,6 @@ public class AutoTraderUS {
         //usSymbols.add(ibContractToSymbol(tickerToUSContract("PDD")));
         //usSymbols.add(ibContractToSymbol(tickerToUSContract("NBEV")));
 
-//        for (HalfHour h : HalfHour.values()) {
-//            manualUSHalfHourDev.put(h, new AtomicBoolean(false));
-//            halfHourUSDevDirection.put(h, Direction.Flat);
-//        }
-
         usSymbols.forEach(s -> {
             manualUSHalfHourDev.put(s, new EnumMap<>(HalfHour.class));
             halfHourUSDevDirection.put(s, new EnumMap<>(HalfHour.class));
@@ -155,11 +150,6 @@ public class AutoTraderUS {
         LocalTime halfHourStartTime = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
         double halfHourOpen = prices.ceilingEntry(halfHourStartTime).getValue();
 
-//        double halfHourMax = prices.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStartTime))
-//                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-//        double halfHourMin = prices.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStartTime))
-//                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
-
         HalfHour h = HalfHour.get(halfHourStartTime);
         AutoOrderType ot = getOrderTypeByHalfHour(h);
 
@@ -186,8 +176,7 @@ public class AutoTraderUS {
 
         pr(symbol, "US half hour trader ", lt, "start", halfHourStartTime, "halfHour", h, "open", halfHourOpen,
                 "type", ot, "#:", halfHourOrderNum, "fresh", freshPrice, "dir",
-                halfHourUSDevDirection.get(symbol).get(h),
-                "manual? ", manualUSHalfHourDev.get(symbol).get(h).get());
+                halfHourUSDevDirection.get(symbol).get(h), "manual? ", manualUSHalfHourDev.get(symbol).get(h).get());
 
         if (halfHourOrderNum >= MAX_US_HALFHOUR_ORDERS) {
             return;

@@ -39,7 +39,7 @@ public enum HalfHour {
         if (lookup.containsKey(t)) {
             return lookup.get(t);
         }
-        throw new IllegalArgumentException(" cannot find time");
+        throw new IllegalArgumentException(" cannot find half time");
     }
 
 
