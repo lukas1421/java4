@@ -5,13 +5,11 @@ import client.Order;
 import client.OrderAugmented;
 import client.Types;
 import handler.GuaranteeUSHandler;
+import util.AutoOrderType;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -45,6 +43,9 @@ public class AutoTraderUS {
     private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSPMDevMap = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSPMHiloMap = new ConcurrentHashMap<>();
 
+    private static volatile EnumMap<HalfHour, AtomicBoolean> manualUSHalfHourDev = new EnumMap<>(HalfHour.class);
+    private static volatile EnumMap<HalfHour, Direction> halfHourUSDevDirection = new EnumMap<>(HalfHour.class);
+
     private static final double US_MIN_SHORT_LEVEL = 1.5;
 
     private static final int MAX_US_ORDERS = 4;
@@ -67,6 +68,10 @@ public class AutoTraderUS {
         usSymbols.add(ibContractToSymbol(tickerToUSContract("PDD")));
         //usSymbols.add(ibContractToSymbol(tickerToUSContract("NBEV")));
 
+        for (HalfHour h : HalfHour.values()) {
+            manualUSHalfHourDev.put(h, new AtomicBoolean(false));
+            halfHourUSDevDirection.put(h, Direction.Flat);
+        }
 
         usSymbols.forEach(s -> {
             if (!priceMapBarDetail.containsKey(s)) {
@@ -124,7 +129,78 @@ public class AutoTraderUS {
     }
 
     private static void usHalfHourTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        Contract ct = tickerToUSContract(symbol);
+        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
 
+        if (lt.isBefore(LocalTime.of(9, 29, 59)) || lt.isAfter(ltof(12, 0, 0))) {
+            return;
+        }
+
+        LocalTime halfHourStart = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
+        double halfHourOpen = prices.ceilingEntry(halfHourStart).getValue();
+
+        double halfHourMax = prices.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
+                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+
+        double halfHourMin = prices.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
+                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+
+        HalfHour h = HalfHour.get(halfHourStart);
+        AutoOrderType ot = getOrderTypeByHalfHour(h);
+
+        long halfHourOrderNum = getOrderSizeForTradeType(symbol, ot);
+
+        if (!manualUSHalfHourDev.get(h).get()) {
+            if (lt.isBefore(h.getStartTime())) {
+                outputDetailedXU(symbol, str(" setting manual US halfhour dev direction", symbol, h, lt));
+                manualUSHalfHourDev.get(h).set(true);
+            } else {
+                if (freshPrice > halfHourOpen) {
+                    outputDetailedXU(symbol, str(" setting manual US halfhour dev fresh>start", symbol, h, lt));
+                    halfHourUSDevDirection.put(h, Direction.Long);
+                    manualUSHalfHourDev.get(h).set(true);
+                } else if (freshPrice < halfHourOpen) {
+                    outputDetailedXU(symbol, str(" setting manual US halfhour dev dir fresh<start", symbol, h, lt));
+                    halfHourUSDevDirection.put(h, Direction.Short);
+                    manualUSHalfHourDev.get(h).set(true);
+                } else {
+                    halfHourUSDevDirection.put(h, Direction.Flat);
+                }
+            }
+        }
+
+        if (halfHourOrderNum >= MAX_US_ORDERS) {
+            return;
+        }
+
+        double buySize = US_SIZE;
+        double sellSize = US_SIZE;
+
+        LocalDateTime lastOrderTime = getLastOrderTime(symbol, ot);
+        long milliLast2 = lastTwoOrderMilliDiff(symbol, ot);
+        int waitTimeSec = (milliLast2 < 60000) ? 300 : 10;
+
+        if (SECONDS.between(lastOrderTime, nowMilli) > waitTimeSec) {
+            if (freshPrice > halfHourOpen && !noMoreBuy.get() && halfHourUSDevDirection.get(h) != Direction.Long) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeUSHandler(id, apcon));
+                outputDetailedXU(symbol, str(o.orderId(), "half hr US dev buy #:", h, "type", ot,
+                        "dir", halfHourUSDevDirection.get(h)));
+                halfHourUSDevDirection.put(h, Direction.Long);
+            } else if (freshPrice < halfHourOpen && !noMoreSell.get() &&
+                    halfHourUSDevDirection.get(h) != Direction.Short) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeUSHandler(id, apcon));
+                outputDetailedXU(symbol, str(o.orderId(), "half hr US dev sell #:", h, "type", ot,
+                        "dir", halfHourUSDevDirection.get(h)));
+                halfHourUSDevDirection.put(h, Direction.Short);
+            }
+        }
     }
 
     private static void usRelativeProfitTaker(String symbol, LocalDateTime nowMilli, double freshPrice) {
