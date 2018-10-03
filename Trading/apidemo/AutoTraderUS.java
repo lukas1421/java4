@@ -164,7 +164,7 @@ public class AutoTraderUS {
                     halfHourUSDevDirection.put(h, Direction.Long);
                     manualUSHalfHourDev.get(h).set(true);
                 } else if (freshPrice < halfHourOpen) {
-                    outputDetailedXU(symbol, str(" setting manual US halfhour dev dir fresh<start", symbol, h, lt));
+                    outputDetailedXU(symbol, str(" setting manual US halfhour dev fresh<start", symbol, h, lt));
                     halfHourUSDevDirection.put(h, Direction.Short);
                     manualUSHalfHourDev.get(h).set(true);
                 } else {
@@ -173,8 +173,9 @@ public class AutoTraderUS {
             }
         }
 
-        pr("US half hour trader ", "start", halfHourStartTime, "halfHour", h, "startValue", halfHourOpen,
-                "type", ot, "#:", halfHourOrderNum);
+        pr("US half hour trader ", lt, "start", halfHourStartTime, "halfHour", h, "open", halfHourOpen,
+                "type", ot, "#:", halfHourOrderNum, "fresh", freshPrice, "dir", halfHourUSDevDirection.get(h),
+                "manual? ", manualUSHalfHourDev.get(h).get());
 
         if (halfHourOrderNum >= MAX_US_HALFHOUR_ORDERS) {
             return;
