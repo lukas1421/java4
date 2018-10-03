@@ -248,38 +248,42 @@ public class AutoTraderUS {
 //        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(amObservationStart));
 //        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(amObservationStart));
 
-        pr(symbol, " US profit taker ", lt, "max min ", maxSoFar, minSoFar,
+        pr(symbol, " US profit taker ", lt, "max min fresh", maxSoFar, minSoFar, freshPrice,
                 "max/open, min/open", maxSoFar / halfHourOpen - 1, minSoFar / halfHourOpen - 1,
                 "pull back(max, min) ", freshPrice / maxSoFar - 1, freshPrice / minSoFar - 1);
 
         double upThresh = 0.02;
         double downThresh = -0.02;
-        double retreatUpThresh = upThresh * 0.5;
-        double retreatDownThresh = downThresh * 0.5;
+        double retreatUpThresh = upThresh * 0.3;
+        double retreatDownThresh = downThresh * 0.3;
 
-        if (currPos < 0) {
-            if ((minSoFar / halfHourOpen - 1 < downThresh) && (freshPrice / minSoFar - 1 > retreatUpThresh)) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, US_SIZE, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_RELATIVE_TAKE_PROFIT));
-                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedUS(symbol, "**********");
-                outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit BUY#",
-                        "min open fresh", minSoFar, halfHourOpen, freshPrice,
-                        "min/open-1", minSoFar / halfHourOpen - 1, "down thresh", downThresh,
-                        "p/min-1", freshPrice / minSoFar - 1, "retreatUpThresh", retreatUpThresh));
-            }
-        } else if (currPos > 0) {
-            if ((maxSoFar / halfHourOpen - 1 > upThresh) && (freshPrice / maxSoFar - 1 < retreatDownThresh)) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, US_SIZE, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_RELATIVE_TAKE_PROFIT));
-                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedUS(symbol, "**********");
-                outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit SELL#",
-                        "max open fresh ", minSoFar, halfHourOpen, freshPrice,
-                        "max/open-1", maxSoFar / halfHourOpen - 1, "up thresh", upThresh,
-                        "p/max-1", freshPrice / maxSoFar - 1, "retreathDownThresh", retreatDownThresh));
+        LocalDateTime lastOrderTime = getLastOrderTime(symbol, US_RELATIVE_TAKE_PROFIT);
+
+        if (SECONDS.between(lastOrderTime, nowMilli) > 10) {
+            if (currPos < 0) {
+                if ((minSoFar / halfHourOpen - 1 < downThresh) && (freshPrice / minSoFar - 1 > retreatUpThresh)) {
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeBidLimitTIF(freshPrice, US_SIZE, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_RELATIVE_TAKE_PROFIT));
+                    apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
+                    outputDetailedUS(symbol, "**********");
+                    outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit BUY#",
+                            "min open fresh", minSoFar, halfHourOpen, freshPrice,
+                            "min/open-1", minSoFar / halfHourOpen - 1, "down thresh", downThresh,
+                            "p/min-1", freshPrice / minSoFar - 1, "retreatUpThresh", retreatUpThresh));
+                }
+            } else if (currPos > 0) {
+                if ((maxSoFar / halfHourOpen - 1 > upThresh) && (freshPrice / maxSoFar - 1 < retreatDownThresh)) {
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeOfferLimitTIF(freshPrice, US_SIZE, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_RELATIVE_TAKE_PROFIT));
+                    apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
+                    outputDetailedUS(symbol, "**********");
+                    outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit SELL#",
+                            "max open fresh ", maxSoFar, halfHourOpen, freshPrice,
+                            "max/open-1", maxSoFar / halfHourOpen - 1, "up thresh", upThresh,
+                            "p/max-1", freshPrice / maxSoFar - 1, "retreathDownThresh", retreatDownThresh));
+                }
             }
         }
     }

@@ -1144,7 +1144,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
-        if (lt.isBefore(LocalTime.of(8, 59, 29)) || lt.isAfter(ltof(15, 0, 0))) {
+        if (lt.isBefore(LocalTime.of(8, 59, 59)) || lt.isAfter(ltof(15, 0, 0))) {
             return;
         }
 
@@ -1167,29 +1167,33 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double halfHourMin = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        if (currPos < 0) {
-            if ((halfHourMin / halfHourOpen - 1 < downThresh) && (freshPrice / halfHourMin - 1 > retreatUpThresh)) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
-                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit BUY#",
-                        "min, open, fresh ", halfHourMin, halfHourOpen, freshPrice,
-                        "min/open", halfHourMin / halfHourOpen - 1, "downThresh", downThresh,
-                        "p/min", freshPrice / halfHourMin - 1, "retreatUpThresh", retreatUpThresh));
-            }
-        } else if (currPos > 0) {
-            if ((halfHourMax / halfHourOpen - 1 > upThresh) && (freshPrice / halfHourMax - 1 < retreatDownThresh)) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
-                apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit SELL#",
-                        "max, open, fresh ", halfHourMax, halfHourOpen, freshPrice,
-                        "max/open", halfHourMax / halfHourOpen - 1, "upthresh", upThresh,
-                        "p/max", freshPrice / halfHourMax - 1, "retreatThresh", retreatDownThresh));
+        LocalDateTime lastOrderTime = getLastOrderTime(symbol, SGXA50_RELATIVE_TAKE_PROFIT);
+
+        if (SECONDS.between(lastOrderTime, nowMilli) > 10) {
+            if (currPos < 0) {
+                if ((halfHourMin / halfHourOpen - 1 < downThresh) && (freshPrice / halfHourMin - 1 > retreatUpThresh)) {
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
+                    apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
+                    outputDetailedXU(symbol, "**********");
+                    outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit BUY#",
+                            "min, open, fresh ", halfHourMin, halfHourOpen, freshPrice,
+                            "min/open", halfHourMin / halfHourOpen - 1, "downThresh", downThresh,
+                            "p/min", freshPrice / halfHourMin - 1, "retreatUpThresh", retreatUpThresh));
+                }
+            } else if (currPos > 0) {
+                if ((halfHourMax / halfHourOpen - 1 > upThresh) && (freshPrice / halfHourMax - 1 < retreatDownThresh)) {
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
+                    apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
+                    outputDetailedXU(symbol, "**********");
+                    outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit SELL#",
+                            "max, open, fresh ", halfHourMax, halfHourOpen, freshPrice,
+                            "max/open", halfHourMax / halfHourOpen - 1, "upthresh", upThresh,
+                            "p/max", freshPrice / halfHourMax - 1, "retreatThresh", retreatDownThresh));
+                }
             }
         }
     }
