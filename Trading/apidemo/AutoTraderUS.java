@@ -190,7 +190,9 @@ public class AutoTraderUS {
                 Order o = placeBidLimitTIF(freshPrice, US_SIZE, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedXU(symbol, str(o.orderId(), "half hr US dev buy #:", h, "type", ot,
+                outputDetailedUS(symbol, "**********");
+                outputDetailedXU(symbol, str("NEW", o.orderId(), "half hr US dev buy #:",
+                        globalIdOrderMap.get(id), h, "type", ot,
                         "dir", halfHourUSDevDirection.get(symbol).get(h)));
                 halfHourUSDevDirection.get(symbol).put(h, Direction.Long);
             } else if (freshPrice < halfHourOpen && !noMoreSell.get() &&
@@ -199,7 +201,9 @@ public class AutoTraderUS {
                 Order o = placeOfferLimitTIF(freshPrice, US_SIZE, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
-                outputDetailedXU(symbol, str(o.orderId(), "half hr US dev sell #:", h, "type", ot,
+                outputDetailedUS(symbol, "**********");
+                outputDetailedXU(symbol, str("NEW", o.orderId(), "half hr US dev sell #:",
+                        globalIdOrderMap.get(id), h, "type", ot,
                         "dir", halfHourUSDevDirection.get(symbol).get(h)));
                 halfHourUSDevDirection.get(symbol).put(h, Direction.Short);
 
@@ -272,7 +276,7 @@ public class AutoTraderUS {
                     apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                     outputDetailedUS(symbol, "**********");
                     outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit BUY#",
-                            "min open fresh", minSoFar, halfHourOpen, freshPrice,
+                            globalIdOrderMap.get(id), "min open fresh", minSoFar, halfHourOpen, freshPrice,
                             "min/open-1", minSoFar / halfHourOpen - 1, "down thresh", downThresh,
                             "p/min-1", freshPrice / minSoFar - 1, "retreatUpThresh", retreatUpThresh));
                 }
@@ -284,7 +288,7 @@ public class AutoTraderUS {
                     apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                     outputDetailedUS(symbol, "**********");
                     outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit SELL#",
-                            "max open fresh ", maxSoFar, halfHourOpen, freshPrice,
+                            globalIdOrderMap.get(id), "max open fresh ", maxSoFar, halfHourOpen, freshPrice,
                             "max/open-1", maxSoFar / halfHourOpen - 1, "up thresh", upThresh,
                             "p/max-1", freshPrice / maxSoFar - 1, "retreathDownThresh", retreatDownThresh));
                 }
