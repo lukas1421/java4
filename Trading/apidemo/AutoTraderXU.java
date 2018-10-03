@@ -1296,24 +1296,34 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     private static AutoOrderType getOrderTypeByHalfHour(HalfHour h) {
         switch (h) {
-            case H0:
-                return H0_DEV;
-            case H1:
-                return H1_DEV;
-            case H2:
-                return H2_DEV;
-            case H3:
-                return H3_DEV;
-            case H4:
-                return H4_DEV;
-            case H5:
-                return H5_DEV;
-            case H6:
-                return H6_DEV;
-            case H7:
-                return H7_DEV;
-            case H8:
-                return H8_DEV;
+            case H9:
+                return H9_DEV;
+            case H930:
+                return H930_DEV;
+            case H10:
+                return H10_DEV;
+            case H1030:
+                return H1030_DEV;
+            case H11:
+                return H11_DEV;
+            case H1130:
+                return H1130_DEV;
+            case H12:
+                return H12_DEV;
+            case H1230:
+                return H1230_DEV;
+            case H13:
+                return H13_DEV;
+            case H1330:
+                return H1330_DEV;
+            case H14:
+                return H14_DEV;
+            case H1430:
+                return H1430_DEV;
+            case H15:
+                return H15_DEV;
+            case H1530:
+                return H1530_DEV;
         }
         throw new IllegalStateException(" not found");
     }

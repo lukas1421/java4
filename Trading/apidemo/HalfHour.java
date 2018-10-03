@@ -8,8 +8,21 @@ import static apidemo.AutoTraderXU.ltof;
 
 public enum HalfHour {
 
-    H0(ltof(9, 0)), H1(ltof(9, 30)), H2(ltof(10, 0)), H3(ltof(10, 30))
-    , H4(ltof(11, 0)), H5(ltof(13, 0)), H6(ltof(13, 30)), H7(ltof(14, 0)), H8(ltof(14, 30));
+    H9(ltof(9, 0)),
+    H930(ltof(9, 30)),
+    H10(ltof(10, 0)),
+    H1030(ltof(10, 30)),
+    H11(ltof(11, 0)),
+    H1130(ltof(11, 30)),
+    H12(ltof(12, 0)),
+    H1230(ltof(12, 30)),
+    H13(ltof(13, 0)),
+    H1330(ltof(13, 30)),
+    H14(ltof(14, 0)),
+    H1430(ltof(14, 30)),
+    H15(ltof(15, 0)),
+    H1530(ltof(15, 30));
+
 
     private LocalTime startTime;
 
