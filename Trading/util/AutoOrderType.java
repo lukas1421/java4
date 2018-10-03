@@ -50,6 +50,15 @@ public enum AutoOrderType {
     FUT_OPEN_DEVI,
     FUT_PC_PROFIT_TAKER,
     SGXA50_HILO,
+    H0_DEV, //9
+    H1_DEV, //9:30
+    H2_DEV, //10
+    H3_DEV, //10:30
+    H4_DEV, //11:00
+    H5_DEV, //13:00
+    H6_DEV, //13:30
+    H7_DEV, //14:00
+    H8_DEV, //14:30
     SGXA50_POST_CUTOFF_LIQ,
     FUT_HILO_ACCU,
     FUT_TENTA,
