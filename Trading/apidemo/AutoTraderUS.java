@@ -159,26 +159,28 @@ public class AutoTraderUS {
 
         double upThresh = 0.02;
         double downThresh = -0.02;
-        double retreatUpThresh = 0.01;
-        double retreatDownThresh = -0.01;
+        double retreatUpThresh = upThresh * 0.3;
+        double retreatDownThresh = downThresh * 0.3;
 
-        if (minSoFar / manualOpen - 1 < downThresh) {
-            if (freshPrice / minSoFar - 1 > retreatUpThresh && currPos < 0) {
+        if (currPos < 0) {
+            if (minSoFar / manualOpen - 1 < downThresh && freshPrice / minSoFar - 1 > retreatUpThresh) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_RELATIVE_TAKE_PROFIT));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedUS(symbol, "**********");
-                outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit BUY#"));
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit BUY#",
+                        "min open fresh", minSoFar, manualOpen, freshPrice));
             }
-        } else if (maxSoFar / manualOpen - 1 > upThresh) {
-            if (freshPrice / maxSoFar - 1 < retreatDownThresh && currPos > 0) {
+        } else if (currPos > 0) {
+            if (maxSoFar / manualOpen - 1 > upThresh && freshPrice / maxSoFar - 1 < retreatDownThresh) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_RELATIVE_TAKE_PROFIT));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedUS(symbol, "**********");
-                outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit SELL#"));
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit SELL#",
+                        "max open fresh ", minSoFar, manualOpen, freshPrice));
             }
         }
     }

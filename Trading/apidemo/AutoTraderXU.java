@@ -820,6 +820,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
             sgxA50CloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
             sgxA50PostCutoffLiqTrader(ldt, price);
+            sgxA50RelativeProfitTaker(ldt, price);
             //futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
             if (globalTradingOn.get()) {
                 sgxA50HiloTrader(ldt, price); // 9:00 to 9:30, guarantee
@@ -1136,10 +1137,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     /**
      * take profit for XU
      *
-     * @param nowMilli
-     * @param freshPrice
+     * @param nowMilli   time now
+     * @param freshPrice price
      */
-    private static void xuRelativeProfitTaker(LocalDateTime nowMilli, double freshPrice) {
+    private static void sgxA50RelativeProfitTaker(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         String symbol = ibContractToSymbol(activeFutureCt);
         FutType f = ibContractToFutType(activeFutureCt);
@@ -1173,8 +1174,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double halfHourMin = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        if (halfHourMin / halfHourOpen - 1 < downThresh) {
-            if (freshPrice / halfHourMin - 1 > retreatUpThresh && currPos < 0) {
+        if (currPos < 0) {
+            if (halfHourMin / halfHourOpen - 1 < downThresh && freshPrice / halfHourMin - 1 > retreatUpThresh) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
@@ -1185,8 +1186,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         "min/open", halfHourMin / halfHourOpen - 1,
                         "p/min", freshPrice / halfHourMin - 1));
             }
-        } else if (halfHourMax / halfHourOpen - 1 > upThresh) {
-            if (freshPrice / halfHourMax - 1 < retreatDownThresh && currPos > 0) {
+        } else if (currPos > 0) {
+            if (halfHourMax / halfHourOpen - 1 > upThresh && freshPrice / halfHourMax - 1 < retreatDownThresh) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
@@ -1198,8 +1199,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         "p/max", freshPrice / halfHourMax - 1));
             }
         }
-
-
     }
 
     /**
