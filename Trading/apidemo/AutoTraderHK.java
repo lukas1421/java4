@@ -7,12 +7,13 @@ import client.Types;
 import handler.GuaranteeHKHandler;
 
 import javax.swing.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -51,7 +52,20 @@ public class AutoTraderHK extends JPanel {
 
     public static List<String> hkSymbols = new ArrayList<>();
 
+    private static Map<String, Integer> hkSizeMap = new HashMap<>();
+
     AutoTraderHK() {
+
+        String line;
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "hkSizeMap.txt"), "gbk"))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                hkSizeMap.put(al1.get(0), Integer.parseInt(al1.get(1)));
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
         hkSymbols.add(ibContractToSymbol(tickerToHKContract("2688")));
         hkSymbols.add(ibContractToSymbol(tickerToHKContract("1548")));
@@ -81,26 +95,28 @@ public class AutoTraderHK extends JPanel {
         });
     }
 
-    private static int getMinimumSizeHK(double price) {
-        if (price < 20.0) {
-            return 2000;
-        } else {
-            return 1000;
-        }
-    }
+//    private static int getMinimumSizeHK(double price) {
+//        if (price < 20.0) {
+//            return 2000;
+//        } else {
+//            return 1000;
+//        }
+//    }
 
     public static void processeMainHK(String symbol, LocalDateTime nowMilli, double freshPrice) {
         cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(10, 0, 0));
 
-        if (!globalTradingOn.get()) {
-            return;
-        }
+//        if (!globalTradingOn.get()) {
+//            return;
+//        }
 
         //hkOpenDeviationTrader(symbol, nowMilli, freshPrice);
-        hkHiloTrader(symbol, nowMilli, freshPrice);
-        hkPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);
+        if (globalTradingOn.get()) {
+            hkHiloTrader(symbol, nowMilli, freshPrice);
+            hkPMHiloTrader(symbol, nowMilli, freshPrice);
+        }
 
-        hkPMHiloTrader(symbol, nowMilli, freshPrice);
+        hkPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);
         hkPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
 
         hkCloseLiqTrader(symbol, nowMilli, freshPrice);
@@ -230,7 +246,7 @@ public class AutoTraderHK extends JPanel {
         LocalTime amTradingStart = ltof(9, 28, 0);
         String ticker = hkSymbolToTicker(symbol);
         Contract ct = tickerToHKContract(ticker);
-        int size = getMinimumSizeHK(freshPrice);
+        int size = hkSizeMap.getOrDefault(symbol, 100);
 
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
         double open = hkOpenMap.getOrDefault(symbol, 0.0);
@@ -380,8 +396,7 @@ public class AutoTraderHK extends JPanel {
         String ticker = hkSymbolToTicker(symbol);
         Contract ct = tickerToHKContract(ticker);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
-
-        int size = getMinimumSizeHK(freshPrice);
+        int size = hkSizeMap.getOrDefault(symbol, 100);
 
         if (prices.size() <= 1) {
             return;
@@ -490,7 +505,7 @@ public class AutoTraderHK extends JPanel {
         Contract ct = tickerToHKContract(ticker);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
 
-        int size = getMinimumSizeHK(freshPrice);
+        int size = hkSizeMap.getOrDefault(symbol, 100);
 
         if (prices.size() <= 1) {
             return;

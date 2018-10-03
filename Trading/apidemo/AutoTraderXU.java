@@ -790,12 +790,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     , "no more buy/sell", noMoreBuy.get(), noMoreSell.get());
         }
 
-        if (!globalTradingOn.get()) {
-            if (detailedPrint.get()) {
-                pr(" global trading off ");
-            }
-            return;
-        }
+//        if (!globalTradingOn.get()) {
+//            if (detailedPrint.get()) {
+//                pr(" global trading off ");
+//            }
+//            return;
+//        }
 
         if (isStockNoonBreak(ldt.toLocalTime())) {
             return;
@@ -809,11 +809,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
             cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
             sgxA50CloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
-
-            //futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
-            cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(10, 0));
-            sgxA50HiloTrader(ldt, price); // 9:00 to 9:30, guarantee
             sgxA50PostCutoffLiqTrader(ldt, price);
+            //futOpenDeviationTrader(ldt, price); // 9:00 to 9:30, no guarantee
+            if (globalTradingOn.get()) {
+                sgxA50HiloTrader(ldt, price); // 9:00 to 9:30, guarantee
+            }
         }
         //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
         //futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
@@ -1132,7 +1132,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         String symbol = ibContractToSymbol(activeFutureCt);
         FutType f = ibContractToFutType(activeFutureCt);
         LocalTime cutoff = ltof(10, 0, 0);
-
+        LocalTime amObservationStart = ltof(8, 59, 59);
         cancelAfterDeadline(lt, symbol, SGXA50_HILO, cutoff);
 
         int baseSize = 1;
@@ -1161,9 +1161,13 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         int waitTimeSec = milliBtwnLastTwoOrders < 60000 ? 300 : 10;
 
         NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(8, 58)))
+                .filter(e -> e.getKey().isAfter(amObservationStart))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
+
+        if (futPrice.size() <= 1 || futPrice.firstKey().isAfter(ltof(9, 1, 0))) {
+            return;
+        }
 
         double futOpen = futPrice.firstEntry().getValue();
         double futLast = futPrice.lastEntry().getValue();
@@ -1178,20 +1182,20 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime maxTPre10 = getFirstMaxTPred(futPrice, t -> t.isBefore(ltof(10, 0)));
         LocalTime minTPre10 = getFirstMinTPred(futPrice, t -> t.isBefore(ltof(10, 0)));
 
-        LocalTime maxT = getFirstMaxTPred(futPrice, t -> t.isAfter(ltof(8, 59, 0)));
-        LocalTime minT = getFirstMinTPred(futPrice, t -> t.isAfter(ltof(8, 59, 0)));
+        LocalTime maxT = getFirstMaxTPred(futPrice, t -> t.isAfter(amObservationStart));
+        LocalTime minT = getFirstMinTPred(futPrice, t -> t.isAfter(amObservationStart));
 
         if (!manualFutHiloDirection.get()) {
-            if (lt.isBefore(ltof(9, 5, 0))) {
-                pr(" setting manual fut hilo direction 9:05", symbol, lt);
+            if (lt.isBefore(ltof(9, 0, 0))) {
+                outputDetailedXU(symbol, str(" setting manual fut hilo direction 9:00", symbol, lt));
                 manualFutHiloDirection.set(true);
             } else {
                 if (maxT.isAfter(minT)) {
-                    pr(" setting manual fut hilo direction maxT>minT", symbol, lt);
+                    outputDetailedXU(symbol, str(" setting manual fut hilo direction maxT>minT", symbol, lt));
                     futHiLoDirection = Direction.Long;
                     manualFutHiloDirection.set(true);
                 } else if (minT.isAfter(maxT)) {
-                    pr(" setting manual fut hilo direction minT>maxT", symbol, lt);
+                    outputDetailedXU(symbol, str(" setting manual fut hilo direction minT>maxT", symbol, lt));
                     futHiLoDirection = Direction.Short;
                     manualFutHiloDirection.set(true);
                 } else {

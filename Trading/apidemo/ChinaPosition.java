@@ -420,7 +420,7 @@ public class ChinaPosition extends JPanel {
                 .collect(Collectors.collectingAndThen(Collectors.groupingByConcurrent(e -> e.getValue().getOrderType()
                         , ConcurrentSkipListMap::new
                         , Collectors.summingDouble(e -> e.getValue()
-                                .getPnl(selected, priceMap.getOrDefault(symb, 0.0)))),
+                                .getPnl(symb, priceMap.getOrDefault(symb, 0.0)))),
                         e -> e.entrySet().stream().sorted(reverseComp(Comparator.comparing(Map.Entry::getValue)))
                                 .map(e1 -> str("|||", e1.getKey(),
                                         "#:", numTradesByOrder.getOrDefault(e1.getKey(), 0L),

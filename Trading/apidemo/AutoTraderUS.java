@@ -105,12 +105,15 @@ public class AutoTraderUS {
         cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(12, 30, 0));
         usCloseLiqTrader(symbol, nowMilli, freshPrice);
 
-        if (!globalTradingOn.get()) {
-            return;
+//        if (!globalTradingOn.get()) {
+//            return;
+//        }
+        //usOpenDeviationTrader(symbol, nowMilli, freshPrice);
+
+        if (globalTradingOn.get()) {
+            usHiloTrader(symbol, nowMilli, freshPrice);
         }
 
-        //usOpenDeviationTrader(symbol, nowMilli, freshPrice);
-        usHiloTrader(symbol, nowMilli, freshPrice);
         usPostCutoffLiqTrader(symbol, nowMilli, freshPrice);
 
         //usPMOpenDeviationTrader(symbol, nowMilli, freshPrice);
