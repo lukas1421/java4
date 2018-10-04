@@ -1234,7 +1234,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
-        if (lt.isBefore(LocalTime.of(8, 59, 29)) || lt.isAfter(ltof(15, 0, 0))) {
+        if (lt.isBefore(LocalTime.of(8, 59, 29)) || lt.isAfter(ltof(16, 0, 0))) {
             return;
         }
 
@@ -2507,8 +2507,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param freshPrice price
      */
     private static void sgxA50CloseLiqTrader(LocalDateTime nowMilli, double freshPrice) {
-        LocalTime liqStartTime = ltof(14, 55);
-        LocalTime liqEndTime = ltof(15, 30);
+        LocalTime liqStartTime = ltof(16, 1);
+        LocalTime liqEndTime = ltof(16, 10);
         String symbol = ibContractToSymbol(activeFutureCt);
         FutType f = ibContractToFutType(activeFutureCt);
 
