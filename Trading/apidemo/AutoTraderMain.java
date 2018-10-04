@@ -55,7 +55,7 @@ public class AutoTraderMain extends JPanel {
     public static volatile Map<Integer, Order> liveIDOrderMap = new ConcurrentHashMap<>();
     static volatile Map<String, TreeSet<Order>> liveSymbolOrderSet = new ConcurrentHashMap<>();
     static final double SGXA50_AUTO_VOL_THRESH = 0.25;
-    
+
     static volatile AtomicBoolean noMoreSell = new AtomicBoolean(false);
     static volatile AtomicBoolean noMoreBuy = new AtomicBoolean(false);
 
@@ -80,8 +80,7 @@ public class AutoTraderMain extends JPanel {
                 .count();
     }
 
-    public static boolean checkIfHoliday(LocalDate d) {
-        //pr("holiday set is ", holidaySet);
+    static boolean checkIfHoliday(LocalDate d) {
         pr(d, " is a holiday? ", holidaySet.contains(d), "!");
         return holidaySet.contains(d);
     }
@@ -156,6 +155,75 @@ public class AutoTraderMain extends JPanel {
         }
         throw new IllegalStateException(" not found");
     }
+
+    static AutoOrderType getOrderTypeByQuarterHour(QuarterHour h) {
+        switch (h) {
+            case Q900:
+                return Q900_DEV;
+            case Q915:
+                return Q915_DEV;
+            case Q930:
+                return Q930_DEV;
+            case Q945:
+                return Q945_DEV;
+
+            case Q1000:
+                return Q1000_DEV;
+            case Q1015:
+                return Q1015_DEV;
+            case Q1030:
+                return Q1030_DEV;
+            case Q1045:
+                return Q1045_DEV;
+
+            case Q1100:
+                return Q1100_DEV;
+            case Q1115:
+                return Q1115_DEV;
+            case Q1130:
+                return Q1130_DEV;
+            case Q1145:
+                return Q1145_DEV;
+
+            case Q1200:
+                return Q1200_DEV;
+            case Q1215:
+                return Q1215_DEV;
+            case Q1230:
+                return Q1230_DEV;
+            case Q1245:
+                return Q1245_DEV;
+
+            case Q1300:
+                return Q1300_DEV;
+            case Q1315:
+                return Q1315_DEV;
+            case Q1330:
+                return Q1330_DEV;
+            case Q1345:
+                return Q1345_DEV;
+
+            case Q1400:
+                return Q1400_DEV;
+            case Q1415:
+                return Q1415_DEV;
+            case Q1430:
+                return Q1430_DEV;
+            case Q1445:
+                return Q1445_DEV;
+
+            case Q1500:
+                return Q1500_DEV;
+            case Q1515:
+                return Q1515_DEV;
+            case Q1530:
+                return Q1530_DEV;
+            case Q1545:
+                return Q1545_DEV;
+        }
+        throw new IllegalStateException(" not found");
+    }
+
 
     public static LocalTime ltof(int h, int m) {
         return LocalTime.of(h, m);

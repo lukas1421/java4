@@ -20,7 +20,7 @@ public enum QuarterHour {
     Q1100(ltof(11, 0)),
     Q1115(ltof(11, 15)),
     Q1130(ltof(11, 30)),
-    Q11045(ltof(11, 45)),
+    Q1145(ltof(11, 45)),
 
     Q1200(ltof(12, 0)),
     Q1215(ltof(12, 15)),
