@@ -820,8 +820,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         //if (atmVol > SGXA50_AUTO_VOL_THRESH) {
 
         if (checkIfHoliday(LocalDate.now()) || atmVol > SGXA50_AUTO_VOL_THRESH) {
-            cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
-            cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
+            //cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
+            //cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
 
             sgxA50CloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
             //sgxA50PostCutoffLiqTrader(ldt, price);
@@ -1237,9 +1237,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        if (lt.isAfter(ltof(11, 30, 0)) && lt.isBefore(ltof(13, 0, 0))) {
-            return;
-        }
+//        if (lt.isAfter(ltof(11, 30, 0)) && lt.isBefore(ltof(13, 0, 0))) {
+//            return;
+//        }
 
         LocalTime quarterHourStart = ltof(lt.getHour(), minuteToQuarterHour(lt.getMinute()));
         double quarterHourOpen = futPrice.ceilingEntry(quarterHourStart).getValue();

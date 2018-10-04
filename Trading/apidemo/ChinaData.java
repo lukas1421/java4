@@ -671,7 +671,7 @@ public final class ChinaData extends JPanel {
                             ChinaSaveOHLCYV c = new ChinaSaveOHLCYV(name, closeMap.get(name));
                             session.saveOrUpdate(c);
                         } else {
-                            System.out.println(" chinasaveohcl all 0 " + name);
+                            //System.out.println(" chinasaveohcl all 0 " + name);
                             ChinaSaveOHLCYV c = new ChinaSaveOHLCYV(name, 0.0);
                             session.saveOrUpdate(c);
                         }
