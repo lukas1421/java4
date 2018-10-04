@@ -829,7 +829,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             if (globalTradingOn.get()) {
                 //sgxA50HalfHourDevTrader(ldt, price);
                 sgxA50QuarterHourTrader(ldt, price);
-                sgxA50OpenDeviationTrader(ldt, price);
+                //sgxA50OpenDeviationTrader(ldt, price);
             }
         }
         //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
@@ -1215,6 +1215,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
     }
 
+    /**
+     * trades every quarter hour
+     *
+     * @param nowMilli   time now
+     * @param freshPrice price
+     */
     private static void sgxA50QuarterHourTrader(LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         String symbol = ibContractToSymbol(activeFutureCt);
@@ -1235,29 +1241,37 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        LocalTime quarterHourStart = ltof(lt.getHour(), minuteToQuarterHour(lt.getMinute()), 0);
-        double quarterHourOpen = futPrice.floorEntry(quarterHourStart).getValue();
+        LocalTime quarterHourStart = ltof(lt.getHour(), minuteToQuarterHour(lt.getMinute()));
+        double quarterHourOpen = futPrice.ceilingEntry(quarterHourStart).getValue();
+        LocalTime quarterHourOpenTime = futPrice.ceilingEntry(quarterHourStart).getKey();
 
         QuarterHour q = QuarterHour.get(quarterHourStart);
         AutoOrderType ot = getOrderTypeByQuarterHour(q);
+        LocalTime lastKey = futPrice.lastKey();
 
         long quarterHourOrderNum = getOrderSizeForTradeType(symbol, ot);
 
-        pr("XU quarter hour trader ", "qHourstart", quarterHourStart,
-                "qHour", q, "startValue", quarterHourOpen,
-                "type", ot, "#:", quarterHourOrderNum, "currpos", currPos);
+        pr("XU q hr trader", lt.truncatedTo(ChronoUnit.SECONDS),
+                "lastKey ", lastKey, "qStart", quarterHourStart,
+                "qHr", q, "open entry:", quarterHourOpenTime, quarterHourOpen,
+                "fresh", freshPrice, "type", ot, "#:", quarterHourOrderNum, "currpos", currPos,
+                "dir:", quarterHourXUDevDirection.get(symbol).get(q),
+                "manual?", manualXUQuarterHourDev.get(symbol).get(q));
 
         if (!manualXUQuarterHourDev.get(symbol).get(q).get()) {
             if (lt.isBefore(q.getStartTime().plusMinutes(1L))) {
-                outputDetailedXU(symbol, str(" setting manual XU qhour dev direction", symbol, q, lt));
+                outputDetailedXU(symbol, str(" setting manual XU qhour dev direction",
+                        symbol, q, lt, "startTime", q.getStartTime()));
                 manualXUQuarterHourDev.get(symbol).get(q).set(true);
             } else {
                 if (freshPrice > quarterHourOpen) {
-                    outputDetailedXU(symbol, str(" setting manual XU qhour dev fresh>start", symbol, q, lt));
+                    outputDetailedXU(symbol, str(" setting manual XU qhour dev fresh>start",
+                            symbol, q, lt, "fresh>start", freshPrice, ">", quarterHourOpen));
                     quarterHourXUDevDirection.get(symbol).put(q, Direction.Long);
                     manualXUQuarterHourDev.get(symbol).get(q).set(true);
                 } else if (freshPrice < quarterHourOpen) {
-                    outputDetailedXU(symbol, str(" setting manual XU qhour dev dir fresh<start", symbol, q, lt));
+                    outputDetailedXU(symbol, str(" setting manual XU qhour dev dir fresh<start",
+                            symbol, q, lt, "fresh<start", freshPrice, "<", quarterHourOpen));
                     quarterHourXUDevDirection.get(symbol).put(q, Direction.Short);
                     manualXUQuarterHourDev.get(symbol).get(q).set(true);
                 } else {

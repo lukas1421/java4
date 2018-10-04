@@ -26,7 +26,6 @@ import static apidemo.ChinaStock.*;
 import static apidemo.XuTraderHelper.*;
 import static client.OrderStatus.*;
 import static util.AutoOrderType.*;
-import static utility.Utility.pr;
 import static utility.Utility.str;
 
 public class AutoTraderMain extends JPanel {
@@ -81,7 +80,7 @@ public class AutoTraderMain extends JPanel {
     }
 
     static boolean checkIfHoliday(LocalDate d) {
-        pr(d, " is a holiday? ", holidaySet.contains(d), "!");
+        //pr(d, " is a holiday? ", holidaySet.contains(d), "!");
         return holidaySet.contains(d);
     }
 

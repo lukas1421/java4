@@ -19,13 +19,14 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static apidemo.AutoTraderMain.*;
-import static apidemo.AutoTraderXU.*;
+import static apidemo.AutoTraderXU.DefaultOrderHandler;
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.XuTraderHelper.*;
 import static client.Types.TimeInForce.DAY;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static util.AutoOrderType.*;
-import static utility.Utility.*;
+import static utility.Utility.pr;
+import static utility.Utility.str;
 
 public class AutoTraderHK extends JPanel {
 
@@ -67,8 +68,8 @@ public class AutoTraderHK extends JPanel {
             ex.printStackTrace();
         }
 
-        hkSymbols.add(ibContractToSymbol(tickerToHKContract("2688")));
-        hkSymbols.add(ibContractToSymbol(tickerToHKContract("1548")));
+        //hkSymbols.add(ibContractToSymbol(tickerToHKContract("2688")));
+        //hkSymbols.add(ibContractToSymbol(tickerToHKContract("1548")));
         //hkSymbols.add(ibContractToSymbol(tickerToHKContract("3333")));
         //String symbol = ibContractToSymbol(ct);
         //hkSymbols.add(ibContractToSymbol(tickerToHKContract("3690")));
@@ -110,11 +111,11 @@ public class AutoTraderHK extends JPanel {
 //            return;
 //        }
 
-        //hkOpenDeviationTrader(symbol, nowMilli, freshPrice);
-        if (globalTradingOn.get()) {
-            hkHiloTrader(symbol, nowMilli, freshPrice);
-            hkPMHiloTrader(symbol, nowMilli, freshPrice);
-        }
+//        hkOpenDeviationTrader(symbol, nowMilli, freshPrice);
+//        if (globalTradingOn.get()) {
+//            hkHiloTrader(symbol, nowMilli, freshPrice);
+//            hkPMHiloTrader(symbol, nowMilli, freshPrice);
+//        }
 
         hkPostAMCutoffLiqTrader(symbol, nowMilli, freshPrice);
         hkPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
