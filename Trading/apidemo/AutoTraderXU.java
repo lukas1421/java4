@@ -824,7 +824,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
 
             sgxA50CloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
-            sgxA50PostCutoffLiqTrader(ldt, price);
+            //sgxA50PostCutoffLiqTrader(ldt, price);
             sgxA50RelativeProfitTaker(ldt, price);
             if (globalTradingOn.get()) {
                 //sgxA50HalfHourDevTrader(ldt, price);
@@ -1169,14 +1169,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double retreatUpThresh = 0.3 * upThresh;
         double retreatDownThresh = 0.3 * downThresh;
 
-        LocalTime halfHourStart = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
+        double open = futPrice.ceilingEntry(amObservationStart).getValue();
 
-        double halfHourOpen = futPrice.ceilingEntry(halfHourStart).getValue();
-
-        double halfHourMax = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
+        double maxSoFar = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(amObservationStart))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
 
-        double halfHourMin = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
+        double minSoFar = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(amObservationStart))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, SGXA50_RELATIVE_TAKE_PROFIT);
@@ -1190,28 +1188,28 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         if (SECONDS.between(lastOrderTime, nowMilli) > 10) {
             if (currPos < 0) {
-                if ((halfHourMin / halfHourOpen - 1 < downThresh) && (freshPrice / halfHourMin - 1 > retreatUpThresh)) {
+                if ((minSoFar / open - 1 < downThresh) && (freshPrice / minSoFar - 1 > retreatUpThresh)) {
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
                     apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                     outputDetailedXU(symbol, "**********");
                     outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit BUY#",
-                            "min, open, fresh ", halfHourMin, halfHourOpen, freshPrice,
-                            "min/open", halfHourMin / halfHourOpen - 1, "downThresh", downThresh,
-                            "p/min", freshPrice / halfHourMin - 1, "retreatUpThresh", retreatUpThresh));
+                            "min, open, fresh ", minSoFar, open, freshPrice,
+                            "min/open", minSoFar / open - 1, "downThresh", downThresh,
+                            "p/min", freshPrice / minSoFar - 1, "retreatUpThresh", retreatUpThresh));
                 }
             } else if (currPos > 0) {
-                if ((halfHourMax / halfHourOpen - 1 > upThresh) && (freshPrice / halfHourMax - 1 < retreatDownThresh)) {
+                if ((maxSoFar / open - 1 > upThresh) && (freshPrice / maxSoFar - 1 < retreatDownThresh)) {
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
                     apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                     outputDetailedXU(symbol, "**********");
                     outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit SELL#",
-                            "max, open, fresh ", halfHourMax, halfHourOpen, freshPrice,
-                            "max/open", halfHourMax / halfHourOpen - 1, "upthresh", upThresh,
-                            "p/max", freshPrice / halfHourMax - 1, "retreatThresh", retreatDownThresh));
+                            "max, open, fresh ", maxSoFar, open, freshPrice,
+                            "max/open", maxSoFar / open - 1, "upthresh", upThresh,
+                            "p/max", freshPrice / maxSoFar - 1, "retreatThresh", retreatDownThresh));
                 }
             }
         }
