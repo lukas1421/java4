@@ -1179,7 +1179,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, SGXA50_RELATIVE_TAKE_PROFIT);
-
         OrderStatus lastStatus = getLastPrimaryOrderStatus(symbol, SGXA50_RELATIVE_TAKE_PROFIT);
 
         if (lastStatus != OrderStatus.Filled && lastStatus != OrderStatus.NoOrder) {
