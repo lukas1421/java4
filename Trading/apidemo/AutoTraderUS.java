@@ -170,15 +170,15 @@ public class AutoTraderUS {
 
         if (!manualUSQuarterHourDev.get(symbol).get(q).get()) {
             if (lt.isBefore(q.getStartTime().plusMinutes(1L))) {
-                outputDetailedXU(symbol, str(" setting manual US qhour dev direction", symbol, q, lt));
+                outputDetailedUS(symbol, str(" setting manual US qhour dev direction", symbol, q, lt));
                 manualUSQuarterHourDev.get(symbol).get(q).set(true);
             } else {
                 if (freshPrice > quarterHourOpen) {
-                    outputDetailedXU(symbol, str(" setting manual US qhour dev fresh>start", symbol, q, lt));
+                    outputDetailedUS(symbol, str(" setting manual US qhour dev fresh>start", symbol, q, lt));
                     quarterHourUSDevDirection.get(symbol).put(q, Direction.Long);
                     manualUSQuarterHourDev.get(symbol).get(q).set(true);
                 } else if (freshPrice < quarterHourOpen) {
-                    outputDetailedXU(symbol, str(" setting manual US qhour dev fresh<start", symbol, q, lt));
+                    outputDetailedUS(symbol, str(" setting manual US qhour dev fresh<start", symbol, q, lt));
                     quarterHourUSDevDirection.get(symbol).put(q, Direction.Short);
                     manualUSQuarterHourDev.get(symbol).get(q).set(true);
                 } else {
@@ -186,7 +186,7 @@ public class AutoTraderUS {
                 }
             }
         }
-        if (quarterHourOrderNum >= MAX_US_HALFHOUR_ORDERS) {
+        if (quarterHourOrderNum >= MAX_US_QUARTERHOUR_ORDERS) {
             return;
         }
 
@@ -195,14 +195,14 @@ public class AutoTraderUS {
         int waitTimeSec = (milliLast2 < 60000) ? 300 : 10;
 
         if (SECONDS.between(lastOrderTime, nowMilli) > waitTimeSec) {
-            if (freshPrice > quarterHourOpen && !noMoreBuy.get() && quarterHourUSDevDirection.get(symbol
-            ).get(q) != Direction.Long) {
+            if (freshPrice > quarterHourOpen && !noMoreBuy.get() &&
+                    quarterHourUSDevDirection.get(symbol).get(q) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, US_SIZE, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedUS(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "q hr US dev buy #:",
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "q hr US dev buy #:",
                         globalIdOrderMap.get(id), q, "type", ot,
                         "dir", quarterHourUSDevDirection.get(symbol).get(q)));
                 quarterHourUSDevDirection.get(symbol).put(q, Direction.Long);
@@ -213,7 +213,7 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedUS(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "q hr US dev sell #:",
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "q hr US dev sell #:",
                         globalIdOrderMap.get(id), q, "type", ot,
                         "dir", quarterHourUSDevDirection.get(symbol).get(q)));
                 quarterHourUSDevDirection.get(symbol).put(q, Direction.Short);
@@ -249,15 +249,15 @@ public class AutoTraderUS {
 
         if (!manualUSHalfHourDev.get(symbol).get(h).get()) {
             if (lt.isBefore(h.getStartTime())) {
-                outputDetailedXU(symbol, str(" setting manual US halfhour dev direction", symbol, h, lt));
+                outputDetailedUS(symbol, str(" setting manual US halfhour dev direction", symbol, h, lt));
                 manualUSHalfHourDev.get(symbol).get(h).set(true);
             } else {
                 if (freshPrice > halfHourOpen) {
-                    outputDetailedXU(symbol, str(" setting manual US halfhour dev fresh>start", symbol, h, lt));
+                    outputDetailedUS(symbol, str(" setting manual US halfhour dev fresh>start", symbol, h, lt));
                     halfHourUSDevDirection.get(symbol).put(h, Direction.Long);
                     manualUSHalfHourDev.get(symbol).get(h).set(true);
                 } else if (freshPrice < halfHourOpen) {
-                    outputDetailedXU(symbol, str(" setting manual US halfhour dev fresh<start", symbol, h, lt));
+                    outputDetailedUS(symbol, str(" setting manual US halfhour dev fresh<start", symbol, h, lt));
                     halfHourUSDevDirection.get(symbol).put(h, Direction.Short);
                     manualUSHalfHourDev.get(symbol).get(h).set(true);
                 } else {
@@ -286,7 +286,7 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedUS(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "half hr US dev buy #:",
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "half hr US dev buy #:",
                         globalIdOrderMap.get(id), h, "type", ot,
                         "dir", halfHourUSDevDirection.get(symbol).get(h)));
                 halfHourUSDevDirection.get(symbol).put(h, Direction.Long);
@@ -297,7 +297,7 @@ public class AutoTraderUS {
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                 outputDetailedUS(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "half hr US dev sell #:",
+                outputDetailedUS(symbol, str("NEW", o.orderId(), "half hr US dev sell #:",
                         globalIdOrderMap.get(id), h, "type", ot,
                         "dir", halfHourUSDevDirection.get(symbol).get(h)));
                 halfHourUSDevDirection.get(symbol).put(h, Direction.Short);
