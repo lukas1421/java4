@@ -1314,10 +1314,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
     }
 
-    private static int minuteToQuarterHour(int min) {
-        return (min - min % 15);
-    }
-
     /**
      * @param nowMilli   time now
      * @param freshPrice last fut price

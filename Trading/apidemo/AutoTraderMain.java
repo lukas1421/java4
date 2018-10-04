@@ -300,6 +300,10 @@ public class AutoTraderMain extends JPanel {
         }
     }
 
+    static int minuteToQuarterHour(int min) {
+        return (min - min % 15);
+    }
+
     private class BarModel_AUTO extends javax.swing.table.AbstractTableModel {
 
         @Override

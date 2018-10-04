@@ -47,10 +47,17 @@ public class AutoTraderUS {
     private static volatile Map<String, EnumMap<HalfHour, AtomicBoolean>> manualUSHalfHourDev = new ConcurrentHashMap<>();
     private static volatile Map<String, EnumMap<HalfHour, Direction>> halfHourUSDevDirection = new ConcurrentHashMap<>();
 
+    private static volatile Map<String, EnumMap<QuarterHour, AtomicBoolean>> manualUSQuarterHourDev
+            = new ConcurrentHashMap<>();
+    private static volatile Map<String, EnumMap<QuarterHour, Direction>> quarterHourUSDevDirection
+            = new ConcurrentHashMap<>();
+
+
     private static final double US_MIN_SHORT_LEVEL = 1.5;
 
     private static final int MAX_US_ORDERS = 4;
     private static final int MAX_US_HALFHOUR_ORDERS = 2;
+    private static final int MAX_US_QUARTERHOUR_ORDERS = 2;
     public static List<String> usSymbols = new ArrayList<>();
     private static final double US_SIZE = 100;
     private static final double US_SAFETY_RATIO = 0.02;
@@ -73,12 +80,20 @@ public class AutoTraderUS {
         usSymbols.forEach(s -> {
             manualUSHalfHourDev.put(s, new EnumMap<>(HalfHour.class));
             halfHourUSDevDirection.put(s, new EnumMap<>(HalfHour.class));
+            manualUSQuarterHourDev.put(s, new EnumMap<>(QuarterHour.class));
+            quarterHourUSDevDirection.put(s, new EnumMap<>(QuarterHour.class));
 
 
             for (HalfHour h : HalfHour.values()) {
                 manualUSHalfHourDev.get(s).put(h, new AtomicBoolean(false));
                 halfHourUSDevDirection.get(s).put(h, Direction.Flat);
             }
+
+            for (QuarterHour q : QuarterHour.values()) {
+                manualUSQuarterHourDev.get(s).put(q, new AtomicBoolean(false));
+                quarterHourUSDevDirection.get(s).put(q, Direction.Flat);
+            }
+
 
             if (!priceMapBarDetail.containsKey(s)) {
                 priceMapBarDetail.put(s, new ConcurrentSkipListMap<>());
@@ -89,17 +104,17 @@ public class AutoTraderUS {
             usFreshPriceMap.put(s, 0.0);
             usShortableValueMap.put(s, 0.0);
 
+            manualUSDevMap.put(s, new AtomicBoolean(false));
             usOpenDevDirection.put(s, Direction.Flat);
+
+            manualUSHiloMap.put(s, new AtomicBoolean(false));
             usHiloDirection.put(s, Direction.Flat);
 
-            usPMOpenDevDirection.put(s, Direction.Flat);
-            usPMHiloDirection.put(s, Direction.Flat);
-
-            manualUSDevMap.put(s, new AtomicBoolean(false));
-            manualUSHiloMap.put(s, new AtomicBoolean(false));
-
             manualUSPMDevMap.put(s, new AtomicBoolean(false));
+            usPMOpenDevDirection.put(s, Direction.Flat);
+
             manualUSPMHiloMap.put(s, new AtomicBoolean(false));
+            usPMHiloDirection.put(s, Direction.Flat);
         });
     }
 
@@ -117,9 +132,10 @@ public class AutoTraderUS {
         usCloseLiqTrader(symbol, nowMilli, freshPrice);
 
         if (globalTradingOn.get()) {
-            usOpenDeviationTrader(symbol, nowMilli, freshPrice);
+            usQuarterHourDevTrader(symbol, nowMilli, freshPrice);
             usRelativeProfitTaker(symbol, nowMilli, freshPrice);
-            usHalfHourDevTrader(symbol, nowMilli, freshPrice);
+            //usOpenDeviationTrader(symbol, nowMilli, freshPrice);
+            //usHalfHourDevTrader(symbol, nowMilli, freshPrice);
         }
         usPostCutoffLiqTrader(symbol, nowMilli, freshPrice);
 
@@ -127,6 +143,85 @@ public class AutoTraderUS {
         //usPMHiloTrader(symbol, nowMilli, freshPrice);
         //usPostPMCutoffLiqTrader(symbol, nowMilli, freshPrice);
     }
+
+    /**
+     * quarter hour trader
+     *
+     * @param symbol     symbol
+     * @param nowMilli   time now
+     * @param freshPrice price
+     */
+    private static void usQuarterHourDevTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+        LocalTime lt = nowMilli.toLocalTime();
+        Contract ct = tickerToUSContract(symbol);
+        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
+
+        if (lt.isBefore(LocalTime.of(9, 29, 59)) || lt.isAfter(ltof(17, 0, 0))) {
+            return;
+        }
+
+        LocalTime quarterHourStartTime = ltof(lt.getHour(), minuteToQuarterHour(lt.getMinute()), 0);
+        double quarterHourOpen = prices.ceilingEntry(quarterHourStartTime).getValue();
+
+        QuarterHour q = QuarterHour.get(quarterHourStartTime);
+        AutoOrderType ot = getOrderTypeByQuarterHour(q);
+
+        long quarterHourOrderNum = getOrderSizeForTradeType(symbol, ot);
+
+        if (!manualUSQuarterHourDev.get(symbol).get(q).get()) {
+            if (lt.isBefore(q.getStartTime().plusMinutes(1L))) {
+                outputDetailedXU(symbol, str(" setting manual US qhour dev direction", symbol, q, lt));
+                manualUSQuarterHourDev.get(symbol).get(q).set(true);
+            } else {
+                if (freshPrice > quarterHourOpen) {
+                    outputDetailedXU(symbol, str(" setting manual US qhour dev fresh>start", symbol, q, lt));
+                    quarterHourUSDevDirection.get(symbol).put(q, Direction.Long);
+                    manualUSQuarterHourDev.get(symbol).get(q).set(true);
+                } else if (freshPrice < quarterHourOpen) {
+                    outputDetailedXU(symbol, str(" setting manual US qhour dev fresh<start", symbol, q, lt));
+                    quarterHourUSDevDirection.get(symbol).put(q, Direction.Short);
+                    manualUSQuarterHourDev.get(symbol).get(q).set(true);
+                } else {
+                    quarterHourUSDevDirection.get(symbol).put(q, Direction.Flat);
+                }
+            }
+        }
+        if (quarterHourOrderNum >= MAX_US_HALFHOUR_ORDERS) {
+            return;
+        }
+
+        LocalDateTime lastOrderTime = getLastOrderTime(symbol, ot);
+        long milliLast2 = lastTwoOrderMilliDiff(symbol, ot);
+        int waitTimeSec = (milliLast2 < 60000) ? 300 : 10;
+
+        if (SECONDS.between(lastOrderTime, nowMilli) > waitTimeSec) {
+            if (freshPrice > quarterHourOpen && !noMoreBuy.get() && quarterHourUSDevDirection.get(symbol
+            ).get(q) != Direction.Long) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimitTIF(freshPrice, US_SIZE, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
+                outputDetailedUS(symbol, "**********");
+                outputDetailedXU(symbol, str("NEW", o.orderId(), "q hr US dev buy #:",
+                        globalIdOrderMap.get(id), q, "type", ot,
+                        "dir", quarterHourUSDevDirection.get(symbol).get(q)));
+                quarterHourUSDevDirection.get(symbol).put(q, Direction.Long);
+            } else if (freshPrice < quarterHourOpen && !noMoreSell.get() &&
+                    quarterHourUSDevDirection.get(symbol).get(q) != Direction.Short) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(freshPrice, US_SIZE, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+                apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
+                outputDetailedUS(symbol, "**********");
+                outputDetailedXU(symbol, str("NEW", o.orderId(), "q hr US dev sell #:",
+                        globalIdOrderMap.get(id), q, "type", ot,
+                        "dir", quarterHourUSDevDirection.get(symbol).get(q)));
+                quarterHourUSDevDirection.get(symbol).put(q, Direction.Short);
+
+            }
+        }
+    }
+
 
     /**
      * half hour US traders
