@@ -768,6 +768,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
     public static void processMainXU(LocalDateTime ldt, double price) {
+        //pr(" in process main xu ");
         LocalTime lt = ldt.toLocalTime();
         double currDelta = getNetPtfDelta();
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
@@ -811,9 +812,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //            return;
 //        }
 
-        if (isStockNoonBreak(ldt.toLocalTime())) {
-            return;
-        }
+//        if (isStockNoonBreak(ldt.toLocalTime())) {
+//            return;
+//        }
 
         double atmVol = getATMVol(expiryToGet);
 
@@ -1149,7 +1150,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         String symbol = ibContractToSymbol(activeFutureCt);
         FutType f = ibContractToFutType(activeFutureCt);
         LocalTime amObservationStart = ltof(8, 59, 59);
-        long currPos = currentPosMap.get(f);
+        long currPos = currentPosMap.getOrDefault(f, 0);
 
         NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(amObservationStart))
@@ -1179,14 +1180,14 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, SGXA50_RELATIVE_TAKE_PROFIT);
 
-        OrderStatus lastStatus = getLastOrderStatusForType(symbol, SGXA50_RELATIVE_TAKE_PROFIT);
+        OrderStatus lastStatus = getLastPrimaryOrderStatus(symbol, SGXA50_RELATIVE_TAKE_PROFIT);
 
         if (lastStatus != OrderStatus.Filled && lastStatus != OrderStatus.NoOrder) {
             pr(" XU relative profit taker, status: ", symbol, lt, lastStatus);
             return;
         }
 
-        if (SECONDS.between(lastOrderTime, nowMilli) > 10) {
+        if (SECONDS.between(lastOrderTime, nowMilli) > 300) {
             if (currPos < 0) {
                 if ((minSoFar / open - 1 < downThresh) && (freshPrice / minSoFar - 1 > retreatUpThresh)) {
                     int id = autoTradeID.incrementAndGet();
@@ -1295,8 +1296,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 Order o = placeBidLimitTIF(freshPrice, 1, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, str(o.orderId(), "quarter hr dev buy #:", q,
-                        "type", ot, "quarterHourOpen ", quarterHourOpen, "fresh", freshPrice));
+                outputDetailedXU(symbol, str("NEW", o.orderId(), "quarter hr dev buy #:",
+                        quarterHourOrderNum, globalIdOrderMap.get(id),
+                        q, "type", ot, "quarterHourOpen ", quarterHourOpen, "fresh", freshPrice));
                 quarterHourXUDevDirection.get(symbol).put(q, Direction.Long);
             } else if (freshPrice < quarterHourOpen && !noMoreSell.get() &&
                     quarterHourXUDevDirection.get(symbol).get(q) != Direction.Short) {
@@ -1304,8 +1306,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 Order o = placeOfferLimitTIF(freshPrice, 1, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, str(o.orderId(), "quarter hr dev sell #:", q,
-                        "type", ot, "quarterHourOpen ", quarterHourOpen, "fresh", freshPrice));
+                outputDetailedXU(symbol, str("NEW", o.orderId(), "quarter hr dev sell #:",
+                        quarterHourOrderNum, globalIdOrderMap.get(id),
+                        q, "type", ot, "quarterHourOpen ", quarterHourOpen, "fresh", freshPrice));
                 quarterHourXUDevDirection.get(symbol).put(q, Direction.Short);
             }
         }

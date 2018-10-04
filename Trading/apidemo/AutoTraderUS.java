@@ -231,6 +231,10 @@ public class AutoTraderUS {
             return;
         }
 
+        if (prices.size() <= 1) {
+            return;
+        }
+
         LocalTime lastKey = prices.lastKey();
 
         LocalTime halfHourStart = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
