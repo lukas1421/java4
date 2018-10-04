@@ -7,6 +7,7 @@ import util.AutoOrderType;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
@@ -155,16 +156,19 @@ public class AutoTraderUS {
         LocalTime lt = nowMilli.toLocalTime();
         Contract ct = tickerToUSContract(symbol);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
+        double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
         if (lt.isBefore(LocalTime.of(9, 29, 59)) || lt.isAfter(ltof(17, 0, 0))) {
             return;
         }
 
-        LocalTime quarterHourStartTime = ltof(lt.getHour(), minuteToQuarterHour(lt.getMinute()), 0);
-        double quarterHourOpen = prices.ceilingEntry(quarterHourStartTime).getValue();
+        LocalTime quarterHourStart = ltof(lt.getHour(), minuteToQuarterHour(lt.getMinute()), 0);
+        double quarterHourOpen = prices.ceilingEntry(quarterHourStart).getValue();
+        LocalTime quarterHourOpenTime = prices.ceilingEntry(quarterHourStart).getKey();
 
-        QuarterHour q = QuarterHour.get(quarterHourStartTime);
+        QuarterHour q = QuarterHour.get(quarterHourStart);
         AutoOrderType ot = getOrderTypeByQuarterHour(q);
+        LocalTime lastKey = prices.lastKey();
 
         long quarterHourOrderNum = getOrderSizeForTradeType(symbol, ot);
 
@@ -189,6 +193,13 @@ public class AutoTraderUS {
         if (quarterHourOrderNum >= MAX_US_QUARTERHOUR_ORDERS) {
             return;
         }
+
+        pr("US q hr trader", lt.truncatedTo(ChronoUnit.SECONDS),
+                "lastKey ", lastKey, "qStart", quarterHourStart,
+                "qHr", q, "open entry:", quarterHourOpenTime, quarterHourOpen,
+                "fresh", freshPrice, "type", ot, "#:", quarterHourOrderNum, "currpos", currPos,
+                "dir:", quarterHourUSDevDirection.get(symbol).get(q),
+                "manual?", manualUSQuarterHourDev.get(symbol).get(q));
 
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, ot);
         long milliLast2 = lastTwoOrderMilliDiff(symbol, ot);
@@ -234,6 +245,7 @@ public class AutoTraderUS {
         LocalTime lt = nowMilli.toLocalTime();
         Contract ct = tickerToUSContract(symbol);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
+        double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
         if (lt.isBefore(LocalTime.of(9, 29, 59)) || lt.isAfter(ltof(11, 0, 0))) {
             return;
@@ -320,7 +332,6 @@ public class AutoTraderUS {
 
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
         LocalTime amStart = ltof(9, 29, 59);
-        //LocalTime amObservationStart = ltof(9, 29, 55);
 
         if (lt.isBefore(amStart)) {
             return;
@@ -344,9 +355,6 @@ public class AutoTraderUS {
                 .filter(e -> e.getKey().isAfter(halfHourStart))
                 .filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
-
-//        LocalTime maxT = getFirstMaxTPred(prices, e -> e.isAfter(amObservationStart));
-//        LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(amObservationStart));
 
         pr(symbol, " US profit taker ", lt, "max min fresh", maxSoFar, minSoFar, freshPrice,
                 "max/open, min/open", maxSoFar / halfHourOpen - 1, minSoFar / halfHourOpen - 1,
