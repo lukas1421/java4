@@ -71,7 +71,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
                 Order prevOrder = globalIdOrderMap.get(defaultID).getOrder();
                 Order o = new Order();
                 o.action(prevOrder.action());
-                o.lmtPrice(freshPrice);
+                o.lmtPrice(Math.round(100d * freshPrice) / 100d);
                 o.orderType(OrderType.LMT);
                 o.totalQuantity(prevOrder.totalQuantity());
                 o.outsideRth(true);
