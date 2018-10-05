@@ -1227,8 +1227,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         FutType f = ibContractToFutType(activeFutureCt);
         LocalTime amObservationStart = ltof(8, 59, 59);
         long currPos = currentPosMap.get(f);
-        double buySize = 1.0;
-        double sellSize = 1.0;
+        double buySize;
+        double sellSize;
 
         NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(amObservationStart))
@@ -1293,9 +1293,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         int waitTimeSec = (milliLast2 < 60000) ? 300 : 1;
 
         if ((minSoFar / qHrOpen - 1 < loThresh) && (freshPrice / minSoFar - 1 > retreatHIThresh)
-                && qHrFilled <= -1 && (qHrOrderNum % 2 == 1)) {
+                && qHrFilled <= -1 && currPos < 0 && (qHrOrderNum % 2 == 1)) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimitTIF(freshPrice, 1, IOC);
+            buySize = Math.abs(currPos);
+            Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, "**********");
@@ -1304,9 +1305,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     "min/open", minSoFar / qHrOpen - 1, "loThresh", loThresh,
                     "p/min", freshPrice / minSoFar - 1, "retreatHIThresh", retreatHIThresh));
         } else if ((maxSoFar / qHrOpen - 1 > hiThresh) && (freshPrice / maxSoFar - 1 < retreatLOThresh)
-                && qHrFilled >= 1 && (qHrOrderNum % 2 == 1)) {
+                && qHrFilled >= 1 && currPos > 0 && (qHrOrderNum % 2 == 1)) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimitTIF(freshPrice, 1, IOC);
+            sellSize = currPos;
+            Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, "**********");

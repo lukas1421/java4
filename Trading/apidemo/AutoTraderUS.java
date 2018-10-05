@@ -225,18 +225,18 @@ public class AutoTraderUS {
 
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, ot);
         long milliLast2 = lastTwoOrderMilliDiff(symbol, ot);
-        int waitTimeSec = (milliLast2 < 60000) ? 300 : 10;
+        int waitTimeSec = (milliLast2 < 60000) ? 300 : 1;
 
         double buyPrice = Math.round(freshPrice * 100d) / 100d;
         double sellPrice = Math.round(freshPrice * 100d) / 100d;
-        double buySize = US_BASE_SIZE;
-        double sellSize = US_BASE_SIZE;
+        double buySize;
+        double sellSize;
 
 
         if ((minSoFar / qHrOpen - 1 < downThresh) && (freshPrice / minSoFar - 1 > retreatUpThresh)
                 && qHrOrderNum % 2 == 1 && currPos < 0 && qHrUSDevDirection.get(symbol).get(q) == Direction.Short) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimitTIF(buyPrice, US_BASE_SIZE, IOC);
+            Order o = placeBidLimitTIF(buyPrice, Math.abs(currPos), IOC);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
             outputDetailedUS(symbol, "**********");
@@ -249,7 +249,7 @@ public class AutoTraderUS {
         } else if ((maxSoFar / qHrOpen - 1 > upThresh) && (freshPrice / maxSoFar - 1 < retreatDownThresh)
                 && qHrOrderNum % 2 == 1 && currPos > 0 && qHrUSDevDirection.get(symbol).get(q) == Direction.Long) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimitTIF(sellPrice, US_BASE_SIZE, IOC);
+            Order o = placeOfferLimitTIF(sellPrice, currPos, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
             outputDetailedUS(symbol, "**********");
@@ -288,7 +288,6 @@ public class AutoTraderUS {
                             "dir", qHrUSDevDirection.get(symbol).get(q),
                             "open fresh sellPrice", qHrOpen, freshPrice, sellPrice, "sellsize", sellSize));
                     qHrUSDevDirection.get(symbol).put(q, Direction.Short);
-
                 }
             }
         }
