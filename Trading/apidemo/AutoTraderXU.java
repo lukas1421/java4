@@ -196,11 +196,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     static volatile JLabel connectionLabel = new JLabel();
 
     //half hour
-//    private static volatile EnumMap<HalfHour, AtomicBoolean> manualXUHalfHourDev = new EnumMap<>(HalfHour.class);
-//    private static volatile EnumMap<HalfHour, Direction> halfHourXUDevDirection = new EnumMap<>(HalfHour.class);
+//    private static volatile EnumMap<HalfHour, AtomicBoolean> manualXUHHourDev = new EnumMap<>(HalfHour.class);
+//    private static volatile EnumMap<HalfHour, Direction> hHrXUDevDirection = new EnumMap<>(HalfHour.class);
 
-    private static volatile Map<String, EnumMap<HalfHour, AtomicBoolean>> manualXUHalfHourDev = new ConcurrentHashMap<>();
-    private static volatile Map<String, EnumMap<HalfHour, Direction>> halfHourXUDevDirection = new ConcurrentHashMap<>();
+    private static volatile Map<String, EnumMap<HalfHour, AtomicBoolean>> manualXUHHourDev = new ConcurrentHashMap<>();
+    private static volatile Map<String, EnumMap<HalfHour, Direction>> hHrXUDevDirection = new ConcurrentHashMap<>();
     private static volatile Map<String, EnumMap<QuarterHour, AtomicBoolean>> manualXUQHrDev
             = new ConcurrentHashMap<>();
     private static volatile Map<String, EnumMap<QuarterHour, Direction>> qHrXUDevDirection
@@ -228,15 +228,15 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             futPrevClose3pmMap.put(f, 0.0);
             String symbol = f.getSymbol();
 
-            halfHourXUDevDirection.put(symbol, new EnumMap<>(HalfHour.class));
-            manualXUHalfHourDev.put(symbol, new EnumMap<>(HalfHour.class));
+            hHrXUDevDirection.put(symbol, new EnumMap<>(HalfHour.class));
+            manualXUHHourDev.put(symbol, new EnumMap<>(HalfHour.class));
 
             qHrXUDevDirection.put(symbol, new EnumMap<>(QuarterHour.class));
             manualXUQHrDev.put(symbol, new EnumMap<>(QuarterHour.class));
 
             for (HalfHour h : HalfHour.values()) {
-                halfHourXUDevDirection.get(symbol).put(h, Direction.Flat);
-                manualXUHalfHourDev.get(symbol).put(h, new AtomicBoolean(false));
+                hHrXUDevDirection.get(symbol).put(h, Direction.Flat);
+                manualXUHHourDev.get(symbol).put(h, new AtomicBoolean(false));
             }
 
             for (QuarterHour q : QuarterHour.values()) {
@@ -1263,8 +1263,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         if (!manualXUQHrDev.get(symbol).get(q).get()) {
             if (lt.isBefore(q.getStartTime().plusMinutes(1L))) {
-                outputDetailedXU(symbol, str(" set XU qhr dev direction",
-                        symbol, q, lt, "startTime", q.getStartTime()));
+                outputDetailedXU(symbol, str(" set XU qhr dev direction", symbol, q, lt, "startTime", q.getStartTime()));
                 manualXUQHrDev.get(symbol).get(q).set(true);
             } else {
                 if (freshPrice > qHrOpen) {
@@ -1322,9 +1321,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                     outputDetailedXU(symbol, "**********");
-                    outputDetailedXU(symbol, str("NEW", o.orderId(), "quarter hr dev buy #:",
-                            qHrOrderNum, globalIdOrderMap.get(id),
-                            q, "type", ot, "quarterHourOpen ", qHrOpen, "fresh", freshPrice));
+                    outputDetailedXU(symbol, str("NEW", o.orderId(), "q hr dev buy #:",
+                            qHrOrderNum, globalIdOrderMap.get(id), q, "type", ot, "qHrOpen ", qHrOpen,
+                            "fresh", freshPrice));
                     qHrXUDevDirection.get(symbol).put(q, Direction.Long);
                 } else if (freshPrice < qHrOpen && !noMoreSell.get() &&
                         qHrXUDevDirection.get(symbol).get(q) != Direction.Short) {
@@ -1333,9 +1332,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
                     outputDetailedXU(symbol, "**********");
-                    outputDetailedXU(symbol, str("NEW", o.orderId(), "quarter hr dev sell #:",
-                            qHrOrderNum, globalIdOrderMap.get(id),
-                            q, "type", ot, "quarterHourOpen ", qHrOpen, "fresh", freshPrice));
+                    outputDetailedXU(symbol, str("NEW", o.orderId(), "q hr dev sell #:",
+                            qHrOrderNum, globalIdOrderMap.get(id), q, "type", ot, "qHrOpen ", qHrOpen,
+                            "fresh", freshPrice));
                     qHrXUDevDirection.get(symbol).put(q, Direction.Short);
                 }
             }
@@ -1369,13 +1368,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime halfHourStart = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
         double halfHourOpen = futPrice.floorEntry(halfHourStart).getValue();
 
-//        double halfHourMax = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
-//                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-//        double halfHourMin = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(halfHourStart))
-//                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
-//        LocalTime halfHourMaxT = getFirstMaxTPred(futPrice, t -> t.isAfter(halfHourStart));
-//        LocalTime halfHourMinT = getFirstMinTPred(futPrice, t -> t.isAfter(halfHourStart));
-
         HalfHour h = HalfHour.get(halfHourStart);
         AutoOrderType ot = getOrderTypeByHalfHour(h);
 
@@ -1384,21 +1376,21 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         pr("XU half hour trader ", "start", halfHourStart, "halfHour", h, "startValue", halfHourOpen,
                 "type", ot, "#:", halfHourOrderNum);
 
-        if (!manualXUHalfHourDev.get(symbol).get(h).get()) {
+        if (!manualXUHHourDev.get(symbol).get(h).get()) {
             if (lt.isBefore(h.getStartTime().plusMinutes(1L))) {
-                outputDetailedXU(symbol, str(" setting manual XU halfhour dev direction", symbol, h, lt));
-                manualXUHalfHourDev.get(symbol).get(h).set(true);
+                outputDetailedXU(symbol, str(" set XU hhour dev direction", symbol, h, lt));
+                manualXUHHourDev.get(symbol).get(h).set(true);
             } else {
                 if (freshPrice > halfHourOpen) {
-                    outputDetailedXU(symbol, str(" setting manual XU halfhour dev fresh>start", symbol, h, lt));
-                    halfHourXUDevDirection.get(symbol).put(h, Direction.Long);
-                    manualXUHalfHourDev.get(symbol).get(h).set(true);
+                    outputDetailedXU(symbol, str(" set XU hhour dev fresh>start", symbol, h, lt));
+                    hHrXUDevDirection.get(symbol).put(h, Direction.Long);
+                    manualXUHHourDev.get(symbol).get(h).set(true);
                 } else if (freshPrice < halfHourOpen) {
-                    outputDetailedXU(symbol, str(" setting manual XU halfhour dev dir fresh<start", symbol, h, lt));
-                    halfHourXUDevDirection.get(symbol).put(h, Direction.Short);
-                    manualXUHalfHourDev.get(symbol).get(h).set(true);
+                    outputDetailedXU(symbol, str(" set manual XU hhour dev dir fresh<start", symbol, h, lt));
+                    hHrXUDevDirection.get(symbol).put(h, Direction.Short);
+                    manualXUHHourDev.get(symbol).get(h).set(true);
                 } else {
-                    halfHourXUDevDirection.get(symbol).put(h, Direction.Flat);
+                    hHrXUDevDirection.get(symbol).put(h, Direction.Flat);
                 }
             }
         }
@@ -1412,21 +1404,21 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         if (SECONDS.between(lastOrderTime, nowMilli) > waitTimeSec) {
             if (freshPrice > halfHourOpen && !noMoreBuy.get() &&
-                    halfHourXUDevDirection.get(symbol).get(h) != Direction.Long) {
+                    hHrXUDevDirection.get(symbol).get(h) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, 1, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, str(o.orderId(), "half hr dev buy #:", h));
-                halfHourXUDevDirection.get(symbol).put(h, Direction.Long);
+                outputDetailedXU(symbol, str(o.orderId(), "h hr dev buy #:", h));
+                hHrXUDevDirection.get(symbol).put(h, Direction.Long);
             } else if (freshPrice < halfHourOpen && !noMoreSell.get() &&
-                    halfHourXUDevDirection.get(symbol).get(h) != Direction.Short) {
+                    hHrXUDevDirection.get(symbol).get(h) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, 1, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, str(o.orderId(), "half hr dev sell #:", h));
-                halfHourXUDevDirection.get(symbol).put(h, Direction.Short);
+                outputDetailedXU(symbol, str(o.orderId(), "h hr dev sell #:", h));
+                hHrXUDevDirection.get(symbol).put(h, Direction.Short);
             }
         }
 
@@ -1499,15 +1491,15 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         if (!manualFutHiloDirection.get()) {
             if (lt.isBefore(ltof(9, 0, 0))) {
-                outputDetailedXU(symbol, str(" setting manual fut hilo direction 9:00", symbol, lt));
+                outputDetailedXU(symbol, str(" set fut hilo direction 9:00", symbol, lt));
                 manualFutHiloDirection.set(true);
             } else {
                 if (maxT.isAfter(minT)) {
-                    outputDetailedXU(symbol, str(" setting manual fut hilo direction maxT>minT", symbol, lt));
+                    outputDetailedXU(symbol, str(" set fut hilo direction maxT>minT", symbol, lt));
                     futHiLoDirection = Direction.Long;
                     manualFutHiloDirection.set(true);
                 } else if (minT.isAfter(maxT)) {
-                    outputDetailedXU(symbol, str(" setting manual fut hilo direction minT>maxT", symbol, lt));
+                    outputDetailedXU(symbol, str(" set fut hilo direction minT>maxT", symbol, lt));
                     futHiLoDirection = Direction.Short;
                     manualFutHiloDirection.set(true);
                 } else {
