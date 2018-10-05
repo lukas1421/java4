@@ -1237,10 +1237,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-//        if (lt.isAfter(ltof(11, 30, 0)) && lt.isBefore(ltof(13, 0, 0))) {
-//            return;
-//        }
-
         LocalTime qHrStart = ltof(lt.getHour(), minuteToQuarterHour(lt.getMinute()));
         double qHrOpen = futPrice.ceilingEntry(qHrStart).getValue();
         LocalTime quarterHourOpenTime = futPrice.ceilingEntry(qHrStart).getKey();
@@ -1267,17 +1263,17 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         if (!manualXUQHrDev.get(symbol).get(q).get()) {
             if (lt.isBefore(q.getStartTime().plusMinutes(1L))) {
-                outputDetailedXU(symbol, str(" set manual XU qhr dev direction",
+                outputDetailedXU(symbol, str(" set XU qhr dev direction",
                         symbol, q, lt, "startTime", q.getStartTime()));
                 manualXUQHrDev.get(symbol).get(q).set(true);
             } else {
                 if (freshPrice > qHrOpen) {
-                    outputDetailedXU(symbol, str(" set manual XU qhr dev fresh>start",
+                    outputDetailedXU(symbol, str(" set XU qhr dev fresh>start",
                             symbol, q, lt, "fresh>start", freshPrice, ">", qHrOpen));
                     qHrXUDevDirection.get(symbol).put(q, Direction.Long);
                     manualXUQHrDev.get(symbol).get(q).set(true);
                 } else if (freshPrice < qHrOpen) {
-                    outputDetailedXU(symbol, str(" set manual XU qhr dev dir fresh<start",
+                    outputDetailedXU(symbol, str(" set XU qhr dev dir fresh<start",
                             symbol, q, lt, "fresh<start", freshPrice, "<", qHrOpen));
                     qHrXUDevDirection.get(symbol).put(q, Direction.Short);
                     manualXUQHrDev.get(symbol).get(q).set(true);
@@ -1325,6 +1321,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     Order o = placeBidLimitTIF(freshPrice, 1, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
+                    outputDetailedXU(symbol, "**********");
                     outputDetailedXU(symbol, str("NEW", o.orderId(), "quarter hr dev buy #:",
                             qHrOrderNum, globalIdOrderMap.get(id),
                             q, "type", ot, "quarterHourOpen ", qHrOpen, "fresh", freshPrice));
@@ -1335,6 +1332,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     Order o = placeOfferLimitTIF(freshPrice, 1, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(id, apcon));
+                    outputDetailedXU(symbol, "**********");
                     outputDetailedXU(symbol, str("NEW", o.orderId(), "quarter hr dev sell #:",
                             qHrOrderNum, globalIdOrderMap.get(id),
                             q, "type", ot, "quarterHourOpen ", qHrOpen, "fresh", freshPrice));

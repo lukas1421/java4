@@ -189,16 +189,16 @@ public class AutoTraderUS {
 
         if (!manualUSQuarterHourDev.get(symbol).get(q).get()) {
             if (lt.isBefore(q.getStartTime().plusMinutes(1L))) {
-                outputDetailedUS(symbol, str(" set manual US qhr dev direction", symbol, q, lt));
+                outputDetailedUS(symbol, str(" set US qhr dev direction", symbol, q, lt));
                 manualUSQuarterHourDev.get(symbol).get(q).set(true);
             } else {
                 if (freshPrice > qHrOpen) {
-                    outputDetailedUS(symbol, str(" set manual US qhr dev fresh>start", symbol, q, lt,
+                    outputDetailedUS(symbol, str(" set US qhr dev fresh>start", symbol, q, lt,
                             "fresh>start", freshPrice, ">", qHrStart));
                     qHrUSDevDirection.get(symbol).put(q, Direction.Long);
                     manualUSQuarterHourDev.get(symbol).get(q).set(true);
                 } else if (freshPrice < qHrOpen) {
-                    outputDetailedUS(symbol, str(" set manual US qhr dev fresh<start", symbol, q, lt,
+                    outputDetailedUS(symbol, str(" set US qhr dev fresh<start", symbol, q, lt,
                             "fresh<start", freshPrice, "<", qHrStart));
                     qHrUSDevDirection.get(symbol).put(q, Direction.Short);
                     manualUSQuarterHourDev.get(symbol).get(q).set(true);
