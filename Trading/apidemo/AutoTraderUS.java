@@ -169,23 +169,23 @@ public class AutoTraderUS {
             return;
         }
 
-        LocalTime quarterHourStart = ltof(lt.getHour(), minuteToQuarterHour(lt.getMinute()), 0);
-        double qHrOpen = prices.ceilingEntry(quarterHourStart).getValue();
-        LocalTime quarterHourOpenTime = prices.ceilingEntry(quarterHourStart).getKey();
+        LocalTime qHrStart = ltof(lt.getHour(), minuteToQuarterHour(lt.getMinute()), 0);
+        double qHrOpen = prices.ceilingEntry(qHrStart).getValue();
+        LocalTime quarterHourOpenTime = prices.ceilingEntry(qHrStart).getKey();
 
-        QuarterHour q = QuarterHour.get(quarterHourStart);
+        QuarterHour q = QuarterHour.get(qHrStart);
         AutoOrderType ot = getOrderTypeByQuarterHour(q);
         LocalTime lastKey = prices.lastKey();
 
-        double maxSoFar = prices.entrySet().stream().filter(e -> e.getKey().isAfter(quarterHourStart))
+        double maxSoFar = prices.entrySet().stream().filter(e -> e.getKey().isAfter(qHrStart))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
 
-        double minSoFar = prices.entrySet().stream().filter(e -> e.getKey().isAfter(quarterHourStart))
+        double minSoFar = prices.entrySet().stream().filter(e -> e.getKey().isAfter(qHrStart))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
 
         long qHrOrderNum = getOrderSizeForTradeType(symbol, ot);
-        double qHrFilled = getFilledSinceTime(symbol, ot, quarterHourStart);
+        double qHrFilled = getFilledSinceTime(symbol, ot, qHrStart);
 
         if (!manualUSQuarterHourDev.get(symbol).get(q).get()) {
             if (lt.isBefore(q.getStartTime().plusMinutes(1L))) {
@@ -194,12 +194,12 @@ public class AutoTraderUS {
             } else {
                 if (freshPrice > qHrOpen) {
                     outputDetailedUS(symbol, str(" setting manual US qhour dev fresh>start", symbol, q, lt,
-                            "fresh>start", freshPrice, quarterHourStart));
+                            "fresh>start", freshPrice, qHrStart));
                     qHrUSDevDirection.get(symbol).put(q, Direction.Long);
                     manualUSQuarterHourDev.get(symbol).get(q).set(true);
                 } else if (freshPrice < qHrOpen) {
                     outputDetailedUS(symbol, str(" setting manual US qhour dev fresh<start", symbol, q, lt,
-                            "fresh<start", freshPrice, quarterHourStart));
+                            "fresh<start", freshPrice, qHrStart));
                     qHrUSDevDirection.get(symbol).put(q, Direction.Short);
                     manualUSQuarterHourDev.get(symbol).get(q).set(true);
                 } else {
@@ -209,7 +209,7 @@ public class AutoTraderUS {
         }
 
         pr("US q hr trader", lt.truncatedTo(ChronoUnit.SECONDS),
-                "lastKey ", lastKey, "qStart", quarterHourStart,
+                "lastKey ", lastKey, "qStart", qHrStart,
                 "qHr", q, "open entry:", quarterHourOpenTime, qHrOpen,
                 "fresh", freshPrice, "type", ot, "#:", qHrOrderNum, "currpos", currPos
                 , "filled", qHrFilled,
