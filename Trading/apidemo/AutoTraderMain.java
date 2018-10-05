@@ -79,10 +79,17 @@ public class AutoTraderMain extends JPanel {
                 .count();
     }
 
-    static double getFilledSinceTime(String symbol, AutoOrderType type, LocalTime t) {
+//    static long getOrderSizeForTradeType(String symbol, AutoOrderType type) {
+//        return globalIdOrderMap.entrySet().stream()
+//                .filter(e -> e.getValue().getSymbol().equals(symbol))
+//                .filter(e -> e.getValue().getOrderType() == type)
+//                .filter(e -> e.getValue().isPrimaryOrder())
+//                .count();
+//    }
+
+    static double getFilledForType(String symbol, AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getSymbol().equals(symbol))
-                .filter(e -> e.getValue().getOrderTime().isAfter(LocalDateTime.of(LocalDate.now(), t)))
                 .filter(e -> e.getValue().getOrderType() == type)
                 .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
                 .mapToDouble(e -> e.getValue().getOrder().signedTotalQuantity())

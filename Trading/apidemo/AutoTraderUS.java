@@ -185,21 +185,21 @@ public class AutoTraderUS {
 
 
         long qHrOrderNum = getOrderSizeForTradeType(symbol, ot);
-        double qHrFilled = getFilledSinceTime(symbol, ot, qHrStart);
+        double qHrFilled = getFilledForType(symbol, ot);
 
         if (!manualUSQuarterHourDev.get(symbol).get(q).get()) {
             if (lt.isBefore(q.getStartTime().plusMinutes(1L))) {
-                outputDetailedUS(symbol, str(" setting manual US qhour dev direction", symbol, q, lt));
+                outputDetailedUS(symbol, str(" set manual US qhr dev direction", symbol, q, lt));
                 manualUSQuarterHourDev.get(symbol).get(q).set(true);
             } else {
                 if (freshPrice > qHrOpen) {
-                    outputDetailedUS(symbol, str(" setting manual US qhour dev fresh>start", symbol, q, lt,
-                            "fresh>start", freshPrice, qHrStart));
+                    outputDetailedUS(symbol, str(" set manual US qhr dev fresh>start", symbol, q, lt,
+                            "fresh>start", freshPrice, ">", qHrStart));
                     qHrUSDevDirection.get(symbol).put(q, Direction.Long);
                     manualUSQuarterHourDev.get(symbol).get(q).set(true);
                 } else if (freshPrice < qHrOpen) {
-                    outputDetailedUS(symbol, str(" setting manual US qhour dev fresh<start", symbol, q, lt,
-                            "fresh<start", freshPrice, qHrStart));
+                    outputDetailedUS(symbol, str(" set manual US qhr dev fresh<start", symbol, q, lt,
+                            "fresh<start", freshPrice, "<", qHrStart));
                     qHrUSDevDirection.get(symbol).put(q, Direction.Short);
                     manualUSQuarterHourDev.get(symbol).get(q).set(true);
                 } else {
@@ -208,10 +208,11 @@ public class AutoTraderUS {
             }
         }
 
-        pr("US q hr trader", lt.truncatedTo(ChronoUnit.SECONDS),
-                "lastKey ", lastKey, "qStart", qHrStart,
-                "qHr", q, "open entry:", quarterHourOpenTime, qHrOpen,
-                "fresh", freshPrice, "type", ot, "#:", qHrOrderNum, "currpos", currPos
+        pr("US q hr:", lt.truncatedTo(ChronoUnit.SECONDS), ot,
+                "#:", qHrOrderNum, "FL#", qHrFilled,
+                "lastKey", lastKey, "qStart", qHrStart,
+                "qHr", q, "openEntry", quarterHourOpenTime, qHrOpen,
+                "P", freshPrice, "currpos", currPos
                 , "filled", qHrFilled,
                 "dir:", qHrUSDevDirection.get(symbol).get(q),
                 "manual?", manualUSQuarterHourDev.get(symbol).get(q));

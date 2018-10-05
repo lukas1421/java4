@@ -1255,29 +1255,29 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime lastKey = futPrice.lastKey();
 
         long qHrOrderNum = getOrderSizeForTradeType(symbol, ot);
-        double qHrFilled = getFilledSinceTime(symbol, ot, qHrStart);
+        double qHrFilled = getFilledForType(symbol, ot);
 
-        pr("XU q hr trader", lt.truncatedTo(ChronoUnit.SECONDS),
-                "#", qHrOrderNum, "filled", qHrFilled,
-                "lastKey ", lastKey, "qStart", qHrStart,
-                "qHr", q, "open entry:", quarterHourOpenTime, qHrOpen,
-                "fresh", freshPrice, "type", ot, "#:", qHrOrderNum, "currpos", currPos,
-                "dir:", qHrXUDevDirection.get(symbol).get(q),
-                "manual?", manualXUQHrDev.get(symbol).get(q));
+        pr("XU qhr:", lt.truncatedTo(ChronoUnit.SECONDS), ot,
+                "#", qHrOrderNum, "FL#", qHrFilled,
+                "lastKey", lastKey, "qStart", qHrStart,
+                "qHr", q, "openEntry:", quarterHourOpenTime, qHrOpen,
+                "P", freshPrice, "currpos", currPos,
+                "dir", qHrXUDevDirection.get(symbol).get(q),
+                "manual", manualXUQHrDev.get(symbol).get(q));
 
         if (!manualXUQHrDev.get(symbol).get(q).get()) {
             if (lt.isBefore(q.getStartTime().plusMinutes(1L))) {
-                outputDetailedXU(symbol, str(" setting manual XU qhour dev direction",
+                outputDetailedXU(symbol, str(" set manual XU qhr dev direction",
                         symbol, q, lt, "startTime", q.getStartTime()));
                 manualXUQHrDev.get(symbol).get(q).set(true);
             } else {
                 if (freshPrice > qHrOpen) {
-                    outputDetailedXU(symbol, str(" setting manual XU qhour dev fresh>start",
+                    outputDetailedXU(symbol, str(" set manual XU qhr dev fresh>start",
                             symbol, q, lt, "fresh>start", freshPrice, ">", qHrOpen));
                     qHrXUDevDirection.get(symbol).put(q, Direction.Long);
                     manualXUQHrDev.get(symbol).get(q).set(true);
                 } else if (freshPrice < qHrOpen) {
-                    outputDetailedXU(symbol, str(" setting manual XU qhour dev dir fresh<start",
+                    outputDetailedXU(symbol, str(" set manual XU qhr dev dir fresh<start",
                             symbol, q, lt, "fresh<start", freshPrice, "<", qHrOpen));
                     qHrXUDevDirection.get(symbol).put(q, Direction.Short);
                     manualXUQHrDev.get(symbol).get(q).set(true);
