@@ -79,6 +79,16 @@ public class AutoTraderMain extends JPanel {
                 .count();
     }
 
+    static double getFilledSinceTime(String symbol, AutoOrderType type, LocalTime t) {
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getSymbol().equals(symbol))
+                .filter(e -> e.getValue().getOrderTime().isAfter(LocalDateTime.of(LocalDate.now(), t)))
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
+                .mapToDouble(e -> e.getValue().getOrder().signedTotalQuantity())
+                .sum();
+    }
+
     static boolean checkIfHoliday(LocalDate d) {
         //pr(d, " is a holiday? ", holidaySet.contains(d), "!");
         return holidaySet.contains(d);
@@ -241,6 +251,7 @@ public class AutoTraderMain extends JPanel {
                 .map(e -> e.getValue().getOrderTime())
                 .orElse(sessionOpenT());
     }
+
 
     static long lastTwoOrderMilliDiff(String symbol, AutoOrderType type) {
         long numOrders = globalIdOrderMap.entrySet().stream()
