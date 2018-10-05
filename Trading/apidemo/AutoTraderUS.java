@@ -242,10 +242,9 @@ public class AutoTraderUS {
             outputDetailedUS(symbol, "**********");
             outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit BUY#",
                     qHrOrderNum, globalIdOrderMap.get(id), "min open last", minSoFar, qHrOpen, freshPrice,
-                    "buyPrice", buyPrice, "qHfilled", qHrFilled, "currPos", currPos,
-                    "min/open-1", minSoFar / qHrOpen - 1, "down thresh", downThresh,
+                    "buyPrice", buyPrice, "filled", qHrFilled, "currPos", currPos,
+                    "min/open-1", minSoFar / qHrOpen - 1, "loThresh", downThresh,
                     "p/min-1", freshPrice / minSoFar - 1, "retreatUpThresh", retreatUpThresh));
-
         } else if ((maxSoFar / qHrOpen - 1 > upThresh) && (freshPrice / maxSoFar - 1 < retreatDownThresh)
                 && qHrOrderNum % 2 == 1 && currPos > 0 && qHrUSDevDirection.get(symbol).get(q) == Direction.Long) {
             int id = autoTradeID.incrementAndGet();
@@ -255,13 +254,12 @@ public class AutoTraderUS {
             outputDetailedUS(symbol, "**********");
             outputDetailedUS(symbol, str("NEW", o.orderId(), "US take profit SELL#",
                     qHrOrderNum, globalIdOrderMap.get(id), "max open last", maxSoFar, qHrOpen, freshPrice,
-                    "sellPrice", sellPrice, "qHfilled", qHrFilled, "currPos", currPos,
-                    "max/open-1", maxSoFar / qHrOpen - 1, "up thresh", upThresh,
-                    "p/max-1", freshPrice / maxSoFar - 1, "retreathDownThresh", retreatDownThresh));
+                    "sellPrice", sellPrice, "filled", qHrFilled, "currPos", currPos,
+                    "max/open-1", maxSoFar / qHrOpen - 1, "hiThresh", upThresh,
+                    "p/max-1", freshPrice / maxSoFar - 1, "retreatLOThresh", retreatDownThresh));
         } else {
             if (SECONDS.between(lastOrderTime, nowMilli) > waitTimeSec) {
-                if (freshPrice > qHrOpen && !noMoreBuy.get() &&
-                        qHrUSDevDirection.get(symbol).get(q) != Direction.Long) {
+                if (freshPrice > qHrOpen && !noMoreBuy.get() && qHrUSDevDirection.get(symbol).get(q) != Direction.Long) {
                     int id = autoTradeID.incrementAndGet();
                     buySize = currPos < 0 ? (Math.abs(currPos) + (qHrOrderNum % 2 == 0 ? US_BASE_SIZE : 0)) : US_BASE_SIZE;
                     Order o = placeBidLimitTIF(buyPrice, buySize, IOC);

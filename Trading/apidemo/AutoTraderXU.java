@@ -1235,7 +1235,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
-        if (lt.isBefore(LocalTime.of(8, 59, 29)) || lt.isAfter(ltof(16, 0, 0))) {
+        if (lt.isBefore(LocalTime.of(8, 59, 29)) || lt.isAfter(ltof(15, 0, 0))) {
+            return;
+        }
+        if (lt.isAfter(ltof(11, 30)) && lt.isBefore(ltof(13, 0))) {
             return;
         }
 
