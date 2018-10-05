@@ -1,3 +1,5 @@
+import static utility.Utility.pr;
+
 public class Test {
 
 //    static double roundToXUPriceAggressive(double x, Direction dir) {
@@ -10,17 +12,22 @@ public class Test {
 //    }
 
     public static int minToQuarterHour(int min) {
-        return (min-min%15);
+        return (min - min % 15);
     }
 
     public static void main(String[] args) {
 
-        System.out.println(minToQuarterHour(14));
-        System.out.println(minToQuarterHour(15));
-        System.out.println(minToQuarterHour(29));
-        System.out.println(minToQuarterHour(31));
-        System.out.println(minToQuarterHour(44));
-        System.out.println(minToQuarterHour(48));
+//        System.out.println(minToQuarterHour(14));
+//        System.out.println(minToQuarterHour(15));
+//        System.out.println(minToQuarterHour(29));
+//        System.out.println(minToQuarterHour(31));
+//        System.out.println(minToQuarterHour(44));
+//        System.out.println(minToQuarterHour(48));
+
+        double freshPrice = 2.8555;
+
+        pr(Math.floor(freshPrice * 100d) / 100d);
+        pr(Math.ceil(freshPrice * 100d) / 100d);
 
 
     }
