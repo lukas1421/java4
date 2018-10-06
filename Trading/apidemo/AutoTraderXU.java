@@ -1770,7 +1770,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        LocalDateTime lastFutDevOrderTime = getLastOrderTime(symbol, ot);
+        LocalDateTime lastFutDevOrderT = getLastOrderTime(symbol, ot);
         long milliLast2 = lastTwoOrderMilliDiff(symbol, ot);
         long numOrders = getOrderSizeForTradeType(symbol, ot);
         int waitSec = getWaitSec(milliLast2);
@@ -1793,15 +1793,15 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         if (!manualfutDev.get()) {
             if (lt.isBefore(ltof(9, 1, 0))) {
-                outputDetailedXU(symbol, str(" set fut open dev dir 9:011", lt));
+                outputDetailedXU(symbol, str("set fut open dev dir 9:011", lt));
                 manualfutDev.set(true);
             } else {
                 if (last > open) {
-                    outputDetailedXU(symbol, str(" set fut dev dir fresh > open", lt));
+                    outputDetailedXU(symbol, str("set fut dev dir fresh > open", lt));
                     futDevDir = Direction.Long;
                     manualfutDev.set(true);
                 } else if (last < open) {
-                    outputDetailedXU(symbol, str(" set fut dev dir fresh < open", lt));
+                    outputDetailedXU(symbol, str("set fut dev dir fresh < open", lt));
                     futDevDir = Direction.Short;
                     manualfutDev.set(true);
                 } else {
@@ -1816,9 +1816,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double minV = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(obT))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        int baseSize = 1;
-        double buySize = baseSize * ((numOrders == 0 || numOrders == (MAX_DEV_SIZE - 1)) ? 1 : 1);
-        double sellSize = baseSize * ((numOrders == 0 || numOrders == (MAX_DEV_SIZE - 1)) ? 1 : 1);
+        double buySize;
+        double sellSize;
 
         if ((minV / open - 1 < loThresh) && (last / minV - 1 > retreatHIThresh)
                 && filled <= -1 && pos < 0 && (numOrders % 2 == 1)) {
@@ -1828,8 +1827,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, "**********");
-            outputDetailedXU(symbol, str("NEW", o.orderId(), "fut dev take profit BUY#",
-                    "min, open, last", minV, open, last,
+            outputDetailedXU(symbol, str("NEW", o.orderId(), "fut dev take profit BUY",
+                    "min,open,last", minV, open, last,
                     "min/open", minV / open - 1, "loThresh", loThresh,
                     "p/min", last / minV - 1, "retreatHIThresh", retreatHIThresh));
         } else if ((maxV / open - 1 > hiThresh) && (last / maxV - 1 < retreatLOThresh)
@@ -1840,21 +1839,21 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, "**********");
-            outputDetailedXU(symbol, str("NEW", o.orderId(), "fut dev take profit SELL#",
-                    "max, open, fresh ", maxV, open, last,
-                    "max/open", maxV / open - 1, "hithresh", hiThresh,
+            outputDetailedXU(symbol, str("NEW", o.orderId(), "fut dev take profit SELL",
+                    "max,open,last", maxV, open, last,
+                    "max/open", maxV / open - 1, "hiThresh", hiThresh,
                     "p/max", last / maxV - 1, "retreatLoThresh", retreatLOThresh));
         } else {
-            if (SECONDS.between(lastFutDevOrderTime, nowMilli) > waitSec && Math.abs(dev) < MAX_FUT_DEV) {
+            if (SECONDS.between(lastFutDevOrderT, nowMilli) > waitSec && Math.abs(dev) < MAX_FUT_DEV) {
                 if (!noMoreBuy.get() && last > open && futDevDir != Direction.Long) {
                     int id = autoTradeID.incrementAndGet();
                     buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? 1 : 0)) : 1;
                     Order o = placeBidLimitTIF(last, buySize, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                    outputDetailedXU(symbol, str(o.orderId(), "fut Open dev BUY #:", numOrders, globalIdOrderMap.get(id),
-                            "open, last ", open, last, "milliLastTwo", milliLast2,
-                            "waitSec", waitSec, "next T", lastFutDevOrderTime.plusSeconds(waitSec)));
+                    outputDetailedXU(symbol, str(o.orderId(), "fut dev BUY #:", numOrders, globalIdOrderMap.get(id),
+                            "open,last ", open, last, "milliLast2", milliLast2,
+                            "waitSec", waitSec, "next T", lastFutDevOrderT.plusSeconds(waitSec)));
                     futDevDir = Direction.Long;
                 } else if (!noMoreSell.get() && last < open && futDevDir != Direction.Short) {
                     int id = autoTradeID.incrementAndGet();
@@ -1862,9 +1861,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     Order o = placeOfferLimitTIF(last, sellSize, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                    outputDetailedXU(symbol, str(o.orderId(), "fut Open dev SELL #:", numOrders, globalIdOrderMap.get(id),
-                            "open, last ", open, last, "milliLast2", milliLast2,
-                            "waitSec", waitSec, "next T", lastFutDevOrderTime.plusSeconds(waitSec)));
+                    outputDetailedXU(symbol, str(o.orderId(), "fut dev SELL #:", numOrders, globalIdOrderMap.get(id),
+                            "open,last ", open, last, "milliLast2", milliLast2,
+                            "waitSec", waitSec, "next T", lastFutDevOrderT.plusSeconds(waitSec)));
                     futDevDir = Direction.Short;
                 }
             }

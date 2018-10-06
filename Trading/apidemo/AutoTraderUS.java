@@ -686,8 +686,8 @@ public class AutoTraderUS {
                 "dev, maxDev", dev,
                 "manual?", manualUSDev.get(symbol), "wait sec", waitSec);
 
-        double buySize = US_BASE_SIZE;
-        double sellSize = US_BASE_SIZE;
+        double buySize;
+        double sellSize;
 
         if (numOrders >= MAX_US_DEV_ORDERS) {
             return;
