@@ -100,7 +100,7 @@ public final class XU extends JPanel {
                 if (isCellSelected(Index_row, Index_col)) {
                     comp.setBackground(Color.CYAN);
 
-                    String ticker = ibContractToSymbol(AutoTraderXU.activeFutureCt);
+                    String ticker = ibContractToSymbol(AutoTraderXU.activeFutCt);
 
                     if (priceMapBar.get(ticker).size() > 0 && indexPriceSina.size() > 0) {
 //                        graph1.setNavigableMap(lastFutPrice);
@@ -186,9 +186,9 @@ public final class XU extends JPanel {
         //jp.add(backFill);
 
         fillButton.addActionListener(l -> {
-            if (priceMapBar.get(ibContractToSymbol(AutoTraderXU.activeFutureCt)).size() > 0 &&
+            if (priceMapBar.get(ibContractToSymbol(AutoTraderXU.activeFutCt)).size() > 0 &&
                     priceMapBar.get(FTSE_INDEX).size() > 0) {
-                priceMapBar.get(ibContractToSymbol(AutoTraderXU.activeFutureCt)).keySet().forEach(k -> {
+                priceMapBar.get(ibContractToSymbol(AutoTraderXU.activeFutCt)).keySet().forEach(k -> {
                     if (!priceMapBar.get(FTSE_INDEX).containsKey(k)) {
                         SimpleBar sb = new SimpleBar(Optional.ofNullable(priceMapBar.get(FTSE_INDEX).floorEntry(k)).map(Entry::getValue).orElse(
                                 priceMapBar.get(FTSE_INDEX).firstEntry().getValue()));
@@ -256,7 +256,7 @@ public final class XU extends JPanel {
         JButton graphButton = new JButton("Graph");
 
         graphButton.addActionListener(al -> {
-            String ticker = ibContractToSymbol(AutoTraderXU.activeFutureCt);
+            String ticker = ibContractToSymbol(AutoTraderXU.activeFutCt);
             if (priceMapBar.get(ticker).size() > 0 && priceMapBar.get(FTSE_INDEX).size() > 0) {
 //                 graph1.setNavigableMap(lastFutPrice);
 //                 graph2.setNavigableMap(indexPriceSina);
@@ -416,7 +416,7 @@ public final class XU extends JPanel {
         }, 0, 1, TimeUnit.SECONDS);
 
         ftes.scheduleAtFixedRate(() -> {
-            String ticker = ibContractToSymbol(AutoTraderXU.activeFutureCt);
+            String ticker = ibContractToSymbol(AutoTraderXU.activeFutCt);
             graph1.fillInGraph(FTSE_INDEX);
             graph2.fillInGraph(ticker);
             //graph3.setSkipMap(lastFutPrice,indexPriceSina);
@@ -524,7 +524,7 @@ public final class XU extends JPanel {
     private static void getPricePercentile() {
         double max = 0.0;
         double min = Double.MAX_VALUE;
-        String ticker = ibContractToSymbol(AutoTraderXU.activeFutureCt);
+        String ticker = ibContractToSymbol(AutoTraderXU.activeFutCt);
         //Iterator it  = lastFutPrice.keySet().iterator();
         Iterator it = priceMapBar.get(ticker).keySet().iterator();
         LocalTime k;
@@ -547,7 +547,7 @@ public final class XU extends JPanel {
         double max = 0.0;
         double min = Double.MAX_VALUE;
         double current;
-        String ticker = ibContractToSymbol(AutoTraderXU.activeFutureCt);
+        String ticker = ibContractToSymbol(AutoTraderXU.activeFutCt);
 
         for (LocalTime k : priceMapBar.get(ticker).keySet()) {
             double v = priceMapBar.get(ticker).get(k).getClose();
@@ -654,7 +654,7 @@ public final class XU extends JPanel {
         @Override
         public Object getValueAt(int rowIn, int col) {
             LocalTime lt = tradeTimeXU.get(rowIn);
-            String ticker = ibContractToSymbol(AutoTraderXU.activeFutureCt);
+            String ticker = ibContractToSymbol(AutoTraderXU.activeFutCt);
             switch (col) {
                 case 0:
                     return lt;

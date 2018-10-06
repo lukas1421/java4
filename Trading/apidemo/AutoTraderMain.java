@@ -506,6 +506,16 @@ public class AutoTraderMain extends JPanel {
         return (min - min % 15);
     }
 
+    static int getWaitSec(long milliLast2) {
+        if (milliLast2 < 10000) {
+            return 300;
+        } else if (milliLast2 < 60000) {
+            return 60;
+        } else {
+            return 0;
+        }
+    }
+
     private class BarModel_AUTO extends javax.swing.table.AbstractTableModel {
 
         @Override

@@ -225,7 +225,7 @@ public class GraphXuTrader extends JComponent implements MouseMotionListener, Mo
             OrderAugmented oa = AutoTraderXU.findOrderByTWSID(k);
             OrderStatus s = oa.getAugmentedOrderStatus();
 
-            if (oa.getSymbol().equals(ibContractToSymbol(activeFutureCt))) {
+            if (oa.getSymbol().equals(ibContractToSymbol(activeFutCt))) {
                 if (s != Filled && s != PendingCancel && s != Inactive && s != DeadlineCancelled) {
                     int y = getY(v.lmtPrice());
                     if (v.action().equals(Types.Action.BUY)) {

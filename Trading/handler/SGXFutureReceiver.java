@@ -66,7 +66,7 @@ public class SGXFutureReceiver implements LiveHandler {
                         } else {
                             AutoTraderXU.futData.get(f).put(ldtMin, new SimpleBar(price));
                         }
-                        String activeFut = ibContractToSymbol(AutoTraderXU.activeFutureCt);
+                        String activeFut = ibContractToSymbol(AutoTraderXU.activeFutCt);
                         if (symbol.equalsIgnoreCase(activeFut) &&
                                 AutoTraderXU.futData.get(f).lastKey().truncatedTo(MINUTES).equals(ldt.truncatedTo(MINUTES))) {
                             AutoTraderXU.processMainXU(ldt, price);

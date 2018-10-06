@@ -1660,7 +1660,7 @@ public class ApiController implements EWrapper {
             @Override
             public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
                                     int parentId, double lastFillPrice, int clientId, String whyHeld) {
-                outputDetailedXU(ibContractToSymbol(AutoTraderXU.activeFutureCt)
+                outputDetailedXU(ibContractToSymbol(AutoTraderXU.activeFutCt)
                         , str("||OrderStatus||", defaultID,
                                 globalIdOrderMap.get(defaultID), status, filled,
                                 remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));

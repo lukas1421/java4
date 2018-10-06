@@ -29,7 +29,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static apidemo.AutoTraderMain.*;
-import static apidemo.AutoTraderXU.activeFutureCt;
+import static apidemo.AutoTraderXU.activeFutCt;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaStock.currencyMap;
 import static apidemo.TradingConstants.FTSE_INDEX;
@@ -617,7 +617,7 @@ public class XuTraderHelper {
         NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(
                 priceMapBar.get(anchorIndex), nowMilli.toLocalDate(), e -> e.isBefore(LocalTime.of(11, 30)) &&
                         e.isAfter(LocalTime.of(12, 59)));
-        NavigableMap<LocalDateTime, SimpleBar> fut = AutoTraderXU.futData.get(ibContractToFutType(activeFutureCt));
+        NavigableMap<LocalDateTime, SimpleBar> fut = AutoTraderXU.futData.get(ibContractToFutType(activeFutCt));
         double futClose = fut.lowerEntry(LocalDateTime.of(LocalDate.now(), LocalTime.of(15, 0))).getValue().getClose();
         int shorterMA = 5;
         int longerMA = 10;
@@ -861,7 +861,7 @@ public class XuTraderHelper {
                 LocalDate.now();
         int candidate = 50;
         NavigableMap<LocalDateTime, Double> dpMap = new ConcurrentSkipListMap<>();
-        AutoTraderXU.futData.get(ibContractToFutType(activeFutureCt)).entrySet().stream().filter(e -> e.getKey()
+        AutoTraderXU.futData.get(ibContractToFutType(activeFutCt)).entrySet().stream().filter(e -> e.getKey()
                 .isAfter(LocalDateTime.of(d, LocalTime.of(9, 29)))).forEach(e -> {
             if (priceMapBar.get(FTSE_INDEX).size() > 0 && priceMapBar.get(FTSE_INDEX).
                     firstKey().isBefore(e.getKey().toLocalTime())) {

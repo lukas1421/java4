@@ -63,7 +63,7 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
 
             if (orderState.status() == PendingCancel &&
                     globalIdOrderMap.get(defaultID).getOrder().tif() == Types.TimeInForce.IOC) {
-                FutType f = ibContractToFutType(activeFutureCt);
+                FutType f = ibContractToFutType(activeFutCt);
                 double bid = bidMap.get(f);
                 double ask = askMap.get(f);
                 double freshPrice = futPriceMap.get(f);
@@ -78,9 +78,9 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
                 o.tif(Types.TimeInForce.IOC);
 
                 int id = AutoTraderMain.autoTradeID.incrementAndGet();
-                controller.placeOrModifyOrder(activeFutureCt, o, new GuaranteeXUHandler(primaryID, id, controller));
+                controller.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(primaryID, id, controller));
                 globalIdOrderMap.put(id, new OrderAugmented(
-                        ibContractToSymbol(activeFutureCt), LocalDateTime.now(), o,
+                        ibContractToSymbol(activeFutCt), LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
                 outputToAll(str(globalIdOrderMap.get(primaryID).getOrder().orderId(),

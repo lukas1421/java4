@@ -61,7 +61,7 @@ public class GraphXUSI extends JComponent {
                     .collect(Collectors.toMap(Map.Entry::getKey, a -> a.getValue().getClose(), (a, b) -> a, ConcurrentSkipListMap::new));
 
             openXU = Optional.ofNullable(xuIn.ceilingEntry(AM900)).map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
-            prevCloseXU = AutoTraderXU.futPrevClose3pmMap.get(ibContractToFutType(AutoTraderXU.activeFutureCt));
+            prevCloseXU = AutoTraderXU.futPrevClose3pmMap.get(ibContractToFutType(AutoTraderXU.activeFutCt));
             openSI = SinaStock.FTSE_OPEN;
             prevCloseSI = ftseCloseMap.lastEntry().getValue();
             ChinaStock.closeMap.put(TradingConstants.FTSE_INDEX, prevCloseSI);
