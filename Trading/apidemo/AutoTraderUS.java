@@ -37,10 +37,10 @@ public class AutoTraderUS {
     private static volatile ConcurrentHashMap<String, Direction> usHiloDirection = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, Direction> usPMOpenDevDirection = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, Direction> usPMHiloDirection = new ConcurrentHashMap<>();
-    private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSDevMap = new ConcurrentHashMap<>();
-    private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSHiloMap = new ConcurrentHashMap<>();
-    private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSPMDevMap = new ConcurrentHashMap<>();
-    private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSPMHiloMap = new ConcurrentHashMap<>();
+    private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSDev = new ConcurrentHashMap<>();
+    private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSHilo = new ConcurrentHashMap<>();
+    private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSPMDev = new ConcurrentHashMap<>();
+    private static volatile ConcurrentHashMap<String, AtomicBoolean> manualUSPMHilo = new ConcurrentHashMap<>();
 
 
 //    private static volatile EnumMap<HalfHour, AtomicBoolean> manualUSHalfHourDev = new EnumMap<>(HalfHour.class);
@@ -62,6 +62,7 @@ public class AutoTraderUS {
     private static final double US_MIN_SHORT_LEVEL = 1.5;
 
     private static final int MAX_US_ORDERS = 4;
+    private static final int MAX_US_DEV_ORDERS = 8;
     private static final double MAX_DEV = 0.005;
     private static final int MAX_US_HALFHOUR_ORDERS = 2;
     private static final int MAX_US_QUARTERHOUR_ORDERS = 2;
@@ -125,16 +126,16 @@ public class AutoTraderUS {
             usFreshPriceMap.put(s, 0.0);
             usShortableValueMap.put(s, 0.0);
 
-            manualUSDevMap.put(s, new AtomicBoolean(false));
+            manualUSDev.put(s, new AtomicBoolean(false));
             usOpenDevDirection.put(s, Direction.Flat);
 
-            manualUSHiloMap.put(s, new AtomicBoolean(false));
+            manualUSHilo.put(s, new AtomicBoolean(false));
             usHiloDirection.put(s, Direction.Flat);
 
-            manualUSPMDevMap.put(s, new AtomicBoolean(false));
+            manualUSPMDev.put(s, new AtomicBoolean(false));
             usPMOpenDevDirection.put(s, Direction.Flat);
 
-            manualUSPMHiloMap.put(s, new AtomicBoolean(false));
+            manualUSPMHilo.put(s, new AtomicBoolean(false));
             usPMHiloDirection.put(s, Direction.Flat);
         });
     }
@@ -156,7 +157,7 @@ public class AutoTraderUS {
             //usMinuteDevTrader(symbol, nowMilli, freshPrice);
             //usQuarterHourDevTrader(symbol, nowMilli, freshPrice);
             //usRelativeProfitTaker(symbol, nowMilli, freshPrice);
-            usOpenDeviationTrader(symbol, nowMilli, freshPrice);
+            usDevTrader(symbol, nowMilli, freshPrice);
             //usHalfHourDevTrader(symbol, nowMilli, freshPrice);
         }
         usPostCutoffLiqTrader(symbol, nowMilli, freshPrice);
@@ -616,11 +617,11 @@ public class AutoTraderUS {
     /**
      * us open deviation trader
      *
-     * @param symbol     symbol
-     * @param nowMilli   time now
-     * @param freshPrice price
+     * @param symbol   symbol
+     * @param nowMilli time now
+     * @param last     price
      */
-    private static void usOpenDeviationTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+    private static void usDevTrader(String symbol, LocalDateTime nowMilli, double last) {
         LocalTime lt = nowMilli.toLocalTime();
         Contract ct = tickerToUSContract(symbol);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
@@ -628,134 +629,130 @@ public class AutoTraderUS {
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
         LocalTime amStart = ltof(9, 29, 59);
         LocalTime amObStart = ltof(9, 29, 55);
-        LocalTime cutoff = ltof(10, 0);
+        LocalTime cutoff = ltof(11, 0);
+        AutoOrderType ot = US_STOCK_DEV;
 
-        cancelAfterDeadline(lt, symbol, US_STOCK_DEV, cutoff);
+        cancelAfterDeadline(lt, symbol, ot, cutoff);
 
         if (lt.isBefore(amStart) || lt.isAfter(cutoff)) {
             return;
         }
 
-        double manualOpen = prices.ceilingEntry(amObStart).getValue();
-        LocalTime openTime = prices.ceilingEntry(amObStart).getKey();
-        double maxSoFar = prices.entrySet().stream().filter(e -> e.getKey().isAfter(amObStart))
+        double open = prices.ceilingEntry(amObStart).getValue();
+        LocalTime openT = prices.ceilingEntry(amObStart).getKey();
+
+        double maxV = prices.entrySet().stream().filter(e -> e.getKey().isAfter(amObStart))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
 
-        double minSoFar = prices.entrySet().stream().filter(e -> e.getKey().isAfter(amObStart))
+        double minV = prices.entrySet().stream().filter(e -> e.getKey().isAfter(amObStart))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        if (!manualUSDevMap.get(symbol).get()) {
+        if (!manualUSDev.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
                 outputDetailedUS(symbol, str("Set US Dev 935", symbol, lt));
-                manualUSDevMap.get(symbol).set(true);
+                manualUSDev.get(symbol).set(true);
             } else {
-                if (freshPrice > manualOpen) {
-                    outputDetailedUS(symbol, str("Set US Dev: last>open", symbol, lt));
+                if (last > open) {
+                    outputDetailedUS(symbol, str("Set US Dev: last>open", symbol, lt, last, ">", open));
                     usOpenDevDirection.put(symbol, Direction.Long);
-                    manualUSDevMap.get(symbol).set(true);
-                } else if (freshPrice < manualOpen) {
-                    outputDetailedUS(symbol, str("Set US Dev: last<open", symbol, lt));
+                    manualUSDev.get(symbol).set(true);
+                } else if (last < open) {
+                    outputDetailedUS(symbol, str("Set US Dev: last<open", symbol, lt, last, "<", open));
                     usOpenDevDirection.put(symbol, Direction.Short);
-                    manualUSDevMap.get(symbol).set(true);
+                    manualUSDev.get(symbol).set(true);
                 } else {
                     usOpenDevDirection.put(symbol, Direction.Flat);
                 }
             }
         }
 
-        long orderNum = getOrderSizeForTradeType(symbol, US_STOCK_DEV);
-        LocalDateTime lastOrderTime = getLastOrderTime(symbol, US_STOCK_DEV);
-        long milliLastTwo = lastTwoOrderMilliDiff(symbol, US_STOCK_DEV);
+        long orderNum = getOrderSizeForTradeType(symbol, ot);
+        LocalDateTime lastOrderTime = getLastOrderTime(symbol, ot);
+        long milliLastTwo = lastTwoOrderMilliDiff(symbol, ot);
         int waitSec = getWaitSec(milliLastTwo);
-        double buyPrice = Math.floor(freshPrice * 100d) / 100d;
-        double sellPrice = Math.ceil(freshPrice * 100d) / 100d;
+        double buyPrice = Math.floor(last * 100d) / 100d;
+        double sellPrice = Math.ceil(last * 100d) / 100d;
 
         LocalTime lastKey = prices.lastKey();
-        double filled = getFilledForType(symbol, US_STOCK_DEV);
-        double dev = (freshPrice / manualOpen) - 1;
+        double filled = getFilledForType(symbol, ot);
+        double dev = (last / open) - 1;
 
 
-        pr("US dev:", lt.truncatedTo(ChronoUnit.SECONDS), US_STOCK_DEV,
+        pr("US dev:", lt.truncatedTo(ChronoUnit.SECONDS), ot,
                 "#:", orderNum, "FL#", filled,
                 "lastKey", lastKey, "start", amObStart,
-                "openEntry", openTime, manualOpen,
-                "P", freshPrice, "currpos", currPos,
+                "openEntry", openT, open,
+                "P", last, "currpos", currPos,
                 "dir:", usOpenDevDirection.get(symbol),
-                "manual?", manualUSDevMap.get(symbol), "wait sec", waitSec,
-                "dev, maxDev", dev, MAX_DEV);
+                "dev, maxDev", dev,
+                "manual?", manualUSDev.get(symbol), "wait sec", waitSec);
 
         double buySize = US_BASE_SIZE;
         double sellSize = US_BASE_SIZE;
 
-        if (orderNum >= MAX_US_ORDERS) {
+        if (orderNum >= MAX_US_DEV_ORDERS) {
             return;
         }
 
-
-        if ((minSoFar / manualOpen - 1 < downThresh) && (freshPrice / minSoFar - 1 > retreatUpThresh)
+        if ((minV / open - 1 < downThresh) && (last / minV - 1 > retreatUpThresh)
                 && orderNum % 2 == 1 && currPos < 0 && usOpenDevDirection.get(symbol) == Direction.Short) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeBidLimitTIF(buyPrice, Math.abs(currPos), IOC);
-            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_DEV));
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
             outputDetailedUS(symbol, "**********");
             outputDetailedUS(symbol, str("NEW", o.orderId(), "US dev take profit BUY#",
-                    orderNum, globalIdOrderMap.get(id), "min open last", minSoFar, manualOpen, freshPrice,
+                    orderNum, globalIdOrderMap.get(id), "min open last", minV, open, last,
                     "buyPrice", buyPrice, "filled", filled, "currPos", currPos,
-                    "min/open-1", minSoFar / manualOpen - 1, "loThresh", downThresh,
-                    "p/min-1", freshPrice / minSoFar - 1, "retreatUpThresh", retreatUpThresh));
-        } else if ((maxSoFar / manualOpen - 1 > upThresh) && (freshPrice / maxSoFar - 1 < retreatDownThresh)
+                    "min/open-1", minV / open - 1, "loThresh", downThresh,
+                    "p/min-1", last / minV - 1, "retreatUpThresh", retreatUpThresh));
+        } else if ((maxV / open - 1 > upThresh) && (last / maxV - 1 < retreatDownThresh)
                 && orderNum % 2 == 1 && currPos > 0 && usOpenDevDirection.get(symbol) == Direction.Long) {
             int id = autoTradeID.incrementAndGet();
             Order o = placeOfferLimitTIF(sellPrice, currPos, IOC);
-            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_DEV));
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
             outputDetailedUS(symbol, "**********");
             outputDetailedUS(symbol, str("NEW", o.orderId(), "US dev take profit SELL#",
-                    orderNum, globalIdOrderMap.get(id), "max open last", maxSoFar, manualOpen, freshPrice,
+                    orderNum, globalIdOrderMap.get(id), "max open last", maxV, open, last,
                     "sellPrice", sellPrice, "filled", filled, "currPos", currPos,
-                    "max/open-1", maxSoFar / manualOpen - 1, "hiThresh", upThresh,
-                    "p/max-1", freshPrice / maxSoFar - 1, "retreatLOThresh", retreatDownThresh));
+                    "max/open-1", maxV / open - 1, "hiThresh", upThresh,
+                    "p/max-1", last / maxV - 1, "retreatLOThresh", retreatDownThresh));
         } else {
             if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && usShortableValueMap.get(symbol) > US_MIN_SHORT_LEVEL
                     && Math.abs(dev) < MAX_DEV)
-                if (!noMoreBuy.get() && freshPrice > manualOpen && usOpenDevDirection.get(symbol) != Direction.Long) {
+                if (!noMoreBuy.get() && last > open && usOpenDevDirection.get(symbol) != Direction.Long) {
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
-                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_DEV));
+                    Order o = placeBidLimitTIF(last, buySize, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                     outputDetailedUS(symbol, "**********");
                     outputDetailedUS(symbol, str("NEW", o.orderId(), "US open dev BUY#", orderNum,
                             globalIdOrderMap.get(id),
-                            "manual Open(9 29 55), fresh", manualOpen, freshPrice,
+                            "manual Open(9 29 55), fresh", open, last,
                             "buy size/ currpos", buySize, currPos,
                             "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
                             lastOrderTime.plusSeconds(waitSec),
-                            "dir", usOpenDevDirection.get(symbol), "manual?", manualUSDevMap.get(symbol)
+                            "dir", usOpenDevDirection.get(symbol), "manual?", manualUSDev.get(symbol)
                             , "short value", usShortableValueMap.get(symbol)));
                     usOpenDevDirection.put(symbol, Direction.Long);
-                } else if (!noMoreSell.get() && freshPrice < manualOpen && usOpenDevDirection.get(symbol) != Direction.Short) {
+                } else if (!noMoreSell.get() && last < open && usOpenDevDirection.get(symbol) != Direction.Short) {
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
-                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, US_STOCK_DEV));
+                    Order o = placeOfferLimitTIF(last, sellSize, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
                     outputDetailedUS(symbol, "**********");
                     outputDetailedUS(symbol, str("NEW", o.orderId(), "US open dev SELL#:", orderNum,
                             globalIdOrderMap.get(id),
-                            "manual Open(9 29 55), fresh", manualOpen, freshPrice,
+                            "open last", open, last,
                             "sell size/ currpos", sellSize, currPos,
                             "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
                             lastOrderTime.plusSeconds(waitSec),
-                            "dir", usOpenDevDirection.get(symbol), "manual?", manualUSDevMap.get(symbol)
+                            "dir", usOpenDevDirection.get(symbol), "manual?", manualUSDev.get(symbol)
                             , "short value", usShortableValueMap.get(symbol)));
                     usOpenDevDirection.put(symbol, Direction.Short);
                 }
         }
-        //        pr(" US open dev#:", numOrders, lt, nowMilli, "name, price ", symbol, freshPrice,
-//                "open/manual open ", usOpenMap.getOrDefault(symbol, 0.0), manualOpen,
-//                "last order T/ millilast2/ waitsec", lastOrderTime, milliLastTwo, waitSec,
-//                "curr pos ", currPos, "dir: ", usOpenDevDirection.get(symbol));
-
     }
 
     //int waitSec = (milliLastTwo < 60000) ? 300 : 10;
@@ -796,19 +793,19 @@ public class AutoTraderUS {
 
         double pmOpen = prices.ceilingEntry(pmObservationStart).getValue();
 
-        if (!manualUSPMDevMap.get(symbol).get()) {
+        if (!manualUSPMDev.get(symbol).get()) {
             if (lt.isBefore(ltof(12, 5))) {
                 outputDetailedUS(symbol, str("Setting manual US PM Dev 1205", symbol, lt));
-                manualUSPMDevMap.get(symbol).set(true);
+                manualUSPMDev.get(symbol).set(true);
             } else {
                 if (freshPrice > pmOpen) {
                     outputDetailedUS(symbol, str("Setting manual US PM Dev: last > open", symbol, lt));
                     usPMOpenDevDirection.put(symbol, Direction.Long);
-                    manualUSPMDevMap.get(symbol).set(true);
+                    manualUSPMDev.get(symbol).set(true);
                 } else if (freshPrice < pmOpen) {
                     outputDetailedUS(symbol, str("Setting manual US PM Dev: last < open", symbol, lt));
                     usPMOpenDevDirection.put(symbol, Direction.Short);
-                    manualUSPMDevMap.get(symbol).set(true);
+                    manualUSPMDev.get(symbol).set(true);
                 } else {
                     usPMOpenDevDirection.put(symbol, Direction.Flat);
                 }
@@ -828,7 +825,7 @@ public class AutoTraderUS {
 //                "open/manual open ", usOpenMap.getOrDefault(symbol, 0.0), pmOpen,
 //                "last order T/ millilast2/ waitsec", lastOrderTime, milliLastTwo, waitSec,
 //                "curr pos ", currPos, "dir: ", usPMOpenDevDirection.get(symbol)
-//                , "manual:", manualUSPMDevMap.get(symbol));
+//                , "manual:", manualUSPMDev.get(symbol));
 
         double buyPrice;
         double sellPrice;
@@ -853,7 +850,7 @@ public class AutoTraderUS {
                         "pm Open(11 59 59)", pmOpen, "buy size/ currpos", buySize, currPos,
                         "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
                         lastOrderTime.plusSeconds(waitSec),
-                        "dir", usPMOpenDevDirection.get(symbol), "manual?", manualUSPMDevMap.get(symbol)
+                        "dir", usPMOpenDevDirection.get(symbol), "manual?", manualUSPMDev.get(symbol)
                         , "short value", usShortableValueMap.get(symbol)));
                 usPMOpenDevDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && freshPrice < pmOpen && usPMOpenDevDirection.get(symbol) != Direction.Short) {
@@ -866,7 +863,7 @@ public class AutoTraderUS {
                         "pm Open(12 59 59)", pmOpen, "sell size/ currpos", sellSize, currPos,
                         "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
                         lastOrderTime.plusSeconds(waitSec),
-                        "dir", usPMOpenDevDirection.get(symbol), "manual?", manualUSPMDevMap.get(symbol)
+                        "dir", usPMOpenDevDirection.get(symbol), "manual?", manualUSPMDev.get(symbol)
                         , "short value", usShortableValueMap.get(symbol)));
                 usPMOpenDevDirection.put(symbol, Direction.Short);
             }
@@ -914,19 +911,19 @@ public class AutoTraderUS {
         LocalTime minT = getFirstMinTPred(prices, e -> e.isAfter(amObservationStart));
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
-        if (!manualUSHiloMap.get(symbol).get()) {
+        if (!manualUSHilo.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35))) {
-                manualUSHiloMap.get(symbol).set(true);
+                manualUSHilo.get(symbol).set(true);
                 outputDetailedUS(symbol, str("Setting manual US Hilo 935", symbol, lt));
             } else {
                 if (maxT.isAfter(minT)) {
                     outputDetailedUS(symbol, str("Setting manual US Hilo: maxT>minT", symbol, lt));
                     usHiloDirection.put(symbol, Direction.Long);
-                    manualUSHiloMap.get(symbol).set(true);
+                    manualUSHilo.get(symbol).set(true);
                 } else if (minT.isAfter(maxT)) {
                     outputDetailedUS(symbol, str("Setting manual US Hilo: minT>maxT", symbol, lt));
                     usHiloDirection.put(symbol, Direction.Short);
-                    manualUSHiloMap.get(symbol).set(true);
+                    manualUSHilo.get(symbol).set(true);
                 } else {
                     usHiloDirection.put(symbol, Direction.Flat);
                 }
@@ -959,7 +956,7 @@ public class AutoTraderUS {
                         "max min maxT minT ", maxSoFar, minSoFar, maxT, minT,
                         "last order T, milliLast2, waitSec,nexT", lastOrderT, milliLastTwo, waitSec,
                         lastOrderT.plusSeconds(waitSec), "dir", usHiloDirection.get(symbol),
-                        "manual?", manualUSHiloMap.get(symbol), "short value", usShortableValueMap.get(symbol)));
+                        "manual?", manualUSHilo.get(symbol), "short value", usShortableValueMap.get(symbol)));
                 usHiloDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && (freshPrice < minSoFar || minT.isAfter(maxT))
                     && usHiloDirection.get(symbol) != Direction.Short) {
@@ -973,7 +970,7 @@ public class AutoTraderUS {
                         "max min maxT minT ", maxSoFar, minSoFar, maxT, minT,
                         "last order T, milliLast2, waitSec, nextT", lastOrderT, milliLastTwo, waitSec,
                         lastOrderT.plusSeconds(waitSec), "dir", usHiloDirection.get(symbol),
-                        "manual?", manualUSHiloMap.get(symbol), "short value", usShortableValueMap.get(symbol)));
+                        "manual?", manualUSHilo.get(symbol), "short value", usShortableValueMap.get(symbol)));
                 usHiloDirection.put(symbol, Direction.Short);
             }
         }
@@ -1020,19 +1017,19 @@ public class AutoTraderUS {
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 
 
-        if (!manualUSPMHiloMap.get(symbol).get()) {
+        if (!manualUSPMHilo.get(symbol).get()) {
             if (lt.isBefore(ltof(12, 5))) {
-                manualUSPMHiloMap.get(symbol).set(true);
+                manualUSPMHilo.get(symbol).set(true);
                 outputDetailedUS(symbol, str("Setting manual US PM Hilo 1305", symbol, lt));
             } else {
                 if (maxPMT.isAfter(minPMT)) {
                     outputDetailedUS(symbol, str("Setting manual US PM Hilo: maxT>minT", symbol, lt));
                     usPMHiloDirection.put(symbol, Direction.Long);
-                    manualUSPMHiloMap.get(symbol).set(true);
+                    manualUSPMHilo.get(symbol).set(true);
                 } else if (minPMT.isAfter(maxPMT)) {
                     outputDetailedUS(symbol, str("Setting manual US PM Hilo: minT>maxT", symbol, lt));
                     usPMHiloDirection.put(symbol, Direction.Short);
-                    manualUSPMHiloMap.get(symbol).set(true);
+                    manualUSPMHilo.get(symbol).set(true);
                 } else {
                     usPMHiloDirection.put(symbol, Direction.Flat);
                 }
@@ -1071,7 +1068,7 @@ public class AutoTraderUS {
                         "max min maxT minT ", maxPMSoFar, minPMSoFar, maxPMT, minPMT,
                         "last order T, milliLast2, waitSec,nexT", lastOrderT, milliLastTwo, waitSec,
                         lastOrderT.plusSeconds(waitSec), "dir", usPMHiloDirection.get(symbol),
-                        "manual?", manualUSPMHiloMap.get(symbol), "short value", usShortableValueMap.get(symbol)));
+                        "manual?", manualUSPMHilo.get(symbol), "short value", usShortableValueMap.get(symbol)));
                 usPMHiloDirection.put(symbol, Direction.Long);
             } else if (!noMoreSell.get() && (freshPrice < minPMSoFar || minPMT.isAfter(maxPMT))
                     && usPMHiloDirection.get(symbol) != Direction.Short) {
@@ -1085,7 +1082,7 @@ public class AutoTraderUS {
                         "max min maxT minT ", maxPMSoFar, minPMSoFar, maxPMT, minPMT,
                         "last order T, milliLast2, waitSec, nextT", lastOrderT, milliLastTwo, waitSec,
                         lastOrderT.plusSeconds(waitSec), "dir", usPMHiloDirection.get(symbol),
-                        "manual?", manualUSPMHiloMap.get(symbol), "short value", usShortableValueMap.get(symbol)));
+                        "manual?", manualUSPMHilo.get(symbol), "short value", usShortableValueMap.get(symbol)));
                 usPMHiloDirection.put(symbol, Direction.Short);
             }
         }
