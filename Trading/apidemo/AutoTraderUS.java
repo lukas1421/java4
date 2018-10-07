@@ -157,11 +157,11 @@ public class AutoTraderUS {
             //usMinuteDevTrader(symbol, nowMilli, freshPrice);
             //usQHrDevTrader(symbol, nowMilli, freshPrice);
             //usRelativeProfitTaker(symbol, nowMilli, freshPrice);
-            usDevTrader(symbol, nowMilli, freshPrice);
+            usDev(symbol, nowMilli, freshPrice);
             //usHalfHourDevTrader(symbol, nowMilli, freshPrice);
         }
-        usPostCutoffLiqTrader(symbol, nowMilli, freshPrice);
-        usCloseLiqTrader(symbol, nowMilli, freshPrice);
+        usPostCutoffLiq(symbol, nowMilli, freshPrice);
+        usCloseLiq(symbol, nowMilli, freshPrice);
 
         //usPMOpenDeviationTrader(symbol, nowMilli, freshPrice);
         //usPMHiloTrader(symbol, nowMilli, freshPrice);
@@ -621,7 +621,7 @@ public class AutoTraderUS {
      * @param nowMilli time now
      * @param last     price
      */
-    private static void usDevTrader(String symbol, LocalDateTime nowMilli, double last) {
+    private static void usDev(String symbol, LocalDateTime nowMilli, double last) {
         LocalTime lt = nowMilli.toLocalTime();
         Contract ct = tickerToUSContract(symbol);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
@@ -667,8 +667,9 @@ public class AutoTraderUS {
 
         long numOrders = getOrderSizeForTradeType(symbol, ot);
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, ot);
-        long milliLastTwo = lastTwoOrderMilliDiff(symbol, ot);
-        int waitSec = getWaitSec(milliLastTwo);
+        long milliLast2 = lastTwoOrderMilliDiff(symbol, ot);
+        int waitSec = getWaitSec(milliLast2);
+        double priceOffset = getPriceOffset(milliLast2, last);
         double buyPrice = Math.floor(last * 100d) / 100d;
         double sellPrice = Math.ceil(last * 100d) / 100d;
 
@@ -676,15 +677,14 @@ public class AutoTraderUS {
         double filled = getFilledForType(symbol, ot);
         double dev = (last / open) - 1;
 
-
         pr("US dev:", lt.truncatedTo(ChronoUnit.SECONDS), ot,
                 "#:", numOrders, "FL#", filled,
                 "lastKey", lastKey, "start", obT,
                 "openEntry", openT, open,
                 "P", last, "pos", pos,
                 "dir:", usDevDir.get(symbol),
-                "dev, maxDev", dev,
-                "manual?", manualUSDev.get(symbol), "wait sec", waitSec);
+                "dev, maxDev", dev, "manual?", manualUSDev.get(symbol),
+                "wait sec", waitSec, "pOffset", priceOffset);
 
         double buySize;
         double sellSize;
@@ -720,7 +720,7 @@ public class AutoTraderUS {
         } else {
             if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && usShortableValueMap.get(symbol) > US_MIN_SHORT_LEVEL
                     && Math.abs(dev) < MAX_US_DEV)
-                if (!noMoreBuy.get() && last > open && usDevDir.get(symbol) != Direction.Long) {
+                if (!noMoreBuy.get() && last > open + priceOffset && usDevDir.get(symbol) != Direction.Long) {
                     int id = autoTradeID.incrementAndGet();
                     buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? US_BASE_SIZE : 0)) : US_BASE_SIZE;
                     Order o = placeBidLimitTIF(last, buySize, IOC);
@@ -729,14 +729,13 @@ public class AutoTraderUS {
                     outputDetailedUS(symbol, "**********");
                     outputDetailedUS(symbol, str("NEW", o.orderId(), "US open dev BUY#", numOrders,
                             globalIdOrderMap.get(id),
-                            "manual Open(9 29 55), fresh", open, last,
-                            "buy size/ currpos", buySize, pos,
-                            "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
-                            lastOrderTime.plusSeconds(waitSec),
+                            "open last", open, last, "buy size/ currpos", buySize, pos,
+                            "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLast2, waitSec,
+                            lastOrderTime.plusSeconds(waitSec), "offset", priceOffset,
                             "dir", usDevDir.get(symbol), "manual?", manualUSDev.get(symbol)
                             , "short value", usShortableValueMap.get(symbol)));
                     usDevDir.put(symbol, Direction.Long);
-                } else if (!noMoreSell.get() && last < open && usDevDir.get(symbol) != Direction.Short) {
+                } else if (!noMoreSell.get() && last < open - priceOffset && usDevDir.get(symbol) != Direction.Short) {
                     int id = autoTradeID.incrementAndGet();
                     sellSize = pos > 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? US_BASE_SIZE : 0)) : US_BASE_SIZE;
                     Order o = placeOfferLimitTIF(last, sellSize, IOC);
@@ -745,10 +744,9 @@ public class AutoTraderUS {
                     outputDetailedUS(symbol, "**********");
                     outputDetailedUS(symbol, str("NEW", o.orderId(), "US open dev SELL#:", numOrders,
                             globalIdOrderMap.get(id),
-                            "open last", open, last,
-                            "sell size/ currpos", sellSize, pos,
-                            "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLastTwo, waitSec,
-                            lastOrderTime.plusSeconds(waitSec),
+                            "open last", open, last, "sell size/ currpos", sellSize, pos,
+                            "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLast2, waitSec,
+                            lastOrderTime.plusSeconds(waitSec), "offset", priceOffset,
                             "dir", usDevDir.get(symbol), "manual?", manualUSDev.get(symbol)
                             , "short value", usShortableValueMap.get(symbol)));
                     usDevDir.put(symbol, Direction.Short);
@@ -1087,7 +1085,7 @@ public class AutoTraderUS {
      * @param nowMilli   time now
      * @param freshPrice fresh price
      */
-    private static void usPostCutoffLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+    private static void usPostCutoffLiq(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
         Contract ct = tickerToUSContract(symbol);
         NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
@@ -1214,7 +1212,7 @@ public class AutoTraderUS {
      * @param nowMilli   now time
      * @param freshPrice price
      */
-    private static void usCloseLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
+    private static void usCloseLiq(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime liqStartTime = ltof(15, 50);
         LocalTime liqEndTime = ltof(16, 0);
         Contract ct = tickerToUSContract(symbol);
