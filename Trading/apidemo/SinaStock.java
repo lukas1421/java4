@@ -122,10 +122,10 @@ public class SinaStock implements Runnable {
                         if (globalTradingOn.get()) {
                             double atmVol = getATMVol(expiryToGet);
                             if (atmVol > SGXA50_AUTO_VOL_THRESH) {
-                                indexHiLoTrader(ldt, currIndexPrice); // open to 10, guarantee
-                                indexPostAMCutoffLiqTrader(ldt, currIndexPrice);
-                                indexPmHiLoTrader(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
-                                indexPostPMCutoffLiqTrader(ldt, currIndexPrice);
+                                indexHiLo(ldt, currIndexPrice); // open to 10, guarantee
+                                indexPostAMCutoffLiq(ldt, currIndexPrice);
+                                indexPmHiLo(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
+                                indexPostPMCutoffLiq(ldt, currIndexPrice);
                             }
 
                             //indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee, same size

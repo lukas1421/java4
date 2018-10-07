@@ -829,29 +829,28 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         //if (atmVol > SGXA50_AUTO_VOL_THRESH) {
 
-        if (checkIfHoliday(LocalDate.now()) || atmVol > SGXA50_AUTO_VOL_THRESH) {
-            //cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
-            //cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
+        //if (checkIfHoliday(LocalDate.now()) || atmVol > SGXA50_AUTO_VOL_THRESH) {
+        //cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
+        //cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
 
-            sgxA50CloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
-            //sgxA50PostCutoffLiqTrader(ldt, price);
-            //sgxA50RelativeProfitTaker(ldt, price);
-            if (globalTradingOn.get()) {
-                //sgxA50HalfHourDevTrader(ldt, price);
-                //sgxQHrTrader(ldt, price);
-                sgxDev(ldt, price);
-            }
+        if (globalTradingOn.get()) {
+            sgxDev(ldt, price);
         }
+        sgxA50CloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
+
+        //sgxA50HalfHourDevTrader(ldt, price);
+        //sgxQHrTrader(ldt, price);
+        //sgxA50PostCutoffLiqTrader(ldt, price);
+        //sgxA50RelativeProfitTaker(ldt, price);
         //percentileMATrader(ldt, price, pmChgY); // all day, guarantee
         //futOpenTrader(ldt, price, pmChgY); // 9:00 to 9:30, guarantee(?)
-        //}
         //futDayMATrader(ldt, price);
         //futFastMATrader(ldt, price);
         //futHiloAccu(ldt, price);
         //futPCProfitTaker(ldt, price);
         //indexFirstTickTrader(ldt, price);
         //indexOpenDeviationTrader(ldt, price, pmChgY);
-        //indexHiLoTrader(ldt, price, pmChgY);
+        //indexHiLo(ldt, price, pmChgY);
         //firstTickMAProfitTaker(ldt, price);
         //closeProfitTaker(ldt, price);
 //        if (!(currDelta > DELTA_HARD_LO_LIMIT && currDelta < DELTA_HARD_HI_LIMIT)) {
@@ -2414,7 +2413,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param nowMilli  time
      * @param indexLast last ftse index value
      */
-    static void indexPmHiLoTrader(LocalDateTime nowMilli, double indexLast) {
+    static void indexPmHiLo(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         FutType f = ibContractToFutType(activeFutCt);
         String symbol = ibContractToSymbol(activeFutCt);
@@ -2674,7 +2673,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param nowMilli  time now
      * @param indexLast last index value
      */
-    static void indexPostAMCutoffLiqTrader(LocalDateTime nowMilli, double indexLast) {
+    static void indexPostAMCutoffLiq(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         String symbol = ibContractToSymbol(activeFutCt);
         FutType f = ibContractToFutType(activeFutCt);
@@ -2727,7 +2726,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param nowMilli  time now
      * @param indexLast last index value
      */
-    static void indexPostPMCutoffLiqTrader(LocalDateTime nowMilli, double indexLast) {
+    static void indexPostPMCutoffLiq(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
 
         String symbol = ibContractToSymbol(activeFutCt);
@@ -2782,7 +2781,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      * @param nowMilli  time
      * @param indexLast last index
      */
-    static void indexHiLoTrader(LocalDateTime nowMilli, double indexLast) {
+    static void indexHiLo(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
         int pmchy = getRecentPmCh(lt, INDEX_000001);
         FutType f = ibContractToFutType(activeFutCt);
@@ -2805,14 +2804,16 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         long numOrders = getOrderSizeForTradeType(symbol, FTSEA50_HILO);
         LocalDateTime lastOrderT = getLastOrderTime(symbol, FTSEA50_HILO);
-        long milliLastTwoOrder = lastTwoOrderMilliDiff(symbol, FTSEA50_HILO);
+        long milliLast2 = lastTwoOrderMilliDiff(symbol, FTSEA50_HILO);
         int buyQ = baseSize * ((numOrders == 0 || numOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
         int sellQ = baseSize * ((numOrders == 0 || numOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
 
         NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
         int _2dayPerc = getPercentileForLast(fut);
 
-        int waitSec = (milliLastTwoOrder < 60000) ? 300 : 10;
+        //int waitSec = (milliLast2 < 60000) ? 300 : 10;
+        int waitSec = getWaitSec(milliLast2);
+
 
         double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(amObservationStart).getValue();
         int openPerc = getPercentileForDoubleX(priceMapBarDetail.get(FTSE_INDEX), open);
