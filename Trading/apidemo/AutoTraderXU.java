@@ -78,6 +78,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     // post cutoff
     private static final double XU_SAFETY_RATIO = 0.003;
 
+    //dev base size
+    private static final int DEV_BASE_SIZE = 2;
 
     //fut open dev
     private static volatile Direction futDevDir = Direction.Flat;
@@ -89,9 +91,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     private static volatile Direction futHiLoDirection = Direction.Flat;
 
     private static final int ORDER_WAIT_TIME = 60;
-
-    private static final double DELTA_HARD_HI_LIMIT = 1000000.0;
-    private static final double DELTA_HARD_LO_LIMIT = -1000000.0;
 
     private static final double BULL_BASE_DELTA = 500000;
     private static final double BEAR_BASE_DELTA = -500000;
@@ -1759,6 +1758,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         AutoOrderType ot = FUT_DEV;
         double pos = currentPosMap.get(f);
         LocalTime obT = ltof(8, 59, 55);
+        int baseSize = DEV_BASE_SIZE;
 
         NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(obT))
@@ -1820,7 +1820,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         if ((minV / open - 1 < loThresh) && (last / minV - 1 > retreatHIThresh)
                 && filled <= -1 && pos < 0 && (numOrders % 2 == 1)) {
             int id = autoTradeID.incrementAndGet();
-            buySize = Math.abs(pos);
+            buySize = Math.max(1, Math.floor(Math.abs(pos) / 2));
             Order o = placeBidLimitTIF(last, buySize, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
@@ -1832,7 +1832,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         } else if ((maxV / open - 1 > hiThresh) && (last / maxV - 1 < retreatLOThresh)
                 && filled >= 1 && pos > 0 && (numOrders % 2 == 1)) {
             int id = autoTradeID.incrementAndGet();
-            sellSize = pos;
+            sellSize = Math.max(1, Math.floor(Math.abs(pos) / 2));;
             Order o = placeOfferLimitTIF(last, sellSize, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
@@ -1845,24 +1845,26 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             if (SECONDS.between(lastFutDevOrderT, nowMilli) > waitSec && Math.abs(dev) < MAX_FUT_DEV) {
                 if (!noMoreBuy.get() && last > open + priceOffset && futDevDir != Direction.Long) {
                     int id = autoTradeID.incrementAndGet();
-                    buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? 1 : 0)) : 1;
+                    buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? baseSize : 0)) : baseSize;
                     Order o = placeBidLimitTIF(last, buySize, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                     outputDetailedXU(symbol, "**********");
-                    outputDetailedXU(symbol, str("NEW", o.orderId(), "fut dev BUY #:", numOrders, globalIdOrderMap.get(id),
+                    outputDetailedXU(symbol, str("NEW", o.orderId(), "fut dev BUY #:", numOrders,
+                            globalIdOrderMap.get(id),
                             "open,last ", open, last, "milliLast2", milliLast2,
                             "waitSec", waitSec, "priceOffset", priceOffset,
                             "next T", lastFutDevOrderT.plusSeconds(waitSec)));
                     futDevDir = Direction.Long;
                 } else if (!noMoreSell.get() && last < open - priceOffset && futDevDir != Direction.Short) {
                     int id = autoTradeID.incrementAndGet();
-                    sellSize = pos > 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? 1 : 0)) : 1;
+                    sellSize = pos > 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? baseSize : 0)) : baseSize;
                     Order o = placeOfferLimitTIF(last, sellSize, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                     outputDetailedXU(symbol, "**********");
-                    outputDetailedXU(symbol, str("NEW", o.orderId(), "fut dev SELL #:", numOrders, globalIdOrderMap.get(id),
+                    outputDetailedXU(symbol, str("NEW", o.orderId(), "fut dev SELL #:", numOrders,
+                            globalIdOrderMap.get(id),
                             "open,last ", open, last, "milliLast2", milliLast2,
                             "waitSec", waitSec, "priceOffset", priceOffset,
                             "next T", lastFutDevOrderT.plusSeconds(waitSec)));

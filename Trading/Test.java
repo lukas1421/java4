@@ -24,11 +24,16 @@ public class Test {
 //        System.out.println(minToQuarterHour(44));
 //        System.out.println(minToQuarterHour(48));
 
-        double freshPrice = 2.8555;
+//        double freshPrice = 2.8555;
+//        pr(Math.floor(freshPrice * 100d) / 100d);
+//        pr(Math.ceil(freshPrice * 100d) / 100d);
 
-        pr(Math.floor(freshPrice * 100d) / 100d);
-        pr(Math.ceil(freshPrice * 100d) / 100d);
-
+        pr(Math.max(1, Math.floor(Math.abs(-1.0) / 2)));
+        pr(Math.max(1, Math.floor(Math.abs(2.0) / 2)));
+        pr(Math.max(1, Math.floor(Math.abs(-3.0) / 2)));
+        pr(Math.max(1, Math.floor(Math.abs(4.0) / 2)));
+        pr(Math.max(1, Math.floor(Math.abs(-5.0) / 2)));
+        pr(Math.max(1, Math.floor(Math.abs(6.0) / 2)));
 
     }
 }
