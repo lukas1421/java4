@@ -1715,10 +1715,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         String symbol = ibContractToSymbol(activeFutCt);
         FutType futType = ibContractToFutType(activeFutCt);
 
-        double pcSignedQ = getOrderTotalSignedQForTypeFilled(symbol, FUT_DEVI);
+        double pcSignedQ = getOrderTotalSignedQForTypeFilled(symbol, FUT_DEV);
         double ptSignedQ = getOrderTotalSignedQForTypeFilled(symbol, FUT_PC_PROFIT_TAKER);
         LocalDateTime lastPTTime = getLastOrderTime(symbol, FUT_PC_PROFIT_TAKER);
-        LocalDateTime lastPCTime = getLastOrderTime(symbol, FUT_DEVI);
+        LocalDateTime lastPCTime = getLastOrderTime(symbol, FUT_DEV);
         int percentile = getPercentileForDouble(priceMapBarDetail.get(symbol));
         double lastFut = priceMapBarDetail.get(symbol).lastEntry().getValue();
         double pc = fut5amClose.get(futType);
@@ -1755,8 +1755,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime lt = nowMilli.toLocalTime();
         String symbol = ibContractToSymbol(activeFutCt);
         FutType f = ibContractToFutType(activeFutCt);
-        LocalTime cutoff = ltof(12, 0);
-        AutoOrderType ot = FUT_DEVI;
+        LocalTime cutoff = ltof(16, 0);
+        AutoOrderType ot = FUT_DEV;
         double pos = currentPosMap.get(f);
         LocalTime obT = ltof(8, 59, 55);
 
@@ -1826,7 +1826,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, "**********");
             outputDetailedXU(symbol, str("NEW", o.orderId(), "fut dev take profit BUY",
-                    "min,open,last", minV, open, last,
+                    "max, min,open,last", maxV, minV, open, last,
                     "min/open", r10000(minV / open - 1), "loThresh", loThresh,
                     "p/min", r10000(last / minV - 1), "retreatHIThresh", retreatHIThresh));
         } else if ((maxV / open - 1 > hiThresh) && (last / maxV - 1 < retreatLOThresh)
@@ -1838,7 +1838,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, "**********");
             outputDetailedXU(symbol, str("NEW", o.orderId(), "fut dev take profit SELL",
-                    "max,open,last", maxV, open, last,
+                    "max,min,mopen,last", maxV, minV, open, last,
                     "max/open", r(maxV / open - 1), "hiThresh", hiThresh,
                     "p/max", r(last / maxV - 1), "retreatLoThresh", retreatLOThresh));
         } else {
