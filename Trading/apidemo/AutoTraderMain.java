@@ -526,6 +526,16 @@ public class AutoTraderMain extends JPanel {
         }
     }
 
+    static double getPriceOffsetUS(long milliLast2, double price) {
+        if (milliLast2 < 10000) {
+            return price * 0.002;
+        } else if (milliLast2 < 60000) {
+            return price * 0.0001;
+        } else {
+            return 0;
+        }
+    }
+
     private class BarModel_AUTO extends javax.swing.table.AbstractTableModel {
 
         @Override

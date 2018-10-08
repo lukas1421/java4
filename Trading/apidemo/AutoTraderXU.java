@@ -1832,7 +1832,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         } else if ((maxV / open - 1 > hiThresh) && (last / maxV - 1 < retreatLOThresh)
                 && filled >= 1 && pos > 0 && (numOrders % 2 == 1)) {
             int id = autoTradeID.incrementAndGet();
-            sellSize = Math.max(1, Math.floor(Math.abs(pos) / 2));;
+            sellSize = Math.max(1, Math.floor(Math.abs(pos) / 2));
             Order o = placeOfferLimitTIF(last, sellSize, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));

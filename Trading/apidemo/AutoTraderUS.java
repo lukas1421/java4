@@ -669,7 +669,7 @@ public class AutoTraderUS {
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, ot);
         long milliLast2 = lastTwoOrderMilliDiff(symbol, ot);
         int waitSec = getWaitSec(milliLast2);
-        double priceOffset = getPriceOffset(milliLast2, last);
+        double priceOffset = getPriceOffsetUS(milliLast2, last);
         double buyPrice = Math.floor(last * 100d) / 100d;
         double sellPrice = Math.ceil(last * 100d) / 100d;
 
@@ -678,12 +678,9 @@ public class AutoTraderUS {
         double dev = (last / open) - 1;
 
         pr("US dev:", lt.truncatedTo(ChronoUnit.SECONDS), ot,
-                "#:", numOrders, "FL#", filled,
-                "lastKey", lastKey, "start", obT,
-                "openEntry", openT, open,
-                "P", last, "pos", pos,
-                "dir:", usDevDir.get(symbol),
-                "dev, maxDev", dev, "manual?", manualUSDev.get(symbol),
+                "#:", numOrders, "FL#", filled, "lastKey", lastKey, "start", obT, "openEntry", openT, open,
+                "P", last, "pos", pos, "dir:", usDevDir.get(symbol),
+                "dev, maxDev", r10000(dev), "manual?", manualUSDev.get(symbol),
                 "wait sec", waitSec, "pOffset", priceOffset);
 
         double buySize;
@@ -696,7 +693,8 @@ public class AutoTraderUS {
         if ((minV / open - 1 < downThresh) && (last / minV - 1 > retreatUpThresh)
                 && numOrders % 2 == 1 && pos < 0 && usDevDir.get(symbol) == Direction.Short) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimitTIF(buyPrice, Math.abs(pos), IOC);
+            buySize = Math.abs(pos);
+            Order o = placeBidLimitTIF(buyPrice, buySize, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
             outputDetailedUS(symbol, "**********");
@@ -708,7 +706,8 @@ public class AutoTraderUS {
         } else if ((maxV / open - 1 > upThresh) && (last / maxV - 1 < retreatDownThresh)
                 && numOrders % 2 == 1 && pos > 0 && usDevDir.get(symbol) == Direction.Long) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimitTIF(sellPrice, pos, IOC);
+            sellSize = pos;
+            Order o = placeOfferLimitTIF(sellPrice, sellSize, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(id, apcon));
             outputDetailedUS(symbol, "**********");
