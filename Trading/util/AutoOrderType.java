@@ -48,7 +48,7 @@ public enum AutoOrderType {
     FUT_DAY_MA,
     FUT_FAST_MA,
     SGXA50_OPEN,
-    FUT_OPEN_DEVI,
+    FUT_DEVI,
     FUT_PC_PROFIT_TAKER,
     SGXA50_HILO,
 
