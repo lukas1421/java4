@@ -647,8 +647,8 @@ public class AutoTraderUS {
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
         if (!manualUSDev.get(symbol).get()) {
-            if (lt.isBefore(ltof(9, 35))) {
-                outputDetailedUS(symbol, str("Set US Dev 935", symbol, lt));
+            if (lt.isBefore(ltof(9, 31))) {
+                outputDetailedUS(symbol, str("Set US Dev 931", symbol, lt));
                 manualUSDev.get(symbol).set(true);
             } else {
                 if (last > open) {
@@ -679,9 +679,8 @@ public class AutoTraderUS {
 
         pr("US dev:", lt.truncatedTo(ChronoUnit.SECONDS), ot,
                 "#:", numOrders, "FL#", filled, "lastKey", lastKey, "start", obT, "openEntry", openT, open,
-                "P", last, "pos", pos, "dir:", usDevDir.get(symbol),
-                "dev, maxDev", r10000(dev), "manual?", manualUSDev.get(symbol),
-                "wait sec", waitSec, "pOffset", priceOffset);
+                "P", last, "pos", pos, "dir:", usDevDir.get(symbol), "dev", r10000(dev)
+                , "manual?", manualUSDev.get(symbol), "wait sec", waitSec, "pOffset", priceOffset);
 
         double buySize;
         double sellSize;
