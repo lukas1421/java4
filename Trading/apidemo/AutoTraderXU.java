@@ -1747,9 +1747,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     @SuppressWarnings("SameParameterValue")
     private static double getXUBaseSize(double defaultSize, long milliSinceLastOrder, long numOrders) {
-        if (numOrders % 2 == 1) {
+        if (numOrders % 2 == 1) { // closing trade
             return defaultSize;
-        } else {
+        } else { // opening trade
             if (milliSinceLastOrder > 30 * 60 * 1000 && milliSinceLastOrder < 12 * 60 * 60 * 1000) {
                 return defaultSize + 1;
             } else {
