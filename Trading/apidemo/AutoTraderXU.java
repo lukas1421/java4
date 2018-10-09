@@ -1803,12 +1803,13 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         //int baseSize = DEV_BASE_SIZE;
         double baseSize = getXUBaseSize(DEV_BASE_SIZE, milliSinceLast, numOrders);
 
-        pr("dev", lt.truncatedTo(ChronoUnit.SECONDS), ot,
+        pr("dev", lt.truncatedTo(ChronoUnit.MILLIS),
                 "#", numOrders, "F#", filled, "opEn:", openT, open,
                 "P", last, "pos", pos, "dev", r10000(dev), "maxD", MAX_FUT_DEV,
                 "tFrLastOrd", showLong(milliSinceLast),
-                "w8Sec", waitSec, "baseSize", baseSize,
-                "dir", futDevDir, "manual", manualfutDev);
+                "wait", waitSec, "nextT", lastOrderT.toLocalTime().plusSeconds(waitSec).truncatedTo(SECONDS),
+                (nowMilli.isBefore(lastOrderT.plusSeconds(waitSec)) ? "wait" : "vacant"),
+                "baseSize", baseSize, "dir", futDevDir, "manual", manualfutDev);
 
         if (numOrders >= MAX_DEV_SIZE) {
             return;
@@ -1876,9 +1877,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                     outputDetailedXU(symbol, "**********");
                     outputDetailedXU(symbol, str("NEW", lt, o.orderId(), "fut dev BUY #:", numOrders,
-                            globalIdOrderMap.get(id),
-                            "open,last ", open, last, "milliLast2", showLong(milliLast2),
-                            "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec)));
+                            globalIdOrderMap.get(id), "open,last ", open, last, "milliLast2", showLong(milliLast2),
+                            "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec), "baseSize", baseSize));
                     futDevDir = Direction.Long;
                 } else if (!noMoreSell.get() && last < open && futDevDir != Direction.Short) {
                     int id = autoTradeID.incrementAndGet();
@@ -1888,9 +1888,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                     outputDetailedXU(symbol, "**********");
                     outputDetailedXU(symbol, str("NEW", lt, o.orderId(), "fut dev SELL #:", numOrders,
-                            globalIdOrderMap.get(id),
-                            "open,last ", open, last, "milliLast2", showLong(milliLast2),
-                            "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec)));
+                            globalIdOrderMap.get(id), "open,last ", open, last, "milliLast2", showLong(milliLast2),
+                            "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec), "baseSize", baseSize));
                     futDevDir = Direction.Short;
                 }
             }
