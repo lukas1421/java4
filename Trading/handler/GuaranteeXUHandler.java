@@ -13,8 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderXU.*;
 import static apidemo.XuTraderHelper.*;
-import static client.OrderStatus.Filled;
-import static client.OrderStatus.PendingCancel;
+import static client.OrderStatus.*;
 import static utility.Utility.*;
 
 public class GuaranteeXUHandler implements ApiController.IOrderHandler {
@@ -27,14 +26,14 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
     public GuaranteeXUHandler(int id, ApiController ap) {
         primaryID = id;
         defaultID = id;
-        idStatusMap.put(id, OrderStatus.ConstructedInHandler);
+        idStatusMap.put(id, ConstructedInHandler);
         controller = ap;
     }
 
     private GuaranteeXUHandler(int prim, int id, ApiController ap) {
         primaryID = prim;
         defaultID = id;
-        idStatusMap.put(id, OrderStatus.ConstructedInHandler);
+        idStatusMap.put(id, ConstructedInHandler);
         controller = ap;
     }
 
@@ -58,7 +57,7 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
                         "*GUARANTEE XU FILL", idStatusMap.get(defaultID), "->", orderState.status(), now,
                         "ID:", defaultID, globalIdOrderMap.get(defaultID),
                         "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
-                outputDetailedXU( globalIdOrderMap.get(defaultID).getSymbol(),msg);
+                outputDetailedXU(globalIdOrderMap.get(defaultID).getSymbol(), msg);
             }
 
             if (orderState.status() == PendingCancel &&
