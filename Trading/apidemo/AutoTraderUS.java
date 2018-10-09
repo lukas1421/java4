@@ -669,7 +669,7 @@ public class AutoTraderUS {
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, ot);
         long milliLast2 = lastTwoOrderMilliDiff(symbol, ot);
         int waitSec = getWaitSec(milliLast2);
-        double priceOffset = getPriceOffsetUS(milliLast2, last);
+        //double priceOffset = getPriceOffsetUS(milliLast2, last);
         double buyPrice = Math.floor(last * 100d) / 100d;
         double sellPrice = Math.ceil(last * 100d) / 100d;
 
@@ -680,7 +680,7 @@ public class AutoTraderUS {
         pr("US dev:", lt.truncatedTo(ChronoUnit.SECONDS), ot,
                 "#:", numOrders, "FL#", filled, "lastKey", lastKey, "start", obT, "openEntry", openT, open,
                 "P", last, "pos", pos, "dir:", usDevDir.get(symbol), "dev", r10000(dev)
-                , "manual?", manualUSDev.get(symbol), "wait sec", waitSec, "pOffset", priceOffset);
+                , "manual?", manualUSDev.get(symbol), "wait sec", waitSec);
 
         double buySize;
         double sellSize;
@@ -718,7 +718,7 @@ public class AutoTraderUS {
         } else {
             if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && usShortableValueMap.get(symbol) > US_MIN_SHORT_LEVEL
                     && Math.abs(dev) < MAX_US_DEV)
-                if (!noMoreBuy.get() && last > open + priceOffset && usDevDir.get(symbol) != Direction.Long) {
+                if (!noMoreBuy.get() && last > open && usDevDir.get(symbol) != Direction.Long) {
                     int id = autoTradeID.incrementAndGet();
                     buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? US_BASE_SIZE : 0)) : US_BASE_SIZE;
                     Order o = placeBidLimitTIF(last, buySize, IOC);
@@ -729,11 +729,11 @@ public class AutoTraderUS {
                             globalIdOrderMap.get(id),
                             "open last", open, last, "buy size/ currpos", buySize, pos,
                             "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLast2, waitSec,
-                            lastOrderTime.plusSeconds(waitSec), "offset", priceOffset,
+                            lastOrderTime.plusSeconds(waitSec),
                             "dir", usDevDir.get(symbol), "manual?", manualUSDev.get(symbol)
                             , "short value", usShortableValueMap.get(symbol)));
                     usDevDir.put(symbol, Direction.Long);
-                } else if (!noMoreSell.get() && last < open - priceOffset && usDevDir.get(symbol) != Direction.Short) {
+                } else if (!noMoreSell.get() && last < open && usDevDir.get(symbol) != Direction.Short) {
                     int id = autoTradeID.incrementAndGet();
                     sellSize = pos > 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? US_BASE_SIZE : 0)) : US_BASE_SIZE;
                     Order o = placeOfferLimitTIF(last, sellSize, IOC);
@@ -744,7 +744,7 @@ public class AutoTraderUS {
                             globalIdOrderMap.get(id),
                             "open last", open, last, "sell size/ currpos", sellSize, pos,
                             "last order T, milliLast2, waitSec, nextT", lastOrderTime, milliLast2, waitSec,
-                            lastOrderTime.plusSeconds(waitSec), "offset", priceOffset,
+                            lastOrderTime.plusSeconds(waitSec), "offset",
                             "dir", usDevDir.get(symbol), "manual?", manualUSDev.get(symbol)
                             , "short value", usShortableValueMap.get(symbol)));
                     usDevDir.put(symbol, Direction.Short);
