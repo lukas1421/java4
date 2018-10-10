@@ -65,7 +65,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     private static volatile Set<String> uniqueTradeKeySet = new HashSet<>();
     //private static XUTraderRoll traderRoll;
     private static final int MAX_XU_SIZE = 4;
-    private static final int MAX_DEV_SIZE = 8;
+    private static final int MAX_DEV_SIZE = 4;
 
 
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
@@ -213,10 +213,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     private static final int MAX_QUARTERHOUR_SIZE = 2;
 
     //profit taker
-    private static final double hiThresh = 0.01;
-    private static final double loThresh = -0.01;
-    private static final double retreatHIThresh = 0.3 * hiThresh;
-    private static final double retreatLOThresh = 0.3 * loThresh;
+    private static final double hiThresh = 0.005;
+    private static final double loThresh = -0.005;
+    private static final double retreatHIThresh = 0.85 * hiThresh;
+    private static final double retreatLOThresh = 0.85 * loThresh;
 
     AutoTraderXU(ApiController ap) {
         pr(str(" ****** front fut ******* ", frontFut.symbol(), frontFut.lastTradeDateOrContractMonth()));
@@ -1145,211 +1145,211 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //        }
 //    }
 
+//
+//    /**
+//     * take profit for XU
+//     *
+//     * @param nowMilli   time now
+//     * @param freshPrice price
+//     */
+//    private static void sgxA50RelativeProfitTaker(LocalDateTime nowMilli, double freshPrice) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        FutType f = ibContractToFutType(activeFutCt);
+//        LocalTime amObservationStart = ltof(8, 59, 59);
+//        long currPos = currentPosMap.getOrDefault(f, 0);
+//
+//        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(amObservationStart))
+//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+//                        (a, b) -> a, ConcurrentSkipListMap::new));
+//
+//        if (lt.isBefore(LocalTime.of(8, 59, 59)) || lt.isAfter(ltof(15, 0, 0))) {
+//            return;
+//        }
+//
+//        if (lt.isAfter(ltof(11, 30, 0)) && lt.isBefore(ltof(13, 0, 0))) {
+//            return;
+//        }
+//
+//
+//        double open = futPrice.ceilingEntry(amObservationStart).getValue();
+//
+//        double maxSoFar = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(amObservationStart))
+//                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+//
+//        double minSoFar = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(amObservationStart))
+//                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+//
+//        LocalDateTime lastOrderTime = getLastOrderTime(symbol, SGXA50_RELATIVE_TAKE_PROFIT);
+//        OrderStatus lastStatus = getLastPrimaryOrderStatus(symbol, SGXA50_RELATIVE_TAKE_PROFIT);
+//
+//        if (lastStatus != OrderStatus.Filled && lastStatus != OrderStatus.NoOrder) {
+//            pr(" XU relative profit taker, status: ", symbol, lt, lastStatus);
+//            return;
+//        }
+//
+//        if (SECONDS.between(lastOrderTime, nowMilli) > 300) {
+//            if ((minSoFar / open - 1 < loThresh) && (freshPrice / minSoFar - 1 > retreatHIThresh)
+//                    && currPos < 0) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, "**********");
+//                outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit BUY#",
+//                        "min, open, fresh ", minSoFar, open, freshPrice,
+//                        "min/open", minSoFar / open - 1, "loThresh", loThresh,
+//                        "p/min", freshPrice / minSoFar - 1, "retreatHIThresh", retreatHIThresh));
+//            } else if ((maxSoFar / open - 1 > hiThresh) && (freshPrice / maxSoFar - 1 < retreatLOThresh)
+//                    && currPos > 0) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, "**********");
+//                outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit SELL#",
+//                        "max, open, fresh ", maxSoFar, open, freshPrice,
+//                        "max/open", maxSoFar / open - 1, "upthresh", hiThresh,
+//                        "p/max", freshPrice / maxSoFar - 1, "retreatThresh", retreatLOThresh));
+//            }
+//        }
+//    }
 
-    /**
-     * take profit for XU
-     *
-     * @param nowMilli   time now
-     * @param freshPrice price
-     */
-    private static void sgxA50RelativeProfitTaker(LocalDateTime nowMilli, double freshPrice) {
-        LocalTime lt = nowMilli.toLocalTime();
-        String symbol = ibContractToSymbol(activeFutCt);
-        FutType f = ibContractToFutType(activeFutCt);
-        LocalTime amObservationStart = ltof(8, 59, 59);
-        long currPos = currentPosMap.getOrDefault(f, 0);
-
-        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(amObservationStart))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                        (a, b) -> a, ConcurrentSkipListMap::new));
-
-        if (lt.isBefore(LocalTime.of(8, 59, 59)) || lt.isAfter(ltof(15, 0, 0))) {
-            return;
-        }
-
-        if (lt.isAfter(ltof(11, 30, 0)) && lt.isBefore(ltof(13, 0, 0))) {
-            return;
-        }
-
-
-        double open = futPrice.ceilingEntry(amObservationStart).getValue();
-
-        double maxSoFar = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(amObservationStart))
-                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-
-        double minSoFar = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(amObservationStart))
-                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
-
-        LocalDateTime lastOrderTime = getLastOrderTime(symbol, SGXA50_RELATIVE_TAKE_PROFIT);
-        OrderStatus lastStatus = getLastPrimaryOrderStatus(symbol, SGXA50_RELATIVE_TAKE_PROFIT);
-
-        if (lastStatus != OrderStatus.Filled && lastStatus != OrderStatus.NoOrder) {
-            pr(" XU relative profit taker, status: ", symbol, lt, lastStatus);
-            return;
-        }
-
-        if (SECONDS.between(lastOrderTime, nowMilli) > 300) {
-            if ((minSoFar / open - 1 < loThresh) && (freshPrice / minSoFar - 1 > retreatHIThresh)
-                    && currPos < 0) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit BUY#",
-                        "min, open, fresh ", minSoFar, open, freshPrice,
-                        "min/open", minSoFar / open - 1, "loThresh", loThresh,
-                        "p/min", freshPrice / minSoFar - 1, "retreatHIThresh", retreatHIThresh));
-            } else if ((maxSoFar / open - 1 > hiThresh) && (freshPrice / maxSoFar - 1 < retreatLOThresh)
-                    && currPos > 0) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_RELATIVE_TAKE_PROFIT));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit SELL#",
-                        "max, open, fresh ", maxSoFar, open, freshPrice,
-                        "max/open", maxSoFar / open - 1, "upthresh", hiThresh,
-                        "p/max", freshPrice / maxSoFar - 1, "retreatThresh", retreatLOThresh));
-            }
-        }
-    }
-
-    /**
-     * trades every quarter hour
-     *
-     * @param nowMilli   time now
-     * @param freshPrice price
-     */
-    private static void sgxQHrTrader(LocalDateTime nowMilli, double freshPrice) {
-        LocalTime lt = nowMilli.toLocalTime();
-        String symbol = ibContractToSymbol(activeFutCt);
-        FutType f = ibContractToFutType(activeFutCt);
-        LocalTime amObservationStart = ltof(8, 59, 59);
-        long currPos = currentPosMap.get(f);
-        double buySize;
-        double sellSize;
-
-        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(amObservationStart))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                        (a, b) -> a, ConcurrentSkipListMap::new));
-
-        if (lt.isBefore(LocalTime.of(8, 59, 29)) || lt.isAfter(ltof(15, 0, 0))) {
-            return;
-        }
-        if (lt.isAfter(ltof(11, 30)) && lt.isBefore(ltof(13, 0))) {
-            return;
-        }
-
-        LocalTime qHrStart = ltof(lt.getHour(), minuteToQuarterHour(lt.getMinute()));
-        double qHrOpen = futPrice.ceilingEntry(qHrStart).getValue();
-        LocalTime quarterHourOpenTime = futPrice.ceilingEntry(qHrStart).getKey();
-        double maxSoFar = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(qHrStart))
-                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-
-        double minSoFar = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(qHrStart))
-                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
-
-        QuarterHour q = QuarterHour.get(qHrStart);
-        AutoOrderType ot = getOrderTypeByQuarterHour(q);
-        LocalTime lastKey = futPrice.lastKey();
-
-        long qHrOrderNum = getOrderSizeForTradeType(symbol, ot);
-        double qHrFilled = getFilledForType(symbol, ot);
-
-        pr("XU qhr:", lt.truncatedTo(ChronoUnit.SECONDS), ot,
-                "#", qHrOrderNum, "FL#", qHrFilled,
-                "lastKey", lastKey, "qStart", qHrStart,
-                "qHr", q, "openEntry:", quarterHourOpenTime, qHrOpen,
-                "P", freshPrice, "currpos", currPos,
-                "dir", qHrXUDevDir.get(symbol).get(q),
-                "manual", manualXUQHrDev.get(symbol).get(q));
-
-        if (!manualXUQHrDev.get(symbol).get(q).get()) {
-            if (lt.isBefore(q.getStartTime().plusMinutes(1L))) {
-                outputDetailedXU(symbol, str(" set XU qhr dev direction", symbol, q, lt, "startTime", q.getStartTime()));
-                manualXUQHrDev.get(symbol).get(q).set(true);
-            } else {
-                if (freshPrice > qHrOpen) {
-                    outputDetailedXU(symbol, str(" set XU qhr dev fresh>start",
-                            symbol, q, lt, "fresh>start", freshPrice, ">", qHrOpen));
-                    qHrXUDevDir.get(symbol).put(q, Direction.Long);
-                    manualXUQHrDev.get(symbol).get(q).set(true);
-                } else if (freshPrice < qHrOpen) {
-                    outputDetailedXU(symbol, str(" set XU qhr dev dir fresh<start",
-                            symbol, q, lt, "fresh<start", freshPrice, "<", qHrOpen));
-                    qHrXUDevDir.get(symbol).put(q, Direction.Short);
-                    manualXUQHrDev.get(symbol).get(q).set(true);
-                } else {
-                    qHrXUDevDir.get(symbol).put(q, Direction.Flat);
-                }
-            }
-        }
-
-        if (qHrOrderNum >= MAX_QUARTERHOUR_SIZE) {
-            return;
-        }
-
-        LocalDateTime lastOrderTime = getLastOrderTime(symbol, ot);
-        long milliLast2 = lastTwoOrderMilliDiff(symbol, ot);
-        int waitTimeSec = (milliLast2 < 60000) ? 300 : 1;
-
-        if ((minSoFar / qHrOpen - 1 < loThresh) && (freshPrice / minSoFar - 1 > retreatHIThresh)
-                && qHrFilled <= -1 && currPos < 0 && (qHrOrderNum % 2 == 1)) {
-            int id = autoTradeID.incrementAndGet();
-            buySize = Math.abs(currPos);
-            Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
-            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
-            apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-            outputDetailedXU(symbol, "**********");
-            outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit BUY#",
-                    "min, open, fresh ", minSoFar, qHrOpen, freshPrice,
-                    "min/open", minSoFar / qHrOpen - 1, "loThresh", loThresh,
-                    "p/min", freshPrice / minSoFar - 1, "retreatHIThresh", retreatHIThresh));
-        } else if ((maxSoFar / qHrOpen - 1 > hiThresh) && (freshPrice / maxSoFar - 1 < retreatLOThresh)
-                && qHrFilled >= 1 && currPos > 0 && (qHrOrderNum % 2 == 1)) {
-            int id = autoTradeID.incrementAndGet();
-            sellSize = currPos;
-            Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
-            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
-            apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-            outputDetailedXU(symbol, "**********");
-            outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit SELL#",
-                    "max, open, fresh ", maxSoFar, qHrOpen, freshPrice,
-                    "max/open", maxSoFar / qHrOpen - 1, "upthresh", hiThresh,
-                    "p/max", freshPrice / maxSoFar - 1, "retreatThresh", retreatLOThresh));
-        } else {
-            if (SECONDS.between(lastOrderTime, nowMilli) > waitTimeSec) {
-                if (freshPrice > qHrOpen && !noMoreBuy.get() &&
-                        qHrXUDevDir.get(symbol).get(q) != Direction.Long) {
-                    int id = autoTradeID.incrementAndGet();
-                    buySize = currPos < 0 ? (Math.abs(currPos) + (qHrOrderNum % 2 == 0 ? 1 : 0)) : 1;
-                    Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
-                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
-                    apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                    outputDetailedXU(symbol, "**********");
-                    outputDetailedXU(symbol, str("NEW", o.orderId(), "q hr dev buy #:",
-                            qHrOrderNum, globalIdOrderMap.get(id), q, "type", ot, "qHrOpen ", qHrOpen,
-                            "fresh", freshPrice, "buysize", buySize));
-                    qHrXUDevDir.get(symbol).put(q, Direction.Long);
-                } else if (freshPrice < qHrOpen && !noMoreSell.get() &&
-                        qHrXUDevDir.get(symbol).get(q) != Direction.Short) {
-                    int id = autoTradeID.incrementAndGet();
-                    sellSize = currPos > 0 ? (currPos + (qHrOrderNum % 2 == 0 ? 1 : 0)) : 1;
-                    Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
-                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
-                    apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                    outputDetailedXU(symbol, "**********");
-                    outputDetailedXU(symbol, str("NEW", o.orderId(), "q hr dev sell #:",
-                            qHrOrderNum, globalIdOrderMap.get(id), q, "type", ot, "qHrOpen ", qHrOpen,
-                            "fresh", freshPrice, "sellSize", sellSize));
-                    qHrXUDevDir.get(symbol).put(q, Direction.Short);
-                }
-            }
-        }
-    }
+//    /**
+//     * trades every quarter hour
+//     *
+//     * @param nowMilli   time now
+//     * @param freshPrice price
+//     */
+//    private static void sgxQHrTrader(LocalDateTime nowMilli, double freshPrice) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        FutType f = ibContractToFutType(activeFutCt);
+//        LocalTime amObservationStart = ltof(8, 59, 59);
+//        long currPos = currentPosMap.get(f);
+//        double buySize;
+//        double sellSize;
+//
+//        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(amObservationStart))
+//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+//                        (a, b) -> a, ConcurrentSkipListMap::new));
+//
+//        if (lt.isBefore(LocalTime.of(8, 59, 29)) || lt.isAfter(ltof(15, 0, 0))) {
+//            return;
+//        }
+//        if (lt.isAfter(ltof(11, 30)) && lt.isBefore(ltof(13, 0))) {
+//            return;
+//        }
+//
+//        LocalTime qHrStart = ltof(lt.getHour(), minuteToQuarterHour(lt.getMinute()));
+//        double qHrOpen = futPrice.ceilingEntry(qHrStart).getValue();
+//        LocalTime quarterHourOpenTime = futPrice.ceilingEntry(qHrStart).getKey();
+//        double maxSoFar = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(qHrStart))
+//                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+//
+//        double minSoFar = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(qHrStart))
+//                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+//
+//        QuarterHour q = QuarterHour.get(qHrStart);
+//        AutoOrderType ot = getOrderTypeByQuarterHour(q);
+//        LocalTime lastKey = futPrice.lastKey();
+//
+//        long qHrOrderNum = getOrderSizeForTradeType(symbol, ot);
+//        double qHrFilled = getFilledForType(symbol, ot);
+//
+//        pr("XU qhr:", lt.truncatedTo(ChronoUnit.SECONDS), ot,
+//                "#", qHrOrderNum, "FL#", qHrFilled,
+//                "lastKey", lastKey, "qStart", qHrStart,
+//                "qHr", q, "openEntry:", quarterHourOpenTime, qHrOpen,
+//                "P", freshPrice, "currpos", currPos,
+//                "dir", qHrXUDevDir.get(symbol).get(q),
+//                "manual", manualXUQHrDev.get(symbol).get(q));
+//
+//        if (!manualXUQHrDev.get(symbol).get(q).get()) {
+//            if (lt.isBefore(q.getStartTime().plusMinutes(1L))) {
+//                outputDetailedXU(symbol, str(" set XU qhr dev direction", symbol, q, lt, "startTime", q.getStartTime()));
+//                manualXUQHrDev.get(symbol).get(q).set(true);
+//            } else {
+//                if (freshPrice > qHrOpen) {
+//                    outputDetailedXU(symbol, str(" set XU qhr dev fresh>start",
+//                            symbol, q, lt, "fresh>start", freshPrice, ">", qHrOpen));
+//                    qHrXUDevDir.get(symbol).put(q, Direction.Long);
+//                    manualXUQHrDev.get(symbol).get(q).set(true);
+//                } else if (freshPrice < qHrOpen) {
+//                    outputDetailedXU(symbol, str(" set XU qhr dev dir fresh<start",
+//                            symbol, q, lt, "fresh<start", freshPrice, "<", qHrOpen));
+//                    qHrXUDevDir.get(symbol).put(q, Direction.Short);
+//                    manualXUQHrDev.get(symbol).get(q).set(true);
+//                } else {
+//                    qHrXUDevDir.get(symbol).put(q, Direction.Flat);
+//                }
+//            }
+//        }
+//
+//        if (qHrOrderNum >= MAX_QUARTERHOUR_SIZE) {
+//            return;
+//        }
+//
+//        LocalDateTime lastOrderTime = getLastOrderTime(symbol, ot);
+//        long milliLast2 = lastTwoOrderMilliDiff(symbol, ot);
+//        int waitTimeSec = (milliLast2 < 60000) ? 300 : 1;
+//
+//        if ((minSoFar / qHrOpen - 1 < loThresh) && (freshPrice / minSoFar - 1 > retreatHIThresh)
+//                && qHrFilled <= -1 && currPos < 0 && (qHrOrderNum % 2 == 1)) {
+//            int id = autoTradeID.incrementAndGet();
+//            buySize = Math.abs(currPos);
+//            Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
+//            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+//            apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//            outputDetailedXU(symbol, "**********");
+//            outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit BUY#",
+//                    "min, open, fresh ", minSoFar, qHrOpen, freshPrice,
+//                    "min/open", minSoFar / qHrOpen - 1, "loThresh", loThresh,
+//                    "p/min", freshPrice / minSoFar - 1, "retreatHIThresh", retreatHIThresh));
+//        } else if ((maxSoFar / qHrOpen - 1 > hiThresh) && (freshPrice / maxSoFar - 1 < retreatLOThresh)
+//                && qHrFilled >= 1 && currPos > 0 && (qHrOrderNum % 2 == 1)) {
+//            int id = autoTradeID.incrementAndGet();
+//            sellSize = currPos;
+//            Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
+//            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+//            apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//            outputDetailedXU(symbol, "**********");
+//            outputDetailedXU(symbol, str("NEW", o.orderId(), "SGXA50 take profit SELL#",
+//                    "max, open, fresh ", maxSoFar, qHrOpen, freshPrice,
+//                    "max/open", maxSoFar / qHrOpen - 1, "upthresh", hiThresh,
+//                    "p/max", freshPrice / maxSoFar - 1, "retreatThresh", retreatLOThresh));
+//        } else {
+//            if (SECONDS.between(lastOrderTime, nowMilli) > waitTimeSec) {
+//                if (freshPrice > qHrOpen && !noMoreBuy.get() &&
+//                        qHrXUDevDir.get(symbol).get(q) != Direction.Long) {
+//                    int id = autoTradeID.incrementAndGet();
+//                    buySize = currPos < 0 ? (Math.abs(currPos) + (qHrOrderNum % 2 == 0 ? 1 : 0)) : 1;
+//                    Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
+//                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+//                    apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                    outputDetailedXU(symbol, "**********");
+//                    outputDetailedXU(symbol, str("NEW", o.orderId(), "q hr dev buy #:",
+//                            qHrOrderNum, globalIdOrderMap.get(id), q, "type", ot, "qHrOpen ", qHrOpen,
+//                            "fresh", freshPrice, "buysize", buySize));
+//                    qHrXUDevDir.get(symbol).put(q, Direction.Long);
+//                } else if (freshPrice < qHrOpen && !noMoreSell.get() &&
+//                        qHrXUDevDir.get(symbol).get(q) != Direction.Short) {
+//                    int id = autoTradeID.incrementAndGet();
+//                    sellSize = currPos > 0 ? (currPos + (qHrOrderNum % 2 == 0 ? 1 : 0)) : 1;
+//                    Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
+//                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+//                    apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                    outputDetailedXU(symbol, "**********");
+//                    outputDetailedXU(symbol, str("NEW", o.orderId(), "q hr dev sell #:",
+//                            qHrOrderNum, globalIdOrderMap.get(id), q, "type", ot, "qHrOpen ", qHrOpen,
+//                            "fresh", freshPrice, "sellSize", sellSize));
+//                    qHrXUDevDir.get(symbol).put(q, Direction.Short);
+//                }
+//            }
+//        }
+//    }
 
     /**
      * @param nowMilli   time now
@@ -1842,7 +1842,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         double buySize;
         double sellSize;
-        double costOffset = (numOrders % 2 == 0) ? 0 : 5.0;
+        //double costOffset = (numOrders % 2 == 0) ? 0 : 5.0;
 
         if ((minV / open - 1 < loThresh) && (last / minV - 1 > retreatHIThresh)
                 && filled <= -1 && pos < 0 && (numOrders % 2 == 1)) {
@@ -1870,7 +1870,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     "p/max", r(last / maxV - 1), "retreatLoThresh", retreatLOThresh));
         } else {
             if (SECONDS.between(lastOrderT, nowMilli) > waitSec && Math.abs(dev) < MAX_FUT_DEV) {
-                if (!noMoreBuy.get() && last > open - costOffset && futDevDir != Direction.Long) {
+                if (!noMoreBuy.get() && last > open && futDevDir != Direction.Long) {
                     int id = autoTradeID.incrementAndGet();
                     buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? baseSize : 0)) : baseSize;
                     Order o = placeBidLimitTIF(last, buySize, IOC);
@@ -1881,7 +1881,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                             globalIdOrderMap.get(id), "open,last ", open, last, "milliLast2", showLong(milliLast2),
                             "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec), "baseSize", baseSize));
                     futDevDir = Direction.Long;
-                } else if (!noMoreSell.get() && last < open + costOffset && futDevDir != Direction.Short) {
+                } else if (!noMoreSell.get() && last < open && futDevDir != Direction.Short) {
                     int id = autoTradeID.incrementAndGet();
                     sellSize = pos > 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? baseSize : 0)) : baseSize;
                     Order o = placeOfferLimitTIF(last, sellSize, IOC);
