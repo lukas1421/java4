@@ -1842,6 +1842,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         double buySize;
         double sellSize;
+        double costOffset = (numOrders % 2 == 0) ? 0 : 5.0;
 
         if ((minV / open - 1 < loThresh) && (last / minV - 1 > retreatHIThresh)
                 && filled <= -1 && pos < 0 && (numOrders % 2 == 1)) {
@@ -1869,7 +1870,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     "p/max", r(last / maxV - 1), "retreatLoThresh", retreatLOThresh));
         } else {
             if (SECONDS.between(lastOrderT, nowMilli) > waitSec && Math.abs(dev) < MAX_FUT_DEV) {
-                if (!noMoreBuy.get() && last > open && futDevDir != Direction.Long) {
+                if (!noMoreBuy.get() && last > open - costOffset && futDevDir != Direction.Long) {
                     int id = autoTradeID.incrementAndGet();
                     buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? baseSize : 0)) : baseSize;
                     Order o = placeBidLimitTIF(last, buySize, IOC);
@@ -1880,7 +1881,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                             globalIdOrderMap.get(id), "open,last ", open, last, "milliLast2", showLong(milliLast2),
                             "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec), "baseSize", baseSize));
                     futDevDir = Direction.Long;
-                } else if (!noMoreSell.get() && last < open && futDevDir != Direction.Short) {
+                } else if (!noMoreSell.get() && last < open + costOffset && futDevDir != Direction.Short) {
                     int id = autoTradeID.incrementAndGet();
                     sellSize = pos > 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? baseSize : 0)) : baseSize;
                     Order o = placeOfferLimitTIF(last, sellSize, IOC);
