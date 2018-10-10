@@ -1729,6 +1729,7 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
         LocalDate d = ldt.toLocalDate();
         LocalTime t = ldt.toLocalTime();
         LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
+        //pr("china pos ", tradeKey, contract.symbol(), execution.time(), ldt);
 
         LocalDate tradeDate = getTradeDate(LocalDateTime.now());
 
@@ -1740,6 +1741,7 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
         }
 
         if (symbol.startsWith("SGXA50")) {
+            //pr("SGX", "ldt", ldt, "tradedate", tradeDate);
             if (ldt.getDayOfMonth() == tradeDate.getDayOfMonth() && t.isAfter(LocalTime.of(8, 59))) {
                 if (ChinaPosition.tradesMap.get(symbol).containsKey(lt)) {
                     ChinaPosition.tradesMap.get(symbol).get(lt)
@@ -1764,6 +1766,12 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReportEnd() {
+//        pr("china position trade report end ");
+//        ChinaPosition.tradesMap.forEach((k, v) -> {
+//            if (v.size() > 0) {
+//                pr("chinapos", k, v);
+//            }
+//        });
     }
 
     @Override

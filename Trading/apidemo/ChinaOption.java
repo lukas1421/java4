@@ -651,7 +651,7 @@ public class ChinaOption extends JPanel implements Runnable {
                         updateOptionSystemInfo(Utility.str("存", saveclass.getSimpleName(),
                                 LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
                                 ChronoUnit.SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
-                        pr(str(" Vol saving done", LocalTime.now()));
+                        //pr(str(" Vol saving done", LocalTime.now()));
                     }
             );
         } else {

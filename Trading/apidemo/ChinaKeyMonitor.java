@@ -734,7 +734,8 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                             //ChinaBigGraph.setGraph(industryNameMap.get(selectedNameGraph));
                             ChinaBigGraph.setGraph(selectedNameGraph);
                             ChinaStock.setIndustryFilter(industryNameMap.getOrDefault(selectedNameGraph, ""));
-                            CompletableFuture.runAsync(() -> ChinaPosition.mtmPnlCompute(e1 -> e1.getKey().equals(selectedNameGraph), selectedNameGraph));
+                            CompletableFuture.runAsync(() ->
+                                    ChinaPosition.mtmPnlCompute(e1 -> e1.getKey().equals(selectedNameGraph), selectedNameGraph));
                         } else {
                             ChinaBigGraph.setGraph(selectedNameGraph);
                             ChinaStock.setIndustryFilter(selectedNameGraph);
@@ -893,7 +894,8 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                 //todayList.stream().peek(System.out::println).map(s -> ChinaStock.industryNameMap.getOrDefault(s, "")).forEach(System.out::println);
                 //todayList.stream().filter(buildPred("板块")).forEach(System.out::println);
                 //todayList.stream().limit(20).forEach(System.out::println);
-                LinkedList<String> l = ChinaData.priceMinuteSharpe.entrySet().stream().filter(e -> buildPred("板块").test(e.getKey()))
+                LinkedList<String> l = ChinaData.priceMinuteSharpe.entrySet().stream()
+                        .filter(e -> buildPred("板块").test(e.getKey()))
                         .sorted(reverseComparator(Comparator.comparingDouble(Map.Entry::getValue)))
                         .peek(System.out::println)
                         .map(Entry::getKey).collect(Collectors.toCollection(LinkedList::new));

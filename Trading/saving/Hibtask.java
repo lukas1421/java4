@@ -76,12 +76,12 @@ public class Hibtask {
 
     public static void loadHibGenPrice() {
         CompletableFuture.runAsync(() -> loadHibGen(ChinaSave.getInstance()))
-                .thenAccept(v -> ChinaMain.updateSystemNotif(str(" LOAD HIB T DONE ")));
+                .thenAccept(v -> ChinaMain.updateSystemNotif(str(" LOADED HIB")));
     }
 
     public static void loadHibDetailPrice() {
         CompletableFuture.runAsync(() -> loadHibGen(ChinaSaveDetailed.getInstance()))
-                .thenAccept(v -> ChinaMain.updateSystemNotif(str(" LOAD Detail DONE ")));
+                .thenAccept(v -> ChinaMain.updateSystemNotif(str(" LOADED Detail")));
     }
 
     public static void hibernateMorningTask() {

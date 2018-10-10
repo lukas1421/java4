@@ -4,6 +4,7 @@ import auxiliary.SimpleBar;
 import auxiliary.Strategy;
 import auxiliary.VolBar;
 import client.Contract;
+import client.Types;
 import historical.HistChinaStocks;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -225,7 +226,9 @@ public final class ChinaData extends JPanel {
         JButton getFXButton = new JButton("FX");
         JButton buildA50Button = new JButton("build A50");
         JButton getSGXA50HistButton = new JButton("SGXA50");
-        JButton getSGXA50TodayButton = new JButton("Fut Today");
+        JButton getSGXA50TodayButton = new JButton("Fut T");
+        JButton getSGXA50DetailedButton = new JButton("Detailed T");
+
         JButton tdxButton = new JButton("TDX");
         JButton retrieveAllButton = new JButton("RetrieveAll");
         JButton retrieveTodayButton = new JButton("RetrieveToday");
@@ -255,6 +258,7 @@ public final class ChinaData extends JPanel {
         buttonUpPanel.add(Box.createHorizontalStrut(10));
         buttonUpPanel.add(saveHibY2Button);
         buttonUpPanel.add(Box.createHorizontalStrut(150));
+        buttonUpPanel.add(getSGXA50DetailedButton);
 
         buttonDownPanel.add(loadHibGenPriceButton);
         buttonDownPanel.add(loadHibDetailButton);
@@ -285,6 +289,7 @@ public final class ChinaData extends JPanel {
         buttonDownPanel.add(Box.createHorizontalStrut(10));
         buttonDownPanel.add(getSGXA50HistButton);
         buttonDownPanel.add(getSGXA50TodayButton);
+
         buttonDownPanel.add(Box.createHorizontalStrut(10));
         buttonDownPanel.add(tdxButton);
         buttonDownPanel.add(retrieveAllButton);
@@ -397,26 +402,26 @@ public final class ChinaData extends JPanel {
                     getBackFutContract(), ChinaData::handleSGX50HistData, 7);
         }));
 
-        getSGXA50TodayButton.addActionListener(l -> CompletableFuture.runAsync(() ->
-
-        {
+        getSGXA50TodayButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
             controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                     getFrontFutContract(), ChinaData::handleSGXDataToday, 2);
             controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                     getBackFutContract(), ChinaData::handleSGXDataToday, 2);
         }));
 
+        getSGXA50DetailedButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
+            pr(" getting detailed T ");
+            controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+                    getFrontFutContract(), ChinaData::handleSGXDetailed, 1, Types.BarSize._1_min);
+            controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+                    getBackFutContract(), ChinaData::handleSGXDetailed, 1, Types.BarSize._1_min);
+        }));
+
+
         tdxButton.addActionListener(l ->
+                getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0)));
 
-                getFromTDX(dateMap.get(2), dateMap.
-
-                        get(1), dateMap.
-
-                        get(0)));
-
-        retrieveAllButton.addActionListener(l ->
-
-                retrieveDataAll());
+        retrieveAllButton.addActionListener(l -> retrieveDataAll());
 
         retrieveTodayButton.addActionListener(l ->
 
@@ -828,6 +833,26 @@ public final class ChinaData extends JPanel {
                         .map(Entry::getValue).orElse(0.0);
                 ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(open, high, low, close));
                 ChinaData.sizeTotalMap.get(ticker).put(lt, volume * 1d + previousVol);
+            }
+        } else {
+            System.out.println(str(date, open, high, low, close));
+        }
+    }
+
+    private static void handleSGXDetailed(Contract c, String date, double open, double high, double low,
+                                          double close, int volume) {
+        String ticker = utility.Utility.ibContractToSymbol(c);
+
+        if (!date.startsWith("finished")) {
+            Date dt = new Date(Long.parseLong(date) * 1000);
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(dt);
+            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+            LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), 0, 0);
+
+            if (ld.equals(currentTradingDate) && ((lt.isAfter(LocalTime.of(8, 59))))) {
+                System.out.println(str("handle sgx detail today", c.symbol(), ld, lt, open, high, low, close));
+                ChinaData.priceMapBarDetail.get(ticker).put(lt, open);
             }
         } else {
             System.out.println(str(date, open, high, low, close));

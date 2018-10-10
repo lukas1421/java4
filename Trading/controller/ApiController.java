@@ -1112,15 +1112,6 @@ public class ApiController implements EWrapper {
 
     public void getSGXA50HistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
                                           int duration) {
-        //Contract c = getFrontFutContract();
-        //        Contract c = new Contract();
-//        c.symbol("XINA50");
-//        c.exchange("SGX");
-//        c.currency("USD");
-//        c.secType(Types.SecType.FUT);
-//        c.lastTradeDateOrContractMonth(TradingConstants.A50_FRONT_EXPIRY);
-//        c.right(Types.Right.None);
-//        c.secIdType(Types.SecIdType.None);
 
         String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
@@ -1138,11 +1129,24 @@ public class ApiController implements EWrapper {
                 barSize.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
     }
 
-    //    public void getHKIntradayHistoricalData(HistoricalHandler hh) {
-//        reqHistoricalDataUSHK(this, uniqueID.get(), tickerToHKContract(stock), CUTOFFTIME,
-//                DAYSTOREQUEST, Types.DurationUnit.DAY,
-//                Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
-//    }
+    public void getSGXA50HistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
+                                          int duration, BarSize bs) {
+
+        String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
+
+        DurationUnit durationUnit = DurationUnit.DAY;
+        String durationStr = duration + " " + durationUnit.toString().charAt(0);
+        WhatToShow whatToShow = WhatToShow.TRADES;
+        boolean rthOnly = false;
+
+        ChinaMain.globalRequestMap.put(reqId, new Request(c, dc));
+
+        CompletableFuture.runAsync(() -> m_client.reqHistoricalData(reqId, c, "", durationStr,
+                bs.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
+    }
+
+
     public void getSGXA50Historical2(int reqID, HistoricalHandler hh) {
         Contract previousFut = getExpiredFutContract();
         Contract frontFut = getFrontFutContract();
