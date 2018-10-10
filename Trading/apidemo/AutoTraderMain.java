@@ -19,6 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.DoubleUnaryOperator;
 import java.util.function.Function;
 
 import static apidemo.ChinaData.priceMapBarDetail;
@@ -513,6 +514,46 @@ public class AutoTraderMain extends JPanel {
             return 60;
         } else {
             return 0;
+        }
+    }
+
+    static String showLong(long l) {
+        if (l > 24 * 60 * 60 * 1000) {
+            return ">1d";
+        } else {
+            return str(l);
+        }
+    }
+
+    static long tSincePrevOrderMilli(String name, AutoOrderType type, LocalDateTime nowMilli) {
+        long numOrders = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getSymbol().equals(name))
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().isPrimaryOrder()).count();
+        if (numOrders == 0) {
+            return Long.MAX_VALUE;
+        } else {
+            LocalDateTime last = globalIdOrderMap.entrySet().stream()
+                    .filter(e -> e.getValue().getSymbol().equals(name))
+                    .filter(e -> e.getValue().getOrderType() == type)
+                    .filter(e -> e.getValue().isPrimaryOrder())
+                    .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                    .map(e -> e.getValue().getOrderTime()).orElseThrow(() -> new IllegalArgumentException("no"));
+            return ChronoUnit.MILLIS.between(last, nowMilli);
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    static double getBaseSizeGen(double defaultSize, long milliSinceLastOrder, long numOrders
+            , DoubleUnaryOperator chgSize) {
+        if (numOrders % 2 == 1) {
+            return defaultSize;
+        } else {
+            if (milliSinceLastOrder > 30 * 60 * 1000 && milliSinceLastOrder < 12 * 60 * 60 * 1000) {
+                return chgSize.applyAsDouble(defaultSize);
+            } else {
+                return defaultSize;
+            }
         }
     }
 

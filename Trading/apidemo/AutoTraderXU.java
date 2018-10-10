@@ -1747,24 +1747,18 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     @SuppressWarnings("SameParameterValue")
     private static double getXUBaseSize(double defaultSize, long milliSinceLastOrder, long numOrders) {
-        if (numOrders % 2 == 1) { // closing trade
-            return defaultSize;
-        } else { // opening trade
-            if (milliSinceLastOrder > 30 * 60 * 1000 && milliSinceLastOrder < 12 * 60 * 60 * 1000) {
-                return defaultSize + 1;
-            } else {
-                return defaultSize;
-            }
-        }
+        return getBaseSizeGen(defaultSize, milliSinceLastOrder, numOrders, d -> d + 1);
+//        if (numOrders % 2 == 1) { // closing trade
+//            return defaultSize;
+//        } else { // opening trade
+//            if (milliSinceLastOrder > 30 * 60 * 1000 && milliSinceLastOrder < 12 * 60 * 60 * 1000) {
+//                return defaultSize + 1;
+//            } else {
+//                return defaultSize;
+//            }
+//        }
     }
 
-    private static String showLong(long l) {
-        if (l > 24 * 60 * 60 * 1000) {
-            return ">1d";
-        } else {
-            return str(l);
-        }
-    }
 
     /**
      * fut pc deviation trader, trade delta based on position relative to last close at 4:44am
@@ -1853,7 +1847,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, "**********");
             outputDetailedXU(symbol, str("NEW", lt, o.orderId(), "fut dev take profit BUY",
-                    "max,min,open,last", maxV, minV, open, last,
+                    "max,min,oautopen,last", maxV, minV, open, last,
                     "min/open", r10000(minV / open - 1), "loThresh", loThresh,
                     "p/min", r10000(last / minV - 1), "retreatHIThresh", retreatHIThresh));
         } else if ((maxV / open - 1 > hiThresh) && (last / maxV - 1 < retreatLOThresh)
@@ -3554,24 +3548,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         NavigableMap<LocalDateTime, Double> sma = getMAGen(price5, shortMAPeriod);
         return sma.size() > 0 ? sma.lastEntry().getValue() : 0.0;
-    }
-
-    private static long tSincePrevOrderMilli(String name, AutoOrderType type, LocalDateTime nowMilli) {
-        long numOrders = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getSymbol().equals(name))
-                .filter(e -> e.getValue().getOrderType() == type)
-                .filter(e -> e.getValue().isPrimaryOrder()).count();
-        if (numOrders == 0) {
-            return Long.MAX_VALUE;
-        } else {
-            LocalDateTime last = globalIdOrderMap.entrySet().stream()
-                    .filter(e -> e.getValue().getSymbol().equals(name))
-                    .filter(e -> e.getValue().getOrderType() == type)
-                    .filter(e -> e.getValue().isPrimaryOrder())
-                    .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                    .map(e -> e.getValue().getOrderTime()).orElseThrow(() -> new IllegalArgumentException("no"));
-            return ChronoUnit.MILLIS.between(last, nowMilli);
-        }
     }
 
 
