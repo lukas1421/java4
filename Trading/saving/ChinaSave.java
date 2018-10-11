@@ -7,13 +7,13 @@ import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.time.LocalTime;
+import java.time.temporal.Temporal;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.sizeTotalMap;
 
-@SuppressWarnings({"JpaDataSourceORMInspection", "SpellCheckingInspection"})
 @javax.persistence.Entity
 @Table(name = "CHINASAVE")
 public class ChinaSave implements Serializable, ChinaSaveInterface2Blob {
@@ -54,6 +54,24 @@ public class ChinaSave implements Serializable, ChinaSaveInterface2Blob {
         this.volMapBlob = x;
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public void updateFirstMap(String name, NavigableMap<? extends Temporal, ?> mp) {
+        ConcurrentSkipListMap<LocalTime, SimpleBar> mp1 = (ConcurrentSkipListMap<LocalTime, SimpleBar>) mp;
+        mp1.forEach((k, v) -> {
+            if (!priceMapBar.get(name).containsKey(k)) {
+                priceMapBar.get(name).put(k, v);
+            }
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public void updateSecondMap(String name, NavigableMap<? extends Temporal, ?> mp) {
+        sizeTotalMap.put(name, (ConcurrentSkipListMap<LocalTime, Double>)
+                Utility.trimSkipMap((NavigableMap<LocalTime, ?>) mp, LocalTime.of(9, 24)));
+    }
+
     @Override
     public Blob getFirstBlob() {
         return dayPriceMapBlob;
@@ -69,23 +87,23 @@ public class ChinaSave implements Serializable, ChinaSaveInterface2Blob {
         return new ChinaSave(name);
     }
 
-    @SuppressWarnings("unchecked")
-    @Override
-    public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
-        ConcurrentSkipListMap<LocalTime, SimpleBar> mp1 = (ConcurrentSkipListMap<LocalTime, SimpleBar>) mp;
-        mp1.forEach((k, v) -> {
-            if (!priceMapBar.get(name).containsKey(k)) {
-                priceMapBar.get(name).put(k, v);
-            }
-        });
-        //priceMapBar.put(name,(ConcurrentSkipListMap<LocalTime,SimpleBar>)trimSkipMap(mp, LocalTime.of(9,19)));
-    }
-
-    @SuppressWarnings("unchecked")
-    @Override
-    public void updateSecondMap(String name, NavigableMap<LocalTime, ?> mp) {
-        sizeTotalMap.put(name, (ConcurrentSkipListMap<LocalTime, Double>) Utility.trimSkipMap(mp, LocalTime.of(9, 24)));
-    }
+//    @SuppressWarnings("unchecked")
+//    @Override
+//    public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
+//        ConcurrentSkipListMap<LocalTime, SimpleBar> mp1 = (ConcurrentSkipListMap<LocalTime, SimpleBar>) mp;
+//        mp1.forEach((k, v) -> {
+//            if (!priceMapBar.get(name).containsKey(k)) {
+//                priceMapBar.get(name).put(k, v);
+//            }
+//        });
+//        //priceMapBar.put(name,(ConcurrentSkipListMap<LocalTime,SimpleBar>)trimSkipMap(mp, LocalTime.of(9,19)));
+//    }
+//
+//    @SuppressWarnings("unchecked")
+//    @Override
+//    public void updateSecondMap(String name, NavigableMap<LocalTime, ?> mp) {
+//        sizeTotalMap.put(name, (ConcurrentSkipListMap<LocalTime, Double>) Utility.trimSkipMap(mp, LocalTime.of(9, 24)));
+//    }
 
     @Override
     public int hashCode() {

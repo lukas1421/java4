@@ -12,6 +12,7 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
@@ -118,11 +119,12 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         this.sharpe = s;
     }
 
-    static NavigableMap<LocalTime, SimpleBar> pmbDetailToSimpleBar(NavigableMap<LocalTime, Double> in) {
+    static NavigableMap<LocalTime, SimpleBar> pmbDetailToSimpleBar(NavigableMap<LocalDateTime, Double> in) {
         NavigableMap<LocalTime, SimpleBar> out = new ConcurrentSkipListMap<>();
-        for (Map.Entry<LocalTime, Double> e : in.entrySet()) {
-            LocalTime roundToMin = e.getKey().truncatedTo(ChronoUnit.MINUTES);
-            if (e.getKey().isAfter(LocalTime.of(4, 0)) && e.getKey().isBefore(LocalTime.of(17, 0))) {
+        for (Map.Entry<LocalDateTime, Double> e : in.entrySet()) {
+            LocalTime roundToMin = e.getKey().toLocalTime().truncatedTo(ChronoUnit.MINUTES);
+            if (e.getKey().toLocalTime().isAfter(LocalTime.of(4, 0)) &&
+                    e.getKey().toLocalTime().isBefore(LocalTime.of(17, 0))) {
                 if (!out.containsKey(roundToMin)) {
                     out.put(roundToMin, new SimpleBar(e.getValue()));
                 } else {

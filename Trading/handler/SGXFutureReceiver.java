@@ -47,7 +47,7 @@ public class SGXFutureReceiver implements LiveHandler {
             case LAST:
                 ChinaStock.priceMap.put(symbol, price);
                 AutoTraderXU.futPriceMap.put(f, price);
-                priceMapBarDetail.get(symbol).put(ldt.toLocalTime(), price);
+                priceMapBarDetail.get(symbol).put(ldt, price);
 
                 // need to capture overnight data
                 if (t.isAfter(LocalTime.of(8, 55)) || t.isBefore(LocalTime.of(5, 0))) {

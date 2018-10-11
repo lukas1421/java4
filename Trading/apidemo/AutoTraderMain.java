@@ -434,6 +434,10 @@ public class AutoTraderMain extends JPanel {
         return LocalTime.of(h, m, s);
     }
 
+    static LocalDateTime ldtof(LocalDate d, LocalTime t) {
+        return LocalDateTime.of(d, t);
+    }
+
     static LocalDateTime getLastOrderTime(String symbol, AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getSymbol().equals(symbol))

@@ -1,21 +1,12 @@
 package saving;
 
-import apidemo.ChinaData;
-import auxiliary.Strategy;
-
+import javax.persistence.*;
+import javax.sql.rowset.serial.SerialBlob;
 import java.io.Serializable;
 import java.sql.Blob;
 import java.sql.SQLException;
-import java.time.LocalTime;
+import java.time.temporal.Temporal;
 import java.util.NavigableMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.sql.rowset.serial.SerialBlob;
 
 @Entity
 public class ChinaSaveStrat implements Serializable, ChinaSaveInterface2Blob {
@@ -48,13 +39,23 @@ public class ChinaSaveStrat implements Serializable, ChinaSaveInterface2Blob {
     }
 
     @Override
-    public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
-        ChinaData.strategyTotalMap.put(name, (ConcurrentSkipListMap<LocalTime, Strategy>) mp);
+    public void updateFirstMap(String name, NavigableMap<? extends Temporal, ?> mp) {
+
     }
 
     @Override
-    public void updateSecondMap(String name, NavigableMap<LocalTime, ?> mp) {
+    public void updateSecondMap(String name, NavigableMap<? extends Temporal, ?> mp) {
+
     }
+
+//    @Override
+//    public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
+//        ChinaData.strategyTotalMap.put(name, (ConcurrentSkipListMap<LocalTime, Strategy>) mp);
+//    }
+//
+//    @Override
+//    public void updateSecondMap(String name, NavigableMap<LocalTime, ?> mp) {
+//    }
 
     @Override
     public Blob getFirstBlob() {

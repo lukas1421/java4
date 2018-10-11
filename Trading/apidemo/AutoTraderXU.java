@@ -43,7 +43,6 @@ import static apidemo.ChinaStockHelper.reverseComp;
 import static apidemo.TradingConstants.*;
 import static apidemo.XuTraderHelper.*;
 import static client.OrderStatus.*;
-import static client.Types.TimeInForce.DAY;
 import static client.Types.TimeInForce.IOC;
 import static java.time.temporal.ChronoUnit.*;
 import static util.AutoOrderType.*;
@@ -84,6 +83,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     //fut open dev
     private static volatile Direction futDevDir = Direction.Flat;
     private static volatile AtomicBoolean manualfutDev = new AtomicBoolean(false);
+    //
+    private static volatile Direction futNightDevDir = Direction.Flat;
+    private static volatile AtomicBoolean manualfutNightDev = new AtomicBoolean(false);
     private static volatile EnumMap<FutType, Double> fut5amClose = new EnumMap<>(FutType.class);
     private static final double MAX_FUT_DEV = 0.002;
 
@@ -833,7 +835,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         //cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
 
         if (globalTradingOn.get()) {
-            sgxDev(ldt, price);
+            //sgxDev(ldt, price);
+            sgxNightDev(ldt, price);
         }
         sgxA50CloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
 
@@ -1359,10 +1362,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime lt = nowMilli.toLocalTime();
         String symbol = ibContractToSymbol(activeFutCt);
         FutType f = ibContractToFutType(activeFutCt);
-        LocalTime amObservationStart = ltof(8, 59, 59);
+        LocalDate td = getTradeDate(nowMilli);
+        LocalDateTime amObservationStart = LocalDateTime.of(td, ltof(8, 59, 59));
         long currPos = currentPosMap.get(f);
 
-        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+        NavigableMap<LocalDateTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(amObservationStart))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
@@ -1375,10 +1379,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        LocalTime halfHourStart = ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0);
+        LocalDateTime halfHourStart = LocalDateTime.of(td, ltof(lt.getHour(), lt.getMinute() < 30 ? 0 : 30, 0));
         double halfHourOpen = futPrice.floorEntry(halfHourStart).getValue();
 
-        HalfHour h = HalfHour.get(halfHourStart);
+        HalfHour h = HalfHour.get(halfHourStart.toLocalTime());
         AutoOrderType ot = getOrderTypeByHalfHour(h);
 
         long halfHourOrderNum = getOrderSizeForTradeType(symbol, ot);
@@ -1446,7 +1450,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         String symbol = ibContractToSymbol(activeFutCt);
         FutType f = ibContractToFutType(activeFutCt);
         LocalTime cutoff = ltof(10, 0, 0);
-        LocalTime amObservationStart = ltof(8, 59, 59);
+
+        LocalDate td = getTradeDate(nowMilli);
+        LocalDateTime amObservationStart = LocalDateTime.of(td, ltof(8, 59, 59));
+        //LocalTime amObservationStart = ltof(8, 59, 59);
         cancelAfterDeadline(lt, symbol, SGXA50_HILO, cutoff);
 
         int baseSize = 1;
@@ -1474,18 +1481,18 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         int waitTimeSec = milliBtwnLastTwoOrders < 60000 ? 300 : 10;
 
-        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+        NavigableMap<LocalDateTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(amObservationStart))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
-        if (futPrice.size() <= 1 || futPrice.firstKey().isAfter(ltof(9, 1, 0))) {
+        if (futPrice.size() <= 1 || futPrice.firstKey().isAfter(LocalDateTime.of(td, ltof(9, 1, 0)))) {
             return;
         }
 
         double futOpen = futPrice.firstEntry().getValue();
         double futLast = futPrice.lastEntry().getValue();
-        LocalTime lastKey = futPrice.lastKey();
+        LocalDateTime lastKey = futPrice.lastKey();
 
         double maxP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
@@ -1493,11 +1500,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double minP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
-        LocalTime maxTPre10 = getFirstMaxTPred(futPrice, t -> t.isBefore(ltof(10, 0)));
-        LocalTime minTPre10 = getFirstMinTPred(futPrice, t -> t.isBefore(ltof(10, 0)));
+        LocalDateTime maxTPre10 = getFirstMaxTPredLdt(futPrice, t -> t.isBefore(LocalDateTime.of(td, ltof(10, 0))));
+        LocalDateTime minTPre10 = getFirstMinTPredLdt(futPrice, t -> t.isBefore(LocalDateTime.of(td, ltof(10, 0))));
 
-        LocalTime maxT = getFirstMaxTPred(futPrice, t -> t.isAfter(amObservationStart));
-        LocalTime minT = getFirstMinTPred(futPrice, t -> t.isAfter(amObservationStart));
+        LocalDateTime maxT = getFirstMaxTPredLdt(futPrice, t -> t.isAfter(amObservationStart));
+        LocalDateTime minT = getFirstMinTPredLdt(futPrice, t -> t.isAfter(amObservationStart));
 
         if (!manualFutHiloDirection.get()) {
             if (lt.isBefore(ltof(9, 0, 0))) {
@@ -1603,146 +1610,146 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
     }
 
-    /**
-     * fut hi lo accumulator
-     *
-     * @param nowMilli   time
-     * @param freshPrice futprice
-     */
+//    /**
+//     * fut hi lo accumulator
+//     *
+//     * @param nowMilli   time
+//     * @param freshPrice futprice
+//     */
+//
+//    private static void futHiloAccu(LocalDateTime nowMilli, double freshPrice) {
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(8, 59)))
+//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+//                        (a, b) -> a, ConcurrentSkipListMap::new));
+//
+//        LocalDateTime lastOrderTime = getLastOrderTime(symbol, FUT_HILO_ACCU);
+//        LocalTime maxTPre10 = getFirstMaxTPred(futPrice, t -> t.isBefore(ltof(10, 0)));
+//        LocalTime minTPre10 = getFirstMaxTPred(futPrice, t -> t.isBefore(ltof(10, 0)));
+//
+//        int todayPerc = getPercentileForDoubleX(futPrice, freshPrice);
+//
+//        if (SECONDS.between(lastOrderTime, nowMilli) >= 900) {
+//            if (!noMoreBuy.get() && maxTPre10.isAfter(minTPre10) && todayPerc < LO_PERC_WIDE) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeBidLimitTIF(freshPrice, 1, Types.TimeInForce.DAY);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_HILO_ACCU));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), "fut hilo accu", globalIdOrderMap.get(id)));
+//            } else if (!noMoreSell.get() && maxTPre10.isBefore(minTPre10) && todayPerc > HI_PERC_WIDE) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimitTIF(freshPrice, 1, Types.TimeInForce.DAY);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_HILO_ACCU));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), "fut hilo decu", globalIdOrderMap.get(id)));
+//            }
+//        }
+//    }
+//
+//
+//    static void futHiloKnockoutTrader(LocalDateTime nowMilli, double freshPrice) {
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        FutType ft = ibContractToFutType(activeFutCt);
+//        double bid = bidMap.get(ft);
+//        double offer = askMap.get(ft);
+//        long futHiloOrdersNum = getOrderSizeForTradeType(symbol, SGXA50_HILO);
+//        long futKOOrdersNum = getOrderSizeForTradeType(symbol, FUT_KO);
+//
+//        if (futHiloOrdersNum == 0) {
+//            return;
+//        }
+//
+//        if (futHiLoDirection == Direction.Flat) {
+//            return;
+//        }
+//
+//        OrderStatus lastHiLoOrderStatus = getLastOrderStatusForType(symbol, SGXA50_HILO);
+//        if (lastHiLoOrderStatus != Filled) {
+//            return;
+//        }
+//
+//        OrderStatus lastKOOrderStatus = getLastOrderStatusForType(symbol, FUT_KO);
+//        if (futKOOrdersNum != 0 && lastKOOrderStatus != Filled) {
+//            //getMoreAggressiveFill(FUT_KO, bid, offer);
+//            cancelOrdersByType(FUT_KO);
+//            return;
+//        }
+//
+//        double previousHiloLimit = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue()
+//                .getOrderType() == SGXA50_HILO).max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+//                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
+//                .map(e -> e.getValue().getOrder().lmtPrice()).orElse(0.0);
+//
+//        double prevSize = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue()
+//                .getOrderType() == SGXA50_HILO).max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+//                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
+//                .map(e -> e.getValue().getOrder().totalQuantity()).orElse(0.0);
+//
+//        if (previousHiloLimit != 0.0 && prevSize != 0.0) {
+//            if (futHiLoDirection == Direction.Long) {
+//                if (freshPrice < previousHiloLimit) {
+//                    int id = autoTradeID.incrementAndGet();
+//                    Order o = placeOfferLimitTIF(freshPrice, prevSize, Types.TimeInForce.DAY);
+//                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_KO));
+//                    apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                    outputDetailedXU(symbol, str(o.orderId(), "fut hilo buy KO", globalIdOrderMap.get(id)));
+//                    futHiLoDirection = Direction.Flat;
+//                }
+//            } else if (futHiLoDirection == Direction.Short) {
+//                if (freshPrice > previousHiloLimit) {
+//                    int id = autoTradeID.incrementAndGet();
+//                    Order o = placeBidLimitTIF(freshPrice, prevSize, Types.TimeInForce.DAY);
+//                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_KO));
+//                    apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                    outputDetailedXU(symbol, str(o.orderId(), "fut hilo sell KO", globalIdOrderMap.get(id)));
+//                    futHiLoDirection = Direction.Flat;
+//                }
+//            }
+//        }
+//    }
 
-    private static void futHiloAccu(LocalDateTime nowMilli, double freshPrice) {
-        String symbol = ibContractToSymbol(activeFutCt);
-        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(8, 59)))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                        (a, b) -> a, ConcurrentSkipListMap::new));
 
-        LocalDateTime lastOrderTime = getLastOrderTime(symbol, FUT_HILO_ACCU);
-        LocalTime maxTPre10 = getFirstMaxTPred(futPrice, t -> t.isBefore(ltof(10, 0)));
-        LocalTime minTPre10 = getFirstMaxTPred(futPrice, t -> t.isBefore(ltof(10, 0)));
-
-        int todayPerc = getPercentileForDoubleX(futPrice, freshPrice);
-
-        if (SECONDS.between(lastOrderTime, nowMilli) >= 900) {
-            if (!noMoreBuy.get() && maxTPre10.isAfter(minTPre10) && todayPerc < LO_PERC_WIDE) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, 1, Types.TimeInForce.DAY);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_HILO_ACCU));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), "fut hilo accu", globalIdOrderMap.get(id)));
-            } else if (!noMoreSell.get() && maxTPre10.isBefore(minTPre10) && todayPerc > HI_PERC_WIDE) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, 1, Types.TimeInForce.DAY);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_HILO_ACCU));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), "fut hilo decu", globalIdOrderMap.get(id)));
-            }
-        }
-    }
-
-
-    static void futHiloKnockoutTrader(LocalDateTime nowMilli, double freshPrice) {
-        String symbol = ibContractToSymbol(activeFutCt);
-        FutType ft = ibContractToFutType(activeFutCt);
-        double bid = bidMap.get(ft);
-        double offer = askMap.get(ft);
-        long futHiloOrdersNum = getOrderSizeForTradeType(symbol, SGXA50_HILO);
-        long futKOOrdersNum = getOrderSizeForTradeType(symbol, FUT_KO);
-
-        if (futHiloOrdersNum == 0) {
-            return;
-        }
-
-        if (futHiLoDirection == Direction.Flat) {
-            return;
-        }
-
-        OrderStatus lastHiLoOrderStatus = getLastOrderStatusForType(symbol, SGXA50_HILO);
-        if (lastHiLoOrderStatus != Filled) {
-            return;
-        }
-
-        OrderStatus lastKOOrderStatus = getLastOrderStatusForType(symbol, FUT_KO);
-        if (futKOOrdersNum != 0 && lastKOOrderStatus != Filled) {
-            //getMoreAggressiveFill(FUT_KO, bid, offer);
-            cancelOrdersByType(FUT_KO);
-            return;
-        }
-
-        double previousHiloLimit = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue()
-                .getOrderType() == SGXA50_HILO).max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
-                .map(e -> e.getValue().getOrder().lmtPrice()).orElse(0.0);
-
-        double prevSize = globalIdOrderMap.entrySet().stream().filter(e -> e.getValue()
-                .getOrderType() == SGXA50_HILO).max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
-                .map(e -> e.getValue().getOrder().totalQuantity()).orElse(0.0);
-
-        if (previousHiloLimit != 0.0 && prevSize != 0.0) {
-            if (futHiLoDirection == Direction.Long) {
-                if (freshPrice < previousHiloLimit) {
-                    int id = autoTradeID.incrementAndGet();
-                    Order o = placeOfferLimitTIF(freshPrice, prevSize, Types.TimeInForce.DAY);
-                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_KO));
-                    apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                    outputDetailedXU(symbol, str(o.orderId(), "fut hilo buy KO", globalIdOrderMap.get(id)));
-                    futHiLoDirection = Direction.Flat;
-                }
-            } else if (futHiLoDirection == Direction.Short) {
-                if (freshPrice > previousHiloLimit) {
-                    int id = autoTradeID.incrementAndGet();
-                    Order o = placeBidLimitTIF(freshPrice, prevSize, Types.TimeInForce.DAY);
-                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_KO));
-                    apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                    outputDetailedXU(symbol, str(o.orderId(), "fut hilo sell KO", globalIdOrderMap.get(id)));
-                    futHiLoDirection = Direction.Flat;
-                }
-            }
-        }
-    }
-
-
-    /**
-     * take profits of PC trades
-     *
-     * @param nowMilli   time
-     * @param freshPrice last futures price
-     */
-    private static void futPCProfitTaker(LocalDateTime nowMilli, double freshPrice) {
-        LocalTime lt = nowMilli.toLocalTime();
-        String symbol = ibContractToSymbol(activeFutCt);
-        FutType futType = ibContractToFutType(activeFutCt);
-
-        double pcSignedQ = getOrderTotalSignedQForTypeFilled(symbol, FUT_DEV);
-        double ptSignedQ = getOrderTotalSignedQForTypeFilled(symbol, FUT_PC_PROFIT_TAKER);
-        LocalDateTime lastPTTime = getLastOrderTime(symbol, FUT_PC_PROFIT_TAKER);
-        LocalDateTime lastPCTime = getLastOrderTime(symbol, FUT_DEV);
-        int percentile = getPercentileForDouble(priceMapBarDetail.get(symbol));
-        double lastFut = priceMapBarDetail.get(symbol).lastEntry().getValue();
-        double pc = fut5amClose.get(futType);
-
-        pr(" fut PC profit taker ", "pcQ, ptakeQ,", pcSignedQ, ptSignedQ, "perc", percentile,
-                "last fut/pc", lastFut, pc);
-
-        if (SECONDS.between(lastPTTime, nowMilli) > 60 * 15 && SECONDS.between(lastPCTime, nowMilli) > 60 * 5) {
-            if (!noMoreBuy.get() && percentile < 1 && futDevDir == Direction.Short
-                    && pcSignedQ < 0 && (pcSignedQ + ptSignedQ) < 0 && lastFut < pc) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, 1, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_PC_PROFIT_TAKER));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), "fut PC PT buy", globalIdOrderMap.get(id)));
-            } else if (!noMoreSell.get() && percentile > 99 && futDevDir == Direction.Long
-                    && pcSignedQ > 0 && (pcSignedQ + ptSignedQ) > 0 && lastFut > pc) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, 1, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_PC_PROFIT_TAKER));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), "fut PC PT sell", globalIdOrderMap.get(id)));
-            }
-        }
-    }
+//    /**
+//     * take profits of PC trades
+//     *
+//     * @param nowMilli   time
+//     * @param freshPrice last futures price
+//     */
+//    private static void futPCProfitTaker(LocalDateTime nowMilli, double freshPrice) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        FutType futType = ibContractToFutType(activeFutCt);
+//
+//        double pcSignedQ = getOrderTotalSignedQForTypeFilled(symbol, FUT_DEV);
+//        double ptSignedQ = getOrderTotalSignedQForTypeFilled(symbol, FUT_PC_PROFIT_TAKER);
+//        LocalDateTime lastPTTime = getLastOrderTime(symbol, FUT_PC_PROFIT_TAKER);
+//        LocalDateTime lastPCTime = getLastOrderTime(symbol, FUT_DEV);
+//        int percentile = getPercentileForDouble(priceMapBarDetail.get(symbol));
+//        double lastFut = priceMapBarDetail.get(symbol).lastEntry().getValue();
+//        double pc = fut5amClose.get(futType);
+//
+//        pr(" fut PC profit taker ", "pcQ, ptakeQ,", pcSignedQ, ptSignedQ, "perc", percentile,
+//                "last fut/pc", lastFut, pc);
+//
+//        if (SECONDS.between(lastPTTime, nowMilli) > 60 * 15 && SECONDS.between(lastPCTime, nowMilli) > 60 * 5) {
+//            if (!noMoreBuy.get() && percentile < 1 && futDevDir == Direction.Short
+//                    && pcSignedQ < 0 && (pcSignedQ + ptSignedQ) < 0 && lastFut < pc) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeBidLimitTIF(freshPrice, 1, IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_PC_PROFIT_TAKER));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), "fut PC PT buy", globalIdOrderMap.get(id)));
+//            } else if (!noMoreSell.get() && percentile > 99 && futDevDir == Direction.Long
+//                    && pcSignedQ > 0 && (pcSignedQ + ptSignedQ) > 0 && lastFut > pc) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimitTIF(freshPrice, 1, IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_PC_PROFIT_TAKER));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), "fut PC PT sell", globalIdOrderMap.get(id)));
+//            }
+//        }
+//    }
 
 
     @SuppressWarnings("SameParameterValue")
@@ -1765,9 +1772,122 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         FutType f = ibContractToFutType(activeFutCt);
         AutoOrderType ot = FUT_NIGHT_DEV;
         double pos = currentPosMap.get(f);
-        LocalTime obT = ltof(16, 59, 55);
-        LocalTime cutoff = ltof(5, 0);
+        LocalDate td = getTradeDate(nowMilli);
+        LocalDateTime obT = ldtof(td, ltof(16, 59, 55));
+        LocalDateTime cutoff = ldtof(td.plusDays(1), ltof(5, 0));
 
+        NavigableMap<LocalDateTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(obT))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
+
+        if (futPrice.size() <= 1) {
+            return;
+        }
+
+        LocalDateTime lastOrderT = getLastOrderTime(symbol, ot);
+        long milliSinceLast = tSincePrevOrderMilli(symbol, ot, nowMilli);
+        long milliLast2 = lastTwoOrderMilliDiff(symbol, ot);
+        long numOrders = getOrderSizeForTradeType(symbol, ot);
+        int waitSec = getWaitSec(milliLast2);
+        double open = futPrice.firstEntry().getValue();
+        LocalDateTime openT = futPrice.firstEntry().getKey();
+        double filled = getFilledForType(symbol, ot);
+        double dev = (last / open) - 1;
+        double nightBaseSize = 1;
+
+        pr("Ndev", lt.truncatedTo(ChronoUnit.MILLIS),
+                "#", numOrders, "F#", filled, "opEn:", openT, open,
+                "P", last, "pos", pos, "dev", r10000(dev), "maxD", MAX_FUT_DEV,
+                "tFrLastOrd", showLong(milliSinceLast),
+                "wait", waitSec, "nextT", lastOrderT.toLocalTime().plusSeconds(waitSec).truncatedTo(SECONDS),
+                (nowMilli.isBefore(lastOrderT.plusSeconds(waitSec)) ? "wait" : "vacant"),
+                "baseSize", nightBaseSize, "dir", futNightDevDir, "manual", manualfutNightDev);
+
+        if (numOrders >= MAX_DEV_SIZE) {
+            return;
+        }
+
+        if (!manualfutNightDev.get()) {
+            if (lt.isBefore(ltof(17, 0, 0))) {
+                outputDetailedXU(symbol, str("set fut N open dev dir 9:01", lt, last));
+                manualfutNightDev.set(true);
+            } else {
+                if (last > open) {
+                    outputDetailedXU(symbol, str("set fut N dev dir fresh > open", lt, last, ">", open));
+                    futNightDevDir = Direction.Long;
+                    manualfutNightDev.set(true);
+                } else if (last < open) {
+                    outputDetailedXU(symbol, str("set fut N dev dir fresh < open", lt, last, "<", open));
+                    futNightDevDir = Direction.Short;
+                    manualfutNightDev.set(true);
+                } else {
+                    futNightDevDir = Direction.Flat;
+                }
+            }
+        }
+
+        double maxV = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(obT))
+                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+
+        double minV = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(obT))
+                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+
+        double buySize;
+        double sellSize;
+        //double costOffset = (numOrders % 2 == 0) ? 0 : 5.0;
+
+        if ((minV / open - 1 < loThresh) && (last / minV - 1 > retreatHIThresh)
+                && filled <= -1 && pos < 0 && (numOrders % 2 == 1)) {
+            int id = autoTradeID.incrementAndGet();
+            buySize = Math.max(1, Math.floor(Math.abs(pos) / 2));
+            Order o = placeBidLimitTIF(last, buySize, IOC);
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+            apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+            outputDetailedXU(symbol, "**********");
+            outputDetailedXU(symbol, str("NEW", lt, o.orderId(), "fut N dev take profit BUY",
+                    "max,min,open,last", maxV, minV, open, last,
+                    "min/open", r10000(minV / open - 1), "loThresh", loThresh,
+                    "p/min", r10000(last / minV - 1), "retreatHIThresh", retreatHIThresh));
+        } else if ((maxV / open - 1 > hiThresh) && (last / maxV - 1 < retreatLOThresh)
+                && filled >= 1 && pos > 0 && (numOrders % 2 == 1)) {
+            int id = autoTradeID.incrementAndGet();
+            sellSize = Math.max(1, Math.floor(Math.abs(pos) / 2));
+            Order o = placeOfferLimitTIF(last, sellSize, IOC);
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+            apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+            outputDetailedXU(symbol, "**********");
+            outputDetailedXU(symbol, str("NEW", lt, o.orderId(), "fut N dev take profit SELL",
+                    "max,min,open,last", maxV, minV, open, last,
+                    "max/open", r(maxV / open - 1), "hiThresh", hiThresh,
+                    "p/max", r(last / maxV - 1), "retreatLoThresh", retreatLOThresh));
+        } else {
+            if (SECONDS.between(lastOrderT, nowMilli) > waitSec && Math.abs(dev) < MAX_FUT_DEV) {
+                if (!noMoreBuy.get() && last > open && futNightDevDir != Direction.Long) {
+                    int id = autoTradeID.incrementAndGet();
+                    buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? nightBaseSize : 0)) : nightBaseSize;
+                    Order o = placeBidLimitTIF(last, buySize, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+                    apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+                    outputDetailedXU(symbol, "**********");
+                    outputDetailedXU(symbol, str("NEW", lt, o.orderId(), "fut N dev BUY #:", numOrders,
+                            globalIdOrderMap.get(id), "open,last ", open, last, "milliLast2", showLong(milliLast2),
+                            "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec), "baseSize", nightBaseSize));
+                    futNightDevDir = Direction.Long;
+                } else if (!noMoreSell.get() && last < open && futNightDevDir != Direction.Short) {
+                    int id = autoTradeID.incrementAndGet();
+                    sellSize = pos > 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? nightBaseSize : 0)) : nightBaseSize;
+                    Order o = placeOfferLimitTIF(last, sellSize, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+                    apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+                    outputDetailedXU(symbol, "**********");
+                    outputDetailedXU(symbol, str("NEW", lt, o.orderId(), "fut N dev SELL #:", numOrders,
+                            globalIdOrderMap.get(id), "open,last ", open, last, "milliLast2", showLong(milliLast2),
+                            "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec), "baseSize", nightBaseSize));
+                    futNightDevDir = Direction.Short;
+                }
+            }
+        }
 
     }
 
@@ -1783,10 +1903,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         FutType f = ibContractToFutType(activeFutCt);
         AutoOrderType ot = FUT_DEV;
         double pos = currentPosMap.get(f);
-        LocalTime obT = ltof(8, 59, 55);
+        LocalDate td = getTradeDate(nowMilli);
+        LocalDateTime obT = LocalDateTime.of(td, ltof(8, 59, 55));
         LocalTime cutoff = ltof(16, 0);
 
-        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+        NavigableMap<LocalDateTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
                 .filter(e -> e.getKey().isAfter(obT))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
@@ -1802,7 +1923,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         int waitSec = getWaitSec(milliLast2);
         //double priceOffset = getPriceOffset(milliLast2, last);
         double open = futPrice.firstEntry().getValue();
-        LocalTime openT = futPrice.firstEntry().getKey();
+        LocalDateTime openT = futPrice.firstEntry().getKey();
         double filled = getFilledForType(symbol, ot);
         double dev = (last / open) - 1;
         //int baseSize = DEV_BASE_SIZE;
@@ -1902,426 +2023,428 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
     }
 
-    /**
-     * fut day ma trader
-     *
-     * @param nowMilli   now
-     * @param freshPrice price
-     */
-    private static void futDayMATrader(LocalDateTime nowMilli, double freshPrice) {
-        LocalTime lt = nowMilli.toLocalTime();
-        String symbol = ibContractToSymbol(activeFutCt);
-        FutType f = ibContractToFutType(activeFutCt);
+//    /**
+//     * fut day ma trader
+//     *
+//     * @param nowMilli   now
+//     * @param freshPrice price
+//     */
+//    private static void futDayMATrader(LocalDateTime nowMilli, double freshPrice) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        FutType f = ibContractToFutType(activeFutCt);
+//        LocalDate td = getTradeDate(nowMilli);
+//        LocalDateTime obT = LocalDateTime.of(td, ltof(8, 59, 55));
+//
+//        NavigableMap<LocalDateTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(obT))
+//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+//                        (a, b) -> a, ConcurrentSkipListMap::new));
+//        int shorterMA = 100;
+//        int longerMA = 200;
+//        long numOrder = getOrderSizeForTradeType(symbol, FUT_DAY_MA);
+//        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(symbol, isNotMA());
+//        double totalFutMASignedQ = getOrderTotalSignedQForTypeFilled(symbol, FUT_DAY_MA);
+//
+//        LocalDateTime lastOrderTime = getLastOrderTime(symbol, FUT_DAY_MA);
+//
+//        if (numOrder > 20) {
+//            if (detailedPrint.get()) {
+//                pr(" fut day ma trader exceeding size 20");
+//            }
+//            return;
+//        }
+//
+//        Types.Action lastAction = getLastAction(FUT_DAY_MA);
+//        int perc = getPercentileForDouble(futPrice);
+//
+//        NavigableMap<LocalTime, Double> smaShort = getMAGenDouble(futPrice, shorterMA);
+//        NavigableMap<LocalTime, Double> smaLong = getMAGenDouble(futPrice, longerMA);
+//
+//        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
+//            return;
+//        }
+//
+//        double maShortLast = smaShort.lastEntry().getValue();
+//        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
+//        double maLongLast = smaLong.lastEntry().getValue();
+//        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
+//
+//
+//        if (perc < 10 && !noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
+//                && lastAction != Types.Action.BUY && (totalFilledNonMAOrderSize < 0 &&
+//                (totalFilledNonMAOrderSize + totalFutMASignedQ < 0))) {
+//            int id = autoTradeID.incrementAndGet();
+//            Order o = placeBidLimit(freshPrice, 1);
+//            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_DAY_MA));
+//            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//            outputDetailedXU(symbol, str(o.orderId(), "fut day MA buy #:", numOrder, "perc", perc
+//                    , "last:shortlong", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast,
+//                    "other size, MA size ", totalFilledNonMAOrderSize, totalFutMASignedQ,
+//                    "last action ", lastAction, "last order T:", lastOrderTime));
+//        } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
+//                && lastAction != Types.Action.SELL && (totalFilledNonMAOrderSize > 0 &&
+//                (totalFilledNonMAOrderSize + totalFutMASignedQ > 0))) {
+//            int id = autoTradeID.incrementAndGet();
+//            Order o = placeOfferLimit(freshPrice, 1);
+//            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_DAY_MA));
+//            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//            outputDetailedXU(symbol, str(o.orderId(), "fut day MA sell #:", numOrder, "perc", perc
+//                    , "last:shortlong", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast,
+//                    "other size, MA size ", totalFilledNonMAOrderSize, totalFutMASignedQ,
+//                    "last action ", lastAction, "last order T", lastOrderTime));
+//        }
+//    }
 
-        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(8, 59, 0)))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                        (a, b) -> a, ConcurrentSkipListMap::new));
-        int shorterMA = 100;
-        int longerMA = 200;
-        long numOrder = getOrderSizeForTradeType(symbol, FUT_DAY_MA);
-        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(symbol, isNotMA());
-        double totalFutMASignedQ = getOrderTotalSignedQForTypeFilled(symbol, FUT_DAY_MA);
-
-        LocalDateTime lastOrderTime = getLastOrderTime(symbol, FUT_DAY_MA);
-
-        if (numOrder > 20) {
-            if (detailedPrint.get()) {
-                pr(" fut day ma trader exceeding size 20");
-            }
-            return;
-        }
-
-        Types.Action lastAction = getLastAction(FUT_DAY_MA);
-        int perc = getPercentileForDouble(futPrice);
-
-        NavigableMap<LocalTime, Double> smaShort = getMAGenDouble(futPrice, shorterMA);
-        NavigableMap<LocalTime, Double> smaLong = getMAGenDouble(futPrice, longerMA);
-
-        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            return;
-        }
-
-        double maShortLast = smaShort.lastEntry().getValue();
-        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
-        double maLongLast = smaLong.lastEntry().getValue();
-        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
-
-
-        if (perc < 10 && !noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
-                && lastAction != Types.Action.BUY && (totalFilledNonMAOrderSize < 0 &&
-                (totalFilledNonMAOrderSize + totalFutMASignedQ < 0))) {
-            int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimit(freshPrice, 1);
-            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_DAY_MA));
-            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-            outputDetailedXU(symbol, str(o.orderId(), "fut day MA buy #:", numOrder, "perc", perc
-                    , "last:shortlong", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast,
-                    "other size, MA size ", totalFilledNonMAOrderSize, totalFutMASignedQ,
-                    "last action ", lastAction, "last order T:", lastOrderTime));
-        } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
-                && lastAction != Types.Action.SELL && (totalFilledNonMAOrderSize > 0 &&
-                (totalFilledNonMAOrderSize + totalFutMASignedQ > 0))) {
-            int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimit(freshPrice, 1);
-            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_DAY_MA));
-            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-            outputDetailedXU(symbol, str(o.orderId(), "fut day MA sell #:", numOrder, "perc", perc
-                    , "last:shortlong", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast,
-                    "other size, MA size ", totalFilledNonMAOrderSize, totalFutMASignedQ,
-                    "last action ", lastAction, "last order T", lastOrderTime));
-        }
-    }
-
-    /**
-     * fut fast ma trader
-     *
-     * @param nowMilli   now
-     * @param freshPrice price
-     */
-    private static void futFastMATrader(LocalDateTime nowMilli, double freshPrice) {
-        LocalTime lt = nowMilli.toLocalTime();
-        String symbol = ibContractToSymbol(activeFutCt);
-        FutType f = ibContractToFutType(activeFutCt);
-
-        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(8, 59, 0)))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                        (a, b) -> a, ConcurrentSkipListMap::new));
-        int shorterMA = 100;
-        int longerMA = 200;
-        long numOrder = getOrderSizeForTradeType(symbol, FUT_FAST_MA);
-
-        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(symbol, isNotMA());
-        double totalFutFastMASignedQ = getOrderTotalSignedQForTypeFilled(symbol, FUT_FAST_MA);
-
-        LocalTime lastKey = futPrice.lastKey();
-        int perc = getPercentileForDoublePred(futPrice, e -> e.isAfter(lastKey.minusMinutes(15)));
-
-        NavigableMap<LocalTime, Double> smaShort = getMAGenDouble(futPrice, shorterMA);
-        NavigableMap<LocalTime, Double> smaLong = getMAGenDouble(futPrice, longerMA);
+//    /**
+//     * fut fast ma trader
+//     *
+//     * @param nowMilli   now
+//     * @param freshPrice price
+//     */
+//    private static void futFastMATrader(LocalDateTime nowMilli, double freshPrice) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        FutType f = ibContractToFutType(activeFutCt);
+//
+//        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(8, 59, 0)))
+//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+//                        (a, b) -> a, ConcurrentSkipListMap::new));
+//        int shorterMA = 100;
+//        int longerMA = 200;
+//        long numOrder = getOrderSizeForTradeType(symbol, FUT_FAST_MA);
+//
+//        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(symbol, isNotMA());
+//        double totalFutFastMASignedQ = getOrderTotalSignedQForTypeFilled(symbol, FUT_FAST_MA);
+//
+//        LocalTime lastKey = futPrice.lastKey();
+//        int perc = getPercentileForDoublePred(futPrice, e -> e.isAfter(lastKey.minusMinutes(15)));
+//
+//        NavigableMap<LocalTime, Double> smaShort = getMAGenDouble(futPrice, shorterMA);
+//        NavigableMap<LocalTime, Double> smaLong = getMAGenDouble(futPrice, longerMA);
+//
+//
+//        Types.Action lastAction = getLastAction(FUT_FAST_MA);
+//        LocalDateTime lastOrderTime = getLastOrderTime(symbol, FUT_FAST_MA);
+//
+//        if (numOrder > 10) {
+//            if (detailedPrint.get()) {
+//                pr(" fut fast ma trader exceeding size 20");
+//            }
+//            return;
+//        }
+//
+//
+//        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
+//            return;
+//        }
+//
+//        double maShortLast = smaShort.lastEntry().getValue();
+//        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
+//        double maLongLast = smaLong.lastEntry().getValue();
+//        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
+//
+//        if (perc < 10 && !noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast &&
+//                lastAction != Types.Action.BUY && (totalFilledNonMAOrderSize < 0 &&
+//                (totalFilledNonMAOrderSize + totalFutFastMASignedQ < 0))) {
+//            int id = autoTradeID.incrementAndGet();
+//            Order o = placeBidLimit(freshPrice, 1);
+//            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_FAST_MA));
+//            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//            outputDetailedXU(symbol, str(o.orderId(), "fut fast MA buy #:", numOrder, "perc", perc
+//                    , "lastSL", maShortLast, maLongLast, "secLast:SL:", maShortSecLast, maLongSecLast,
+//                    "other size, MA size ", totalFilledNonMAOrderSize, totalFutFastMASignedQ,
+//                    "last action ", lastAction, "last Action T:", lastOrderTime));
+//        } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
+//                lastAction != Types.Action.SELL && (totalFilledNonMAOrderSize > 0 &&
+//                (totalFilledNonMAOrderSize + totalFutFastMASignedQ > 0))) {
+//            int id = autoTradeID.incrementAndGet();
+//            Order o = placeOfferLimit(freshPrice, 1);
+//            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_FAST_MA));
+//            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//            outputDetailedXU(symbol, str(o.orderId(), "fut fast MA sell #:", numOrder, "perc", perc
+//                    , "last:SL", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast,
+//                    "other size, MA size ", totalFilledNonMAOrderSize, totalFutFastMASignedQ,
+//                    "last action ", lastAction, "last action T:", lastOrderTime));
+//        }
+//    }
 
 
-        Types.Action lastAction = getLastAction(FUT_FAST_MA);
-        LocalDateTime lastOrderTime = getLastOrderTime(symbol, FUT_FAST_MA);
+//    /**
+//     * fut trades at fut open at 9am
+//     *
+//     * @param nowMilli   time now
+//     * @param freshPrice fut price
+//     * @param pmchy      ytd pm change in percentile
+//     */
+//    private static void futOpenTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        FutType f = ibContractToFutType(activeFutCt);
+//        cancelAfterDeadline(lt, symbol, SGXA50_OPEN, ltof(9, 29, 50));
+//        double bidPrice = bidMap.get(f);
+//        double askPrice = askMap.get(f);
+//        double deltaTgt = getDeltaTarget(nowMilli, pmchy);
+//        double currDelta = getNetPtfDelta();
+//
+//        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(ltof(9, 29))) {
+//            checkCancelOrders(symbol, SGXA50_OPEN, nowMilli, 5);
+//            return;
+//        }
+//
+//        if (priceMapBarDetail.get(symbol).size() <= 1) {
+//            return;
+//        }
+//
+//        long futOpenOrdersNum = getOrderSizeForTradeType(symbol, SGXA50_OPEN);
+//
+//        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(8, 59, 0)))
+//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+//                        (a, b) -> a, ConcurrentSkipListMap::new));
+//
+//        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
+//        int _2dayPerc = getPercentileForLast(fut);
+//
+//        pr("fut open trader " + futPrice);
+//        pr(" curDelta/delta target ", r(currDelta), r(deltaTgt));
+//        LocalTime lastKey = futPrice.lastKey();
+//
+//        double maxP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
+//                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+//
+//        double minP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
+//                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+//
+//        double last = futPrice.lastEntry().getValue();
+//
+//        LocalDateTime lastOpenTime = getLastOrderTime(symbol, SGXA50_OPEN);
+//
+//        if (SECONDS.between(lastOpenTime, nowMilli) >= 60) {
+//            if (!noMoreBuy.get() && last > maxP && _2dayPerc < 50 && (_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO)
+//                    && currDelta < deltaTgt && maxP != 0.0 && minP != 0.0) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeBidLimitTIF(freshPrice, 1, IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_OPEN));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, str(o.orderId(), "fut open buy #:", futOpenOrdersNum,
+//                        globalIdOrderMap.get(id), " max min last fresh 2dp% pmchy ", r(maxP), r(minP), r(last), freshPrice
+//                        , _2dayPerc, pmchy, "bid ask ", bidPrice, askPrice, "currDelta/tgt:", r(currDelta), r(deltaTgt)));
+//            } else if (!noMoreSell.get() && last < minP && _2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI
+//                    && currDelta > deltaTgt && maxP != 0.0 && minP != 0.0) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimitTIF(freshPrice, 1, IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_OPEN));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, str(o.orderId(), "fut open sell #:", futOpenOrdersNum,
+//                        globalIdOrderMap.get(id), "max min last fresh 2dp% ", r(maxP), r(minP), r(last), freshPrice
+//                        , _2dayPerc, pmchy, "bid ask ", bidPrice, askPrice, "currDelta/tgt:", r(currDelta), r(deltaTgt)));
+//            }
+//        }
+//    }
+//
+//    /**
+//     * trades based on ftse first tick
+//     *
+//     * @param nowMilli  time
+//     * @param indexLast fut price
+//     */
+//    static void indexFirstTickTrader(LocalDateTime nowMilli, double indexLast) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        int pmchy = getRecentPmCh(lt, INDEX_000001);
+//        FutType f = ibContractToFutType(activeFutCt);
+//        double bidPrice = bidMap.get(f);
+//        double askPrice = askMap.get(f);
+//        double freshPrice = futPriceMap.get(f);
+//        String symbol = ibContractToSymbol(activeFutCt);
+//
+//        if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(9, 35))) {
+//            checkCancelOrders(symbol, FTSEA50_FIRST_TICK, nowMilli, ORDER_WAIT_TIME);
+//            return;
+//        }
+//
+//        if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
+//            return;
+//        }
+//
+//        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
+//        int _2dayPerc = getPercentileForLast(fut);
+//
+//        if (detailedPrint.get()) {
+//            pr(" detailed ftse index ", priceMapBarDetail.get(FTSE_INDEX));
+//        }
+//
+//        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(9, 28)).getValue();
+//
+//        double ftick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
+//                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue)
+//                .orElse(open);
+//
+//        LocalTime firstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
+//                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
+//                .orElse(LocalTime.MIN);
+//
+//        LocalDateTime lastFTickTime = getLastOrderTime(symbol, FTSEA50_FIRST_TICK);
+//        int buySize = 3;
+//        int sellSize = 2;
+//
+//        if (detailedPrint.get()) {
+//            pr("indexFirstTickTrader:open/last/ft/ftTime", r(open), r(indexLast), r(ftick), firstTickTime);
+//        }
+//
+//        if (MINUTES.between(lastFTickTime, nowMilli) >= 10) {
+//            if (!noMoreBuy.get() && ftick > open && _2dayPerc < 50 && (_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO)) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_FIRST_TICK));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, str(o.orderId(), "1st tick buy", globalIdOrderMap.get(id),
+//                        "open/FT/T", r(open), r(ftick), firstTickTime, " bid ask ", bidPrice, askPrice));
+//            } else if (!noMoreSell.get() && ftick < open && _2dayPerc > 50 && pmchy > PMCHY_LO
+//                    && (_2dayPerc > HI_PERC_WIDE || pmchy > PMCHY_HI)) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_FIRST_TICK));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, str(o.orderId(), "1st tick sell", globalIdOrderMap.get(id),
+//                        "open/FT/T", r(open), r(ftick), firstTickTime, " bid ask ", bidPrice, askPrice));
+//            }
+//        }
+//    }
 
-        if (numOrder > 10) {
-            if (detailedPrint.get()) {
-                pr(" fut fast ma trader exceeding size 20");
-            }
-            return;
-        }
-
-
-        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            return;
-        }
-
-        double maShortLast = smaShort.lastEntry().getValue();
-        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
-        double maLongLast = smaLong.lastEntry().getValue();
-        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
-
-        if (perc < 10 && !noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast &&
-                lastAction != Types.Action.BUY && (totalFilledNonMAOrderSize < 0 &&
-                (totalFilledNonMAOrderSize + totalFutFastMASignedQ < 0))) {
-            int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimit(freshPrice, 1);
-            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_FAST_MA));
-            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-            outputDetailedXU(symbol, str(o.orderId(), "fut fast MA buy #:", numOrder, "perc", perc
-                    , "lastSL", maShortLast, maLongLast, "secLast:SL:", maShortSecLast, maLongSecLast,
-                    "other size, MA size ", totalFilledNonMAOrderSize, totalFutFastMASignedQ,
-                    "last action ", lastAction, "last Action T:", lastOrderTime));
-        } else if (perc > 90 && !noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
-                lastAction != Types.Action.SELL && (totalFilledNonMAOrderSize > 0 &&
-                (totalFilledNonMAOrderSize + totalFutFastMASignedQ > 0))) {
-            int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimit(freshPrice, 1);
-            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_FAST_MA));
-            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-            outputDetailedXU(symbol, str(o.orderId(), "fut fast MA sell #:", numOrder, "perc", perc
-                    , "last:SL", maShortLast, maLongLast, "secLast:SL", maShortSecLast, maLongSecLast,
-                    "other size, MA size ", totalFilledNonMAOrderSize, totalFutFastMASignedQ,
-                    "last action ", lastAction, "last action T:", lastOrderTime));
-        }
-    }
-
-
-    /**
-     * fut trades at fut open at 9am
-     *
-     * @param nowMilli   time now
-     * @param freshPrice fut price
-     * @param pmchy      ytd pm change in percentile
-     */
-    private static void futOpenTrader(LocalDateTime nowMilli, double freshPrice, int pmchy) {
-        LocalTime lt = nowMilli.toLocalTime();
-        String symbol = ibContractToSymbol(activeFutCt);
-        FutType f = ibContractToFutType(activeFutCt);
-        cancelAfterDeadline(lt, symbol, SGXA50_OPEN, ltof(9, 29, 50));
-        double bidPrice = bidMap.get(f);
-        double askPrice = askMap.get(f);
-        double deltaTgt = getDeltaTarget(nowMilli, pmchy);
-        double currDelta = getNetPtfDelta();
-
-        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(ltof(9, 29))) {
-            checkCancelOrders(symbol, SGXA50_OPEN, nowMilli, 5);
-            return;
-        }
-
-        if (priceMapBarDetail.get(symbol).size() <= 1) {
-            return;
-        }
-
-        long futOpenOrdersNum = getOrderSizeForTradeType(symbol, SGXA50_OPEN);
-
-        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(8, 59, 0)))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                        (a, b) -> a, ConcurrentSkipListMap::new));
-
-        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
-        int _2dayPerc = getPercentileForLast(fut);
-
-        pr("fut open trader " + futPrice);
-        pr(" curDelta/delta target ", r(currDelta), r(deltaTgt));
-        LocalTime lastKey = futPrice.lastKey();
-
-        double maxP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
-                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-
-        double minP = futPrice.entrySet().stream().filter(e -> e.getKey().isBefore(lastKey))
-                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
-
-        double last = futPrice.lastEntry().getValue();
-
-        LocalDateTime lastOpenTime = getLastOrderTime(symbol, SGXA50_OPEN);
-
-        if (SECONDS.between(lastOpenTime, nowMilli) >= 60) {
-            if (!noMoreBuy.get() && last > maxP && _2dayPerc < 50 && (_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO)
-                    && currDelta < deltaTgt && maxP != 0.0 && minP != 0.0) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, 1, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_OPEN));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, str(o.orderId(), "fut open buy #:", futOpenOrdersNum,
-                        globalIdOrderMap.get(id), " max min last fresh 2dp% pmchy ", r(maxP), r(minP), r(last), freshPrice
-                        , _2dayPerc, pmchy, "bid ask ", bidPrice, askPrice, "currDelta/tgt:", r(currDelta), r(deltaTgt)));
-            } else if (!noMoreSell.get() && last < minP && _2dayPerc > HI_PERC_WIDE && pmchy > PMCHY_HI
-                    && currDelta > deltaTgt && maxP != 0.0 && minP != 0.0) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, 1, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, SGXA50_OPEN));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, str(o.orderId(), "fut open sell #:", futOpenOrdersNum,
-                        globalIdOrderMap.get(id), "max min last fresh 2dp% ", r(maxP), r(minP), r(last), freshPrice
-                        , _2dayPerc, pmchy, "bid ask ", bidPrice, askPrice, "currDelta/tgt:", r(currDelta), r(deltaTgt)));
-            }
-        }
-    }
-
-    /**
-     * trades based on ftse first tick
-     *
-     * @param nowMilli  time
-     * @param indexLast fut price
-     */
-    static void indexFirstTickTrader(LocalDateTime nowMilli, double indexLast) {
-        LocalTime lt = nowMilli.toLocalTime();
-        int pmchy = getRecentPmCh(lt, INDEX_000001);
-        FutType f = ibContractToFutType(activeFutCt);
-        double bidPrice = bidMap.get(f);
-        double askPrice = askMap.get(f);
-        double freshPrice = futPriceMap.get(f);
-        String symbol = ibContractToSymbol(activeFutCt);
-
-        if (lt.isBefore(ltof(9, 28)) || lt.isAfter(ltof(9, 35))) {
-            checkCancelOrders(symbol, FTSEA50_FIRST_TICK, nowMilli, ORDER_WAIT_TIME);
-            return;
-        }
-
-        if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
-            return;
-        }
-
-        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
-        int _2dayPerc = getPercentileForLast(fut);
-
-        if (detailedPrint.get()) {
-            pr(" detailed ftse index ", priceMapBarDetail.get(FTSE_INDEX));
-        }
-
-        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(9, 28)).getValue();
-
-        double ftick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
-                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue)
-                .orElse(open);
-
-        LocalTime firstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
-                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getKey)
-                .orElse(LocalTime.MIN);
-
-        LocalDateTime lastFTickTime = getLastOrderTime(symbol, FTSEA50_FIRST_TICK);
-        int buySize = 3;
-        int sellSize = 2;
-
-        if (detailedPrint.get()) {
-            pr("indexFirstTickTrader:open/last/ft/ftTime", r(open), r(indexLast), r(ftick), firstTickTime);
-        }
-
-        if (MINUTES.between(lastFTickTime, nowMilli) >= 10) {
-            if (!noMoreBuy.get() && ftick > open && _2dayPerc < 50 && (_2dayPerc < LO_PERC_WIDE || pmchy < PMCHY_LO)) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_FIRST_TICK));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, str(o.orderId(), "1st tick buy", globalIdOrderMap.get(id),
-                        "open/FT/T", r(open), r(ftick), firstTickTime, " bid ask ", bidPrice, askPrice));
-            } else if (!noMoreSell.get() && ftick < open && _2dayPerc > 50 && pmchy > PMCHY_LO
-                    && (_2dayPerc > HI_PERC_WIDE || pmchy > PMCHY_HI)) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_FIRST_TICK));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, str(o.orderId(), "1st tick sell", globalIdOrderMap.get(id),
-                        "open/FT/T", r(open), r(ftick), firstTickTime, " bid ask ", bidPrice, askPrice));
-            }
-        }
-    }
-
-    /**
-     * open deviation - buy if above open and sell if below, no cares for pmchy and percentile, shud always trade
-     *
-     * @param nowMilli  time now
-     * @param lastIndex last index price
-     */
-    static void indexOpenDeviationTrader(LocalDateTime nowMilli, double lastIndex) {
-        LocalTime lt = nowMilli.toLocalTime();
-        FutType f = ibContractToFutType(activeFutCt);
-        String symbol = ibContractToSymbol(activeFutCt);
-        double freshPrice = futPriceMap.get(f);
-        double atmVol = getATMVol(expiryToGet);
-        OrderStatus lastStatus = getLastOrderStatusForType(symbol, FTSEA50_OPEN_DEVI);
-
-        if (lt.isBefore(ltof(9, 29, 0)) || lt.isAfter(ltof(10, 0))) {
-            return;
-        }
-
-        if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
-            return;
-        }
-
-        double openIndex = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(9, 28, 0)).getValue();
-
-        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
-                .filter(e -> Math.abs(e.getValue() - openIndex) > 0.01).findFirst().map(Map.Entry::getValue)
-                .orElse(openIndex);
-
-        if (!manualOpenDeviationOn.get()) {
-            if (lt.isBefore(ltof(9, 30, 0))) {
-                manualOpenDeviationOn.set(true);
-            } else {
-                if (lastIndex > openIndex) {
-                    openDeviationDirection = Direction.Long;
-                    manualOpenDeviationOn.set(true);
-                } else if (lastIndex < openIndex) {
-                    openDeviationDirection = Direction.Short;
-                    manualOpenDeviationOn.set(true);
-                } else {
-                    openDeviationDirection = Direction.Flat;
-                }
-            }
-        }
-
-        long numOrdersOpenDev = getOrderSizeForTradeType(symbol, FTSEA50_OPEN_DEVI);
-        LocalDateTime lastOpenDevTradeTime = getLastOrderTime(symbol, FTSEA50_OPEN_DEVI);
-        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(symbol, FTSEA50_OPEN_DEVI);
-        long tSinceLastOrder = tSincePrevOrderMilli(symbol, FTSEA50_OPEN_DEVI, nowMilli);
-        if (numOrdersOpenDev >= MAX_XU_SIZE) {
-            return;
-        }
-
-        int waitTimeInSeconds = (milliBtwnLastTwoOrders < 60000) ? 300 : 10;
-
-        int baseSize = getWeekdayBaseSize(nowMilli.getDayOfWeek());
-        int buySize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == (MAX_XU_SIZE - 1)) ? 1 : 1);
-        int sellSize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == (MAX_XU_SIZE - 1)) ? 1 : 1);
-
-        if (detailedPrint.get()) {
-            if (lt.isBefore(ltof(9, 40)) || lt.getSecond() > 50) {
-                pr(" open dev #:", numOrdersOpenDev, lt.truncatedTo(SECONDS),
-                        "lastIndex/fut/pd", r(lastIndex), (freshPrice)
-                        , Math.round(10000d * (freshPrice / lastIndex - 1)) + "bps",
-                        "open:", r(openIndex), "ft", r(firstTick),
-                        "IDX chg:", r10000(lastIndex / openIndex - 1) + "bps",
-                        "openDevDir/vol ", openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
-                        "IDX chg: ", r(lastIndex - openIndex), "prevT:", lastOpenDevTradeTime,
-                        "wait(s):", waitTimeInSeconds, "last status ", lastStatus, "noBuy", noMoreBuy.get(),
-                        "noSell", noMoreSell.get(), "manual opendev set", manualOpenDeviationOn.get());
-            }
-        }
-
-        if (numOrdersOpenDev > 0 && lastStatus != Filled) {
-            if (detailedPrint.get()) {
-                pr(" open order last not filled, status ", lastStatus);
-            }
-            return;
-        }
-
-        String msg = "";
-        double buyPrice;
-        double sellPrice;
-
-        if (numOrdersOpenDev < 2) {
-            buyPrice = freshPrice;
-            sellPrice = freshPrice;
-        } else {
-            buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(openIndex, Direction.Long));
-            sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(openIndex, Direction.Short));
-        }
-
-        msg = " conservative on all trades ";
-
-        if (SECONDS.between(lastOpenDevTradeTime, nowMilli) > waitTimeInSeconds) {
-            if (!noMoreBuy.get() && lastIndex > openIndex && openDeviationDirection != Direction.Long) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(buyPrice, buySize, DAY);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_OPEN_DEVI));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "index open dev BUY #:", numOrdersOpenDev
-                        , globalIdOrderMap.get(id), "buy limit:", buyPrice,
-                        "indexLast/fut/pd/Base Size", r(lastIndex), freshPrice, baseSize,
-                        Math.round(10000d * (freshPrice / lastIndex - 1)), "bp",
-                        "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
-                        openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
-                        "IDX chg: ", r10000(lastIndex / openIndex - 1),
-                        "wait/last2Diff/tSinceLast:", waitTimeInSeconds, milliBtwnLastTwoOrders, tSinceLastOrder,
-                        "msg:", msg));
-                openDeviationDirection = Direction.Long;
-            } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(sellPrice, sellSize, DAY);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_OPEN_DEVI));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "index open dev SELL #:", numOrdersOpenDev,
-                        globalIdOrderMap.get(id), "sell limit: ", sellPrice,
-                        "indexLast/fut/pd/Base Size", r(lastIndex), freshPrice, baseSize,
-                        Math.round(10000d * (freshPrice / lastIndex - 1)), "bp",
-                        "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
-                        openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
-                        "IDX chg: ", r10000(lastIndex / openIndex - 1),
-                        "waitT/last2Diff/tSinceLast:", waitTimeInSeconds, milliBtwnLastTwoOrders, tSinceLastOrder,
-                        "msg:", msg));
-                openDeviationDirection = Direction.Short;
-            }
-        }
-    }
+//    /**
+//     * open deviation - buy if above open and sell if below, no cares for pmchy and percentile, shud always trade
+//     *
+//     * @param nowMilli  time now
+//     * @param lastIndex last index price
+//     */
+//    static void indexOpenDeviationTrader(LocalDateTime nowMilli, double lastIndex) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        FutType f = ibContractToFutType(activeFutCt);
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        double freshPrice = futPriceMap.get(f);
+//        double atmVol = getATMVol(expiryToGet);
+//        OrderStatus lastStatus = getLastOrderStatusForType(symbol, FTSEA50_OPEN_DEVI);
+//
+//        if (lt.isBefore(ltof(9, 29, 0)) || lt.isAfter(ltof(10, 0))) {
+//            return;
+//        }
+//
+//        if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
+//            return;
+//        }
+//
+//        double openIndex = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(9, 28, 0)).getValue();
+//
+//        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
+//                .filter(e -> Math.abs(e.getValue() - openIndex) > 0.01).findFirst().map(Map.Entry::getValue)
+//                .orElse(openIndex);
+//
+//        if (!manualOpenDeviationOn.get()) {
+//            if (lt.isBefore(ltof(9, 30, 0))) {
+//                manualOpenDeviationOn.set(true);
+//            } else {
+//                if (lastIndex > openIndex) {
+//                    openDeviationDirection = Direction.Long;
+//                    manualOpenDeviationOn.set(true);
+//                } else if (lastIndex < openIndex) {
+//                    openDeviationDirection = Direction.Short;
+//                    manualOpenDeviationOn.set(true);
+//                } else {
+//                    openDeviationDirection = Direction.Flat;
+//                }
+//            }
+//        }
+//
+//        long numOrdersOpenDev = getOrderSizeForTradeType(symbol, FTSEA50_OPEN_DEVI);
+//        LocalDateTime lastOpenDevTradeTime = getLastOrderTime(symbol, FTSEA50_OPEN_DEVI);
+//        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(symbol, FTSEA50_OPEN_DEVI);
+//        long tSinceLastOrder = tSincePrevOrderMilli(symbol, FTSEA50_OPEN_DEVI, nowMilli);
+//        if (numOrdersOpenDev >= MAX_XU_SIZE) {
+//            return;
+//        }
+//
+//        int waitTimeInSeconds = (milliBtwnLastTwoOrders < 60000) ? 300 : 10;
+//
+//        int baseSize = getWeekdayBaseSize(nowMilli.getDayOfWeek());
+//        int buySize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == (MAX_XU_SIZE - 1)) ? 1 : 1);
+//        int sellSize = baseSize * ((numOrdersOpenDev == 0 || numOrdersOpenDev == (MAX_XU_SIZE - 1)) ? 1 : 1);
+//
+//        if (detailedPrint.get()) {
+//            if (lt.isBefore(ltof(9, 40)) || lt.getSecond() > 50) {
+//                pr(" open dev #:", numOrdersOpenDev, lt.truncatedTo(SECONDS),
+//                        "lastIndex/fut/pd", r(lastIndex), (freshPrice)
+//                        , Math.round(10000d * (freshPrice / lastIndex - 1)) + "bps",
+//                        "open:", r(openIndex), "ft", r(firstTick),
+//                        "IDX chg:", r10000(lastIndex / openIndex - 1) + "bps",
+//                        "openDevDir/vol ", openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
+//                        "IDX chg: ", r(lastIndex - openIndex), "prevT:", lastOpenDevTradeTime,
+//                        "wait(s):", waitTimeInSeconds, "last status ", lastStatus, "noBuy", noMoreBuy.get(),
+//                        "noSell", noMoreSell.get(), "manual opendev set", manualOpenDeviationOn.get());
+//            }
+//        }
+//
+//        if (numOrdersOpenDev > 0 && lastStatus != Filled) {
+//            if (detailedPrint.get()) {
+//                pr(" open order last not filled, status ", lastStatus);
+//            }
+//            return;
+//        }
+//
+//        String msg = "";
+//        double buyPrice;
+//        double sellPrice;
+//
+//        if (numOrdersOpenDev < 2) {
+//            buyPrice = freshPrice;
+//            sellPrice = freshPrice;
+//        } else {
+//            buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(openIndex, Direction.Long));
+//            sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(openIndex, Direction.Short));
+//        }
+//
+//        msg = " conservative on all trades ";
+//
+//        if (SECONDS.between(lastOpenDevTradeTime, nowMilli) > waitTimeInSeconds) {
+//            if (!noMoreBuy.get() && lastIndex > openIndex && openDeviationDirection != Direction.Long) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeBidLimitTIF(buyPrice, buySize, DAY);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_OPEN_DEVI));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, "**********");
+//                outputDetailedXU(symbol, str("NEW", o.orderId(), "index open dev BUY #:", numOrdersOpenDev
+//                        , globalIdOrderMap.get(id), "buy limit:", buyPrice,
+//                        "indexLast/fut/pd/Base Size", r(lastIndex), freshPrice, baseSize,
+//                        Math.round(10000d * (freshPrice / lastIndex - 1)), "bp",
+//                        "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
+//                        openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
+//                        "IDX chg: ", r10000(lastIndex / openIndex - 1),
+//                        "wait/last2Diff/tSinceLast:", waitTimeInSeconds, milliBtwnLastTwoOrders, tSinceLastOrder,
+//                        "msg:", msg));
+//                openDeviationDirection = Direction.Long;
+//            } else if (!noMoreSell.get() && lastIndex < openIndex && openDeviationDirection != Direction.Short) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimitTIF(sellPrice, sellSize, DAY);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_OPEN_DEVI));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, "**********");
+//                outputDetailedXU(symbol, str("NEW", o.orderId(), "index open dev SELL #:", numOrdersOpenDev,
+//                        globalIdOrderMap.get(id), "sell limit: ", sellPrice,
+//                        "indexLast/fut/pd/Base Size", r(lastIndex), freshPrice, baseSize,
+//                        Math.round(10000d * (freshPrice / lastIndex - 1)), "bp",
+//                        "open/ft/last/openDevDir/vol", r(openIndex), r(firstTick), r(lastIndex),
+//                        openDeviationDirection, Math.round(atmVol * 10000d) / 100d + "v",
+//                        "IDX chg: ", r10000(lastIndex / openIndex - 1),
+//                        "waitT/last2Diff/tSinceLast:", waitTimeInSeconds, milliBtwnLastTwoOrders, tSinceLastOrder,
+//                        "msg:", msg));
+//                openDeviationDirection = Direction.Short;
+//            }
+//        }
+//    }
 
     private static int getWeekdayBaseSize(DayOfWeek w) {
         switch (w) {
@@ -2339,242 +2462,242 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return 0;
     }
 
-    /**
-     * pm deviation trader
-     *
-     * @param nowMilli  time
-     * @param indexLast index last
-     */
-    static void indexPmOpenDeviationTrader(LocalDateTime nowMilli, double indexLast) {
-        LocalTime lt = nowMilli.toLocalTime();
-        FutType f = ibContractToFutType(activeFutCt);
-        String symbol = ibContractToSymbol(activeFutCt);
-        double freshPrice = futPriceMap.get(f);
-        OrderStatus lastPMDevStatus = getLastOrderStatusForType(symbol, FTSEA50_PM_OPEN_DEVI);
-        int PM_DEVI_BASE = getWeekdayBaseSize(nowMilli.getDayOfWeek());
-        double bidPrice = bidMap.get(f);
-        double askPrice = askMap.get(f);
-
-        if (!checkTimeRangeBool(lt, 12, 58, 13, 30)) {
-            return;
-        }
-
-        long numPMDeviOrders = getOrderSizeForTradeType(symbol, FTSEA50_PM_OPEN_DEVI);
-        long milliBtwnLastTwo = lastTwoOrderMilliDiff(symbol, FTSEA50_PM_OPEN_DEVI);
-
-        int pmDevWaitSec = (milliBtwnLastTwo < 60000) ? 300 : 10;
-
-        if (numPMDeviOrders >= MAX_XU_SIZE) {
-            if (detailedPrint.get()) {
-                pr(" pm dev exceed max", MAX_XU_SIZE);
-            }
-            return;
-        }
-
-        if (numPMDeviOrders > 0 && lastPMDevStatus != Filled) {
-            if (detailedPrint.get()) {
-                pr(" pm devi order last not filled, status: ", lastPMDevStatus);
-            }
-            return;
-        }
-
-        double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(12, 58)).getValue();
-        if (!manualPMDevDirection.get()) {
-            if (lt.isBefore(ltof(13, 0, 0))) {
-                manualPMDevDirection.set(true);
-            } else {
-                if (indexLast > pmOpen) {
-                    indexPmDevDirection = Direction.Long;
-                    manualPMDevDirection.set(true);
-                } else if (indexLast < pmOpen) {
-                    indexPmDevDirection = Direction.Short;
-                    manualPMDevDirection.set(true);
-                } else {
-                    indexPmDevDirection = Direction.Flat;
-                }
-            }
-        }
-
-        LocalDateTime lastPMDevTradeTime = getLastOrderTime(symbol, FTSEA50_PM_OPEN_DEVI);
-
-        int buyQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
-        int sellQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
-
-        double buyPrice;
-        double sellPrice;
-        if (numPMDeviOrders < 2) {
-            buyPrice = freshPrice;
-            sellPrice = freshPrice;
-        } else {
-            buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(pmOpen, Direction.Long));
-            sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(pmOpen, Direction.Short));
-        }
-
-        if (SECONDS.between(lastPMDevTradeTime, nowMilli) > pmDevWaitSec) {
-            if (!noMoreBuy.get() && indexLast > pmOpen && indexPmDevDirection != Direction.Long) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(buyPrice, buyQ, DAY);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_PM_OPEN_DEVI));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "index pm open dev BUY #:", numPMDeviOrders
-                        , globalIdOrderMap.get(id), "pm open ", r(pmOpen), "index, price, pd ",
-                        r(indexLast), freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
-                        "bid ask ", bidPrice, askPrice));
-                indexPmDevDirection = Direction.Long;
-            } else if (!noMoreSell.get() && indexLast < pmOpen && indexPmDevDirection != Direction.Short) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(sellPrice, sellQ, DAY);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_PM_OPEN_DEVI));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "index pm open dev SELL #:", numPMDeviOrders
-                        , globalIdOrderMap.get(id), "pm open ", r(pmOpen), "index, price, pd ",
-                        r(indexLast), freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
-                        "bid ask ", bidPrice, askPrice));
-                indexPmDevDirection = Direction.Short;
-            }
-        }
-    }
-
-    /**
-     * pm hilo trader
-     *
-     * @param nowMilli  time
-     * @param indexLast last ftse index value
-     */
-    static void indexPmHiLo(LocalDateTime nowMilli, double indexLast) {
-        LocalTime lt = nowMilli.toLocalTime();
-        FutType f = ibContractToFutType(activeFutCt);
-        String symbol = ibContractToSymbol(activeFutCt);
-        double freshPrice = futPriceMap.get(f);
-        OrderStatus lastStatus = getLastOrderStatusForType(symbol, FTSEA50_PM_HILO);
-        int PM_HILO_BASE = getWeekdayBaseSize(nowMilli.getDayOfWeek()) + 2;
-        double bidPrice = bidMap.get(f);
-        double askPrice = askMap.get(f);
-        LocalTime cutoff = ltof(13, 30);
-
-        if (!checkTimeRangeBool(lt, 12, 58, 13, 30)) {
-            return;
-        }
-
-        long numPMHiloOrders = getOrderSizeForTradeType(symbol, FTSEA50_PM_HILO);
-        if (numPMHiloOrders >= MAX_XU_SIZE) {
-            if (detailedPrint.get()) {
-                pr(" pm hilo exceed max ", MAX_XU_SIZE);
-            }
-            return;
-        }
-        int buyQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
-        int sellQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
-        int totalFilled = (int) getOrderTotalSignedQForTypeFilled(symbol, FTSEA50_PM_HILO);
-
-        if (lt.isAfter(cutoff)) {
-            if (totalFilled > 0) {
-                buyQ = 0;
-                sellQ = totalFilled;
-            } else if (totalFilled < 0) {
-                buyQ = Math.abs(totalFilled);
-                sellQ = 0;
-            } else {
-                return;
-            }
-        }
-
-
-        LocalDateTime lastPMHiLoTradeTime = getLastOrderTime(symbol, FTSEA50_PM_HILO);
-        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(symbol, FTSEA50_PM_HILO);
-
-        int pmHiloWaitTimeSeconds = (milliBtwnLastTwoOrders < 60000) ? 300 : 10;
-
-
-        long tBtwnLast2Trades = lastTwoOrderMilliDiff(symbol, FTSEA50_PM_HILO);
-        long tSinceLastTrade = tSincePrevOrderMilli(symbol, FTSEA50_PM_HILO, nowMilli);
-
-        double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(12, 58)).getValue();
-
-        double pmFirstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(12, 58, 0)))
-                .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getValue)
-                .orElse(pmOpen);
-
-        LocalTime pmFirstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(12, 58, 0)))
-                .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getKey)
-                .orElse(LocalTime.MIN);
-
-        LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
-
-        double pmMaxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(12, 58))
-                        && e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-
-        double pmMinSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(12, 58)) &&
-                        e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
-
-        LocalTime pmMaxT = getFirstMaxTPred(priceMapBarDetail.get(FTSE_INDEX), t -> t.isAfter(ltof(12, 58)));
-        LocalTime pmMinT = getFirstMinTPred(priceMapBarDetail.get(FTSE_INDEX), t -> t.isAfter(ltof(12, 58)));
-
-        if (!manualPMHiloDirection.get()) {
-            if (lt.isBefore(ltof(13, 0))) {
-                manualPMHiloDirection.set(true);
-            } else {
-                if (pmMaxT.isAfter(pmMinT)) {
-                    indexPmHiLoDirection = Direction.Long;
-                    manualPMHiloDirection.set(true);
-                } else if (pmMaxT.isBefore(pmMinT)) {
-                    indexPmHiLoDirection = Direction.Short;
-                    manualPMHiloDirection.set(true);
-                } else {
-                    indexPmHiLoDirection = Direction.Flat;
-                }
-            }
-        }
-
-        if (detailedPrint.get()) {
-            pr(lt.truncatedTo(ChronoUnit.SECONDS)
-                    , "index pm hilo trader: pmOpen, pmFT, T, dir: ", r(pmOpen), r(pmFirstTick), pmFirstTickTime
-                    , indexPmHiLoDirection, "max min maxT minT ", r(pmMaxSoFar), r(pmMinSoFar), pmMaxT, pmMinT,
-                    "milliBtwnLastTwo", milliBtwnLastTwoOrders);
-        }
-
-        if (SECONDS.between(lastPMHiLoTradeTime, nowMilli) >= pmHiloWaitTimeSeconds && pmMaxSoFar != 0.0 && pmMinSoFar != 0.0) {
-            if (!noMoreBuy.get() && (indexLast > pmMaxSoFar || pmMaxT.isAfter(pmMinT))
-                    && indexPmHiLoDirection != Direction.Long) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, buyQ, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_PM_HILO));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "index pm hilo BUY #:", numPMHiloOrders,
-                        globalIdOrderMap.get(id), "buy limit: ", freshPrice, "indexLast/fut/pd: ", r(indexLast),
-                        freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
-                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDirection,
-                        "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
-                        "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar), "pmMaxT,pmMinT", pmMaxT, pmMinT,
-                        "bid ask", bidPrice, askPrice, Math.round(10000d * (askPrice / bidPrice - 1)), "bp",
-                        "total Filled", totalFilled));
-                indexPmHiLoDirection = Direction.Long;
-            } else if (!noMoreSell.get() && (indexLast < pmMinSoFar || pmMinT.isAfter(pmMaxT))
-                    && indexPmHiLoDirection != Direction.Short) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, sellQ, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_PM_HILO));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "index pm hilo SELL #:", numPMHiloOrders,
-                        globalIdOrderMap.get(id), "sell limit: ", freshPrice, "indexLast/fut/pd: ", r(indexLast),
-                        freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
-                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDirection,
-                        "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
-                        "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar), "pmMaxT,pmMinT", pmMaxT, pmMinT,
-                        "bid ask", bidPrice, askPrice, Math.round(10000d * (askPrice / bidPrice - 1)), "bp",
-                        "total Filled", totalFilled));
-                indexPmHiLoDirection = Direction.Short;
-            }
-        }
-    }
+//    /**
+//     * pm deviation trader
+//     *
+//     * @param nowMilli  time
+//     * @param indexLast index last
+//     */
+//    static void indexPmOpenDeviationTrader(LocalDateTime nowMilli, double indexLast) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        FutType f = ibContractToFutType(activeFutCt);
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        double freshPrice = futPriceMap.get(f);
+//        OrderStatus lastPMDevStatus = getLastOrderStatusForType(symbol, FTSEA50_PM_OPEN_DEVI);
+//        int PM_DEVI_BASE = getWeekdayBaseSize(nowMilli.getDayOfWeek());
+//        double bidPrice = bidMap.get(f);
+//        double askPrice = askMap.get(f);
+//
+//        if (!checkTimeRangeBool(lt, 12, 58, 13, 30)) {
+//            return;
+//        }
+//
+//        long numPMDeviOrders = getOrderSizeForTradeType(symbol, FTSEA50_PM_OPEN_DEVI);
+//        long milliBtwnLastTwo = lastTwoOrderMilliDiff(symbol, FTSEA50_PM_OPEN_DEVI);
+//
+//        int pmDevWaitSec = (milliBtwnLastTwo < 60000) ? 300 : 10;
+//
+//        if (numPMDeviOrders >= MAX_XU_SIZE) {
+//            if (detailedPrint.get()) {
+//                pr(" pm dev exceed max", MAX_XU_SIZE);
+//            }
+//            return;
+//        }
+//
+//        if (numPMDeviOrders > 0 && lastPMDevStatus != Filled) {
+//            if (detailedPrint.get()) {
+//                pr(" pm devi order last not filled, status: ", lastPMDevStatus);
+//            }
+//            return;
+//        }
+//
+//        double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(12, 58)).getValue();
+//        if (!manualPMDevDirection.get()) {
+//            if (lt.isBefore(ltof(13, 0, 0))) {
+//                manualPMDevDirection.set(true);
+//            } else {
+//                if (indexLast > pmOpen) {
+//                    indexPmDevDirection = Direction.Long;
+//                    manualPMDevDirection.set(true);
+//                } else if (indexLast < pmOpen) {
+//                    indexPmDevDirection = Direction.Short;
+//                    manualPMDevDirection.set(true);
+//                } else {
+//                    indexPmDevDirection = Direction.Flat;
+//                }
+//            }
+//        }
+//
+//        LocalDateTime lastPMDevTradeTime = getLastOrderTime(symbol, FTSEA50_PM_OPEN_DEVI);
+//
+//        int buyQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
+//        int sellQ = PM_DEVI_BASE * ((numPMDeviOrders == 0 || numPMDeviOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
+//
+//        double buyPrice;
+//        double sellPrice;
+//        if (numPMDeviOrders < 2) {
+//            buyPrice = freshPrice;
+//            sellPrice = freshPrice;
+//        } else {
+//            buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(pmOpen, Direction.Long));
+//            sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(pmOpen, Direction.Short));
+//        }
+//
+//        if (SECONDS.between(lastPMDevTradeTime, nowMilli) > pmDevWaitSec) {
+//            if (!noMoreBuy.get() && indexLast > pmOpen && indexPmDevDirection != Direction.Long) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeBidLimitTIF(buyPrice, buyQ, DAY);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_PM_OPEN_DEVI));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, "**********");
+//                outputDetailedXU(symbol, str("NEW", o.orderId(), "index pm open dev BUY #:", numPMDeviOrders
+//                        , globalIdOrderMap.get(id), "pm open ", r(pmOpen), "index, price, pd ",
+//                        r(indexLast), freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
+//                        "bid ask ", bidPrice, askPrice));
+//                indexPmDevDirection = Direction.Long;
+//            } else if (!noMoreSell.get() && indexLast < pmOpen && indexPmDevDirection != Direction.Short) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimitTIF(sellPrice, sellQ, DAY);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_PM_OPEN_DEVI));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, "**********");
+//                outputDetailedXU(symbol, str("NEW", o.orderId(), "index pm open dev SELL #:", numPMDeviOrders
+//                        , globalIdOrderMap.get(id), "pm open ", r(pmOpen), "index, price, pd ",
+//                        r(indexLast), freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
+//                        "bid ask ", bidPrice, askPrice));
+//                indexPmDevDirection = Direction.Short;
+//            }
+//        }
+//    }
+//
+//    /**
+//     * pm hilo trader
+//     *
+//     * @param nowMilli  time
+//     * @param indexLast last ftse index value
+//     */
+//    static void indexPmHiLo(LocalDateTime nowMilli, double indexLast) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        FutType f = ibContractToFutType(activeFutCt);
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        double freshPrice = futPriceMap.get(f);
+//        OrderStatus lastStatus = getLastOrderStatusForType(symbol, FTSEA50_PM_HILO);
+//        int PM_HILO_BASE = getWeekdayBaseSize(nowMilli.getDayOfWeek()) + 2;
+//        double bidPrice = bidMap.get(f);
+//        double askPrice = askMap.get(f);
+//        LocalTime cutoff = ltof(13, 30);
+//
+//        if (!checkTimeRangeBool(lt, 12, 58, 13, 30)) {
+//            return;
+//        }
+//
+//        long numPMHiloOrders = getOrderSizeForTradeType(symbol, FTSEA50_PM_HILO);
+//        if (numPMHiloOrders >= MAX_XU_SIZE) {
+//            if (detailedPrint.get()) {
+//                pr(" pm hilo exceed max ", MAX_XU_SIZE);
+//            }
+//            return;
+//        }
+//        int buyQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
+//        int sellQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
+//        int totalFilled = (int) getOrderTotalSignedQForTypeFilled(symbol, FTSEA50_PM_HILO);
+//
+//        if (lt.isAfter(cutoff)) {
+//            if (totalFilled > 0) {
+//                buyQ = 0;
+//                sellQ = totalFilled;
+//            } else if (totalFilled < 0) {
+//                buyQ = Math.abs(totalFilled);
+//                sellQ = 0;
+//            } else {
+//                return;
+//            }
+//        }
+//
+//
+//        LocalDateTime lastPMHiLoTradeTime = getLastOrderTime(symbol, FTSEA50_PM_HILO);
+//        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(symbol, FTSEA50_PM_HILO);
+//
+//        int pmHiloWaitTimeSeconds = (milliBtwnLastTwoOrders < 60000) ? 300 : 10;
+//
+//
+//        long tBtwnLast2Trades = lastTwoOrderMilliDiff(symbol, FTSEA50_PM_HILO);
+//        long tSinceLastTrade = tSincePrevOrderMilli(symbol, FTSEA50_PM_HILO, nowMilli);
+//
+//        double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(12, 58)).getValue();
+//
+//        double pmFirstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(12, 58, 0)))
+//                .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getValue)
+//                .orElse(pmOpen);
+//
+//        LocalTime pmFirstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(12, 58, 0)))
+//                .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getKey)
+//                .orElse(LocalTime.MIN);
+//
+//        LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
+//
+//        double pmMaxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(12, 58))
+//                        && e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+//
+//        double pmMinSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(12, 58)) &&
+//                        e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+//
+//        LocalTime pmMaxT = getFirstMaxTPred(priceMapBarDetail.get(FTSE_INDEX), t -> t.isAfter(ltof(12, 58)));
+//        LocalTime pmMinT = getFirstMinTPred(priceMapBarDetail.get(FTSE_INDEX), t -> t.isAfter(ltof(12, 58)));
+//
+//        if (!manualPMHiloDirection.get()) {
+//            if (lt.isBefore(ltof(13, 0))) {
+//                manualPMHiloDirection.set(true);
+//            } else {
+//                if (pmMaxT.isAfter(pmMinT)) {
+//                    indexPmHiLoDirection = Direction.Long;
+//                    manualPMHiloDirection.set(true);
+//                } else if (pmMaxT.isBefore(pmMinT)) {
+//                    indexPmHiLoDirection = Direction.Short;
+//                    manualPMHiloDirection.set(true);
+//                } else {
+//                    indexPmHiLoDirection = Direction.Flat;
+//                }
+//            }
+//        }
+//
+//        if (detailedPrint.get()) {
+//            pr(lt.truncatedTo(ChronoUnit.SECONDS)
+//                    , "index pm hilo trader: pmOpen, pmFT, T, dir: ", r(pmOpen), r(pmFirstTick), pmFirstTickTime
+//                    , indexPmHiLoDirection, "max min maxT minT ", r(pmMaxSoFar), r(pmMinSoFar), pmMaxT, pmMinT,
+//                    "milliBtwnLastTwo", milliBtwnLastTwoOrders);
+//        }
+//
+//        if (SECONDS.between(lastPMHiLoTradeTime, nowMilli) >= pmHiloWaitTimeSeconds && pmMaxSoFar != 0.0 && pmMinSoFar != 0.0) {
+//            if (!noMoreBuy.get() && (indexLast > pmMaxSoFar || pmMaxT.isAfter(pmMinT))
+//                    && indexPmHiLoDirection != Direction.Long) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeBidLimitTIF(freshPrice, buyQ, IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_PM_HILO));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, "**********");
+//                outputDetailedXU(symbol, str("NEW", o.orderId(), "index pm hilo BUY #:", numPMHiloOrders,
+//                        globalIdOrderMap.get(id), "buy limit: ", freshPrice, "indexLast/fut/pd: ", r(indexLast),
+//                        freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
+//                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDirection,
+//                        "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
+//                        "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar), "pmMaxT,pmMinT", pmMaxT, pmMinT,
+//                        "bid ask", bidPrice, askPrice, Math.round(10000d * (askPrice / bidPrice - 1)), "bp",
+//                        "total Filled", totalFilled));
+//                indexPmHiLoDirection = Direction.Long;
+//            } else if (!noMoreSell.get() && (indexLast < pmMinSoFar || pmMinT.isAfter(pmMaxT))
+//                    && indexPmHiLoDirection != Direction.Short) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimitTIF(freshPrice, sellQ, IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_PM_HILO));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, "**********");
+//                outputDetailedXU(symbol, str("NEW", o.orderId(), "index pm hilo SELL #:", numPMHiloOrders,
+//                        globalIdOrderMap.get(id), "sell limit: ", freshPrice, "indexLast/fut/pd: ", r(indexLast),
+//                        freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
+//                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDirection,
+//                        "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
+//                        "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar), "pmMaxT,pmMinT", pmMaxT, pmMinT,
+//                        "bid ask", bidPrice, askPrice, Math.round(10000d * (askPrice / bidPrice - 1)), "bp",
+//                        "total Filled", totalFilled));
+//                indexPmHiLoDirection = Direction.Short;
+//            }
+//        }
+//    }
 
     static LocalDateTime ldtof(LocalDate d, LocalTime t) {
         return LocalDateTime.of(d, t);
@@ -2635,67 +2758,67 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
     }
 
-    /**
-     * hilo trader
-     *
-     * @param nowMilli   now
-     * @param freshPrice fut
-     */
-    static void futTentativeHiloTrader(LocalDateTime nowMilli, double freshPrice) {
-        LocalTime lt = nowMilli.toLocalTime();
-        FutType f = ibContractToFutType(activeFutCt);
-        String symbol = ibContractToSymbol(activeFutCt);
-        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
-        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(8, 59, 0)))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
-                        (a, b) -> a, ConcurrentSkipListMap::new));
-        int perc = getPercentileForDouble(futPrice);
-
-
-        double buyQ = 1.0;
-        double sellQ = 1.0;
-        long numOrders = getOrderSizeForTradeType(symbol, FUT_TENTA);
-
-        OrderStatus lastStatus = getLastOrderStatusForType(symbol, FUT_TENTA);
-        Types.Action lastAction = getLastAction(FUT_TENTA);
-        double lastLimit = getLastPrice(FUT_TENTA);
-
-        LocalDateTime lastFutTentaTime = getLastOrderTime(symbol, FUT_TENTA);
-        LocalDateTime lastFutTentaCoverTime = getLastOrderTime(symbol, FUT_TENTA_COVER);
-
-        if (lastStatus == Filled && SECONDS.between(lastFutTentaTime, nowMilli) > 60) {
-            if (lastAction == Types.Action.SELL && freshPrice > lastLimit) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, buyQ, Types.TimeInForce.DAY);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_TENTA_COVER));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), " fut tenta cover: BUY SHORT #:", numOrders));
-            } else if (lastAction == Types.Action.BUY && freshPrice < lastLimit) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, buyQ, Types.TimeInForce.DAY);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_TENTA_COVER));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), " fut tenta cover: SELL LONG #:", numOrders));
-            }
-        } else {
-            if (SECONDS.between(lastFutTentaTime, nowMilli) > 300) {
-                if (perc < 20) {
-                    int id = autoTradeID.incrementAndGet();
-                    Order o = placeBidLimitTIF(freshPrice, buyQ, Types.TimeInForce.DAY);
-                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_TENTA));
-                    apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                    outputDetailedXU(symbol, str(o.orderId(), " fut tenta buy #:", numOrders));
-                } else if (perc > 80) {
-                    int id = autoTradeID.incrementAndGet();
-                    Order o = placeOfferLimitTIF(freshPrice, sellQ, Types.TimeInForce.DAY);
-                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_TENTA));
-                    apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                    outputDetailedXU(symbol, str(o.orderId(), " fut tenta sell #:", numOrders));
-                }
-            }
-        }
-    }
+//    /**
+//     * hilo trader
+//     *
+//     * @param nowMilli   now
+//     * @param freshPrice fut
+//     */
+//    static void futTentativeHiloTrader(LocalDateTime nowMilli, double freshPrice) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        FutType f = ibContractToFutType(activeFutCt);
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
+//        NavigableMap<LocalTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(8, 59, 0)))
+//                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+//                        (a, b) -> a, ConcurrentSkipListMap::new));
+//        int perc = getPercentileForDouble(futPrice);
+//
+//
+//        double buyQ = 1.0;
+//        double sellQ = 1.0;
+//        long numOrders = getOrderSizeForTradeType(symbol, FUT_TENTA);
+//
+//        OrderStatus lastStatus = getLastOrderStatusForType(symbol, FUT_TENTA);
+//        Types.Action lastAction = getLastAction(FUT_TENTA);
+//        double lastLimit = getLastPrice(FUT_TENTA);
+//
+//        LocalDateTime lastFutTentaTime = getLastOrderTime(symbol, FUT_TENTA);
+//        LocalDateTime lastFutTentaCoverTime = getLastOrderTime(symbol, FUT_TENTA_COVER);
+//
+//        if (lastStatus == Filled && SECONDS.between(lastFutTentaTime, nowMilli) > 60) {
+//            if (lastAction == Types.Action.SELL && freshPrice > lastLimit) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeBidLimitTIF(freshPrice, buyQ, Types.TimeInForce.DAY);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_TENTA_COVER));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), " fut tenta cover: BUY SHORT #:", numOrders));
+//            } else if (lastAction == Types.Action.BUY && freshPrice < lastLimit) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimitTIF(freshPrice, buyQ, Types.TimeInForce.DAY);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_TENTA_COVER));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), " fut tenta cover: SELL LONG #:", numOrders));
+//            }
+//        } else {
+//            if (SECONDS.between(lastFutTentaTime, nowMilli) > 300) {
+//                if (perc < 20) {
+//                    int id = autoTradeID.incrementAndGet();
+//                    Order o = placeBidLimitTIF(freshPrice, buyQ, Types.TimeInForce.DAY);
+//                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_TENTA));
+//                    apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                    outputDetailedXU(symbol, str(o.orderId(), " fut tenta buy #:", numOrders));
+//                } else if (perc > 80) {
+//                    int id = autoTradeID.incrementAndGet();
+//                    Order o = placeOfferLimitTIF(freshPrice, sellQ, Types.TimeInForce.DAY);
+//                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FUT_TENTA));
+//                    apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                    outputDetailedXU(symbol, str(o.orderId(), " fut tenta sell #:", numOrders));
+//                }
+//            }
+//        }
+//    }
 
     /**
      * post am cutoff liquidate trader
@@ -2707,7 +2830,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         LocalTime lt = nowMilli.toLocalTime();
         String symbol = ibContractToSymbol(activeFutCt);
         FutType f = ibContractToFutType(activeFutCt);
-        LocalTime amObservationStart = ltof(9, 28, 0);
+
+        LocalDate td = getTradeDate(nowMilli);
+        LocalDateTime amObservationStart = LocalDateTime.of(td, ltof(9, 28, 59));
+        //LocalTime amObservationStart = ltof(9, 28, 0);
         LocalTime cutoff = ltof(10, 0);
         LocalTime amClose = ltof(11, 30, 0);
         double safetyMargin = indexLast * XU_SAFETY_RATIO;
@@ -2758,7 +2884,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
      */
     static void indexPostPMCutoffLiq(LocalDateTime nowMilli, double indexLast) {
         LocalTime lt = nowMilli.toLocalTime();
-
+        LocalDate td = getTradeDate(nowMilli);
         String symbol = ibContractToSymbol(activeFutCt);
         FutType f = ibContractToFutType(activeFutCt);
         double freshPrice = futPriceMap.get(f);
@@ -2767,7 +2893,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         int reverseAddOn = 0;
         double safetyMargin = indexLast * XU_SAFETY_RATIO;
 
-        LocalTime pmObservationStart = ltof(12, 58, 0);
+        LocalDateTime pmObservationStart = LocalDateTime.of(td, ltof(12, 58, 0));
         LocalTime pmCutoff = ltof(13, 30);
         LocalTime pmClose = ltof(15, 0, 0);
 
@@ -2779,7 +2905,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return;
         }
 
-        double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(pmObservationStart).getValue();
+        double pmOpen = priceMapBarDetail.get(FTSE_INDEX)
+                .ceilingEntry(pmObservationStart).getValue();
 
         if (lt.isAfter(pmCutoff) && lt.isBefore(pmClose)) {
             if (currPos < 0 && indexLast > pmOpen - safetyMargin) {
@@ -2805,473 +2932,473 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     }
 
 
-    /**
-     * ftse break high low trader
-     *
-     * @param nowMilli  time
-     * @param indexLast last index
-     */
-    static void indexHiLo(LocalDateTime nowMilli, double indexLast) {
-        LocalTime lt = nowMilli.toLocalTime();
-        int pmchy = getRecentPmCh(lt, INDEX_000001);
-        FutType f = ibContractToFutType(activeFutCt);
-        String symbol = ibContractToSymbol(activeFutCt);
-        double freshPrice = futPriceMap.get(f);
-        int baseSize = getWeekdayBaseSize(nowMilli.getDayOfWeek()) + 1;
-
-        LocalTime amObservationStart = ltof(9, 28, 0);
-        LocalTime amStart = ltof(9, 29, 0);
-        LocalTime cutoff = ltof(10, 0);
-
-
-        if (lt.isBefore(amStart) || lt.isAfter(cutoff)) {
-            return;
-        }
-
-        if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
-            return;
-        }
-
-        long numOrders = getOrderSizeForTradeType(symbol, FTSEA50_HILO);
-        LocalDateTime lastOrderT = getLastOrderTime(symbol, FTSEA50_HILO);
-        long milliLast2 = lastTwoOrderMilliDiff(symbol, FTSEA50_HILO);
-        int buyQ = baseSize * ((numOrders == 0 || numOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
-        int sellQ = baseSize * ((numOrders == 0 || numOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
-
-        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
-        int _2dayPerc = getPercentileForLast(fut);
-
-        //int waitSec = (milliLast2 < 60000) ? 300 : 10;
-        int waitSec = getWaitSec(milliLast2);
-
-
-        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(amObservationStart).getValue();
-        int openPerc = getPercentileForDoubleX(priceMapBarDetail.get(FTSE_INDEX), open);
-
-        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(amStart))
-                .filter(e -> Math.abs(e.getValue() - open) > 0.01)
-                .findFirst().map(Map.Entry::getValue)
-                .orElse(open);
-
-        LocalTime firstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(amStart))
-                .filter(e -> Math.abs(e.getValue() - open) > 0.01)
-                .findFirst().map(Map.Entry::getKey)
-                .orElse(LocalTime.MIN);
-
-        long tBtwnLast2Trades = lastTwoOrderMilliDiff(symbol, FTSEA50_HILO);
-        long tSinceLastTrade = tSincePrevOrderMilli(symbol, FTSEA50_HILO, nowMilli);
-
-        if (numOrders >= MAX_XU_SIZE) {
-            if (detailedPrint.get()) {
-                pr(" china hilo exceed max");
-            }
-            return;
-        }
-
-        double buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Long));
-        double sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Short));
-
-        LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
-
-        double maxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(amObservationStart)
-                        && e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-
-        double minSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(amObservationStart) &&
-                        e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
-
-        LocalTime maxT = getFirstMaxTPred(priceMapBarDetail.get(FTSE_INDEX), e -> e.isAfter(amObservationStart));
-        LocalTime minT = getFirstMinTPred(priceMapBarDetail.get(FTSE_INDEX), e -> e.isAfter(amObservationStart));
-
-        if (!manualIndexHiloDirection.get()) {
-            if (lt.isBefore(ltof(9, 30))) {
-                manualIndexHiloDirection.set(true);
-            } else {
-                if (maxT.isAfter(minT)) {
-                    indexHiLoDirection = Direction.Long;
-                    manualIndexHiloDirection.set(true);
-                } else if (minT.isAfter(maxT)) {
-                    indexHiLoDirection = Direction.Short;
-                    manualIndexHiloDirection.set(true);
-                } else {
-                    indexHiLoDirection = Direction.Flat;
-                }
-            }
-        }
-
-        if (SECONDS.between(lastOrderT, nowMilli) >= waitSec && maxSoFar != 0.0 && minSoFar != 0.0) {
-            if (!noMoreBuy.get() && (indexLast > maxSoFar || maxT.isAfter(minT)) && indexHiLoDirection != Direction.Long) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(buyPrice, buyQ, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_HILO));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "index hilo buy #:", numOrders,
-                        globalIdOrderMap.get(id), "buy limit: ", buyPrice,
-                        "index/fut/pd/Base#:", r(indexLast), freshPrice,
-                        Math.round(10000d * (freshPrice / indexLast - 1)), "bp", baseSize,
-                        "open/ft/time/dir ", r(open), r(firstTick), firstTickTime, indexHiLoDirection,
-                        "waitT, lastTwoTDiff, tSinceLast, nextT ", waitSec, tBtwnLast2Trades,
-                        tSinceLastTrade, lastOrderT.plusSeconds(waitSec),
-                        "max/min/2dp%/pmchy/openp% ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, openPerc,
-                        "max min t", maxT, minT));
-                indexHiLoDirection = Direction.Long;
-            } else if (!noMoreSell.get() && (indexLast < minSoFar || minT.isAfter(maxT))
-                    && indexHiLoDirection != Direction.Short) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(sellPrice, sellQ, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_HILO));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, "**********");
-                outputDetailedXU(symbol, str("NEW", o.orderId(), "index hilo sell #:", numOrders,
-                        globalIdOrderMap.get(id), "sell limit: ", sellPrice,
-                        "index/fut/pd/Base#:", r(indexLast), freshPrice,
-                        Math.round(10000d * (freshPrice / indexLast - 1)), "bp", baseSize,
-                        "open/ft/time/dir ", r(open), r(firstTick), firstTickTime, indexHiLoDirection,
-                        "waitT, lastTwoTDiff, tSinceLast, nextT ", waitSec, tBtwnLast2Trades,
-                        tSinceLastTrade, lastOrderT.plusSeconds(waitSec),
-                        "max/min/2dp%/pmchy/openP%", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, openPerc,
-                        "max min t", maxT, minT));
-                indexHiLoDirection = Direction.Short;
-            }
-        }
-    }
-
-    /**
-     * In addition to china hilo, this trades in the same direction as hilo
-     *
-     * @param nowMilli   time now
-     * @param indexPrice price
-     */
-
-    static void indexHiloAccumulator(LocalDateTime nowMilli, double indexPrice) {
-        if (!manualAccuOn.get() || nowMilli.toLocalTime().isAfter(HILO_ACCU_DEADLINE)
-                || indexHiLoDirection == Direction.Flat) {
-            return;
-        }
-        FutType f = ibContractToFutType(activeFutCt);
-        String symbol = ibContractToSymbol(activeFutCt);
-        double freshPrice = futPriceMap.get(f);
-        LocalTime lt = nowMilli.toLocalTime();
-        LocalDateTime lastHiLoAccuTradeTime = getLastOrderTime(symbol, FTSEA50_HILO_ACCU);
-
-        long numOrders = getOrderSizeForTradeType(symbol, FTSEA50_HILO_ACCU);
-        double hiloAccuTotalOrderQ = getOrderTotalSignedQForType(symbol, FTSEA50_HILO_ACCU);
-        double hiloTotalOrderQ = getOrderTotalSignedQForType(symbol, FTSEA50_HILO);
-
-        checkCancelOrders(symbol, FTSEA50_HILO_ACCU, nowMilli, ORDER_WAIT_TIME);
-
-        int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
-
-        if (MINUTES.between(lastHiLoAccuTradeTime, nowMilli) >= ORDER_WAIT_TIME &&
-                Math.abs(hiloAccuTotalOrderQ) <= HILO_ACCU_MAX_SIZE && Math.abs(hiloTotalOrderQ) > 0.0) {
-
-            if (!noMoreBuy.get() && todayPerc < 1 && indexHiLoDirection == Direction.Long) {
-                int id = autoTradeID.incrementAndGet();
-                int buyQ = 1;
-                if (lt.isAfter(ltof(13, 0)) && lt.isBefore(ltof(15, 0))) {
-                    buyQ = 2;
-                }
-                Order o = placeBidLimit(freshPrice, buyQ);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_HILO_ACCU));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), "hilo accu buy", "#:", numOrders,
-                        globalIdOrderMap.get(id), " accu#, hilo#", hiloAccuTotalOrderQ, hiloTotalOrderQ));
-            } else if (!noMoreSell.get() && todayPerc > 99 && indexHiLoDirection == Direction.Short
-                    && lt.isAfter(ltof(14, 50))) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, 1);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_HILO_ACCU));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), "hilo decu sell", "#:", numOrders,
-                        globalIdOrderMap.get(id), " decu#, hilo#", hiloAccuTotalOrderQ, hiloTotalOrderQ));
-            }
-        }
-    }
-
-
-    /**
-     * first tick ma profit taker
-     *
-     * @param nowMilli  time
-     * @param indexLast price
-     */
-    static void firstTickMAProfitTaker(LocalDateTime nowMilli, double indexLast) {
-        String symbol = ibContractToSymbol(activeFutCt);
-        LocalTime lt = nowMilli.toLocalTime();
-
-        double freshPrice = AutoTraderXU.futPriceMap.get(ibContractToFutType(activeFutCt));
-        int pmchy = getRecentPmCh(lt, INDEX_000001);
-        if (!checkTimeRangeBool(lt, 9, 29, 15, 0)) {
-            return;
-        }
-        if (priceMapBarDetail.get(FTSE_INDEX).size() < 2) {
-            return;
-        }
-
-        double firstTickTotalQ = getTotalFilledSignedQForType(FTSEA50_FIRST_TICK);
-        double ftProfitTakeQ = getTotalFilledSignedQForType(FTICK_TAKE_PROFIT);
-
-        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(9, 29, 0)).getValue();
-
-        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
-                .filter(e -> Math.abs(e.getValue() - open) > 0.01)
-                .findFirst().map(Map.Entry::getValue).orElse(0.0);
-
-        if (firstTickTotalQ == 0.0 || Math.abs(ftProfitTakeQ) >= Math.abs(firstTickTotalQ)) {
-            pr("first tick Q, profitTaker Q, open, ft ",
-                    firstTickTotalQ, ftProfitTakeQ, r(open), r(firstTick));
-            return;
-        }
-
-        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
-                , e -> !isStockNoonBreak(e));
-
-        int shorterMA = 2;
-        int longerMA = 5;
-
-        checkCancelOrders(symbol, FTICK_TAKE_PROFIT, nowMilli, ORDER_WAIT_TIME * 2);
-        int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
-
-        LocalDateTime lastProfitTakerOrder = getLastOrderTime(symbol, FTICK_TAKE_PROFIT);
-
-        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
-        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
-
-        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            return;
-        }
-
-        double maShortLast = smaShort.lastEntry().getValue();
-        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
-        double maLongLast = smaLong.lastEntry().getValue();
-        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
-
-        if (MINUTES.between(lastProfitTakerOrder, nowMilli) >= ORDER_WAIT_TIME) {
-            if (!noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
-                    && todayPerc < LO_PERC_WIDE && firstTick < open) {
-
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, 1);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTICK_TAKE_PROFIT));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), "ftick MA cover", globalIdOrderMap.get(id)
-                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
-                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
-
-            } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
-                    && todayPerc > HI_PERC_WIDE && firstTick > open && lt.isAfter(ltof(14, 50))
-                    && pmchy > PMCHY_LO) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, 1);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTICK_TAKE_PROFIT));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), "ftick MA sellback", globalIdOrderMap.get(id)
-                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
-                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
-            }
-        }
-    }
-
-    /**
-     * taking profit at close
-     *
-     * @param nowMilli  time now
-     * @param indexLast last index price
-     */
-    static void closeProfitTaker(LocalDateTime nowMilli, double indexLast) {
-        LocalTime lt = nowMilli.toLocalTime();
-        String symbol = ibContractToSymbol(activeFutCt);
-        //double freshPrice = futPriceMap.get(FutType.FrontFut);
-        double freshPrice = AutoTraderXU.futPriceMap.get(ibContractToFutType(activeFutCt));
-        double currDelta = getNetPtfDelta();
-        double deltaTgt = getDeltaTarget(nowMilli, getRecentPmCh(lt, INDEX_000001));
-
-        if (lt.isBefore(ltof(14, 50)) || lt.isAfter(ltof(15, 5))) {
-            return;
-        }
-
-        if (priceMapBarDetail.get(FTSE_INDEX).size() < 2) {
-            return;
-        }
-
-        int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
-        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(9, 29, 0)).getValue();
-        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
-                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
-
-        LocalDateTime lastCloseProfitTaker = getLastOrderTime(symbol, CLOSE_TAKE_PROFIT);
-
-        if (MINUTES.between(lastCloseProfitTaker, nowMilli) >= ORDER_WAIT_TIME) {
-            if (!noMoreBuy.get() && todayPerc < 5 && firstTick < open && currDelta < deltaTgt) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, CLOSE_TAKE_PROFIT));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), "close profit taking COVER", globalIdOrderMap.get(id)
-                        , "curDel, deltaTarget", currDelta, deltaTgt));
-            } else if (!noMoreSell.get() && todayPerc > 99 && firstTick > open && currDelta > deltaTgt
-                    && lt.isAfter(ltof(14, 50))) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, CLOSE_TAKE_PROFIT));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), "close profit taking SELL", globalIdOrderMap.get(id)
-                        , "curDel, deltaTarget", currDelta, deltaTgt));
-            }
-        }
-    }
-
-    /**
-     * accumulate based on intraday
-     *
-     * @param nowMilli  time
-     * @param indexLast last index
-     */
-    static void intraday1stTickAccumulator(LocalDateTime nowMilli, double indexLast) {
-        LocalTime lt = nowMilli.toLocalTime();
-        int pmchy = getRecentPmCh(lt, INDEX_000001);
-        String symbol = ibContractToSymbol(activeFutCt);
-        if (lt.isBefore(ltof(9, 40)) || lt.isAfter(ltof(15, 0))) {
-            return;
-        }
-
-        FutType f = ibContractToFutType(activeFutCt);
-
-        if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
-            return;
-        }
-
-        double freshPrice = futPriceMap.get(f);
-        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
-        int _2dayFutPerc = getPercentileForLast(fut);
-
-        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(9, 29, 0)).getValue();
-
-        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
-                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
-
-        LocalDateTime lastOpenTime = getLastOrderTime(symbol, INTRADAY_FIRSTTICK_ACCU);
-        double firstTickSignedQuant = getOrderTotalSignedQForType(symbol, FTSEA50_FIRST_TICK);
-        double ftAccuSignedQuant = getOrderTotalSignedQForType(symbol, INTRADAY_FIRSTTICK_ACCU);
-        //pr(" intraday first tick accu: open, firstTick, futP% ", r(open), r(firstTick), _2dayFutPerc);
-
-        if (firstTickSignedQuant == 0.0 || Math.abs(ftAccuSignedQuant) >= FT_ACCU_MAX_SIZE) {
-            return;
-        }
-
-        if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
-            if (!noMoreBuy.get() && firstTick > open && _2dayFutPerc < 20 && (_2dayFutPerc < 1 || pmchy < PMCHY_LO)
-                    && indexLast < open && lt.isBefore(ltof(14, 0))) {
-                int buyQ = 1;
-                if (lt.isAfter(ltof(13, 0))) {
-                    buyQ = 2;
-                }
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimit(freshPrice, buyQ);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), "intraday ft accu",
-                        globalIdOrderMap.get(id), "open first futP%", open, firstTick, _2dayFutPerc,
-                        "ft size ", firstTickSignedQuant));
-            } else if (!noMoreSell.get() && firstTick < open && indexLast > open &&
-                    _2dayFutPerc > 99 && pmchy > PMCHY_HI && lt.isAfter(ltof(14, 50))) {
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimit(freshPrice, 1);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
-                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
-                outputDetailedXU(symbol, str(o.orderId(), "intraday ft decu",
-                        globalIdOrderMap.get(id), "open first futP% ", open, firstTick, _2dayFutPerc,
-                        "ft size ", firstTickSignedQuant));
-            }
-        }
-    }
-
-    /**
-     * intraday ma
-     *
-     * @param nowMilli  time
-     * @param indexLast index last price
-     */
-    static synchronized void intradayMAProfitTaker(LocalDateTime nowMilli, double indexLast) {
-        LocalTime t = nowMilli.toLocalTime();
-        FutType f = ibContractToFutType(activeFutCt);
-        String symbol = ibContractToSymbol(activeFutCt);
-        double freshPrice = futPriceMap.get(f);
-        int pmChgY = getRecentPmCh(t, INDEX_000001);
-
-        if (!checkTimeRangeBool(t, 9, 29, 15, 0)) {
-            return;
-        }
-
-        int shorterMA = 5;
-        int longerMA = 10;
-
-        int buySize;
-        int sellSize;
-
-        //checkCancelOrders(INTRADAY_MA, nowMilli, 30);
-        LocalDate tTrade = getTradeDate(nowMilli);
-
-        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(symbol, isNotMA());
-        double totalMASignedQ = getOrderTotalSignedQForTypeFilled(symbol, INTRADAY_MA);
-        long numOrders = getOrderSizeForTradeType(symbol, INTRADAY_MA);
-
-        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
-                , e -> !isStockNoonBreak(e));
-
-        int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
-        LocalDateTime lastIndexMAOrder = getLastOrderTime(symbol, INTRADAY_MA);
-
-        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
-        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
-
-        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
-            //pr(" smashort size long size not enough ");
-            return;
-        }
-
-        double maShortLast = smaShort.lastEntry().getValue();
-        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
-        double maLongLast = smaLong.lastEntry().getValue();
-        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
-
-        long maWaitTime = 15;
-        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= maWaitTime) {
-            if (!noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
-                    && todayPerc < LO_PERC_WIDE && ((totalFilledNonMAOrderSize < 0
-                    && totalMASignedQ + totalFilledNonMAOrderSize < 0) || totalMASignedQ < 0)) {
-                int id = autoTradeID.incrementAndGet();
-                buySize = (int) Math.min(Math.round((Math.abs(totalMASignedQ + totalFilledNonMAOrderSize) / 2)), 3);
-                Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INTRADAY_MA));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, str(o.orderId(), "intraday MA BUY#:", numOrders, globalIdOrderMap.get(id)
-                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
-                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc, "pmchg ", pmChgY
-                        , " others total:", totalFilledNonMAOrderSize, "MA total:", totalMASignedQ));
-            } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
-                    todayPerc > HI_PERC_WIDE
-                    && ((totalFilledNonMAOrderSize > 0 && totalMASignedQ + totalFilledNonMAOrderSize > 0) ||
-                    totalMASignedQ > 0)) {
-                sellSize = (int) Math.min(Math.round((totalMASignedQ + totalFilledNonMAOrderSize) / 2), 3);
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INTRADAY_MA));
-                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-                outputDetailedXU(symbol, str(o.orderId(), "intraday MA SELL#:", numOrders, globalIdOrderMap.get(id)
-                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
-                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc, "pmchg ", pmChgY
-                        , " others total:", totalFilledNonMAOrderSize, "MA total:", totalMASignedQ));
-            }
-        }
-    }
+//    /**
+//     * ftse break high low trader
+//     *
+//     * @param nowMilli  time
+//     * @param indexLast last index
+//     */
+//    static void indexHiLo(LocalDateTime nowMilli, double indexLast) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        int pmchy = getRecentPmCh(lt, INDEX_000001);
+//        FutType f = ibContractToFutType(activeFutCt);
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        double freshPrice = futPriceMap.get(f);
+//        int baseSize = getWeekdayBaseSize(nowMilli.getDayOfWeek()) + 1;
+//
+//        LocalTime amObservationStart = ltof(9, 28, 0);
+//        LocalTime amStart = ltof(9, 29, 0);
+//        LocalTime cutoff = ltof(10, 0);
+//
+//
+//        if (lt.isBefore(amStart) || lt.isAfter(cutoff)) {
+//            return;
+//        }
+//
+//        if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
+//            return;
+//        }
+//
+//        long numOrders = getOrderSizeForTradeType(symbol, FTSEA50_HILO);
+//        LocalDateTime lastOrderT = getLastOrderTime(symbol, FTSEA50_HILO);
+//        long milliLast2 = lastTwoOrderMilliDiff(symbol, FTSEA50_HILO);
+//        int buyQ = baseSize * ((numOrders == 0 || numOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
+//        int sellQ = baseSize * ((numOrders == 0 || numOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
+//
+//        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
+//        int _2dayPerc = getPercentileForLast(fut);
+//
+//        //int waitSec = (milliLast2 < 60000) ? 300 : 10;
+//        int waitSec = getWaitSec(milliLast2);
+//
+//
+//        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(amObservationStart).getValue();
+//        int openPerc = getPercentileForDoubleX(priceMapBarDetail.get(FTSE_INDEX), open);
+//
+//        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(amStart))
+//                .filter(e -> Math.abs(e.getValue() - open) > 0.01)
+//                .findFirst().map(Map.Entry::getValue)
+//                .orElse(open);
+//
+//        LocalTime firstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(amStart))
+//                .filter(e -> Math.abs(e.getValue() - open) > 0.01)
+//                .findFirst().map(Map.Entry::getKey)
+//                .orElse(LocalTime.MIN);
+//
+//        long tBtwnLast2Trades = lastTwoOrderMilliDiff(symbol, FTSEA50_HILO);
+//        long tSinceLastTrade = tSincePrevOrderMilli(symbol, FTSEA50_HILO, nowMilli);
+//
+//        if (numOrders >= MAX_XU_SIZE) {
+//            if (detailedPrint.get()) {
+//                pr(" china hilo exceed max");
+//            }
+//            return;
+//        }
+//
+//        double buyPrice = Math.min(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Long));
+//        double sellPrice = Math.max(freshPrice, roundToXUPriceAggressive(indexLast, Direction.Short));
+//
+//        LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
+//
+//        double maxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(amObservationStart)
+//                        && e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+//
+//        double minSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(amObservationStart) &&
+//                        e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+//
+//        LocalTime maxT = getFirstMaxTPred(priceMapBarDetail.get(FTSE_INDEX), e -> e.isAfter(amObservationStart));
+//        LocalTime minT = getFirstMinTPred(priceMapBarDetail.get(FTSE_INDEX), e -> e.isAfter(amObservationStart));
+//
+//        if (!manualIndexHiloDirection.get()) {
+//            if (lt.isBefore(ltof(9, 30))) {
+//                manualIndexHiloDirection.set(true);
+//            } else {
+//                if (maxT.isAfter(minT)) {
+//                    indexHiLoDirection = Direction.Long;
+//                    manualIndexHiloDirection.set(true);
+//                } else if (minT.isAfter(maxT)) {
+//                    indexHiLoDirection = Direction.Short;
+//                    manualIndexHiloDirection.set(true);
+//                } else {
+//                    indexHiLoDirection = Direction.Flat;
+//                }
+//            }
+//        }
+//
+//        if (SECONDS.between(lastOrderT, nowMilli) >= waitSec && maxSoFar != 0.0 && minSoFar != 0.0) {
+//            if (!noMoreBuy.get() && (indexLast > maxSoFar || maxT.isAfter(minT)) && indexHiLoDirection != Direction.Long) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeBidLimitTIF(buyPrice, buyQ, IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_HILO));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, "**********");
+//                outputDetailedXU(symbol, str("NEW", o.orderId(), "index hilo buy #:", numOrders,
+//                        globalIdOrderMap.get(id), "buy limit: ", buyPrice,
+//                        "index/fut/pd/Base#:", r(indexLast), freshPrice,
+//                        Math.round(10000d * (freshPrice / indexLast - 1)), "bp", baseSize,
+//                        "open/ft/time/dir ", r(open), r(firstTick), firstTickTime, indexHiLoDirection,
+//                        "waitT, lastTwoTDiff, tSinceLast, nextT ", waitSec, tBtwnLast2Trades,
+//                        tSinceLastTrade, lastOrderT.plusSeconds(waitSec),
+//                        "max/min/2dp%/pmchy/openp% ", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, openPerc,
+//                        "max min t", maxT, minT));
+//                indexHiLoDirection = Direction.Long;
+//            } else if (!noMoreSell.get() && (indexLast < minSoFar || minT.isAfter(maxT))
+//                    && indexHiLoDirection != Direction.Short) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimitTIF(sellPrice, sellQ, IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_HILO));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, "**********");
+//                outputDetailedXU(symbol, str("NEW", o.orderId(), "index hilo sell #:", numOrders,
+//                        globalIdOrderMap.get(id), "sell limit: ", sellPrice,
+//                        "index/fut/pd/Base#:", r(indexLast), freshPrice,
+//                        Math.round(10000d * (freshPrice / indexLast - 1)), "bp", baseSize,
+//                        "open/ft/time/dir ", r(open), r(firstTick), firstTickTime, indexHiLoDirection,
+//                        "waitT, lastTwoTDiff, tSinceLast, nextT ", waitSec, tBtwnLast2Trades,
+//                        tSinceLastTrade, lastOrderT.plusSeconds(waitSec),
+//                        "max/min/2dp%/pmchy/openP%", r(maxSoFar), r(minSoFar), _2dayPerc, pmchy, openPerc,
+//                        "max min t", maxT, minT));
+//                indexHiLoDirection = Direction.Short;
+//            }
+//        }
+//    }
+//
+//    /**
+//     * In addition to china hilo, this trades in the same direction as hilo
+//     *
+//     * @param nowMilli   time now
+//     * @param indexPrice price
+//     */
+//
+//    static void indexHiloAccumulator(LocalDateTime nowMilli, double indexPrice) {
+//        if (!manualAccuOn.get() || nowMilli.toLocalTime().isAfter(HILO_ACCU_DEADLINE)
+//                || indexHiLoDirection == Direction.Flat) {
+//            return;
+//        }
+//        FutType f = ibContractToFutType(activeFutCt);
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        double freshPrice = futPriceMap.get(f);
+//        LocalTime lt = nowMilli.toLocalTime();
+//        LocalDateTime lastHiLoAccuTradeTime = getLastOrderTime(symbol, FTSEA50_HILO_ACCU);
+//
+//        long numOrders = getOrderSizeForTradeType(symbol, FTSEA50_HILO_ACCU);
+//        double hiloAccuTotalOrderQ = getOrderTotalSignedQForType(symbol, FTSEA50_HILO_ACCU);
+//        double hiloTotalOrderQ = getOrderTotalSignedQForType(symbol, FTSEA50_HILO);
+//
+//        checkCancelOrders(symbol, FTSEA50_HILO_ACCU, nowMilli, ORDER_WAIT_TIME);
+//
+//        int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
+//
+//        if (MINUTES.between(lastHiLoAccuTradeTime, nowMilli) >= ORDER_WAIT_TIME &&
+//                Math.abs(hiloAccuTotalOrderQ) <= HILO_ACCU_MAX_SIZE && Math.abs(hiloTotalOrderQ) > 0.0) {
+//
+//            if (!noMoreBuy.get() && todayPerc < 1 && indexHiLoDirection == Direction.Long) {
+//                int id = autoTradeID.incrementAndGet();
+//                int buyQ = 1;
+//                if (lt.isAfter(ltof(13, 0)) && lt.isBefore(ltof(15, 0))) {
+//                    buyQ = 2;
+//                }
+//                Order o = placeBidLimit(freshPrice, buyQ);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_HILO_ACCU));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), "hilo accu buy", "#:", numOrders,
+//                        globalIdOrderMap.get(id), " accu#, hilo#", hiloAccuTotalOrderQ, hiloTotalOrderQ));
+//            } else if (!noMoreSell.get() && todayPerc > 99 && indexHiLoDirection == Direction.Short
+//                    && lt.isAfter(ltof(14, 50))) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimit(freshPrice, 1);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_HILO_ACCU));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), "hilo decu sell", "#:", numOrders,
+//                        globalIdOrderMap.get(id), " decu#, hilo#", hiloAccuTotalOrderQ, hiloTotalOrderQ));
+//            }
+//        }
+//    }
+//
+//
+//    /**
+//     * first tick ma profit taker
+//     *
+//     * @param nowMilli  time
+//     * @param indexLast price
+//     */
+//    static void firstTickMAProfitTaker(LocalDateTime nowMilli, double indexLast) {
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        LocalTime lt = nowMilli.toLocalTime();
+//
+//        double freshPrice = AutoTraderXU.futPriceMap.get(ibContractToFutType(activeFutCt));
+//        int pmchy = getRecentPmCh(lt, INDEX_000001);
+//        if (!checkTimeRangeBool(lt, 9, 29, 15, 0)) {
+//            return;
+//        }
+//        if (priceMapBarDetail.get(FTSE_INDEX).size() < 2) {
+//            return;
+//        }
+//
+//        double firstTickTotalQ = getTotalFilledSignedQForType(FTSEA50_FIRST_TICK);
+//        double ftProfitTakeQ = getTotalFilledSignedQForType(FTICK_TAKE_PROFIT);
+//
+//        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(9, 29, 0)).getValue();
+//
+//        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
+//                .filter(e -> Math.abs(e.getValue() - open) > 0.01)
+//                .findFirst().map(Map.Entry::getValue).orElse(0.0);
+//
+//        if (firstTickTotalQ == 0.0 || Math.abs(ftProfitTakeQ) >= Math.abs(firstTickTotalQ)) {
+//            pr("first tick Q, profitTaker Q, open, ft ",
+//                    firstTickTotalQ, ftProfitTakeQ, r(open), r(firstTick));
+//            return;
+//        }
+//
+//        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
+//                , e -> !isStockNoonBreak(e));
+//
+//        int shorterMA = 2;
+//        int longerMA = 5;
+//
+//        checkCancelOrders(symbol, FTICK_TAKE_PROFIT, nowMilli, ORDER_WAIT_TIME * 2);
+//        int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
+//
+//        LocalDateTime lastProfitTakerOrder = getLastOrderTime(symbol, FTICK_TAKE_PROFIT);
+//
+//        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
+//        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
+//
+//        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
+//            return;
+//        }
+//
+//        double maShortLast = smaShort.lastEntry().getValue();
+//        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
+//        double maLongLast = smaLong.lastEntry().getValue();
+//        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
+//
+//        if (MINUTES.between(lastProfitTakerOrder, nowMilli) >= ORDER_WAIT_TIME) {
+//            if (!noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
+//                    && todayPerc < LO_PERC_WIDE && firstTick < open) {
+//
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeBidLimit(freshPrice, 1);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTICK_TAKE_PROFIT));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), "ftick MA cover", globalIdOrderMap.get(id)
+//                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
+//                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
+//
+//            } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast
+//                    && todayPerc > HI_PERC_WIDE && firstTick > open && lt.isAfter(ltof(14, 50))
+//                    && pmchy > PMCHY_LO) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimit(freshPrice, 1);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTICK_TAKE_PROFIT));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), "ftick MA sellback", globalIdOrderMap.get(id)
+//                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
+//                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc));
+//            }
+//        }
+//    }
+//
+//    /**
+//     * taking profit at close
+//     *
+//     * @param nowMilli  time now
+//     * @param indexLast last index price
+//     */
+//    static void closeProfitTaker(LocalDateTime nowMilli, double indexLast) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        //double freshPrice = futPriceMap.get(FutType.FrontFut);
+//        double freshPrice = AutoTraderXU.futPriceMap.get(ibContractToFutType(activeFutCt));
+//        double currDelta = getNetPtfDelta();
+//        double deltaTgt = getDeltaTarget(nowMilli, getRecentPmCh(lt, INDEX_000001));
+//
+//        if (lt.isBefore(ltof(14, 50)) || lt.isAfter(ltof(15, 5))) {
+//            return;
+//        }
+//
+//        if (priceMapBarDetail.get(FTSE_INDEX).size() < 2) {
+//            return;
+//        }
+//
+//        int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
+//        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(9, 29, 0)).getValue();
+//        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
+//                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
+//
+//        LocalDateTime lastCloseProfitTaker = getLastOrderTime(symbol, CLOSE_TAKE_PROFIT);
+//
+//        if (MINUTES.between(lastCloseProfitTaker, nowMilli) >= ORDER_WAIT_TIME) {
+//            if (!noMoreBuy.get() && todayPerc < 5 && firstTick < open && currDelta < deltaTgt) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeBidLimit(freshPrice, CONSERVATIVE_SIZE);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, CLOSE_TAKE_PROFIT));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), "close profit taking COVER", globalIdOrderMap.get(id)
+//                        , "curDel, deltaTarget", currDelta, deltaTgt));
+//            } else if (!noMoreSell.get() && todayPerc > 99 && firstTick > open && currDelta > deltaTgt
+//                    && lt.isAfter(ltof(14, 50))) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimit(freshPrice, CONSERVATIVE_SIZE);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, CLOSE_TAKE_PROFIT));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), "close profit taking SELL", globalIdOrderMap.get(id)
+//                        , "curDel, deltaTarget", currDelta, deltaTgt));
+//            }
+//        }
+//    }
+//
+//    /**
+//     * accumulate based on intraday
+//     *
+//     * @param nowMilli  time
+//     * @param indexLast last index
+//     */
+//    static void intraday1stTickAccumulator(LocalDateTime nowMilli, double indexLast) {
+//        LocalTime lt = nowMilli.toLocalTime();
+//        int pmchy = getRecentPmCh(lt, INDEX_000001);
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        if (lt.isBefore(ltof(9, 40)) || lt.isAfter(ltof(15, 0))) {
+//            return;
+//        }
+//
+//        FutType f = ibContractToFutType(activeFutCt);
+//
+//        if (priceMapBarDetail.get(FTSE_INDEX).size() <= 1) {
+//            return;
+//        }
+//
+//        double freshPrice = futPriceMap.get(f);
+//        NavigableMap<LocalDateTime, SimpleBar> fut = futData.get(f);
+//        int _2dayFutPerc = getPercentileForLast(fut);
+//
+//        double open = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(9, 29, 0)).getValue();
+//
+//        double firstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+//                .filter(e -> e.getKey().isAfter(ltof(9, 29, 0)))
+//                .filter(e -> Math.abs(e.getValue() - open) > 0.01).findFirst().map(Map.Entry::getValue).orElse(0.0);
+//
+//        LocalDateTime lastOpenTime = getLastOrderTime(symbol, INTRADAY_FIRSTTICK_ACCU);
+//        double firstTickSignedQuant = getOrderTotalSignedQForType(symbol, FTSEA50_FIRST_TICK);
+//        double ftAccuSignedQuant = getOrderTotalSignedQForType(symbol, INTRADAY_FIRSTTICK_ACCU);
+//        //pr(" intraday first tick accu: open, firstTick, futP% ", r(open), r(firstTick), _2dayFutPerc);
+//
+//        if (firstTickSignedQuant == 0.0 || Math.abs(ftAccuSignedQuant) >= FT_ACCU_MAX_SIZE) {
+//            return;
+//        }
+//
+//        if (MINUTES.between(lastOpenTime, nowMilli) >= ORDER_WAIT_TIME) {
+//            if (!noMoreBuy.get() && firstTick > open && _2dayFutPerc < 20 && (_2dayFutPerc < 1 || pmchy < PMCHY_LO)
+//                    && indexLast < open && lt.isBefore(ltof(14, 0))) {
+//                int buyQ = 1;
+//                if (lt.isAfter(ltof(13, 0))) {
+//                    buyQ = 2;
+//                }
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeBidLimit(freshPrice, buyQ);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), "intraday ft accu",
+//                        globalIdOrderMap.get(id), "open first futP%", open, firstTick, _2dayFutPerc,
+//                        "ft size ", firstTickSignedQuant));
+//            } else if (!noMoreSell.get() && firstTick < open && indexLast > open &&
+//                    _2dayFutPerc > 99 && pmchy > PMCHY_HI && lt.isAfter(ltof(14, 50))) {
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimit(freshPrice, 1);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INTRADAY_FIRSTTICK_ACCU));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+//                outputDetailedXU(symbol, str(o.orderId(), "intraday ft decu",
+//                        globalIdOrderMap.get(id), "open first futP% ", open, firstTick, _2dayFutPerc,
+//                        "ft size ", firstTickSignedQuant));
+//            }
+//        }
+//    }
+//
+//    /**
+//     * intraday ma
+//     *
+//     * @param nowMilli  time
+//     * @param indexLast index last price
+//     */
+//    static synchronized void intradayMAProfitTaker(LocalDateTime nowMilli, double indexLast) {
+//        LocalTime t = nowMilli.toLocalTime();
+//        FutType f = ibContractToFutType(activeFutCt);
+//        String symbol = ibContractToSymbol(activeFutCt);
+//        double freshPrice = futPriceMap.get(f);
+//        int pmChgY = getRecentPmCh(t, INDEX_000001);
+//
+//        if (!checkTimeRangeBool(t, 9, 29, 15, 0)) {
+//            return;
+//        }
+//
+//        int shorterMA = 5;
+//        int longerMA = 10;
+//
+//        int buySize;
+//        int sellSize;
+//
+//        //checkCancelOrders(INTRADAY_MA, nowMilli, 30);
+//        LocalDate tTrade = getTradeDate(nowMilli);
+//
+//        double totalFilledNonMAOrderSize = getTotalFilledOrderSignedQPred(symbol, isNotMA());
+//        double totalMASignedQ = getOrderTotalSignedQForTypeFilled(symbol, INTRADAY_MA);
+//        long numOrders = getOrderSizeForTradeType(symbol, INTRADAY_MA);
+//
+//        NavigableMap<LocalDateTime, SimpleBar> index = convertToLDT(priceMapBar.get(FTSE_INDEX), nowMilli.toLocalDate()
+//                , e -> !isStockNoonBreak(e));
+//
+//        int todayPerc = getPercentileForDouble(priceMapBarDetail.get(FTSE_INDEX));
+//        LocalDateTime lastIndexMAOrder = getLastOrderTime(symbol, INTRADAY_MA);
+//
+//        NavigableMap<LocalDateTime, Double> smaShort = getMAGen(index, shorterMA);
+//        NavigableMap<LocalDateTime, Double> smaLong = getMAGen(index, longerMA);
+//
+//        if (smaShort.size() <= 2 || smaLong.size() <= 2) {
+//            //pr(" smashort size long size not enough ");
+//            return;
+//        }
+//
+//        double maShortLast = smaShort.lastEntry().getValue();
+//        double maShortSecLast = smaShort.lowerEntry(smaShort.lastKey()).getValue();
+//        double maLongLast = smaLong.lastEntry().getValue();
+//        double maLongSecLast = smaLong.lowerEntry((smaLong.lastKey())).getValue();
+//
+//        long maWaitTime = 15;
+//        if (MINUTES.between(lastIndexMAOrder, nowMilli) >= maWaitTime) {
+//            if (!noMoreBuy.get() && maShortLast > maLongLast && maShortSecLast <= maLongSecLast
+//                    && todayPerc < LO_PERC_WIDE && ((totalFilledNonMAOrderSize < 0
+//                    && totalMASignedQ + totalFilledNonMAOrderSize < 0) || totalMASignedQ < 0)) {
+//                int id = autoTradeID.incrementAndGet();
+//                buySize = (int) Math.min(Math.round((Math.abs(totalMASignedQ + totalFilledNonMAOrderSize) / 2)), 3);
+//                Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INTRADAY_MA));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, str(o.orderId(), "intraday MA BUY#:", numOrders, globalIdOrderMap.get(id)
+//                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
+//                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc, "pmchg ", pmChgY
+//                        , " others total:", totalFilledNonMAOrderSize, "MA total:", totalMASignedQ));
+//            } else if (!noMoreSell.get() && maShortLast < maLongLast && maShortSecLast >= maLongSecLast &&
+//                    todayPerc > HI_PERC_WIDE
+//                    && ((totalFilledNonMAOrderSize > 0 && totalMASignedQ + totalFilledNonMAOrderSize > 0) ||
+//                    totalMASignedQ > 0)) {
+//                sellSize = (int) Math.min(Math.round((totalMASignedQ + totalFilledNonMAOrderSize) / 2), 3);
+//                int id = autoTradeID.incrementAndGet();
+//                Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
+//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, INTRADAY_MA));
+//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+//                outputDetailedXU(symbol, str(o.orderId(), "intraday MA SELL#:", numOrders, globalIdOrderMap.get(id)
+//                        , "Last shortlong ", r(maShortLast), r(maLongLast), "2ndLast Shortlong",
+//                        r(maShortSecLast), r(maLongSecLast), "|perc", todayPerc, "pmchg ", pmChgY
+//                        , " others total:", totalFilledNonMAOrderSize, "MA total:", totalMASignedQ));
+//            }
+//        }
+//    }
 
     private static double getDeltaTarget(LocalDateTime nowMilli, int pmchy) {
         double baseDelta = _20DayMA == MASentiment.Bearish ? BEAR_BASE_DELTA : BULL_BASE_DELTA;

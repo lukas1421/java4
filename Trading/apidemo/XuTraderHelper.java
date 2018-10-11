@@ -811,11 +811,18 @@ public class XuTraderHelper {
                 .map(Map.Entry::getKey).orElse(LocalTime.MIN);
     }
 
+    //for max, use >= for first max
     static LocalDateTime getFirstMaxTPredLdt(NavigableMap<LocalDateTime, Double> mp, Predicate<LocalDateTime> p) {
         return mp.entrySet().stream().filter(e -> p.test(e.getKey()))
                 .max((e1, e2) -> e1.getValue() >= e2.getValue() ? 1 : -1)
                 .map(Map.Entry::getKey).orElse(LocalDateTime.MIN);
     }
+
+//    static LocalDateTime getFirstMaxTPredLdt(NavigableMap<LocalDateTime, Double> mp, Predicate<LocalDateTime> p) {
+//        return mp.entrySet().stream().filter(e -> p.test(e.getKey()))
+//                .max((e1, e2) -> e1.getValue() >= e2.getValue() ? 1 : -1)
+//                .map(Map.Entry::getKey).orElse(LocalDateTime.MIN);
+//    }
 
     //for min, use > for first min
     static LocalTime getFirstMinTPred(NavigableMap<LocalTime, Double> mp, Predicate<LocalTime> p) {

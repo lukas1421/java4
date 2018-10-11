@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
@@ -43,7 +44,7 @@ import static utility.Utility.*;
 public final class ChinaData extends JPanel {
 
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBar = new ConcurrentHashMap<>();
-    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> priceMapBarDetail
+    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalDateTime, Double>> priceMapBarDetail
             = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBarYtd = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBarY2 = new ConcurrentHashMap<>();
@@ -608,15 +609,15 @@ public final class ChinaData extends JPanel {
 
     //private static void saveHib
 
-    private static void saveHibGen(Map<String, ? extends NavigableMap<LocalTime, ?>> mp,
-                                   Map<String, ? extends NavigableMap<LocalTime, ?>> mp2,
+    private static void saveHibGen(Map<String, ? extends NavigableMap<? extends Temporal, ?>> mp,
+                                   Map<String, ? extends NavigableMap<? extends Temporal, ?>> mp2,
                                    ChinaSaveInterface2Blob saveclass) {
         if (mp.size() == 0) {
             pr(" first map empty, not saving ");
             return;
         }
 
-        LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
+        //LocalTime start = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
         CompletableFuture.runAsync(() -> {
             try (Session session = sessionF.openSession()) {
@@ -860,10 +861,11 @@ public final class ChinaData extends JPanel {
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE),
                     cal.get(Calendar.SECOND), cal.get(Calendar.MILLISECOND));
+            LocalDateTime ldt = LocalDateTime.of(ld,lt);
 
             if (ld.equals(currentTradingDate) && ((lt.isAfter(LocalTime.of(8, 59))))) {
                 pr("handle detail today", c.symbol(), ld, lt, open, high, low, close);
-                ChinaData.priceMapBarDetail.get(ticker).put(lt, open);
+                ChinaData.priceMapBarDetail.get(ticker).put(ldt, open);
             }
         } else {
             System.out.println(str(date, open, high, low, close));

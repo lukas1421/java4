@@ -117,8 +117,8 @@ public final class ChinaStockHelper {
         }
     }
 
-    static NavigableMap<LocalTime, Double> trimTo3DP(NavigableMap<LocalTime, Double> inMap) {
-        NavigableMap<LocalTime, Double> outMap = new ConcurrentSkipListMap<>();
+    static <T> NavigableMap<T, Double> trimTo3DP(NavigableMap<T, Double> inMap) {
+        NavigableMap<T, Double> outMap = new ConcurrentSkipListMap<>();
         inMap.forEach((k, v) -> outMap.put(k, Math.round(v * 1000d) / 1000d));
         return outMap;
     }
@@ -130,7 +130,7 @@ public final class ChinaStockHelper {
         outputPMBDetailedToFile(priceMapBarDetail.get("SGXA50"), futOut);
     }
 
-    private static void outputPMBDetailedToFile(NavigableMap<LocalTime, Double> inMap, File outfile) {
+    private static void outputPMBDetailedToFile(NavigableMap<?, Double> inMap, File outfile) {
         if (inMap.size() == 0) {
             return;
         }
@@ -149,7 +149,7 @@ public final class ChinaStockHelper {
         }
     }
 
-    static void outputPMBDetailedToTxt(NavigableMap<LocalTime, Double> inMap) {
+    static void outputPMBDetailedToTxt(NavigableMap<?, Double> inMap) {
         //pmbOutput.txt
         pr(" outputting options");
         File output = new File(TradingConstants.GLOBALPATH + "pmbOutput.txt");

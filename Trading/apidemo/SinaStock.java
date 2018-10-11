@@ -117,14 +117,14 @@ public class SinaStock implements Runnable {
                 if (priceMapBarDetail.containsKey(FTSE_INDEX)) {
                     if (ldt.toLocalTime().isAfter(LocalTime.of(9, 20))
                             && ldt.toLocalTime().isBefore(LocalTime.of(15, 5))) { //change this later
-                        priceMapBarDetail.get(FTSE_INDEX).put(ldt.toLocalTime(), currIndexPrice);
+                        priceMapBarDetail.get(FTSE_INDEX).put(ldt, currIndexPrice);
 
                         if (globalTradingOn.get()) {
                             double atmVol = getATMVol(expiryToGet);
                             if (atmVol > SGXA50_AUTO_VOL_THRESH) {
-                                indexHiLo(ldt, currIndexPrice); // open to 10, guarantee
+                                //indexHiLo(ldt, currIndexPrice); // open to 10, guarantee
                                 indexPostAMCutoffLiq(ldt, currIndexPrice);
-                                indexPmHiLo(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
+                                //indexPmHiLo(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
                                 indexPostPMCutoffLiq(ldt, currIndexPrice);
                             }
 
@@ -183,8 +183,9 @@ public class SinaStock implements Runnable {
                             double last = Utility.pd(datalist, 3);
                             sizeTotalMap.get(ticker).put(lt, Utility.pd(datalist, 9) / 1000000d);
 
-                            if (isIndex(ticker) && lt.isAfter(AutoTraderMain.ltof(9, 0)) && lt.isBefore(AutoTraderMain.ltof(15, 5))) {
-                                priceMapBarDetail.get(ticker).put(ldt.toLocalTime(), last);
+                            if (isIndex(ticker) && lt.isAfter(AutoTraderMain.ltof(9, 0))
+                                    && lt.isBefore(AutoTraderMain.ltof(15, 5))) {
+                                priceMapBarDetail.get(ticker).put(ldt, last);
                             }
 
                             if (priceMapBar.get(ticker).containsKey(lt)) {

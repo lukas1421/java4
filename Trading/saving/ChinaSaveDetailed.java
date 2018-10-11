@@ -3,7 +3,8 @@ package saving;
 import javax.persistence.*;
 import java.io.Serializable;
 import java.sql.Blob;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
+import java.time.temporal.Temporal;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
@@ -46,6 +47,25 @@ public class ChinaSaveDetailed implements Serializable, ChinaSaveInterface2Blob 
 
     }
 
+    @SuppressWarnings("unchecked")
+    @Override
+    public void updateFirstMap(String name, NavigableMap<? extends Temporal, ?> mp) {
+        if (mp.size() > 0) {
+            ConcurrentSkipListMap<LocalDateTime, Double> mp1 = (ConcurrentSkipListMap<LocalDateTime, Double>) mp;
+            mp1.forEach((k, v) -> {
+                if (!priceMapBarDetail.get(name).containsKey(k)) {
+                    priceMapBarDetail.get(name).put(k, v);
+                }
+            });
+            //priceMapBarDetail.put(name, (ConcurrentSkipListMap<LocalTime, Double>) mp);
+        }
+    }
+
+    @Override
+    public void updateSecondMap(String name, NavigableMap<? extends Temporal, ?> mp) {
+
+    }
+
     @Override
     public Blob getFirstBlob() {
         return dayPriceMapBlob;
@@ -60,27 +80,26 @@ public class ChinaSaveDetailed implements Serializable, ChinaSaveInterface2Blob 
         return new ChinaSaveDetailed(name);
     }
 
-    @SuppressWarnings("unchecked")
-    public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
-        //priceMapBar.put(name,(ConcurrentSkipListMap<LocalTime,SimpleBar>)trimSkipMap(mp, LocalTime.of(9,19)));
-//        if (name.equals("SGXA50")) {
-//            Utility.pr(" LOADING: china save detailed SGXA50 ", mp);
+//    public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
+//        //priceMapBar.put(name,(ConcurrentSkipListMap<LocalTime,SimpleBar>)trimSkipMap(mp, LocalTime.of(9,19)));
+////        if (name.equals("SGXA50")) {
+////            Utility.pr(" LOADING: china save detailed SGXA50 ", mp);
+////        }
+//        if (mp.size() > 0) {
+//            ConcurrentSkipListMap<LocalTime, Double> mp1 = (ConcurrentSkipListMap<LocalTime, Double>) mp;
+//            mp1.forEach((k, v) -> {
+//                if (!priceMapBarDetail.get(name).containsKey(k)) {
+//                    priceMapBarDetail.get(name).put(k, v);
+//                }
+//            });
+//            //priceMapBarDetail.put(name, (ConcurrentSkipListMap<LocalTime, Double>) mp);
 //        }
-        if (mp.size() > 0) {
-            ConcurrentSkipListMap<LocalTime, Double> mp1 = (ConcurrentSkipListMap<LocalTime, Double>) mp;
-            mp1.forEach((k, v) -> {
-                if (!priceMapBarDetail.get(name).containsKey(k)) {
-                    priceMapBarDetail.get(name).put(k, v);
-                }
-            });
-            //priceMapBarDetail.put(name, (ConcurrentSkipListMap<LocalTime, Double>) mp);
-        }
-    }
+//    }
 
-    @Override
-    public void updateSecondMap(String name, NavigableMap<LocalTime, ?> mp) {
-
-    }
+//    @Override
+//    public void updateSecondMap(String name, NavigableMap<LocalTime, ?> mp) {
+//
+//    }
 
     @Override
     public int hashCode() {
@@ -94,7 +113,8 @@ public class ChinaSaveDetailed implements Serializable, ChinaSaveInterface2Blob 
             return false;
         }
         ChinaSaveDetailed other = (ChinaSaveDetailed) object;
-        return !((this.stockName == null && other.stockName != null) || (this.stockName != null && !this.stockName.equals(other.stockName)));
+        return !((this.stockName == null && other.stockName != null) ||
+                (this.stockName != null && !this.stockName.equals(other.stockName)));
     }
 
     @Override

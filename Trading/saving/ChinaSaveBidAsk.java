@@ -76,6 +76,20 @@ public class ChinaSaveBidAsk implements Serializable, ChinaSaveInterface2Blob {
     }
 
     @Override
+    public void updateFirstMap(String name, NavigableMap<? extends java.time.temporal.Temporal, ?> mp) {
+        //noinspection unchecked
+        ChinaData.bidMap.put(name, (ConcurrentSkipListMap<LocalTime, VolBar>)
+                Utility.trimSkipMap((NavigableMap<LocalTime, VolBar>) mp, LocalTime.of(9, 14)));
+    }
+
+    @Override
+    public void updateSecondMap(String name, NavigableMap<? extends java.time.temporal.Temporal, ?> mp) {
+        //noinspection unchecked
+        ChinaData.askMap.put(name, (ConcurrentSkipListMap<LocalTime, VolBar>) Utility.trimSkipMap(
+                (NavigableMap<LocalTime, VolBar>) mp, LocalTime.of(9, 14)));
+    }
+
+    @Override
     public Blob getFirstBlob() {
         return bidMapBlob;
     }
@@ -90,17 +104,17 @@ public class ChinaSaveBidAsk implements Serializable, ChinaSaveInterface2Blob {
         return new ChinaSaveBidAsk(name);
     }
 
-    @Override
-    public void updateFirstMap(String name, NavigableMap<LocalTime, ?> mp) {
-        //noinspection unchecked
-        ChinaData.bidMap.put(name, (ConcurrentSkipListMap<LocalTime, VolBar>) Utility.trimSkipMap(mp, LocalTime.of(9, 14)));
-    }
-
-    @Override
-    public void updateSecondMap(String name, NavigableMap<LocalTime, ?> mp) {
-        //noinspection unchecked
-        ChinaData.askMap.put(name, (ConcurrentSkipListMap<LocalTime, VolBar>) Utility.trimSkipMap(mp, LocalTime.of(9, 14)));
-    }
+//    @Override
+//    public void updateFirstMap(String name, NavigableMap<? extends Temporal, ?> mp) {
+//        //noinspection unchecked
+//        ChinaData.bidMap.put(name, (ConcurrentSkipListMap<LocalTime, VolBar>) Utility.trimSkipMap(mp, LocalTime.of(9, 14)));
+//    }
+//
+//    @Override
+//    public void updateSecondMap(String name, NavigableMap<? extends Temporal, ?> mp) {
+//        //noinspection unchecked
+//        ChinaData.askMap.put(name, (ConcurrentSkipListMap<LocalTime, VolBar>) Utility.trimSkipMap(mp, LocalTime.of(9, 14)));
+//    }
 
     @Override
     public int hashCode() {

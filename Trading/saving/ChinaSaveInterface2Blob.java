@@ -1,7 +1,7 @@
 package saving;
 
 import java.sql.Blob;
-import java.time.LocalTime;
+import java.time.temporal.Temporal;
 import java.util.NavigableMap;
 
 public interface ChinaSaveInterface2Blob {
@@ -10,8 +10,8 @@ public interface ChinaSaveInterface2Blob {
 //    Map<String, ? extends NavigableMap<LocalTime,?>> getFirstMap();
 //    Map<String, ? extends NavigableMap<LocalTime,?>> getSecondMap();
 
-    void updateFirstMap(String name,  NavigableMap<LocalTime,?> mp);
-    void updateSecondMap(String name, NavigableMap<LocalTime,?> mp);
+    void updateFirstMap(String name,  NavigableMap<? extends Temporal,?> mp);
+    void updateSecondMap(String name, NavigableMap<? extends Temporal,?> mp);
     Blob getFirstBlob();
     Blob getSecondBlob();
     String getSimpleName();

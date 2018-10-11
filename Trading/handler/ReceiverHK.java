@@ -29,7 +29,7 @@ public class ReceiverHK implements LiveHandler {
         switch (tt) {
             case LAST:
                 //hkPriceMapDetail.get(name).put(t, price);
-                ChinaData.priceMapBarDetail.get(symbol).put(t.toLocalTime(), price);
+                ChinaData.priceMapBarDetail.get(symbol).put(t, price);
                 hkFreshPriceMap.put(symbol, price);
                 processeMainHK(symbol, t, price);
                 break;
