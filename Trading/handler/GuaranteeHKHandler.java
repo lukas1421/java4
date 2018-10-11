@@ -56,7 +56,7 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
                 double freshPrice = hkFreshPriceMap.get(symbol);
                 double bid = hkBidMap.get(symbol);
                 double ask = hkAskMap.get(symbol);
-                Contract ct = tickerToHKContract(hkSymbolToTicker(symbol));
+                Contract ct = tickerToHKStkContract(hkSymbolToTicker(symbol));
 
                 Order prevOrder = globalIdOrderMap.get(defaultID).getOrder();
 

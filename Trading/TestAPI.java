@@ -44,7 +44,7 @@ public class TestAPI {
         // req
         //ap.reqUSAutoTrader();
         //ap.req1StockLive("IQ", "SMART", "USD", new ReceiverUS("IQ"), false);
-        Contract hkTestCont = AutoTraderHK.tickerToHKContract("5");
+        Contract hkTestCont = AutoTraderHK.tickerToHKStkContract("5");
         ap.reqContractDetails(hkTestCont, new ApiController.IContractDetailsHandler.DefaultContractDetailsHandler());
 
 

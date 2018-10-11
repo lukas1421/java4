@@ -104,7 +104,6 @@ public final class ChinaMain implements IConnectionHandler {
     private static AutoTraderHK hkTrader = new AutoTraderHK();
     private static AutoTraderUS usTrader = new AutoTraderUS();
 
-
     //private static USStock usstock = new USStock(M_CONTROLLER);
 
     private SinaStock sinastock1 = SinaStock.getInstance();
@@ -139,6 +138,7 @@ public final class ChinaMain implements IConnectionHandler {
         m_tabbedPanel.addTab("Stock ", chinastock);
         m_tabbedPanel.addTab("XU", xu);
         m_tabbedPanel.addTab("Xu trader ", xutrader);
+        //m_tabbedPanel.addTab("Hk trader ", hkTrader);
         //m_tabbedPanel.addTab("Auto trader ", autoMain);
         //m_tabbedPanel.addTab("Ytd", chinaDataYtd);
         m_tabbedPanel.addTab("Data ", chinaData);

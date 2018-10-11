@@ -1709,7 +1709,7 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
     @Override
     public void tradeReport(String tradeKey, Contract contract, Execution execution) {
         if (ChinaPosition.uniqueTradeSet.contains(tradeKey)) {
-            XuTraderHelper.outputToError(str(" tradeKey already in the set ", tradeKey));
+            //XuTraderHelper.outputToError(str(" tradeKey already in the set ", tradeKey));
             return;
         } else {
             ChinaPosition.uniqueTradeSet.add(tradeKey);

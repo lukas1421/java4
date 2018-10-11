@@ -28,6 +28,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static apidemo.AutoTraderHK.getHKFutContract;
 import static apidemo.AutoTraderMain.globalIdOrderMap;
 import static apidemo.AutoTraderMain.globalTradingOn;
 import static apidemo.ChinaMain.*;
@@ -973,6 +974,22 @@ public class ApiController implements EWrapper {
         }
     }
 
+
+    public void req1FutLive(String ticker, String exch, String curr, LiveHandler h, boolean snapshot) {
+        pr(" requesting 1 stock live ", ticker, exch, curr);
+        try {
+            int reqId = m_reqId.incrementAndGet();
+            if (reqId % 90 == 0) {
+                Thread.sleep(1000);
+            }
+            Contract ct = generateFutContract(ticker, exch, curr);
+            ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
+            m_client.reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public void req1ContractLive(Contract ct, LiveHandler h, boolean snapshot) {
         try {
             int reqId = m_reqId.incrementAndGet();
@@ -1008,8 +1025,16 @@ public class ApiController implements EWrapper {
      */
     public void reqHKAutoTrader() {
         AutoTraderHK.hkSymbols.forEach(k -> {
-            String ticker = k.substring(2);
-            req1StockLive(ticker, "SEHK", "HKD", ReceiverHK.getReceiverHK(), false);
+            pr("requesting hk for ", k);
+            if (k.startsWith("hk")) {
+                String ticker = k.substring(2);
+                req1StockLive(ticker, "SEHK", "HKD", ReceiverHK.getReceiverHK(), false);
+            } else {
+                if (k.equals("MCH.HK") || k.equals("HHI.HK")) {
+                    Contract ct = getHKFutContract(k);
+                    req1ContractLive(ct, ReceiverHK.getReceiverHK(), false);
+                }
+            }
         });
     }
 
@@ -1066,7 +1091,16 @@ public class ApiController implements EWrapper {
         return ct;
     }
 
-//    private Contract tickerToHKContract(String stock) {
+    private static Contract generateFutContract(String ticker, String ex, String curr) {
+        Contract ct = new Contract();
+        ct.symbol(ticker);
+        ct.exchange(ex);
+        ct.currency(curr);
+        ct.secType(SecType.STK);
+        return ct;
+    }
+
+//    private Contract tickerToHKStkContract(String stock) {
 //        Contract ct = new Contract();
 //        ct.symbol(stock);
 //        ct.exchange("SEHK");
