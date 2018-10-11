@@ -1809,8 +1809,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
 
         if (!manualfutNightDev.get()) {
-            if (lt.isBefore(ltof(17, 0, 0))) {
-                outputDetailedXU(symbol, str("set fut N open dev dir 9:01", lt, last));
+            if (lt.isBefore(ltof(17, 1, 0))) {
+                outputDetailedXU(symbol, str("set fut N open dev dir 17:01", lt, last));
                 manualfutNightDev.set(true);
             } else {
                 if (last > open) {
@@ -1835,7 +1835,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         double buySize;
         double sellSize;
-        //double costOffset = (numOrders % 2 == 0) ? 0 : 5.0;
 
         if ((minV / open - 1 < loThresh) && (last / minV - 1 > retreatHIThresh)
                 && filled <= -1 && pos < 0 && (numOrders % 2 == 1)) {
@@ -1888,7 +1887,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 }
             }
         }
-
     }
 
     /**

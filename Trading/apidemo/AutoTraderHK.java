@@ -248,7 +248,7 @@ public class AutoTraderHK extends JPanel {
         }
 
         LocalTime lt = nowMilli.toLocalTime();
-        LocalTime cutoff = ltof(16, 0);
+        LocalTime cutoff = ltof(15, 0);
         LocalTime obT = ltof(9, 14, 50);
         Contract ct = getHKFutContract(symbol);
 
