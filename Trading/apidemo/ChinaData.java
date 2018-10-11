@@ -43,7 +43,8 @@ import static utility.Utility.*;
 public final class ChinaData extends JPanel {
 
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBar = new ConcurrentHashMap<>();
-    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> priceMapBarDetail = new ConcurrentHashMap<>();
+    public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> priceMapBarDetail
+            = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBarYtd = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, SimpleBar>> priceMapBarY2 = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> sizeTotalMap = new ConcurrentHashMap<>();
@@ -545,7 +546,7 @@ public final class ChinaData extends JPanel {
         });
     }
 
-    static void withHibernateDetailedManual() {
+    private static void withHibernateDetailedManual() {
         CompletableFuture.runAsync(() -> {
             int maxSize = priceMapBarDetail.entrySet().stream().mapToInt(e -> e.getValue().size()).max().orElse(0);
             if (maxSize > 0) {

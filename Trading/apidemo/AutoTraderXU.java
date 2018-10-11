@@ -833,7 +833,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         //cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
 
         if (globalTradingOn.get()) {
-            //sgxDev(ldt, price);
+            sgxDev(ldt, price);
         }
         sgxA50CloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
 
@@ -1759,6 +1759,17 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //        }
     }
 
+    private static void sgxNightDev(LocalDateTime nowMilli, double last) {
+        LocalTime lt = nowMilli.toLocalTime();
+        String symbol = ibContractToSymbol(activeFutCt);
+        FutType f = ibContractToFutType(activeFutCt);
+        AutoOrderType ot = FUT_NIGHT_DEV;
+        double pos = currentPosMap.get(f);
+        LocalTime obT = ltof(16, 59, 55);
+        LocalTime cutoff = ltof(5, 0);
+
+
+    }
 
     /**
      * fut pc deviation trader, trade delta based on position relative to last close at 4:44am
@@ -1847,7 +1858,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, "**********");
             outputDetailedXU(symbol, str("NEW", lt, o.orderId(), "fut dev take profit BUY",
-                    "max,min,oautopen,last", maxV, minV, open, last,
+                    "max,min,open,last", maxV, minV, open, last,
                     "min/open", r10000(minV / open - 1), "loThresh", loThresh,
                     "p/min", r10000(last / minV - 1), "retreatHIThresh", retreatHIThresh));
         } else if ((maxV / open - 1 > hiThresh) && (last / maxV - 1 < retreatLOThresh)
@@ -1859,7 +1870,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, "**********");
             outputDetailedXU(symbol, str("NEW", lt, o.orderId(), "fut dev take profit SELL",
-                    "max,min,mopen,last", maxV, minV, open, last,
+                    "max,min,open,last", maxV, minV, open, last,
                     "max/open", r(maxV / open - 1), "hiThresh", hiThresh,
                     "p/max", r(last / maxV - 1), "retreatLoThresh", retreatLOThresh));
         } else {
