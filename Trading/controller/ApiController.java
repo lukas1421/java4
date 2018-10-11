@@ -944,21 +944,7 @@ public class ApiController implements EWrapper {
         });
     }
 
-    public void reqLiveContract(Contract ct, LiveHandler h, boolean snapshot) {
-        try {
-            int reqId = m_reqId.incrementAndGet();
-            if (reqId % 90 == 0) {
-                Thread.sleep(1000);
-            }
-            ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
-            m_client.reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-        }
-
-    }
-
-    public void req1StockLive(String ticker, String exch, String curr, LiveHandler h, boolean snapshot) {
+    private void req1StockLive(String ticker, String exch, String curr, LiveHandler h, boolean snapshot) {
         pr(" requesting 1 stock live ", ticker, exch, curr);
         try {
             int reqId = m_reqId.incrementAndGet();
@@ -975,20 +961,20 @@ public class ApiController implements EWrapper {
     }
 
 
-    public void req1FutLive(String ticker, String exch, String curr, LiveHandler h, boolean snapshot) {
-        pr(" requesting 1 stock live ", ticker, exch, curr);
-        try {
-            int reqId = m_reqId.incrementAndGet();
-            if (reqId % 90 == 0) {
-                Thread.sleep(1000);
-            }
-            Contract ct = generateFutContract(ticker, exch, curr);
-            ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
-            m_client.reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-        }
-    }
+//    public void req1FutLive(String ticker, String exch, String curr, LiveHandler h, boolean snapshot) {
+//        pr(" requesting 1 stock live ", ticker, exch, curr);
+//        try {
+//            int reqId = m_reqId.incrementAndGet();
+//            if (reqId % 90 == 0) {
+//                Thread.sleep(1000);
+//            }
+//            Contract ct = generateFutContract(ticker, exch, curr);
+//            ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
+//            m_client.reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
+//        } catch (InterruptedException ex) {
+//            ex.printStackTrace();
+//        }
+//    }
 
     public void req1ContractLive(Contract ct, LiveHandler h, boolean snapshot) {
         try {

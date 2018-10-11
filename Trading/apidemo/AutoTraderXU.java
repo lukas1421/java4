@@ -833,7 +833,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         //cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
 
         if (globalTradingOn.get()) {
-            sgxDev(ldt, price);
+            //sgxDev(ldt, price);
         }
         sgxA50CloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
 

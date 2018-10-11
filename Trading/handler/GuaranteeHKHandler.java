@@ -56,13 +56,18 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
                 double freshPrice = hkFreshPriceMap.get(symbol);
                 double bid = hkBidMap.get(symbol);
                 double ask = hkAskMap.get(symbol);
-                Contract ct = tickerToHKStkContract(hkSymbolToTicker(symbol));
+                Contract ct;
+                if (symbol.startsWith("hk")) {
+                    ct = tickerToHKStkContract(hkSymbolToTicker(symbol));
+                } else {
+                    ct = getHKFutContract(symbol);
+                }
 
                 Order prevOrder = globalIdOrderMap.get(defaultID).getOrder();
-
                 Order o = new Order();
                 o.action(prevOrder.action());
-                o.lmtPrice(prevOrder.action() == Types.Action.BUY ? ask : bid);
+                //o.lmtPrice(prevOrder.action() == Types.Action.BUY ? ask : bid);
+                o.lmtPrice(freshPrice);
                 o.orderType(OrderType.LMT);
                 o.totalQuantity(prevOrder.totalQuantity());
                 o.outsideRth(true);

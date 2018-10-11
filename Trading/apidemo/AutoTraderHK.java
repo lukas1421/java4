@@ -62,6 +62,7 @@ public class AutoTraderHK extends JPanel {
     private static Map<String, Integer> hkSizeMap = new HashMap<>();
 
     //fut dev
+    private static final double MAX_DEV_HK = 0.001;
     private static final double hiThresh = 0.005;
     private static final double loThresh = -0.005;
     private static final double retreatHIThresh = 0.85 * hiThresh;
@@ -112,11 +113,6 @@ public class AutoTraderHK extends JPanel {
     public static void processeMainHK(String symbol, LocalDateTime nowMilli, double last) {
         //cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(10, 0, 0));
 
-//        if (!globalTradingOn.get()) {
-//            return;
-//        }
-
-
         if (globalTradingOn.get()) {
             //hkDev(symbol, nowMilli, last);
             hkFutDev(symbol, nowMilli, last);
@@ -131,7 +127,10 @@ public class AutoTraderHK extends JPanel {
     }
 
     public static String hkSymbolToTicker(String symbol) {
-        return symbol.substring(2);
+        if (symbol.startsWith("hk")) {
+            return symbol.substring(2);
+        }
+        return symbol;
     }
 
     /**
@@ -247,7 +246,7 @@ public class AutoTraderHK extends JPanel {
         }
 
         LocalTime lt = nowMilli.toLocalTime();
-        LocalTime cutoff = ltof(10, 0);
+        LocalTime cutoff = ltof(11, 0);
         LocalTime obT = ltof(9, 14, 50);
         Contract ct = getHKFutContract(symbol);
 
@@ -265,7 +264,7 @@ public class AutoTraderHK extends JPanel {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
-        if (lt.isBefore(ltof(8, 50)) || lt.isAfter(cutoff)) {
+        if (lt.isBefore(ltof(9, 10)) || lt.isAfter(cutoff)) {
             return;
         }
 
@@ -286,14 +285,14 @@ public class AutoTraderHK extends JPanel {
 
         pr("HKdev", lt.truncatedTo(ChronoUnit.MILLIS),
                 "#", numOrders, "F#", filled, "opEn:", openT, open,
-                "P", last, "pos", pos, "dev", r10000(dev), "maxD", 0.002,
+                "P", last, "pos", pos, "dev", r10000(dev), "maxD", MAX_DEV_HK,
                 "tFrLastOrd", showLong(milliSinceLast),
                 "wait", waitSec, "nextT", lastOrderT.toLocalTime().plusSeconds(waitSec).truncatedTo(SECONDS),
                 (nowMilli.isBefore(lastOrderT.plusSeconds(waitSec)) ? "wait" : "vacant"),
                 "baseSize", baseSize, "dir", hkOpenDevDir.get(symbol), "manual",
                 manualHKDev.get(symbol));
 
-        if (numOrders >= 4) {
+        if (numOrders >= MAX_ORDER_HK) {
             return;
         }
 
@@ -346,12 +345,12 @@ public class AutoTraderHK extends JPanel {
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
             outputDetailedHK(symbol, "**********");
-            outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "fut dev take profit SELL",
+            outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "hkfut dev take profit SELL",
                     "max,min,mopen,last", maxV, minV, open, last,
                     "max/open", r(maxV / open - 1), "hiThresh", hiThresh,
                     "p/max", r(last / maxV - 1), "retreatLoThresh", retreatLOThresh));
         } else {
-            if (SECONDS.between(lastOrderT, nowMilli) > waitSec && Math.abs(dev) < 0.002) {
+            if (SECONDS.between(lastOrderT, nowMilli) > waitSec && Math.abs(dev) < MAX_DEV_HK) {
                 if (!noMoreBuy.get() && last > open && hkOpenDevDir.get(symbol) != Direction.Long) {
                     int id = autoTradeID.incrementAndGet();
                     buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? baseSize : 0)) : baseSize;
@@ -359,7 +358,7 @@ public class AutoTraderHK extends JPanel {
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
                     outputDetailedHK(symbol, "**********");
-                    outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "fut dev BUY #:", numOrders,
+                    outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "hkfut dev BUY #:", numOrders,
                             globalIdOrderMap.get(id), "open,last ", open, last, "milliLast2", showLong(milliLast2),
                             "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec), "baseSize", baseSize));
                     hkOpenDevDir.put(symbol, Direction.Long);
@@ -766,7 +765,6 @@ public class AutoTraderHK extends JPanel {
 
     private static LocalDate getSecondLastBD(LocalDate d) {
         LocalDate res = d.plusMonths(1L).withDayOfMonth(1);
-        pr("d/next month", d, res);
         int i = 0;
         while (i != 2) {
             res = res.minusDays(1);

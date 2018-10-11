@@ -223,7 +223,7 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
         pr(" format time " + formatTime);
 
         pr(" requesting live contract for CNHKKD ");
-        ap.reqLiveContract(c, this, false);
+        ap.req1ContractLive(c, this, false);
     }
 
     private void getFXLast(ApiController ap) {
