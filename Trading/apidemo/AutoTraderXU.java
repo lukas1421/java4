@@ -62,9 +62,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     public static volatile double currentIBNAV = 0.0;
 
     private static volatile Set<String> uniqueTradeKeySet = new HashSet<>();
-    //private static XUTraderRoll traderRoll;
     private static final int MAX_XU_SIZE = 4;
     private static final int MAX_DEV_SIZE = 4;
+    private static final int MAX_N_DEV_SIZE = 0;
 
 
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
@@ -122,8 +122,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     private static final long FT_ACCU_MAX_SIZE = 2;
 
     //pm hilo
-    private static volatile Direction indexPmHiLoDirection = Direction.Flat;
-    private static volatile AtomicBoolean manualPMHiloDirection = new AtomicBoolean(false);
+    private static volatile Direction indexPmHiLoDir = Direction.Flat;
+    private static volatile AtomicBoolean manualPMHiloDir = new AtomicBoolean(false);
 
     //pm dev trader
     private static volatile Direction indexPmDevDirection = Direction.Flat;
@@ -1804,7 +1804,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 (nowMilli.isBefore(lastOrderT.plusSeconds(waitSec)) ? "wait" : "vacant"),
                 "baseSize", nightBaseSize, "dir", futNightDevDir, "manual", manualfutNightDev);
 
-        if (numOrders >= MAX_DEV_SIZE) {
+        if (numOrders >= MAX_N_DEV_SIZE) {
             return;
         }
 
@@ -2560,147 +2560,146 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //        }
 //    }
 //
-//    /**
-//     * pm hilo trader
-//     *
-//     * @param nowMilli  time
-//     * @param indexLast last ftse index value
-//     */
-//    static void indexPmHiLo(LocalDateTime nowMilli, double indexLast) {
-//        LocalTime lt = nowMilli.toLocalTime();
-//        FutType f = ibContractToFutType(activeFutCt);
-//        String symbol = ibContractToSymbol(activeFutCt);
-//        double freshPrice = futPriceMap.get(f);
-//        OrderStatus lastStatus = getLastOrderStatusForType(symbol, FTSEA50_PM_HILO);
-//        int PM_HILO_BASE = getWeekdayBaseSize(nowMilli.getDayOfWeek()) + 2;
-//        double bidPrice = bidMap.get(f);
-//        double askPrice = askMap.get(f);
-//        LocalTime cutoff = ltof(13, 30);
-//
-//        if (!checkTimeRangeBool(lt, 12, 58, 13, 30)) {
-//            return;
-//        }
-//
-//        long numPMHiloOrders = getOrderSizeForTradeType(symbol, FTSEA50_PM_HILO);
-//        if (numPMHiloOrders >= MAX_XU_SIZE) {
-//            if (detailedPrint.get()) {
-//                pr(" pm hilo exceed max ", MAX_XU_SIZE);
-//            }
-//            return;
-//        }
-//        int buyQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
-//        int sellQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
-//        int totalFilled = (int) getOrderTotalSignedQForTypeFilled(symbol, FTSEA50_PM_HILO);
-//
-//        if (lt.isAfter(cutoff)) {
-//            if (totalFilled > 0) {
-//                buyQ = 0;
-//                sellQ = totalFilled;
-//            } else if (totalFilled < 0) {
-//                buyQ = Math.abs(totalFilled);
-//                sellQ = 0;
-//            } else {
-//                return;
-//            }
-//        }
-//
-//
-//        LocalDateTime lastPMHiLoTradeTime = getLastOrderTime(symbol, FTSEA50_PM_HILO);
-//        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(symbol, FTSEA50_PM_HILO);
-//
-//        int pmHiloWaitTimeSeconds = (milliBtwnLastTwoOrders < 60000) ? 300 : 10;
-//
-//
-//        long tBtwnLast2Trades = lastTwoOrderMilliDiff(symbol, FTSEA50_PM_HILO);
-//        long tSinceLastTrade = tSincePrevOrderMilli(symbol, FTSEA50_PM_HILO, nowMilli);
-//
-//        double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(ltof(12, 58)).getValue();
-//
-//        double pmFirstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-//                .filter(e -> e.getKey().isAfter(ltof(12, 58, 0)))
-//                .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getValue)
-//                .orElse(pmOpen);
-//
-//        LocalTime pmFirstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-//                .filter(e -> e.getKey().isAfter(ltof(12, 58, 0)))
-//                .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getKey)
-//                .orElse(LocalTime.MIN);
-//
-//        LocalTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
-//
-//        double pmMaxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-//                .filter(e -> e.getKey().isAfter(ltof(12, 58))
-//                        && e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).max().orElse(0.0);
-//
-//        double pmMinSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
-//                .filter(e -> e.getKey().isAfter(ltof(12, 58)) &&
-//                        e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
-//
-//        LocalTime pmMaxT = getFirstMaxTPred(priceMapBarDetail.get(FTSE_INDEX), t -> t.isAfter(ltof(12, 58)));
-//        LocalTime pmMinT = getFirstMinTPred(priceMapBarDetail.get(FTSE_INDEX), t -> t.isAfter(ltof(12, 58)));
-//
-//        if (!manualPMHiloDirection.get()) {
-//            if (lt.isBefore(ltof(13, 0))) {
-//                manualPMHiloDirection.set(true);
-//            } else {
-//                if (pmMaxT.isAfter(pmMinT)) {
-//                    indexPmHiLoDirection = Direction.Long;
-//                    manualPMHiloDirection.set(true);
-//                } else if (pmMaxT.isBefore(pmMinT)) {
-//                    indexPmHiLoDirection = Direction.Short;
-//                    manualPMHiloDirection.set(true);
-//                } else {
-//                    indexPmHiLoDirection = Direction.Flat;
-//                }
-//            }
-//        }
-//
-//        if (detailedPrint.get()) {
-//            pr(lt.truncatedTo(ChronoUnit.SECONDS)
-//                    , "index pm hilo trader: pmOpen, pmFT, T, dir: ", r(pmOpen), r(pmFirstTick), pmFirstTickTime
-//                    , indexPmHiLoDirection, "max min maxT minT ", r(pmMaxSoFar), r(pmMinSoFar), pmMaxT, pmMinT,
-//                    "milliBtwnLastTwo", milliBtwnLastTwoOrders);
-//        }
-//
-//        if (SECONDS.between(lastPMHiLoTradeTime, nowMilli) >= pmHiloWaitTimeSeconds && pmMaxSoFar != 0.0 && pmMinSoFar != 0.0) {
-//            if (!noMoreBuy.get() && (indexLast > pmMaxSoFar || pmMaxT.isAfter(pmMinT))
-//                    && indexPmHiLoDirection != Direction.Long) {
-//                int id = autoTradeID.incrementAndGet();
-//                Order o = placeBidLimitTIF(freshPrice, buyQ, IOC);
-//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_PM_HILO));
-//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-//                outputDetailedXU(symbol, "**********");
-//                outputDetailedXU(symbol, str("NEW", o.orderId(), "index pm hilo BUY #:", numPMHiloOrders,
-//                        globalIdOrderMap.get(id), "buy limit: ", freshPrice, "indexLast/fut/pd: ", r(indexLast),
-//                        freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
-//                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDirection,
-//                        "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
-//                        "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar), "pmMaxT,pmMinT", pmMaxT, pmMinT,
-//                        "bid ask", bidPrice, askPrice, Math.round(10000d * (askPrice / bidPrice - 1)), "bp",
-//                        "total Filled", totalFilled));
-//                indexPmHiLoDirection = Direction.Long;
-//            } else if (!noMoreSell.get() && (indexLast < pmMinSoFar || pmMinT.isAfter(pmMaxT))
-//                    && indexPmHiLoDirection != Direction.Short) {
-//                int id = autoTradeID.incrementAndGet();
-//                Order o = placeOfferLimitTIF(freshPrice, sellQ, IOC);
-//                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_PM_HILO));
-//                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-//                outputDetailedXU(symbol, "**********");
-//                outputDetailedXU(symbol, str("NEW", o.orderId(), "index pm hilo SELL #:", numPMHiloOrders,
-//                        globalIdOrderMap.get(id), "sell limit: ", freshPrice, "indexLast/fut/pd: ", r(indexLast),
-//                        freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
-//                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDirection,
-//                        "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
-//                        "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar), "pmMaxT,pmMinT", pmMaxT, pmMinT,
-//                        "bid ask", bidPrice, askPrice, Math.round(10000d * (askPrice / bidPrice - 1)), "bp",
-//                        "total Filled", totalFilled));
-//                indexPmHiLoDirection = Direction.Short;
-//            }
-//        }
-//    }
 
-    static LocalDateTime ldtof(LocalDate d, LocalTime t) {
-        return LocalDateTime.of(d, t);
+    /**
+     * pm hilo trader
+     *
+     * @param nowMilli  time
+     * @param indexLast last ftse index value
+     */
+    static void indexPmHiLo(LocalDateTime nowMilli, double indexLast) {
+        LocalTime lt = nowMilli.toLocalTime();
+        FutType f = ibContractToFutType(activeFutCt);
+        String symbol = ibContractToSymbol(activeFutCt);
+        double freshPrice = futPriceMap.get(f);
+        OrderStatus lastStatus = getLastOrderStatusForType(symbol, FTSEA50_PM_HILO);
+        int PM_HILO_BASE = getWeekdayBaseSize(nowMilli.getDayOfWeek()) + 2;
+        double bidPrice = bidMap.get(f);
+        double askPrice = askMap.get(f);
+        LocalTime cutoff = ltof(13, 30);
+
+        if (!checkTimeRangeBool(lt, 12, 58, 13, 30)) {
+            return;
+        }
+
+        long numPMHiloOrders = getOrderSizeForTradeType(symbol, FTSEA50_PM_HILO);
+        if (numPMHiloOrders >= MAX_XU_SIZE) {
+            if (detailedPrint.get()) {
+                pr(" pm hilo exceed max ", MAX_XU_SIZE);
+            }
+            return;
+        }
+        int buyQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
+        int sellQ = PM_HILO_BASE * ((numPMHiloOrders == 0 || numPMHiloOrders == (MAX_XU_SIZE - 1)) ? 1 : 1);
+        int totalFilled = (int) getOrderTotalSignedQForTypeFilled(symbol, FTSEA50_PM_HILO);
+
+        if (lt.isAfter(cutoff)) {
+            if (totalFilled > 0) {
+                buyQ = 0;
+                sellQ = totalFilled;
+            } else if (totalFilled < 0) {
+                buyQ = Math.abs(totalFilled);
+                sellQ = 0;
+            } else {
+                return;
+            }
+        }
+
+
+        LocalDateTime lastPMHiLoTradeTime = getLastOrderTime(symbol, FTSEA50_PM_HILO);
+        long milliBtwnLastTwoOrders = lastTwoOrderMilliDiff(symbol, FTSEA50_PM_HILO);
+
+        int pmHiloWaitTimeSeconds = (milliBtwnLastTwoOrders < 60000) ? 300 : 10;
+
+
+        long tBtwnLast2Trades = lastTwoOrderMilliDiff(symbol, FTSEA50_PM_HILO);
+        long tSinceLastTrade = tSincePrevOrderMilli(symbol, FTSEA50_PM_HILO, nowMilli);
+
+        LocalDateTime pmStart = ldtof(getTradeDate(nowMilli), ltof(12, 58));
+
+        double pmOpen = priceMapBarDetail.get(FTSE_INDEX).ceilingEntry(pmStart).getValue();
+
+        double pmFirstTick = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(pmStart))
+                .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getValue)
+                .orElse(pmOpen);
+
+        LocalDateTime pmFirstTickTime = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(pmStart))
+                .filter(e -> Math.abs(e.getValue() - pmOpen) > 0.01).findFirst().map(Map.Entry::getKey)
+                .orElse(LocalDateTime.MIN);
+
+        LocalDateTime lastKey = priceMapBarDetail.get(FTSE_INDEX).lastKey();
+
+        double pmMaxSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(pmStart)
+                        && e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+
+        double pmMinSoFar = priceMapBarDetail.get(FTSE_INDEX).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(pmStart) &&
+                        e.getKey().isBefore(lastKey)).mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+
+        LocalDateTime pmMaxT = getFirstMaxTPredLdt(priceMapBarDetail.get(FTSE_INDEX), t -> t.isAfter(pmStart));
+        LocalDateTime pmMinT = getFirstMinTPredLdt(priceMapBarDetail.get(FTSE_INDEX), t -> t.isAfter(pmStart));
+
+        if (!manualPMHiloDir.get()) {
+            if (lt.isBefore(ltof(13, 0))) {
+                manualPMHiloDir.set(true);
+            } else {
+                if (pmMaxT.isAfter(pmMinT)) {
+                    indexPmHiLoDir = Direction.Long;
+                    manualPMHiloDir.set(true);
+                } else if (pmMaxT.isBefore(pmMinT)) {
+                    indexPmHiLoDir = Direction.Short;
+                    manualPMHiloDir.set(true);
+                } else {
+                    indexPmHiLoDir = Direction.Flat;
+                }
+            }
+        }
+
+        if (detailedPrint.get()) {
+            pr(lt.truncatedTo(ChronoUnit.SECONDS)
+                    , "index pm hilo trader: pmOpen, pmFT, T, dir: ", r(pmOpen), r(pmFirstTick), pmFirstTickTime
+                    , indexPmHiLoDir, "max min maxT minT ", r(pmMaxSoFar), r(pmMinSoFar), pmMaxT, pmMinT,
+                    "milliBtwnLastTwo", milliBtwnLastTwoOrders);
+        }
+
+        if (SECONDS.between(lastPMHiLoTradeTime, nowMilli) >= pmHiloWaitTimeSeconds && pmMaxSoFar != 0.0 && pmMinSoFar != 0.0) {
+            if (!noMoreBuy.get() && (indexLast > pmMaxSoFar || pmMaxT.isAfter(pmMinT))
+                    && indexPmHiLoDir != Direction.Long) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeBidLimitTIF(freshPrice, buyQ, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_PM_HILO));
+                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+                outputDetailedXU(symbol, "**********");
+                outputDetailedXU(symbol, str("NEW", o.orderId(), "index pm hilo BUY #:", numPMHiloOrders,
+                        globalIdOrderMap.get(id), "buy limit: ", freshPrice, "indexLast/fut/pd: ", r(indexLast),
+                        freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
+                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDir,
+                        "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
+                        "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar), "pmMaxT,pmMinT", pmMaxT, pmMinT,
+                        "bid ask", bidPrice, askPrice, Math.round(10000d * (askPrice / bidPrice - 1)), "bp",
+                        "total Filled", totalFilled));
+                indexPmHiLoDir = Direction.Long;
+            } else if (!noMoreSell.get() && (indexLast < pmMinSoFar || pmMinT.isAfter(pmMaxT))
+                    && indexPmHiLoDir != Direction.Short) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(freshPrice, sellQ, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, FTSEA50_PM_HILO));
+                apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+                outputDetailedXU(symbol, "**********");
+                outputDetailedXU(symbol, str("NEW", o.orderId(), "index pm hilo SELL #:", numPMHiloOrders,
+                        globalIdOrderMap.get(id), "sell limit: ", freshPrice, "indexLast/fut/pd: ", r(indexLast),
+                        freshPrice, Math.round(10000d * (freshPrice / indexLast - 1)), "bp",
+                        "pmOpen/ft/time/direction ", r(pmOpen), r(pmFirstTick), pmFirstTickTime, indexPmHiLoDir,
+                        "waitT, lastTwoTDiff, tSinceLast ", pmHiloWaitTimeSeconds, tBtwnLast2Trades, tSinceLastTrade,
+                        "pm:max/min", r(pmMaxSoFar), r(pmMinSoFar), "pmMaxT,pmMinT", pmMaxT, pmMinT,
+                        "bid ask", bidPrice, askPrice, Math.round(10000d * (askPrice / bidPrice - 1)), "bp",
+                        "total Filled", totalFilled));
+                indexPmHiLoDir = Direction.Short;
+            }
+        }
     }
 
 

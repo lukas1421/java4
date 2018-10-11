@@ -352,7 +352,8 @@ public class AutoTraderHK extends JPanel {
                     "max/open", r(maxV / open - 1), "hiThresh", hiThresh,
                     "p/max", r(last / maxV - 1), "retreatLoThresh", retreatLOThresh));
         } else {
-            if (SECONDS.between(lastOrderT, nowMilli) > waitSec && Math.abs(dev) < MAX_DEV_HK) {
+            if ((SECONDS.between(lastOrderT, nowMilli) > waitSec && Math.abs(dev) < MAX_DEV_HK) ||
+                    (numOrders % 2 == 1)) {
                 if (!noMoreBuy.get() && last > open && hkOpenDevDir.get(symbol) != Direction.Long) {
                     int id = autoTradeID.incrementAndGet();
                     buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? baseSize : 0)) : baseSize;

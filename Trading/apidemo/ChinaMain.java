@@ -489,8 +489,10 @@ public final class ChinaMain implements IConnectionHandler {
                                     outputToAll(LocalDateTime.now().toString());
 
                                     pr(" hib ");
-                                    if (LocalTime.now().isAfter(ltof(9, 30)) && LocalTime.now().isBefore(ltof(15, 0))) {
-                                        Hibtask.loadHibGenPrice();
+                                    if (LocalTime.now().isAfter(ltof(9, 30))) {
+                                        if (LocalTime.now().isBefore(ltof(15, 0))) {
+                                            Hibtask.loadHibGenPrice();
+                                        }
                                         Hibtask.loadHibDetailPrice();
                                     }
 

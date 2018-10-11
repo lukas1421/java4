@@ -561,6 +561,10 @@ public class AutoTraderMain extends JPanel {
         }
     }
 
+//    static LocalDateTime ldtof(LocalDate d, LocalTime t) {
+//        return LocalDateTime.of(d, t);
+//    }
+
 //    static double getPriceOffset(long milliLast2, double price) {
 //        if (milliLast2 < 10000) {
 //            return price * 0.001;
