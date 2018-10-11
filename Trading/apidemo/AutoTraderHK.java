@@ -246,7 +246,7 @@ public class AutoTraderHK extends JPanel {
         }
 
         LocalTime lt = nowMilli.toLocalTime();
-        LocalTime cutoff = ltof(11, 0);
+        LocalTime cutoff = ltof(16, 0);
         LocalTime obT = ltof(9, 14, 50);
         Contract ct = getHKFutContract(symbol);
 
@@ -333,7 +333,7 @@ public class AutoTraderHK extends JPanel {
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
             outputDetailedHK(symbol, "**********");
-            outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "fut dev take profit BUY",
+            outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "hkfut dev take profit BUY",
                     "max,min,oautopen,last", maxV, minV, open, last,
                     "min/open", r10000(minV / open - 1), "loThresh", loThresh,
                     "p/min", r10000(last / minV - 1), "retreatHIThresh", retreatHIThresh));
@@ -369,7 +369,7 @@ public class AutoTraderHK extends JPanel {
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
                     outputDetailedHK(symbol, "**********");
-                    outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "fut dev SELL #:", numOrders,
+                    outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "hkfut dev SELL #:", numOrders,
                             globalIdOrderMap.get(id), "open,last ", open, last, "milliLast2", showLong(milliLast2),
                             "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec), "baseSize", baseSize));
                     hkOpenDevDir.put(symbol, Direction.Short);

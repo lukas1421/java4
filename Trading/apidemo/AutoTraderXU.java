@@ -3745,7 +3745,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         if (contract.symbol().equals("XINA50")) {
             FutType f = ibContractToFutType(contract);
             if (uniqueTradeKeySet.contains(tradeKey)) {
-                pr(" duplicate trade key ", tradeKey);
+                //pr(" duplicate trade key ", tradeKey);
                 return;
             } else {
                 uniqueTradeKeySet.add(tradeKey);
