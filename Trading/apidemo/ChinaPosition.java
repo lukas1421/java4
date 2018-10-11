@@ -15,6 +15,7 @@ import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableRowSorter;
+import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
@@ -378,8 +379,9 @@ public class ChinaPosition extends JPanel {
 
         //add text area
         outputArea = new JTextArea(10, 1);
-        JScrollPane outputPane = new JScrollPane(outputArea);
+        ((DefaultCaret) outputArea.getCaret()).setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 
+        JScrollPane outputPane = new JScrollPane(outputArea);
         //JPanel graphPanel = new JPanel();
         JScrollPane graphPane = new JScrollPane(gPnl) {
             @Override

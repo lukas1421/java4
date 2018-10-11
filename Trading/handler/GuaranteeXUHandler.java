@@ -70,7 +70,8 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
                 Order prevOrder = globalIdOrderMap.get(defaultID).getOrder();
                 Order o = new Order();
                 o.action(prevOrder.action());
-                o.lmtPrice(freshPrice);
+                o.lmtPrice(prevOrder.action() == Types.Action.BUY ? ask : bid);
+                //o.lmtPrice(prevOrder.action());
                 o.orderType(OrderType.LMT);
                 o.totalQuantity(prevOrder.totalQuantity());
                 o.outsideRth(true);

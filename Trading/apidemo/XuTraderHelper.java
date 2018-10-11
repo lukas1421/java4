@@ -196,7 +196,7 @@ public class XuTraderHelper {
     }
 
     private static void outputDetailedXUSymbol(String symbol, String msg) {
-        if (globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getSymbol().equals(symbol)).count() <= 1) {
+        if (globalIdOrderMap.entrySet().stream().noneMatch(e -> e.getValue().getSymbol().equals(symbol))) {
             outputDetailedGen(LocalDateTime.now().toString()
                     , new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
         }
@@ -211,7 +211,7 @@ public class XuTraderHelper {
     }
 
     private static void outputDetailedHKSymbol(String symbol, String msg) {
-        if (globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getSymbol().equals(symbol)).count() <= 1) {
+        if (globalIdOrderMap.entrySet().stream().noneMatch(e -> e.getValue().getSymbol().equals(symbol))) {
             outputDetailedGen(LocalDateTime.now().toString()
                     , new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
         }
@@ -226,7 +226,7 @@ public class XuTraderHelper {
     }
 
     private static void outputDetailedUSSymbol(String symbol, String msg) {
-        if (globalIdOrderMap.entrySet().stream().filter(e -> e.getValue().getSymbol().equals(symbol)).count() <= 1) {
+        if (globalIdOrderMap.entrySet().stream().noneMatch(e -> e.getValue().getSymbol().equals(symbol))) {
             outputDetailedGen(LocalDateTime.now().toString()
                     , new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
         }
