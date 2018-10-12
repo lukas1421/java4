@@ -50,17 +50,14 @@ import static apidemo.ChinaStock.*;
 import static apidemo.ChinaStockHelper.reverseComp;
 import static apidemo.XuTraderHelper.getTradeDate;
 import static client.OrderStatus.Filled;
+import static graph.GraphBar.pmbDetailToSimpleBarT;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
 
-//import static apidemo.ChinaStock.priceMap;
-//import static apidemo.ChinaStock.symbolNames;
 
 public class ChinaPosition extends JPanel {
 
-    private static ChinaPositionHistHandler posHandler = new ChinaPositionHistHandler();
-    private static JButton filterButton;
     static JButton excludeChinaButton;
     static JButton refreshButton;
     static JToggleButton autoUpdateButton;
@@ -108,7 +105,6 @@ public class ChinaPosition extends JPanel {
 
     private static GraphPnl gPnl = new GraphPnl();
 
-    private final int NAME_COL = 0;
     private final int OPEN_POS_COL = 2;
     private final int BOT_POS_COL = 13;
     private final int NET_POS_COL = 21;
@@ -233,7 +229,6 @@ public class ChinaPosition extends JPanel {
         refreshButton = new JButton("Refresh");
         JButton getOpenButton = new JButton("getOpen");
         JButton getCurrentButton = new JButton("getCurrent");
-        //JButton getWtdMaxMinButton = new JButton("getWtdMaxMin");
 
         refreshButton.addActionListener((ActionEvent l) ->
                 CompletableFuture.runAsync(() -> {
@@ -260,7 +255,7 @@ public class ChinaPosition extends JPanel {
         });
 
         //getWtdMaxMinButton.addActionListener(l -> getWtdMaxMin());
-        filterButton = new JButton("Active Only");
+        JButton filterButton = new JButton("Active Only");
         sorter = (TableRowSorter<BarModel_POS>) tab.getRowSorter();
 
         filterButton.addActionListener(l -> {
@@ -540,7 +535,7 @@ public class ChinaPosition extends JPanel {
     static synchronized void mtmPnlCompute(Predicate<? super Map.Entry<String, ?>> p, String nam) {
         //pr(" COMPUTE *************************************************** ");
         gPnl.setName(nam);
-        gPnl.setChineseName(nameMap.get(nam));
+        gPnl.setChineseName(nameMap.getOrDefault(nam, ""));
 
         if (priceMap.getOrDefault(nam, 0.0) == 0.0 && priceMapBar.containsKey(nam) && priceMapBar.get(nam).size() > 0) {
             priceMap.put(nam, Optional.ofNullable(priceMapBar.get(nam).lastEntry())
@@ -603,14 +598,18 @@ public class ChinaPosition extends JPanel {
             CompletableFuture.allOf(
                     CompletableFuture.supplyAsync(() ->
                             boughtPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
-                                    .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 > 0))
+                                    .map(e -> tradePnlCompute(e.getKey(),
+                                            pmbDetailToSimpleBarT(priceMapBarDetail.get(e.getKey())),
+                                            e.getValue(), e1 -> e1 > 0))
                                     .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>()))
                             .thenAcceptAsync(a -> SwingUtilities.invokeLater(() ->
                                     gPnl.setBuyPnl(Optional.ofNullable(a.lastEntry()).map(Entry::getValue).orElse(0.0)))),
 
                     CompletableFuture.supplyAsync(() ->
                             soldPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
-                                    .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> e1 < 0))
+                                    .map(e -> tradePnlCompute(e.getKey(),
+                                            pmbDetailToSimpleBarT(priceMapBarDetail.get(e.getKey())),
+                                            e.getValue(), e1 -> e1 < 0))
                                     .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())
                     ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() ->
                             gPnl.setSellPnl(Optional.ofNullable(a.lastEntry()).map(Entry::getValue).orElse(0.0))))
@@ -626,14 +625,18 @@ public class ChinaPosition extends JPanel {
 
                     CompletableFuture.supplyAsync(() ->
                             mtmPNLMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p)
-                                    .map(e -> getMtmPNL(ChinaData.priceMapBar.get(e.getKey()), closeMap.getOrDefault(e.getKey(), 0.0), e.getValue(),
+                                    .map(e -> getMtmPNL(
+                                            pmbDetailToSimpleBarT(priceMapBarDetail.get(e.getKey())),
+                                            closeMap.getOrDefault(e.getKey(), 0.0), e.getValue(),
                                             fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0))
                                     ).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())
                     ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setMtmPnl(Optional.ofNullable(a.lastEntry()).map(Entry::getValue).orElse(0.0)))),
 
                     CompletableFuture.supplyAsync(() ->
                             tradePNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
-                                    .map(e -> tradePnlCompute(e.getKey(), ChinaData.priceMapBar.get(e.getKey()), e.getValue(), e1 -> true))
+                                    .map(e -> tradePnlCompute(e.getKey(),
+                                            pmbDetailToSimpleBarT(priceMapBarDetail.get(e.getKey()))
+                                            , e.getValue(), e1 -> true))
                                     .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())))
                     .thenRunAsync(() -> todayNetPnl = Optional.ofNullable(tradePNLMap.lastEntry()).map(Entry::getValue).orElse(0.0) + netYtdPnl
                             + Optional.ofNullable(mtmPNLMap.lastEntry()).map(Entry::getValue).orElse(0.0)).thenRunAsync(() ->
@@ -653,7 +656,6 @@ public class ChinaPosition extends JPanel {
                                                     * getNetPosition(s.getKey()) * priceMap.getOrDefault(s.getKey(), 0.0)))))
                     .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setBenchMap(a)));
 
-            //pr(str(" bench exposure map ",nam,  benchExposureMap));
             CompletableFuture.supplyAsync(() ->
                     ChinaPosition.openPositionMap.entrySet().stream().filter(p).filter(e -> e.getValue() > 0)
                             .collect(Collectors.groupingBy(e -> ChinaStock.benchSimpleMap.getOrDefault(e.getKey(), ""), HashMap::new,
@@ -1658,8 +1660,8 @@ public class ChinaPosition extends JPanel {
                 case 27:
                     if (priceMapBarDetail.containsKey(symbol) &&
                             priceMapBarDetail.get(symbol).size() > 0) {
-                        return r10000(priceMapBarDetail.get(symbol).lastEntry().getValue() /
-                                priceMapBarDetail.get(symbol).firstEntry().getValue() - 1)*100d;
+                        return Math.round(10000d * (priceMapBarDetail.get(symbol).lastEntry().getValue() /
+                                priceMapBarDetail.get(symbol).firstEntry().getValue() - 1)) / 100d;
                     } else {
                         return 0.0;
                     }

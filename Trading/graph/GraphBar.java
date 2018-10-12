@@ -120,7 +120,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         this.sharpe = s;
     }
 
-    static NavigableMap<LocalTime, SimpleBar> pmbDetailToSimpleBar(NavigableMap<LocalDateTime, Double> in) {
+    public static NavigableMap<LocalTime, SimpleBar> pmbDetailToSimpleBarT(NavigableMap<LocalDateTime, Double> in) {
         NavigableMap<LocalTime, SimpleBar> out = new ConcurrentSkipListMap<>();
         for (Map.Entry<LocalDateTime, Double> e : in.entrySet()) {
             LocalTime roundToMin = e.getKey().toLocalTime().truncatedTo(ChronoUnit.MINUTES);
@@ -150,7 +150,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
             this.computeWtd();
         } else {
             if (priceMapBarDetail.containsKey(name) && priceMapBarDetail.get(name).size() > 0) {
-                this.setNavigableMap(pmbDetailToSimpleBar(priceMapBarDetail.get(name)));
+                this.setNavigableMap(pmbDetailToSimpleBarT(priceMapBarDetail.get(name)));
             } else {
                 this.setNavigableMap(new ConcurrentSkipListMap<>());
             }

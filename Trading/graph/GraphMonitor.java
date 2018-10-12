@@ -31,7 +31,7 @@ import static apidemo.ChinaKeyMonitor.dispGran;
 import static apidemo.ChinaStock.NORMAL_STOCK;
 import static apidemo.ChinaStock.closeMap;
 import static client.OrderStatus.*;
-import static graph.GraphBar.pmbDetailToSimpleBar;
+import static graph.GraphBar.pmbDetailToSimpleBarT;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.*;
@@ -392,7 +392,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
             getYtdY2CloseP(symb);
         } else {
             if (priceMapBarDetail.get(symb).size() > 0) {
-                this.setNavigableMap(pmbDetailToSimpleBar(priceMapBarDetail.get(symb)));
+                this.setNavigableMap(pmbDetailToSimpleBarT(priceMapBarDetail.get(symb)));
             } else {
                 this.setNavigableMap(new ConcurrentSkipListMap<>());
             }

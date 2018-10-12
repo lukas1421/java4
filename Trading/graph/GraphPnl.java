@@ -77,7 +77,7 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
     private static final Predicate<? super Map.Entry<LocalTime, ? extends Number>> AMPRED = e -> e.getKey().isBefore(AMCLOSET);
     private static final Predicate<? super Map.Entry<LocalTime, ? extends Number>> PMPRED = e -> e.getKey().isAfter(PMOPENT);
     private static final Predicate<? super Map.Entry<LocalTime, ? extends Number>> TRADING_PRED = e
-            -> (e.getKey().isAfter(LocalTime.of(9, 15)) && e.getKey().isBefore(LocalTime.of(11, 31)))
+            -> (e.getKey().isAfter(LocalTime.of(8, 59)) && e.getKey().isBefore(LocalTime.of(11, 31)))
             || (e.getKey().isAfter(LocalTime.of(12, 59)) && e.getKey().isBefore(LocalTime.of(15, 1)));
 
     //    public GraphPnl(NavigableMap<LocalTime, Double> mainMap) {
@@ -167,7 +167,8 @@ public final class GraphPnl extends JComponent implements MouseMotionListener, M
         benchMtmMap = m;
     }
 
-    public void setNavigableMap(NavigableMap<LocalTime, Double> mtmmap, NavigableMap<LocalTime, Double> trademap, NavigableMap<LocalTime, Double> netmap) {
+    public void setNavigableMap(NavigableMap<LocalTime, Double> mtmmap,
+                                NavigableMap<LocalTime, Double> trademap, NavigableMap<LocalTime, Double> netmap) {
 
         mtmMap = (mtmmap != null) ? mtmmap.entrySet().stream().filter(TRADING_PRED)
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, ConcurrentSkipListMap::new))
