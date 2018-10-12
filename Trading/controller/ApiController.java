@@ -1130,8 +1130,8 @@ public class ApiController implements EWrapper {
     }
 
 
-    public void getSGXA50HistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
-                                          int duration) {
+    public void getHistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
+                                    int duration) {
 
         String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
@@ -1149,16 +1149,16 @@ public class ApiController implements EWrapper {
                 barSize.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
     }
 
-    public void getSGXA50HistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
-                                          int duration, BarSize bs) {
+    public void getHistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
+                                    int duration, BarSize bs) {
 
-        String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
-                .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
+//        String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
+//                .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
+//        boolean rthOnly = false;
 
         DurationUnit durationUnit = DurationUnit.DAY;
         String durationStr = duration + " " + durationUnit.toString().charAt(0);
         WhatToShow whatToShow = WhatToShow.TRADES;
-        boolean rthOnly = false;
 
         ChinaMain.globalRequestMap.put(reqId, new Request(c, dc));
 

@@ -5,7 +5,6 @@ import auxiliary.Strategy;
 import auxiliary.VolBar;
 import client.Contract;
 import client.Types;
-import historical.HistChinaStocks;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import saving.*;
@@ -32,6 +31,8 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static apidemo.AutoTraderMain.ldtof;
+import static apidemo.AutoTraderMain.ltof;
 import static apidemo.ChinaDataYesterday.convertTimeToInt;
 import static apidemo.ChinaMain.*;
 import static apidemo.ChinaStock.*;
@@ -400,32 +401,32 @@ public final class ChinaData extends JPanel {
         getSGXA50HistButton.addActionListener(l -> CompletableFuture.runAsync(() ->
 
         {
-            controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                     getFrontFutContract(), ChinaData::handleSGX50HistData, 7);
-            controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                     getBackFutContract(), ChinaData::handleSGX50HistData, 7);
         }));
 
         getSGXA50TodayButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
-            controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                     getFrontFutContract(), ChinaData::handleSGXDataToday, 2);
-            controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                     getBackFutContract(), ChinaData::handleSGXDataToday, 2);
         }));
 
         getSGXA50DetailedButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
-            pr(" getting detailed XU ");
-            controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                    getFrontFutContract(), ChinaData::handleTodayDetailed, 1, Types.BarSize._1_min);
-            controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                    getBackFutContract(), ChinaData::handleTodayDetailed, 1, Types.BarSize._1_min);
+            pr(" getting detailed wtd XU ");
+            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+                    getFrontFutContract(), ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
+            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+                    getBackFutContract(), ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
         }));
 
         getHKDetailedButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
             pr(" getting detailed HK ");
-            controller().getSGXA50HistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                     AutoTraderHK.getHKFutContract("MCH.HK")
-                    , ChinaData::handleTodayDetailed, 1, Types.BarSize._30_secs);
+                    , ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
         }));
 
 
@@ -491,11 +492,11 @@ public final class ChinaData extends JPanel {
     }
 
     private static void retrieveDataAll() {
-        CompletableFuture.runAsync(() -> controller().getSGXA50HistoricalCustom(
+        CompletableFuture.runAsync(() -> controller().getHistoricalCustom(
                 GLOBAL_REQ_ID.addAndGet(5), getFrontFutContract()
                 , ChinaData::handleSGX50HistData, 7));
 
-        CompletableFuture.runAsync(() -> controller().getSGXA50HistoricalCustom(
+        CompletableFuture.runAsync(() -> controller().getHistoricalCustom(
                 GLOBAL_REQ_ID.addAndGet(5), getBackFutContract()
                 , ChinaData::handleSGX50HistData, 7));
 
@@ -780,7 +781,7 @@ public final class ChinaData extends JPanel {
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
 
-            if (ld.isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L))) {
+            if (ld.isAfter(MONDAY_OF_WEEK.minusDays(1L))) {
 
                 if ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
                         || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1)))) {
@@ -850,9 +851,9 @@ public final class ChinaData extends JPanel {
         }
     }
 
-    private static void handleTodayDetailed(Contract c, String date, double open, double high, double low,
-                                            double close, int volume) {
-        String ticker = utility.Utility.ibContractToSymbol(c);
+    private static void handleWtdDetailed(Contract c, String date, double open, double high, double low,
+                                          double close, int volume) {
+        String symbol = utility.Utility.ibContractToSymbol(c);
 
         if (!date.startsWith("finished")) {
             Date dt = new Date(Long.parseLong(date) * 1000);
@@ -861,11 +862,13 @@ public final class ChinaData extends JPanel {
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE),
                     cal.get(Calendar.SECOND), cal.get(Calendar.MILLISECOND));
-            LocalDateTime ldt = LocalDateTime.of(ld,lt);
+            LocalDateTime ldt = LocalDateTime.of(ld, lt);
 
-            if (ld.equals(currentTradingDate) && ((lt.isAfter(LocalTime.of(8, 59))))) {
-                pr("handle detail today", c.symbol(), ld, lt, open, high, low, close);
-                ChinaData.priceMapBarDetail.get(ticker).put(ldt, open);
+
+//            if (ld.equals(currentTradingDate) && ((lt.isAfter(LocalTime.of(8, 59))))) {
+            if (ldt.isAfter(ldtof(MONDAY_OF_WEEK, ltof(8, 59, 0)))) {
+                pr(MONDAY_OF_WEEK, "handle wtd ", symbol, ld, lt, open, high, low, close);
+                ChinaData.priceMapBarDetail.get(symbol).put(ldt, open);
             }
         } else {
             System.out.println(str(date, open, high, low, close));

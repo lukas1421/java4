@@ -42,6 +42,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static utility.Utility.pr;
 
 public final class ChinaMain implements IConnectionHandler {
+    public static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now());
     public static volatile LocalDate currentTradingDate;
 
     static {

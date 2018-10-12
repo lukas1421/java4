@@ -1,6 +1,7 @@
 package handler;
 
 import TradeType.*;
+import apidemo.ChinaMain;
 import apidemo.FutType;
 import apidemo.TradingConstants;
 import client.CommissionReport;
@@ -78,7 +79,7 @@ public class IBTradesHandler implements ApiController.ITradeReportHandler {
             
             int sgxLotsTraded = chinaTradeMap.get(ticker).entrySet().stream()
                     .filter(e -> e.getKey().toLocalDate()
-                            .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
+                            .isAfter(ChinaMain.MONDAY_OF_WEEK.minusDays(1L)))
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
 
             pr(" sgx trades handler trade map " + chinaTradeMap.get(ticker));
@@ -101,11 +102,11 @@ public class IBTradesHandler implements ApiController.ITradeReportHandler {
 
             int sgxLotsBot = chinaTradeMap.get(ticker).entrySet().stream()
                     .filter(e -> e.getKey().toLocalDate()
-                            .isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
+                            .isAfter(ChinaMain.MONDAY_OF_WEEK.minusDays(1L)))
                     .mapToInt(e -> e.getValue().getSizeBot()).sum();
 
             int sgxLotsSold = chinaTradeMap.get(ticker).entrySet().stream()
-                    .filter(e -> e.getKey().toLocalDate().isAfter(HistChinaStocks.MONDAY_OF_WEEK.minusDays(1L)))
+                    .filter(e -> e.getKey().toLocalDate().isAfter(ChinaMain.MONDAY_OF_WEEK.minusDays(1L)))
                     .mapToInt(e -> e.getValue().getSizeSold()).sum();
 
             HistChinaStocks.wtdChgInPosition.put(ticker, sgxLotsTraded);

@@ -115,7 +115,7 @@ public class AutoTraderHK extends JPanel {
 
         if (globalTradingOn.get()) {
             //hkDev(symbol, nowMilli, last);
-            hkFutDev(symbol, nowMilli, last);
+            //hkFutDev(symbol, nowMilli, last);
             //hkHiloTrader(symbol, nowMilli, freshPrice);
             //hkPMHiloTrader(symbol, nowMilli, freshPrice);
         }

@@ -50,6 +50,7 @@ public enum AutoOrderType {
     SGXA50_OPEN,
     FUT_DEV,
     FUT_NIGHT_DEV,
+    FUT_WEEK_DEV,
     FUT_PC_PROFIT_TAKER,
     SGXA50_HILO,
 

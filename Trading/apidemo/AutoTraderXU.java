@@ -65,6 +65,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     private static final int MAX_XU_SIZE = 4;
     private static final int MAX_DEV_SIZE = 4;
     private static final int MAX_N_DEV_SIZE = 0;
+    private static final int MAX_W_DEV_SIZE = 2;
 
 
     private static AtomicBoolean musicOn = new AtomicBoolean(false);
@@ -86,6 +87,11 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     //
     private static volatile Direction futNightDevDir = Direction.Flat;
     private static volatile AtomicBoolean manualfutNightDev = new AtomicBoolean(false);
+
+    private static volatile Direction futWeekDevDir = Direction.Flat;
+    private static volatile AtomicBoolean manualfutWeekDev = new AtomicBoolean(false);
+
+
     private static volatile EnumMap<FutType, Double> fut5amClose = new EnumMap<>(FutType.class);
     private static final double MAX_FUT_DEV = 0.002;
 
@@ -836,7 +842,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         if (globalTradingOn.get()) {
             //sgxDev(ldt, price);
-            sgxNightDev(ldt, price);
+            //sgxNightDev(ldt, price);
+            sgxWDev(ldt, price);
         }
         sgxA50CloseLiqTrader(ldt, price); // 14:55 to 15:30 guarantee
 
@@ -1765,6 +1772,130 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //            }
 //        }
     }
+
+    private static void sgxWDev(LocalDateTime nowMilli, double last) {
+        LocalTime lt = nowMilli.toLocalTime();
+        String symbol = ibContractToSymbol(activeFutCt);
+        FutType f = ibContractToFutType(activeFutCt);
+        AutoOrderType ot = FUT_WEEK_DEV;
+        double pos = currentPosMap.get(f);
+        LocalDate mon = getMondayOfWeek(nowMilli.toLocalDate());
+        LocalDateTime monObt = ldtof(mon, ltof(8, 59, 50));
+
+        NavigableMap<LocalDateTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(monObt))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (a, b) -> a, ConcurrentSkipListMap::new));
+
+        if (futPrice.size() <= 1) {
+            return;
+        }
+
+        LocalDateTime lastOrderT = getLastOrderTime(symbol, ot);
+        long milliSinceLast = tSincePrevOrderMilli(symbol, ot, nowMilli);
+        long milliLast2 = lastTwoOrderMilliDiff(symbol, ot);
+        long numOrders = getOrderSizeForTradeType(symbol, ot);
+        int waitSec = getWaitSec(milliLast2);
+        double open = futPrice.firstEntry().getValue();
+        LocalDateTime openT = futPrice.firstEntry().getKey();
+        double filled = getFilledForType(symbol, ot);
+        double dev = (last / open) - 1;
+        double wBaseSize = 1;
+
+        pr("Wdev", lt.truncatedTo(ChronoUnit.MILLIS),
+                "#", numOrders, "F#", filled, "opEn:", openT, open,
+                "P", last, "pos", pos, "dev", r10000(dev), "maxD", MAX_FUT_DEV,
+                "tFrLastOrd", showLong(milliSinceLast),
+                "wait", waitSec, "nextT", lastOrderT.toLocalTime().plusSeconds(waitSec).truncatedTo(SECONDS),
+                (nowMilli.isBefore(lastOrderT.plusSeconds(waitSec)) ? "wait" : "vacant"),
+                "baseSize", wBaseSize, "dir", futWeekDevDir, "manual", manualfutWeekDev);
+
+        if (numOrders >= MAX_W_DEV_SIZE) {
+            return;
+        }
+
+        if (!manualfutWeekDev.get()) {
+            if (nowMilli.isBefore(openT.plusMinutes(1L))) {
+                outputDetailedXU(symbol, str("set fut W open dev dir", openT.plusMinutes(1L), lt, last));
+                manualfutWeekDev.set(true);
+            } else {
+                if (last > open) {
+                    outputDetailedXU(symbol, str("set fut W dev dir fresh > open", lt, last, ">", open));
+                    futWeekDevDir = Direction.Long;
+                    manualfutWeekDev.set(true);
+                } else if (last < open) {
+                    outputDetailedXU(symbol, str("set fut W dev dir fresh < open", lt, last, "<", open));
+                    futWeekDevDir = Direction.Short;
+                    manualfutWeekDev.set(true);
+                } else {
+                    futWeekDevDir = Direction.Flat;
+                }
+            }
+        }
+
+        double maxV = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(monObt))
+                .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
+
+        double minV = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(monObt))
+                .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
+
+        double buySize;
+        double sellSize;
+
+        if ((minV / open - 1 < loThresh) && (last / minV - 1 > retreatHIThresh)
+                && filled <= -1 && pos < 0 && (numOrders % 2 == 1)) {
+            int id = autoTradeID.incrementAndGet();
+            buySize = Math.max(1, Math.floor(Math.abs(pos) / 2));
+            Order o = placeBidLimitTIF(last, buySize, IOC);
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+            apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+            outputDetailedXU(symbol, "**********");
+            outputDetailedXU(symbol, str("NEW", lt, o.orderId(), "fut W dev take profit BUY",
+                    "max,min,open,last", maxV, minV, open, last,
+                    "min/open", r10000(minV / open - 1), "loThresh", loThresh,
+                    "p/min", r10000(last / minV - 1), "retreatHIThresh", retreatHIThresh));
+        } else if ((maxV / open - 1 > hiThresh) && (last / maxV - 1 < retreatLOThresh)
+                && filled >= 1 && pos > 0 && (numOrders % 2 == 1)) {
+            int id = autoTradeID.incrementAndGet();
+            sellSize = Math.max(1, Math.floor(Math.abs(pos) / 2));
+            Order o = placeOfferLimitTIF(last, sellSize, IOC);
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+            apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+            outputDetailedXU(symbol, "**********");
+            outputDetailedXU(symbol, str("NEW", lt, o.orderId(), "fut W dev take profit SELL",
+                    "max,min,open,last", maxV, minV, open, last,
+                    "max/open", r(maxV / open - 1), "hiThresh", hiThresh,
+                    "p/max", r(last / maxV - 1), "retreatLoThresh", retreatLOThresh));
+        } else {
+            if ((SECONDS.between(lastOrderT, nowMilli) > waitSec && Math.abs(dev) < MAX_FUT_DEV) ||
+                    (numOrders % 2 == 1)) {
+                if (!noMoreBuy.get() && last > open && futWeekDevDir != Direction.Long) {
+                    int id = autoTradeID.incrementAndGet();
+                    buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? wBaseSize : 0)) : wBaseSize;
+                    Order o = placeBidLimitTIF(last, buySize, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+                    apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+                    outputDetailedXU(symbol, "**********");
+                    outputDetailedXU(symbol, str("NEW", lt, o.orderId(), "fut W dev BUY #:", numOrders,
+                            globalIdOrderMap.get(id), "open,last ", open, last, "milliLast2", showLong(milliLast2),
+                            "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec), "baseSize", wBaseSize));
+                    futWeekDevDir = Direction.Long;
+                } else if (!noMoreSell.get() && last < open && futWeekDevDir != Direction.Short) {
+                    int id = autoTradeID.incrementAndGet();
+                    sellSize = pos > 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? wBaseSize : 0)) : wBaseSize;
+                    Order o = placeOfferLimitTIF(last, sellSize, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+                    apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
+                    outputDetailedXU(symbol, "**********");
+                    outputDetailedXU(symbol, str("NEW", lt, o.orderId(), "fut W dev SELL #:", numOrders,
+                            globalIdOrderMap.get(id), "open,last ", open, last, "milliLast2", showLong(milliLast2),
+                            "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec), "baseSize", wBaseSize));
+                    futWeekDevDir = Direction.Short;
+                }
+            }
+        }
+    }
+
 
     private static void sgxNightDev(LocalDateTime nowMilli, double last) {
         LocalTime lt = nowMilli.toLocalTime();
