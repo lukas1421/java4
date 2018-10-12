@@ -25,16 +25,16 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 import static apidemo.AutoTraderMain.ltof;
 import static apidemo.AutoTraderXU.findOrderByTWSID;
-import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaKeyMonitor.dispGran;
-import static apidemo.ChinaStock.NORMAL_STOCK;
 import static apidemo.ChinaStock.closeMap;
 import static client.OrderStatus.*;
 import static graph.GraphBar.pmbDetailToSimpleBarT;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.*;
+
+//import static apidemo.ChinaData.priceMapBar;
 
 public class GraphMonitor extends JComponent implements GraphFillable, MouseListener, MouseMotionListener {
 
@@ -377,25 +377,17 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         trades = priceMapToLDT(ChinaPosition.tradesMap.containsKey(symb) ?
                 ChinaPosition.tradesMap.get(symb) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate);
 
-        //pr("graph monitor trades", symbol, trades);
-
         if (HistChinaStocks.chinaTradeMap.containsKey(symb) && HistChinaStocks.chinaTradeMap.get(symb).size() > 0) {
-            //LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
             trades = mergeTradeMap(HistChinaStocks.chinaTradeMap.get(symb).headMap(
                     LocalDateTime.of(ChinaMain.currentTradingDate, LocalTime.MIN), false),
                     priceMapToLDT(ChinaPosition.tradesMap.containsKey(symb) ?
                             ChinaPosition.tradesMap.get(symb) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate));
         }
 
-        if (NORMAL_STOCK.test(symb)) {
-            this.setNavigableMap(priceMapBar.get(symb));
-            getYtdY2CloseP(symb);
+        if (priceMapBarDetail.get(symb).size() > 0) {
+            this.setNavigableMap(pmbDetailToSimpleBarT(priceMapBarDetail.get(symb)));
         } else {
-            if (priceMapBarDetail.get(symb).size() > 0) {
-                this.setNavigableMap(pmbDetailToSimpleBarT(priceMapBarDetail.get(symb)));
-            } else {
-                this.setNavigableMap(new ConcurrentSkipListMap<>());
-            }
+            this.setNavigableMap(new ConcurrentSkipListMap<>());
         }
     }
 
@@ -443,53 +435,53 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         return 0.0;
     }
 
-    private void getYtdY2CloseP(String name) {
-        double current;
-        double maxT;
-        double minT;
-
-        if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
-            current = priceMapBar.get(name).lastEntry().getValue().getClose();
-            maxT = priceMapBar.get(name).entrySet().stream().max(BAR_HIGH).map(Map.Entry::getValue)
-                    .map(SimpleBar::getHigh).orElse(0.0);
-            minT = priceMapBar.get(name).entrySet().stream().min(BAR_LOW).map(Map.Entry::getValue)
-                    .map(SimpleBar::getHigh).orElse(0.0);
-        } else {
-            current = 0.0;
-            maxT = Double.MIN_VALUE;
-            minT = Double.MAX_VALUE;
-        }
-
-        if (ChinaData.priceMapBarYtd.containsKey(name) && ChinaData.priceMapBarYtd.get(name).size() > 0) {
-            double closeY1 = ChinaData.priceMapBarYtd.get(name).lastEntry().getValue().getClose();
-            double maxY = ChinaData.priceMapBarYtd.get(name).entrySet().stream()
-                    .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
-            double minY = ChinaData.priceMapBarYtd.get(name).entrySet().stream()
-                    .min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
-            ytdCloseP = (int) Math.round(100d * (closeY1 - minY) / (maxY - minY));
-            current2DayP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, minY))
-                    / (Utility.reduceDouble(Math::max, maxT, maxY) - Utility.reduceDouble(Math::min, minT, minY)));
-
-            if (ChinaData.priceMapBarY2.containsKey(name) && ChinaData.priceMapBarY2.get(name).size() > 0) {
-                double maxY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
-                        .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
-                double minY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
-                        .min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
-
-                ytdY2CloseP = (int) Math.round(100d * (closeY1 - Utility.reduceDouble(Math::min, minY2, minY))
-                        / (Utility.reduceDouble(Math::max, maxY2, maxY) - Utility.reduceDouble(Math::min, minY2, minY)));
-
-                current3DayP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, minY, minY2))
-                        / (Utility.reduceDouble(Math::max, maxT, maxY, maxY2) - Utility.reduceDouble(Math::min, minT, minY, minY2)));
-            }
-
-            wtdP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name,
-                    Double.MAX_VALUE))) / (Utility.reduceDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
-                    - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, Double.MAX_VALUE))));
-//            System.out.println(" symbol " + symbol + " current max min wtd wtdMax wtdMin "+ str(current,maxT,minT,wtdP,
-//                    ChinaPosition.wtdMinMap.getOrDefault(symbol,Double.MAX_VALUE), ChinaPosition.wtdMinMap.getOrDefault(symbol, Double.MAX_VALUE)));
-        }
-    }
+//    private void getYtdY2CloseP(String name) {
+//        double current;
+//        double maxT;
+//        double minT;
+//
+//        if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
+//            current = priceMapBar.get(name).lastEntry().getValue().getClose();
+//            maxT = priceMapBar.get(name).entrySet().stream().max(BAR_HIGH).map(Map.Entry::getValue)
+//                    .map(SimpleBar::getHigh).orElse(0.0);
+//            minT = priceMapBar.get(name).entrySet().stream().min(BAR_LOW).map(Map.Entry::getValue)
+//                    .map(SimpleBar::getHigh).orElse(0.0);
+//        } else {
+//            current = 0.0;
+//            maxT = Double.MIN_VALUE;
+//            minT = Double.MAX_VALUE;
+//        }
+//
+//        if (ChinaData.priceMapBarYtd.containsKey(name) && ChinaData.priceMapBarYtd.get(name).size() > 0) {
+//            double closeY1 = ChinaData.priceMapBarYtd.get(name).lastEntry().getValue().getClose();
+//            double maxY = ChinaData.priceMapBarYtd.get(name).entrySet().stream()
+//                    .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
+//            double minY = ChinaData.priceMapBarYtd.get(name).entrySet().stream()
+//                    .min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
+//            ytdCloseP = (int) Math.round(100d * (closeY1 - minY) / (maxY - minY));
+//            current2DayP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, minY))
+//                    / (Utility.reduceDouble(Math::max, maxT, maxY) - Utility.reduceDouble(Math::min, minT, minY)));
+//
+//            if (ChinaData.priceMapBarY2.containsKey(name) && ChinaData.priceMapBarY2.get(name).size() > 0) {
+//                double maxY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
+//                        .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
+//                double minY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
+//                        .min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
+//
+//                ytdY2CloseP = (int) Math.round(100d * (closeY1 - Utility.reduceDouble(Math::min, minY2, minY))
+//                        / (Utility.reduceDouble(Math::max, maxY2, maxY) - Utility.reduceDouble(Math::min, minY2, minY)));
+//
+//                current3DayP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, minY, minY2))
+//                        / (Utility.reduceDouble(Math::max, maxT, maxY, maxY2) - Utility.reduceDouble(Math::min, minT, minY, minY2)));
+//            }
+//
+//            wtdP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name,
+//                    Double.MAX_VALUE))) / (Utility.reduceDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
+//                    - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, Double.MAX_VALUE))));
+////            System.out.println(" symbol " + symbol + " current max min wtd wtdMax wtdMin "+ str(current,maxT,minT,wtdP,
+////                    ChinaPosition.wtdMinMap.getOrDefault(symbol,Double.MAX_VALUE), ChinaPosition.wtdMinMap.getOrDefault(symbol, Double.MAX_VALUE)));
+//        }
+//    }
 
     @Override
     public void mouseClicked(MouseEvent e) {

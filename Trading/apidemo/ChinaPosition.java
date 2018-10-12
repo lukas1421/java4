@@ -100,8 +100,6 @@ public class ChinaPosition extends JPanel {
     private static double openDelta = 0.0;
     private static double netDelta = 0.0;
     private static double soldDelta = 0.0;
-    //static volatile LinkedList<String> chg5m = new LinkedList<>();
-    //static volatile LinkedList<String> topKiyodo = new LinkedList<>();
 
     private static GraphPnl gPnl = new GraphPnl();
 
