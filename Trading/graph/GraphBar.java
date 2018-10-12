@@ -123,14 +123,13 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         NavigableMap<LocalTime, SimpleBar> out = new ConcurrentSkipListMap<>();
         for (Map.Entry<LocalDateTime, Double> e : in.entrySet()) {
             LocalTime roundToMin = e.getKey().toLocalTime().truncatedTo(ChronoUnit.MINUTES);
-            if (e.getKey().toLocalTime().isAfter(LocalTime.of(4, 0)) &&
-                    e.getKey().toLocalTime().isBefore(LocalTime.of(17, 0))) {
-                if (!out.containsKey(roundToMin)) {
-                    out.put(roundToMin, new SimpleBar(e.getValue()));
-                } else {
-                    out.get(roundToMin).add(e.getValue());
-                }
+            //if (e.getKey().toLocalTime().isAfter(ltof(4, 0)) && e.getKey().toLocalTime().isBefore(ltof(17, 0))) {
+            if (!out.containsKey(roundToMin)) {
+                out.put(roundToMin, new SimpleBar(e.getValue()));
+            } else {
+                out.get(roundToMin).add(e.getValue());
             }
+            //}
         }
         return out;
     }
