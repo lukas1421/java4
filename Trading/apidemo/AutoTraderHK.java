@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 import static apidemo.AutoTraderMain.*;
 import static apidemo.AutoTraderXU.DefaultOrderHandler;
 import static apidemo.ChinaData.priceMapBarDetail;
+import static apidemo.ChinaMain.MONDAY_OF_WEEK;
 import static apidemo.XuTraderHelper.*;
 import static client.Types.TimeInForce.DAY;
 import static client.Types.TimeInForce.IOC;
@@ -43,9 +44,11 @@ public class AutoTraderHK extends JPanel {
     public static volatile ConcurrentHashMap<String, Double> hkOpenMap = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, Double> hkFreshPriceMap = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, Double> hkShortableValueMap = new ConcurrentHashMap<>();
-    private static volatile ConcurrentHashMap<String, Direction> hkOpenDevDir = new ConcurrentHashMap<>();
+
+    private static volatile ConcurrentHashMap<String, Direction> hkWDevDir = new ConcurrentHashMap<>();
+    private static volatile ConcurrentHashMap<String, AtomicBoolean> manualHKWDev = new ConcurrentHashMap<>();
+
     private static volatile ConcurrentHashMap<String, Direction> hkHiloDir = new ConcurrentHashMap<>();
-    private static volatile ConcurrentHashMap<String, AtomicBoolean> manualHKDev = new ConcurrentHashMap<>();
     private static volatile ConcurrentHashMap<String, AtomicBoolean> manualHKHilo = new ConcurrentHashMap<>();
 
     private static volatile ConcurrentHashMap<String, Direction> hkPMHiloDir = new ConcurrentHashMap<>();
@@ -53,7 +56,7 @@ public class AutoTraderHK extends JPanel {
 
     private static final double MIN_SHORT_LEVEL = 1.5;
 
-    private static long MAX_ORDER_HK = 4;
+    private static long MAX_ORDER_HK = 2;
 
     private static final double HK_SAFETY_RATIO = 0.005;
 
@@ -98,8 +101,8 @@ public class AutoTraderHK extends JPanel {
             hkFreshPriceMap.put(s, 0.0);
             hkShortableValueMap.put(s, 0.0);
 
-            hkOpenDevDir.put(s, Direction.Flat);
-            manualHKDev.put(s, new AtomicBoolean(false));
+            hkWDevDir.put(s, Direction.Flat);
+            manualHKWDev.put(s, new AtomicBoolean(false));
 
             hkHiloDir.put(s, Direction.Flat);
             manualHKHilo.put(s, new AtomicBoolean(false));
@@ -114,8 +117,9 @@ public class AutoTraderHK extends JPanel {
         //cancelAllOrdersAfterDeadline(nowMilli.toLocalTime(), ltof(10, 0, 0));
 
         if (globalTradingOn.get()) {
+
+            hkFutDev(symbol, nowMilli, last);
             //hkDev(symbol, nowMilli, last);
-            //hkFutDev(symbol, nowMilli, last);
             //hkHiloTrader(symbol, nowMilli, freshPrice);
             //hkPMHiloTrader(symbol, nowMilli, freshPrice);
         }
@@ -248,8 +252,7 @@ public class AutoTraderHK extends JPanel {
         }
 
         LocalTime lt = nowMilli.toLocalTime();
-        LocalTime cutoff = ltof(15, 0);
-        LocalTime obT = ltof(9, 14, 50);
+        LocalDateTime monObt = ldtof(MONDAY_OF_WEEK, ltof(8, 59, 50));
         Contract ct = getHKFutContract(symbol);
 
         NavigableMap<LocalDateTime, Double> prices = priceMapBarDetail.get(symbol);
@@ -258,17 +261,17 @@ public class AutoTraderHK extends JPanel {
             return;
         }
 
-        AutoOrderType ot = HK_FUT_DEV;
+        AutoOrderType ot = HK_FUT_WDEV;
         double pos = ibPositionMap.getOrDefault(symbol, 0.0);
 
         NavigableMap<LocalDateTime, Double> futPrice = priceMapBarDetail.get(symbol).entrySet().stream()
-                .filter(e -> e.getKey().toLocalTime().isAfter(obT))
+                .filter(e -> e.getKey().isAfter(monObt))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
                         (a, b) -> a, ConcurrentSkipListMap::new));
 
-        if (lt.isBefore(ltof(9, 10)) || lt.isAfter(cutoff)) {
-            return;
-        }
+//        if (lt.isBefore(ltof(9, 10)) || lt.isAfter(cutoff)) {
+//            return;
+//        }
 
         LocalDateTime lastOrderT = getLastOrderTime(symbol, ot);
         long milliSinceLast = tSincePrevOrderMilli(symbol, ot, nowMilli);
@@ -277,55 +280,57 @@ public class AutoTraderHK extends JPanel {
         int waitSec = getWaitSec(milliLast2);
         //double priceOffset = getPriceOffset(milliLast2, last);
         double open = futPrice.firstEntry().getValue();
-        LocalTime openT = futPrice.firstEntry().getKey().toLocalTime();
+        LocalDateTime openT = futPrice.firstEntry().getKey();
         double filled = getFilledForType(symbol, ot);
         double dev = (last / open) - 1;
         //int baseSize = DEV_BASE_SIZE;
         //double baseSize = getXUBaseSize(DEV_BASE_SIZE, milliSinceLast, numOrders);
         double baseSize = 1;
 
-
-        pr("HKdev", lt.truncatedTo(ChronoUnit.MILLIS),
+        pr("HKWdev", lt.truncatedTo(ChronoUnit.MILLIS),
                 "#", numOrders, "F#", filled, "opEn:", openT, open,
                 "P", last, "pos", pos, "dev", r10000(dev), "maxD", MAX_DEV_HK,
                 "tFrLastOrd", showLong(milliSinceLast),
                 "wait", waitSec, "nextT", lastOrderT.toLocalTime().plusSeconds(waitSec).truncatedTo(SECONDS),
                 (nowMilli.isBefore(lastOrderT.plusSeconds(waitSec)) ? "wait" : "vacant"),
-                "baseSize", baseSize, "dir", hkOpenDevDir.get(symbol), "manual",
-                manualHKDev.get(symbol));
+                "baseSize", baseSize, "dir", hkWDevDir.get(symbol), "manual",
+                manualHKWDev.get(symbol));
 
         if (numOrders >= MAX_ORDER_HK) {
             return;
         }
 
-        if (!manualHKDev.get(symbol).get()) {
-            if (lt.isBefore(ltof(9, 1, 0))) {
-                outputDetailedHK(symbol, str("set fut open dev dir 9:01", lt, last));
-                manualHKDev.get(symbol).set(true);
+        if (futPrice.firstKey().getDayOfWeek() != DayOfWeek.MONDAY) {
+            return;
+        }
+
+        if (!manualHKWDev.get(symbol).get()) {
+            if (nowMilli.isBefore(monObt.plusMinutes(1L))) {
+                outputDetailedHK(symbol, str("set fut open Wdev dir 9:01", nowMilli, last));
+                manualHKWDev.get(symbol).set(true);
             } else {
                 if (last > open) {
-                    outputDetailedHK(symbol, str("set fut dev dir fresh > open", lt, last, ">", open));
-                    hkOpenDevDir.put(symbol, Direction.Long);
-                    manualHKDev.get(symbol).set(true);
+                    outputDetailedHK(symbol, str("set fut Wdev dir fresh > open", lt, last, ">", open));
+                    hkWDevDir.put(symbol, Direction.Long);
+                    manualHKWDev.get(symbol).set(true);
                 } else if (last < open) {
-                    outputDetailedHK(symbol, str("set fut dev dir fresh < open", lt, last, "<", open));
-                    hkOpenDevDir.put(symbol, Direction.Short);
-                    manualHKDev.get(symbol).set(true);
+                    outputDetailedHK(symbol, str("set fut Wdev dir fresh < open", lt, last, "<", open));
+                    hkWDevDir.put(symbol, Direction.Short);
+                    manualHKWDev.get(symbol).set(true);
                 } else {
-                    hkOpenDevDir.put(symbol, Direction.Flat);
+                    hkWDevDir.put(symbol, Direction.Flat);
                 }
             }
         }
 
-        double maxV = futPrice.entrySet().stream().filter(e -> e.getKey().toLocalTime().isAfter(obT))
+        double maxV = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(monObt))
                 .mapToDouble(Map.Entry::getValue).max().orElse(0.0);
 
-        double minV = futPrice.entrySet().stream().filter(e -> e.getKey().toLocalTime().isAfter(obT))
+        double minV = futPrice.entrySet().stream().filter(e -> e.getKey().isAfter(monObt))
                 .mapToDouble(Map.Entry::getValue).min().orElse(0.0);
 
         double buySize;
         double sellSize;
-        //double costOffset = (numOrders % 2 == 0) ? 0 : 5.0;
 
         if ((minV / open - 1 < loThresh) && (last / minV - 1 > retreatHIThresh)
                 && filled <= -1 && pos < 0 && (numOrders % 2 == 1)) {
@@ -335,7 +340,7 @@ public class AutoTraderHK extends JPanel {
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
             outputDetailedHK(symbol, "**********");
-            outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "hkfut dev take profit BUY",
+            outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "hkfut Wdev take profit BUY",
                     "max,min,oautopen,last", maxV, minV, open, last,
                     "min/open", r10000(minV / open - 1), "loThresh", loThresh,
                     "p/min", r10000(last / minV - 1), "retreatHIThresh", retreatHIThresh));
@@ -347,35 +352,35 @@ public class AutoTraderHK extends JPanel {
             globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
             apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
             outputDetailedHK(symbol, "**********");
-            outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "hkfut dev take profit SELL",
+            outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "hkfut Wdev take profit SELL",
                     "max,min,mopen,last", maxV, minV, open, last,
                     "max/open", r(maxV / open - 1), "hiThresh", hiThresh,
                     "p/max", r(last / maxV - 1), "retreatLoThresh", retreatLOThresh));
         } else {
             if ((SECONDS.between(lastOrderT, nowMilli) > waitSec && Math.abs(dev) < MAX_DEV_HK) ||
                     (numOrders % 2 == 1)) {
-                if (!noMoreBuy.get() && last > open && hkOpenDevDir.get(symbol) != Direction.Long) {
+                if (!noMoreBuy.get() && last > open && hkWDevDir.get(symbol) != Direction.Long) {
                     int id = autoTradeID.incrementAndGet();
                     buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? baseSize : 0)) : baseSize;
                     Order o = placeBidLimitTIF(last, buySize, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
                     outputDetailedHK(symbol, "**********");
-                    outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "hkfut dev BUY #:", numOrders,
+                    outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "hkfut Wdev BUY #:", numOrders,
                             globalIdOrderMap.get(id), "open,last ", open, last, "milliLast2", showLong(milliLast2),
                             "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec), "baseSize", baseSize));
-                    hkOpenDevDir.put(symbol, Direction.Long);
-                } else if (!noMoreSell.get() && last < open && hkOpenDevDir.get(symbol) != Direction.Short) {
+                    hkWDevDir.put(symbol, Direction.Long);
+                } else if (!noMoreSell.get() && last < open && hkWDevDir.get(symbol) != Direction.Short) {
                     int id = autoTradeID.incrementAndGet();
                     sellSize = pos > 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? baseSize : 0)) : baseSize;
                     Order o = placeOfferLimitTIF(last, sellSize, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, apcon));
                     outputDetailedHK(symbol, "**********");
-                    outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "hkfut dev SELL #:", numOrders,
+                    outputDetailedHK(symbol, str("NEW", lt, o.orderId(), "hkfut Wdev SELL #:", numOrders,
                             globalIdOrderMap.get(id), "open,last ", open, last, "milliLast2", showLong(milliLast2),
                             "waitSec", waitSec, "nextT", lastOrderT.plusSeconds(waitSec), "baseSize", baseSize));
-                    hkOpenDevDir.put(symbol, Direction.Short);
+                    hkWDevDir.put(symbol, Direction.Short);
                 }
             }
         }
@@ -422,21 +427,21 @@ public class AutoTraderHK extends JPanel {
                 .orElse(LocalDateTime.MIN);
 
 
-        if (!manualHKDev.get(symbol).get()) {
+        if (!manualHKWDev.get(symbol).get()) {
             if (lt.isBefore(ltof(9, 35, 0))) {
                 outputDetailedHK(symbol, str("setting manual HK dev:before 935 ", symbol, lt));
-                manualHKDev.get(symbol).set(true);
+                manualHKWDev.get(symbol).set(true);
             } else {
                 if (freshPrice > open) {
                     outputDetailedHK(symbol, str("setting manual HK dev: fresh>open ", symbol, lt));
-                    hkOpenDevDir.put(symbol, Direction.Long);
-                    manualHKDev.get(symbol).set(true);
+                    hkWDevDir.put(symbol, Direction.Long);
+                    manualHKWDev.get(symbol).set(true);
                 } else if (freshPrice < open) {
                     outputDetailedHK(symbol, str("setting manual HK dev: fresh<open", symbol, lt));
-                    hkOpenDevDir.put(symbol, Direction.Short);
-                    manualHKDev.get(symbol).set(true);
+                    hkWDevDir.put(symbol, Direction.Short);
+                    manualHKWDev.get(symbol).set(true);
                 } else {
-                    hkOpenDevDir.put(symbol, Direction.Flat);
+                    hkWDevDir.put(symbol, Direction.Flat);
                 }
             }
         }
@@ -454,7 +459,7 @@ public class AutoTraderHK extends JPanel {
 
         if (SECONDS.between(lastOrderTime, nowMilli) > waitSec && hkShortableValueMap.getOrDefault(symbol, 0.0) >
                 MIN_SHORT_LEVEL) {
-            if (!noMoreBuy.get() && freshPrice > open && hkOpenDevDir.get(symbol) != Direction.Long) {
+            if (!noMoreBuy.get() && freshPrice > open && hkWDevDir.get(symbol) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(freshPrice, size, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_DEV));
@@ -464,10 +469,10 @@ public class AutoTraderHK extends JPanel {
                         globalIdOrderMap.get(id),
                         "open, manualOpen, ft, ftT", open, manualOpen, firstTick, firstTickTime,
                         "last Order T, milliLastTwo", lastOrderTime, milliLastTwo,
-                        "pos", currPos, "dir", hkOpenDevDir.get(symbol), "manual?", manualHKDev.get(symbol),
+                        "pos", currPos, "dir", hkWDevDir.get(symbol), "manual?", manualHKWDev.get(symbol),
                         "shortability ", hkShortableValueMap.get(symbol)));
-                hkOpenDevDir.put(symbol, Direction.Long);
-            } else if (!noMoreSell.get() && freshPrice < open && hkOpenDevDir.get(symbol) != Direction.Short) {
+                hkWDevDir.put(symbol, Direction.Long);
+            } else if (!noMoreSell.get() && freshPrice < open && hkWDevDir.get(symbol) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, size, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_DEV));
@@ -477,16 +482,16 @@ public class AutoTraderHK extends JPanel {
                         globalIdOrderMap.get(id),
                         "open, manualOpen, ft, ftT", open, manualOpen, firstTick, firstTickTime,
                         "last Order T, milliLastTwo", lastOrderTime, milliLastTwo,
-                        "pos", currPos, "dir", hkOpenDevDir.get(symbol), "manual?", manualHKDev.get(symbol),
+                        "pos", currPos, "dir", hkWDevDir.get(symbol), "manual?", manualHKWDev.get(symbol),
                         "shortability ", hkShortableValueMap.get(symbol)));
-                hkOpenDevDir.put(symbol, Direction.Short);
+                hkWDevDir.put(symbol, Direction.Short);
             }
         }
         pr(" open deviation hk ", prices);
         pr(" HK open dev #: ", numOrders, nowMilli, ticker, symbol, "price:", freshPrice,
                 "open,manualOpen,ft, ftT", open, manualOpen, firstTick, firstTickTime,
                 "last order T", lastOrderTime, "milliLastTwo", milliLastTwo, "waitSec", waitSec,
-                "pos", currPos, "dir:", hkOpenDevDir.get(symbol), "manual? ", manualHKDev.get(symbol),
+                "pos", currPos, "dir:", hkWDevDir.get(symbol), "manual? ", manualHKWDev.get(symbol),
                 "shortable value ", hkShortableValueMap.get(symbol));
     }
 

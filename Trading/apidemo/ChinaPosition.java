@@ -60,7 +60,8 @@ import static utility.Utility.*;
 public class ChinaPosition extends JPanel {
 
     private static ChinaPositionHistHandler posHandler = new ChinaPositionHistHandler();
-    static JButton filterButton;
+    private static JButton filterButton;
+    static JButton excludeChinaButton;
     static JButton refreshButton;
     static JToggleButton autoUpdateButton;
     private static JTextArea outputArea;
@@ -107,6 +108,7 @@ public class ChinaPosition extends JPanel {
 
     private static GraphPnl gPnl = new GraphPnl();
 
+    private final int NAME_COL = 0;
     private final int OPEN_POS_COL = 2;
     private final int BOT_POS_COL = 13;
     private final int NET_POS_COL = 21;
@@ -275,6 +277,17 @@ public class ChinaPosition extends JPanel {
             }
         });
 
+        excludeChinaButton = new JButton("Exclude China");
+        excludeChinaButton.addActionListener(l -> {
+            if (filterOn) {
+                sorter.setRowFilter(null);
+                filterOn = false;
+            } else {
+                sorter.setRowFilter(RowFilter.regexFilter("^(?!sh|sz).*$", 0));
+                filterOn = true;
+            }
+        });
+
         JRadioButton rb1 = new JRadioButton("Trade", true);
         JRadioButton rb2 = new JRadioButton("Buy Sell", false);
 
@@ -344,6 +357,7 @@ public class ChinaPosition extends JPanel {
             includeExpiredButton.setText("Include Expired: " + includeExpired.get());
         });
 
+
         JLabel updateFreqLabel = new JLabel("Update Freq");
         JRadioButton _1secButton = new JRadioButton("1s");
         JRadioButton _5secButton = new JRadioButton("5s");
@@ -362,6 +376,7 @@ public class ChinaPosition extends JPanel {
 
         controlPanel.add(refreshButton);
         controlPanel.add(filterButton);
+        controlPanel.add(excludeChinaButton);
         controlPanel.add(getOpenButton);
         controlPanel.add(getCurrentButton);
         //controlPanel.add(getWtdMaxMinButton);
@@ -1437,7 +1452,7 @@ public class ChinaPosition extends JPanel {
 
         @Override
         public int getColumnCount() {
-            return 25;
+            return 30;
         }
 
         @Override
@@ -1493,6 +1508,13 @@ public class ChinaPosition extends JPanel {
                     return "T   Total Pnl";
                 case 24:
                     return "P%";
+                case 25:
+                    return "openV";
+                case 26:
+                    return "openT";
+                case 27:
+                    return "dev";
+
 //                case 25:
 //                    return "1m动";
 //                case 26:
@@ -1534,6 +1556,8 @@ public class ChinaPosition extends JPanel {
                     return Integer.class;
                 case 24:
                     return Integer.class;
+                case 26:
+                    return LocalDateTime.class;
 //                case 26:
 //                    return String.class;
 //                case 27:
@@ -1612,6 +1636,31 @@ public class ChinaPosition extends JPanel {
                     return r(getTodayTotalPnl(symbol));
                 case 24:
                     return ChinaStock.getPercentileBar(symbol);
+                case 25:
+                    if (priceMapBarDetail.containsKey(symbol) &&
+                            priceMapBarDetail.get(symbol).size() > 0) {
+                        return priceMapBarDetail.get(symbol).firstEntry().getValue();
+                    } else {
+                        return 0.0;
+                    }
+                case 26:
+                    if (priceMapBarDetail.containsKey(symbol) &&
+                            priceMapBarDetail.get(symbol).size() > 0) {
+                        return priceMapBarDetail.get(symbol).firstEntry().getKey()
+                                .truncatedTo(ChronoUnit.MINUTES);
+                    } else {
+                        return LocalDateTime.now().truncatedTo(ChronoUnit.DAYS);
+                    }
+                case 27:
+                    if (priceMapBarDetail.containsKey(symbol) &&
+                            priceMapBarDetail.get(symbol).size() > 0) {
+                        return r10000(priceMapBarDetail.get(symbol).lastEntry().getValue() /
+                                priceMapBarDetail.get(symbol).firstEntry().getValue() - 1);
+                    } else {
+                        return 0.0;
+                    }
+
+
 //                case 25:
 //                    return r(getPnLChange5m(symbol));
 //                case 26:

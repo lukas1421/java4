@@ -490,7 +490,7 @@ public final class ChinaMain implements IConnectionHandler {
                                     outputToAll(LocalDateTime.now().toString());
 
                                     pr(" hib ");
-                                    if (LocalTime.now().isAfter(ltof(9, 30))) {
+                                    if (LocalTime.now().isAfter(ltof(9, 5))) {
                                         if (LocalTime.now().isBefore(ltof(15, 0))) {
                                             Hibtask.loadHibGenPrice();
                                         }
@@ -528,7 +528,8 @@ public final class ChinaMain implements IConnectionHandler {
                                 ses.schedule(() -> {
                                     SwingUtilities.invokeLater(() -> {
                                         ChinaPosition.refreshButton.doClick();
-                                        ChinaPosition.filterButton.doClick();
+                                        //ChinaPosition.filterButton.doClick();
+                                        ChinaPosition.excludeChinaButton.doClick();
                                         ChinaPosition.autoUpdateButton.doClick();
                                         ChinaStock.computeButton.doClick();
                                     });

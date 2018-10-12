@@ -1077,16 +1077,7 @@ public class ApiController implements EWrapper {
         return ct;
     }
 
-    private static Contract generateFutContract(String ticker, String ex, String curr) {
-        Contract ct = new Contract();
-        ct.symbol(ticker);
-        ct.exchange(ex);
-        ct.currency(curr);
-        ct.secType(SecType.STK);
-        return ct;
-    }
-
-//    private Contract tickerToHKStkContract(String stock) {
+    //    private Contract tickerToHKStkContract(String stock) {
 //        Contract ct = new Contract();
 //        ct.symbol(stock);
 //        ct.exchange("SEHK");
