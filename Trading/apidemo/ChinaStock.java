@@ -4,6 +4,7 @@ import auxiliary.Bench;
 import auxiliary.SimpleBar;
 import auxiliary.Strategy;
 import auxiliary.Strategy.StratType;
+import client.Types;
 import graph.GraphBar;
 import graph.GraphFillable;
 import graph.GraphIndustry;
@@ -51,6 +52,7 @@ public final class ChinaStock extends JPanel {
 
     public static Map<String, Double> weightMap = new HashMap<>();
     public static Map<String, String> nameMap = new HashMap<>();
+    public static Map<String, Types.SecType> secTypeMap = new HashMap<>();
     public static Map<String, String> currencyMap = new HashMap<>();
     //static Map<String, String> shortNameMap = new HashMap<>();
     public static Map<String, String> industryNameMap = new HashMap<>();
@@ -275,6 +277,7 @@ public final class ChinaStock extends JPanel {
                 shortIndustryMap.put(al1.get(0), al1.get(3));
                 shortLongIndusMap.put(al1.get(3), al1.get(2));
                 longShortIndusMap.put(al1.get(2), al1.get(3));
+                secTypeMap.put(al1.get(0), Types.SecType.get(al1.get(5)));
             }
             symbolNamesFull = new ArrayList<>(nameMap.keySet());
 

@@ -1514,6 +1514,8 @@ public class ChinaPosition extends JPanel {
                     return "openT";
                 case 27:
                     return "dev";
+                case 28:
+                    return "Type";
 
 //                case 25:
 //                    return "1m动";
@@ -1558,6 +1560,8 @@ public class ChinaPosition extends JPanel {
                     return Integer.class;
                 case 26:
                     return LocalDateTime.class;
+                case 28:
+                    return Types.SecType.class;
 //                case 26:
 //                    return String.class;
 //                case 27:
@@ -1655,10 +1659,12 @@ public class ChinaPosition extends JPanel {
                     if (priceMapBarDetail.containsKey(symbol) &&
                             priceMapBarDetail.get(symbol).size() > 0) {
                         return r10000(priceMapBarDetail.get(symbol).lastEntry().getValue() /
-                                priceMapBarDetail.get(symbol).firstEntry().getValue() - 1);
+                                priceMapBarDetail.get(symbol).firstEntry().getValue() - 1)*100d;
                     } else {
                         return 0.0;
                     }
+                case 28:
+                    return secTypeMap.getOrDefault(symbol, Types.SecType.None);
 
 
 //                case 25:

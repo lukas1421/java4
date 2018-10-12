@@ -289,7 +289,8 @@ public class Types {
 
     public enum SecType implements IApiEnum {
 
-        None, STK, OPT, FUT, CASH, BOND, CFD, FOP, WAR, IOPT, FWD, BAG, IND, BILL, FUND, FIXED, SLB, NEWS, CMDTY, BSK, ICU, ICS;
+        None, STK, OPT, FUT, CASH, BOND, CFD, FOP, WAR, IOPT, FWD, BAG, IND, BILL, FUND, FIXED,
+        SLB, NEWS, CMDTY, BSK, ICU, ICS;
 
         public static SecType get(String str) {
             return getValueOf(str, values(), None);
@@ -323,7 +324,7 @@ public class Types {
         }
     }
 
-    public static <T extends Enum<?> & IApiEnum> T getValueOf(String v, T[] values, T defaultValue) {
+    private static <T extends Enum<?> & IApiEnum> T getValueOf(String v, T[] values, T defaultValue) {
         for (T currentEnum : values) {
             if (currentEnum.getApiString().equals(v)) {
                 return currentEnum;
