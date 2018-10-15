@@ -50,7 +50,7 @@ public enum AutoOrderType {
     SGXA50_OPEN,
     FUT_DEV,
     FUT_NIGHT_DEV,
-    FUT_WEEK_DEV,
+    FUT_W_DEV,
     FUT_PC_PROFIT_TAKER,
     SGXA50_HILO,
 
@@ -197,6 +197,7 @@ public enum AutoOrderType {
 
 
     SGXA50_POST_CUTOFF_LIQ,
+    SGXA50_W_POSTCUTOFF_LIQ,
     FUT_HILO_ACCU,
     FUT_TENTA,
     FUT_TENTA_COVER,
@@ -218,6 +219,7 @@ public enum AutoOrderType {
     HK_STOCK_HILO,
     HK_STOCK_PMHILO,
     HK_CLOSE_LIQ,
+    HK_W_POSTCUTOFF_LIQ,
     HK_POST_AMCUTOFF_LIQ,
     HK_POST_PMCUTOFF_LIQ,
     UNKNOWN

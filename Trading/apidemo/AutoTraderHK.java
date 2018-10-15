@@ -119,6 +119,7 @@ public class AutoTraderHK extends JPanel {
         if (globalTradingOn.get()) {
 
             hkFutDev(symbol, nowMilli, last);
+            hkFutWCutoffLiq(symbol, nowMilli, last);
             //hkDev(symbol, nowMilli, last);
             //hkHiloTrader(symbol, nowMilli, freshPrice);
             //hkPMHiloTrader(symbol, nowMilli, freshPrice);
@@ -136,6 +137,56 @@ public class AutoTraderHK extends JPanel {
         }
         return symbol;
     }
+
+    private static void hkFutWCutoffLiq(String symbol, LocalDateTime nowMilli, double freshPrice) {
+        if (!symbol.equals("MCH.HK")) {
+            pr(" hk symbol not MCH.HK");
+            return;
+        }
+        LocalDateTime monObt = ldtof(MONDAY_OF_WEEK, ltof(9, 14, 0));
+        AutoOrderType ot = HK_W_POSTCUTOFF_LIQ;
+        DayOfWeek d = nowMilli.getDayOfWeek();
+
+        double safetyMargin = freshPrice * 0.001;
+
+        long numOrders = getOrderSizeForTradeType(symbol, ot);
+
+        if (numOrders != 0) {
+            return;
+        }
+
+        if (d == DayOfWeek.MONDAY || d == DayOfWeek.TUESDAY) {
+            return;
+        }
+
+        Contract ct = getHKFutContract(symbol);
+        NavigableMap<LocalDateTime, Double> prices = priceMapBarDetail.get(symbol);
+        double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
+        double weekOpen = prices.ceilingEntry(monObt).getValue();
+
+        if (currPos < 0 && freshPrice > weekOpen - safetyMargin) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+            apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
+            outputDetailedHK(symbol, "**********");
+            outputDetailedHK(symbol, str("NEW", o.orderId(), "HK W cutoff liq BUY#:", numOrders,
+                    globalIdOrderMap.get(id),
+                    "freshPrice, manualOpen", freshPrice, weekOpen, "safety margin ", safetyMargin,
+                    "cut level", weekOpen - safetyMargin));
+        } else if (currPos > 0 && freshPrice < weekOpen + safetyMargin) {
+            int id = autoTradeID.incrementAndGet();
+            Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
+            globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, ot));
+            apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
+            outputDetailedHK(symbol, "**********");
+            outputDetailedHK(symbol, str("NEW", o.orderId(), "HK W cutoff liq SELL#:", numOrders,
+                    globalIdOrderMap.get(id),
+                    "freshPrice, manualOpen", freshPrice, weekOpen, "safety margin", safetyMargin,
+                    "cut level", weekOpen + safetyMargin));
+        }
+    }
+
 
     /**
      * cut pos after cutoff if on the wrong side of manual open
@@ -254,6 +305,12 @@ public class AutoTraderHK extends JPanel {
         LocalTime lt = nowMilli.toLocalTime();
         LocalDateTime monObt = ldtof(MONDAY_OF_WEEK, ltof(8, 59, 50));
         Contract ct = getHKFutContract(symbol);
+        LocalDate tradeDate = getTradeDate(nowMilli);
+        DayOfWeek d = tradeDate.getDayOfWeek();
+
+        if (d != DayOfWeek.MONDAY && d != DayOfWeek.TUESDAY) {
+            return;
+        }
 
         NavigableMap<LocalDateTime, Double> prices = priceMapBarDetail.get(symbol);
 

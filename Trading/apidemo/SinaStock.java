@@ -21,7 +21,7 @@ import java.util.regex.Pattern;
 
 import static apidemo.AutoTraderMain.SGXA50_AUTO_VOL_THRESH;
 import static apidemo.AutoTraderMain.globalTradingOn;
-import static apidemo.AutoTraderXU.*;
+import static apidemo.AutoTraderXU.expiryToGet;
 import static apidemo.ChinaData.*;
 import static apidemo.ChinaOption.getATMVol;
 import static apidemo.ChinaStock.*;
@@ -123,9 +123,9 @@ public class SinaStock implements Runnable {
                             double atmVol = getATMVol(expiryToGet);
                             if (atmVol > SGXA50_AUTO_VOL_THRESH) {
                                 //indexHiLo(ldt, currIndexPrice); // open to 10, guarantee
-                                indexPostAMCutoffLiq(ldt, currIndexPrice);
+                                //indexPostAMCutoffLiq(ldt, currIndexPrice);
                                 //indexPmHiLo(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
-                                indexPostPMCutoffLiq(ldt, currIndexPrice);
+                                //indexPostPMCutoffLiq(ldt, currIndexPrice);
                             }
 
                             //indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee, same size
