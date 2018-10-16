@@ -4,6 +4,8 @@ import client.Contract;
 import client.Order;
 import client.OrderAugmented;
 import client.Types;
+import controller.ApiController;
+import controller.ApiController.IOrderHandler.DefaultOrderHandler;
 import handler.GuaranteeHKHandler;
 import util.AutoOrderType;
 
@@ -25,7 +27,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static apidemo.AutoTraderMain.*;
-import static apidemo.AutoTraderXU.DefaultOrderHandler;
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaMain.MONDAY_OF_WEEK;
 import static apidemo.XuTraderHelper.*;
@@ -533,7 +534,7 @@ public class AutoTraderHK extends JPanel {
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(freshPrice, size, DAY);
                 globalIdOrderMap.put(id, new OrderAugmented(symbol, nowMilli, o, HK_STOCK_DEV));
-                apcon.placeOrModifyOrder(ct, o, new DefaultOrderHandler(id));
+                apcon.placeOrModifyOrder(ct, o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
                 outputDetailedHK(symbol, "**********");
                 outputDetailedHK(symbol, str("NEW", o.orderId(), "HK open dev SELL#:", numOrders,
                         globalIdOrderMap.get(id),
