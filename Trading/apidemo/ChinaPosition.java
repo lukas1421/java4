@@ -1666,7 +1666,7 @@ public class ChinaPosition extends JPanel {
                 case 28:
                     return secTypeMap.getOrDefault(symbol, Types.SecType.None);
 
-
+                // change remote dir name test
 //                case 25:
 //                    return r(getPnLChange5m(symbol));
 //                case 26:
