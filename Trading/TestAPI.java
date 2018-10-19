@@ -1,4 +1,3 @@
-import apidemo.AutoTraderHK;
 import client.Contract;
 import controller.ApiConnection;
 import controller.ApiController;
@@ -6,6 +5,7 @@ import controller.ApiController;
 import java.time.LocalTime;
 import java.util.concurrent.CountDownLatch;
 
+import static utility.Utility.getFrontFutContract;
 import static utility.Utility.pr;
 
 public class TestAPI {
@@ -44,9 +44,10 @@ public class TestAPI {
         // req
         //ap.reqUSAutoTrader();
         //ap.req1StockLive("IQ", "SMART", "USD", new ReceiverUS("IQ"), false);
-        Contract hkTestCont = AutoTraderHK.tickerToHKStkContract("5");
-        ap.reqContractDetails(hkTestCont, new ApiController.IContractDetailsHandler.DefaultContractDetailsHandler());
-
+        //Contract hkCt = AutoTraderHK.tickerToHKStkContract("5");
+        Contract ct = getFrontFutContract();
+        //Contract i = AutoTraderMain.getXINAIndexContract();
+        //ap.reqMonthOpen(ct);
 
     }
 }

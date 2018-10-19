@@ -1,8 +1,6 @@
 package apidemo;
 
-import client.Order;
-import client.OrderAugmented;
-import client.OrderStatus;
+import client.*;
 import controller.ApiController;
 import util.AutoOrderType;
 
@@ -27,7 +25,7 @@ import static apidemo.ChinaStock.*;
 import static apidemo.XuTraderHelper.*;
 import static client.OrderStatus.*;
 import static util.AutoOrderType.*;
-import static utility.Utility.str;
+import static utility.Utility.*;
 
 public class AutoTraderMain extends JPanel {
 
@@ -559,6 +557,89 @@ public class AutoTraderMain extends JPanel {
                 return defaultSize;
             }
         }
+    }
+
+    public static Contract getXINAIndexContract() {
+        Contract c = new Contract();
+        c.symbol("XINA50");
+        c.secType(Types.SecType.IND);
+        c.exchange("SGX");
+        c.currency("USD");
+        return c;
+    }
+
+    static Contract symbolToIBContract(String symbol) {
+        if (secTypeMap.containsKey(symbol)) {
+            if (secTypeMap.get(symbol) == Types.SecType.STK) {
+                switch (currencyMap.get(symbol)) {
+                    case HKD:
+                        return symbolToHKStkContract(symbol);
+                    case USD:
+                        return symbolToUSStkContract(symbol);
+                }
+            } else if (secTypeMap.get(symbol) == Types.SecType.FUT) {
+                switch (currencyMap.get(symbol)) {
+                    case HKD:
+                        return getHKFutContract(symbol);
+                    case USD:
+                        if (symbol.equals("SGXA50")) {
+                            return getFrontFutContract();
+                        } else if (symbol.equals("SGXA50BM")) {
+                            return getBackFutContract();
+                        } else if (symbol.equals("SGXA50PR")) {
+                            return getExpiredFutContract();
+                        }
+                }
+            }
+        }
+        return new Contract();
+    }
+
+
+    public static Contract tickerToHKStkContract(String ticker) {
+        Contract ct = new Contract();
+        ct.symbol(ticker);
+        ct.exchange("SEHK");
+        ct.currency("HKD");
+        ct.secType(Types.SecType.STK);
+        return ct;
+    }
+
+    private static Contract symbolToHKStkContract(String symbol) {
+        String ticker = hkSymbolToTicker(symbol);
+        Contract ct = new Contract();
+        ct.symbol(ticker);
+        ct.exchange("SEHK");
+        ct.currency("HKD");
+        ct.secType(Types.SecType.STK);
+        return ct;
+    }
+
+    public static Contract getHKFutContract(String symb) {
+        Contract ct = new Contract();
+        ct.symbol(symb);
+        ct.exchange("HKFE");
+        ct.currency("HKD");
+        ct.lastTradeDateOrContractMonth(AutoTraderHK.getSecondLastBD(LocalDate.now()).
+                format(DateTimeFormatter.ofPattern("yyyyMMdd")));
+        ct.secType(Types.SecType.FUT);
+        return ct;
+    }
+
+    public static String hkSymbolToTicker(String symbol) {
+        if (symbol.startsWith("hk")) {
+            return symbol.substring(2);
+        }
+        return symbol;
+    }
+
+    public static Contract symbolToUSStkContract(String symbol) {
+        Contract ct = new Contract();
+        ct.symbol(symbol);
+        ct.exchange("SMART");
+        ct.currency("USD");
+        ct.secType(Types.SecType.STK);
+        return ct;
     }
 
 //    static LocalDateTime ldtof(LocalDate d, LocalTime t) {

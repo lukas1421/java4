@@ -1,5 +1,6 @@
 package handler;
 
+import apidemo.AutoTraderMain;
 import client.*;
 import controller.ApiController;
 
@@ -58,9 +59,9 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
                 double ask = hkAskMap.get(symbol);
                 Contract ct;
                 if (symbol.startsWith("hk")) {
-                    ct = tickerToHKStkContract(hkSymbolToTicker(symbol));
+                    ct = AutoTraderMain.tickerToHKStkContract(AutoTraderMain.hkSymbolToTicker(symbol));
                 } else {
-                    ct = getHKFutContract(symbol);
+                    ct = AutoTraderMain.getHKFutContract(symbol);
                 }
 
                 Order prevOrder = globalIdOrderMap.get(defaultID).getOrder();

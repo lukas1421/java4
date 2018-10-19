@@ -1,5 +1,6 @@
 package handler;
 
+import apidemo.AutoTraderMain;
 import client.*;
 import controller.ApiController;
 
@@ -66,7 +67,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
                 double freshPrice = usFreshPriceMap.get(symbol);
                 double bid = usBidMap.get(symbol);
                 double ask = usAskMap.get(symbol);
-                Contract ct = tickerToUSContract(symbol);
+                Contract ct = AutoTraderMain.symbolToUSStkContract(symbol);
 
                 Order prevOrder = globalIdOrderMap.get(defaultID).getOrder();
                 Order o = new Order();

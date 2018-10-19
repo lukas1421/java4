@@ -3,7 +3,6 @@ package apidemo;
 import client.Contract;
 import client.Order;
 import client.OrderAugmented;
-import client.Types;
 import controller.ApiController;
 import handler.GuaranteeUSHandler;
 import util.AutoOrderType;
@@ -81,20 +80,11 @@ public class AutoTraderUS {
     private static double retreatUpThresh = upThresh * 0.85;
     private static double retreatDownThresh = downThresh * 0.85;
 
-    public static Contract tickerToUSContract(String ticker) {
-        Contract ct = new Contract();
-        ct.symbol(ticker);
-        ct.exchange("SMART");
-        ct.currency("USD");
-        ct.secType(Types.SecType.STK);
-        return ct;
-    }
-
     AutoTraderUS() {
-        //usSymbols.add(ibContractToSymbol(tickerToUSContract("NIO")));
-        //usSymbols.add(ibContractToSymbol(tickerToUSContract("QTT")));
-        //usSymbols.add(ibContractToSymbol(tickerToUSContract("PDD")));
-        usSymbols.add(ibContractToSymbol(tickerToUSContract("NBEV")));
+        //usSymbols.add(ibContractToSymbol(symbolToUSStkContract("NIO")));
+        //usSymbols.add(ibContractToSymbol(symbolToUSStkContract("QTT")));
+        //usSymbols.add(ibContractToSymbol(symbolToUSStkContract("PDD")));
+        usSymbols.add(ibContractToSymbol(symbolToUSStkContract("NBEV")));
 
         usSymbols.forEach(s -> {
             manualUSHalfHourDev.put(s, new EnumMap<>(HalfHour.class));
@@ -175,7 +165,7 @@ public class AutoTraderUS {
 
 //    private static void usMinuteDevTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
 //        LocalTime lt = nowMilli.toLocalTime();
-//        Contract ct = tickerToUSContract(symbol);
+//        Contract ct = symbolToUSStkContract(symbol);
 //        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
 //        double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 //
@@ -314,7 +304,7 @@ public class AutoTraderUS {
 //     */
 //    private static void usQHrDevTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
 //        LocalTime lt = nowMilli.toLocalTime();
-//        Contract ct = tickerToUSContract(symbol);
+//        Contract ct = symbolToUSStkContract(symbol);
 //        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
 //        double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 //
@@ -452,7 +442,7 @@ public class AutoTraderUS {
     //     */
 //    private static void usRelativeProfitTaker(String symbol, LocalDateTime nowMilli, double freshPrice) {
 //        LocalTime lt = nowMilli.toLocalTime();
-//        Contract ct = tickerToUSContract(symbol);
+//        Contract ct = symbolToUSStkContract(symbol);
 //        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
 //
 //        double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
@@ -542,7 +532,7 @@ public class AutoTraderUS {
 //     */
 //    private static void usHalfHourDevTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
 //        LocalTime lt = nowMilli.toLocalTime();
-//        Contract ct = tickerToUSContract(symbol);
+//        Contract ct = symbolToUSStkContract(symbol);
 //        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
 //        double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 //
@@ -627,7 +617,7 @@ public class AutoTraderUS {
      */
     private static void usDev(String symbol, LocalDateTime nowMilli, double last) {
         LocalTime lt = nowMilli.toLocalTime();
-        Contract ct = tickerToUSContract(symbol);
+        Contract ct = symbolToUSStkContract(symbol);
         NavigableMap<LocalDateTime, Double> prices = priceMapBarDetail.get(symbol);
         double pos = ibPositionMap.getOrDefault(symbol, 0.0);
         LocalTime amStart = ltof(9, 29, 59);
@@ -787,7 +777,7 @@ public class AutoTraderUS {
      */
     private static void usPMOpenDeviationTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime lt = nowMilli.toLocalTime();
-        Contract ct = tickerToUSContract(symbol);
+        Contract ct = symbolToUSStkContract(symbol);
         NavigableMap<LocalDateTime, Double> prices = priceMapBarDetail.get(symbol);
         double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
         LocalDate td = getTradeDate(nowMilli);
@@ -892,7 +882,7 @@ public class AutoTraderUS {
 //    private static void usHiloTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
 //        LocalTime lt = nowMilli.toLocalTime();
 //        NavigableMap<LocalDateTime, Double> prices = priceMapBarDetail.get(symbol);
-//        Contract ct = tickerToUSContract(symbol);
+//        Contract ct = symbolToUSStkContract(symbol);
 //        LocalDate td = getTradeDate(nowMilli);
 //        LocalDateTime amStart = ldtof(td, ltof(9, 29, 59));
 //        LocalDateTime amObservationStart = ldtof(td, ltof(9, 29, 55));
@@ -999,7 +989,7 @@ public class AutoTraderUS {
 //    private static void usPMHiloTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
 //        LocalTime lt = nowMilli.toLocalTime();
 //        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
-//        Contract ct = tickerToUSContract(symbol);
+//        Contract ct = symbolToUSStkContract(symbol);
 //        LocalTime pmStart = ltof(11, 59, 59);
 //        LocalTime pmObservationStart = ltof(11, 59, 55);
 //        LocalTime pmCutoff = ltof(12, 30);
@@ -1111,7 +1101,7 @@ public class AutoTraderUS {
 //     */
 //    private static void usPostCutoffLiq(String symbol, LocalDateTime nowMilli, double freshPrice) {
 //        LocalTime lt = nowMilli.toLocalTime();
-//        Contract ct = tickerToUSContract(symbol);
+//        Contract ct = symbolToUSStkContract(symbol);
 //        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
 //        double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 //        LocalTime amStart = ltof(9, 29, 59);
@@ -1175,7 +1165,7 @@ public class AutoTraderUS {
 //     */
 //    private static void usPostPMCutoffLiqTrader(String symbol, LocalDateTime nowMilli, double freshPrice) {
 //        LocalTime lt = nowMilli.toLocalTime();
-//        Contract ct = tickerToUSContract(symbol);
+//        Contract ct = symbolToUSStkContract(symbol);
 //        NavigableMap<LocalTime, Double> prices = priceMapBarDetail.get(symbol);
 //        double currPos = ibPositionMap.getOrDefault(symbol, 0.0);
 //        LocalTime pmStart = ltof(11, 59, 59);
@@ -1239,7 +1229,7 @@ public class AutoTraderUS {
     private static void usCloseLiq(String symbol, LocalDateTime nowMilli, double freshPrice) {
         LocalTime liqStartTime = ltof(15, 50);
         LocalTime liqEndTime = ltof(16, 0);
-        Contract ct = tickerToUSContract(symbol);
+        Contract ct = symbolToUSStkContract(symbol);
         long liqWaitSecs = 60;
 
         if (nowMilli.toLocalTime().isBefore(liqStartTime) || nowMilli.toLocalTime().isAfter(liqEndTime)) {

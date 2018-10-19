@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import static apidemo.ChinaPosition.fxMap;
 import static apidemo.ChinaPosition.getCurrentDelta;
 import static apidemo.ChinaStock.*;
+import static apidemo.Currency.CNY;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
@@ -58,7 +59,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
     public static volatile int displayWidth = 2;
 
     private static volatile ToDoubleFunction<Entry<String, Integer>> positionComparingFunc =
-            e -> Math.abs(fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+            e -> Math.abs(fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                     * e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0));
 
     private static volatile ToDoubleFunction<String> sharpeComparingFunc =
@@ -517,7 +518,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
             displaySharp = !posButton.isSelected();
             displayInterest = !posButton.isSelected();
             displayCorrel = !posButton.isSelected();
-            positionComparingFunc = e -> Math.abs(fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+            positionComparingFunc = e -> Math.abs(fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                     * e.getValue() * ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0));
             refresh();
             System.out.println(" display pos is " + displayPos);

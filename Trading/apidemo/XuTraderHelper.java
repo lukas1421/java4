@@ -32,6 +32,7 @@ import static apidemo.AutoTraderMain.*;
 import static apidemo.AutoTraderXU.activeFutCt;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaStock.currencyMap;
+import static apidemo.Currency.CNY;
 import static apidemo.TradingConstants.FTSE_INDEX;
 import static java.lang.System.out;
 import static utility.Utility.*;
@@ -174,7 +175,7 @@ public class XuTraderHelper {
             outputDetailedHK(symbol, msg);
         } else if (symbol.startsWith("SGXA50")) {
             outputDetailedXU(symbol, msg);
-        } else if (currencyMap.getOrDefault(symbol, "CNY").equals("USD")) {
+        } else if (currencyMap.getOrDefault(symbol, CNY).equals("USD")) {
             outputDetailedUS(symbol, msg);
         }
     }

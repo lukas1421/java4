@@ -69,31 +69,33 @@ public interface HistoricalHandler extends GeneralHandler {
         }
     }
 
-    class DefaultHistHandle implements HistoricalHandler {
+    class DefaultHistHandler implements HistoricalHandler {
         //Semaphore semaphore;
 
-        public DefaultHistHandle() {
+        public DefaultHistHandler() {
 
         }
 
         @Override
         public void handleHist(String name, String date, double open, double high, double low, double close) {
             //pr("handle hist ", name, date, open, close);
-            if (ChinaData.priceMapBar.containsKey(name)) {
-                if (!date.startsWith("finished")) {
-                    Date dt = new Date(Long.parseLong(date) * 1000);
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTime(dt);
-                    LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1,
-                            cal.get(Calendar.DAY_OF_MONTH));
-                    LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
-                    ChinaData.priceMapBar.get(name).put(lt, new SimpleBar(open, high, low, close));
-                }
+            //if (ChinaData.priceMapBar.containsKey(name)) {
+            if (!date.startsWith("finished")) {
+                Date dt = new Date(Long.parseLong(date) * 1000);
+                Calendar cal = Calendar.getInstance();
+                cal.setTime(dt);
+                LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1,
+                        cal.get(Calendar.DAY_OF_MONTH));
+                LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+                pr(name, date, ld, lt, open, high, low, close);
+                //ChinaData.priceMapBar.get(name).put(lt, new SimpleBar(open, high, low, close));
             }
+            //}
         }
 
         @Override
         public void actionUponFinish(String name) {
+            pr(name, " finished ");
         }
     }
 }

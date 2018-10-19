@@ -31,8 +31,7 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static apidemo.AutoTraderMain.ldtof;
-import static apidemo.AutoTraderMain.ltof;
+import static apidemo.AutoTraderMain.*;
 import static apidemo.ChinaDataYesterday.convertTimeToInt;
 import static apidemo.ChinaMain.*;
 import static apidemo.ChinaStock.*;
@@ -57,6 +56,10 @@ public final class ChinaData extends JPanel {
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, VolBar>> askMap = new ConcurrentHashMap<>();
     //static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> bidTotalMap = new ConcurrentHashMap<>();
     //static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> askTotalMap = new ConcurrentHashMap<>();
+
+    public static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
+            pastMonthDayData = new ConcurrentSkipListMap<>();
+
 
     public static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>> price5mWtd
             = new ConcurrentSkipListMap<>();
@@ -114,6 +117,7 @@ public final class ChinaData extends JPanel {
             //priceMapPlain.put(v, new ConcurrentSkipListMap<>());
             priceMapBar.put(v, new ConcurrentSkipListMap<>());
             priceMapBarDetail.put(v, new ConcurrentSkipListMap<>());
+            pastMonthDayData.put(v, new ConcurrentSkipListMap<>());
             priceMapBarYtd.put(v, new ConcurrentSkipListMap<>());
             priceMapBarY2.put(v, new ConcurrentSkipListMap<>());
             sizeTotalMap.put(v, new ConcurrentSkipListMap<>());
@@ -232,6 +236,8 @@ public final class ChinaData extends JPanel {
         JButton getSGXA50TodayButton = new JButton("Fut T");
         JButton getSGXA50DetailedButton = new JButton("Detailed XU");
         JButton getHKDetailedButton = new JButton("Detailed HK");
+        JButton getMonthOpenButton = new JButton("MonthOpen");
+
 
         JButton tdxButton = new JButton("TDX");
         JButton retrieveAllButton = new JButton("RetrieveAll");
@@ -264,6 +270,7 @@ public final class ChinaData extends JPanel {
         buttonUpPanel.add(Box.createHorizontalStrut(150));
         buttonUpPanel.add(getSGXA50DetailedButton);
         buttonUpPanel.add(getHKDetailedButton);
+        buttonUpPanel.add(getMonthOpenButton);
 
         buttonDownPanel.add(loadHibGenPriceButton);
         buttonDownPanel.add(loadHibDetailButton);
@@ -425,9 +432,26 @@ public final class ChinaData extends JPanel {
         getHKDetailedButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
             pr(" getting detailed HK ");
             controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                    AutoTraderHK.getHKFutContract("MCH.HK")
+                    AutoTraderMain.getHKFutContract("MCH.HK")
                     , ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
         }));
+
+        getMonthOpenButton.addActionListener(l -> {
+
+            priceMapBarDetail.keySet().forEach(k -> {
+                if (!k.startsWith("sz") && !k.startsWith("sh"))
+                    controller().reqMonthOpen(GLOBAL_REQ_ID.addAndGet(5),
+                            symbolToIBContract(k), ChinaData::handleMonthOpen, 30, Types.BarSize._1_day);
+            });
+
+//            controller().reqMonthOpen(GLOBAL_REQ_ID.addAndGet(5),
+//                    getFrontFutContract(), ChinaData::handleMonthOpen, 30, Types.BarSize._1_day);
+//            controller().reqMonthOpen(GLOBAL_REQ_ID.addAndGet(5),
+//                    tickerToHKStkContract("700"), ChinaData::handleMonthOpen, 30, Types.BarSize._1_day);
+//            controller().reqMonthOpen(GLOBAL_REQ_ID.addAndGet(5),
+//                    symbolToUSStkContract("IQ"), ChinaData::handleMonthOpen, 30, Types.BarSize._1_day);
+
+        });
 
 
         tdxButton.addActionListener(l ->
@@ -435,23 +459,13 @@ public final class ChinaData extends JPanel {
 
         retrieveAllButton.addActionListener(l -> retrieveDataAll());
 
-        retrieveTodayButton.addActionListener(l ->
+        retrieveTodayButton.addActionListener(l -> getTodayTDX(ChinaMain.currentTradingDate));
 
-                getTodayTDX(ChinaMain.currentTradingDate));
+        outputPricesButton.addActionListener(l -> outputPrices());
 
-        outputPricesButton.addActionListener(l ->
+        fixYtdZeroButton.addActionListener(l -> fixYtdSuspendedStocks());
 
-                outputPrices());
-
-        fixYtdZeroButton.addActionListener(l ->
-
-                fixYtdSuspendedStocks());
-
-        getIBChinaButton.addActionListener(l ->
-
-                controller().
-
-                        reqHoldingsTodayHist());
+        getIBChinaButton.addActionListener(l -> controller().reqHoldingsTodayHist());
     }
 
     static void outputPrices() {
@@ -848,6 +862,17 @@ public final class ChinaData extends JPanel {
             }
         } else {
             pr(date, open, high, low, close);
+        }
+    }
+
+    private static void handleMonthOpen(Contract c, String date, double open, double high, double low,
+                                        double close, int volume) {
+
+        String symbol = utility.Utility.ibContractToSymbol(c);
+        if (!date.startsWith("finished")) {
+            LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
+            pr("handleMonthOpen", symbol, ld, open, high, low, close);
+            ChinaData.pastMonthDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         }
     }
 

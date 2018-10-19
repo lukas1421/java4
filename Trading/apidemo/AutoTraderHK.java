@@ -3,7 +3,6 @@ package apidemo;
 import client.Contract;
 import client.Order;
 import client.OrderAugmented;
-import client.Types;
 import controller.ApiController;
 import controller.ApiController.IOrderHandler.DefaultOrderHandler;
 import handler.GuaranteeHKHandler;
@@ -18,7 +17,6 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -130,13 +128,6 @@ public class AutoTraderHK extends JPanel {
         //hkPostPMCutoffLiqTrader(symbol, nowMilli, last);
         //hkCloseLiqTrader(symbol, nowMilli, last);
 
-    }
-
-    public static String hkSymbolToTicker(String symbol) {
-        if (symbol.startsWith("hk")) {
-            return symbol.substring(2);
-        }
-        return symbol;
     }
 
     private static void hkFutWCutoffLiq(String symbol, LocalDateTime nowMilli, double freshPrice) {
@@ -811,26 +802,7 @@ public class AutoTraderHK extends JPanel {
 //    }
 
 
-    public static Contract tickerToHKStkContract(String ticker) {
-        Contract ct = new Contract();
-        ct.symbol(ticker);
-        ct.exchange("SEHK");
-        ct.currency("HKD");
-        ct.secType(Types.SecType.STK);
-        return ct;
-    }
-
-    public static Contract getHKFutContract(String symb) {
-        Contract ct = new Contract();
-        ct.symbol(symb);
-        ct.exchange("HKFE");
-        ct.currency("HKD");
-        ct.lastTradeDateOrContractMonth(getSecondLastBD(LocalDate.now()).format(DateTimeFormatter.ofPattern("yyyyMMdd")));
-        ct.secType(Types.SecType.FUT);
-        return ct;
-    }
-
-    private static LocalDate getSecondLastBD(LocalDate d) {
+    static LocalDate getSecondLastBD(LocalDate d) {
         LocalDate res = d.plusMonths(1L).withDayOfMonth(1);
         int i = 0;
         while (i != 2) {

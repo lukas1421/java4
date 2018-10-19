@@ -28,9 +28,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static apidemo.AutoTraderHK.getHKFutContract;
-import static apidemo.AutoTraderMain.globalIdOrderMap;
-import static apidemo.AutoTraderMain.globalTradingOn;
+import static apidemo.AutoTraderMain.*;
 import static apidemo.ChinaMain.*;
 import static apidemo.XuTraderHelper.*;
 import static client.OrderStatus.Filled;
@@ -930,7 +928,7 @@ public class ApiController implements EWrapper {
 
     }
 
-    public void req1StockHistToday(String stock, String exch, String curr, HistoricalHandler h) {
+    private void req1StockHistToday(String stock, String exch, String curr, HistoricalHandler h) {
         pr(" requesting stock hist ", stock, exch, curr);
         CompletableFuture.runAsync(() -> {
             int reqId = m_reqId.incrementAndGet();
@@ -1140,19 +1138,29 @@ public class ApiController implements EWrapper {
                 barSize.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
     }
 
-    public void getHistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
-                                    int duration, BarSize bs) {
-
-//        String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
-//                .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
-//        boolean rthOnly = false;
-
+    //requ month open
+    public void reqMonthOpen(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
+                             int duration, BarSize bs) {
+        //Contract ct = tickerToHKStkContract("5");
+        //int duration = 30;
+        //BarSize bs = BarSize._1_day;
+        //int reqId = 100000;
         DurationUnit durationUnit = DurationUnit.DAY;
         String durationStr = duration + " " + durationUnit.toString().charAt(0);
         WhatToShow whatToShow = WhatToShow.TRADES;
-
+        HistoricalHandler h = new HistoricalHandler.DefaultHistHandler();
         ChinaMain.globalRequestMap.put(reqId, new Request(c, dc));
+        CompletableFuture.runAsync(() -> m_client.reqHistoricalData(reqId, c, "", durationStr,
+                bs.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
+    }
 
+
+    public void getHistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
+                                    int duration, BarSize bs) {
+        DurationUnit durationUnit = DurationUnit.DAY;
+        String durationStr = duration + " " + durationUnit.toString().charAt(0);
+        WhatToShow whatToShow = WhatToShow.TRADES;
+        ChinaMain.globalRequestMap.put(reqId, new Request(c, dc));
         CompletableFuture.runAsync(() -> m_client.reqHistoricalData(reqId, c, "", durationStr,
                 bs.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
     }

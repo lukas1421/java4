@@ -42,12 +42,12 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static apidemo.AutoTraderMain.*;
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaData.priceMapBarDetail;
+import static apidemo.ChinaData.*;
 import static apidemo.ChinaMain.currentTradingDate;
 import static apidemo.ChinaPosition.costMap;
 import static apidemo.ChinaStock.*;
 import static apidemo.ChinaStockHelper.reverseComp;
+import static apidemo.Currency.CNY;
 import static apidemo.XuTraderHelper.getTradeDate;
 import static client.OrderStatus.Filled;
 import static graph.GraphBar.pmbDetailToSimpleBarT;
@@ -85,7 +85,7 @@ public class ChinaPosition extends JPanel {
     private static volatile NavigableMap<LocalTime, Double> mtmDeltaMap;
     private static volatile NavigableMap<String, Double> benchExposureMap;
     private static volatile Map<String, Double> pureMtmMap;
-    public static Map<String, Double> fxMap = new HashMap<>();
+    public static Map<Currency, Double> fxMap = new HashMap<>();
     private static volatile double mtmDeltaSharpe;
     private static volatile double minuteNetPnlSharpe;
 
@@ -117,6 +117,7 @@ public class ChinaPosition extends JPanel {
     private static volatile Predicate<Map.Entry<String, ?>> GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
     private static volatile UpdateFrequency updateFreq = UpdateFrequency.oneSec;
 
+
     @Override
     public void scrollRectToVisible(Rectangle aRect) {
         super.scrollRectToVisible(aRect); //To change body of generated methods, choose Tools | Templates.
@@ -130,7 +131,7 @@ public class ChinaPosition extends JPanel {
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                fxMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
+                fxMap.put(Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
             }
         } catch (IOException x) {
             x.printStackTrace();
@@ -508,7 +509,7 @@ public class ChinaPosition extends JPanel {
         int pos = 0;
         double cb = 0.0;
         double mv;
-        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0);
+        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0);
         NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
 
         if (trMap.firstKey().isBefore(prMap.firstKey())) {
@@ -542,7 +543,7 @@ public class ChinaPosition extends JPanel {
         CompletableFuture.runAsync(() -> {
             CompletableFuture.supplyAsync(() ->
                     boughtDelta = tradesMap.entrySet().stream().filter(p).mapToDouble(e ->
-                            fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                            fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                                     * priceMap.getOrDefault(e.getKey(), 0.0)
                                     * e.getValue().values().stream().filter(e1 -> e1.getSizeAll() > 0)
                                     .mapToInt(TradeBlock::getSizeAll).sum()).sum()
@@ -550,7 +551,7 @@ public class ChinaPosition extends JPanel {
 
             CompletableFuture.supplyAsync(() ->
                     soldDelta = tradesMap.entrySet().stream().filter(p).mapToDouble(e ->
-                            fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                            fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                                     * priceMap.getOrDefault(e.getKey(), 0.0)
                                     * e.getValue().values().stream().filter(e1 -> e1.getSizeAll() < 0)
                                     .mapToInt(TradeBlock::getSizeAll).sum()).sum())
@@ -559,17 +560,17 @@ public class ChinaPosition extends JPanel {
             CompletableFuture.supplyAsync(() ->
                     openDelta = openPositionMap.entrySet().stream().filter(p)
                             .mapToDouble(e ->
-                                    fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                                    fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                                             * e.getValue() * openMap.getOrDefault(e.getKey(), 0.0)).sum()
             ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setOpenDelta(a)));
 
             CompletableFuture.supplyAsync(() ->
                     netDelta = openPositionMap.entrySet().stream().filter(p)
                             .mapToDouble(e ->
-                                    fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                                    fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                                             * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum()
                             + tradesMap.entrySet().stream().filter(p).mapToDouble(
-                            e -> fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                            e -> fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                                     * priceMap.getOrDefault(e.getKey(), 0.0)
                                     * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum()
             ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setCurrentDelta(a)));
@@ -617,16 +618,17 @@ public class ChinaPosition extends JPanel {
             CompletableFuture.allOf(
                     CompletableFuture.supplyAsync(() ->
                             netYtdPnl = openPositionMap.entrySet().stream().filter(p).mapToDouble(e ->
-                                    fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
-                                            * e.getValue() * (closeMap.getOrDefault(e.getKey(), 0.0) - costMap.getOrDefault(e.getKey(), 0.0))).sum()
+                                    fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
+                                            * e.getValue() * (getPrevClose(e.getKey())
+                                            - costMap.getOrDefault(e.getKey(), 0.0))).sum()
                     ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setNetPnlYtd(a))),
 
                     CompletableFuture.supplyAsync(() ->
                             mtmPNLMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p)
                                     .map(e -> getMtmPNL(
                                             pmbDetailToSimpleBarT(priceMapBarDetail.get(e.getKey())),
-                                            closeMap.getOrDefault(e.getKey(), 0.0), e.getValue(),
-                                            fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0))
+                                            getPrevClose(e.getKey()), e.getValue(),
+                                            fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0))
                                     ).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())
                     ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setMtmPnl(Optional.ofNullable(a.lastEntry()).map(Entry::getValue).orElse(0.0)))),
 
@@ -650,7 +652,7 @@ public class ChinaPosition extends JPanel {
                     ChinaStock.benchSimpleMap.entrySet().stream().filter(e -> !e.getKey().equals("sh204001")).filter(p)
                             .collect(Collectors.groupingBy(s -> ChinaStock.benchSimpleMap.getOrDefault(s.getKey(), ""), ConcurrentSkipListMap::new,
                                     Collectors.summingDouble(s ->
-                                            fxMap.getOrDefault(currencyMap.getOrDefault(s.getKey(), "CNY"), 1.0)
+                                            fxMap.getOrDefault(currencyMap.getOrDefault(s.getKey(), CNY), 1.0)
                                                     * getNetPosition(s.getKey()) * priceMap.getOrDefault(s.getKey(), 0.0)))))
                     .thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setBenchMap(a)));
 
@@ -658,9 +660,9 @@ public class ChinaPosition extends JPanel {
                     ChinaPosition.openPositionMap.entrySet().stream().filter(p).filter(e -> e.getValue() > 0)
                             .collect(Collectors.groupingBy(e -> ChinaStock.benchSimpleMap.getOrDefault(e.getKey(), ""), HashMap::new,
                                     Collectors.summingDouble(e ->
-                                            fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                                            fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                                                     * (ChinaStock.priceMap.getOrDefault(e.getKey(), 0.0) -
-                                                    ChinaStock.closeMap.getOrDefault(e.getKey(), 0.0)) * (e.getValue()))))
+                                                    getPrevClose(e.getKey())) * (e.getValue()))))
             ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() -> gPnl.setMtmBenchMap(a)));
 
         }).thenRun(() ->
@@ -693,6 +695,23 @@ public class ChinaPosition extends JPanel {
     }
 
 
+    static double getPrevClose(String symbol) {
+        if (closeMap.containsKey(symbol) && closeMap.get(symbol) != 0.0) {
+            return closeMap.get(symbol);
+        } else if (priceMapBar.containsKey(symbol) && priceMapBar.get(symbol).size() > 0) {
+            return priceMapBar.get(symbol)
+                    .entrySet().stream()
+                    .filter(e -> e.getKey().isAfter(ltof(8, 59)))
+                    .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+        } else if (priceMapBarDetail.containsKey(symbol) && priceMapBarDetail.get(symbol).size() > 0) {
+            return priceMapBarDetail.get(symbol)
+                    .entrySet().stream()
+                    .filter(e -> e.getKey().isAfter(ldtof(LocalDate.now(), ltof(8, 59))))
+                    .findFirst().map(Entry::getValue).orElse(0.0);
+        }
+        return 0.0;
+    }
+
     static double getNetPtfDelta() {
         return getStockPtfDelta() + AutoTraderXU.getFutDelta();
     }
@@ -700,11 +719,11 @@ public class ChinaPosition extends JPanel {
     static double getNetPtfDeltaV2() {
         double openDelta = openPositionMap.entrySet().stream()
                 .mapToDouble(e ->
-                        fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                        fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                                 * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum();
         double tradedDelta = tradesMap.entrySet().stream().mapToDouble(
                 e ->
-                        fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                        fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                                 * priceMap.getOrDefault(e.getKey(), 0.0)
                                 * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum();
         pr(str(" ChinaPosition getNetptfDelta ", "open delta ", " traded delta, net delta "
@@ -723,11 +742,11 @@ public class ChinaPosition extends JPanel {
     static double getStockPtfDelta() {
         double openDelta = openPositionMap.entrySet().stream()
                 .filter(e -> !e.getKey().startsWith("SGXA50"))
-                .mapToDouble(e -> fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                .mapToDouble(e -> fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                         * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum();
         double tradedDelta = tradesMap.entrySet().stream()
                 .filter(e -> !e.getKey().startsWith("SGXA50"))
-                .mapToDouble(e -> fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                .mapToDouble(e -> fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                         * priceMap.getOrDefault(e.getKey(), 0.0)
                         * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum();
 
@@ -737,11 +756,11 @@ public class ChinaPosition extends JPanel {
     static double getStockPtfDeltaCustom(Predicate<? super Map.Entry<String, ?>> p) {
         double openDelta = openPositionMap.entrySet().stream()
                 .filter(p).mapToDouble(e ->
-                        fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                        fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                                 * e.getValue() * priceMap.getOrDefault(e.getKey(), 0.0)).sum();
         double tradedDelta = tradesMap.entrySet().stream()
                 .filter(p).mapToDouble(e ->
-                        fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), "CNY"), 1.0)
+                        fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
                                 * priceMap.getOrDefault(e.getKey(), 0.0)
                                 * e.getValue().entrySet().stream().mapToInt(e1 -> e1.getValue().getSizeAll()).sum()).sum();
 
@@ -751,7 +770,7 @@ public class ChinaPosition extends JPanel {
 
     private static NavigableMap<LocalTime, Double> getDelta(String name, int tradesMultiplier) {
         NavigableMap<LocalTime, Double> res = new ConcurrentSkipListMap<>();
-        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0);
+        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0);
         int pos = openPositionMap.getOrDefault(name, 0);
         for (LocalTime t : ChinaData.priceMapBar.get(name).keySet()) {
             double price = ChinaData.priceMapBar.get(name).get(t).getClose();
@@ -1065,7 +1084,7 @@ public class ChinaPosition extends JPanel {
                     } catch (Exception x) {
                         x.printStackTrace();
                     }
-                    String outputString = Utility.getStrTabbed(LocalDate.now().toString(), dataList.get(fillTimeCol), "Stock", " ", "CNY",
+                    String outputString = Utility.getStrTabbed(LocalDate.now().toString(), dataList.get(fillTimeCol), "Stock", " ", CNY,
                             ticker.substring(0, 2).toUpperCase(), " ", "'" + dataList.get(stockCodeCol), dataList.get(buySellCol).equals("买入") ? "B" : "S",
                             "O", (dataList.get(buySellCol).equals("买入") ? "" : "-") + dataList.get(fillAmtCol), "1", dataList.get(fillPriceCol));
                     simpleWriteToFile(outputString, true, output);
@@ -1170,7 +1189,7 @@ public class ChinaPosition extends JPanel {
                         x.printStackTrace();
                     }
                     String outputString = Utility.getStrTabbed(LocalDate.now().toString(),
-                            dataList.get(fillTimeCol), "Margin", " ", "CNY",
+                            dataList.get(fillTimeCol), "Margin", " ", CNY,
                             ticker.substring(0, 2).toUpperCase(), " ", "'" +
                                     dataList.get(stockCodeCol), dataList.get(buySellCol).equals("证券买入") ? "B" : "S",
                             "O", (dataList.get(buySellCol).equals("证券买入") ? "" : "-")
@@ -1217,14 +1236,14 @@ public class ChinaPosition extends JPanel {
     }
 
     private double getTotalDeltaBought(String name) {
-        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0);
+        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0);
         return (tradesMap.get(name).size() > 0) ? tradesMap.get(name).entrySet().stream()
                 .filter(e -> e.getValue().getSizeAll() > 0)
                 .mapToDouble(e -> e.getValue().getDeltaAll()).sum() * fx : 0;
     }
 
     private double getTotalDeltaSold(String name) {
-        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0);
+        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0);
         return (tradesMap.get(name).size() > 0) ? tradesMap.get(name).entrySet().stream()
                 .filter(e -> e.getValue().getSizeAll() < 0)
                 .mapToDouble(e -> e.getValue().getDeltaAll()).sum() * fx : 0;
@@ -1248,7 +1267,7 @@ public class ChinaPosition extends JPanel {
 
     private static double getBuyTradePnl(String name) {
         //if(priceMapBar.)
-        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0);
+        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0);
         double defaultPrice = Optional.ofNullable(priceMapBar.get(name).lastEntry())
                 .map(Entry::getValue).map(SimpleBar::getClose).orElse(0.0);
         double price = ChinaStock.priceMap.getOrDefault(name, 0.0) == 0.0 ?
@@ -1261,7 +1280,7 @@ public class ChinaPosition extends JPanel {
     }
 
     private static double getSellTradePnl(String name) {
-        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0);
+        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0);
         return (tradesMap.get(name).size() > 0 && Utility.noZeroArrayGen(name, ChinaStock.priceMap))
                 ? Math.round(tradesMap.get(name).entrySet().stream()
                 .filter(e -> e.getValue().getSizeAll() < 0)
@@ -1285,7 +1304,7 @@ public class ChinaPosition extends JPanel {
             defaultPrice = priceMapBar.get(name).lastEntry().getValue().getClose();
         }
 
-        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0);
+        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0);
         return Math.round(100d * (fx * ((priceMap.getOrDefault(name, defaultPrice) -
                 costMap.getOrDefault(name, 0.0)) * openPositionMap.getOrDefault(name, 0))
                 + getBuyTradePnl(name) + getSellTradePnl(name))) / 100d;
@@ -1306,7 +1325,7 @@ public class ChinaPosition extends JPanel {
     }
 
     private static double getPnLChange5m(String name) {
-        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0);
+        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0);
         if (ChinaStock.NORMAL_STOCK.test(name)) {
             LocalTime lastKey = ChinaData.priceMapBar.get(name).lastKey().isAfter(LocalTime.of(15, 0))
                     ? LocalTime.of(15, 0) : ChinaData.priceMapBar.get(name).lastKey();
@@ -1377,7 +1396,7 @@ public class ChinaPosition extends JPanel {
     }
 
     public static int getCurrentDelta(String name) {
-        return (int) Math.round(fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0)
+        return (int) Math.round(fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0)
                 * priceMap.getOrDefault(name, 0.0) * getNetPosition(name) / 1000d);
     }
 
@@ -1391,7 +1410,7 @@ public class ChinaPosition extends JPanel {
         if (openPositionMap.containsKey(name)) {
             return r((priceMap.getOrDefault(name, defaultPrice) - closeMap.getOrDefault(name, defaultPrice))
                     * openPositionMap.getOrDefault(name, 0) *
-                    fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0));
+                    fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0));
         }
         return 0.0;
     }
@@ -1405,7 +1424,7 @@ public class ChinaPosition extends JPanel {
 
 
     private static double getTodayTotalPnl(String name) {
-        //double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0);
+        //double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0);
         return Math.round(100d * (getMtmPnl(name) + getBuyTradePnl(name) + getSellTradePnl(name))) / 100d;
     }
 
@@ -1442,6 +1461,11 @@ public class ChinaPosition extends JPanel {
                 }));
     }
 
+    private static LocalDate getLastMonthLastDay() {
+        LocalDate now = LocalDate.now().withDayOfMonth(1);
+        return now.minusDays(1L);
+    }
+
 
     private final class BarModel_POS extends AbstractTableModel {
 
@@ -1452,7 +1476,7 @@ public class ChinaPosition extends JPanel {
 
         @Override
         public int getColumnCount() {
-            return 30;
+            return 35;
         }
 
         @Override
@@ -1516,6 +1540,12 @@ public class ChinaPosition extends JPanel {
                     return "dev";
                 case 28:
                     return "Type";
+                case 29:
+                    return "mon Open";
+                case 30:
+                    return "monBeg Day";
+                case 31:
+                    return "monDev";
 
 //                case 25:
 //                    return "1m动";
@@ -1562,6 +1592,9 @@ public class ChinaPosition extends JPanel {
                     return LocalDateTime.class;
                 case 28:
                     return Types.SecType.class;
+                case 30:
+                    return LocalDate.class;
+
 //                case 26:
 //                    return String.class;
 //                case 27:
@@ -1592,7 +1625,7 @@ public class ChinaPosition extends JPanel {
                 case 3:
                     return costMap.getOrDefault(symbol, 0.0);
                 case 4:
-                    return Math.round(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, "CNY"), 1.0)
+                    return Math.round(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, CNY), 1.0)
                             * currPrice * getNetPosition(symbol) / 1000d) * 1.0d;
                 case 5:
                     return ChinaStock.closeMap.getOrDefault(symbol, 0.0);
@@ -1604,17 +1637,17 @@ public class ChinaPosition extends JPanel {
                     return closeMap.getOrDefault(symbol, 0.0) == 0.0 ? 0
                             : Math.round(1000d * (currPrice / closeMap.getOrDefault(symbol, 0.0) - 1)) / 10d;
                 case 9:
-                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, "CNY"), 1.0) *
+                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, CNY), 1.0) *
                             (openMap.getOrDefault(symbol, 0.0) - closeMap.getOrDefault(symbol, 0.0)) * openpos);
                 case 10:
-                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, "CNY"), 1.0) *
+                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, CNY), 1.0) *
                             (currPrice - closeMap.getOrDefault(symbol, 0.0)) * openpos);
                 case 11:
-                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, "CNY"), 1.0) *
+                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, CNY), 1.0) *
                             (closeMap.getOrDefault(symbol, 0.0)
                                     - costMap.getOrDefault(symbol, 0.0)) * openpos);
                 case 12:
-                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, "CNY"), 1.0) *
+                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, CNY), 1.0) *
                             (currPrice - costMap.getOrDefault(symbol, 0.0)) * openpos);
                 case 13:
                     return getTotalTodayBought(symbol);
@@ -1666,7 +1699,42 @@ public class ChinaPosition extends JPanel {
                 case 28:
                     return secTypeMap.getOrDefault(symbol, Types.SecType.None);
 
-                // change remote dir name test
+                case 29:
+                    if (pastMonthDayData.containsKey(symbol) && pastMonthDayData.get(symbol).size() > 0
+                            && pastMonthDayData.get(symbol).lastKey().isAfter(getLastMonthLastDay())) {
+                        return pastMonthDayData.get(symbol).entrySet().stream()
+                                .filter(e -> e.getKey().isAfter(getLastMonthLastDay()))
+                                .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+                    }
+
+                case 30:
+                    if (pastMonthDayData.containsKey(symbol) && pastMonthDayData.get(symbol).size() > 0
+                            && pastMonthDayData.get(symbol).lastKey().isAfter(getLastMonthLastDay())) {
+                        return pastMonthDayData.get(symbol).entrySet().stream()
+                                .filter(e -> e.getKey().isAfter(getLastMonthLastDay()))
+                                .findFirst().map(Entry::getKey).orElse(LocalDate.MIN);
+                    }
+
+                case 31:
+                    if (pastMonthDayData.containsKey(symbol) && pastMonthDayData.get(symbol).size() > 0
+                            && pastMonthDayData.get(symbol).lastKey().isAfter(getLastMonthLastDay())) {
+                        double monthOpen = pastMonthDayData.get(symbol).entrySet().stream()
+                                .filter(e -> e.getKey().isAfter(getLastMonthLastDay()))
+                                .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+                        double close = 0.0;
+                        if (priceMapBarDetail.get(symbol).size() > 0) {
+                            close = priceMapBarDetail.get(symbol).lastEntry().getValue();
+                        } else {
+                            close = pastMonthDayData.get(symbol).lastEntry().getValue().getClose();
+                        }
+
+                        return Math.round(10000d * (close / monthOpen - 1)) / 100d;
+                    } else {
+                        return 0.0;
+                    }
+
+
+                    // change remote dir name test
 //                case 25:
 //                    return r(getPnLChange5m(symbol));
 //                case 26:
@@ -1790,7 +1858,7 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
 
         LocalDate tradeDate = getTradeDate(LocalDateTime.now());
 
-        if (contract.secType() == Types.SecType.STK && currencyMap.getOrDefault(symbol, "CNY").equals("USD")) {
+        if (contract.secType() == Types.SecType.STK && currencyMap.getOrDefault(symbol, CNY).equals("USD")) {
             ZonedDateTime chinaZdt = ZonedDateTime.of(ldt, chinaZone);
             ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
             LocalDateTime usLdt = usZdt.toLocalDateTime();

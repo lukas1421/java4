@@ -5,6 +5,7 @@ import TradeType.NormalTrade;
 import TradeType.Trade;
 import TradeType.TradeBlock;
 import apidemo.*;
+import apidemo.Currency;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.ExecutionFilter;
@@ -41,6 +42,7 @@ import static apidemo.ChinaData.wtdSharpe;
 import static apidemo.ChinaMain.GLOBAL_REQ_ID;
 import static apidemo.ChinaPosition.tradesMap;
 import static apidemo.ChinaStock.currencyMap;
+import static apidemo.Currency.CNY;
 import static utility.Utility.*;
 
 @SuppressWarnings("SpellCheckingInspection")
@@ -111,7 +113,7 @@ public class HistChinaStocks extends JPanel {
     private static volatile NavigableMap<LocalDate, Double> netPnlByWeekdayPM = new ConcurrentSkipListMap<>();
 
     public static Map<String, Double> mtdSharpe = new HashMap<>();
-    private static Map<String, Double> fxMap = new HashMap<>();
+    private static Map<Currency, Double> fxMap = new HashMap<>();
 
     private static Map<String, LocalDate> histHighDateMap = new HashMap<>();
 
@@ -187,7 +189,7 @@ public class HistChinaStocks extends JPanel {
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                fxMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
+                fxMap.put(Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
             }
         } catch (IOException x) {
             x.printStackTrace();
@@ -623,7 +625,7 @@ public class HistChinaStocks extends JPanel {
                     if (s.startsWith("hk")) {
                         pr("requesting hk ", s.substring(2));
                         ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                                AutoTraderHK.tickerToHKStkContract(s.substring(2)),
+                                AutoTraderMain.tickerToHKStkContract(s.substring(2)),
                                 HistChinaStocks::handleIBWtdData, 7);
                     }
                 });
@@ -873,7 +875,7 @@ public class HistChinaStocks extends JPanel {
 
     private static double getCurrentDelta(String name) {
         if (chinaWtd.containsKey(name) && chinaWtd.get(name).size() > 0) {
-            return fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0) * getCurrentPos(name) * chinaWtd.get(name).lastEntry().getValue().getClose();
+            return fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0) * getCurrentPos(name) * chinaWtd.get(name).lastEntry().getValue().getClose();
         }
         return 0.0;
     }
@@ -953,7 +955,7 @@ public class HistChinaStocks extends JPanel {
                                                                   double lastWeekClose) {
 
         NavigableMap<LocalDateTime, Double> res = new ConcurrentSkipListMap<>();
-        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(ticker, "CNY"), 1.0);
+        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(ticker, CNY), 1.0);
 
         prices.forEach((k, v) -> {
             if (chinaTradingTimeHist.test(k.toLocalTime())) {
@@ -964,7 +966,7 @@ public class HistChinaStocks extends JPanel {
     }
 
     private static double computeTrendPnlSum(String name) {
-        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0);
+        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0);
         if (chinaWtd.get(name).size() > 0) {
             int openPos = weekOpenPositionMap.getOrDefault(name, 0);
             NavigableMap<LocalDateTime, SimpleBar> prices = chinaWtd.get(name);
@@ -982,7 +984,7 @@ public class HistChinaStocks extends JPanel {
     }
 
     private static double computeOwedPnl(String name) {
-        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0);
+        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0);
         if (chinaWtd.get(name).size() > 0) {
             int openPos = weekOpenPositionMap.getOrDefault(name, 0);
             NavigableMap<LocalDateTime, SimpleBar> prices = chinaWtd.get(name);
@@ -1042,7 +1044,7 @@ public class HistChinaStocks extends JPanel {
         int currPos = 0;
         double costBasis = 0.0;
         double mv;
-        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(ticker, "CNY"), 1.0);
+        double fx = fxMap.getOrDefault(currencyMap.getOrDefault(ticker, CNY), 1.0);
 
         NavigableMap<LocalDateTime, TradeBlock> trimmedTrades = trimTrades(trades);
 
@@ -1379,8 +1381,8 @@ public class HistChinaStocks extends JPanel {
                         .mapToDouble(e -> e.getValue().getTradeList().stream().mapToDouble(
                                 t -> HistChinaHelper.getCostWithCommissionsCustom(s, e.getKey().toLocalDate(),
                                         (Trade) t)).sum()).sum();
-                totalTradingCostMap.put(s, fxMap.getOrDefault(currencyMap.getOrDefault(s, "CNY"), 1.0) * tradingCost);
-                costBasisMap.put(s, fxMap.getOrDefault(currencyMap.getOrDefault(s, "CNY"), 1.0) * costBasis);
+                totalTradingCostMap.put(s, fxMap.getOrDefault(currencyMap.getOrDefault(s, CNY), 1.0) * tradingCost);
+                costBasisMap.put(s, fxMap.getOrDefault(currencyMap.getOrDefault(s, CNY), 1.0) * costBasis);
             }
         }
     }
@@ -1392,7 +1394,7 @@ public class HistChinaStocks extends JPanel {
                 .mapToInt(e -> e.getValue().getSizeAll()).sum();
         if (chinaWtd.containsKey(s) && chinaWtd.get(s).size() > 0) {
             double price = chinaWtd.get(s).lastEntry().getValue().getClose();
-            return fxMap.getOrDefault(currencyMap.getOrDefault(s, "CNY"), 1.0) * (netPosition * price + costBasis);
+            return fxMap.getOrDefault(currencyMap.getOrDefault(s, CNY), 1.0) * (netPosition * price + costBasis);
         }
         return 0.0;
     }
@@ -1420,7 +1422,7 @@ public class HistChinaStocks extends JPanel {
                     .mapToDouble(e -> e.getValue().getCostBasisAll(s)).sum();
             int netPosition = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(ChinaMain.MONDAY_OF_WEEK.minusDays(1)))
                     .mapToInt(e -> e.getValue().getSizeAll()).sum();
-            wtdTradePnlMap.put(s, fxMap.getOrDefault(currencyMap.getOrDefault(s, "CNY"), 1.0) * (netPosition *
+            wtdTradePnlMap.put(s, fxMap.getOrDefault(currencyMap.getOrDefault(s, CNY), 1.0) * (netPosition *
                     chinaWtd.get(s).lastEntry().getValue().getClose() + costBasis));
         }
     }
@@ -1433,7 +1435,7 @@ public class HistChinaStocks extends JPanel {
             double mv = price * pos;
             double cost = chinaTradeMap.get(name).entrySet().stream().filter(e -> e.getKey().toLocalDate().isAfter(ChinaMain.MONDAY_OF_WEEK.minusDays(1)))
                     .mapToDouble(e -> e.getValue().getCostBasisAll(name)).sum();
-            return fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0) * (mv + cost);
+            return fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0) * (mv + cost);
         } else {
             return 0.0;
         }
@@ -1448,19 +1450,19 @@ public class HistChinaStocks extends JPanel {
 
 //                if (s.startsWith("hk")) {
 //                    openPos = currentPositionMap.getOrDefault(s, 0) - wtdChgInPosition.getOrDefault(s, 0);
-//                    pr(s, "wtd mtm ", " fx ", fxMap.getOrDefault(currencyMap.getOrDefault(s, "CNY"), 1.0),
+//                    pr(s, "wtd mtm ", " fx ", fxMap.getOrDefault(currencyMap.getOrDefault(s, CNY), 1.0),
 //                            "open pos ", openPos, "last ", chinaWtd.get(s).lastEntry().getValue().getClose(),
 //                            "last week close", lastWeekCloseMap.getOrDefault(s, 0.0), "default",
 //                            chinaWtd.get(s).firstEntry().getValue().getOpen());
 //                }
 
-                return fxMap.getOrDefault(currencyMap.getOrDefault(s, "CNY"), 1.0)
+                return fxMap.getOrDefault(currencyMap.getOrDefault(s, CNY), 1.0)
                         * (openPos * (chinaWtd.get(s).lastEntry().getValue().getClose()
                         - lastWeekCloseMap.getOrDefault(s, chinaWtd.get(s).firstEntry().getValue().getOpen())));
             } else {
                 int openPos = currentPositionMap.getOrDefault(s, 0) - wtdChgInPosition.getOrDefault(s, 0);
                 double close = s.equalsIgnoreCase("SGXA50PR") ? futExpiryLevel : chinaWtd.get(s).lastEntry().getValue().getClose();
-                return openPos != 0 ? fxMap.getOrDefault(currencyMap.getOrDefault(s, "CNY"), 1.0) * (openPos) *
+                return openPos != 0 ? fxMap.getOrDefault(currencyMap.getOrDefault(s, CNY), 1.0) * (openPos) *
                         (close - lastWeekCloseMap.getOrDefault(s, chinaWtd.get(s).firstEntry().getValue().getOpen())) : 0.0;
             }
         }
@@ -1474,14 +1476,14 @@ public class HistChinaStocks extends JPanel {
                 int posBeforeThisWeek = chinaTradeMap.get(s).entrySet().stream().filter(e -> e.getKey().toLocalDate().isBefore(ChinaMain.MONDAY_OF_WEEK))
                         .mapToInt(e -> e.getValue().getSizeAll()).sum();
                 weekOpenPositionMap.put(s, posBeforeThisWeek);
-                wtdMtmPnlMap.put(s, fxMap.getOrDefault(currencyMap.getOrDefault(s, "CNY"), 1.0)
+                wtdMtmPnlMap.put(s, fxMap.getOrDefault(currencyMap.getOrDefault(s, CNY), 1.0)
                         * (posBeforeThisWeek * (chinaWtd.get(s).lastEntry().getValue().getClose()
                         - lastWeekCloseMap.getOrDefault(s, chinaWtd.get(s).firstEntry().getValue().getOpen()))));
             } else {
                 int openPos = currentPositionMap.getOrDefault(s, 0) - wtdChgInPosition.getOrDefault(s, 0);
                 weekOpenPositionMap.put(s, openPos);
                 //+ (s.equalsIgnoreCase("SGXA50PR") ? futExpiryUnits : 0);
-                wtdMtmPnlMap.put(s, fxMap.getOrDefault(currencyMap.getOrDefault(s, "CNY"), 1.0) * (openPos) * (chinaWtd.get(s).lastEntry().getValue().getClose()
+                wtdMtmPnlMap.put(s, fxMap.getOrDefault(currencyMap.getOrDefault(s, CNY), 1.0) * (openPos) * (chinaWtd.get(s).lastEntry().getValue().getClose()
                         - lastWeekCloseMap.getOrDefault(s, chinaWtd.get(s).firstEntry().getValue().getOpen())));
             }
         }
@@ -1649,7 +1651,7 @@ public class HistChinaStocks extends JPanel {
         public Object getValueAt(int row, int col) {
             String name = stockList.get(row);
             double price;
-            double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0);
+            double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0);
 
             if (chinaWtd.containsKey(name) && chinaWtd.get(name).size() > 0) {
                 price = (name.equalsIgnoreCase("SGXA50PR")) ? futExpiryLevel : chinaWtd.get(name).lastEntry().getValue().getClose();
@@ -1714,7 +1716,7 @@ public class HistChinaStocks extends JPanel {
                 case 17:
                     return price;
                 case 18:
-                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(name, "CNY"), 1.0)
+                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0)
                             * price * currentPositionMap.getOrDefault(name, 0));
                 case 19:
                     return r(costBasisMap.getOrDefault(name, 0.0));

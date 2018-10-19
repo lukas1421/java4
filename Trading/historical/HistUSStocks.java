@@ -275,7 +275,7 @@ public class HistUSStocks extends JPanel  {
         USALLWtd.keySet().forEach(this::request1StockWtd);
     }
 
-    private Contract generateUSContract(String stock) {
+    private Contract generateUSStkContract(String stock) {
         Contract ct = new Contract();
         ct.symbol(stock);
         ct.currency("USD");
@@ -296,7 +296,7 @@ public class HistUSStocks extends JPanel  {
                 //System.out.println(" stock is " + stock);
                 //idStockMap.put(uniqueID.incrementAndGet(), stock);
                 apcon.reqHistoricalDataUSHK(new YtdHandler(), uniqueID.incrementAndGet(),
-                        generateUSContract(stock), CUTOFFTIME, DAYSTOREQUESTYtd, Types.DurationUnit.DAY,
+                        generateUSStkContract(stock), CUTOFFTIME, DAYSTOREQUESTYtd, Types.DurationUnit.DAY,
                         Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
             } catch (InterruptedException ex) {
                 Logger.getLogger(HistHKStocks.class.getName()).log(Level.SEVERE, null, ex);
@@ -316,7 +316,7 @@ public class HistUSStocks extends JPanel  {
                 //System.out.println(" stock is " + stock);
                 //idStockMap.put(uniqueID.incrementAndGet(), stock);
                 apcon.reqHistoricalDataUSHK(new WtdHandler(), uniqueID.incrementAndGet(),
-                        generateUSContract(stock), CUTOFFTIME, DAYSTOREQUESTWtd, Types.DurationUnit.DAY,
+                        generateUSStkContract(stock), CUTOFFTIME, DAYSTOREQUESTWtd, Types.DurationUnit.DAY,
                         Types.BarSize._5_mins, Types.WhatToShow.TRADES, true);
             } catch (InterruptedException ex) {
                 Logger.getLogger(HistHKStocks.class.getName()).log(Level.SEVERE, null, ex);

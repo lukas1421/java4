@@ -53,7 +53,7 @@ public final class ChinaStock extends JPanel {
     public static Map<String, Double> weightMap = new HashMap<>();
     public static Map<String, String> nameMap = new HashMap<>();
     public static Map<String, Types.SecType> secTypeMap = new HashMap<>();
-    public static Map<String, String> currencyMap = new HashMap<>();
+    public static Map<String, Currency> currencyMap = new HashMap<>();
     //static Map<String, String> shortNameMap = new HashMap<>();
     public static Map<String, String> industryNameMap = new HashMap<>();
     public static Map<String, String> shortIndustryMap = new HashMap<>();
@@ -272,7 +272,7 @@ public final class ChinaStock extends JPanel {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 nameMap.put(al1.get(0), al1.get(1));
                 industryNameMap.put(al1.get(0), al1.get(2));
-                currencyMap.put(al1.get(0), al1.get(4));
+                currencyMap.put(al1.get(0), Currency.get(al1.get(4)));
                 //shortNameMap.put(al1.get(0), al1.get(3));
                 shortIndustryMap.put(al1.get(0), al1.get(3));
                 shortLongIndusMap.put(al1.get(3), al1.get(2));

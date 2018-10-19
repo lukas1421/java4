@@ -1,6 +1,6 @@
 package historical;
 
-import apidemo.AutoTraderHK;
+import apidemo.AutoTraderMain;
 import apidemo.TradingConstants;
 import auxiliary.SimpleBar;
 import client.Types;
@@ -289,7 +289,7 @@ public class HistHKStocks extends JPanel {
                 System.out.println(" stock is " + stock);
                 //idStockMap.put(uniqueID.incrementAndGet(), stock);
                 System.out.println(" days requested  " + DAYSTOREQUESTYTD);
-                apcon.reqHistoricalDataUSHK(new YtdDataHandler(), uniqueID.incrementAndGet(), AutoTraderHK.tickerToHKStkContract(stock), CUTOFFTIME,
+                apcon.reqHistoricalDataUSHK(new YtdDataHandler(), uniqueID.incrementAndGet(), AutoTraderMain.tickerToHKStkContract(stock), CUTOFFTIME,
                         DAYSTOREQUESTYTD, Types.DurationUnit.DAY,
                         Types.BarSize._1_day, Types.WhatToShow.TRADES, true);
             } catch (InterruptedException ex) {
@@ -312,7 +312,7 @@ public class HistHKStocks extends JPanel {
                 System.out.println(" stock is " + stock);
                 //idStockMap.put(uniqueID.incrementAndGet(), stock);
                 apcon.reqHistoricalDataUSHK(new WtdDataHandler()
-                        , uniqueID.incrementAndGet(), AutoTraderHK.tickerToHKStkContract(stock), CUTOFFTIME,
+                        , uniqueID.incrementAndGet(), AutoTraderMain.tickerToHKStkContract(stock), CUTOFFTIME,
                         DAYSTOREQUESTWTD, Types.DurationUnit.DAY,
                         Types.BarSize._5_mins, Types.WhatToShow.TRADES, true);
             } catch (InterruptedException ex) {

@@ -40,6 +40,7 @@ import static apidemo.ChinaOption.getATMVol;
 import static apidemo.ChinaPosition.*;
 import static apidemo.ChinaStock.*;
 import static apidemo.ChinaStockHelper.reverseComp;
+import static apidemo.Currency.CNY;
 import static apidemo.TradingConstants.*;
 import static apidemo.XuTraderHelper.*;
 import static client.OrderStatus.*;
@@ -1065,10 +1066,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                                     .equals(LocalDate.now()) && LocalTime.now().isBefore(ltof(15, 0)))) {
 //                        pr(" get expiring delta ", e.getValue(), futPriceMap.getOrDefault(e.getKey(),
 //                                SinaStock.FTSE_OPEN), ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getSymbol(),
-//                                "CNY"), 1.0));
+//                                CNY), 1.0));
                         return e.getValue() * futPriceMap.getOrDefault(e.getKey(), SinaStock.FTSE_OPEN)
-                                * ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getSymbol(),
-                                "CNY"), 1.0);
+                                * ChinaPosition.fxMap.getOrDefault
+                                (currencyMap.getOrDefault(e.getKey().getSymbol(), CNY), 1.0);
                     } else {
                         return 0.0;
                     }
@@ -1096,7 +1097,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     }
                     return Math.max(0.0, factor) * e.getValue() * futPriceMap.getOrDefault(e.getKey(), SinaStock.FTSE_OPEN)
                             * ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getSymbol()
-                            , "CNY"), 1.0);
+                            , CNY), 1.0);
                 }).sum();
     }
 
