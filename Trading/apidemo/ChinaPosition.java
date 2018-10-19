@@ -58,6 +58,8 @@ import static utility.Utility.*;
 
 public class ChinaPosition extends JPanel {
 
+    public static final LocalDate LAST_MONTH_LAST_DAY = getLastMonthLastDay();
+
     static JButton excludeChinaButton;
     static JButton refreshButton;
     static JToggleButton autoUpdateButton;
@@ -1690,28 +1692,26 @@ public class ChinaPosition extends JPanel {
                     }
                 case 26:
                     return secTypeMap.getOrDefault(symbol, Types.SecType.None);
-
                 case 27:
                     if (pastMonthDayData.containsKey(symbol) && pastMonthDayData.get(symbol).size() > 0
-                            && pastMonthDayData.get(symbol).lastKey().isAfter(getLastMonthLastDay())) {
+                            && pastMonthDayData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
                         return pastMonthDayData.get(symbol).entrySet().stream()
-                                .filter(e -> e.getKey().isAfter(getLastMonthLastDay()))
+                                .filter(e -> e.getKey().isAfter(LAST_MONTH_LAST_DAY))
                                 .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
                     }
                 case 28:
                     if (pastMonthDayData.containsKey(symbol) && pastMonthDayData.get(symbol).size() > 0
-                            && pastMonthDayData.get(symbol).lastKey().isAfter(getLastMonthLastDay())) {
+                            && pastMonthDayData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
                         return pastMonthDayData.get(symbol).entrySet().stream()
-                                .filter(e -> e.getKey().isAfter(getLastMonthLastDay()))
+                                .filter(e -> e.getKey().isAfter(LAST_MONTH_LAST_DAY))
                                 .findFirst().map(Entry::getKey).orElse(LocalDate.MIN)
                                 .format(DateTimeFormatter.ofPattern("MM-dd"));
                     }
-
                 case 29:
                     if (pastMonthDayData.containsKey(symbol) && pastMonthDayData.get(symbol).size() > 0
-                            && pastMonthDayData.get(symbol).lastKey().isAfter(getLastMonthLastDay())) {
+                            && pastMonthDayData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
                         double monthOpen = pastMonthDayData.get(symbol).entrySet().stream()
-                                .filter(e -> e.getKey().isAfter(getLastMonthLastDay()))
+                                .filter(e -> e.getKey().isAfter(LAST_MONTH_LAST_DAY))
                                 .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
                         double priceNow;
                         if (priceMap.getOrDefault(symbol, 0.0) != 0.0) {
