@@ -974,19 +974,32 @@ public class ApiController implements EWrapper {
 //        }
 //    }
 
+    public void req1ContractLive(Contract ct, LiveHandler h) {
+        try {
+            int reqId = m_reqId.incrementAndGet();
+            if (reqId % 90 == 0) {
+                Thread.sleep(1000);
+            }
+            ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
+            m_client.reqMktData(reqId, ct, "", false, Collections.<TagValue>emptyList());
+        } catch (InterruptedException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public void req1ContractLive(Contract ct, LiveHandler h, boolean snapshot) {
         try {
             int reqId = m_reqId.incrementAndGet();
             if (reqId % 90 == 0) {
                 Thread.sleep(1000);
             }
-            //Contract ct = generateStockContract(stock, exch, curr);
             ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
             m_client.reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
         } catch (InterruptedException ex) {
             ex.printStackTrace();
         }
     }
+
 
 
     public void reqA50Live() {
@@ -1004,6 +1017,15 @@ public class ApiController implements EWrapper {
         });
     }
 
+    public void reqNonChinaTrader() {
+        ChinaData.priceMapBarDetail.keySet().forEach(k -> {
+            if (!k.startsWith("sz") && !k.startsWith("sh")) {
+                Contract c = AutoTraderMain.symbolToIBContract(k);
+                req1ContractLive(c, new LiveHandler.PriceMapUpdater());
+            }
+        });
+    }
+
     /**
      * req hk prices for auto trader
      */
@@ -1016,7 +1038,7 @@ public class ApiController implements EWrapper {
             } else {
                 if (k.equals("MCH.HK") || k.equals("HHI.HK")) {
                     Contract ct = getHKFutContract(k);
-                    req1ContractLive(ct, ReceiverHK.getReceiverHK(), false);
+                    req1ContractLive(ct, ReceiverHK.getReceiverHK());
                 }
             }
         });

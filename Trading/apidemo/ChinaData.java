@@ -57,7 +57,7 @@ public final class ChinaData extends JPanel {
     //static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> bidTotalMap = new ConcurrentHashMap<>();
     //static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> askTotalMap = new ConcurrentHashMap<>();
 
-    public static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
+    static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             pastMonthDayData = new ConcurrentSkipListMap<>();
 
 
@@ -867,7 +867,6 @@ public final class ChinaData extends JPanel {
 
     private static void handleMonthOpen(Contract c, String date, double open, double high, double low,
                                         double close, int volume) {
-
         String symbol = utility.Utility.ibContractToSymbol(c);
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));

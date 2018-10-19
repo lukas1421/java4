@@ -16,6 +16,29 @@ public interface LiveHandler extends GeneralHandler {
 
     void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t);
 
+    class PriceMapUpdater implements LiveHandler {
+
+        @Override
+        public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+            if (tt == TickType.LAST) {
+                ChinaStock.priceMap.put(symbol, price);
+            } else if (tt == TickType.CLOSE) {
+                ChinaStock.closeMap.put(symbol, price);
+            } else if (tt == TickType.OPEN) {
+                ChinaStock.openMap.put(symbol, price);
+            }
+
+        }
+
+        @Override
+        public void handleVol(TickType tt, String symbol, double vol, LocalDateTime t) {
+        }
+
+        @Override
+        public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
+        }
+    }
+
     class DefaultLiveHandler implements LiveHandler {
 
         @Override
@@ -37,10 +60,6 @@ public interface LiveHandler extends GeneralHandler {
                 }
             } else if (tt == TickType.OPEN) {
                 ChinaStock.openMap.put(symbol, price);
-            } else if (tt == TickType.BID || tt == TickType.ASK) {
-//                if (ChinaStock.priceMap.getOrDefault(name, 0.0) == 0.0) {
-//                    ChinaStock.priceMap.put(name, price);
-//                }
             }
         }
 

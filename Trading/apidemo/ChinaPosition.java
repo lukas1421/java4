@@ -1505,46 +1505,42 @@ public class ChinaPosition extends JPanel {
                 case 10:
                     return "Today MTM";
                 case 11:
-                    return "Net Pnl YTD";
-                case 12:
-                    return "Total MTM";
-                case 13:
                     return "today 买";
-                case 14:
+                case 12:
                     return "delta 买";
-                case 15:
+                case 13:
                     return "avg B cost";
-                case 16:
+                case 14:
                     return "Buy PnL";
-                case 17:
+                case 15:
                     return "today 卖";
-                case 18:
+                case 16:
                     return "delta 卖";
-                case 19:
+                case 17:
                     return "avg S cost";
-                case 20:
+                case 18:
                     return "Sell PnL";
-                case 21:
+                case 19:
                     return "net pos";
-                case 22:
+                case 20:
                     return "T Tr Pnl";
-                case 23:
-                    return "T   Total Pnl";
-                case 24:
+                case 21:
+                    return "T Total Pnl";
+                case 22:
                     return "P%";
-                case 25:
+                case 23:
                     return "openV";
-                case 26:
+                case 24:
                     return "openT";
-                case 27:
+                case 25:
                     return "dev";
-                case 28:
+                case 26:
                     return "Type";
-                case 29:
+                case 27:
                     return "mon Open";
-                case 30:
+                case 28:
                     return "monBeg Day";
-                case 31:
+                case 29:
                     return "monDev";
 
 //                case 25:
@@ -1576,23 +1572,24 @@ public class ChinaPosition extends JPanel {
                     return String.class;
                 case 2:
                     return Integer.class;
-                case 13:
+
+                case 11:
                     return Integer.class;
-                case 14:
+                case 12:
                     return Long.class;
-                case 18:
-                    return Long.class;
-                case 17:
+                case 15:
                     return Integer.class;
-                case 21:
+                case 16:
+                    return Long.class;
+                case 19:
+                    return Integer.class;
+                case 22:
                     return Integer.class;
                 case 24:
-                    return Integer.class;
-                case 26:
                     return LocalDateTime.class;
-                case 28:
+                case 26:
                     return Types.SecType.class;
-                case 30:
+                case 28:
                     return LocalDate.class;
 
 //                case 26:
@@ -1643,44 +1640,37 @@ public class ChinaPosition extends JPanel {
                     return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, CNY), 1.0) *
                             (currPrice - closeMap.getOrDefault(symbol, 0.0)) * openpos);
                 case 11:
-                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, CNY), 1.0) *
-                            (closeMap.getOrDefault(symbol, 0.0)
-                                    - costMap.getOrDefault(symbol, 0.0)) * openpos);
-                case 12:
-                    return r(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, CNY), 1.0) *
-                            (currPrice - costMap.getOrDefault(symbol, 0.0)) * openpos);
-                case 13:
                     return getTotalTodayBought(symbol);
-                case 14:
+                case 12:
                     return Math.round(getTotalDeltaBought(symbol) / 1000d);
-                case 15:
+                case 13:
                     return r(getAvgBCost(symbol));
-                case 16:
+                case 14:
                     return r(getBuyTradePnl(symbol));
-                case 17:
+                case 15:
                     return getTotalTodaySold(symbol);
-                case 18:
+                case 16:
                     return Math.round(getTotalDeltaSold(symbol) / 1000d);
-                case 19:
+                case 17:
                     return r(getAvgSCost(symbol));
-                case 20:
+                case 18:
                     return r(getSellTradePnl(symbol));
-                case 21:
+                case 19:
                     return getNetPosition(symbol);
-                case 22:
+                case 20:
                     return r(getBuyTradePnl(symbol) + getSellTradePnl(symbol));
-                case 23:
+                case 21:
                     return r(getTodayTotalPnl(symbol));
-                case 24:
+                case 22:
                     return ChinaStock.getPercentileBar(symbol);
-                case 25:
+                case 23:
                     if (priceMapBarDetail.containsKey(symbol) &&
                             priceMapBarDetail.get(symbol).size() > 0) {
                         return priceMapBarDetail.get(symbol).firstEntry().getValue();
                     } else {
                         return 0.0;
                     }
-                case 26:
+                case 24:
                     if (priceMapBarDetail.containsKey(symbol) &&
                             priceMapBarDetail.get(symbol).size() > 0) {
                         return priceMapBarDetail.get(symbol).firstEntry().getKey()
@@ -1688,7 +1678,7 @@ public class ChinaPosition extends JPanel {
                     } else {
                         return LocalDateTime.now().truncatedTo(ChronoUnit.DAYS);
                     }
-                case 27:
+                case 25:
                     if (priceMapBarDetail.containsKey(symbol) &&
                             priceMapBarDetail.get(symbol).size() > 0) {
                         return Math.round(10000d * (priceMapBarDetail.get(symbol).lastEntry().getValue() /
@@ -1696,18 +1686,17 @@ public class ChinaPosition extends JPanel {
                     } else {
                         return 0.0;
                     }
-                case 28:
+                case 26:
                     return secTypeMap.getOrDefault(symbol, Types.SecType.None);
 
-                case 29:
+                case 27:
                     if (pastMonthDayData.containsKey(symbol) && pastMonthDayData.get(symbol).size() > 0
                             && pastMonthDayData.get(symbol).lastKey().isAfter(getLastMonthLastDay())) {
                         return pastMonthDayData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(getLastMonthLastDay()))
                                 .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
                     }
-
-                case 30:
+                case 28:
                     if (pastMonthDayData.containsKey(symbol) && pastMonthDayData.get(symbol).size() > 0
                             && pastMonthDayData.get(symbol).lastKey().isAfter(getLastMonthLastDay())) {
                         return pastMonthDayData.get(symbol).entrySet().stream()
@@ -1715,24 +1704,22 @@ public class ChinaPosition extends JPanel {
                                 .findFirst().map(Entry::getKey).orElse(LocalDate.MIN);
                     }
 
-                case 31:
+                case 29:
                     if (pastMonthDayData.containsKey(symbol) && pastMonthDayData.get(symbol).size() > 0
                             && pastMonthDayData.get(symbol).lastKey().isAfter(getLastMonthLastDay())) {
                         double monthOpen = pastMonthDayData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(getLastMonthLastDay()))
                                 .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
-                        double close = 0.0;
-                        if (priceMapBarDetail.get(symbol).size() > 0) {
-                            close = priceMapBarDetail.get(symbol).lastEntry().getValue();
+                        double priceNow;
+                        if (priceMap.getOrDefault(symbol, 0.0) != 0.0) {
+                            priceNow = priceMap.get(symbol);
                         } else {
-                            close = pastMonthDayData.get(symbol).lastEntry().getValue().getClose();
+                            priceNow = pastMonthDayData.get(symbol).lastEntry().getValue().getClose();
                         }
-
-                        return Math.round(10000d * (close / monthOpen - 1)) / 100d;
+                        return Math.round(10000d * (priceNow / monthOpen - 1)) / 100d;
                     } else {
                         return 0.0;
                     }
-
 
                     // change remote dir name test
 //                case 25:

@@ -568,7 +568,7 @@ public class AutoTraderMain extends JPanel {
         return c;
     }
 
-    static Contract symbolToIBContract(String symbol) {
+    public static Contract symbolToIBContract(String symbol) {
         if (secTypeMap.containsKey(symbol)) {
             if (secTypeMap.get(symbol) == Types.SecType.STK) {
                 switch (currencyMap.get(symbol)) {
