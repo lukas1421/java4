@@ -1529,19 +1529,19 @@ public class ChinaPosition extends JPanel {
                 case 22:
                     return "P%";
                 case 23:
-                    return "openV";
+                    return "wOpen";
                 case 24:
-                    return "openT";
+                    return "wOpenT";
                 case 25:
-                    return "dev";
+                    return "wDev";
                 case 26:
                     return "Type";
                 case 27:
-                    return "mon Open";
+                    return "mOpen";
                 case 28:
-                    return "monBeg Day";
+                    return "mOpenT";
                 case 29:
-                    return "monDev";
+                    return "mDev";
 
 //                case 25:
 //                    return "1m动";
@@ -1554,7 +1554,7 @@ public class ChinaPosition extends JPanel {
 //                case 29:
 //                    return "wkMin";
 //                case 30:
-//                    return "dev";
+//                    return "dev;
 //                case 31:
 //                    return "Total pnl";
 
@@ -1586,11 +1586,11 @@ public class ChinaPosition extends JPanel {
                 case 22:
                     return Integer.class;
                 case 24:
-                    return LocalDateTime.class;
+                    return String.class;
                 case 26:
                     return Types.SecType.class;
                 case 28:
-                    return LocalDate.class;
+                    return String.class;
 
 //                case 26:
 //                    return String.class;
@@ -1674,9 +1674,11 @@ public class ChinaPosition extends JPanel {
                     if (priceMapBarDetail.containsKey(symbol) &&
                             priceMapBarDetail.get(symbol).size() > 0) {
                         return priceMapBarDetail.get(symbol).firstEntry().getKey()
-                                .truncatedTo(ChronoUnit.MINUTES);
+                                .truncatedTo(ChronoUnit.MINUTES)
+                                .format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
                     } else {
-                        return LocalDateTime.now().truncatedTo(ChronoUnit.DAYS);
+                        return LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
+                                .format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
                     }
                 case 25:
                     if (priceMapBarDetail.containsKey(symbol) &&
@@ -1701,7 +1703,8 @@ public class ChinaPosition extends JPanel {
                             && pastMonthDayData.get(symbol).lastKey().isAfter(getLastMonthLastDay())) {
                         return pastMonthDayData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(getLastMonthLastDay()))
-                                .findFirst().map(Entry::getKey).orElse(LocalDate.MIN);
+                                .findFirst().map(Entry::getKey).orElse(LocalDate.MIN)
+                                .format(DateTimeFormatter.ofPattern("MM-dd"));
                     }
 
                 case 29:

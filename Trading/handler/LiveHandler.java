@@ -17,7 +17,6 @@ public interface LiveHandler extends GeneralHandler {
     void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t);
 
     class PriceMapUpdater implements LiveHandler {
-
         @Override
         public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
             if (tt == TickType.LAST) {
