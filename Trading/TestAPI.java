@@ -1,14 +1,21 @@
+import apidemo.AutoTraderMain;
 import client.Contract;
+import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
 
 import java.time.LocalTime;
 import java.util.concurrent.CountDownLatch;
 
-import static utility.Utility.getFrontFutContract;
 import static utility.Utility.pr;
 
 public class TestAPI {
+
+    static void handleHist(Contract c, String date, double open, double high, double low,
+                           double close, int volume) {
+        String symbol = utility.Utility.ibContractToSymbol(c);
+        pr(c.symbol(), date, open, high, low, close, volume);
+    }
 
 
     public static void main(String[] args) {
@@ -41,13 +48,11 @@ public class TestAPI {
 
         pr(" Time after latch released " + LocalTime.now());
 
-        // req
-        //ap.reqUSAutoTrader();
         //ap.req1StockLive("IQ", "SMART", "USD", new ReceiverUS("IQ"), false);
-        //Contract hkCt = AutoTraderHK.tickerToHKStkContract("5");
-        Contract ct = getFrontFutContract();
+        Contract hkCt = AutoTraderMain.tickerToHKStkContract("5");
+//        Contract ct = getFrontFutContract();
         //Contract i = AutoTraderMain.getXINAIndexContract();
-        //ap.reqMonthOpen(ct);
+        ap.reqHistDayData(10000, hkCt, TestAPI::handleHist, 365, Types.BarSize._1_day);
 
     }
 }

@@ -48,6 +48,7 @@ import static apidemo.ChinaPosition.costMap;
 import static apidemo.ChinaStock.*;
 import static apidemo.ChinaStockHelper.reverseComp;
 import static apidemo.Currency.CNY;
+import static apidemo.Currency.USD;
 import static apidemo.XuTraderHelper.getTradeDate;
 import static client.OrderStatus.Filled;
 import static graph.GraphBar.pmbDetailToSimpleBarT;
@@ -58,7 +59,8 @@ import static utility.Utility.*;
 
 public class ChinaPosition extends JPanel {
 
-    public static final LocalDate LAST_MONTH_LAST_DAY = getLastMonthLastDay();
+    private static final LocalDate LAST_MONTH_LAST_DAY = getLastMonthLastDay();
+    private static final LocalDate LAST_YEAR_LAST_DAY = getLastYearLastDay();
 
     static JButton excludeChinaButton;
     static JButton refreshButton;
@@ -1468,6 +1470,11 @@ public class ChinaPosition extends JPanel {
         return now.minusDays(1L);
     }
 
+    private static LocalDate getLastYearLastDay() {
+        LocalDate now = LocalDate.now().withDayOfYear(1);
+        return now.minusDays(1L);
+    }
+
 
     private final class BarModel_POS extends AbstractTableModel {
 
@@ -1544,6 +1551,12 @@ public class ChinaPosition extends JPanel {
                     return "mOpenT";
                 case 29:
                     return "mDev";
+                case 30:
+                    return "yOpen";
+                case 31:
+                    return "yOpenT";
+                case 32:
+                    return "yDev";
 
 //                case 25:
 //                    return "1m动";
@@ -1574,7 +1587,6 @@ public class ChinaPosition extends JPanel {
                     return String.class;
                 case 2:
                     return Integer.class;
-
                 case 11:
                     return Integer.class;
                 case 12:
@@ -1588,11 +1600,13 @@ public class ChinaPosition extends JPanel {
                 case 22:
                     return Integer.class;
                 case 24:
-                    return String.class;
+                    return LocalDateTime.class;
                 case 26:
                     return Types.SecType.class;
                 case 28:
-                    return String.class;
+                    return LocalDate.class;
+                case 31:
+                    return LocalDate.class;
 
 //                case 26:
 //                    return String.class;
@@ -1608,11 +1622,20 @@ public class ChinaPosition extends JPanel {
             String symbol = symbolNames.get(rowIn);
             int openpos = openPositionMap.getOrDefault(symbol, 0);
             double defaultPrice = 0.0;
+
             if (priceMapBarDetail.containsKey(symbol) && priceMapBarDetail.get(symbol).size() > 0) {
                 defaultPrice = priceMapBarDetail.get(symbol).lastEntry().getValue();
             }
+
             double currPrice = ChinaStock.priceMap.getOrDefault(symbol, 0.0) == 0.0 ?
                     ChinaStock.closeMap.getOrDefault(symbol, defaultPrice) : ChinaStock.priceMap.get(symbol);
+
+            double priceNow = currPrice;
+            if (priceMap.getOrDefault(symbol, 0.0) != 0.0) {
+                priceNow = priceMap.get(symbol);
+            } else if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0) {
+                priceNow = ytdData.get(symbol).lastEntry().getValue().getClose();
+            }
 
             switch (col) {
                 case 0:
@@ -1676,53 +1699,77 @@ public class ChinaPosition extends JPanel {
                     if (priceMapBarDetail.containsKey(symbol) &&
                             priceMapBarDetail.get(symbol).size() > 0) {
                         return priceMapBarDetail.get(symbol).firstEntry().getKey()
-                                .truncatedTo(ChronoUnit.MINUTES)
-                                .format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
+                                .truncatedTo(ChronoUnit.MINUTES);
+                        //.format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
                     } else {
-                        return LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
-                                .format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
+                        return LocalDateTime.now().truncatedTo(ChronoUnit.DAYS);
+                        //.format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
                     }
                 case 25:
                     if (priceMapBarDetail.containsKey(symbol) &&
                             priceMapBarDetail.get(symbol).size() > 0) {
                         return Math.round(10000d * (priceMapBarDetail.get(symbol).lastEntry().getValue() /
                                 priceMapBarDetail.get(symbol).firstEntry().getValue() - 1)) / 100d;
-                    } else {
-                        return 0.0;
                     }
+                    return 0.0;
                 case 26:
                     return secTypeMap.getOrDefault(symbol, Types.SecType.None);
                 case 27:
-                    if (pastMonthDayData.containsKey(symbol) && pastMonthDayData.get(symbol).size() > 0
-                            && pastMonthDayData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
-                        return pastMonthDayData.get(symbol).entrySet().stream()
+                    if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
+                            && ytdData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
+                        return ytdData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_LAST_DAY))
                                 .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
                     }
+                    return 0.0;
                 case 28:
-                    if (pastMonthDayData.containsKey(symbol) && pastMonthDayData.get(symbol).size() > 0
-                            && pastMonthDayData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
-                        return pastMonthDayData.get(symbol).entrySet().stream()
+                    if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
+                            && ytdData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
+                        return ytdData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_LAST_DAY))
-                                .findFirst().map(Entry::getKey).orElse(LocalDate.MIN)
-                                .format(DateTimeFormatter.ofPattern("MM-dd"));
+                                .findFirst().map(Entry::getKey).orElse(LocalDate.MIN);
+                        //.format(DateTimeFormatter.ofPattern("MM-dd"));
                     }
+                    return getLastMonthLastDay();
+
                 case 29:
-                    if (pastMonthDayData.containsKey(symbol) && pastMonthDayData.get(symbol).size() > 0
-                            && pastMonthDayData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
-                        double monthOpen = pastMonthDayData.get(symbol).entrySet().stream()
+                    if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
+                            && ytdData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
+                        double monthOpen = ytdData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_LAST_DAY))
                                 .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
-                        double priceNow;
-                        if (priceMap.getOrDefault(symbol, 0.0) != 0.0) {
-                            priceNow = priceMap.get(symbol);
-                        } else {
-                            priceNow = pastMonthDayData.get(symbol).lastEntry().getValue().getClose();
-                        }
                         return Math.round(10000d * (priceNow / monthOpen - 1)) / 100d;
+                    }
+                    return 0.0;
+
+                case 30:
+                    if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
+                            && ytdData.get(symbol).lastKey().isAfter(LAST_YEAR_LAST_DAY)) {
+                        return ytdData.get(symbol).entrySet().stream()
+                                .filter(e -> e.getKey().isAfter(LAST_YEAR_LAST_DAY))
+                                .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+                    }
+                    return 0.0;
+                case 31:
+                    if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
+                            && ytdData.get(symbol).lastKey().isAfter(LAST_YEAR_LAST_DAY)) {
+                        return ytdData.get(symbol).entrySet().stream()
+                                .filter(e -> e.getKey().isAfter(LAST_YEAR_LAST_DAY))
+                                .findFirst().map(Entry::getKey).orElse(LocalDate.MIN);
+                        //.format(DateTimeFormatter.ofPattern("MM-dd"));
+                    }
+                    return LAST_YEAR_LAST_DAY;
+                case 32:
+                    if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
+                            && ytdData.get(symbol).lastKey().isAfter(LAST_YEAR_LAST_DAY)) {
+                        double yOpen = ytdData.get(symbol).entrySet().stream()
+                                .filter(e -> e.getKey().isAfter(LAST_YEAR_LAST_DAY))
+                                .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
+                        return Math.round(10000d * (priceNow / yOpen - 1)) / 100d;
                     } else {
                         return 0.0;
                     }
+
 
                     // change remote dir name test
 //                case 25:
@@ -1848,7 +1895,7 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
 
         LocalDate tradeDate = getTradeDate(LocalDateTime.now());
 
-        if (contract.secType() == Types.SecType.STK && currencyMap.getOrDefault(symbol, CNY).equals("USD")) {
+        if (contract.secType() == Types.SecType.STK && currencyMap.getOrDefault(symbol, CNY) == USD) {
             ZonedDateTime chinaZdt = ZonedDateTime.of(ldt, chinaZone);
             ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
             LocalDateTime usLdt = usZdt.toLocalDateTime();
