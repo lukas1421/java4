@@ -11,6 +11,11 @@ import static utility.Utility.pr;
 
 public class TestAPI {
 
+
+    TestAPI() {
+
+    }
+
     static void handleHist(Contract c, String date, double open, double high, double low,
                            double close, int volume) {
         String symbol = utility.Utility.ibContractToSymbol(c);
@@ -19,6 +24,9 @@ public class TestAPI {
 
 
     public static void main(String[] args) {
+
+
+
         ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
         CountDownLatch l = new CountDownLatch(1);

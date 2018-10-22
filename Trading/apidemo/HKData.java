@@ -42,7 +42,6 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
     private File testOutput = new File(TradingConstants.GLOBALPATH + "hkTestData.txt");
 
     HKData() {
-
         Utility.clearFile(testOutput);
 
         for (LocalTime t = LocalTime.of(9, 19); t.isBefore(LocalTime.of(16, 1)); t = t.plusMinutes(1)) {
@@ -102,22 +101,17 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
 
         refreshButton.addActionListener(al -> this.repaint());
 
-        histButton.addActionListener(al -> {
-            System.out.println(" requesting hk today data ");
-            ChinaMain.controller().reqHKTodayData();
-        });
+//        histButton.addActionListener(al -> {
+//            System.out.println(" requesting hk today data ");
+//            ChinaMain.controller().reqHKTodayData();
+//        });
 
         controlPanel.add(refreshButton);
         controlPanel.add(histButton);
-
         setLayout(new BorderLayout());
         add(controlPanel, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
-
         tab.setAutoCreateRowSorter(true);
-
-        //@SuppressWarnings("unchecked") TableRowSorter<BarModel_HKData> sorter = (TableRowSorter<BarModel_HKData>) tab.getRowSorter();
-
     }
 
     @Override

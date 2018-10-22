@@ -94,7 +94,8 @@ public final class ChinaMain implements IConnectionHandler {
     private final ChinaBigGraph bg = new ChinaBigGraph();
     private final ChinaGraphIndustry gi = new ChinaGraphIndustry();
 
-    public static HKData hkdata = new HKData();
+
+    private static HKData hkdata = new HKData();
 
     private static ChinaOption chinaOption = new ChinaOption();
     private static HistChinaStocks histChina = new HistChinaStocks();
@@ -139,6 +140,7 @@ public final class ChinaMain implements IConnectionHandler {
         m_tabbedPanel.addTab("Stock ", chinastock);
         m_tabbedPanel.addTab("XU", xu);
         m_tabbedPanel.addTab("Xu trader ", xutrader);
+        m_tabbedPanel.addTab("hk", hkstock);
         //m_tabbedPanel.addTab("Hk trader ", hkTrader);
         //m_tabbedPanel.addTab("Auto trader ", autoMain);
         //m_tabbedPanel.addTab("Ytd", chinaDataYtd);
@@ -320,7 +322,7 @@ public final class ChinaMain implements IConnectionHandler {
 
         startXU.addActionListener((ae) -> M_CONTROLLER.reqXUDataArray());
 
-        startHK.addActionListener(al -> M_CONTROLLER.reqHKLiveData());
+        //startHK.addActionListener(al -> M_CONTROLLER.reqHKLiveData());
 
         startIBChina.addActionListener(al -> M_CONTROLLER.reqA50Live());
 

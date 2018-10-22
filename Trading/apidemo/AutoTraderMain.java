@@ -605,7 +605,7 @@ public class AutoTraderMain extends JPanel {
         return ct;
     }
 
-    private static Contract symbolToHKStkContract(String symbol) {
+    public static Contract symbolToHKStkContract(String symbol) {
         String ticker = hkSymbolToTicker(symbol);
         Contract ct = new Contract();
         ct.symbol(ticker);
@@ -632,6 +632,11 @@ public class AutoTraderMain extends JPanel {
         }
         return symbol;
     }
+
+    public static String hkTickerToSymbol(String ticker) {
+        return "hk" + ticker;
+    }
+
 
     public static Contract symbolToUSStkContract(String symbol) {
         Contract ct = new Contract();

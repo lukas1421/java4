@@ -1,7 +1,6 @@
 package graph;
 
 import apidemo.ChinaPosition;
-import apidemo.HKData;
 import apidemo.HKStock;
 import apidemo.XU;
 import auxiliary.SimpleBar;
@@ -163,11 +162,11 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         setName(name);
         setChineseName(HKStock.hkNameMap.getOrDefault(name, ""));
 
-        if (HKData.hkPriceBar.containsKey(name) && HKData.hkPriceBar.get(name).size() > 0) {
-            this.setNavigableMap(HKData.hkPriceBar.get(name));
-        } else {
-            this.setNavigableMap(new ConcurrentSkipListMap<>());
-        }
+//        if (HKStock.hkData.containsKey(name) && HKStock.hkData.get(name).size() > 0) {
+//            this.setNavigableMap(HKStock.hkData.get(name));
+//        } else {
+//            this.setNavigableMap(new ConcurrentSkipListMap<>());
+//        }
     }
 
     @Override

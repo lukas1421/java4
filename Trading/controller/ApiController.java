@@ -25,7 +25,9 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static apidemo.AutoTraderMain.*;
@@ -889,28 +891,28 @@ public class ApiController implements EWrapper {
         }
     }
 
-    public void reqHKLiveData() {
-        pr(" requesting hk ");
-        HKData.es.shutdown();
-        HKData.es = Executors.newScheduledThreadPool(10);
-        HKData.es.scheduleAtFixedRate(() -> {
-            HKData.hkPriceBar.keySet().forEach(k -> req1StockLive(k, "SEHK", "HKD",
-                    apidemo.ChinaMain.hkdata, true));
-        }, 5L, 10L, TimeUnit.SECONDS);
-    }
+//    public void reqHKLiveData() {
+//        pr(" requesting hk ");
+//        HKData.es.shutdown();
+//        HKData.es = Executors.newScheduledThreadPool(10);
+//        HKData.es.scheduleAtFixedRate(() -> {
+//            HKData.hkPriceBar.keySet().forEach(k -> req1StockLive(k, "SEHK", "HKD",
+//                    apidemo.ChinaMain.hkdata, true));
+//        }, 5L, 10L, TimeUnit.SECONDS);
+//    }
 
-    public void reqHKTodayData() {
-        //HKData.historyDataSem.drainPermits();
-        HKData.historyDataSem = new Semaphore(50);
-        HKData.hkPriceBar.keySet().forEach(k -> {
-            try {
-                HKData.historyDataSem.acquire();
-                req1StockHistToday(k, "SEHK", "HKD", ChinaMain.hkdata);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
-    }
+//    public void reqHKTodayData() {
+//        //HKData.historyDataSem.drainPermits();
+//        HKData.historyDataSem = new Semaphore(50);
+//        HKData.hkPriceBar.keySet().forEach(k -> {
+//            try {
+//                HKData.historyDataSem.acquire();
+//                req1StockHistToday(k, "SEHK", "HKD", ChinaMain.hkdata);
+//            } catch (InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        });
+//    }
 
 
     public void req1ContractHistory(Contract ct, BarSize b, HistoricalHandler h) {
@@ -1170,7 +1172,6 @@ public class ApiController implements EWrapper {
         DurationUnit durationUnit = DurationUnit.DAY;
         String durationStr = duration + " " + durationUnit.toString().charAt(0);
         WhatToShow whatToShow = WhatToShow.TRADES;
-        HistoricalHandler h = new HistoricalHandler.DefaultHistHandler();
         ChinaMain.globalRequestMap.put(reqId, new Request(c, dc));
         CompletableFuture.runAsync(() -> m_client.reqHistoricalData(reqId, c, "", durationStr,
                 bs.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
