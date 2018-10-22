@@ -34,7 +34,7 @@ public class HKStock extends JPanel {
     static volatile Map<String, Double> hkVol = new HashMap<>();
     private static GraphBarTemporal graph1 = new GraphBarTemporal();
 
-    static Map<String, AtomicBoolean> downloadStatus = new HashMap<>();
+    private static Map<String, AtomicBoolean> downloadStatus = new HashMap<>();
 
     //private static GraphBar graph2 = new GraphBar();
     //private static GraphBar graph3 = new GraphBar();
@@ -129,16 +129,12 @@ public class HKStock extends JPanel {
                     }
                     try {
                         sem.acquire(1);
-                        //if (sem.availablePermits() > 0) {
                         pr(" requesting HK, sem#: ", s, sem.availablePermits());
                         controller().reqHistDayData(GLOBAL_REQ_ID.addAndGet(5),
-                                hkCt, HKStock::handleHist, 365, Types.BarSize._1_week);
-                        //}
+                                hkCt, HKStock::handleHist, 300, Types.BarSize._1_day);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-
-
                 });
             });
         });
@@ -205,9 +201,7 @@ public class HKStock extends JPanel {
     private static void handleHist(Contract c, String date, double open, double high, double low,
                                    double close, int volume) {
         if (!date.startsWith("finished")) {
-
             String symbol = utility.Utility.ibContractToSymbol(c);
-
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             hkData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         } else {
@@ -215,9 +209,10 @@ public class HKStock extends JPanel {
                 String symbol = ibContractToSymbol(c);
                 downloadStatus.get(symbol).set(true);
                 sem.release(1);
-                pr(" sem released ", symbol, "first last",
-                        hkData.get(symbol).firstEntry(), hkData.get(symbol).lastEntry(),
-                        "#", sem.availablePermits());
+                pr(" sem released ", symbol, "size ", hkData.get(symbol).size(),
+                        hkData.get(symbol),
+                        //"first last", hkData.get(symbol).firstEntry(), hkData.get(symbol).lastEntry(),
+                        "sem#", sem.availablePermits());
             }
         }
     }
@@ -278,8 +273,6 @@ public class HKStock extends JPanel {
                     } else {
                         return LocalDate.MIN;
                     }
-
-
                 default:
                     return null;
             }

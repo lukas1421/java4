@@ -227,9 +227,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
                 g.drawOval(x + 2, lowY, 5, 5);
                 g.fillOval(x + 2, lowY, 5, 5);
                 g2.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.5F));
-
             }
-
             x += XU.graphBarWidth.get();
         }
 

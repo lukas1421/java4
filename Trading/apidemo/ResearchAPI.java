@@ -45,8 +45,8 @@ public class ResearchAPI {
         }
     }
 
-    static void handleHist(Contract c, String date, double open, double high, double low,
-                           double close, int volume) {
+    private static void handleHist(Contract c, String date, double open, double high, double low,
+                                   double close, int volume) {
         String symbol = utility.Utility.ibContractToSymbol(c);
         //pr(c.symbol(), date, open, high, low, close, volume);
         LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
