@@ -51,7 +51,6 @@ import static apidemo.Currency.CNY;
 import static apidemo.Currency.USD;
 import static apidemo.XuTraderHelper.getTradeDate;
 import static client.OrderStatus.Filled;
-import static graph.GraphBar.pmbDetailToSimpleBarT;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
@@ -337,6 +336,8 @@ public class ChinaPosition extends JPanel {
             }
         });
 
+        includeAllToggle.setSelected(true);
+
         JToggleButton onlyFutToggle = new JToggleButton("Fut Only");
         onlyFutToggle.addActionListener(l -> {
             if (onlyFutToggle.isSelected()) {
@@ -601,8 +602,7 @@ public class ChinaPosition extends JPanel {
             CompletableFuture.allOf(
                     CompletableFuture.supplyAsync(() ->
                             boughtPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
-                                    .map(e -> tradePnlCompute(e.getKey(),
-                                            pmbDetailToSimpleBarT(priceMapBarDetail.get(e.getKey())),
+                                    .map(e -> tradePnlCompute(e.getKey(), priceMapBar.get(e.getKey()),
                                             e.getValue(), e1 -> e1 > 0))
                                     .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>()))
                             .thenAcceptAsync(a -> SwingUtilities.invokeLater(() ->
@@ -611,7 +611,7 @@ public class ChinaPosition extends JPanel {
                     CompletableFuture.supplyAsync(() ->
                             soldPNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
                                     .map(e -> tradePnlCompute(e.getKey(),
-                                            pmbDetailToSimpleBarT(priceMapBarDetail.get(e.getKey())),
+                                            priceMapBar.get(e.getKey()),
                                             e.getValue(), e1 -> e1 < 0))
                                     .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())
                     ).thenAcceptAsync(a -> SwingUtilities.invokeLater(() ->
@@ -630,7 +630,7 @@ public class ChinaPosition extends JPanel {
                     CompletableFuture.supplyAsync(() ->
                             mtmPNLMap = openPositionMap.entrySet().stream().filter(e -> e.getValue() != 0).filter(p)
                                     .map(e -> getMtmPNL(
-                                            pmbDetailToSimpleBarT(priceMapBarDetail.get(e.getKey())),
+                                            priceMapBar.get(e.getKey()),
                                             getPrevClose(e.getKey()), e.getValue(),
                                             fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0))
                                     ).reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())
@@ -639,7 +639,7 @@ public class ChinaPosition extends JPanel {
                     CompletableFuture.supplyAsync(() ->
                             tradePNLMap = tradesMap.entrySet().stream().filter(p).filter(e -> e.getValue().size() > 0)
                                     .map(e -> tradePnlCompute(e.getKey(),
-                                            pmbDetailToSimpleBarT(priceMapBarDetail.get(e.getKey()))
+                                            priceMapBar.get(e.getKey())
                                             , e.getValue(), e1 -> true))
                                     .reduce(Utility.mapBinOp()).orElse(new ConcurrentSkipListMap<>())))
                     .thenRunAsync(() -> todayNetPnl = Optional.ofNullable(tradePNLMap.lastEntry()).map(Entry::getValue).orElse(0.0) + netYtdPnl
@@ -882,53 +882,6 @@ public class ChinaPosition extends JPanel {
         }
         return futExpiryDate;
     }
-
-
-//    @Override
-//    public void handleHist(String name, String date, double open, double high, double low, double close) {
-//
-//        if (!date.startsWith("finished")) {
-//            Date dt = new Date();
-//            try {
-//                dt = new Date(Long.parseLong(date) * 1000);
-//            } catch (DateTimeParseException ex) {
-//                pr(" date format problem " + date);
-//            }
-//            Calendar cal = Calendar.getInstance();
-//            cal.setTime(dt);
-//            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1,
-//                    cal.get(Calendar.DAY_OF_MONTH));
-//            LocalTime ltof = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
-//
-//            if (name.equalsIgnoreCase("SGXA50PR")) {
-//                if (ld.equals(currentTradingDate) && ltof.isAfter(LocalTime.of(8, 59))) {
-//                    priceMapBar.get("SGXA50PR").put(ltof, new SimpleBar(open, high, low, close));
-//                }
-//            }
-//
-//            if (ltof.equals(LocalTime.of(14, 59)) && !ld.equals(currentTradingDate)) {
-//                ChinaStock.closeMap.put(name, close);
-////                pr(" Trading date " + currentTradingDate
-////                        + " checking close " + ltof + " " + name + " " + close);
-//            }
-//
-//            if (((ltof.isAfter(LocalTime.of(8, 59)) && ltof.isBefore(LocalTime.of(11, 31)))
-//                    || (ltof.isAfter(LocalTime.of(12, 59)) && ltof.isBefore(LocalTime.of(15, 1))))) {
-//                if (ltof.equals(LocalTime.of(9, 0))) {
-//                    openMap.put(name, open);
-//                }
-//            }
-//        } else {
-//            pr(str(date, open, high, low, close));
-//        }
-//    }
-//
-//    @Override
-//    public void actionUponFinish(String name) {
-//        costMap.put(name, closeMap.getOrDefault(name, 0.0));
-////        pr(str(" finished in china pos + costmap just updated is ", name, costMap.get(name)
-////                , closeMap.getOrDefault(name, 0.0)));
-//    }
 
     static void getOpenPositionsNormal() {
 
@@ -1428,7 +1381,6 @@ public class ChinaPosition extends JPanel {
 
 
     private static double getTodayTotalPnl(String name) {
-        //double fx = fxMap.getOrDefault(currencyMap.getOrDefault(name, CNY), 1.0);
         return Math.round(100d * (getMtmPnl(name) + getBuyTradePnl(name) + getSellTradePnl(name))) / 100d;
     }
 
@@ -1444,7 +1396,6 @@ public class ChinaPosition extends JPanel {
                 .map(Map.Entry::getKey).map(s -> Utility.str(nameMap.get(s),
                         tickerNetpnl.getOrDefault(s, 0.0), Math.round(100d * tickerNetpnl.getOrDefault(s, 0.0) / netPnlAll), "%"))
                 .collect(Collectors.toCollection(LinkedList::new));
-        //pr(" top kiyodo list " + res);
         return res;
     }
 
@@ -1488,7 +1439,7 @@ public class ChinaPosition extends JPanel {
                 case 2:
                     return "开Pos";
                 case 3:
-                    return "Cost";
+                    return "Type";
                 case 4:
                     return "市值";
                 case 5:
@@ -1534,18 +1485,16 @@ public class ChinaPosition extends JPanel {
                 case 25:
                     return "wDev";
                 case 26:
-                    return "Type";
-                case 27:
                     return "mOpen";
-                case 28:
+                case 27:
                     return "mOpenT";
-                case 29:
+                case 28:
                     return "mDev";
-                case 30:
+                case 29:
                     return "yOpen";
-                case 31:
+                case 30:
                     return "yOpenT";
-                case 32:
+                case 31:
                     return "yDev";
 
 //                case 25:
@@ -1577,6 +1526,8 @@ public class ChinaPosition extends JPanel {
                     return String.class;
                 case 2:
                     return Integer.class;
+                case 3:
+                    return Types.SecType.class;
                 case 11:
                     return Integer.class;
                 case 12:
@@ -1591,11 +1542,9 @@ public class ChinaPosition extends JPanel {
                     return Integer.class;
                 case 24:
                     return LocalDateTime.class;
-                case 26:
-                    return Types.SecType.class;
-                case 28:
+                case 27:
                     return LocalDate.class;
-                case 31:
+                case 30:
                     return LocalDate.class;
 
 //                case 26:
@@ -1635,7 +1584,8 @@ public class ChinaPosition extends JPanel {
                 case 2:
                     return openpos;
                 case 3:
-                    return costMap.getOrDefault(symbol, 0.0);
+                    return secTypeMap.getOrDefault(symbol, Types.SecType.None);
+                //return costMap.getOrDefault(symbol, 0.0);
                 case 4:
                     return Math.round(fxMap.getOrDefault(currencyMap.getOrDefault(symbol, CNY), 1.0)
                             * currPrice * getNetPosition(symbol) / 1000d) * 1.0d;
@@ -1702,9 +1652,8 @@ public class ChinaPosition extends JPanel {
                                 priceMapBarDetail.get(symbol).firstEntry().getValue() - 1)) / 100d;
                     }
                     return 0.0;
+
                 case 26:
-                    return secTypeMap.getOrDefault(symbol, Types.SecType.None);
-                case 27:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
                         return ytdData.get(symbol).entrySet().stream()
@@ -1712,7 +1661,7 @@ public class ChinaPosition extends JPanel {
                                 .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
                     }
                     return 0.0;
-                case 28:
+                case 27:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
                         return ytdData.get(symbol).entrySet().stream()
@@ -1722,7 +1671,7 @@ public class ChinaPosition extends JPanel {
                     }
                     return getLastMonthLastDay();
 
-                case 29:
+                case 28:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
                         double monthOpen = ytdData.get(symbol).entrySet().stream()
@@ -1732,7 +1681,7 @@ public class ChinaPosition extends JPanel {
                     }
                     return 0.0;
 
-                case 30:
+                case 29:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_YEAR_LAST_DAY)) {
                         return ytdData.get(symbol).entrySet().stream()
@@ -1740,7 +1689,7 @@ public class ChinaPosition extends JPanel {
                                 .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
                     }
                     return 0.0;
-                case 31:
+                case 30:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_YEAR_LAST_DAY)) {
                         return ytdData.get(symbol).entrySet().stream()
@@ -1749,7 +1698,7 @@ public class ChinaPosition extends JPanel {
                         //.format(DateTimeFormatter.ofPattern("MM-dd"));
                     }
                     return LAST_YEAR_LAST_DAY;
-                case 32:
+                case 31:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_YEAR_LAST_DAY)) {
                         double yOpen = ytdData.get(symbol).entrySet().stream()
@@ -1918,12 +1867,12 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
 
     @Override
     public void tradeReportEnd() {
-//        pr("china position trade report end ");
-//        ChinaPosition.tradesMap.forEach((k, v) -> {
-//            if (v.size() > 0) {
-//                pr("chinapos", k, v);
-//            }
-//        });
+        pr("china position trade report end ");
+        ChinaPosition.tradesMap.forEach((k, v) -> {
+            if (v.size() > 0) {
+                pr("chinapos trade report end ", k, v);
+            }
+        });
     }
 
     @Override

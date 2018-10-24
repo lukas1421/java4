@@ -25,6 +25,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 import static apidemo.AutoTraderMain.ltof;
 import static apidemo.AutoTraderXU.findOrderByTWSID;
+import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaKeyMonitor.dispGran;
 import static apidemo.ChinaStock.closeMap;
@@ -386,6 +387,8 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
 
         if (priceMapBarDetail.get(symb).size() > 0) {
             this.setNavigableMap(pmbDetailToSimpleBarT(priceMapBarDetail.get(symb)));
+        } else if (priceMapBar.get(symb).size() > 0) {
+            this.setNavigableMap(priceMapBar.get(symb));
         } else {
             this.setNavigableMap(new ConcurrentSkipListMap<>());
         }
