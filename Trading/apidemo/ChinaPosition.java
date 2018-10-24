@@ -1465,16 +1465,6 @@ public class ChinaPosition extends JPanel {
                 }));
     }
 
-    private static LocalDate getLastMonthLastDay() {
-        LocalDate now = LocalDate.now().withDayOfMonth(1);
-        return now.minusDays(1L);
-    }
-
-    private static LocalDate getLastYearLastDay() {
-        LocalDate now = LocalDate.now().withDayOfYear(1);
-        return now.minusDays(1L);
-    }
-
 
     private final class BarModel_POS extends AbstractTableModel {
 

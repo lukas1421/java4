@@ -26,8 +26,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import static apidemo.ChinaMain.GLOBAL_REQ_ID;
 import static apidemo.ChinaMain.controller;
-import static utility.Utility.ibContractToSymbol;
-import static utility.Utility.pr;
+import static utility.Utility.*;
 
 public class HKStock extends JPanel {
     static volatile Map<String, Double> hkCurrPrice = new HashMap<>();
@@ -36,24 +35,20 @@ public class HKStock extends JPanel {
 
     private static Map<String, AtomicBoolean> downloadStatus = new HashMap<>();
 
-    //private static GraphBar graph2 = new GraphBar();
-    //private static GraphBar graph3 = new GraphBar();
-//    private static GraphBar graph4 = new GraphBar();
-//    private static GraphBar graph5 = new GraphBar();
-//    private static GraphBar graph6 = new GraphBar();
+    private static final LocalDate LAST_MONTH_LAST_DAY = getLastMonthLastDay();
+    private static final LocalDate LAST_YEAR_LAST_DAY = getLastYearLastDay();
+    private static final LocalDate LAST_WEEK_LAST_DAY = getLastWeekLastDay();
+
 
     BarModel_HKStock m_model;
     static JPanel graphPanel;
     private int modelRow;
-    private int indexRow;
     static JTable tab;
-
     String line;
     private static List<String> symbolNamesHK = new LinkedList<>();
-    //private static Map<String, String> haMap = new HashMap<>();
     public static Map<String, String> hkNameMap = new HashMap<>();
 
-    public static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
+    private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             hkData = new ConcurrentSkipListMap<>();
 
     private static Semaphore sem = new Semaphore(49);
@@ -81,32 +76,8 @@ public class HKStock extends JPanel {
         graphPanel.setLayout(new GridLayout(6, 1));
 
         String hkstock1 = "700";
-        //graph1.setNavigableMap(hkstock1);
-//        String hkstock2 = "2823";
-//        graph2.fillInGraphHK(hkstock2);
-//        String hkstock3 = "2822";
-//        graph3.fillInGraphHK(hkstock3);
-//        String hkstock4 = "3188";
-//        graph4.fillInGraphHK(hkstock4);
-//        String hkstock5 = "3147";
-//        graph5.fillInGraphHK(hkstock5);
-//        String hkstock6 = "1398";
-//        graph6.fillInGraphHK(hkstock6);
-
         JScrollPane gp1 = genNewScrollPane(graph1);
-//        JScrollPane gp2 = genNewScrollPane(graph2);
-//        JScrollPane gp3 = genNewScrollPane(graph3);
-//        JScrollPane gp4 = genNewScrollPane(graph4);
-//        JScrollPane gp5 = genNewScrollPane(graph5);
-//        JScrollPane gp6 = genNewScrollPane(graph6);
-
         graphPanel.add(gp1);
-//        graphPanel.add(gp2);
-//        graphPanel.add(gp3);
-//        graphPanel.add(gp4);
-//        graphPanel.add(gp5);
-//        graphPanel.add(gp6);
-
         JPanel controlPanel = new JPanel();
 
         JButton refreshButton = new JButton("Refresh");
@@ -148,20 +119,17 @@ public class HKStock extends JPanel {
                 Component comp = super.prepareRenderer(tableCellRenderer, row, col);
                 if (isCellSelected(row, col)) {
                     modelRow = this.convertRowIndexToModel(row);
-                    indexRow = row;
-
+                    //indexRow = row;
 
                     String selectedNameStock = symbolNamesHK.get(modelRow);
 
                     if (hkData.containsKey(selectedNameStock) && hkData.get(selectedNameStock).size() > 0) {
-                        graph1.setNavigableMap(hkData.get(selectedNameStock));
+                        graph1.setNavigableMap(
+                                hkData.get(selectedNameStock).tailMap(LAST_YEAR_LAST_DAY));
+                    } else {
+                        graph1.setNavigableMap(new ConcurrentSkipListMap());
                     }
                     refreshAll();
-
-//                    if (hkData.containsKey(selectedNameStock)) {
-//                        pr("hkstock", selectedNameStock, hkData.get(selectedNameStock));
-//                    }
-
                     comp.setBackground(Color.green);
                 } else {
                     comp.setBackground((row % 2 == 0) ? Color.lightGray : Color.white);
@@ -251,6 +219,15 @@ public class HKStock extends JPanel {
                     return "Downloaded";
                 case 3:
                     return "first date";
+                case 4:
+                    return "yOpen";
+                case 5:
+                    return "mOpen";
+                case 6:
+                    return "wOpen";
+                case 7:
+                    return "last";
+
                 default:
                     return "";
             }
@@ -272,6 +249,25 @@ public class HKStock extends JPanel {
                         return hkData.get(name).firstKey();
                     } else {
                         return LocalDate.MIN;
+                    }
+                case 4:
+                    if (hkData.get(name).size() > 0 && hkData.get(name).lastKey().isAfter(LAST_YEAR_LAST_DAY)) {
+                        return hkData.get(name).ceilingEntry(LAST_YEAR_LAST_DAY).getValue().getOpen();
+                    }
+                    return 0.0;
+                case 5:
+                    if (hkData.get(name).size() > 0 && hkData.get(name).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
+                        return hkData.get(name).ceilingEntry(LAST_MONTH_LAST_DAY).getValue().getOpen();
+                    }
+                    return 0.0;
+                case 6:
+                    if (hkData.get(name).size() > 0 && hkData.get(name).lastKey().isAfter(LAST_WEEK_LAST_DAY)) {
+                        return hkData.get(name).ceilingEntry(LAST_WEEK_LAST_DAY).getValue().getOpen();
+                    }
+                    return 0.0;
+                case 7:
+                    if (hkData.get(name).size() > 0) {
+                        return hkData.get(name).lastEntry().getValue().getClose();
                     }
                 default:
                     return null;

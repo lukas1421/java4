@@ -861,4 +861,23 @@ public class Utility {
     public static void pr(Object... os) {
         System.out.println(str(os));
     }
+
+    public static LocalDate getLastMonthLastDay() {
+        LocalDate now = LocalDate.now().withDayOfMonth(1);
+        return now.minusDays(1L);
+    }
+
+    public static LocalDate getLastYearLastDay() {
+        LocalDate now = LocalDate.now().withDayOfYear(1);
+        return now.minusDays(1L);
+    }
+
+    public static LocalDate getLastWeekLastDay() {
+        LocalDate res = LocalDate.now();
+        while (res.getDayOfWeek() != DayOfWeek.FRIDAY) {
+            res = res.minusDays(1L);
+        }
+        return res;
+    }
+
 }
