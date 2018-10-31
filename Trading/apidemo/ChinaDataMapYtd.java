@@ -10,10 +10,10 @@ import java.awt.event.MouseEvent;
 import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.ChinaData.tradeTime;
 import static apidemo.ChinaStock.nameMap;
-import static apidemo.ChinaStock.symbolNamesFull;
+import static apidemo.ChinaStock.symbolNames;
+//import static apidemo.ChinaStock.symbolNamesFull;
 
 /**
- *
  * @author Administrator
  */
 final class ChinaDataMapYtd extends JPanel {
@@ -64,7 +64,7 @@ final class ChinaDataMapYtd extends JPanel {
 
         @Override
         public int getRowCount() {
-            return ChinaStock.symbolNamesFull.size();
+            return ChinaStock.symbolNames.size();
         }
 
         @Override
@@ -98,7 +98,7 @@ final class ChinaDataMapYtd extends JPanel {
 
         @Override
         public Object getValueAt(int rowIn, int col) {
-            String name = (rowIn < symbolNamesFull.size()) ? symbolNamesFull.get(rowIn) : "";
+            String name = (rowIn < symbolNames.size()) ? symbolNames.get(rowIn) : "";
             switch (col) {
                 case 0:
                     return name;

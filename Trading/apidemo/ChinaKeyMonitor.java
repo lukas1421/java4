@@ -833,8 +833,8 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         int i = 1;
         GraphMonitorFactory.clearAllGraphs();
         while (it.hasNext()) {
-            String ticker = it.next();
-            GraphMonitorFactory.getGraphMonitor(i).fillInGraph(ticker);
+            String symbol = it.next();
+            GraphMonitorFactory.getGraphMonitor(i).fillInGraph(symbol);
             i++;
         }
         SwingUtilities.invokeLater(() -> jp.repaint());

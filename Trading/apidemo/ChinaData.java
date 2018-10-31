@@ -36,6 +36,8 @@ import static apidemo.ChinaDataYesterday.convertTimeToInt;
 import static apidemo.ChinaMain.*;
 import static apidemo.ChinaStock.*;
 import static apidemo.ChinaStockHelper.fixYtdSuspendedStocks;
+import static apidemo.Currency.CNY;
+import static apidemo.Currency.HKD;
 import static apidemo.TradingConstants.FTSE_INDEX;
 import static historical.HistChinaStocks.chinaWtd;
 import static java.util.Optional.ofNullable;
@@ -430,9 +432,17 @@ public final class ChinaData extends JPanel {
 
         getHKDetailedButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
             pr(" getting detailed HK ");
-            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                    AutoTraderMain.getHKFutContract("MCH.HK")
-                    , ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
+            priceMapBarDetail.keySet().forEach(k -> {
+                if (currencyMap.getOrDefault(k, CNY).equals(HKD)) {
+                    Contract c = symbolToIBContract(k);
+                    controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), c
+                            , ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
+                }
+            });
+//            symbolToIBContract()
+//            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+//                    AutoTraderMain.getHKFutContract("MCH.HK")
+//                    , ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
         }));
 
         getYtdButton.addActionListener(l -> {
@@ -902,7 +912,7 @@ public final class ChinaData extends JPanel {
         @Override
         public int getRowCount() {
             //return priceMapBar.size();
-            return symbolNamesFull.size();
+            return symbolNames.size();
         }
 
         @Override
@@ -938,7 +948,7 @@ public final class ChinaData extends JPanel {
 
         @Override
         public Object getValueAt(int rowIn, int col) {
-            String name = (rowIn < symbolNamesFull.size()) ? symbolNamesFull.get(rowIn) : "";
+            String name = (rowIn < symbolNames.size()) ? symbolNames.get(rowIn) : "";
             //String name = (rowIn < priceMapBar.size()) ? priceMapBar.get(rowIn) : "";
             switch (col) {
                 case 0:

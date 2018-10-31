@@ -385,10 +385,10 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
                             ChinaPosition.tradesMap.get(symb) : new ConcurrentSkipListMap<>(), ChinaMain.currentTradingDate));
         }
 
-        if (priceMapBarDetail.get(symb).size() > 0) {
-            this.setNavigableMap(pmbDetailToSimpleBarT(priceMapBarDetail.get(symb)));
-        } else if (priceMapBar.get(symb).size() > 0) {
+        if (priceMapBar.get(symb).size() > 0) {
             this.setNavigableMap(priceMapBar.get(symb));
+        } else if (priceMapBarDetail.get(symb).size() > 0) {
+            this.setNavigableMap(pmbDetailToSimpleBarT(priceMapBarDetail.get(symb)));
         } else {
             this.setNavigableMap(new ConcurrentSkipListMap<>());
         }
@@ -417,6 +417,8 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
             }
         }
         NavigableMap<LocalDateTime, SimpleBar> finalRes = res;
+        //pr("graph monitor tm in", symbol, tmIn);
+        //pr(" graph monitor tm out", symbol, " res ", finalRes);
         SwingUtilities.invokeLater(() -> this.tm = finalRes);
     }
 

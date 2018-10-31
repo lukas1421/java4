@@ -702,7 +702,7 @@ public class AutoTraderMain extends JPanel {
         @Override
         public Object getValueAt(int rowIn, int col) {
 
-            String name = symbolNamesFull.get(rowIn);
+            String name = symbolNames.get(rowIn);
             //String name = priceMapBarDetail.keySet().stream().collect(toList()).get(rowIn);
 
             switch (col) {

@@ -2,55 +2,29 @@ package apidemo;
 
 import graph.GraphSize;
 
-import static apidemo.ChinaData.sizeTotalMap;
-import static apidemo.ChinaData.sizeTotalMapYtd;
-import static apidemo.ChinaData.tradeTime;
-import static utility.Utility.PM1310T;
-import static utility.Utility.PMOPENT;
-import static utility.Utility.PM_PRED;
-import static apidemo.ChinaStock.nameMap;
-import static utility.Utility.normalMapGen;
-import static apidemo.ChinaStock.symbolNames;
-import static apidemo.ChinaStock.symbolNamesFull;
-
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
-
-import static java.lang.Math.round;
-
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableCellRenderer;
+import java.awt.*;
 import java.time.LocalTime;
 import java.util.Comparator;
-
-import static java.util.Comparator.naturalOrder;
-
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
 import java.util.Optional;
-
-import static java.util.Optional.ofNullable;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static apidemo.ChinaData.*;
+import static apidemo.ChinaStock.nameMap;
+import static apidemo.ChinaStock.symbolNames;
+import static java.lang.Math.round;
+import static java.util.Comparator.naturalOrder;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableCellRenderer;
+import static utility.Utility.*;
 
 public final class ChinaSizeRatio extends JPanel {
 
@@ -76,7 +50,7 @@ public final class ChinaSizeRatio extends JPanel {
     ExecutorService es = Executors.newCachedThreadPool();
 
     ChinaSizeRatio() {
-        symbolNamesFull.forEach(v -> {
+        symbolNames.forEach(v -> {
             sizeRatioMap.put(v, new ConcurrentSkipListMap<>());
             sizeRatioStandardizedMap.put(v, 0.0);
             pmF10VRChgStandardizedMap.put(v, 0.0);

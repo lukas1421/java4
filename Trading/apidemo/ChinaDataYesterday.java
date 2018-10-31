@@ -27,7 +27,7 @@ import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 
 import static apidemo.ChinaStock.nameMap;
-import static apidemo.ChinaStock.symbolNamesFull;
+import static apidemo.ChinaStock.symbolNames;
 import static apidemo.TradingConstants.FTSE_INDEX;
 import static java.lang.Double.min;
 import static java.lang.Math.log;
@@ -187,7 +187,7 @@ public final class ChinaDataYesterday extends JPanel {
             }
         };
 
-        symbolNamesFull.forEach(name -> {
+        symbolNames.forEach(name -> {
             priceMapCopy.put(name, new ConcurrentSkipListMap<>());
             amMaxY.put(name, 0.0);
             amMinY.put(name, 0.0);
@@ -249,7 +249,7 @@ public final class ChinaDataYesterday extends JPanel {
                     //ChinaStockHelper.buildA50FromSS();
                     ChinaStockHelper.buildGenForYtd("SGXA50", FTSE_INDEX);
 
-                    symbolNamesFull.forEach(name -> {
+                    symbolNames.forEach(name -> {
                         openMapY.put(name, ChinaStock.openMap.getOrDefault(name, 0.0));
                         closeMapY.put(name, ChinaStock.priceMap.getOrDefault(name, 0.0));
                         closeMapY2.put(name, ChinaStock.closeMap.getOrDefault(name, 0.0));
@@ -613,7 +613,7 @@ public final class ChinaDataYesterday extends JPanel {
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
         try (Session session = sessionF.openSession()) {
             try {
-                ChinaStock.symbolNames.forEach(name -> {
+                symbolNames.forEach(name -> {
                     ChinaSaveOHLCYV c = session.load(ChinaSaveOHLCYV.class, name);
                     System.out.println(" loading " + name + " " + c);
                     ChinaStock.openMap.put(name, c.getOpen());
@@ -675,7 +675,7 @@ public final class ChinaDataYesterday extends JPanel {
 
     static void compute() {
         CompletableFuture.runAsync(() -> {
-            symbolNamesFull.forEach(name -> {
+            symbolNames.forEach(name -> {
                 try {
                     if (noZeroArrayGen(name, openMapY, closeMapY, closeMapY2, maxMapY, minMapY)) {
                         retCOY.put(name, log(closeMapY.get(name) / openMapY.get(name)));
@@ -884,7 +884,7 @@ public final class ChinaDataYesterday extends JPanel {
 
         @Override
         public int getRowCount() {
-            return symbolNamesFull.size();
+            return symbolNames.size();
         }
 
         @Override
@@ -998,7 +998,7 @@ public final class ChinaDataYesterday extends JPanel {
         @Override
         public Object getValueAt(int rowIn, int col) {
 
-            String name = symbolNamesFull.get(rowIn);
+            String name = symbolNames.get(rowIn);
             switch (col) {
                 case 0:
                     //System.out.println( " name is  " + name);

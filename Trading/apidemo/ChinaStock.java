@@ -45,12 +45,11 @@ import static java.lang.Math.round;
 import static java.lang.System.out;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
 
 public final class ChinaStock extends JPanel {
 
-    public static Map<String, Double> weightMap = new HashMap<>();
+    //public static Map<String, Double> weightMap = new HashMap<>();
     public static Map<String, String> nameMap = new HashMap<>();
     public static Map<String, Types.SecType> secTypeMap = new HashMap<>();
     public static Map<String, Currency> currencyMap = new HashMap<>();
@@ -67,7 +66,7 @@ public final class ChinaStock extends JPanel {
     public static Map<String, Integer> closePercYMap = new HashMap<>();
 
     public static volatile List<String> symbolNames = new ArrayList<>(1000);
-    public static volatile List<String> symbolNamesFull = new ArrayList<>(1000);
+    //public static volatile List<String> symbolNamesFull = new ArrayList<>(1000);
 
 
     String line;
@@ -244,26 +243,17 @@ public final class ChinaStock extends JPanel {
                     .filter(p).min(Utility.BAR_LOW).map(Entry::getKey).orElse(Utility.TIMEMAX));
 
     public ChinaStock() {
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(TradingConstants.GLOBALPATH + "ChinaAllWeight.txt")))) {
-            while ((line = reader1.readLine()) != null) {
-                List<String> al1 = Arrays.asList(line.split("\t"));
-                weightMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
-            }
-
-            listNames = weightMap.entrySet().stream().map(Map.Entry::getKey).collect(joining(","));
-            listNameSH = weightMap.entrySet().stream().filter(s -> s.getKey().startsWith("sh"))
-                    .map(Map.Entry::getKey).collect(joining(","));
-            listNameSZ = weightMap.entrySet().stream().filter(s -> !s.getKey().startsWith("sh"))
-                    .map(Map.Entry::getKey).collect(joining(","));
-
-            //pr( " sh size " + listNameSH.si)
-            //pr( " listnames in Chinastock " + listNames);
-            symbolNames = weightMap.keySet().stream().collect(toList());
-            List<Double> weights = weightMap.values().stream().collect(toList());
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+//        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+//                new FileInputStream(TradingConstants.GLOBALPATH + "ChinaAllWeight.txt")))) {
+//            while ((line = reader1.readLine()) != null) {
+//                List<String> al1 = Arrays.asList(line.split("\t"));
+//                weightMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
+//            }
+//            //listNames = weightMap.entrySet().stream().map(Map.Entry::getKey).collect(joining(","));
+//            //List<Double> weights = weightMap.values().stream().collect(toList());
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "ChinaAll.txt"), "gbk"))) {
@@ -279,7 +269,15 @@ public final class ChinaStock extends JPanel {
                 longShortIndusMap.put(al1.get(2), al1.get(3));
                 secTypeMap.put(al1.get(0), Types.SecType.get(al1.get(5)));
             }
-            symbolNamesFull = new ArrayList<>(nameMap.keySet());
+            listNameSH = nameMap.entrySet().stream().filter(s -> s.getKey().startsWith("sh"))
+                    .map(Map.Entry::getKey).collect(joining(","));
+            listNameSZ = nameMap.entrySet().stream().filter(s -> !s.getKey().startsWith("sh"))
+                    .map(Map.Entry::getKey).collect(joining(","));
+
+            //pr( " sh size " + listNameSH.si)
+            //pr( " listnames in Chinastock " + listNames);
+            symbolNames = new ArrayList<>(nameMap.keySet());
+            //symbolNamesFull = new ArrayList<>(nameMap.keySet());
 
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -356,7 +354,7 @@ public final class ChinaStock extends JPanel {
 
                         try {
                             CompletableFuture.runAsync(() -> {
-                                selectedNameStock = symbolNamesFull.get(modelRow);
+                                selectedNameStock = symbolNames.get(modelRow);
                                 selectedBench = benchSimpleMap.getOrDefault(selectedNameStock, "");
 
                                 if (priceMapBar.containsKey(selectedNameStock)) {
@@ -598,7 +596,7 @@ public final class ChinaStock extends JPanel {
         graphButton.addActionListener(al -> {
             CompletableFuture.runAsync(() -> {
                 try {
-                    graph1.setNavigableMap(priceMapBar.get(symbolNamesFull.get(modelRow)));
+                    graph1.setNavigableMap(priceMapBar.get(symbolNames.get(modelRow)));
                     graph2.fillInGraph(tf3.getText());
                     graph3.fillInGraph(tf4.getText());
                     graph4.fillInGraph(tf5.getText());
@@ -2270,7 +2268,7 @@ public final class ChinaStock extends JPanel {
         @Override
         public Object getValueAt(int rowIn, int col) {
 
-            String name = symbolNamesFull.get(rowIn);
+            String name = symbolNames.get(rowIn);
             //String name = priceMapBarDetail.keySet().stream().collect(toList()).get(rowIn);
 
             switch (col) {
@@ -2614,8 +2612,9 @@ public final class ChinaStock extends JPanel {
 
                 //寄
                 case 65:
-                    return (returnMap.containsKey(name) && weightMap.containsKey(name) && SinaStock.rtn != 0.0)
-                            ? round(1000d * returnMap.get(name) * weightMap.get(name) / SinaStock.rtn) / 10d : 0.0;
+                    return 0.0;
+//                    return (returnMap.containsKey(name) && nameMap.containsKey(name) && SinaStock.rtn != 0.0)
+//                            ? round(1000d * returnMap.get(name) * weightMap.get(name) / SinaStock.rtn) / 10d : 0.0;
 
                 //dayPeaks
                 case 66:

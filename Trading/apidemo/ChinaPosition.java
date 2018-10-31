@@ -117,7 +117,8 @@ public class ChinaPosition extends JPanel {
     private static final Predicate<Map.Entry<String, ?>> FUT_PRED = m -> m.getKey().startsWith("SGXA50");
     private static final Predicate<Map.Entry<String, ?>> HK_PRED = e -> isHKStock(e.getKey());
 
-    private static volatile Predicate<Map.Entry<String, ?>> GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
+    //private static volatile Predicate<Map.Entry<String, ?>> GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
+    private static volatile Predicate<Map.Entry<String, ?>> GEN_MTM_PRED = e -> true;
     private static volatile UpdateFrequency updateFreq = UpdateFrequency.oneSec;
 
 
@@ -456,7 +457,8 @@ public class ChinaPosition extends JPanel {
         List<String> res;
         Pattern p = Pattern.compile("sh|sz");
         Matcher m;
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "wtdMaxMin.txt"), "gbk"))) {
+        try (BufferedReader reader1 = new BufferedReader
+                (new InputStreamReader(new FileInputStream(TradingConstants.GLOBALPATH + "wtdMaxMin.txt"), "gbk"))) {
             while ((line1 = reader1.readLine()) != null) {
                 res = Arrays.asList(line1.split("\\s+"));
                 m = p.matcher(res.get(0));
@@ -1476,25 +1478,25 @@ public class ChinaPosition extends JPanel {
                     return "T Tr Pnl";
                 case 21:
                     return "T Total Pnl";
+//                case 22:
+//                    return "P%";
                 case 22:
-                    return "P%";
-                case 23:
                     return "wOpen";
-                case 24:
+                case 23:
                     return "wOpenT";
-                case 25:
+                case 24:
                     return "wDev";
-                case 26:
+                case 25:
                     return "mOpen";
-                case 27:
+                case 26:
                     return "mOpenT";
-                case 28:
+                case 27:
                     return "mDev";
-                case 29:
+                case 28:
                     return "yOpen";
-                case 30:
+                case 29:
                     return "yOpenT";
-                case 31:
+                case 30:
                     return "yDev";
 
 //                case 25:
@@ -1538,13 +1540,11 @@ public class ChinaPosition extends JPanel {
                     return Long.class;
                 case 19:
                     return Integer.class;
-                case 22:
-                    return Integer.class;
-                case 24:
+                case 23:
                     return LocalDateTime.class;
-                case 27:
+                case 26:
                     return LocalDate.class;
-                case 30:
+                case 29:
                     return LocalDate.class;
 
 //                case 26:
@@ -1626,16 +1626,15 @@ public class ChinaPosition extends JPanel {
                     return r(getBuyTradePnl(symbol) + getSellTradePnl(symbol));
                 case 21:
                     return r(getTodayTotalPnl(symbol));
+
                 case 22:
-                    return ChinaStock.getPercentileBar(symbol);
-                case 23:
                     if (priceMapBarDetail.containsKey(symbol) &&
                             priceMapBarDetail.get(symbol).size() > 0) {
                         return priceMapBarDetail.get(symbol).firstEntry().getValue();
                     } else {
                         return 0.0;
                     }
-                case 24:
+                case 23:
                     if (priceMapBarDetail.containsKey(symbol) &&
                             priceMapBarDetail.get(symbol).size() > 0) {
                         return priceMapBarDetail.get(symbol).firstEntry().getKey()
@@ -1645,7 +1644,7 @@ public class ChinaPosition extends JPanel {
                         return LocalDateTime.now().truncatedTo(ChronoUnit.DAYS);
                         //.format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
                     }
-                case 25:
+                case 24:
                     if (priceMapBarDetail.containsKey(symbol) &&
                             priceMapBarDetail.get(symbol).size() > 0) {
                         return Math.round(10000d * (priceMapBarDetail.get(symbol).lastEntry().getValue() /
@@ -1653,7 +1652,7 @@ public class ChinaPosition extends JPanel {
                     }
                     return 0.0;
 
-                case 26:
+                case 25:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
                         return ytdData.get(symbol).entrySet().stream()
@@ -1661,7 +1660,7 @@ public class ChinaPosition extends JPanel {
                                 .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
                     }
                     return 0.0;
-                case 27:
+                case 26:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
                         return ytdData.get(symbol).entrySet().stream()
@@ -1671,7 +1670,7 @@ public class ChinaPosition extends JPanel {
                     }
                     return getLastMonthLastDay();
 
-                case 28:
+                case 27:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
                         double monthOpen = ytdData.get(symbol).entrySet().stream()
@@ -1681,7 +1680,7 @@ public class ChinaPosition extends JPanel {
                     }
                     return 0.0;
 
-                case 29:
+                case 28:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_YEAR_LAST_DAY)) {
                         return ytdData.get(symbol).entrySet().stream()
@@ -1689,7 +1688,7 @@ public class ChinaPosition extends JPanel {
                                 .findFirst().map(Entry::getValue).map(SimpleBar::getOpen).orElse(0.0);
                     }
                     return 0.0;
-                case 30:
+                case 29:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_YEAR_LAST_DAY)) {
                         return ytdData.get(symbol).entrySet().stream()
@@ -1698,7 +1697,7 @@ public class ChinaPosition extends JPanel {
                         //.format(DateTimeFormatter.ofPattern("MM-dd"));
                     }
                     return LAST_YEAR_LAST_DAY;
-                case 31:
+                case 30:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_YEAR_LAST_DAY)) {
                         double yOpen = ytdData.get(symbol).entrySet().stream()
@@ -1708,7 +1707,6 @@ public class ChinaPosition extends JPanel {
                     } else {
                         return 0.0;
                     }
-
 
                     // change remote dir name test
 //                case 25:
