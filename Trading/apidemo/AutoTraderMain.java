@@ -55,7 +55,7 @@ public class AutoTraderMain extends JPanel {
     static final double SGXA50_AUTO_VOL_THRESH = 0.4;
 
     static volatile AtomicBoolean noMoreSell = new AtomicBoolean(false);
-    static volatile AtomicBoolean noMoreBuy = new AtomicBoolean(false);
+    static volatile AtomicBoolean noMoreBuy = new AtomicBoolean(true);
 
     static ApiController apcon;
 

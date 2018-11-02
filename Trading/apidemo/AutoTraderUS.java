@@ -151,7 +151,7 @@ public class AutoTraderUS {
             //usMinuteDevTrader(symbol, nowMilli, freshPrice);
             //usQHrDevTrader(symbol, nowMilli, freshPrice);
             //usRelativeProfitTaker(symbol, nowMilli, freshPrice);
-            usDev(symbol, nowMilli, freshPrice);
+            //usDev(symbol, nowMilli, freshPrice);
             //usHalfHourDevTrader(symbol, nowMilli, freshPrice);
         }
         //usPostCutoffLiq(symbol, nowMilli, freshPrice);

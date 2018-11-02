@@ -184,7 +184,7 @@ public class ChinaPosition extends JPanel {
                                                         "#:", numTradesByOrder.getOrDefault(e1.getKey(), 0L),
                                                         "Tot Q: ", quantitySumByOrder.getOrDefault(e1.getKey(), 0d), r(e1.getValue())))
                                                 .collect(Collectors.joining(","))));
-                        pr("pnl string ", selected, pnlString);
+                        //pr("pnl string ", selected, pnlString);
                     });
                 }
                 return comp;
@@ -1541,7 +1541,7 @@ public class ChinaPosition extends JPanel {
                 case 19:
                     return Integer.class;
                 case 23:
-                    return LocalDateTime.class;
+                    return LocalDate.class;
                 case 26:
                     return LocalDate.class;
                 case 29:
@@ -1626,7 +1626,6 @@ public class ChinaPosition extends JPanel {
                     return r(getBuyTradePnl(symbol) + getSellTradePnl(symbol));
                 case 21:
                     return r(getTodayTotalPnl(symbol));
-
                 case 22:
                     if (priceMapBarDetail.containsKey(symbol) &&
                             priceMapBarDetail.get(symbol).size() > 0) {
@@ -1637,11 +1636,11 @@ public class ChinaPosition extends JPanel {
                 case 23:
                     if (priceMapBarDetail.containsKey(symbol) &&
                             priceMapBarDetail.get(symbol).size() > 0) {
-                        return priceMapBarDetail.get(symbol).firstEntry().getKey()
-                                .truncatedTo(ChronoUnit.MINUTES);
+                        return priceMapBarDetail.get(symbol).firstEntry().getKey().toLocalDate();
                         //.format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
                     } else {
-                        return LocalDateTime.now().truncatedTo(ChronoUnit.DAYS);
+                        return LocalDate.now();
+                        //return LocalDateTime.now().truncatedTo(ChronoUnit.DAYS);
                         //.format(DateTimeFormatter.ofPattern("MM-dd HH:mm"));
                     }
                 case 24:
@@ -1651,7 +1650,6 @@ public class ChinaPosition extends JPanel {
                                 priceMapBarDetail.get(symbol).firstEntry().getValue() - 1)) / 100d;
                     }
                     return 0.0;
-
                 case 25:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {
@@ -1669,7 +1667,6 @@ public class ChinaPosition extends JPanel {
                         //.format(DateTimeFormatter.ofPattern("MM-dd"));
                     }
                     return getLastMonthLastDay();
-
                 case 27:
                     if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0
                             && ytdData.get(symbol).lastKey().isAfter(LAST_MONTH_LAST_DAY)) {

@@ -37,13 +37,14 @@ import static apidemo.AutoTraderMain.ltof;
 import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
+import static apidemo.XuTraderHelper.getTradeDate;
 import static apidemo.XuTraderHelper.outputToAll;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static utility.Utility.pr;
 
 public final class ChinaMain implements IConnectionHandler {
     public static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now());
-    public static volatile LocalDate currentTradingDate;
+    public static volatile LocalDate currentTradingDate = getTradeDate(LocalDateTime.now());
 
     static {
         NewLookAndFeel.register();

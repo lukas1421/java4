@@ -736,7 +736,7 @@ public class XuTraderHelper {
     }
 
 
-    static LocalDate getTradeDate(LocalDateTime ldt) {
+    public static LocalDate getTradeDate(LocalDateTime ldt) {
         if (checkTimeRangeBool(ldt.toLocalTime(), 0, 0, 5, 0)) {
             return ldt.toLocalDate().minusDays(1);
         }

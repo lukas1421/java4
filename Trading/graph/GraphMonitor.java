@@ -29,6 +29,7 @@ import static apidemo.ChinaData.priceMapBar;
 import static apidemo.ChinaData.priceMapBarDetail;
 import static apidemo.ChinaKeyMonitor.dispGran;
 import static apidemo.ChinaStock.closeMap;
+import static apidemo.XuTraderHelper.getTradeDate;
 import static client.OrderStatus.*;
 import static graph.GraphBar.pmbDetailToSimpleBarT;
 import static java.lang.Math.*;
@@ -404,7 +405,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         NavigableMap<LocalDateTime, SimpleBar> res = new ConcurrentSkipListMap<>();
 
         if (dispGran == DisplayGranularity._1MDATA) {
-            res = trimMapWithLocalTimePred(priceMapToLDT(tmIn, ChinaMain.currentTradingDate),
+            res = trimMapWithLocalTimePred(priceMapToLDT(tmIn, getTradeDate(LocalDateTime.now())),
                     e -> e.isAfter(ltof(8, 59)));
         } else if (dispGran == DisplayGranularity._5MDATA) {
             if (HistChinaStocks.chinaWtd.containsKey(symbol) && HistChinaStocks.chinaWtd.get(symbol).size() > 0) {

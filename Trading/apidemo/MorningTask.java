@@ -72,7 +72,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
             writeA50(out);
             writeA50_MW(out);
             writeA50FT(out);
-            writeXIN0U(out);
+            //writeXIN0U(out);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
