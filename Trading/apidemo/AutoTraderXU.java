@@ -165,8 +165,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     public static volatile Contract activeFutCt = gettingActiveContract();
 
     public static volatile DisplayGranularity gran = DisplayGranularity._5MDATA;
-    private static volatile Map<Double, Double> activeFutLiveOrder = new HashMap<>();
-    //public static volatile Map<Integer, Order> activeFutLiveIDOrderMap = new HashMap<>();
+    private static volatile Map<Double, Double> activeFutLiveOrder = new ConcurrentHashMap<>();
 
     public static volatile EnumMap<FutType, Double> bidMap = new EnumMap<>(FutType.class);
     public static volatile EnumMap<FutType, Double> askMap = new EnumMap<>(FutType.class);
@@ -389,8 +388,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 }
                 apcon.reqPositions(getThis());
                 activeFutLiveOrder = new HashMap<>();
-                //activeFutLiveIDOrderMap = new HashMap<>();
-                //liveIDOrderMap = new HashMap<>();
+                liveIDOrderMap = new ConcurrentHashMap<>();
+                liveSymbolOrderSet = new ConcurrentHashMap<>();
 
                 apcon.reqLiveOrders(getThis());
 
@@ -458,7 +457,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         JButton reqLiveOrdersButton = new JButton(" Live Orders ");
         reqLiveOrdersButton.addActionListener(l -> {
-            activeFutLiveOrder = new HashMap<>();
+            activeFutLiveOrder = new ConcurrentHashMap<>();
+            liveIDOrderMap = new ConcurrentHashMap<>();
+            liveSymbolOrderSet = new ConcurrentHashMap<>();
             apcon.reqLiveOrders(getThis());
         });
 
@@ -4155,7 +4156,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     @Override
     public void openOrderEnd() {
-
+        pr("AutoTraderXU: open order end ", "live id order map ", liveIDOrderMap,
+                "live symbol order set", liveSymbolOrderSet,
+                "active fut live order", activeFutLiveOrder);
     }
 
     @Override
