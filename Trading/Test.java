@@ -1,3 +1,5 @@
+import apidemo.TradingConstants;
+
 import java.time.LocalDate;
 
 import static utility.Utility.pr;
@@ -16,14 +18,10 @@ public class Test {
     }
 
     public static void main(String[] args) {
-
-//        Pattern p = Pattern.compile("^(?!sh|sz).*$");
-//        Matcher m = p.matcher("hk000001");
-//        while (m.find()) {
-//            pr(m.group());
-//        }
-        pr(getLastYearLastDay());
-
+        pr("last expire is", TradingConstants.getFutLastExpiry());
+        pr("front expire is", TradingConstants.getFutFrontExpiry());
+        pr("back expire is", TradingConstants.getFutBackExpiry());
+        pr("back2 expire is", TradingConstants.getFut2BackExpiry());
     }
 
 //

@@ -4156,9 +4156,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     @Override
     public void openOrderEnd() {
-        pr("AutoTraderXU: open order end ", "live id order map ", liveIDOrderMap,
-                "live symbol order set", liveSymbolOrderSet,
-                "active fut live order", activeFutLiveOrder);
+//        pr("AutoTraderXU: open order end ", "live id order map ", liveIDOrderMap,
+//                "live symbol order set", liveSymbolOrderSet,
+//                "active fut live order", activeFutLiveOrder);
     }
 
     @Override

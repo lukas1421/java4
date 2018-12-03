@@ -73,6 +73,21 @@ public final class TradingConstants {
         //return A50_BACK_EXPIRY;
     }
 
+    public static String getFut2BackExpiry() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = LocalDate.now();
+        LocalTime time = LocalTime.now();
+
+        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
+        if (today.isAfter(thisMonthExpiryDate) ||
+                (today.isEqual(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
+            return getFutureExpiryDateString(today.plusMonths(3L));
+        } else {
+            return getFutureExpiryDateString(today.plusMonths(2L));
+        }
+        //return A50_BACK_EXPIRY;
+    }
+
     public static final String GLOBALPATH = System.getProperty("os.name").equalsIgnoreCase("linux") ?
             "/home/luke/Trading/" : "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";
 
@@ -116,7 +131,8 @@ public final class TradingConstants {
     }
 
     private static LocalDate getFutureExpiryDate(int year, Month m) {
-        LocalDate res = LocalDate.of(year, m.plus(1), 1);
+        //LocalDate res = LocalDate.of(year, m.plus(1), 1);
+        LocalDate res = LocalDate.of(year, m, 1).plusMonths(1);
 //        while (res.getDayOfWeek() != TradingConstants.futExpiryWeekDay) {
 //            res = res.minusDays(1);
 //        }
