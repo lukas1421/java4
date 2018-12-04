@@ -171,11 +171,11 @@ public class SimpleBar implements Serializable, Comparable<SimpleBar> {
         return (open != 0.0) ? (close / open - 1) : 0.0;
     }
 
-    public int getOP() {
+    public int getOpenPerc() {
         return (int) ((open - low) / (high - low) * 100d);
     }
 
-    public int getCP() {
+    public int getClosePerc() {
         return (int) ((close - low) / (high - low) * 100d);
     }
 

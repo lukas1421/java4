@@ -149,14 +149,41 @@ public final class ChinaStockHelper {
         }
     }
 
+    private static void outputPMBToFile(NavigableMap<?, SimpleBar> inMap, File outfile) {
+        if (inMap.size() == 0) {
+            return;
+        }
+
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(outfile, false))) {
+            inMap.forEach((k, v) -> {
+                try {
+                    out.append(str(k, "\t", v.getOpen(), "\t", v.getHigh(),
+                            "\t", v.getLow(), "\t", v.getClose()));
+                    out.newLine();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            });
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+
     static void outputPMBDetailedToTxt(NavigableMap<?, Double> inMap) {
-        //pmbOutput.txt
-        pr(" outputting options");
-        File output = new File(TradingConstants.GLOBALPATH + "pmbOutput.txt");
+        File output = new File(TradingConstants.GLOBALPATH + "pmbDetailedOutput.txt");
         if (inMap.size() == 0) {
             return;
         }
         outputPMBDetailedToFile(inMap, output);
+    }
+
+    static void outputPMBToTxt(NavigableMap<?, SimpleBar> inMap) {
+        File output = new File(TradingConstants.GLOBALPATH + "pmbOutput.txt");
+        if (inMap.size() == 0) {
+            return;
+        }
+        outputPMBToFile(inMap, output);
     }
 
     static <T> Comparator<T> reverseComp(Comparator<T> c) {
@@ -218,9 +245,7 @@ public final class ChinaStockHelper {
                 if (lastKey.isAfter(startTime)) {
                     while (!t.equals(startTime)) {
                         if (t.isAfter(LocalTime.of(11, 30)) && t.isBefore(LocalTime.of(13, 0))) {
-                            if (tm.containsKey(t)) {
-                                tm.remove(t);
-                            }
+                            tm.remove(t);
                         } else if (!tm.containsKey(t) || tm.get(t).containsZero()) {
                             //pr("name has issue in filling holes " + name + " " + t);
                             if (tm.lastKey().isBefore(t)) {

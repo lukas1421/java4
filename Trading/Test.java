@@ -23,6 +23,4 @@ public class Test {
         pr("back expire is", TradingConstants.getFutBackExpiry());
         pr("back2 expire is", TradingConstants.getFut2BackExpiry());
     }
-
-//
 }

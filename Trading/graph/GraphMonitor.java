@@ -284,7 +284,10 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
 
         g2.drawString("年夏" + Double.toString(ytdSharpe), getWidth() * 5 / 6 + 10, getHeight() - 5);
 
-        g2.drawString("周夏" + Double.toString(wtdSharpe), getWidth() * 4 / 6, getHeight() - 20);
+        //g2.drawString("周夏" + Double.toString(wtdSharpe), getWidth() * 4 / 6, getHeight() - 20);
+        g2.drawString(">O:" + Long.toString(getAboveOpenPercentage(symbol))
+                , getWidth() * 4 / 6, getHeight() - 20);
+
 
         g2.setColor(new Color(0, Math.min(250, 250 * (100 - wtdP) / 100), 0));
         //g2.fillRect(0,0, getWidth(), getHeight());
@@ -395,6 +398,7 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         }
     }
 
+
     @Override
     public void refresh() {
         fillInGraph(symbol);
@@ -441,16 +445,16 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         return 0.0;
     }
 
-//    private void getYtdY2CloseP(String name) {
+//    private void getYtdY2CloseP(String symbol) {
 //        double current;
 //        double maxT;
 //        double minT;
 //
-//        if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
-//            current = priceMapBar.get(name).lastEntry().getValue().getClose();
-//            maxT = priceMapBar.get(name).entrySet().stream().max(BAR_HIGH).map(Map.Entry::getValue)
+//        if (priceMapBar.containsKey(symbol) && priceMapBar.get(symbol).size() > 0) {
+//            current = priceMapBar.get(symbol).lastEntry().getValue().getClose();
+//            maxT = priceMapBar.get(symbol).entrySet().stream().max(BAR_HIGH).map(Map.Entry::getValue)
 //                    .map(SimpleBar::getHigh).orElse(0.0);
-//            minT = priceMapBar.get(name).entrySet().stream().min(BAR_LOW).map(Map.Entry::getValue)
+//            minT = priceMapBar.get(symbol).entrySet().stream().min(BAR_LOW).map(Map.Entry::getValue)
 //                    .map(SimpleBar::getHigh).orElse(0.0);
 //        } else {
 //            current = 0.0;
@@ -458,20 +462,20 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
 //            minT = Double.MAX_VALUE;
 //        }
 //
-//        if (ChinaData.priceMapBarYtd.containsKey(name) && ChinaData.priceMapBarYtd.get(name).size() > 0) {
-//            double closeY1 = ChinaData.priceMapBarYtd.get(name).lastEntry().getValue().getClose();
-//            double maxY = ChinaData.priceMapBarYtd.get(name).entrySet().stream()
+//        if (ChinaData.priceMapBarYtd.containsKey(symbol) && ChinaData.priceMapBarYtd.get(symbol).size() > 0) {
+//            double closeY1 = ChinaData.priceMapBarYtd.get(symbol).lastEntry().getValue().getClose();
+//            double maxY = ChinaData.priceMapBarYtd.get(symbol).entrySet().stream()
 //                    .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
-//            double minY = ChinaData.priceMapBarYtd.get(name).entrySet().stream()
+//            double minY = ChinaData.priceMapBarYtd.get(symbol).entrySet().stream()
 //                    .min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
 //            ytdCloseP = (int) Math.round(100d * (closeY1 - minY) / (maxY - minY));
 //            current2DayP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, minY))
 //                    / (Utility.reduceDouble(Math::max, maxT, maxY) - Utility.reduceDouble(Math::min, minT, minY)));
 //
-//            if (ChinaData.priceMapBarY2.containsKey(name) && ChinaData.priceMapBarY2.get(name).size() > 0) {
-//                double maxY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
+//            if (ChinaData.priceMapBarY2.containsKey(symbol) && ChinaData.priceMapBarY2.get(symbol).size() > 0) {
+//                double maxY2 = ChinaData.priceMapBarY2.get(symbol).entrySet().stream()
 //                        .max(BAR_HIGH).map(Map.Entry::getValue).map(SimpleBar::getHigh).orElse(0.0);
-//                double minY2 = ChinaData.priceMapBarY2.get(name).entrySet().stream()
+//                double minY2 = ChinaData.priceMapBarY2.get(symbol).entrySet().stream()
 //                        .min(BAR_LOW).map(Map.Entry::getValue).map(SimpleBar::getLow).orElse(0.0);
 //
 //                ytdY2CloseP = (int) Math.round(100d * (closeY1 - Utility.reduceDouble(Math::min, minY2, minY))
@@ -481,9 +485,9 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
 //                        / (Utility.reduceDouble(Math::max, maxT, maxY, maxY2) - Utility.reduceDouble(Math::min, minT, minY, minY2)));
 //            }
 //
-//            wtdP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name,
-//                    Double.MAX_VALUE))) / (Utility.reduceDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
-//                    - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, Double.MAX_VALUE))));
+//            wtdP = (int) Math.round(100d * (current - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(symbol,
+//                    Double.MAX_VALUE))) / (Utility.reduceDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(symbol, 0.0))
+//                    - Utility.reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(symbol, Double.MAX_VALUE))));
 ////            System.out.println(" symbol " + symbol + " current max min wtd wtdMax wtdMin "+ str(current,maxT,minT,wtdP,
 ////                    ChinaPosition.wtdMinMap.getOrDefault(symbol,Double.MAX_VALUE), ChinaPosition.wtdMinMap.getOrDefault(symbol, Double.MAX_VALUE)));
 //        }

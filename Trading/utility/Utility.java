@@ -28,8 +28,9 @@ import java.util.function.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static apidemo.ChinaStock.priceMap;
-import static apidemo.ChinaStock.symbolNames;
+import static apidemo.AutoTraderMain.ltof;
+import static apidemo.ChinaData.priceMapBar;
+import static apidemo.ChinaStock.*;
 import static apidemo.TradingConstants.tdxPath;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
@@ -880,4 +881,28 @@ public class Utility {
         return res;
     }
 
+    public static long getAboveOpenPercentage(String symb) {
+        if (priceMapBar.containsKey(symb) && priceMapBar.get(symb).size() > 0) {
+            double open = priceMapBar.get(symb).ceilingEntry(LocalTime.of(9, 28)).getValue().getOpen();
+            double open2 = openMap.getOrDefault(symb, 0.0);
+            double open3 = getCustomOpen(symb);
+            long minuteTotal = priceMapBar.get(symb).entrySet().stream().filter(e -> e.getKey().isAfter(ltof(9, 29)))
+                    .count();
+            long aboveMinutes = priceMapBar.get(symb).entrySet().stream().filter(e -> e.getKey().isAfter(ltof(9, 29)))
+                    .filter(e -> e.getValue().getClose() > open3).count();
+            pr(symb, "open | open2 | open3 | minuteTotal | aboveMin ", open, open2, open3, minuteTotal, aboveMinutes,
+                    Math.round(100d * aboveMinutes / minuteTotal));
+            return Math.round(100d * aboveMinutes / minuteTotal);
+        }
+        return 0L;
+    }
+
+    public static double getCustomOpen(String symb) {
+        if (!symb.startsWith("SGX")) {
+            return openMap.getOrDefault(symb, 0.0);
+        } else if (priceMapBar.containsKey(symb)) {
+            return priceMapBar.get(symb).firstEntry().getValue().getOpen();
+        }
+        return 0.0;
+    }
 }

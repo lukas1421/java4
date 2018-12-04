@@ -25,13 +25,13 @@ import static apidemo.ChinaData.*;
 import static apidemo.ChinaDataYesterday.*;
 import static apidemo.ChinaStock.*;
 import static graph.GraphHelper.*;
+import static graph.GraphHelper.getRtn;
 import static java.lang.Double.min;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toMap;
-import static utility.Utility.reduceDouble;
-import static utility.Utility.roundDownToN;
+import static utility.Utility.*;
 
 public final class GraphBar extends JComponent implements GraphFillable, MouseMotionListener, MouseListener {
 
@@ -44,7 +44,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
     int last = 0;
     double rtn = 0;
     NavigableMap<LocalTime, SimpleBar> tm;
-    String name;
+    String symbol;
     String chineseName;
     private String bench;
     private double sharpe;
@@ -64,7 +64,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
 //    }
 
     public GraphBar(Predicate<? super Entry<LocalTime, ?>> p) {
-        name = "";
+        symbol = "";
         chineseName = "";
         maxAMT = LocalTime.of(9, 30);
         minAMT = Utility.AMOPENT;
@@ -75,7 +75,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
     }
 
     public GraphBar() {
-        name = "";
+        symbol = "";
         chineseName = "";
         maxAMT = LocalTime.of(9, 30);
         minAMT = Utility.AMOPENT;
@@ -95,12 +95,12 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
 
     @Override
     public void setName(String s) {
-        this.name = s;
+        this.symbol = s;
     }
 
     @Override
     public String getName() {
-        return this.name;
+        return this.symbol;
     }
 
     public void setChineseName(String s) {
@@ -135,35 +135,35 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
     }
 
     @Override
-    public void fillInGraph(String name) {
-        this.name = name;
-        setName(name);
-        setChineseName(nameMap.get(name));
-        setBench(benchMap.getOrDefault(name, ""));
-        setSharpe(sharpeMap.getOrDefault(name, 0.0));
+    public void fillInGraph(String symb) {
+        this.symbol = symb;
+        setName(symb);
+        setChineseName(nameMap.get(symb));
+        setBench(benchMap.getOrDefault(symb, ""));
+        setSharpe(sharpeMap.getOrDefault(symb, 0.0));
 
         //System.out.println( " bench is " + bench );
-        setSize1(sizeMap.getOrDefault(name, 0L));
-        if (NORMAL_STOCK.test(name)) {
-            this.setNavigableMap(priceMapBar.get(name));
+        setSize1(sizeMap.getOrDefault(symb, 0L));
+        if (NORMAL_STOCK.test(symb)) {
+            this.setNavigableMap(priceMapBar.get(symb));
             this.computeWtd();
         } else {
-            if (priceMapBarDetail.containsKey(name) && priceMapBarDetail.get(name).size() > 0) {
-                this.setNavigableMap(pmbDetailToSimpleBarT(priceMapBarDetail.get(name)));
+            if (priceMapBarDetail.containsKey(symb) && priceMapBarDetail.get(symb).size() > 0) {
+                this.setNavigableMap(pmbDetailToSimpleBarT(priceMapBarDetail.get(symb)));
             } else {
                 this.setNavigableMap(new ConcurrentSkipListMap<>());
             }
         }
     }
 
-    public void fillInGraphHK(String name) {
+    public void fillInGraphHK(String symb) {
         //System.out.println(" filling HK " + symbol);
-        this.name = name;
-        setName(name);
-        setChineseName(HKStock.hkNameMap.getOrDefault(name, ""));
+        this.symbol = symb;
+        setName(symb);
+        setChineseName(HKStock.hkNameMap.getOrDefault(symb, ""));
 
-//        if (HKStock.hkData.containsKey(name) && HKStock.hkData.get(name).size() > 0) {
-//            this.setNavigableMap(HKStock.hkData.get(name));
+//        if (HKStock.hkData.containsKey(symbol) && HKStock.hkData.get(symbol).size() > 0) {
+//            this.setNavigableMap(HKStock.hkData.get(symbol));
 //        } else {
 //            this.setNavigableMap(new ConcurrentSkipListMap<>());
 //        }
@@ -171,11 +171,11 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
 
     @Override
     public void refresh() {
-        fillInGraph(name);
+        fillInGraph(symbol);
     }
 
     public void refresh(Consumer<String> cons) {
-        cons.accept(name);
+        cons.accept(symbol);
     }
 
     @SuppressWarnings("Duplicates")
@@ -253,8 +253,8 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         //g2.drawString(Double.toString(ChinaStock.getCurrentMARatio(symbol)),getWidth()-40, getHeight()/2);
         g2.drawString("周" + Integer.toString(wtdP), getWidth() - 40, getHeight() / 2);
 
-        if (!ofNullable(name).orElse("").equals("")) {
-            g2.drawString(name, 5, 15);
+        if (!ofNullable(symbol).orElse("").equals("")) {
+            g2.drawString(symbol, 5, 15);
         }
         if (!ofNullable(chineseName).orElse("").equals("")) {
             g2.drawString(chineseName, getWidth() / 8, 15);
@@ -264,7 +264,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         }
 
         //add bench here
-        g2.drawString(Double.toString(getLast()) + " (" + (Math.round(100d * closeMap.getOrDefault(name, 0.0))) / 100d + ")"
+        g2.drawString(Double.toString(getLast()) + " (" + (Math.round(100d * closeMap.getOrDefault(symbol, 0.0))) / 100d + ")"
                 , getWidth() * 3 / 8, 15);
 
         g2.drawString("P%:" + Integer.toString(getCurrentPercentile()), getWidth() * 9 / 16, 15);
@@ -294,7 +294,9 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         g2.drawString("CC " + Double.toString(getRetCC()), getWidth() / 9 * 5 + 70, getHeight() - 5);
         g2.drawString("振" + Double.toString(getRangeY()), getWidth() / 9 * 6 + 70, getHeight() - 5);
         g2.drawString("折R " + Double.toString(getHOCHRangeRatio()), getWidth() / 9 * 7 + 50, getHeight() - 5);
-        g2.drawString("晏 " + Integer.toString(getPMchgY()), getWidth() - 60, getHeight() - 5);
+        //g2.drawString("晏 " + Integer.toString(getPMchgY()), getWidth() - 60, getHeight() - 5);
+        g2.drawString(">O%" + Long.toString(getAboveOpenPercentage(symbol)), getWidth() - 80, getHeight() - 5);
+
 
         g2.setColor(new Color(0, colorGen(wtdP), 0));
         g2.fillRect(getWidth() - 30, 20, 20, 20);
@@ -321,11 +323,11 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         double maxT;
         double minT;
 
-        if (priceMapBar.containsKey(name) && priceMapBar.get(name).size() > 0) {
-            current = priceMapBar.get(name).lastEntry().getValue().getClose();
-            maxT = priceMapBar.get(name).entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue)
+        if (priceMapBar.containsKey(symbol) && priceMapBar.get(symbol).size() > 0) {
+            current = priceMapBar.get(symbol).lastEntry().getValue().getClose();
+            maxT = priceMapBar.get(symbol).entrySet().stream().max(Utility.BAR_HIGH).map(Entry::getValue)
                     .map(SimpleBar::getHigh).orElse(0.0);
-            minT = priceMapBar.get(name).entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue)
+            minT = priceMapBar.get(symbol).entrySet().stream().min(Utility.BAR_LOW).map(Entry::getValue)
                     .map(SimpleBar::getHigh).orElse(0.0);
 
         } else {
@@ -335,9 +337,9 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
         }
 
         wtdP = (int) Math.round(100d * (current - reduceDouble(Math::min, minT,
-                ChinaPosition.wtdMinMap.getOrDefault(name, 0.0)))
-                / (reduceDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(name, 0.0))
-                - reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(name, 0.0))));
+                ChinaPosition.wtdMinMap.getOrDefault(symbol, 0.0)))
+                / (reduceDouble(Math::max, maxT, ChinaPosition.wtdMaxMap.getOrDefault(symbol, 0.0))
+                - reduceDouble(Math::min, minT, ChinaPosition.wtdMinMap.getOrDefault(symbol, 0.0))));
     }
 
     @Override
@@ -366,7 +368,7 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
 //    }
 
     private double getRangeY() {
-        return Utility.noZeroArrayGen(name, minMapY, maxMapY) ? round(100d * (maxMapY.get(name) / minMapY.get(name) - 1)) / 100d : 0.0;
+        return Utility.noZeroArrayGen(symbol, minMapY, maxMapY) ? round(100d * (maxMapY.get(symbol) / minMapY.get(symbol) - 1)) / 100d : 0.0;
     }
 
 //    double getMaxRtn() {
@@ -388,75 +390,75 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
 //    }
 
     double getLast() {
-        return round(100d * priceMap.getOrDefault(name, (tm.size() > 0) ? tm.lastEntry().getValue().getClose() : 0.0)) / 100d;
+        return round(100d * priceMap.getOrDefault(symbol, (tm.size() > 0) ? tm.lastEntry().getValue().getClose() : 0.0)) / 100d;
     }
 
     private long getSize1() {
-        return sizeMap.getOrDefault(name, 0L);
+        return sizeMap.getOrDefault(symbol, 0L);
     }
 
     private double getRetOPC() {
-        return (Utility.noZeroArrayGen(name, closeMap, openMap)) ? round(1000d * (openMap.get(name) / closeMap.get(name) - 1)) / 10d : 0.0;
+        return (Utility.noZeroArrayGen(symbol, closeMap, openMap)) ? round(1000d * (openMap.get(symbol) / closeMap.get(symbol) - 1)) / 10d : 0.0;
     }
 
     private double getFirst1() {
-        return (Utility.normalMapGen(name, priceMapBar) && priceMapBar.get(name).containsKey(Utility.AMOPENT) && Utility.noZeroArrayGen(name, openMap))
-                ? round(1000d * (priceMapBar.get(name).floorEntry(Utility.AMOPENT).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
+        return (Utility.normalMapGen(symbol, priceMapBar) && priceMapBar.get(symbol).containsKey(Utility.AMOPENT) && Utility.noZeroArrayGen(symbol, openMap))
+                ? round(1000d * (priceMapBar.get(symbol).floorEntry(Utility.AMOPENT).getValue().getClose() / openMap.get(symbol) - 1)) / 10d : 0.0;
     }
 
     private double getFirst10() {
-        return (Utility.normalMapGen(name, priceMapBar) && priceMapBar.get(name).containsKey(Utility.AMOPENT) && Utility.noZeroArrayGen(name, openMap))
-                ? round(1000d * (priceMapBar.get(name).floorEntry(Utility.AM940T).getValue().getClose() / openMap.get(name) - 1)) / 10d : 0.0;
+        return (Utility.normalMapGen(symbol, priceMapBar) && priceMapBar.get(symbol).containsKey(Utility.AMOPENT) && Utility.noZeroArrayGen(symbol, openMap))
+                ? round(1000d * (priceMapBar.get(symbol).floorEntry(Utility.AM940T).getValue().getClose() / openMap.get(symbol) - 1)) / 10d : 0.0;
     }
 
     private int getCurrentMaxMinYP() {
-        return (Utility.noZeroArrayGen(name, minMapY, priceMap)) ? (int) min(100, round(100d * (priceMap.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+        return (Utility.noZeroArrayGen(symbol, minMapY, priceMap)) ? (int) min(100, round(100d * (priceMap.get(symbol) - minMapY.get(symbol)) / (maxMapY.get(symbol) - minMapY.get(symbol)))) : 0;
     }
 
     private double getOpenYP() {
-        return (Utility.noZeroArrayGen(name, minMapY)) ? (int) min(100, round(100d * (openMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+        return (Utility.noZeroArrayGen(symbol, minMapY)) ? (int) min(100, round(100d * (openMapY.get(symbol) - minMapY.get(symbol)) / (maxMapY.get(symbol) - minMapY.get(symbol)))) : 0;
     }
 
     private int getCloseYP() {
-        return (Utility.noZeroArrayGen(name, minMapY)) ? (int) min(100, round(100d * (closeMapY.get(name) - minMapY.get(name)) / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+        return (Utility.noZeroArrayGen(symbol, minMapY)) ? (int) min(100, round(100d * (closeMapY.get(symbol) - minMapY.get(symbol)) / (maxMapY.get(symbol) - minMapY.get(symbol)))) : 0;
     }
 
     private int getCurrentPercentile() {
-        return (Utility.noZeroArrayGen(name, priceMap, maxMap, minMap)) ?
-                (int) Math.round(min(100, round(100d * ((priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))))) : 0;
+        return (Utility.noZeroArrayGen(symbol, priceMap, maxMap, minMap)) ?
+                (int) Math.round(min(100, round(100d * ((priceMap.get(symbol) - minMap.get(symbol)) / (maxMap.get(symbol) - minMap.get(symbol)))))) : 0;
     }
 
     private double getRetCHY() {
-        return (Utility.noZeroArrayGen(name, closeMapY, maxMapY)) ? min(100.0, round(1000d * log(closeMapY.get(name) / maxMapY.get(name)))) / 10d : 0.0;
+        return (Utility.noZeroArrayGen(symbol, closeMapY, maxMapY)) ? min(100.0, round(1000d * log(closeMapY.get(symbol) / maxMapY.get(symbol)))) / 10d : 0.0;
     }
 
     private double getHO() {
-        return round(1000d * ofNullable(retHOY.get(name)).orElse(0.0)) / 10d;
+        return round(1000d * ofNullable(retHOY.get(symbol)).orElse(0.0)) / 10d;
     }
 
     private double getHOCHRangeRatio() {
-        return (Utility.noZeroArrayGen(name, retHOY, retCHY, minMapY, maxMapY))
-                ? round((retHOY.get(name) - retCHY.get(name)) / ((maxMapY.get(name) / minMapY.get(name) - 1)) * 10d) / 10d : 0.0;
+        return (Utility.noZeroArrayGen(symbol, retHOY, retCHY, minMapY, maxMapY))
+                ? round((retHOY.get(symbol) - retCHY.get(symbol)) / ((maxMapY.get(symbol) / minMapY.get(symbol) - 1)) * 10d) / 10d : 0.0;
     }
 
     private double getRetCLY() {
-        return (Utility.noZeroArrayGen(name, closeMapY, minMapY)) ? min(100.0, round(1000d * log(closeMapY.get(name) / minMapY.get(name)))) / 10d : 0.0;
+        return (Utility.noZeroArrayGen(symbol, closeMapY, minMapY)) ? min(100.0, round(1000d * log(closeMapY.get(symbol) / minMapY.get(symbol)))) / 10d : 0.0;
     }
 
     private double getRetCC() {
-        return round(1000d * ofNullable(retCCY.get(name)).orElse(0.0)) / 10d;
+        return round(1000d * ofNullable(retCCY.get(symbol)).orElse(0.0)) / 10d;
     }
 
     private double getRetCO() {
-        return round(1000d * ofNullable(retCOY.get(name)).orElse(0.0)) / 10d;
+        return round(1000d * ofNullable(retCOY.get(symbol)).orElse(0.0)) / 10d;
     }
 
     private int getMinTY() {
-        return ofNullable(minTY.get(name)).orElse(0);
+        return ofNullable(minTY.get(symbol)).orElse(0);
     }
 
     private int getMaxTY() {
-        return ofNullable(maxTY.get(name)).orElse(0);
+        return ofNullable(maxTY.get(symbol)).orElse(0);
     }
 
 //    LocalTime getAMMinT() {
@@ -474,18 +476,18 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
 //    }
 
     private Double getSizeSizeYT() {
-        if (Utility.normalMapGen(name, sizeTotalMapYtd, sizeTotalMap)) {
-            LocalTime lastEntryTime = sizeTotalMap.get(name).lastEntry().getKey();
-            double yest = ofNullable(sizeTotalMapYtd.get(name).floorEntry(lastEntryTime)).map(Entry::getValue).orElse(0.0);
-            return yest != 0.0 ? round(10d * sizeTotalMap.get(name).lastEntry().getValue() / yest) / 10d : 0.0;
+        if (Utility.normalMapGen(symbol, sizeTotalMapYtd, sizeTotalMap)) {
+            LocalTime lastEntryTime = sizeTotalMap.get(symbol).lastEntry().getKey();
+            double yest = ofNullable(sizeTotalMapYtd.get(symbol).floorEntry(lastEntryTime)).map(Entry::getValue).orElse(0.0);
+            return yest != 0.0 ? round(10d * sizeTotalMap.get(symbol).lastEntry().getValue() / yest) / 10d : 0.0;
         }
         return 0.0;
     }
 
     private int getPMchgY() {
-        return (Utility.noZeroArrayGen(name, minMapY, amCloseY, closeMapY, maxMapY))
-                ? (int) min(100, round(100d * (closeMapY.get(name) - amCloseY.get(name))
-                / (maxMapY.get(name) - minMapY.get(name)))) : 0;
+        return (Utility.noZeroArrayGen(symbol, minMapY, amCloseY, closeMapY, maxMapY))
+                ? (int) min(100, round(100d * (closeMapY.get(symbol) - amCloseY.get(symbol))
+                / (maxMapY.get(symbol) - minMapY.get(symbol)))) : 0;
     }
 
 

@@ -605,6 +605,11 @@ public final class ChinaStock extends JPanel {
                     if (selectedNameStock != "" && priceMapBarDetail.containsKey(selectedNameStock)) {
                         outputPMBDetailedToTxt(priceMapBarDetail.get(selectedNameStock));
                     }
+
+                    if (selectedNameStock != "" && priceMapBar.containsKey(selectedNameStock)) {
+                        outputPMBToTxt(priceMapBar.get(selectedNameStock));
+                    }
+
                 } catch (Exception e) {
                     e.printStackTrace();
                     tf3.setText(stock2);
@@ -1630,12 +1635,12 @@ public final class ChinaStock extends JPanel {
                 SimpleBar secLastBar = priceMapBar.get(name).lowerEntry(lastEntryTime).getValue();
 
                 double lastMinReturn = lastBar.getBarReturn();
-                int lastOP = lastBar.getOP();
-                int lastCP = lastBar.getCP();
+                int lastOP = lastBar.getOpenPerc();
+                int lastCP = lastBar.getClosePerc();
 
                 double secondLastMinReturn = secLastBar.getBarReturn();
-                int secLastOP = secLastBar.getOP();
-                int secLastCP = secLastBar.getCP();
+                int secLastOP = secLastBar.getOpenPerc();
+                int secLastCP = secLastBar.getClosePerc();
 
                 double rangeZScore0 = getMinuteRangeZScoreGen(name, 0L);
                 //double rangeZScore1 =getMinuteRangeZScoreGen(name,1L);
@@ -1709,7 +1714,7 @@ public final class ChinaStock extends JPanel {
                 (int) min(100, round(100d * (priceMap.get(name) - minMap.get(name)) / (maxMap.get(name) - minMap.get(name)))) : 0;
     }
 
-    static int getPercentileBar(String name) {
+    private static int getPercentileBar(String name) {
         if (NORMAL_STOCK.test(name)) {
             double max = GETMAX.applyAsDouble(name, Utility.IS_OPEN_PRED);
             double min = GETMIN.applyAsDouble(name, Utility.IS_OPEN_PRED);
@@ -1903,7 +1908,7 @@ public final class ChinaStock extends JPanel {
                 ? log(priceMapBar.get(name).lastEntry().getValue().getClose() / priceMapBar.get(name).ceilingEntry(Utility.PMOPENT).getValue().getOpen()) : 0.0;
     }
 
-    static double getAMRange(String name) {
+    private static double getAMRange(String name) {
         if (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET)) {
             double ammin = GETMIN.applyAsDouble(name, Utility.AM_PRED);
             double ammax = GETMAX.applyAsDouble(name, Utility.AM_PRED);
@@ -1916,7 +1921,7 @@ public final class ChinaStock extends JPanel {
         return Utility.noZeroArrayGen(name, closeMap, openMap) ? round(1000d * (openMap.get(name) / closeMap.get(name) - 1)) / 10d : 0.0;
     }
 
-    static LocalTime getMA20FirstBreakTime(String name) {
+    private static LocalTime getMA20FirstBreakTime(String name) {
         final double ma = ma20Map.getOrDefault(name, 0.0);
         return (NORMAL_STOCK.test(name) && FIRST_KEY_BEFORE.test(name, Utility.AMCLOSET) && LAST_KEY_AFTER.test(name, Utility.AMOPENT) && Utility.NO_ZERO.test(ma20Map, name))
                 ? priceMapBar.get(name).entrySet().parallelStream().filter(e1 -> e1.getValue().getHigh() > ma)
@@ -2566,11 +2571,11 @@ public final class ChinaStock extends JPanel {
 
                 //1m CP%
                 case 57:
-                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) ? priceMapBar.get(name).get(Utility.AMOPENT).getCP() : 0;
+                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) ? priceMapBar.get(name).get(Utility.AMOPENT).getClosePerc() : 0;
 
                 // 1m OP%
                 case 58:
-                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) ? priceMapBar.get(name).get(Utility.AMOPENT).getOP() : 0;
+                    return (NORMAL_STOCK.test(name) && CONTAINS_TIME.test(name, Utility.AMOPENT)) ? priceMapBar.get(name).get(Utility.AMOPENT).getOpenPerc() : 0;
 
                 //vrP%
                 case 59:
