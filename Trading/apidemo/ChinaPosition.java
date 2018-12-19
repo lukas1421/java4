@@ -357,6 +357,9 @@ public class ChinaPosition extends JPanel {
             includeExpiredButton.setText("Include Expired: " + includeExpired.get());
         });
 
+        JButton outputButton = new JButton(" Output ");
+        outputButton.addActionListener(l -> outputReport());
+
 
         JLabel updateFreqLabel = new JLabel("Update Freq");
         JRadioButton _1secButton = new JRadioButton("1s");
@@ -387,6 +390,7 @@ public class ChinaPosition extends JPanel {
         controlPanel.add(onlyFutToggle);
         controlPanel.add(includeAllToggle);
         controlPanel.add(includeExpiredButton);
+        controlPanel.add(outputButton);
         controlPanel.add(updateFreqLabel);
         controlPanel.add(_1secButton);
         controlPanel.add(_5secButton);
@@ -416,6 +420,49 @@ public class ChinaPosition extends JPanel {
         tab.setAutoCreateRowSorter(true);
 
         sorter = (TableRowSorter<BarModel_POS>) tab.getRowSorter();
+    }
+
+    private static void outputReport() {
+        currentPositionMap.entrySet().stream().sorted(Comparator.comparing(Entry::getKey))
+                .forEach((en) -> {
+                    String symbol = en.getKey();
+                    int size = en.getValue();
+                    if (size != 0.0) {
+                        if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0) {
+
+                            double yOpen = ytdData.get(symbol).higherEntry(LAST_YEAR_LAST_DAY).getValue().getOpen();
+
+                            long yCount = ytdData.get(symbol).entrySet().stream()
+                                    .filter(e -> e.getKey().isAfter(LAST_YEAR_LAST_DAY)).count();
+
+                            double mOpen = ytdData.get(symbol).higherEntry(LAST_MONTH_LAST_DAY).getValue().getOpen();
+
+                            long mCount = ytdData.get(symbol).entrySet().stream()
+                                    .filter(e -> e.getKey().isAfter(LAST_MONTH_LAST_DAY)).count();
+
+                            double last;
+                            if (priceMapBar.containsKey(symbol) && priceMapBar.get(symbol).size() > 0) {
+                                last = priceMapBar.get(symbol).lastEntry().getValue().getClose();
+                            } else {
+                                last = ytdData.get(symbol).lastEntry().getValue().getClose();
+                            }
+
+                            pr(symbol, size, ytdData.get(symbol).lastEntry().getKey(), last,
+                                    "||yOpen", ytdData.get(symbol).higherEntry(LAST_YEAR_LAST_DAY).getKey(), yOpen,
+                                    "yDays", yCount, "yUp%",
+                                    Math.round(1000d * ytdData.get(symbol).entrySet().stream()
+                                            .filter(e -> e.getKey().isAfter(LAST_YEAR_LAST_DAY))
+                                            .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d, "%",
+                                    "yDev", Math.round((last / yOpen - 1) * 1000d) / 10d, "%",
+                                    "||mOpen ", ytdData.get(symbol).higherEntry(LAST_MONTH_LAST_DAY).getKey(), mOpen,
+                                    "mDays", mCount, "mUp%",
+                                    Math.round(1000d * ytdData.get(symbol).entrySet().stream()
+                                            .filter(e -> e.getKey().isAfter(LAST_MONTH_LAST_DAY))
+                                            .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d, "%",
+                                    "mDev", Math.round((last / mOpen - 1) * 1000d) / 10d, "%");
+                        }
+                    }
+                });
     }
 
     private static String getPnlString(String symb) {
@@ -886,8 +933,6 @@ public class ChinaPosition extends JPanel {
     }
 
     static void getOpenPositionsNormal() {
-
-        //pr(" get open position from normal ");
 
         int todaySoldCol = 0;
         int todayBoughtCol = 0;

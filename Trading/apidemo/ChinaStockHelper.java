@@ -251,7 +251,7 @@ public final class ChinaStockHelper {
                             if (tm.lastKey().isBefore(t)) {
                                 tm.put(t, new SimpleBar(priceMap.getOrDefault(name, 0.0)));
                             } else {
-                                SimpleBar sb = new SimpleBar(tm.higherEntry(t).getValue());
+                                SimpleBar sb = new SimpleBar(tm.higherEntry(t).getValue().getOpen());
                                 tm.put(t, sb);
                             }
                         }

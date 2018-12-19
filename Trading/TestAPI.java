@@ -1,6 +1,4 @@
-import apidemo.AutoTraderMain;
 import client.Contract;
-import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
 
@@ -24,9 +22,6 @@ public class TestAPI {
 
 
     public static void main(String[] args) {
-
-
-
         ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
         CountDownLatch l = new CountDownLatch(1);
@@ -56,11 +51,7 @@ public class TestAPI {
 
         pr(" Time after latch released " + LocalTime.now());
 
-        //ap.req1StockLive("IQ", "SMART", "USD", new ReceiverUS("IQ"), false);
-        Contract hkCt = AutoTraderMain.tickerToHKStkContract("5");
-//        Contract ct = getFrontFutContract();
-        //Contract i = AutoTraderMain.getXINAIndexContract();
-        ap.reqHistDayData(10000, hkCt, TestAPI::handleHist, 365, Types.BarSize._1_day);
+        ap.reqPositions(new ApiController.IPositionHandler.DefaultPositionHandler());
 
     }
 }

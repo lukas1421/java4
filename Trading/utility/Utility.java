@@ -897,7 +897,7 @@ public class Utility {
         return 0L;
     }
 
-    public static double getCustomOpen(String symb) {
+    private static double getCustomOpen(String symb) {
         if (!symb.startsWith("SGX")) {
             return openMap.getOrDefault(symb, 0.0);
         } else if (priceMapBar.containsKey(symb) && priceMapBar.get(symb).size() > 0) {

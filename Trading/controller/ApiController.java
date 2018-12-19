@@ -592,19 +592,14 @@ public class ApiController implements EWrapper {
 
     // ---------------------------------------- Position handling ----------------------------------------
     public interface IPositionHandler {
-
         void position(String account, Contract contract, double position, double avgCost);
-
         void positionEnd();
-
         public static class DefaultPositionHandler implements IPositionHandler {
-
             @Override
             public void position(String account, Contract contract, double position, double avgCost) {
-
-                pr(" in default position handler " + Utility.str(account, contract.toString(), position, avgCost));
+                pr(" in default position handler " + Utility.str(account, ibContractToSymbol(contract)
+                        , position, avgCost));
             }
-
             @Override
             public void positionEnd() {
             }

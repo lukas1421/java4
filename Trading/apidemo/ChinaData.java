@@ -878,7 +878,7 @@ public final class ChinaData extends JPanel {
         String symbol = utility.Utility.ibContractToSymbol(c);
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
-            pr("handleYtdOpen", symbol, ld, open, high, low, close);
+            //pr("handleYtdOpen", symbol, ld, open, high, low, close);
             ChinaData.ytdData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         }
     }

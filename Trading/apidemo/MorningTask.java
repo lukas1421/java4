@@ -28,8 +28,15 @@ import java.util.regex.Pattern;
 
 import static utility.Utility.*;
 
-public final class MorningTask implements HistoricalHandler, LiveHandler {
+public final class MorningTask implements HistoricalHandler, LiveHandler, ApiController.IPositionHandler {
 
+
+    private static final LocalDate LAST_MONTH_LAST_DAY = getLastMonthLastDay();
+    private static final LocalDate LAST_YEAR_LAST_DAY = getLastYearLastDay();
+    private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
+            ytdData = new ConcurrentSkipListMap<>();
+    static ApiController staticController;
+    private volatile static Map<Contract, Double> holdingsMap = new HashMap<>();
     public static File output = new File(TradingConstants.GLOBALPATH + "morningOutput.txt");
     private static File bocOutput = new File(TradingConstants.GLOBALPATH + "BOCUSD.txt");
     private static File fxOutput = new File(TradingConstants.GLOBALPATH + "fx.txt");
@@ -116,6 +123,12 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
             }
         }
     }
+
+    private void reqHoldings(ApiController ap) {
+        pr(" request holdings ");
+        ap.reqPositions(this);
+    }
+
 
     @SuppressWarnings("unused")
     static void writeIndex(BufferedWriter out) {
@@ -439,6 +452,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
         clearFile(fxOutput);
 
         ApiController ap = new ApiController(new DefaultConnectionHandler(), new DefaultLogger(), new DefaultLogger());
+        staticController = ap;
         CountDownLatch l = new CountDownLatch(1);
         boolean connectionStatus = false;
 
@@ -468,6 +482,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
         getUSDDetailed(ap);
         getHKDDetailed(ap);
         getUSPricesAfterMarket(ap);
+        reqHoldings(ap);
 
         getXINA50Index(ap);
 
@@ -755,10 +770,10 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
             Utility.simpleWriteToFile("HKD" + "\t" +
                     Math.round(1000000d * HKDCNH) / 1000000d, true, fxOutput);
         } else if (!name.equals("USD")) {
-            pr(str(name, "is finished "));
+            //pr(str(name, "is finished "));
             usAfterClose.forEach((key, value) -> pr(str(key, value.lastEntry())));
         }
-        pr(" data is finished ");
+        //pr(" data is finished ");
     }
 
     @Override
@@ -766,7 +781,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
         if (tt == TickType.CLOSE && symbol.equals("XINA50")) {
             Utility.simpleWriteToFile("FTSE A50" + "\t" + price, true, output);
         }
-        pr("handle price  ", symbol, tt, price, t);
+        //pr("handle price  ", symbol, tt, price, t);
     }
 
     @Override
@@ -778,4 +793,72 @@ public final class MorningTask implements HistoricalHandler, LiveHandler {
     public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
 
     }
+
+    //positions
+    @Override
+    public void position(String account, Contract contract, double position, double avgCost) {
+        //String symbol = ibContractToSymbol(contract);
+        //holdingsMap.put(symbol, (int) position);
+        holdingsMap.put(contract, position);
+    }
+
+    @Override
+    public void positionEnd() {
+        pr(" holdings map ");
+        holdingsMap.forEach((key, value) -> pr("symbol pos ", key.symbol(), value));
+
+        for (Contract c : holdingsMap.keySet()) {
+            String k = ibContractToSymbol(c);
+            ytdData.put(k, new ConcurrentSkipListMap<>());
+            if (!k.startsWith("sz") && !k.startsWith("sh")) {
+                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
+                        c, MorningTask::handleYtdOpen, 365, Types.BarSize._1_day);
+            }
+        }
+    }
+
+    private static void handleYtdOpen(Contract c, String date, double open, double high, double low,
+                                      double close, int volume) {
+        String symbol = utility.Utility.ibContractToSymbol(c);
+        if (!date.startsWith("finished")) {
+            LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
+            //pr("handleYtdOpen", symbol, ld, open, high, low, close);
+            ytdData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
+        } else {
+            //finished
+            //pr(" finished ", c.symbol(), date, open, close);
+            double size = holdingsMap.getOrDefault(c, 0.0);
+            if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0) {
+
+                double yOpen = ytdData.get(symbol).higherEntry(LAST_YEAR_LAST_DAY).getValue().getOpen();
+
+                long yCount = ytdData.get(symbol).entrySet().stream()
+                        .filter(e -> e.getKey().isAfter(LAST_YEAR_LAST_DAY)).count();
+
+                double mOpen = ytdData.get(symbol).higherEntry(LAST_MONTH_LAST_DAY).getValue().getOpen();
+
+                long mCount = ytdData.get(symbol).entrySet().stream()
+                        .filter(e -> e.getKey().isAfter(LAST_MONTH_LAST_DAY)).count();
+
+                double last;
+                last = ytdData.get(symbol).lastEntry().getValue().getClose();
+
+                pr(symbol, size, ytdData.get(symbol).lastEntry().getKey(), last,
+                        "||yOpen", ytdData.get(symbol).higherEntry(LAST_YEAR_LAST_DAY).getKey(), yOpen,
+                        "yDays", yCount, "yUp%",
+                        Math.round(1000d * ytdData.get(symbol).entrySet().stream()
+                                .filter(e -> e.getKey().isAfter(LAST_YEAR_LAST_DAY))
+                                .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d, "%",
+                        "yDev", Math.round((last / yOpen - 1) * 1000d) / 10d, "%",
+                        "||mOpen ", ytdData.get(symbol).higherEntry(LAST_MONTH_LAST_DAY).getKey(), mOpen,
+                        "mDays", mCount, "mUp%",
+                        Math.round(1000d * ytdData.get(symbol).entrySet().stream()
+                                .filter(e -> e.getKey().isAfter(LAST_MONTH_LAST_DAY))
+                                .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d, "%",
+                        "mDev", Math.round((last / mOpen - 1) * 1000d) / 10d, "%");
+            }
+        }
+    }
+
+
 }
