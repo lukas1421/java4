@@ -789,6 +789,7 @@ public class Utility {
         ct.symbol("XINA50");
         ct.exchange("SGX");
         ct.currency("USD");
+        pr("front exp date ", TradingConstants.A50_FRONT_EXPIRY);
         ct.lastTradeDateOrContractMonth(TradingConstants.A50_FRONT_EXPIRY);
         ct.secType(Types.SecType.FUT);
         return ct;

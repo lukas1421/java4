@@ -136,12 +136,17 @@ public final class TradingConstants {
 //        while (res.getDayOfWeek() != TradingConstants.futExpiryWeekDay) {
 //            res = res.minusDays(1);
 //        }
+        //pr(" get fut expiry date ", res);
         int count = 0;
         while (count < 2) {
             res = res.minusDays(1);
-            if (res.getDayOfWeek() != DayOfWeek.SATURDAY && res.getDayOfWeek() != DayOfWeek.SUNDAY) {
+
+            if (res.getDayOfWeek() != DayOfWeek.SATURDAY && res.getDayOfWeek() != DayOfWeek.SUNDAY
+                    && !res.equals(LocalDate.of(2018, 12, 31))) {
                 count++;
             }
+            //pr(" res count ", res, count);
+            //pr("fut expiry date ", res);
         }
 
         return res;
@@ -153,21 +158,18 @@ public final class TradingConstants {
 
 
     private static String getFutureExpiryDateString(int year, Month m) {
-        LocalDate res = LocalDate.of(year + ((m == Month.DECEMBER) ? 1 : 0), m.plus(1), 1);
-
-        int businessOffsetTarget = 2;
-        int i = 0;
-//        while (res.getDayOfWeek() != TradingConstants.futExpiryWeekDay) {
+        //LocalDate res = LocalDate.of(year + ((m == Month.DECEMBER) ? 1 : 0), m.plus(1), 1);
+//        LocalDate res = LocalDate.of(year, m, 1).plusMonths(1);
+//        int i = 0;
+//        while (i != 2) {
 //            res = res.minusDays(1);
+//            if (res.getDayOfWeek() != DayOfWeek.SATURDAY && res.getDayOfWeek() != DayOfWeek.SUNDAY
+//                    && !res.isEqual(LocalDate.of(2018, Month.DECEMBER, 31))) {
+//                i++;
+//            }
 //        }
-        while (i != businessOffsetTarget) {
-            res = res.minusDays(1);
-            if (res.getDayOfWeek() != DayOfWeek.SATURDAY && res.getDayOfWeek() != DayOfWeek.SUNDAY
-                    && !res.isEqual(LocalDate.of(2018, Month.APRIL, 30))) {
-                i++;
-            }
-        }
 
+        LocalDate res = getFutureExpiryDate(LocalDate.now());
         return res.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
     }
 

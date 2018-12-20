@@ -359,14 +359,14 @@ public final class ChinaStock extends JPanel {
 
                                 if (priceMapBar.containsKey(selectedNameStock)) {
                                     if (priceMapBar.get(selectedNameStock).size() > 0) {
-                                        pr("pmb ", selectedNameStock, priceMapBar.get(selectedNameStock));
+                                        //pr("pmb ", selectedNameStock, priceMapBar.get(selectedNameStock));
                                     }
                                 }
 
                                 if (priceMapBarDetail.containsKey(selectedNameStock)) {
                                     if (priceMapBarDetail.get(selectedNameStock).size() > 0) {
-                                        pr(" pmb detailed ", selectedNameStock,
-                                                trimTo3DP(priceMapBarDetail.get(selectedNameStock)));
+//                                        pr(" pmb detailed ", selectedNameStock,
+//                                                trimTo3DP(priceMapBarDetail.get(selectedNameStock)));
                                     }
                                     //outputPMBDetailedToTxt(trimTo3DP(priceMapBarDetail.get(selectedNameStock)));
                                 }

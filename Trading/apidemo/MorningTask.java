@@ -31,15 +31,17 @@ import static utility.Utility.*;
 public final class MorningTask implements HistoricalHandler, LiveHandler, ApiController.IPositionHandler {
 
 
-    private static final LocalDate LAST_MONTH_LAST_DAY = getLastMonthLastDay();
-    private static final LocalDate LAST_YEAR_LAST_DAY = getLastYearLastDay();
+    private static final LocalDate LAST_MONTH_DAY = getLastMonthLastDay();
+    private static final LocalDate LAST_YEAR_DAY = getLastYearLastDay();
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
-            ytdData = new ConcurrentSkipListMap<>();
-    static ApiController staticController;
+            morningYtdData = new ConcurrentSkipListMap<>();
+    private static ApiController staticController;
     private volatile static Map<Contract, Double> holdingsMap = new HashMap<>();
     public static File output = new File(TradingConstants.GLOBALPATH + "morningOutput.txt");
     private static File bocOutput = new File(TradingConstants.GLOBALPATH + "BOCUSD.txt");
+
     private static File fxOutput = new File(TradingConstants.GLOBALPATH + "fx.txt");
+    private static File positionOutput = new File(TradingConstants.GLOBALPATH + "positionReport.txt");
     private static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export\\" : "J:\\TDX\\T0002\\export\\";
     private static final Pattern DATA_PATTERN = Pattern.compile("(?<=var\\shq_str_)((?:sh|sz)\\d{6})");
@@ -89,7 +91,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         pr("done and starting exiting sequence in 5");
         ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
         es.scheduleAtFixedRate(() -> pr(" countDown ... "), 0, 1, TimeUnit.SECONDS);
-        es.schedule(() -> System.exit(0), 20, TimeUnit.SECONDS);
+        es.schedule(() -> System.exit(0), 30, TimeUnit.SECONDS);
     }
 
     // this
@@ -450,6 +452,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 
     private void getFromIB() {
         clearFile(fxOutput);
+        clearFile(positionOutput);
 
         ApiController ap = new ApiController(new DefaultConnectionHandler(), new DefaultLogger(), new DefaultLogger());
         staticController = ap;
@@ -611,6 +614,8 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
             ex.printStackTrace();
         }
 
+        //t = t.minusDays(1L);
+
         final String dateString = t.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
         pr(" date is " + dateString);
 
@@ -756,7 +761,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 
             usAfterClose.get(name).put(nyTime, close);
             if (nyTime.toLocalTime().equals(LocalTime.of(15, 55))) {
-                pr(str(" US data 15 55 ", name, nyTime, chinadt, open, high, low, close));
+                //pr(str(" US data 15 55 ", name, nyTime, chinadt, open, high, low, close));
             }
         }
     }
@@ -809,53 +814,53 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 
         for (Contract c : holdingsMap.keySet()) {
             String k = ibContractToSymbol(c);
-            ytdData.put(k, new ConcurrentSkipListMap<>());
+            morningYtdData.put(k, new ConcurrentSkipListMap<>());
             if (!k.startsWith("sz") && !k.startsWith("sh")) {
                 staticController.reqHistDayData(ibStockReqId.addAndGet(5),
-                        c, MorningTask::handleYtdOpen, 365, Types.BarSize._1_day);
+                        c, MorningTask::morningYtdOpen, 365, Types.BarSize._1_day);
             }
         }
     }
 
-    private static void handleYtdOpen(Contract c, String date, double open, double high, double low,
-                                      double close, int volume) {
+    private static void morningYtdOpen(Contract c, String date, double open, double high, double low,
+                                       double close, int volume) {
         String symbol = utility.Utility.ibContractToSymbol(c);
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
-            //pr("handleYtdOpen", symbol, ld, open, high, low, close);
-            ytdData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
+            //pr("morningYtdOpen", symbol, ld, open, high, low, close);
+            morningYtdData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         } else {
             //finished
             //pr(" finished ", c.symbol(), date, open, close);
             double size = holdingsMap.getOrDefault(c, 0.0);
-            if (ytdData.containsKey(symbol) && ytdData.get(symbol).size() > 0) {
+            if (morningYtdData.containsKey(symbol) && morningYtdData.get(symbol).size() > 0) {
 
-                double yOpen = ytdData.get(symbol).higherEntry(LAST_YEAR_LAST_DAY).getValue().getOpen();
+                double yOpen = morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getValue().getOpen();
 
-                long yCount = ytdData.get(symbol).entrySet().stream()
-                        .filter(e -> e.getKey().isAfter(LAST_YEAR_LAST_DAY)).count();
-
-                double mOpen = ytdData.get(symbol).higherEntry(LAST_MONTH_LAST_DAY).getValue().getOpen();
-
-                long mCount = ytdData.get(symbol).entrySet().stream()
-                        .filter(e -> e.getKey().isAfter(LAST_MONTH_LAST_DAY)).count();
-
+                long yCount = morningYtdData.get(symbol).entrySet().stream()
+                        .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY)).count();
+                double mOpen = morningYtdData.get(symbol).higherEntry(LAST_MONTH_DAY).getValue().getOpen();
+                long mCount = morningYtdData.get(symbol).entrySet().stream()
+                        .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY)).count();
                 double last;
-                last = ytdData.get(symbol).lastEntry().getValue().getClose();
-
-                pr(symbol, size, ytdData.get(symbol).lastEntry().getKey(), last,
-                        "||yOpen", ytdData.get(symbol).higherEntry(LAST_YEAR_LAST_DAY).getKey(), yOpen,
+                last = morningYtdData.get(symbol).lastEntry().getValue().getClose();
+                String out = str(symbol, size, morningYtdData.get(symbol).lastEntry().getKey(), last,
+                        "||yOpen", morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey(), yOpen,
                         "yDays", yCount, "yUp%",
-                        Math.round(1000d * ytdData.get(symbol).entrySet().stream()
-                                .filter(e -> e.getKey().isAfter(LAST_YEAR_LAST_DAY))
+                        Math.round(1000d * morningYtdData.get(symbol).entrySet().stream()
+                                .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
                                 .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d, "%",
                         "yDev", Math.round((last / yOpen - 1) * 1000d) / 10d, "%",
-                        "||mOpen ", ytdData.get(symbol).higherEntry(LAST_MONTH_LAST_DAY).getKey(), mOpen,
+                        "||mOpen ", morningYtdData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey(), mOpen,
                         "mDays", mCount, "mUp%",
-                        Math.round(1000d * ytdData.get(symbol).entrySet().stream()
-                                .filter(e -> e.getKey().isAfter(LAST_MONTH_LAST_DAY))
+                        Math.round(1000d * morningYtdData.get(symbol).entrySet().stream()
+                                .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
                                 .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d, "%",
                         "mDev", Math.round((last / mOpen - 1) * 1000d) / 10d, "%");
+
+                pr("position output ", out);
+
+                Utility.simpleWriteToFile(out, true, positionOutput);
             }
         }
     }

@@ -44,7 +44,7 @@ public class ChinaVolIntraday implements ChinaSaveInterface1Blob {
         if (mp.size() > 0) {
             ChinaOption.todayImpliedVolMap.put(name, (ConcurrentSkipListMap<LocalDateTime, SimpleBar>) mp);
         } else {
-            System.out.println(" nothing in map " + name);
+            //System.out.println(" nothing in map " + name);
         }
     }
 
