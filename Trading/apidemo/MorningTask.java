@@ -66,6 +66,29 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+
+        holdingsMap.put(getUSIndexContract("SPX"), 0.0);
+        //holdingsMap.put(getUSIndexContract("NDX"), 0.0);
+        holdingsMap.put(getUSStockContract("QQQ"), 0.0);
+
+    }
+
+    private Contract getUSIndexContract(String symb) {
+        Contract ct = new Contract();
+        ct.symbol(symb);
+        ct.exchange("CBOE");
+        ct.currency("USD");
+        ct.secType(Types.SecType.IND);
+        return ct;
+    }
+
+    private final Contract getUSStockContract(String symb) {
+        Contract ct = new Contract();
+        ct.symbol(symb);
+        ct.exchange("SMART");
+        ct.currency("USD");
+        ct.secType(Types.SecType.STK);
+        return ct;
     }
 
     private static void runThis() {
@@ -183,7 +206,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                     sb.append("\t");
 
                     while ((line = reader2.readLine()) != null) {
-                        //pr("line is ", line);
                         Matcher matcher = p.matcher(line);
                         Matcher m2 = p2.matcher(line);
                         Matcher m3 = p3.matcher(line);
@@ -683,9 +705,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 
     public static void main(String[] args) {
         MorningTask.runThis();
-
-        //MorningTask mt = new MorningTask();
-        //mt.getFromIB();
     }
 
     @Override
@@ -810,8 +829,8 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
     @Override
     public void positionEnd() {
         pr(" holdings map ");
-        holdingsMap.forEach((key, value) -> pr("symbol pos ", key.symbol(), value));
 
+        holdingsMap.forEach((key, value) -> pr("symbol pos ", key.symbol(), value));
         for (Contract c : holdingsMap.keySet()) {
             String k = ibContractToSymbol(c);
             morningYtdData.put(k, new ConcurrentSkipListMap<>());
