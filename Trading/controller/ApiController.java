@@ -593,13 +593,16 @@ public class ApiController implements EWrapper {
     // ---------------------------------------- Position handling ----------------------------------------
     public interface IPositionHandler {
         void position(String account, Contract contract, double position, double avgCost);
+
         void positionEnd();
+
         public static class DefaultPositionHandler implements IPositionHandler {
             @Override
             public void position(String account, Contract contract, double position, double avgCost) {
                 pr(" in default position handler " + Utility.str(account, ibContractToSymbol(contract)
                         , position, avgCost));
             }
+
             @Override
             public void positionEnd() {
             }
@@ -998,7 +1001,6 @@ public class ApiController implements EWrapper {
     }
 
 
-
     public void reqA50Live() {
         for (String s : SinaStock.weightMapA50.keySet()) {
             String ticker = s.substring(2);
@@ -1160,6 +1162,7 @@ public class ApiController implements EWrapper {
     //requ month open
     public void reqHistDayData(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
                                int duration, BarSize bs) {
+        pr(" requesting ", reqId, c.symbol());
         //Contract ct = tickerToHKStkContract("5");
         //int duration = 30;
         //BarSize bs = BarSize._1_day;

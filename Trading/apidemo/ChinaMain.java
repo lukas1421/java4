@@ -39,7 +39,6 @@ import static apidemo.ChinaData.priceMapBarYtd;
 import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
 import static apidemo.XuTraderHelper.getTradeDate;
 import static apidemo.XuTraderHelper.outputToAll;
-import static java.util.concurrent.TimeUnit.SECONDS;
 import static utility.Utility.pr;
 
 public final class ChinaMain implements IConnectionHandler {
@@ -98,7 +97,7 @@ public final class ChinaMain implements IConnectionHandler {
 
     private static HKData hkdata = new HKData();
 
-    private static ChinaOption chinaOption = new ChinaOption();
+    //private static ChinaOption chinaOption = new ChinaOption();
     private static HistChinaStocks histChina = new HistChinaStocks();
     private static AutoTraderMain autoMain = new AutoTraderMain();
     private static AutoTraderXU xutrader = new AutoTraderXU(M_CONTROLLER);
@@ -152,7 +151,7 @@ public final class ChinaMain implements IConnectionHandler {
         //m_tabbedPanel.addTab("Size ytd", csdy);
         //m_tabbedPanel.addTab(" HK Data", hkdata);
         //m_tabbedPanel.addTab(" HK Stock", hkstock);
-        m_tabbedPanel.addTab("Option", chinaOption);
+        //m_tabbedPanel.addTab("Option", chinaOption);
         m_tabbedPanel.addTab("Hist China", histChina);
         m_tabbedPanel.addTab("Connection", m_connectionPanel);
         //m_tabbedPanel.addTab("US", usstock);
@@ -230,7 +229,7 @@ public final class ChinaMain implements IConnectionHandler {
                 AutoTraderXU.set20DayBullBear();
             }, 0, 1, TimeUnit.SECONDS);
 
-            ses.scheduleAtFixedRate(chinaOption, 0, 5, SECONDS);
+            //ses.scheduleAtFixedRate(chinaOption, 0, 5, SECONDS);
             ChinaOption.refresh();
         });
 

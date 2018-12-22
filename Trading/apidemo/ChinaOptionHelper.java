@@ -159,27 +159,6 @@ public class ChinaOptionHelper {
         return 0.0;
     }
 
-    static void getLastTradingDate() {
-        int lineNo = 0;
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
-            String line;
-            while ((line = reader1.readLine()) != null) {
-                List<String> al1 = Arrays.asList(line.split("\t"));
-                if (lineNo > 2) {
-                    throw new IllegalArgumentException(" ERROR: date map has more than 3 lines ");
-                }
-                if (Double.parseDouble(al1.get(1)) != Double.parseDouble(al1.get(2))) {
-                    ChinaOption.previousTradingDate = LocalDate.parse(al1.get(0));
-                }
-                lineNo++;
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        System.out.println(" ChinaOption.PreviousTradingDate: " + ChinaOption.previousTradingDate);
-    }
-
     static String getOptionTicker(Map<String, Option> mp, CallPutFlag f, double strike, LocalDate expiry) {
         for (Map.Entry<String, Option> e : mp.entrySet()) {
             if (e.getValue().getCallOrPut() == f && e.getValue().getStrike() == strike

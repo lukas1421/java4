@@ -129,7 +129,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static RowFilter<OptionTableModel, Integer> otmFilter;
     static OptionTableModel model;
 
-    ChinaOption() {
+    private ChinaOption() {
         otmFilter = new RowFilter<OptionTableModel, Integer>() {
             @Override
             public boolean include(Entry<? extends OptionTableModel, ? extends Integer> entry) {
@@ -141,7 +141,7 @@ public class ChinaOption extends JPanel implements Runnable {
             }
         };
 
-        ChinaOptionHelper.getLastTradingDate();
+        getLastTradingDate();
         loadOptionTickers();
 
         expiryList.add(frontExpiry);
@@ -561,6 +561,27 @@ public class ChinaOption extends JPanel implements Runnable {
         graphATMLapse.repaint();
         graphIntraday.repaint();
         graphTS2.repaint();
+    }
+
+    private static void getLastTradingDate() {
+        int lineNo = 0;
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
+            String line;
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                if (lineNo > 2) {
+                    throw new IllegalArgumentException(" ERROR: date map has more than 3 lines ");
+                }
+                if (Double.parseDouble(al1.get(1)) != Double.parseDouble(al1.get(2))) {
+                    previousTradingDate = LocalDate.parse(al1.get(0));
+                }
+                lineNo++;
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        System.out.println(" ChinaOption.PreviousTradingDate: " + previousTradingDate);
     }
 
     private void outputOptions() {

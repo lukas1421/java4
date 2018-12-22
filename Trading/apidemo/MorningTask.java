@@ -787,7 +787,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 
     @Override
     public void actionUponFinish(String name) {
-
         if (name.equals("USD")) {
             Utility.simpleWriteToFile("USD" + "\t" + USDCNY, true, fxOutput);
         } else if (name.equals("CNH")) {
@@ -829,7 +828,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
     @Override
     public void positionEnd() {
         pr(" holdings map ");
-
         holdingsMap.forEach((key, value) -> pr("symbol pos ", key.symbol(), value));
         for (Contract c : holdingsMap.keySet()) {
             String k = ibContractToSymbol(c);
