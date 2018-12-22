@@ -6,43 +6,50 @@ import client.Types;
 import controller.ApiConnection.ILogger.DefaultLogger;
 import controller.ApiController;
 import controller.ApiController.IConnectionHandler.DefaultConnectionHandler;
-import utility.Utility;
 
-import java.io.File;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static utility.Utility.*;
 
-public class PositionReport implements ApiController.IPositionHandler {
+public class ETFReport {
 
-    private static File positionOutput = new File(TradingConstants.GLOBALPATH + "positionReport.txt");
+
+    private static File etfFile = new File(TradingConstants.GLOBALPATH + "etfFile.txt");
     static final DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d");
     private static final LocalDate LAST_MONTH_DAY = getLastMonthLastDay();
     private static final LocalDate LAST_YEAR_DAY = getLastYearLastDay();
-    private volatile static Map<Contract, Double> holdingsMap = new TreeMap<>(Comparator.comparing(Contract::symbol));
+    //private volatile static Map<Contract, Double> holdingsMap = new TreeMap<>(Comparator.comparing(Contract::symbol));
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
 
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             morningYtdData = new ConcurrentSkipListMap<>();
 
     private static ApiController staticController;
+    private static Map<String, String> etfCountryMap = new TreeMap<>(Comparator.naturalOrder());
+    //private Map<String,String> etfCountryMap = new HashMap<>();
 
-    private PositionReport() {
 
+    private ETFReport() {
+        String line;
+        try (BufferedReader reader1 = new BufferedReader
+                (new InputStreamReader(new FileInputStream(etfFile), "gbk"))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                etfCountryMap.put(al1.get(0), al1.get(1));
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
-    private void ibTask() {
-
-        clearFile(positionOutput);
+    void runThis() {
         ApiController ap = new ApiController(new DefaultConnectionHandler(), new DefaultLogger(), new DefaultLogger());
         staticController = ap;
         CountDownLatch l = new CountDownLatch(1);
@@ -70,8 +77,27 @@ public class PositionReport implements ApiController.IPositionHandler {
             e.printStackTrace();
         }
         pr(" Time after latch released " + LocalTime.now());
-        pr(" request holdings ");
-        ap.reqPositions(this);
+
+        for (String k : etfCountryMap.keySet()) {
+            //String k = ibContractToSymbol(c);
+            morningYtdData.put(k, new ConcurrentSkipListMap<>());
+            if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
+                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
+                        etfToUSContract(k), ETFReport::morningYtdOpen, 250, Types.BarSize._1_day);
+            }
+        }
+    }
+
+    private static Contract etfToUSContract(String key) {
+        Contract c = new Contract();
+        c.symbol(key);
+        c.secType(Types.SecType.STK);
+        c.exchange("SMART");
+        if (key.equals("DXJ")) {
+            c.primaryExch("ARCA");
+        }
+        c.currency("USD");
+        return c;
     }
 
     private static void morningYtdOpen(Contract c, String date, double open, double high, double low,
@@ -84,7 +110,7 @@ public class PositionReport implements ApiController.IPositionHandler {
         } else {
             //finished
             //pr(" finished ", c.symbol(), date, open, close);
-            double size = holdingsMap.getOrDefault(c, 0.0);
+            //double size = holdingsMap.getOrDefault(c, 0.0);
             if (morningYtdData.containsKey(symbol) && morningYtdData.get(symbol).size() > 0) {
                 double yOpen = morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getValue().getOpen();
                 long yCount = morningYtdData.get(symbol).entrySet().stream()
@@ -97,23 +123,8 @@ public class PositionReport implements ApiController.IPositionHandler {
                 String info = "";
                 double yDev = Math.round((last / yOpen - 1) * 1000d) / 10d;
                 double mDev = Math.round((last / mOpen - 1) * 1000d) / 10d;
-                if (size > 0) {
-                    if (yDev > 0 && mDev > 0) {
-                        info = "LONG ON";
-                    } else {
-                        info = "LONG OFF";
-                    }
-                } else if (size < 0) {
-                    if (yDev < 0 && mDev < 0) {
-                        info = "SHORT ON";
-                    } else {
-                        info = "SHORT OFF";
-                    }
-                } else {
-                    info = "ERROR";
-                }
 
-                String out = getStrTabbed(symbol, size,
+                String out = getStrTabbed(symbol, etfCountryMap.get(symbol),
                         morningYtdData.get(symbol).lastEntry().getKey().format(f), last,
                         "||yOpen", morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f), yOpen,
                         "yDays", yCount, "yUp%",
@@ -128,57 +139,17 @@ public class PositionReport implements ApiController.IPositionHandler {
                                 .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d + "%",
                         "mDev", mDev + "%", info);
                 pr("*", out);
-                Utility.simpleWriteToFile(out, true, positionOutput);
+                //Utility.simpleWriteToFile(out, true, positionOutput);
             }
         }
-    }
-
-    @Override
-    public void position(String account, Contract contract, double position, double avgCost) {
-        if (!contract.symbol().equals("USD")) {
-            holdingsMap.put(contract, position);
-        }
-    }
-
-    @Override
-    public void positionEnd() {
-        pr(" holdings map ");
-
-        holdingsMap.forEach((key, value) -> pr("symbol pos ", key.symbol(), value));
-
-        for (Contract c : holdingsMap.keySet()) {
-            String k = ibContractToSymbol(c);
-            morningYtdData.put(k, new ConcurrentSkipListMap<>());
-            if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
-                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
-                        fillContract(c), PositionReport::morningYtdOpen, 250, Types.BarSize._1_day);
-            }
-        }
-    }
-
-    private static Contract fillContract(Contract c) {
-        pr("symb ", Optional.ofNullable(c.symbol()),
-                "curr", Optional.ofNullable(c.currency()),
-                "exch", Optional.ofNullable(c.exchange()),
-                "prim exch", Optional.ofNullable(c.primaryExch()),
-                "secType", Optional.ofNullable(c.secType())
-        );
-        if (c.symbol().equals("XINA50")) {
-            //pr(" us no exchange ");
-            c.exchange("SGX");
-        }
-
-        if (c.currency().equals("USD") && c.secType().equals(Types.SecType.STK)) {
-            pr(" USD STOCK ", c.symbol());
-            c.exchange("SMART");
-        }
-        return c;
     }
 
 
     public static void main(String[] args) {
-        PositionReport pr = new PositionReport();
-        pr.ibTask();
+        ETFReport e = new ETFReport();
+        e.runThis();
 
     }
+
+
 }
