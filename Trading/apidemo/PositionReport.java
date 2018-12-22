@@ -6,13 +6,16 @@ import client.Types;
 import controller.ApiConnection.ILogger.DefaultLogger;
 import controller.ApiController;
 import controller.ApiController.IConnectionHandler.DefaultConnectionHandler;
+import utility.Utility;
 
+import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,14 +24,15 @@ import static utility.Utility.*;
 
 public class PositionReport implements ApiController.IPositionHandler {
 
+    private static File positionOutput = new File(TradingConstants.GLOBALPATH + "positionReport.txt");
+    static final DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d");
     private static final LocalDate LAST_MONTH_DAY = getLastMonthLastDay();
     private static final LocalDate LAST_YEAR_DAY = getLastYearLastDay();
-    private volatile static Map<Contract, Double> holdingsMap = new HashMap<>();
+    private volatile static Map<Contract, Double> holdingsMap = new TreeMap<>(Comparator.comparing(Contract::symbol));
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
 
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             morningYtdData = new ConcurrentSkipListMap<>();
-
 
     private static ApiController staticController;
 
@@ -38,6 +42,7 @@ public class PositionReport implements ApiController.IPositionHandler {
 
     private void ibTask() {
 
+        clearFile(positionOutput);
         ApiController ap = new ApiController(new DefaultConnectionHandler(), new DefaultLogger(), new DefaultLogger());
         staticController = ap;
         CountDownLatch l = new CountDownLatch(1);
@@ -67,11 +72,6 @@ public class PositionReport implements ApiController.IPositionHandler {
         pr(" Time after latch released " + LocalTime.now());
         pr(" request holdings ");
         ap.reqPositions(this);
-
-//        pr("done and starting exiting sequence");
-//        ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
-//        es.scheduleAtFixedRate(() -> pr(" countDown ... "), 0, 1, TimeUnit.SECONDS);
-//        es.schedule(() -> System.exit(0), 10, TimeUnit.SECONDS);
     }
 
     private static void morningYtdOpen(Contract c, String date, double open, double high, double low,
@@ -96,21 +96,40 @@ public class PositionReport implements ApiController.IPositionHandler {
                         .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY)).count();
                 double last;
                 last = morningYtdData.get(symbol).lastEntry().getValue().getClose();
-                String out = str(symbol, size, morningYtdData.get(symbol).lastEntry().getKey(), last,
-                        "||yOpen", morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey(), yOpen,
+                String info = "";
+                double yDev = Math.round((last / yOpen - 1) * 1000d) / 10d;
+                double mDev = Math.round((last / mOpen - 1) * 1000d) / 10d;
+                if (size > 0) {
+                    if (yDev > 0 && mDev > 0) {
+                        info = "ON";
+                    } else {
+                        info = "OFF";
+                    }
+                } else if (size < 0) {
+                    if (yDev < 0 && mDev < 0) {
+                        info = "ON";
+                    } else {
+                        info = "OFF";
+                    }
+                } else {
+                    info = "ERROR";
+                }
+
+                String out = getStrTabbed(symbol, size, morningYtdData.get(symbol).lastEntry().getKey(), last,
+                        "||yOpen", morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f), yOpen,
                         "yDays", yCount, "yUp%",
                         Math.round(1000d * morningYtdData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
-                                .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d, "%",
-                        "yDev", Math.round((last / yOpen - 1) * 1000d) / 10d, "%",
-                        "||mOpen ", morningYtdData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey(), mOpen,
+                                .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d + "%",
+                        "yDev", yDev + "%",
+                        "||mOpen ", morningYtdData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
                         "mDays", mCount, "mUp%",
                         Math.round(1000d * morningYtdData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
-                                .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d, "%",
-                        "mDev", Math.round((last / mOpen - 1) * 1000d) / 10d, "%");
-                pr("position output ", out);
-                //Utility.simpleWriteToFile(out, true, positionOutput);
+                                .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d + "%",
+                        "mDev", mDev + "%", info);
+                pr("*", out);
+                Utility.simpleWriteToFile(out, true, positionOutput);
             }
         }
     }
