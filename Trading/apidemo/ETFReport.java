@@ -31,7 +31,6 @@ public class ETFReport {
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             morningYtdData = new ConcurrentSkipListMap<>();
 
-    private static ApiController staticController;
     private static Map<String, String> etfCountryMap = new TreeMap<>(Comparator.naturalOrder());
     //private Map<String,String> etfCountryMap = new HashMap<>();
 
@@ -49,9 +48,8 @@ public class ETFReport {
         }
     }
 
-    void runThis() {
+    private void runThis() {
         ApiController ap = new ApiController(new DefaultConnectionHandler(), new DefaultLogger(), new DefaultLogger());
-        staticController = ap;
         CountDownLatch l = new CountDownLatch(1);
         boolean connectionStatus = false;
 
@@ -82,7 +80,7 @@ public class ETFReport {
             //String k = ibContractToSymbol(c);
             morningYtdData.put(k, new ConcurrentSkipListMap<>());
             if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
-                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
+                ap.reqHistDayData(ibStockReqId.addAndGet(5),
                         etfToUSContract(k), ETFReport::morningYtdOpen, 250, Types.BarSize._1_day);
             }
         }

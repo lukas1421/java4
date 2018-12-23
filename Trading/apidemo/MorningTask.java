@@ -30,7 +30,7 @@ import static utility.Utility.*;
 
 public final class MorningTask implements HistoricalHandler, LiveHandler, ApiController.IPositionHandler {
 
-
+    static final DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d");
     private static final LocalDate LAST_MONTH_DAY = getLastMonthLastDay();
     private static final LocalDate LAST_YEAR_DAY = getLastYearLastDay();
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
@@ -68,7 +68,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         }
 
         holdingsMap.put(getUSIndexContract("SPX"), 0.0);
-        //holdingsMap.put(getUSIndexContract("NDX"), 0.0);
         holdingsMap.put(getUSStockContract("QQQ"), 0.0);
 
     }
@@ -82,7 +81,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         return ct;
     }
 
-    private final Contract getUSStockContract(String symb) {
+    private Contract getUSStockContract(String symb) {
         Contract ct = new Contract();
         ct.symbol(symb);
         ct.exchange("SMART");
@@ -121,7 +120,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
     private static void writeIndexTDX(BufferedWriter out) {
         String line;
         List<String> ind = Arrays.asList(indices.split(","));
-        pr(ind);
+        //pr(ind);
         String currentLine;
         String previousLine;
         for (String s : ind) {
@@ -191,7 +190,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         //Proxy proxy = new Proxy(Proxy.Type.HTTP,new InetSocketAddress("127.0.0.1",1080));
         for (String e : etfs) {
             urlString = "https://www.bloomberg.com/quote/" + e;
-            pr(" etf is " + e);
+            //pr(" etf is " + e);
 
             try {
                 URL url = new URL(urlString);
@@ -227,14 +226,14 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 
                     String etfTicker = e.substring(0, e.length() - 3);
 
-                    pr("printing sb ", urlString, etfTicker, sb);
+                    //pr("printing sb ", urlString, etfTicker, sb);
 
                     sb.append(e.endsWith(":US") && usAfterClose.containsKey(etfTicker) ? ("\t" +
                             usAfterClose.get(etfTicker).lastKey()
                             + "\t" + usAfterClose.get(etfTicker).lastEntry().getValue()) : "");
                     out.append(sb);
                     out.newLine();
-                    pr(" sb " + sb);
+                    //pr(" sb " + sb);
                 }
 
             } catch (IOException ex) {
@@ -763,7 +762,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                 ZonedDateTime zdt = ZonedDateTime.of(ldt, chinaZone);
                 HKDCNH = 1 / close;
 
-                pr(name, ldt, open, close);
+                //pr("*", name, ldt, open, close);
                 //Utility.simpleWriteToFile("USD" + "\t" + close, true, fxOutput);
 
             }
@@ -832,9 +831,9 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         for (Contract c : holdingsMap.keySet()) {
             String k = ibContractToSymbol(c);
             morningYtdData.put(k, new ConcurrentSkipListMap<>());
-            if (!k.startsWith("sz") && !k.startsWith("sh")) {
+            if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
                 staticController.reqHistDayData(ibStockReqId.addAndGet(5),
-                        c, MorningTask::morningYtdOpen, 365, Types.BarSize._1_day);
+                        fillContract(c), MorningTask::morningYtdOpen, 365, Types.BarSize._1_day);
             }
         }
     }
@@ -861,26 +860,62 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                         .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY)).count();
                 double last;
                 last = morningYtdData.get(symbol).lastEntry().getValue().getClose();
-                String out = str(symbol, size, morningYtdData.get(symbol).lastEntry().getKey(), last,
-                        "||yOpen", morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey(), yOpen,
+                String info = "";
+                double yDev = Math.round((last / yOpen - 1) * 1000d) / 10d;
+                double mDev = Math.round((last / mOpen - 1) * 1000d) / 10d;
+                if (size > 0) {
+                    if (yDev > 0 && mDev > 0) {
+                        info = "LONG ON";
+                    } else {
+                        info = "LONG OFF";
+                    }
+                } else if (size < 0) {
+                    if (yDev < 0 && mDev < 0) {
+                        info = "SHORT ON";
+                    } else {
+                        info = "SHORT OFF";
+                    }
+                } else {
+                    info = "NO POS";
+                }
+
+                String out = str(symbol, size, morningYtdData.get(symbol).lastEntry().getKey().format(f), last,
+                        "||yOpen", morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f), yOpen,
                         "yDays", yCount, "yUp%",
                         Math.round(1000d * morningYtdData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
-                                .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d, "%",
-                        "yDev", Math.round((last / yOpen - 1) * 1000d) / 10d, "%",
-                        "||mOpen ", morningYtdData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey(), mOpen,
+                                .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d + "%",
+                        "yDev", yDev + "%",
+                        "||mOpen ", morningYtdData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
                         "mDays", mCount, "mUp%",
                         Math.round(1000d * morningYtdData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
-                                .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d, "%",
-                        "mDev", Math.round((last / mOpen - 1) * 1000d) / 10d, "%");
+                                .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d + "%",
+                        "mDev", mDev + "%", info);
 
-                pr("position output ", out);
+                pr("*", out);
 
                 Utility.simpleWriteToFile(out, true, positionOutput);
             }
         }
     }
 
+    private static Contract fillContract(Contract c) {
+//        pr("symb ", Optional.ofNullable(c.symbol()),
+//                "curr", Optional.ofNullable(c.currency()),
+//                "exch", Optional.ofNullable(c.exchange()),
+//                "prim exch", Optional.ofNullable(c.primaryExch()),
+//                "secType", Optional.ofNullable(c.secType())
+//        );
+        if (c.symbol().equals("XINA50")) {
+            //pr(" us no exchange ");
+            c.exchange("SGX");
+        }
 
+        if (c.currency().equals("USD") && c.secType().equals(Types.SecType.STK)) {
+            //pr(" USD STOCK ", c.symbol());
+            c.exchange("SMART");
+        }
+        return c;
+    }
 }

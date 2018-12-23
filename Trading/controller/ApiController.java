@@ -213,7 +213,7 @@ public class ApiController implements EWrapper {
 
             @Override
             public void message(int id, int errorCode, String errorMsg) {
-                pr(" error ID " + id + " error code " + errorCode + " errormsg " + errorMsg);
+                pr(" DefaultHandler error ID " + id + " error code " + errorCode + " errormsg " + errorMsg);
             }
 
             @Override
