@@ -124,14 +124,14 @@ public class ETFReport {
 
                 String out = getStrTabbed(symbol, etfCountryMap.get(symbol),
                         morningYtdData.get(symbol).lastEntry().getKey().format(f), last,
-                        "||yOpen", morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f), yOpen,
-                        "yDays", yCount, "yUp%",
+                        "||yOpen " + morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f), yOpen,
+                        "yDays" + yCount, "yUp%",
                         Math.round(1000d * morningYtdData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
                                 .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d + "%",
                         "yDev", yDev + "%",
-                        "||mOpen ", morningYtdData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
-                        "mDays", mCount, "mUp%",
+                        "||mOpen " + morningYtdData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
+                        "mDays" + mCount, "mUp%",
                         Math.round(1000d * morningYtdData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
                                 .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d + "%",
