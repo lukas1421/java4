@@ -12,7 +12,6 @@ import controller.ApiController.IConnectionHandler;
 import controller.Formats;
 import graph.GraphIndustry;
 import historical.HistChinaStocks;
-import historical.Request;
 import saving.Hibtask;
 import util.*;
 import util.IConnectionConfiguration.DefaultConnectionConfiguration;
@@ -29,7 +28,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -51,7 +49,6 @@ public final class ChinaMain implements IConnectionHandler {
 
     public static AtomicInteger GLOBAL_REQ_ID = new AtomicInteger(30000);
     private final IConnectionConfiguration m_connectionConfiguration;
-    public static volatile Map<Integer, Request> globalRequestMap = new ConcurrentHashMap<>();
     public static ChinaMain INSTANCE;
     private final JTextArea m_inLog = new JTextArea();
     private final JTextArea m_outLog = new JTextArea();

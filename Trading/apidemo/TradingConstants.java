@@ -1,10 +1,12 @@
 package apidemo;
 
+import historical.Request;
 import utility.Utility;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 public final class TradingConstants {
@@ -25,6 +27,7 @@ public final class TradingConstants {
     public static final String FTSE_INDEX = "FTSEA50";
     public static final String INDEX_000001 = "sh000001";
     public static final String INDEX_000016 = "sh000016";
+    public static volatile Map<Integer, Request> globalRequestMap = new ConcurrentHashMap<>();
 
 
     public static String getFutLastExpiry() {

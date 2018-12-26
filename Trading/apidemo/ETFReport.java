@@ -121,9 +121,13 @@ public class ETFReport {
                 String info = "";
                 double yDev = Math.round((last / yOpen - 1) * 1000d) / 10d;
                 double mDev = Math.round((last / mOpen - 1) * 1000d) / 10d;
+                double secLast = morningYtdData.get(symbol).lowerEntry(morningYtdData.get(symbol).lastKey())
+                        .getValue().getClose();
+                double lastChg = Math.round((last / secLast - 1) * 1000d) / 10d;
 
                 String out = getStrTabbed(symbol, etfCountryMap.get(symbol),
                         morningYtdData.get(symbol).lastEntry().getKey().format(f), last,
+                        lastChg + "%",
                         "||yOpen " + morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f), yOpen,
                         "yDays" + yCount, "yUp%",
                         Math.round(1000d * morningYtdData.get(symbol).entrySet().stream()

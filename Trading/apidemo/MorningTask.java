@@ -34,9 +34,12 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
     private static final LocalDate LAST_MONTH_DAY = getLastMonthLastDay();
     private static final LocalDate LAST_YEAR_DAY = getLastYearLastDay();
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
-            morningYtdData = new ConcurrentSkipListMap<>();
+            morningYtdData = new ConcurrentSkipListMap<>(String::compareTo);
     private static ApiController staticController;
-    private volatile static Map<Contract, Double> holdingsMap = new HashMap<>();
+    private volatile static Map<Contract, Double> holdingsMap =
+            new TreeMap<>(Comparator.comparing(Utility::ibContractToSymbol));
+    private static Map<String, String> holdingsResult = new TreeMap<>(String::compareTo);
+
     public static File output = new File(TradingConstants.GLOBALPATH + "morningOutput.txt");
     private static File bocOutput = new File(TradingConstants.GLOBALPATH + "BOCUSD.txt");
 
@@ -54,6 +57,8 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
     private static volatile double USDCNY = 0.0;
     private static volatile double HKDCNH = 0.0;
     private static Set<LocalDate> holidaySet = new TreeSet<>();
+
+    //private Comparator<T>
 
     private MorningTask() {
         String line;
@@ -110,9 +115,10 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         getBOCFX2();
         processShcomp();
 
-        pr("done and starting exiting sequence in 5");
+        //pr("done and starting exiting sequence in 5");
         ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
         es.scheduleAtFixedRate(() -> pr(" countDown ... "), 0, 1, TimeUnit.SECONDS);
+        holdingsResult.forEach((symb, msg) -> pr("*", symb, msg));
         es.schedule(() -> System.exit(0), 30, TimeUnit.SECONDS);
     }
 
@@ -138,7 +144,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 
                 String output = Utility.getStrTabbed(s, pd(todayList, 4), pd(ytdList, 4),
                         Double.toString(Math.round(10000d * (pd(todayList, 4) / pd(ytdList, 4) - 1)) / 100d) + "%");
-                pr(" stock return " + s + " " + output);
+                //pr(" stock return " + s + " " + output);
 
                 out.write(output);
                 out.newLine();
@@ -149,7 +155,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
     }
 
     private void reqHoldings(ApiController ap) {
-        pr(" request holdings ");
+        //pr(" request holdings ");
         ap.reqPositions(this);
     }
 
@@ -257,7 +263,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                 while ((line = reader2.readLine()) != null) {
                     Matcher m = p.matcher(line);
                     while (m.find()) {
-                        pr(" a50 investing.com ", m.group());
+                        //pr(" a50 investing.com ", m.group());
                         out.write("FTSE A50" + "\t" + m.group().replace(",", ""));
                         out.newLine();
                         //pr(m.group());
@@ -286,7 +292,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                     //pr(" mw, line ", line);
                     Matcher m = p.matcher(line);
                     while (m.find()) {
-                        pr("FTSE A50 MW " + "\t" + m.group(1).replace(",", ""));
+                        //pr("FTSE A50 MW " + "\t" + m.group(1).replace(",", ""));
                         out.write("FTSE A50" + "\t" + m.group(1).replace(",", ""));
                         out.newLine();
                     }
@@ -318,7 +324,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         LocalDate dt = getLastBizDate(LocalDate.now());
         DateTimeFormatter f = DateTimeFormatter.ofPattern("EEE, MMM dd, yyyy", Locale.US);
         String ds = dt.format(f);
-        pr(ds);
+        //pr(ds);
 
         p = Pattern.compile("(?<=" + ds + "</span>)(.*?)(?:<span class)");
 
@@ -331,11 +337,11 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                     //pr("ft line: ", line);
                     Matcher m = p.matcher(line);
                     while (m.find()) {
-                        pr(m.group());
+                        //pr(m.group());
                         List<String> sp = Arrays.asList(m.group(1).replace(",", "")
                                 .split("</td><td>")); //m.group()
-                        pr(Double.parseDouble(sp.get(4)));
-                        pr("FTSE A50 ft " + "\t" + sp);
+                        //pr(Double.parseDouble(sp.get(4)));
+                        //pr("FTSE A50 ft " + "\t" + sp);
                         out.append("FTSEA50 2" + "\t").append(sp.get(4));
                         out.newLine();
                     }
@@ -363,7 +369,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                     Matcher m = p.matcher(line);
                     while (m.find()) {
                         String res = m.group(1).replace(",", "");
-                        pr(res);
+                        //pr(res);
                         out.append("XIN0U" + "\t").append(res);
                         out.newLine();
                     }
@@ -511,7 +517,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         getXINA50Index(ap);
 
 
-        pr(" requesting position ");
+        //pr(" requesting position ");
 
         AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
         ap.reqAccountSummary("All", tags, new ApiController.IAccountSummaryHandler.AccountInfoHandler());
@@ -585,7 +591,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                 c.primaryExch("ARCA");
             }
             c.currency("USD");
-            pr(" etf is " + ticker);
+            //pr(" etf is " + ticker);
 
             LocalDateTime lt = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
@@ -638,7 +644,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         //t = t.minusDays(1L);
 
         final String dateString = t.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"));
-        pr(" date is " + dateString);
+        //pr(" date is " + dateString);
 
         String name = "SH#000001.txt";
         String line;
@@ -720,13 +726,13 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 
                 switch (zdt.getHour()) {
                     case 13:
-                        pr(" Date " + ldt.toString() + " HK noon " + close);
+                        //pr(" Date " + ldt.toString() + " HK noon " + close);
                         Utility.simpleWrite("HK NOON" + "\t" + close + "\t" +
                                 ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "\t" + zdt.getHour(), false);
                         break;
 
                     case 16:
-                        pr(" Date " + ldt.toString() + " HK close " + close);
+                        //pr(" Date " + ldt.toString() + " HK close " + close);
                         Utility.simpleWrite("HK CLOSE" + "\t" + close + "\t" +
                                 ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd")) + "\t" + zdt.getHour(), true);
                         break;
@@ -734,7 +740,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 
                 switch (zdt.withZoneSameInstant(nyZone).getHour()) {
                     case 15:
-                        pr(" Date " + ldt.toString() + " US close " + close);
+                        //pr(" Date " + ldt.toString() + " US close " + close);
                         Utility.simpleWrite("US CLOSE" + "\t" + close + "\t" +
                                 ldt.format(DateTimeFormatter.ofPattern("yyyy/MM/dd"))
                                 + "\t" + zdt.getHour(), true);
@@ -793,7 +799,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                     Math.round(1000000d * HKDCNH) / 1000000d, true, fxOutput);
         } else if (!name.equals("USD")) {
             //pr(str(name, "is finished "));
-            usAfterClose.forEach((key, value) -> pr(str(key, value.lastEntry())));
+            //usAfterClose.forEach((key, value) -> pr(str(key, value.lastEntry())));
         }
         //pr(" data is finished ");
     }
@@ -821,15 +827,20 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
     public void position(String account, Contract contract, double position, double avgCost) {
         //String symbol = ibContractToSymbol(contract);
         //holdingsMap.put(symbol, (int) position);
-        holdingsMap.put(contract, position);
+        if (!contract.symbol().equals("USD")) {
+            holdingsMap.put(contract, position);
+        }
     }
 
     @Override
     public void positionEnd() {
-        pr(" holdings map ");
-        holdingsMap.forEach((key, value) -> pr("symbol pos ", key.symbol(), value));
+        //pr(" holdings map ", holdingsMap);
+        holdingsMap.entrySet().stream().forEachOrdered((e)
+                -> pr("symb pos ", ibContractToSymbol(e.getKey()), e.getValue()));
         for (Contract c : holdingsMap.keySet()) {
+
             String k = ibContractToSymbol(c);
+            holdingsResult.put(k, "");
             morningYtdData.put(k, new ConcurrentSkipListMap<>());
             if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
                 staticController.reqHistDayData(ibStockReqId.addAndGet(5),
@@ -859,8 +870,11 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                 long mCount = morningYtdData.get(symbol).entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY)).count();
                 double last;
+                double secLast;
                 last = morningYtdData.get(symbol).lastEntry().getValue().getClose();
+                secLast = morningYtdData.get(symbol).lowerEntry(morningYtdData.get(symbol).lastKey()).getValue().getClose();
                 String info = "";
+                double lastChg = Math.round((last / secLast - 1) * 1000d) / 10d;
                 double yDev = Math.round((last / yOpen - 1) * 1000d) / 10d;
                 double mDev = Math.round((last / mOpen - 1) * 1000d) / 10d;
                 if (size > 0) {
@@ -880,7 +894,8 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                 }
 
                 String out = str(symbol, size, morningYtdData.get(symbol).lastEntry().getKey().format(f), last,
-                        "||yOpen", morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f), yOpen,
+                        lastChg + "%", "||yOpen", morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f),
+                        yOpen,
                         "yDays" + yCount, "yUp%",
                         Math.round(1000d * morningYtdData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
@@ -892,7 +907,8 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
                                 .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d + "%",
                         "mDev", mDev + "%", info);
-                pr("*", out);
+                //pr("*", out);
+                holdingsResult.put(symbol, out);
                 Utility.simpleWriteToFile(out, true, positionOutput);
             }
         }
