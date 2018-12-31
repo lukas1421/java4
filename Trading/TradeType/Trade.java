@@ -29,7 +29,7 @@ public abstract class Trade {
         return size;
     }
 
-    public int getAbsSize() {
+    int getAbsSize() {
         return Math.abs(size);
     }
 
@@ -49,7 +49,7 @@ public abstract class Trade {
     //cost basis with fees (custom brokerage)
     public abstract double getCostBasisWithFeesCustomBrokerage(String name, double rate);
 
-    public double getMtmPnl(String name) {
+    double getMtmPnl(String name) {
         if (ChinaStock.priceMap.containsKey(name)) {
             double brokerage = Math.max(5, Math.round(price * abs(size) * 2 / 100) / 100d);
             double guohu = (name.startsWith("sz")) ? 0.0 : Math.round(price * abs(size) * 0.2 / 100d) / 100d;

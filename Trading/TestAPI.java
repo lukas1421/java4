@@ -51,7 +51,7 @@ public class TestAPI {
 
         pr(" Time after latch released " + LocalTime.now());
 
-        ap.reqPositions(new ApiController.IPositionHandler.DefaultPositionHandler());
+        //ap.reqPositions(new ApiController.IPositionHandler.DefaultPositionHandler());
 
     }
 }
