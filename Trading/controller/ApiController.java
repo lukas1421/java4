@@ -944,9 +944,11 @@ public class ApiController implements EWrapper {
     }
 
     private void req1StockLive(String ticker, String exch, String curr, LiveHandler h, boolean snapshot) {
-        pr(" requesting 1 stock live ", ticker, exch, curr);
         try {
             int reqId = m_reqId.incrementAndGet();
+
+            pr(" requesting 1 stock live ", reqId, ticker, exch, curr);
+
             if (reqId % 90 == 0) {
                 Thread.sleep(1000);
             }
@@ -975,9 +977,11 @@ public class ApiController implements EWrapper {
 //        }
 //    }
 
-    public void req1ContractLive(Contract ct, LiveHandler h) {
+    private void req1ContractLive(Contract ct, LiveHandler h) {
         try {
             int reqId = m_reqId.incrementAndGet();
+            pr(" req 1 contract live ", reqId, ibContractToSymbol(ct), ct.symbol(), ct.currency(),
+                    ct.lastTradeDateOrContractMonth());
             if (reqId % 90 == 0) {
                 Thread.sleep(1000);
             }
@@ -1019,8 +1023,12 @@ public class ApiController implements EWrapper {
 
     public void reqNonChinaTrader() {
         ChinaData.priceMapBarDetail.keySet().forEach(k -> {
-            if (!k.startsWith("sz") && !k.startsWith("sh")) {
+            if (!k.startsWith("sz") && !k.startsWith("sh") && !k.startsWith("FTSEA50")
+                    && !k.startsWith("SGXA50PR") && !k.startsWith("SGXA50BM")) {
+                pr(" req Non china trader ", k);
+                //pr(" symbol ", AutoTraderMain.symbolToIBContract(k).symbol());
                 Contract c = AutoTraderMain.symbolToIBContract(k);
+
                 req1ContractLive(c, new LiveHandler.PriceMapUpdater());
             }
         });
