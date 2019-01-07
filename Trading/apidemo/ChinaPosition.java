@@ -61,6 +61,8 @@ public class ChinaPosition extends JPanel {
     private static final LocalDate LAST_MONTH_LAST_DAY = getLastMonthLastDay();
     private static final LocalDate LAST_YEAR_LAST_DAY = getLastYearLastDay();
 
+    private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
+            ytdDayData = new ConcurrentSkipListMap<>(String::compareTo);
     static JButton excludeChinaButton;
     static JButton refreshButton;
     static JToggleButton autoUpdateButton;
@@ -69,7 +71,8 @@ public class ChinaPosition extends JPanel {
     static String line;
     private static AtomicBoolean includeExpired = new AtomicBoolean(true);
     public volatile static Map<String, Integer> openPositionMap = new HashMap<>();
-    public volatile static Map<String, Integer> currentPositionMap = new HashMap<>();
+    public volatile static Map<String, Integer> currentPositionMap
+            = new TreeMap<>(String::compareTo);
     static Map<String, Double> costMap = new HashMap<>();
     public volatile static Map<String, ConcurrentSkipListMap<LocalTime, TradeBlock>> tradesMap = new ConcurrentHashMap<>();
     private static Map<String, ConcurrentSkipListMap<LocalTime, Double>> tradePnlMap = new ConcurrentHashMap<>();
@@ -252,7 +255,8 @@ public class ChinaPosition extends JPanel {
 
         getCurrentButton.addActionListener(l -> {
             //symbolNames.forEach((String name) -> tradesMap.put(name, new ConcurrentSkipListMap<>()));
-            CompletableFuture.runAsync(ChinaPosition::updatePosition).thenRun(ChinaPosition::getOpenTradePositionForFuture);
+            CompletableFuture.runAsync(ChinaPosition::updatePosition)
+                    .thenRun(ChinaPosition::getOpenTradePositionForFuture);
             //getCurrentPositionNormal();
             //getCurrentPositionMargin();
         });
@@ -525,7 +529,8 @@ public class ChinaPosition extends JPanel {
     }
 
     private void refreshPositions() {
-        CompletableFuture.runAsync(ChinaPosition::updatePosition).thenRun(ChinaPosition::getOpenTradePositionForFuture);
+        CompletableFuture.runAsync(ChinaPosition::updatePosition)
+                .thenRun(ChinaPosition::getOpenTradePositionForFuture);
     }
 
     @SuppressWarnings("unused")
@@ -1299,6 +1304,11 @@ public class ChinaPosition extends JPanel {
         } else {
             return 0;
         }
+    }
+
+    private void checkIntradayBreach() {
+
+
     }
 
     private double getNetPnl(String name) {

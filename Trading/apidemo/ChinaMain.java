@@ -511,6 +511,9 @@ public final class ChinaMain implements IConnectionHandler {
                                     CompletableFuture.runAsync(ChinaPosition::updatePosition)
                                             .thenRun(ChinaPosition::getOpenTradePositionForFuture);
 
+                                    
+                                    //M_CONTROLLER.
+
                                     SwingUtilities.invokeLater(() -> {
                                         pr(" mon ");
                                         ChinaKeyMonitor.refreshButton.doClick();

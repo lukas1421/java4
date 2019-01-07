@@ -1168,6 +1168,7 @@ public class ApiController implements EWrapper {
                 barSize.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
     }
 
+
     //requ month open
     public void reqHistDayData(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
                                int duration, BarSize bs) {
