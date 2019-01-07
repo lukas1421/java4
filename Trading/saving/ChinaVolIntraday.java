@@ -1,6 +1,6 @@
 package saving;
 
-import apidemo.ChinaOption;
+import api.ChinaOption;
 import auxiliary.SimpleBar;
 
 import javax.persistence.Column;

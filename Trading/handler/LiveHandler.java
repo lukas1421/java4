@@ -1,7 +1,7 @@
 package handler;
 
-import apidemo.ChinaData;
-import apidemo.ChinaStock;
+import api.ChinaData;
+import api.ChinaStock;
 import auxiliary.SimpleBar;
 import client.TickType;
 

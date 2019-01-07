@@ -1,6 +1,6 @@
 package graph;
 
-import apidemo.*;
+import api.*;
 import auxiliary.SimpleBar;
 import utility.Utility;
 
@@ -18,11 +18,11 @@ import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
 
-import static apidemo.ChinaData.*;
-import static apidemo.ChinaDataYesterday.*;
-import static apidemo.ChinaStock.*;
-import static apidemo.ChinaStockHelper.*;
-import static apidemo.XuTraderHelper.getMAGenLT;
+import static api.ChinaData.*;
+import static api.ChinaDataYesterday.*;
+import static api.ChinaStock.*;
+import static api.ChinaStockHelper.*;
+import static api.XuTraderHelper.getMAGenLT;
 import static java.lang.Double.min;
 import static java.lang.Math.log;
 import static java.lang.Math.round;

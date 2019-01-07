@@ -1,7 +1,7 @@
 package auxiliary;
 
-import apidemo.ChinaMain;
-import apidemo.TradingConstants;
+import api.ChinaMain;
+import api.TradingConstants;
 import client.Types;
 import controller.ApiController.IHistoricalDataHandler;
 import controller.Bar;
@@ -45,7 +45,7 @@ public final class HistData extends JPanel implements IHistoricalDataHandler {
 
     //String[] arr = new String[331];                    
     //final boolean m_historical;
-    //final apidemo.Chart m_chart = new apidemo.Chart( m_rows);
+    //final api.Chart m_chart = new api.Chart( m_rows);
     //generic column names to be intialized
     public void init() {
         LocalTime lt = LocalTime.of(9, 29);

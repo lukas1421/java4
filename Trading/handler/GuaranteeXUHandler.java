@@ -1,7 +1,7 @@
 package handler;
 
-import apidemo.AutoTraderMain;
-import apidemo.FutType;
+import api.AutoTraderMain;
+import api.FutType;
 import client.*;
 import controller.ApiController;
 
@@ -10,9 +10,9 @@ import java.time.LocalTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static apidemo.AutoTraderMain.globalIdOrderMap;
-import static apidemo.AutoTraderXU.*;
-import static apidemo.XuTraderHelper.*;
+import static api.AutoTraderMain.globalIdOrderMap;
+import static api.AutoTraderXU.*;
+import static api.XuTraderHelper.*;
 import static client.OrderStatus.*;
 import static utility.Utility.*;
 

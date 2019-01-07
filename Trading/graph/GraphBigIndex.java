@@ -1,8 +1,8 @@
 package graph;
 
-import apidemo.ChinaDataYesterday;
-import apidemo.ChinaStock;
-import apidemo.ChinaStockHelper;
+import api.ChinaDataYesterday;
+import api.ChinaStock;
+import api.ChinaStockHelper;
 import auxiliary.SimpleBar;
 import utility.Utility;
 
@@ -17,10 +17,10 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 
-import static apidemo.ChinaData.*;
-import static apidemo.ChinaDataYesterday.*;
-import static apidemo.ChinaStock.*;
-import static apidemo.ChinaStockHelper.*;
+import static api.ChinaData.*;
+import static api.ChinaDataYesterday.*;
+import static api.ChinaStock.*;
+import static api.ChinaStockHelper.*;
 import static java.lang.Double.min;
 import static java.lang.Math.log;
 import static java.lang.Math.round;

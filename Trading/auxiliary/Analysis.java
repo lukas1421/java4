@@ -1,7 +1,7 @@
 package auxiliary;
 
-import apidemo.LiveData;
-import apidemo.TradingConstants;
+import api.LiveData;
+import api.TradingConstants;
 import graph.Graph;
 
 import javax.swing.*;

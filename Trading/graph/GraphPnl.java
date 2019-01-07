@@ -1,8 +1,8 @@
 package graph;
 
 import TradeType.TradeBlock;
-import apidemo.ChinaPosition;
-import apidemo.ChinaStock;
+import api.ChinaPosition;
+import api.ChinaStock;
 import utility.Utility;
 
 import javax.swing.*;

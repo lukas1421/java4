@@ -1,8 +1,8 @@
 package auxiliary;
 
-import apidemo.ChinaData;
-import apidemo.ChinaStock;
-import apidemo.TradingConstants;
+import api.ChinaData;
+import api.ChinaStock;
+import api.TradingConstants;
 import auxiliary.Strategy.StratType;
 
 import javax.swing.*;
@@ -17,8 +17,8 @@ import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
 
-import static apidemo.ChinaData.strategyTotalMap;
-import static apidemo.ChinaStock.symbolNames;
+import static api.ChinaData.strategyTotalMap;
+import static api.ChinaStock.symbolNames;
 import static java.util.stream.Collectors.*;
 
 public final class ChinaStrategyTable extends JPanel {

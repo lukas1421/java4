@@ -1,9 +1,9 @@
 package graph;
 
-//import static apidemo.ChinaDataYesterday.*;
-//import static apidemo.ChinaStock.*;
+//import static api.ChinaDataYesterday.*;
+//import static api.ChinaStock.*;
 
-import apidemo.ChinaStock;
+import api.ChinaStock;
 import auxiliary.SimpleBar;
 import utility.Utility;
 
@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static apidemo.ChinaData.*;
+import static api.ChinaData.*;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.time.temporal.ChronoUnit.MINUTES;

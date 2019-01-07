@@ -11,8 +11,8 @@ import java.time.temporal.Temporal;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaData.sizeTotalMap;
+import static api.ChinaData.priceMapBar;
+import static api.ChinaData.sizeTotalMap;
 
 @javax.persistence.Entity
 @Table(name = "CHINASAVE")

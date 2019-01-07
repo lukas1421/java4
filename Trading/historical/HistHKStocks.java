@@ -1,7 +1,7 @@
 package historical;
 
-import apidemo.AutoTraderMain;
-import apidemo.TradingConstants;
+import api.AutoTraderMain;
+import api.TradingConstants;
 import auxiliary.SimpleBar;
 import client.Types;
 import controller.ApiConnection;

@@ -1,7 +1,7 @@
 package auxiliary;
 
-import apidemo.ChinaData;
-import apidemo.TradingConstants;
+import api.ChinaData;
+import api.TradingConstants;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static apidemo.ChinaData.dateMap;
+import static api.ChinaData.dateMap;
 
 public class Dividends {
 

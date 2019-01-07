@@ -1,6 +1,6 @@
 package TradeType;
 
-import apidemo.ChinaStock;
+import api.ChinaStock;
 import utility.Utility;
 
 import static java.lang.Math.abs;

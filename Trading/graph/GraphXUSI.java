@@ -1,6 +1,6 @@
 package graph;
 
-import apidemo.*;
+import api.*;
 import auxiliary.SimpleBar;
 
 import javax.swing.*;
@@ -14,7 +14,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
 
-import static apidemo.ChinaData.ftseCloseMap;
+import static api.ChinaData.ftseCloseMap;
 import static java.util.stream.Collectors.toMap;
 import static utility.Utility.ibContractToFutType;
 import static utility.Utility.str;

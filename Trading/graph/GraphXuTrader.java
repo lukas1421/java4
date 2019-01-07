@@ -2,7 +2,7 @@ package graph;
 
 import TradeType.MAIdea;
 import TradeType.TradeBlock;
-import apidemo.*;
+import api.*;
 import auxiliary.SimpleBar;
 import client.OrderAugmented;
 import client.OrderStatus;
@@ -28,10 +28,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static apidemo.AutoTraderMain.liveIDOrderMap;
-import static apidemo.AutoTraderXU.*;
-import static apidemo.TradingConstants.FTSE_INDEX;
-import static apidemo.XuTraderHelper.getPercentileForLast;
+import static api.AutoTraderMain.liveIDOrderMap;
+import static api.AutoTraderXU.*;
+import static api.TradingConstants.FTSE_INDEX;
+import static api.XuTraderHelper.getPercentileForLast;
 import static client.OrderStatus.*;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;

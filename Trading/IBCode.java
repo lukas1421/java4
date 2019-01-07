@@ -1,4 +1,4 @@
-import apidemo.TradingConstants;
+import api.TradingConstants;
 
 import javax.swing.*;
 import java.awt.*;

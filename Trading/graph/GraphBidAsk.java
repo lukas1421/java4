@@ -1,7 +1,7 @@
 package graph;
 
-import apidemo.ChinaData;
-import apidemo.ChinaStock;
+import api.ChinaData;
+import api.ChinaStock;
 
 import javax.swing.*;
 import java.awt.*;

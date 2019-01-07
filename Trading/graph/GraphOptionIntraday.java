@@ -1,6 +1,6 @@
 package graph;
 
-import apidemo.ChinaOption;
+import api.ChinaOption;
 import auxiliary.SimpleBar;
 import utility.Utility;
 
@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static apidemo.ChinaOption.*;
+import static api.ChinaOption.*;
 import static utility.Utility.reduceMapToDouble;
 import static utility.Utility.roundDownToN;
 

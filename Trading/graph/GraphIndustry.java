@@ -1,7 +1,7 @@
 package graph;
 
-import apidemo.ChinaStock;
-import apidemo.TradingConstants;
+import api.ChinaStock;
+import api.TradingConstants;
 import auxiliary.SimpleBar;
 
 import javax.swing.*;
@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static apidemo.ChinaData.*;
+import static api.ChinaData.*;
 import static java.lang.Math.round;
 import static java.util.Comparator.comparingDouble;
 import static java.util.Map.Entry.comparingByValue;

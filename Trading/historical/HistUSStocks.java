@@ -1,6 +1,6 @@
 package historical;
 
-import apidemo.TradingConstants;
+import api.TradingConstants;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;

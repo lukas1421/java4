@@ -4,7 +4,7 @@ import client.TickType;
 
 import java.time.LocalDateTime;
 
-import static apidemo.AutoTraderUS.*;
+import static api.AutoTraderUS.*;
 import static utility.Utility.pr;
 
 public class USStockReceiver implements LiveHandler {

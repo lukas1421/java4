@@ -1,7 +1,7 @@
 package utility;
 
 import TradeType.TradeBlock;
-import apidemo.*;
+import api.*;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
@@ -28,10 +28,10 @@ import java.util.function.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static apidemo.AutoTraderMain.ltof;
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaStock.*;
-import static apidemo.TradingConstants.tdxPath;
+import static api.AutoTraderMain.ltof;
+import static api.ChinaData.priceMapBar;
+import static api.ChinaStock.*;
+import static api.TradingConstants.tdxPath;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.util.stream.Collectors.groupingBy;

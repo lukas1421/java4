@@ -1,6 +1,6 @@
 package handler;
 
-import apidemo.ChinaData;
+import api.ChinaData;
 import auxiliary.SimpleBar;
 
 import java.time.LocalDate;

@@ -1,6 +1,6 @@
 package handler;
 
-import apidemo.ChinaPosition;
+import api.ChinaPosition;
 import client.Contract;
 import controller.ApiController;
 

@@ -4,8 +4,8 @@ import TradeType.MarginTrade;
 import TradeType.NormalTrade;
 import TradeType.Trade;
 import TradeType.TradeBlock;
-import apidemo.*;
-import apidemo.Currency;
+import api.*;
+import api.Currency;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.ExecutionFilter;
@@ -37,12 +37,12 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaData.wtdSharpe;
-import static apidemo.ChinaMain.GLOBAL_REQ_ID;
-import static apidemo.ChinaPosition.tradesMap;
-import static apidemo.ChinaStock.currencyMap;
-import static apidemo.Currency.CNY;
+import static api.ChinaData.priceMapBar;
+import static api.ChinaData.wtdSharpe;
+import static api.ChinaMain.GLOBAL_REQ_ID;
+import static api.ChinaPosition.tradesMap;
+import static api.ChinaStock.currencyMap;
+import static api.Currency.CNY;
 import static utility.Utility.*;
 
 @SuppressWarnings("SpellCheckingInspection")

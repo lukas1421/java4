@@ -1,7 +1,7 @@
 package graph;
 
-import apidemo.ChinaSizeRatio;
-import apidemo.ChinaStock;
+import api.ChinaSizeRatio;
+import api.ChinaStock;
 
 import javax.swing.*;
 import java.awt.*;

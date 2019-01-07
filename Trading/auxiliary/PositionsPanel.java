@@ -1,23 +1,19 @@
 package auxiliary;
 
-import java.awt.BorderLayout;
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
-
-import apidemo.ChinaMain;
+import api.ChinaMain;
+import auxiliary.AccountInfoPanel.Table;
 import client.Contract;
 import controller.ApiController.IPositionHandler;
 import controller.Formats;
-
-import auxiliary.AccountInfoPanel.Table;
 import util.HtmlButton;
 import util.NewTabbedPanel.NewTabPanel;
 import util.VerticalPanel;
+
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class PositionsPanel extends NewTabPanel {
 

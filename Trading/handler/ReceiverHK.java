@@ -1,12 +1,12 @@
 package handler;
 
-import apidemo.ChinaData;
+import api.ChinaData;
 import client.TickType;
 
 import java.time.LocalDateTime;
 
-import static apidemo.AutoTraderHK.*;
-import static apidemo.XuTraderHelper.outputDetailedHK;
+import static api.AutoTraderHK.*;
+import static api.XuTraderHelper.outputDetailedHK;
 import static utility.Utility.str;
 
 

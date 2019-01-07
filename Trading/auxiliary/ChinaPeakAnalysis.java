@@ -1,6 +1,6 @@
 package auxiliary;
 
-import apidemo.ChinaData;
+import api.ChinaData;
 
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
@@ -15,9 +15,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
 
-import static apidemo.ChinaData.tradeTime;
-import static apidemo.ChinaStock.nameMap;
-import static apidemo.ChinaStock.symbolNames;
+import static api.ChinaData.tradeTime;
+import static api.ChinaStock.nameMap;
+import static api.ChinaStock.symbolNames;
 
 public class ChinaPeakAnalysis extends JPanel {
 

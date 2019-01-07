@@ -1,6 +1,6 @@
 package auxiliary;
 
-import apidemo.ChinaStock;
+import api.ChinaStock;
 import graph.Graph;
 import graph.GraphBar;
 
@@ -15,7 +15,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import static apidemo.ChinaStockHelper.getRange;
+import static api.ChinaStockHelper.getRange;
 
 final class IdeaProcessorPM extends JPanel {
 

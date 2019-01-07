@@ -9,9 +9,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static apidemo.ChinaData.tradeTime;
-import static apidemo.ChinaStock.nameMap;
-import static apidemo.ChinaStock.symbolNames;
+import static api.ChinaData.tradeTime;
+import static api.ChinaStock.nameMap;
+import static api.ChinaStock.symbolNames;
 
 public class ChinaBidAskData extends JPanel {
 

@@ -1,7 +1,7 @@
 package saving;
 
-import apidemo.ChinaData;
-import apidemo.ChinaMain;
+import api.ChinaData;
+import api.ChinaMain;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 

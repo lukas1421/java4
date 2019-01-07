@@ -1,6 +1,6 @@
 package saving;
 
-import apidemo.XU;
+import api.XU;
 import auxiliary.SimpleBar;
 
 import javax.persistence.*;

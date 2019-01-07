@@ -1,25 +1,19 @@
 package auxiliary;
 
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.util.ArrayList;
-import java.util.HashMap;
-
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.border.TitledBorder;
-import javax.swing.table.AbstractTableModel;
-
-import apidemo.ChinaMain;
-import util.HtmlButton;
-
+import api.ChinaMain;
 import client.CommissionReport;
 import client.Contract;
 import client.Execution;
 import client.ExecutionFilter;
 import controller.ApiController.ITradeReportHandler;
-import javax.swing.SwingUtilities;
+import util.HtmlButton;
+
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import javax.swing.table.AbstractTableModel;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 final class TradesPanel extends JPanel implements ITradeReportHandler {
 

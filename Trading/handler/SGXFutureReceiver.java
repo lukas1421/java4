@@ -1,16 +1,16 @@
 package handler;
 
-import apidemo.*;
+import api.*;
 import auxiliary.SimpleBar;
 import client.TickType;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaData.priceMapBarDetail;
-import static apidemo.TradingConstants.FUT_COLLECTION_TIME;
-import static apidemo.TradingConstants.STOCK_COLLECTION_TIME;
+import static api.ChinaData.priceMapBar;
+import static api.ChinaData.priceMapBarDetail;
+import static api.TradingConstants.FUT_COLLECTION_TIME;
+import static api.TradingConstants.STOCK_COLLECTION_TIME;
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.pr;

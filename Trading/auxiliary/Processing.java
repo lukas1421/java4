@@ -1,19 +1,14 @@
 package auxiliary;
 
-import apidemo.LiveData;
-import auxiliary.Trait;
+import api.LiveData;
 
-import static utility.Utility.TIMEMAX;
-import static java.lang.Math.log;
 import java.time.LocalTime;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static java.lang.Math.log;
+import static utility.Utility.TIMEMAX;
 // this will be a class to analyse data in LiveData
 
 public class Processing implements Runnable {

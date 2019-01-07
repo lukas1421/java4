@@ -1,6 +1,6 @@
 package graph;
 
-import apidemo.XU;
+import api.XU;
 
 import javax.swing.*;
 import java.awt.*;

@@ -1,6 +1,6 @@
 package graph;
 
-import apidemo.ChinaOption;
+import api.ChinaOption;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,8 +12,8 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
 
-import static apidemo.ChinaOption.previousTradingDate;
-import static apidemo.ChinaOptionHelper.interpolateVol;
+import static api.ChinaOption.previousTradingDate;
+import static api.ChinaOptionHelper.interpolateVol;
 import static utility.Utility.*;
 
 public class GraphOptionVolDiff extends JComponent implements MouseMotionListener, MouseListener {

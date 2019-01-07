@@ -1,6 +1,6 @@
 package auxiliary;
 
-import apidemo.TradingConstants;
+import api.TradingConstants;
 import graph.Graph;
 
 import javax.swing.*;

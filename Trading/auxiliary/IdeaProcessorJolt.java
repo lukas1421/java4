@@ -1,7 +1,7 @@
 package auxiliary;
 
-import apidemo.ChinaIdeaTimeCompute;
-import apidemo.ChinaStock;
+import api.ChinaIdeaTimeCompute;
+import api.ChinaStock;
 import graph.Graph;
 
 import javax.swing.*;
@@ -15,7 +15,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
-import static apidemo.ChinaStockHelper.getRange;
+import static api.ChinaStockHelper.getRange;
 
 final class IdeaProcessorJolt extends JPanel {
 

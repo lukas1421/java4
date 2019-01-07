@@ -2,7 +2,7 @@ package handler;
 
 import TradeType.FutureTrade;
 import TradeType.TradeBlock;
-import apidemo.FutType;
+import api.FutType;
 import client.CommissionReport;
 import client.Contract;
 import client.Execution;
@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-import static apidemo.AutoTraderXU.overnightTradesMap;
+import static api.AutoTraderXU.overnightTradesMap;
 import static utility.Utility.ibContractToFutType;
 import static utility.Utility.ibContractToSymbol;
 

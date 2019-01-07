@@ -2,7 +2,7 @@
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 package controller;
 
-import apidemo.*;
+import api.*;
 import client.*;
 import client.Types.*;
 import controller.ApiConnection.ILogger;
@@ -30,10 +30,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static apidemo.AutoTraderMain.*;
-import static apidemo.ChinaMain.controller;
-import static apidemo.ChinaMain.ibConnLatch;
-import static apidemo.XuTraderHelper.*;
+import static api.AutoTraderMain.*;
+import static api.ChinaMain.controller;
+import static api.ChinaMain.ibConnLatch;
+import static api.XuTraderHelper.*;
 import static client.OrderStatus.Filled;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
@@ -896,7 +896,7 @@ public class ApiController implements EWrapper {
 //        HKData.es = Executors.newScheduledThreadPool(10);
 //        HKData.es.scheduleAtFixedRate(() -> {
 //            HKData.hkPriceBar.keySet().forEach(k -> req1StockLive(k, "SEHK", "HKD",
-//                    apidemo.ChinaMain.hkdata, true));
+//                    api.ChinaMain.hkdata, true));
 //        }, 5L, 10L, TimeUnit.SECONDS);
 //    }
 

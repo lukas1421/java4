@@ -8,7 +8,7 @@ import java.time.temporal.Temporal;
 import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import static apidemo.ChinaData.priceMapBarDetail;
+import static api.ChinaData.priceMapBarDetail;
 
 @javax.persistence.Entity
 @Table(name = "CHINASAVEDETAILED")

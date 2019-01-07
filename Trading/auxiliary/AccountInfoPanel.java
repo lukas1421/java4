@@ -1,6 +1,6 @@
 package auxiliary;
 
-import apidemo.ChinaMain;
+import api.ChinaMain;
 import client.Types.SecType;
 import controller.ApiController.IAccountHandler;
 import controller.MarketValueTag;

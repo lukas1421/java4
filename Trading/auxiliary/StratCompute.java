@@ -1,7 +1,6 @@
 package auxiliary;
 
-import apidemo.LiveData;
-import auxiliary.Backtesting;
+import api.LiveData;
 
 import java.time.LocalTime;
 

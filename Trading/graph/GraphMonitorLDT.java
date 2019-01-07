@@ -2,9 +2,9 @@ package graph;
 
 import TradeType.Trade;
 import TradeType.TradeBlock;
-import apidemo.ChinaData;
-import apidemo.ChinaPosition;
-import apidemo.ChinaStock;
+import api.ChinaData;
+import api.ChinaPosition;
+import api.ChinaStock;
 import auxiliary.SimpleBar;
 import historical.HistChinaStocks;
 import utility.Utility;
@@ -19,9 +19,9 @@ import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Function;
 
-import static apidemo.ChinaData.price5mWtd;
-import static apidemo.ChinaData.priceMapBar;
-import static apidemo.ChinaStock.NORMAL_STOCK;
+import static api.ChinaData.price5mWtd;
+import static api.ChinaData.priceMapBar;
+import static api.ChinaStock.NORMAL_STOCK;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.*;
 

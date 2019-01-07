@@ -1,6 +1,6 @@
 package auxiliary;
 
-import apidemo.ChinaMain;
+import api.ChinaMain;
 import client.Contract;
 import client.TickType;
 import client.Types.MktDataType;

@@ -1,6 +1,6 @@
 package graph;
 
-import apidemo.XuTraderHelper;
+import api.XuTraderHelper;
 import auxiliary.SimpleBar;
 import utility.Utility;
 
@@ -18,7 +18,7 @@ import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.stream.Collectors;
 
-import static apidemo.ChinaStock.closeMap;
+import static api.ChinaStock.closeMap;
 import static graph.GraphHelper.*;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.r10000;
