@@ -144,15 +144,15 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 }
 
                 String out = str(symbol, size, ytdDayData.get(symbol).lastEntry().getKey().format(f), last,
-                        lastChg + "%", "||yOpen", ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f),
-                        yOpen,
-                        "y#" + yCount, "yUp%",
+                        lastChg + "%", "||yOpen", ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY)
+                                .getKey().format(f), yOpen,
+                        "y#:" + yCount, "yUp%:",
                         Math.round(1000d * ytdDayData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
                                 .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d + "%",
                         "yDev", yDev + "%",
                         "||mOpen ", ytdDayData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
-                        "m#" + mCount, "mUp%",
+                        "m#:" + mCount, "mUp%:",
                         Math.round(1000d * ytdDayData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
                                 .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d + "%",
@@ -175,43 +175,48 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     //live
     @Override
     public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
-        pr("last symbol ", tt, symbol, price, t.format(f2));
+        //pr("last symbol ", tt, symbol, price, t.format(f2));
         switch (tt) {
             case LAST:
                 if (ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
                     double yOpen = ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY).getValue().getOpen();
                     double mOpen = ytdDayData.get(symbol).higherEntry(LAST_MONTH_DAY).getValue().getOpen();
+                    double last;
                     double secLast;
-                    secLast = ytdDayData.get(symbol).lowerEntry(ytdDayData.get(symbol)
-                            .lastKey()).getValue().getClose();
+                    LocalDate lastKey = ytdDayData.get(symbol).lastKey();
+                    LocalDate secLastKey = ytdDayData.get(symbol).lowerKey(lastKey);
+
+                    last = ytdDayData.get(symbol).lastEntry().getValue().getClose();
+                    secLast = ytdDayData.get(symbol).lowerEntry(lastKey).getValue().getClose();
+
                     String info = "";
                     double lastChg = Math.round((price / secLast - 1) * 1000d) / 10d;
                     double yDev = Math.round((price / yOpen - 1) * 1000d) / 10d;
                     double mDev = Math.round((price / mOpen - 1) * 1000d) / 10d;
 
                     String yBreachStatus = "";
-                    if (secLast > yOpen && price < yOpen) {
-                        yBreachStatus = "y BREACHED DOWN";
-                    } else if (secLast < yOpen && price > yOpen) {
-                        yBreachStatus = "y BREACHED UP";
-                    }
-
                     String mBreachStatus = "";
-                    if (secLast > mOpen && price < mOpen) {
-                        mBreachStatus = "m BREACHED DOWN";
-                    } else if (secLast < mOpen && price > mOpen) {
-                        mBreachStatus = "m BREACHED UP";
+
+                    if (secLast > yOpen && price < yOpen) {
+                        yBreachStatus = "y DOWN";
+                    } else if (secLast < yOpen && price > yOpen) {
+                        yBreachStatus = "y UP";
                     }
 
-                    String out = str(symbol, "||LIVE", tt, t.format(f2), price, lastChg + "%"
-                            , "LAST DAY", ytdDayData.get(symbol).lastKey().format(f)
-                            , ytdDayData.get(symbol).lastEntry().getValue().getClose()
+                    if (secLast > mOpen && price < mOpen) {
+                        mBreachStatus = "m DOWN";
+                    } else if (secLast < mOpen && price > mOpen) {
+                        mBreachStatus = "m UP";
+                    }
+
+                    String out = str(symbol, "||LIVE", tt, t.format(f2), price
+                            , "CHG%:", lastChg + "%", "PREV:", secLastKey.format(f), secLast
                             , "||yOpen", ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f),
                             yOpen, "yDev", yDev + "%",
                             "||mOpen ", ytdDayData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
                             "mDev", mDev + "%", info);
-                    pr("*", out, "Y", yBreachStatus, "M", mBreachStatus);
+                    pr("*", out, yBreachStatus, mBreachStatus);
                 }
         }
     }
