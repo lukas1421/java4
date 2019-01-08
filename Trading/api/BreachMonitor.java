@@ -33,6 +33,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     private static ApiController staticController;
     private volatile static Map<Contract, Double> holdingsMap =
             new TreeMap<>(Comparator.comparing(Utility::ibContractToSymbol));
+    private volatile static Map<String, Double> symbolPosMap = new TreeMap<>(String::compareTo);
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
 
 
@@ -79,6 +80,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     public void position(String account, Contract contract, double position, double avgCost) {
         if (!contract.symbol().equals("USD")) {
             holdingsMap.put(contract, position);
+            symbolPosMap.put(ibContractToSymbol(contract), position);
         }
     }
 
@@ -210,7 +212,18 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                         mBreachStatus = "m UP";
                     }
 
-                    String out = str(symbol, "||LIVE", tt, t.format(f2), price
+                    double pos = symbolPosMap.getOrDefault(symbol, 0.0);
+                    if (pos < 0) {
+                        if (yDev > 0 || mDev > 0) {
+                            info = "SHORT OFFSIDE";
+                        }
+                    } else if (pos > 0) {
+                        if (yDev < 0 || mDev < 0) {
+                            info = "LONG OFFSIDE";
+                        }
+                    }
+
+                    String out = str(symbol, pos, "||LIVE", tt, t.format(f2), price
                             , "CHG%:", lastChg + "%", "PREV:", secLastKey.format(f), secLast
                             , "||yOpen", ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f),
                             yOpen, "yDev", yDev + "%",
