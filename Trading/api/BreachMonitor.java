@@ -9,15 +9,16 @@ import controller.ApiController;
 import handler.LiveHandler;
 import utility.Utility;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.CountDownLatch;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static utility.Utility.*;
@@ -36,9 +37,23 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     private volatile static Map<String, Double> symbolPosMap = new TreeMap<>(String::compareTo);
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
 
+    public static Map<Currency, Double> fxMap = new HashMap<>();
+
+
+    BreachMonitor() {
+        String line;
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                fxMap.put(Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
+            }
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+    }
 
     private void getFromIB() {
-
         ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
         staticController = ap;
@@ -46,7 +61,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         boolean connectionStatus = false;
 
         try {
-            ap.connect("127.0.0.1", 7496, 3, "");
+            ap.connect("127.0.0.1", 7496, 2, "");
             connectionStatus = true;
             pr(" connection : status is true ");
             l.countDown();
@@ -56,7 +71,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
         if (!connectionStatus) {
             pr(" using port 4001");
-            ap.connect("127.0.0.1", 4001, 3, "");
+            ap.connect("127.0.0.1", 4001, 2, "");
             l.countDown();
             pr(" Latch counted down " + LocalTime.now());
         }
@@ -105,11 +120,8 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         String symbol = utility.Utility.ibContractToSymbol(c);
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
-            //pr("morningYtdOpen", symbol, ld, open, high, low, close);
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         } else {
-            //finished
-            //pr(" finished ", c.symbol(), date, open, close);
             double size = holdingsMap.getOrDefault(c, 0.0);
             if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
 
@@ -145,6 +157,11 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                     info = "NO POS ";
                 }
 
+                double delta = size * last * fxMap.getOrDefault(Currency.get(c.currency()), 1.0);
+//                pr("delta ", size, last,
+//                        c.currency(), fxMap.getOrDefault(Currency.get(c.currency()), 1.0),
+//                        Math.round(delta / 1000d), "k");
+
                 String out = str(symbol, size, ytdDayData.get(symbol).lastEntry().getKey().format(f), last,
                         lastChg + "%", "||yOpen", ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY)
                                 .getKey().format(f), yOpen,
@@ -159,10 +176,11 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
                                 .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d + "%",
                         "mDev", mDev + "%", info);
-                pr("*LAST", out);
+                pr("*LAST", out, Math.round(delta / 1000d) + "k");
             }
         }
     }
+
 
     private static Contract fillContract(Contract c) {
         if (c.symbol().equals("XINA50")) {
@@ -229,7 +247,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                             yOpen, "yDev", yDev + "%",
                             "||mOpen ", ytdDayData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
                             "mDev", mDev + "%", info);
-                    pr("*", out, yBreachStatus, mBreachStatus);
+                    //pr("*", out, yBreachStatus, mBreachStatus);
                 }
         }
     }
@@ -250,7 +268,12 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         BreachMonitor bm = new BreachMonitor();
         bm.getFromIB();
 
-
+        //static ScheduledExecutorService ftes = Executors.newScheduledThreadPool(10);
+        ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
+        es.scheduleAtFixedRate(() -> {
+            pr("running @ ", LocalTime.now());
+            bm.reqHoldings(staticController);
+        }, 1, 1, TimeUnit.MINUTES);
     }
 
 }
