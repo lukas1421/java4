@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -176,7 +177,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
                                 .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d + "%",
                         "mDev", mDev + "%", info);
-                pr("*LAST", out, Math.round(delta / 1000d) + "k");
+                pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), "*", out, Math.round(delta / 1000d) + "k");
             }
         }
     }
@@ -268,7 +269,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         BreachMonitor bm = new BreachMonitor();
         bm.getFromIB();
 
-        //static ScheduledExecutorService ftes = Executors.newScheduledThreadPool(10);
         ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
         es.scheduleAtFixedRate(() -> {
             pr("running @ ", LocalTime.now());
