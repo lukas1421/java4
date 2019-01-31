@@ -144,15 +144,23 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 double mDev = Math.round((last / mOpen - 1) * 1000d) / 10d;
                 if (size > 0) {
                     if (yDev > 0 && mDev > 0) {
-                        info = "LONG ON ";
+                        info = "LONG ON/ON ";
+                    } else if (yDev > 0 && mDev < 0) {
+                        info = "LONG ON/OFF";
+                    } else if (yDev < 0 && mDev > 0) {
+                        info = "LONG OFF/ON";
                     } else {
-                        info = "LONG OFF ";
+                        info = "LONG OFF/OFF";
                     }
                 } else if (size < 0) {
                     if (yDev < 0 && mDev < 0) {
-                        info = "SHORT ON ";
+                        info = "SHORT ON/ON ";
+                    } else if (yDev > 0 && mDev < 0) {
+                        info = "LONG OFF/ON";
+                    } else if (yDev < 0 && mDev > 0) {
+                        info = "LONG ON/OFF";
                     } else {
-                        info = "SHORT OFF ";
+                        info = "SHORT OFF/OFF ";
                     }
                 } else {
                     info = "NO POS ";
