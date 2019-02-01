@@ -126,11 +126,11 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             double size = holdingsMap.getOrDefault(c, 0.0);
             if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
 
-                double yOpen = ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY).getValue().getOpen();
+                double yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
 
                 long yCount = ytdDayData.get(symbol).entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY)).count();
-                double mOpen = ytdDayData.get(symbol).higherEntry(LAST_MONTH_DAY).getValue().getOpen();
+                double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
                 long mCount = ytdDayData.get(symbol).entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY)).count();
                 double last;
@@ -143,22 +143,22 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 double yDev = Math.round((last / yOpen - 1) * 1000d) / 10d;
                 double mDev = Math.round((last / mOpen - 1) * 1000d) / 10d;
                 if (size > 0) {
-                    if (yDev > 0 && mDev > 0) {
+                    if (yDev > 0 && mDev >= 0) {
                         info = "LONG ON/ON ";
-                    } else if (yDev > 0 && mDev < 0) {
+                    } else if (yDev > 0 && mDev <= 0) {
                         info = "LONG ON/OFF";
-                    } else if (yDev < 0 && mDev > 0) {
+                    } else if (yDev < 0 && mDev >= 0) {
                         info = "LONG OFF/ON";
                     } else {
                         info = "LONG OFF/OFF";
                     }
                 } else if (size < 0) {
-                    if (yDev < 0 && mDev < 0) {
+                    if (yDev < 0 && mDev <= 0) {
                         info = "SHORT ON/ON ";
-                    } else if (yDev > 0 && mDev < 0) {
-                        info = "LONG OFF/ON";
-                    } else if (yDev < 0 && mDev > 0) {
-                        info = "LONG ON/OFF";
+                    } else if (yDev > 0 && mDev <= 0) {
+                        info = "SHORT OFF/ON";
+                    } else if (yDev < 0 && mDev >= 0) {
+                        info = "SHORT ON/OFF";
                     } else {
                         info = "SHORT OFF/OFF ";
                     }
@@ -171,15 +171,17 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 //                        c.currency(), fxMap.getOrDefault(Currency.get(c.currency()), 1.0),
 //                        Math.round(delta / 1000d), "k");
 
-                String out = str(symbol, size, ytdDayData.get(symbol).lastEntry().getKey().format(f), last,
-                        lastChg + "%", "||yOpen", ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY)
+                String out = str(symbol, Math.round(size),
+                        ytdDayData.get(symbol).lastEntry().getKey().format(f), last,
+                        lastChg + "%", "||yOpen",
+                        ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY)
                                 .getKey().format(f), yOpen,
                         "y#:" + yCount, "yUp%:",
                         Math.round(1000d * ytdDayData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
                                 .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d + "%",
                         "yDev", yDev + "%",
-                        "||mOpen ", ytdDayData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
+                        "||mOpen ", ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
                         "m#:" + mCount, "mUp%:",
                         Math.round(1000d * ytdDayData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))

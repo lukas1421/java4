@@ -862,11 +862,15 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
             double size = holdingsMap.getOrDefault(c, 0.0);
             if (morningYtdData.containsKey(symbol) && morningYtdData.get(symbol).size() > 0) {
 
+                pr(" last year day, last month day ", LAST_YEAR_DAY, LAST_MONTH_DAY);
+
                 double yOpen = morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getValue().getOpen();
 
                 long yCount = morningYtdData.get(symbol).entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY)).count();
-                double mOpen = morningYtdData.get(symbol).higherEntry(LAST_MONTH_DAY).getValue().getOpen();
+
+                double mOpen = morningYtdData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
+
                 long mCount = morningYtdData.get(symbol).entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY)).count();
                 double last;
@@ -901,7 +905,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                                 .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
                                 .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d + "%",
                         "yDev", yDev + "%",
-                        "||mOpen ", morningYtdData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
+                        "||mOpen ", morningYtdData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
                         "mDays" + mCount, "mUp%",
                         Math.round(1000d * morningYtdData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))

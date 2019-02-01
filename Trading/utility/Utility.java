@@ -887,9 +887,11 @@ public class Utility {
             //double open = priceMapBar.get(symb).ceilingEntry(LocalTime.of(9, 28)).getValue().getOpen();
             //double open2 = openMap.getOrDefault(symb, 0.0);
             double open3 = getCustomOpen(symb);
-            long minuteTotal = priceMapBar.get(symb).entrySet().stream().filter(e -> e.getKey().isAfter(ltof(9, 29)))
+            long minuteTotal = priceMapBar.get(symb).entrySet().stream()
+                    .filter(e -> e.getKey().isAfter(ltof(9, 29)))
                     .count();
-            long aboveMinutes = priceMapBar.get(symb).entrySet().stream().filter(e -> e.getKey().isAfter(ltof(9, 29)))
+            long aboveMinutes = priceMapBar.get(symb).entrySet().stream()
+                    .filter(e -> e.getKey().isAfter(ltof(9, 29)))
                     .filter(e -> e.getValue().getClose() > open3).count();
 //            pr(symb, "open | open2 | open3 | minuteTotal | aboveMin ", open, open2, open3, minuteTotal, aboveMinutes,
 //                    Math.round(100d * aboveMinutes / minuteTotal));
