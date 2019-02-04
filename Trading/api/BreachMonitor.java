@@ -41,7 +41,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     public static Map<Currency, Double> fxMap = new HashMap<>();
 
 
-    BreachMonitor() {
+    private BreachMonitor() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {

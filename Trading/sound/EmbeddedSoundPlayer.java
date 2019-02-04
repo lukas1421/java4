@@ -61,9 +61,9 @@ public class EmbeddedSoundPlayer {
     }
 
     private static Scene createScene() {
-        String fileName = TradingConstants.GLOBALPATH + "suju.wav";
-        player = fileNameToURIString(fileName);
-        player.setOnEndOfMedia(() -> player.seek(Duration.ZERO));
+        //String fileName = TradingConstants.GLOBALPATH + "suju.wav";
+        //player = fileNameToURIString(fileName);
+        //player.setOnEndOfMedia(() -> player.seek(Duration.ZERO));
         MediaView mediaView = new MediaView(player);
         Group root = new Group(mediaView);
         return (new Scene(root, 500, 200));

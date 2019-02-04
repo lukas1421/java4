@@ -99,11 +99,11 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         MorningTask mt = new MorningTask();
 
         Utility.clearFile(output);
-        processShcomp();
+        //processShcomp();
 
         mt.getFromIB();
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
-            writeIndexTDX(out);
+            //writeIndexTDX(out);
             //writeETF(out);
             writeA50(out);
             //writeA50_MW(out);
@@ -113,7 +113,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
             ex.printStackTrace();
         }
         getBOCFX2();
-        processShcomp();
+        //processShcomp();
 
         //pr("done and starting exiting sequence in 5");
         ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
