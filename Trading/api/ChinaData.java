@@ -630,6 +630,27 @@ public final class ChinaData extends JPanel {
         //Hibtask.loadHibGen(ChinaSaveBidAsk.getInstance());
     }
 
+
+    private static void saveTest() {
+        SessionFactory sessionF = HibernateUtil.getSessionFactory();
+        try (Session session = sessionF.openSession()) {
+            try {
+                session.getTransaction().begin();
+                StudentScore ss = new StudentScore(LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
+                        .toString(), 100);
+                session.save(ss);
+                session.getTransaction().commit();
+                session.close();
+            } catch (org.hibernate.exception.LockAcquisitionException x) {
+                session.close();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        ChinaData.saveTest();
+    }
+
     //private static void saveHib
 
     private static void saveHibGen(Map<String, ? extends NavigableMap<? extends Temporal, ?>> mp,
