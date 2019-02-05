@@ -209,7 +209,7 @@ public final class ChinaMain implements IConnectionHandler {
             xu.startIndex();
             ses.scheduleAtFixedRate(() -> {
                 if (STOCK_COLLECTION_TIME.test(LocalDateTime.now())) {
-                    XU.saveHibXU();
+                    //XU.saveHibXU();
                     ChinaData.withHibernateAuto();
                     ChinaData.withHibernateDetailedAuto();
                     ChinaData.saveChinaOHLC();

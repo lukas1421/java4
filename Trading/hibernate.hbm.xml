@@ -9,22 +9,17 @@
         <property column="SCORE" name="score" type="double"/>
     </class>
 
-    <!-->
     <class name="saving.ChinaSave" table="CHINASAVE">
         <id column="STOCK" name="stockName" type="string"/>
         <property column="DATA" name="dayPriceMapBlob" type="blob"/>
         <property column="VOL" name="volMapBlob" type="blob"/>
     </class>
-    <-->
 
-    <!-->
     <class name="saving.ChinaSaveDetailed" table="CHINASAVEDETAILED">
         <id column="STOCK" name="stockName" type="string"/>
         <property column="DATA" name="dayPriceMapBlob" type="blob"/>
     </class>
-    <-->
 
-    <!-->
     <class name="saving.ChinaSaveYest" table="CHINASAVEYEST">
         <id column="STOCK" name="stockName" type="string"/>
         <property column="DATA1" name="dayPriceMapBlob" type="blob"/>
@@ -36,28 +31,24 @@
         <property column="DATA1" name="dayPriceMapBlob" type="blob"/>
         <property column="VOL" name="volMapBlob" type="blob"/>
     </class>
-    <-->
 
-    <!-->
     <class name="saving.ChinaSaveBidAsk" table="CHINASAVEBIDASK">
         <id column="STOCK" name="stockName" type="string"/>
         <property column="BID" name="bidMapBlob" type="blob"/>
         <property column="ASK" name="askMapBlob" type="blob"/>
     </class>
-    <-->
 
-    <!-->
 
-<class name="saving.ChinaSaveOHLCYV" table="CHINASAVEOHLC">
-    <id column="STOCK" name="stockName" type="string"/>
-    <property column="O" name="open" type="double"/>
-    <property column="H" name="high" type="double"/>
-    <property column="L" name="low" type="double"/>
-    <property column="C" name="close" type="double"/>
-    <property column="CY" name="closeY" type="double"/>
-    <property column="V" name="volume" type="double"/>
-</class>
-<-->
+    <class name="saving.ChinaSaveOHLCYV" table="CHINASAVEOHLC">
+        <id column="STOCK" name="stockName" type="string"/>
+        <property column="O" name="open" type="double"/>
+        <property column="H" name="high" type="double"/>
+        <property column="L" name="low" type="double"/>
+        <property column="C" name="close" type="double"/>
+        <property column="CY" name="closeY" type="double"/>
+        <property column="V" name="volume" type="double"/>
+    </class>
+
     <!-->
         <class name="saving.ChinaSaveStrat" table="CHINASAVESTRAT">
             <id column="STOCK" name="stock" type="string"/>
@@ -73,7 +64,6 @@
         </class>
         <-->
 
-    <!-->
     <class name="saving.ChinaVolSave" table="CHINAVOLSAVE">
         <id column="ID" name="id" type="integer">
             <generator class="identity"/>
@@ -86,13 +76,10 @@
         <property column="MONEYNESS" name="moneyness" type="integer"/>
         <property column="OPTIONTICKER" name="optionTicker" type="string"/>
     </class>
-    <-->
 
-    <!-->
     <class name="saving.ChinaVolIntraday" table="CHINAVOLINTRADAY">
         <id column="TICKER" name="ticker" type="string"/>
         <property column="VOLMAP" name="intradayVolBlob" type="blob"/>
     </class>
-    <-->
 
 </hibernate-mapping>
