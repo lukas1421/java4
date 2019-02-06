@@ -52,6 +52,29 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         } catch (IOException x) {
             x.printStackTrace();
         }
+
+        Contract activeXIN50Fut = AutoTraderXU.gettingActiveContract();
+        holdingsMap.put(activeXIN50Fut, 0.0);
+        symbolPosMap.put(ibContractToSymbol(activeXIN50Fut), 0.0);
+
+        Contract alibaba = getUSStockContract("BABA");
+        holdingsMap.put(alibaba, 0.0);
+        symbolPosMap.put(ibContractToSymbol(alibaba), 0.0);
+
+        Contract jd = getUSStockContract("JD");
+        holdingsMap.put(jd, 0.0);
+        symbolPosMap.put(ibContractToSymbol(jd), 0.0);
+
+
+    }
+
+    private Contract getUSStockContract(String symb) {
+        Contract ct = new Contract();
+        ct.symbol(symb);
+        ct.exchange("SMART");
+        ct.currency("USD");
+        ct.secType(Types.SecType.STK);
+        return ct;
     }
 
     private void getFromIB() {

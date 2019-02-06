@@ -214,7 +214,8 @@ public class ApiController implements EWrapper {
 
             @Override
             public void message(int id, int errorCode, String errorMsg) {
-                if (errorCode != 2104 && errorCode != 2105 && errorCode != 2106 && errorCode != 2108) {
+                if (errorCode != 2104 && errorCode != 2105 && errorCode != 2106 && errorCode != 2108 &&
+                        errorCode != 2119) {
                     pr(" DefaultHandler error ID " + id + " error code " + errorCode + " errormsg " + errorMsg);
                 }
             }

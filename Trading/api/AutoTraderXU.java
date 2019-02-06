@@ -1042,7 +1042,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return this;
     }
 
-    private static Contract gettingActiveContract() {
+    static Contract gettingActiveContract() {
         long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(),
                 LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd")));
         //return frontFut;
