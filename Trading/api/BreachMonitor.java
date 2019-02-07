@@ -57,15 +57,60 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         holdingsMap.put(activeXIN50Fut, 0.0);
         symbolPosMap.put(ibContractToSymbol(activeXIN50Fut), 0.0);
 
-        Contract alibaba = getUSStockContract("BABA");
-        holdingsMap.put(alibaba, 0.0);
-        symbolPosMap.put(ibContractToSymbol(alibaba), 0.0);
+        Contract oil = getOilContract();
+        holdingsMap.put(oil, 0.0);
+        symbolPosMap.put(ibContractToSymbol(oil), 0.0);
+
+        Contract vix = getVIXContract();
+        holdingsMap.put(vix, 0.0);
+        symbolPosMap.put(ibContractToSymbol(vix),0.0);
+
+
+        Contract spy = getUSStockContract("SPY");
+        holdingsMap.put(spy, 0.0);
+        symbolPosMap.put(ibContractToSymbol(spy), 0.0);
+
+        Contract baba = getUSStockContract("BABA");
+        holdingsMap.put(baba, 0.0);
+        symbolPosMap.put(ibContractToSymbol(baba), 0.0);
 
         Contract jd = getUSStockContract("JD");
         holdingsMap.put(jd, 0.0);
         symbolPosMap.put(ibContractToSymbol(jd), 0.0);
 
+        Contract amzn = getUSStockContract("AMZN");
+        holdingsMap.put(amzn, 0.0);
+        symbolPosMap.put(ibContractToSymbol(amzn), 0.0);
 
+        Contract nflx = getUSStockContract("NFLX");
+        holdingsMap.put(nflx, 0.0);
+        symbolPosMap.put(ibContractToSymbol(nflx), 0.0);
+
+        Contract aapl = getUSStockContract("AAPL");
+        holdingsMap.put(aapl, 0.0);
+        symbolPosMap.put(ibContractToSymbol(aapl), 0.0);
+
+
+    }
+
+    private static Contract getOilContract() {
+        Contract ct = new Contract();
+        ct.symbol("CL");
+        ct.exchange("NYMEX");
+        ct.currency("USD");
+        ct.secType(Types.SecType.FUT);
+        ct.lastTradeDateOrContractMonth("20190220");
+        return ct;
+    }
+
+    private static Contract getVIXContract() {
+        Contract ct = new Contract();
+        ct.symbol("VIX");
+        ct.exchange("CFE");
+        ct.currency("USD");
+        ct.secType(Types.SecType.FUT);
+        ct.lastTradeDateOrContractMonth("20190213");
+        return ct;
     }
 
     private Contract getUSStockContract(String symb) {
