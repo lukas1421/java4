@@ -232,7 +232,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 last = ytdDayData.get(symbol).lastEntry().getValue().getClose();
                 secLast = ytdDayData.get(symbol).lowerEntry(ytdDayData.get(symbol)
                         .lastKey()).getValue().getClose();
-                String info = "";
+                String info;
                 double lastChg = Math.round((last / secLast - 1) * 1000d) / 10d;
                 double yDev = Math.round((last / yOpen - 1) * 1000d) / 10d;
                 double mDev = Math.round((last / mOpen - 1) * 1000d) / 10d;
@@ -257,7 +257,8 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                         info = "SHORT OFF/OFF ";
                     }
                 } else {
-                    info = "NO POS ";
+                    info = str(yDev == 0.0 ? "yFlat" : (yDev < 0.0 ? "yDown" : "yUp"),
+                            mDev == 0.0 ? "mFlat" : (mDev < 0.0 ? "mDown" : "mUp"));
                 }
 
                 double delta = size * last * fxMap.getOrDefault(Currency.get(c.currency()), 1.0);
@@ -265,7 +266,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 //                        c.currency(), fxMap.getOrDefault(Currency.get(c.currency()), 1.0),
 //                        Math.round(delta / 1000d), "k");
 
-                String out = str(symbol, Math.round(size),
+                String out = str(symbol, info, Math.round(size),
                         ytdDayData.get(symbol).lastEntry().getKey().format(f), last,
                         lastChg + "%", "||yOpen",
                         ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY)
@@ -281,8 +282,11 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
                                 .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d + "%",
                         "mDev", mDev + "%", info);
+
                 pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), size != 0.0 ? "*" : ""
                         , out, Math.round(delta / 1000d) + "k");
+
+                //pr("*****************************");
             }
         }
     }
