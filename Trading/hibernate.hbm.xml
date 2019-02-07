@@ -3,12 +3,6 @@
         "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
 <hibernate-mapping default-access="field">
 
-
-    <class name="saving.StudentScore" table="STUDENTSCORE">
-        <id column="STUDENT" name="student" type="string"/>
-        <property column="SCORE" name="score" type="double"/>
-    </class>
-
     <class name="saving.ChinaSave" table="CHINASAVE">
         <id column="STOCK" name="stockName" type="string"/>
         <property column="DATA" name="dayPriceMapBlob" type="blob"/>
