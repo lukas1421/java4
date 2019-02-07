@@ -61,9 +61,25 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         holdingsMap.put(oil, 0.0);
         symbolPosMap.put(ibContractToSymbol(oil), 0.0);
 
+        Contract hk2828 = getGenericContract("2828", "SEHK", "HKD", Types.SecType.STK);
+        holdingsMap.put(hk2828, 0.0);
+        symbolPosMap.put(ibContractToSymbol(hk2828), 0.0);
+
+        Contract hk2800 = getGenericContract("2800", "SEHK", "HKD", Types.SecType.STK);
+        holdingsMap.put(hk2800, 0.0);
+        symbolPosMap.put(ibContractToSymbol(hk2800), 0.0);
+
+        Contract hk700 = getGenericContract("700", "SEHK", "HKD", Types.SecType.STK);
+        holdingsMap.put(hk700, 0.0);
+        symbolPosMap.put(ibContractToSymbol(hk700), 0.0);
+
+        Contract hk27 = getGenericContract("27", "SEHK", "HKD", Types.SecType.STK);
+        holdingsMap.put(hk27, 0.0);
+        symbolPosMap.put(ibContractToSymbol(hk27), 0.0);
+
         Contract vix = getVIXContract();
         holdingsMap.put(vix, 0.0);
-        symbolPosMap.put(ibContractToSymbol(vix),0.0);
+        symbolPosMap.put(ibContractToSymbol(vix), 0.0);
 
 
         Contract spy = getUSStockContract("SPY");
@@ -121,6 +137,16 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         ct.secType(Types.SecType.STK);
         return ct;
     }
+
+    private Contract getGenericContract(String symb, String exch, String curr, Types.SecType type) {
+        Contract ct = new Contract();
+        ct.symbol(symb);
+        ct.exchange(exch);
+        ct.currency(curr);
+        ct.secType(type);
+        return ct;
+    }
+
 
     private void getFromIB() {
         ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
@@ -255,7 +281,8 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
                                 .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d + "%",
                         "mDev", mDev + "%", info);
-                pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), "*", out, Math.round(delta / 1000d) + "k");
+                pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), size != 0.0 ? "*" : ""
+                        , out, Math.round(delta / 1000d) + "k");
             }
         }
     }
@@ -353,5 +380,4 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             bm.reqHoldings(staticController);
         }, 1, 1, TimeUnit.MINUTES);
     }
-
 }
