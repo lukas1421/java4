@@ -1195,20 +1195,17 @@ public final class ChinaStock extends JPanel {
         sorter = (TableRowSorter<BarModel_STOCK>) tab.getRowSorter();
     }
 
-    public static void computeIndex() {
+    static void computeIndex() {
         String index = "sh000016";
-        if (priceMapBar.contains(index) && priceMapBar.get(index).size() != 0) {
-
+        if (priceMapBar.containsKey(index) && priceMapBar.get(index).size() != 0) {
             pr("*index ", index, priceMapBar.get(index).lastKey(),
-                    "950 ", getAboveOpenPercentage950(index),
-                    "aboveO", getAboveOpenPercentage(index));
+                    "aboveO-950 ", getAboveOpenPercentage950(index),
+                    "aboveO-all", getAboveOpenPercentage(index));
         }
     }
 
     public static void pureRefreshTable() {
-        SwingUtilities.invokeLater(() -> {
-            m_model.fireTableDataChanged();
-        });
+        SwingUtilities.invokeLater(() -> m_model.fireTableDataChanged());
     }
 
     static void refreshGraphs() {

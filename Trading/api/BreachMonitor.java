@@ -97,9 +97,9 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         holdingsMap.put(jd, 0.0);
         symbolPosMap.put(ibContractToSymbol(jd), 0.0);
 
-        Contract amzn = getUSStockContract("AMZN");
-        holdingsMap.put(amzn, 0.0);
-        symbolPosMap.put(ibContractToSymbol(amzn), 0.0);
+//        Contract amzn = getUSStockContract("AMZN");
+//        holdingsMap.put(amzn, 0.0);
+//        symbolPosMap.put(ibContractToSymbol(amzn), 0.0);
 
         Contract nflx = getUSStockContract("NFLX");
         holdingsMap.put(nflx, 0.0);
