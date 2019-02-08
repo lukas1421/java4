@@ -77,10 +77,13 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         holdingsMap.put(hk27, 0.0);
         symbolPosMap.put(ibContractToSymbol(hk27), 0.0);
 
+        Contract sh600519= getShanghaiConnectStock("600519");
+        holdingsMap.put(sh600519, 0.0);
+        symbolPosMap.put(ibContractToSymbol(sh600519), 0.0);
+
         Contract vix = getVIXContract();
         holdingsMap.put(vix, 0.0);
         symbolPosMap.put(ibContractToSymbol(vix), 0.0);
-
 
         Contract spy = getUSStockContract("SPY");
         holdingsMap.put(spy, 0.0);
@@ -147,6 +150,15 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         return ct;
     }
 
+    private Contract getShanghaiConnectStock(String symb) {
+        Contract ct = new Contract();
+        ct.symbol(symb);
+        ct.exchange("SEHKNTL");
+        ct.currency("CNH");
+        ct.secType(Types.SecType.STK);
+        return ct;
+    }
+
 
     private void getFromIB() {
         ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
@@ -201,8 +213,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 -> pr("symb pos ", ibContractToSymbol(e.getKey()), e.getValue()));
         for (Contract c : holdingsMap.keySet()) {
             String k = ibContractToSymbol(c);
+            pr("position end: ticker/symbol ", c.symbol(), k);
             ytdDayData.put(k, new ConcurrentSkipListMap<>());
-            if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
+            if (!k.equals("USD")) {
+                //if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
                 staticController.reqHistDayData(ibStockReqId.addAndGet(5),
                         fillContract(c), BreachMonitor::morningYtdOpen, 20, Types.BarSize._1_day);
             }

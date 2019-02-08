@@ -813,10 +813,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
 
         if (detailedPrint.get() && lt.getSecond() < 2) {
-            pr(lt.truncatedTo(ChronoUnit.SECONDS),
-                    "||20DayMA ", _20DayMA, "vol ", r10000(getATMVol(expiryToGet)),
-                    "currDelta ", Math.round(currDelta)
-                    , "no more buy/sell", noMoreBuy.get(), noMoreSell.get());
+//            pr(lt.truncatedTo(ChronoUnit.SECONDS),
+//                    "||20DayMA ", _20DayMA, "vol ", r10000(getATMVol(expiryToGet)),
+//                    "currDelta ", Math.round(currDelta)
+//                    , "no more buy/sell", noMoreBuy.get(), noMoreSell.get());
 //                    "||maxT>MinT: ", maxAfterMin, "||max>PrevC", maxAbovePrev,
 //                    "closeY", closePercY, "openPercY", openPercY, "pmchgy", pmChgY,
 //                    "pmch", pmChg, "lastP", lastPerc,

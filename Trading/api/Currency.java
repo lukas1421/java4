@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum Currency {
-    USD("USD"), CNY("CNY"), HKD("HKD");
+    USD("USD"), CNY("CNY"), HKD("HKD"), CNH("CNH");
     String currName;
 
     Currency(String curr) {
@@ -20,6 +20,8 @@ public enum Currency {
     }
 
     public static Currency get(String curr) {
+        if (curr.equalsIgnoreCase("CNH")) return lookup.get("CNY");
+
         if (lookup.containsKey(curr)) {
             return lookup.get(curr);
         }

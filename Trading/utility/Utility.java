@@ -900,6 +900,21 @@ public class Utility {
         return 0L;
     }
 
+    public static long getAboveOpenPercentage950(String symb) {
+        if (priceMapBar.containsKey(symb) && priceMapBar.get(symb).size() > 0) {
+            double open3 = getCustomOpen(symb);
+            long minuteTotal = priceMapBar.get(symb).entrySet().stream()
+                    .filter(e -> e.getKey().isAfter(ltof(9, 29)) && e.getKey().isBefore(ltof(9, 50)))
+                    .count();
+            long aboveMinutes = priceMapBar.get(symb).entrySet().stream()
+                    .filter(e -> e.getKey().isAfter(ltof(9, 29)) && e.getKey().isBefore(ltof(9, 50)))
+                    .filter(e -> e.getValue().getClose() > open3).count();
+            return Math.round(100d * aboveMinutes / minuteTotal);
+        }
+        return 0L;
+    }
+
+
     private static double getCustomOpen(String symb) {
         if (!symb.startsWith("SGX")) {
             return openMap.getOrDefault(symb, 0.0);
