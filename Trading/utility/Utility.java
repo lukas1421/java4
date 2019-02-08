@@ -923,4 +923,14 @@ public class Utility {
         }
         return 0.0;
     }
+
+    public static <T extends Temporal> int getPercentileForLast(NavigableMap<T, SimpleBar> mp) {
+        if (mp.size() > 1) {
+            double max = mp.entrySet().stream().mapToDouble(e -> e.getValue().getHigh()).max().orElse(0.0);
+            double min = mp.entrySet().stream().mapToDouble(e -> e.getValue().getLow()).min().orElse(0.0);
+            double last = mp.lastEntry().getValue().getClose();
+            return (int) round(100d * ((last - min) / (max - min)));
+        }
+        return 50;
+    }
 }

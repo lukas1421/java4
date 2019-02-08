@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 import static api.AutoTraderMain.liveIDOrderMap;
 import static api.AutoTraderXU.*;
 import static api.TradingConstants.FTSE_INDEX;
-import static api.XuTraderHelper.getPercentileForLast;
+import static utility.Utility.getPercentileForLast;
 import static client.OrderStatus.*;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;

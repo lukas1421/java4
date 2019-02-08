@@ -1931,7 +1931,7 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
         //pr("china position trade report end ");
         ChinaPosition.tradesMap.forEach((k, v) -> {
             if (v.size() > 0) {
-                pr("chinapos trade report end ", k, v);
+                //pr("chinapos trade report end ", k, v);
             }
         });
     }

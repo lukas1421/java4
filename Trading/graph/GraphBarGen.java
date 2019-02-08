@@ -1,6 +1,5 @@
 package graph;
 
-import api.XuTraderHelper;
 import auxiliary.SimpleBar;
 import utility.Utility;
 
@@ -164,7 +163,7 @@ public class GraphBarGen extends JComponent implements MouseMotionListener, Mous
         g2.drawString(Double.toString(getLast(tm)) + " (" + (r10000(closeMap.getOrDefault(name, 0.0))) + ")"
                 , getWidth() * 3 / 8, 15);
 
-        g2.drawString("P%:" + Integer.toString(XuTraderHelper.getPercentileForLast(tm)), getWidth() * 9 / 16, 15);
+        g2.drawString("P%:" + Integer.toString(Utility.getPercentileForLast(tm)), getWidth() * 9 / 16, 15);
         g2.drawString("涨:" + Double.toString(getRtn(tm)) + "%", getWidth() * 21 / 32, 15);
 
     }

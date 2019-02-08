@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.*;
 import java.util.stream.Collectors;
 
+import static api.AutoTraderMain.ltof;
 import static api.ChinaData.*;
 import static api.ChinaDataYesterday.*;
 import static api.ChinaSizeRatio.*;
@@ -48,6 +49,7 @@ import static java.lang.Math.round;
 import static java.lang.System.out;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toMap;
 import static utility.Utility.*;
 
 public final class ChinaStock extends JPanel {
@@ -264,7 +266,7 @@ public final class ChinaStock extends JPanel {
         indexList.addAll(Arrays.asList(stock2, stock3, stock4, stock5, stock6, stock7));
 
         indexList.forEach(s -> {
-            ytdData.put(s, new ConcurrentSkipListMap<>());
+            indexData.put(s, new ConcurrentSkipListMap<>());
             detailed5mData.put(s, new ConcurrentSkipListMap<>());
 
             String line = "";
@@ -272,10 +274,9 @@ public final class ChinaStock extends JPanel {
                     new FileInputStream("/home/l/chinaData/" + s + "_day.csv")))) {
                 while ((line = reader1.readLine()) != null) {
                     List<String> al1 = Arrays.asList(line.split(","));
-                    pr(al1);
                     if (!al1.get(0).equalsIgnoreCase("date")) {
                         LocalDate d = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-                        ytdData.get(s).put(d, new SimpleBar(Double.parseDouble(al1.get(1))
+                        indexData.get(s).put(d, new SimpleBar(Double.parseDouble(al1.get(1))
                                 , Double.parseDouble(al1.get(2)),
                                 Double.parseDouble(al1.get(3)), Double.parseDouble(al1.get(4))));
                     }
@@ -288,7 +289,6 @@ public final class ChinaStock extends JPanel {
                     new FileInputStream("/home/l/chinaData/" + s + "_5m.csv")))) {
                 while ((line = reader1.readLine()) != null) {
                     List<String> al1 = Arrays.asList(line.split(","));
-                    pr(al1);
                     if (!al1.get(0).equalsIgnoreCase("date")) {
                         LocalDateTime ldt = LocalDateTime.parse(al1.get(0),
                                 DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
@@ -300,7 +300,7 @@ public final class ChinaStock extends JPanel {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            pr("day ", s, ytdData.get(s).firstEntry(), ytdData.get(s).lastEntry());
+            pr("day ", s, indexData.get(s).firstEntry(), indexData.get(s).lastEntry());
             pr(" 5m ", s, detailed5mData.get(s).firstEntry(), detailed5mData.get(s).lastEntry());
         });
 
@@ -1246,12 +1246,40 @@ public final class ChinaStock extends JPanel {
     }
 
     static void computeIndex() {
+        pr(" computing index ", LocalTime.now());
         String index = "sh000016";
         if (priceMapBar.containsKey(index) && priceMapBar.get(index).size() != 0) {
             pr("*index ", index, priceMapBar.get(index).lastKey(),
                     "aboveO-950 ", getAboveOpenPercentage950(index),
                     "aboveO-all", getAboveOpenPercentage(index));
         }
+        //mdev ydev wdev, ytd close p%, pmChg,
+        pr("printing index ", indexData.get(index));
+        double last = indexData.get(index).lastEntry().getValue().getClose();
+        double lastYrEnd = indexData.get(index).ceilingEntry(Utility.getLastYearLastDay()).getValue().getClose();
+        double lastMoEnd = indexData.get(index).ceilingEntry(Utility.getLastMonthLastDay()).getValue().getClose();
+        double ydev = Math.round(10000d * ((last / lastYrEnd) - 1)) / 100d;
+        double mdev = Math.round(10000d * ((last / lastMoEnd) - 1)) / 100d;
+
+        LocalDate lastDay = detailed5mData.get(index).lastEntry().getKey().toLocalDate();
+        NavigableMap<LocalDateTime, SimpleBar> lastDayMap = detailed5mData.get(index).entrySet().stream()
+                .filter(e -> e.getKey().toLocalDate().equals(lastDay))
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, TreeMap::new));
+
+        double lastDayPMOpen = detailed5mData.get(index).entrySet().stream()
+                .filter(e -> e.getKey().toLocalDate().equals(lastDay))
+                .filter(e -> e.getKey().toLocalTime().isAfter(ltof(12, 55))).findFirst().map(Entry::getValue)
+                .map(SimpleBar::getClose).orElse(0.0);
+
+        double lastDayClose = detailed5mData.get(index).lastEntry().getValue().getClose();
+        double lastDayPMChg = Math.round(10000d * (lastDayClose / lastDayPMOpen - 1)) / 100d;
+        int lastDayPerc = getPercentileForLast(lastDayMap);
+
+        pr(index, "yDev", ydev, "%", "mDev ", mdev, "%"
+                , "last_day", lastDay, "last_PM_chg", lastDayPMChg, "%",
+                "last_p%", lastDayPerc, "%");
+
+
     }
 
     public static void pureRefreshTable() {
