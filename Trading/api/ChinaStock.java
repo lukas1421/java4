@@ -23,7 +23,10 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
@@ -143,6 +146,9 @@ public final class ChinaStock extends JPanel {
     private String stock4 = "sh000300";
     private String stock5 = "sz399006";
     private String stock6 = "sh000905";
+    private String stock7 = "sz399006";
+
+    private List<String> indexList = new ArrayList<>();
 
     private static TableRowSorter<BarModel_STOCK> sorter;
 
@@ -254,6 +260,50 @@ public final class ChinaStock extends JPanel {
 //        } catch (IOException ex) {
 //            ex.printStackTrace();
 //        }
+
+        indexList.addAll(Arrays.asList(stock2, stock3, stock4, stock5, stock6, stock7));
+
+        indexList.forEach(s -> {
+            ytdData.put(s, new ConcurrentSkipListMap<>());
+            detailed5mData.put(s, new ConcurrentSkipListMap<>());
+
+            String line = "";
+            try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                    new FileInputStream("/home/l/chinaData/" + s + "_day.csv")))) {
+                while ((line = reader1.readLine()) != null) {
+                    List<String> al1 = Arrays.asList(line.split(","));
+                    pr(al1);
+                    if (!al1.get(0).equalsIgnoreCase("date")) {
+                        LocalDate d = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+                        ytdData.get(s).put(d, new SimpleBar(Double.parseDouble(al1.get(1))
+                                , Double.parseDouble(al1.get(2)),
+                                Double.parseDouble(al1.get(3)), Double.parseDouble(al1.get(4))));
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                    new FileInputStream("/home/l/chinaData/" + s + "_5m.csv")))) {
+                while ((line = reader1.readLine()) != null) {
+                    List<String> al1 = Arrays.asList(line.split(","));
+                    pr(al1);
+                    if (!al1.get(0).equalsIgnoreCase("date")) {
+                        LocalDateTime ldt = LocalDateTime.parse(al1.get(0),
+                                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+                        detailed5mData.get(s).put(ldt,
+                                new SimpleBar(Double.parseDouble(al1.get(1)), Double.parseDouble(al1.get(2)),
+                                        Double.parseDouble(al1.get(3)), Double.parseDouble(al1.get(4))));
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            pr("day ", s, ytdData.get(s).firstEntry(), ytdData.get(s).lastEntry());
+            pr(" 5m ", s, detailed5mData.get(s).firstEntry(), detailed5mData.get(s).lastEntry());
+        });
+
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "ChinaAll.txt"), "gbk"))) {

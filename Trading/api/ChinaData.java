@@ -62,6 +62,9 @@ public final class ChinaData extends JPanel {
     static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             ytdData = new ConcurrentSkipListMap<>();
 
+    static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>>
+            detailed5mData = new ConcurrentSkipListMap<>();
+
     public static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>> price5mWtd
             = new ConcurrentSkipListMap<>();
 
