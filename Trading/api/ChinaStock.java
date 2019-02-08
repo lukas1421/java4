@@ -150,7 +150,7 @@ public final class ChinaStock extends JPanel {
     private String stock6 = "sh000905";
     private String stock7 = "sz399006";
 
-    private List<String> indexList = new ArrayList<>();
+    public static List<String> indexList = new ArrayList<>();
 
     private static TableRowSorter<BarModel_STOCK> sorter;
 
@@ -1247,38 +1247,40 @@ public final class ChinaStock extends JPanel {
 
     static void computeIndex() {
         pr(" computing index ", LocalTime.now());
-        String index = "sh000016";
-        if (priceMapBar.containsKey(index) && priceMapBar.get(index).size() != 0) {
-            pr("*index ", index, priceMapBar.get(index).lastKey(),
-                    "aboveO-950 ", getAboveOpenPercentage950(index),
-                    "aboveO-all", getAboveOpenPercentage(index));
+        //String index = "sh000016";
+        for (String index : indexList) {
+            if (priceMapBar.containsKey(index) && priceMapBar.get(index).size() != 0) {
+                pr("*index ", index, priceMapBar.get(index).lastKey(),
+                        "aboveO-950 ", getAboveOpenPercentage950(index),
+                        "aboveO-all", getAboveOpenPercentage(index));
+            }
+
+            //mdev ydev wdev, ytd close p%, pmChg,
+            //pr("printing index ", indexData.get(index));
+            double last = indexData.get(index).lastEntry().getValue().getClose();
+            double lastYrEnd = indexData.get(index).ceilingEntry(Utility.getLastYearLastDay()).getValue().getClose();
+            double lastMoEnd = indexData.get(index).ceilingEntry(Utility.getLastMonthLastDay()).getValue().getClose();
+            double ydev = Math.round(10000d * ((last / lastYrEnd) - 1)) / 100d;
+            double mdev = Math.round(10000d * ((last / lastMoEnd) - 1)) / 100d;
+
+            LocalDate lastDay = detailed5mData.get(index).lastEntry().getKey().toLocalDate();
+            NavigableMap<LocalDateTime, SimpleBar> lastDayMap = detailed5mData.get(index).entrySet().stream()
+                    .filter(e -> e.getKey().toLocalDate().equals(lastDay))
+                    .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, TreeMap::new));
+
+            double lastDayPMOpen = detailed5mData.get(index).entrySet().stream()
+                    .filter(e -> e.getKey().toLocalDate().equals(lastDay))
+                    .filter(e -> e.getKey().toLocalTime().isAfter(ltof(12, 55))).findFirst().map(Entry::getValue)
+                    .map(SimpleBar::getClose).orElse(0.0);
+
+            double lastDayClose = detailed5mData.get(index).lastEntry().getValue().getClose();
+            double lastDayPMChg = Math.round(10000d * (lastDayClose / lastDayPMOpen - 1)) / 100d;
+            int lastDayPerc = getPercentileForLast(lastDayMap);
+
+            pr(index, "yDev", ydev, "%", "mDev ", mdev, "%"
+                    , "last_day", lastDay, "last_PM_chg", lastDayPMChg, "%",
+                    "last_p%", lastDayPerc, "%");
         }
-        //mdev ydev wdev, ytd close p%, pmChg,
-        pr("printing index ", indexData.get(index));
-        double last = indexData.get(index).lastEntry().getValue().getClose();
-        double lastYrEnd = indexData.get(index).ceilingEntry(Utility.getLastYearLastDay()).getValue().getClose();
-        double lastMoEnd = indexData.get(index).ceilingEntry(Utility.getLastMonthLastDay()).getValue().getClose();
-        double ydev = Math.round(10000d * ((last / lastYrEnd) - 1)) / 100d;
-        double mdev = Math.round(10000d * ((last / lastMoEnd) - 1)) / 100d;
-
-        LocalDate lastDay = detailed5mData.get(index).lastEntry().getKey().toLocalDate();
-        NavigableMap<LocalDateTime, SimpleBar> lastDayMap = detailed5mData.get(index).entrySet().stream()
-                .filter(e -> e.getKey().toLocalDate().equals(lastDay))
-                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, TreeMap::new));
-
-        double lastDayPMOpen = detailed5mData.get(index).entrySet().stream()
-                .filter(e -> e.getKey().toLocalDate().equals(lastDay))
-                .filter(e -> e.getKey().toLocalTime().isAfter(ltof(12, 55))).findFirst().map(Entry::getValue)
-                .map(SimpleBar::getClose).orElse(0.0);
-
-        double lastDayClose = detailed5mData.get(index).lastEntry().getValue().getClose();
-        double lastDayPMChg = Math.round(10000d * (lastDayClose / lastDayPMOpen - 1)) / 100d;
-        int lastDayPerc = getPercentileForLast(lastDayMap);
-
-        pr(index, "yDev", ydev, "%", "mDev ", mdev, "%"
-                , "last_day", lastDay, "last_PM_chg", lastDayPMChg, "%",
-                "last_p%", lastDayPerc, "%");
-
 
     }
 
