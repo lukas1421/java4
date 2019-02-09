@@ -5,18 +5,13 @@ import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
 import handler.LiveHandler;
-import util.AutoOrderType;
 import utility.Utility;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,6 +35,8 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
     private volatile static Map<String, Double> symbolPosMap = new TreeMap<>(String::compareTo);
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
     public static Map<Currency, Double> fxMap = new HashMap<>();
+    private static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
+    private static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
 
 
     private static ApiController staticController;
@@ -79,7 +76,6 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
     }
 
     private void reqHoldings(ApiController ap) {
-        //pr(" request holdings ");
         ap.reqPositions(this);
     }
 
@@ -99,30 +95,13 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
-        } else {
-            double size = holdingsMap.getOrDefault(c, 0.0);
-            if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
-
-                double yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
-
-                long yCount = ytdDayData.get(symbol).entrySet().stream()
-                        .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY)).count();
-
-                double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
-
-                long mCount = ytdDayData.get(symbol).entrySet().stream()
-                        .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY)).count();
-            }
         }
-
-
     }
 
     @Override
     public void positionEnd() {
-        //pr(" holdings map ", holdingsMap);
-        holdingsMap.entrySet().stream().forEachOrdered((e)
-                -> pr("symb pos ", ibContractToSymbol(e.getKey()), e.getValue()));
+        holdingsMap.entrySet().stream().forEachOrdered(e -> pr("symb pos ",
+                ibContractToSymbol(e.getKey()), e.getValue()));
         for (Contract c : holdingsMap.keySet()) {
             String k = ibContractToSymbol(c);
             pr("position end: ticker/symbol ", c.symbol(), k);
@@ -149,57 +128,45 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
     @Override
     public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
         String symbol = ibContractToSymbol(ct);
-        switch (tt) {
-            case LAST:
-                if (ytdDayData.get(symbol).size() > 0
-                        && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
-                    double yOpen = ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY).getValue().getOpen();
-                    double mOpen = ytdDayData.get(symbol).higherEntry(LAST_MONTH_DAY).getValue().getOpen();
-                    LocalDate lastKey = ytdDayData.get(symbol).lastKey();
-                    LocalDate secLastKey = ytdDayData.get(symbol).lowerKey(lastKey);
+        if (tt == TickType.LAST) {
+            if (ytdDayData.get(symbol).size() > 0
+                    && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
+                double yearOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
+                double monthOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
+                LocalDate lastKey = ytdDayData.get(symbol).lastKey();
 
-                    String info = "";
-                    double yDev = Math.round((price / yOpen - 1) * 1000d) / 10d;
-                    double mDev = Math.round((price / mOpen - 1) * 1000d) / 10d;
+                double yDev = Math.round((price / yearOpen - 1) * 1000d) / 10d;
+                double mDev = Math.round((price / monthOpen - 1) * 1000d) / 10d;
 
-                    double pos = symbolPosMap.getOrDefault(symbol, 0.0);
+                pr("Breach Cutter", symbol, price, t, yDev, mDev);
 
-                    if (pos < 0) {
-                        if (yDev > 0 || mDev > 0) {
-                            int id = autoTradeID.incrementAndGet();
-                            Order o = placeBidLimitTIF(price, Math.abs(pos), Types.TimeInForce.DAY);
-                            globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
-                            staticController.placeOrModifyOrder(ct, o,
-                                    new ApiController.IOrderHandler.DefaultOrderHandler(id));
-                            outputDetailedXU(symbol, "**********");
-                            outputDetailedXU(symbol, str("NEW", o.orderId(), " Breach Cutter BUY #:",
-                                    globalIdOrderMap.get(id), "pos", pos));
-                            //cut short pos. Buy back
-                            info = "SHORT OFFSIDE";
-                        }
-                    } else if (pos > 0) {
-                        if (yDev < 0 || mDev < 0) {
-                            int id = autoTradeID.incrementAndGet();
-                            Order o = placeOfferLimitTIF(price, pos, Types.TimeInForce.DAY);
-                            globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
-                            staticController.placeOrModifyOrder(ct, o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
-                            outputDetailedXU(symbol, "**********");
-                            outputDetailedXU(symbol, str("NEW", o.orderId(), " Breach Cutter #:"
-                                    , globalIdOrderMap.get(id), "pos", pos));
-                            //cut long pos. Sell
-                            info = "LONG OFFSIDE";
-                        }
+                double pos = symbolPosMap.getOrDefault(symbol, 0.0);
+
+                if (pos < 0) {
+                    if (yDev > 0 || mDev > 0) {
+                        int id = autoTradeID.incrementAndGet();
+                        Order o = placeBidLimitTIF(price, Math.abs(pos), Types.TimeInForce.DAY);
+                        globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
+                        staticController.placeOrModifyOrder(ct, o,
+                                new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                        outputDetailedXU(symbol, "*********");
+                        outputDetailedXU(symbol, str("NEW", o.orderId(), " Breach Cutter BUY #:",
+                                globalIdOrderMap.get(id), "pos", pos));
                     }
-
-                    String out = str(symbol, pos, "||LIVE", tt, t.format(f2), price,
-                            "PREV:", secLastKey.format(f)
-                            , "||yOpen", ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f),
-                            yOpen, "yDev", yDev + "%",
-                            "||mOpen ", ytdDayData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
-                            "mDev", mDev + "%", info);
+                } else if (pos > 0) {
+                    if (yDev < 0 || mDev < 0) {
+                        int id = autoTradeID.incrementAndGet();
+                        Order o = placeOfferLimitTIF(price, pos, Types.TimeInForce.DAY);
+                        globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
+                        staticController.placeOrModifyOrder(ct, o,
+                                new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                        outputDetailedXU(symbol, "*********");
+                        outputDetailedXU(symbol, str("NEW", o.orderId(), " Breach Cutter sell:"
+                                , globalIdOrderMap.get(id), "pos", pos));
+                    }
                 }
+            }
         }
-
     }
 
     @Override
@@ -213,10 +180,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
     }
 
     public static void main(String[] args) {
-
         BreachCutter cutter = new BreachCutter();
         cutter.connectAndReqHoldings();
-
-
     }
 }

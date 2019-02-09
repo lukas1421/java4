@@ -44,6 +44,10 @@ public class XuTraderHelper {
     private static final LocalTime PM_BEGIN = LocalTime.of(13, 0);
     private static final LocalTime OVERNIGHT_BEGIN = LocalTime.of(15, 0);
 
+    XuTraderHelper() {
+        throw new UnsupportedOperationException("cannot instantiate helper class");
+    }
+
     public static NavigableMap<LocalDateTime, Double> getMAGen(NavigableMap<LocalDateTime, SimpleBar> mp, int period) {
         NavigableMap<LocalDateTime, Double> sma = new ConcurrentSkipListMap<>();
         for (Map.Entry<LocalDateTime, SimpleBar> e : mp.entrySet()) {
