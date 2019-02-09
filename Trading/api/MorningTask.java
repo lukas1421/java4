@@ -835,7 +835,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
     @Override
     public void positionEnd() {
         //pr(" holdings map ", holdingsMap);
-        holdingsMap.entrySet().stream().forEachOrdered((e)
+        holdingsMap.entrySet().stream().forEachOrdered(e
                 -> pr("symb pos ", ibContractToSymbol(e.getKey()), e.getValue()));
         for (Contract c : holdingsMap.keySet()) {
 
@@ -876,7 +876,8 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                 double last;
                 double secLast;
                 last = morningYtdData.get(symbol).lastEntry().getValue().getClose();
-                secLast = morningYtdData.get(symbol).lowerEntry(morningYtdData.get(symbol).lastKey()).getValue().getClose();
+                secLast = morningYtdData.get(symbol)
+                        .lowerEntry(morningYtdData.get(symbol).lastKey()).getValue().getClose();
                 String info = "";
                 double lastChg = Math.round((last / secLast - 1) * 1000d) / 10d;
                 double yDev = Math.round((last / yOpen - 1) * 1000d) / 10d;

@@ -27,15 +27,23 @@ import static utility.Utility.*;
 public class BreachMonitor implements LiveHandler, ApiController.IPositionHandler {
 
     private static final DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d");
+
     private static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s");
+
     private static final LocalDate LAST_MONTH_DAY = getLastMonthLastDay();
+
     private static final LocalDate LAST_YEAR_DAY = getLastYearLastDay();
+
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             ytdDayData = new ConcurrentSkipListMap<>(String::compareTo);
+
     private static ApiController staticController;
+
     private volatile static Map<Contract, Double> holdingsMap =
             new TreeMap<>(Comparator.comparing(Utility::ibContractToSymbol));
+
     private volatile static Map<String, Double> symbolPosMap = new TreeMap<>(String::compareTo);
+
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
 
     public static Map<Currency, Double> fxMap = new HashMap<>();
@@ -89,17 +97,22 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         holdingsMap.put(spy, 0.0);
         symbolPosMap.put(ibContractToSymbol(spy), 0.0);
 
+        Contract qqq = getUSStockContract("QQQ");
+        holdingsMap.put(qqq, 0.0);
+        symbolPosMap.put(ibContractToSymbol(qqq), 0.0);
+
         Contract baba = getUSStockContract("BABA");
         holdingsMap.put(baba, 0.0);
         symbolPosMap.put(ibContractToSymbol(baba), 0.0);
 
+        Contract fb = getUSStockContract("FB");
+        holdingsMap.put(fb, 0.0);
+        symbolPosMap.put(ibContractToSymbol(fb), 0.0);
+
+
         Contract jd = getUSStockContract("JD");
         holdingsMap.put(jd, 0.0);
         symbolPosMap.put(ibContractToSymbol(jd), 0.0);
-
-//        Contract amzn = getUSStockContract("AMZN");
-//        holdingsMap.put(amzn, 0.0);
-//        symbolPosMap.put(ibContractToSymbol(amzn), 0.0);
 
         Contract nflx = getUSStockContract("NFLX");
         holdingsMap.put(nflx, 0.0);
@@ -218,14 +231,14 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             if (!k.equals("USD")) {
                 //if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
                 staticController.reqHistDayData(ibStockReqId.addAndGet(5),
-                        fillContract(c), BreachMonitor::morningYtdOpen, 20, Types.BarSize._1_day);
+                        fillContract(c), BreachMonitor::ytdOpen, 20, Types.BarSize._1_day);
             }
             staticController.req1ContractLive(c, this, false);
         }
     }
 
-    private static void morningYtdOpen(Contract c, String date, double open, double high, double low,
-                                       double close, int volume) {
+    private static void ytdOpen(Contract c, String date, double open, double high, double low,
+                                double close, int volume) {
         String symbol = utility.Utility.ibContractToSymbol(c);
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -299,8 +312,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
                 pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), size != 0.0 ? "*" : ""
                         , out, Math.round(delta / 1000d) + "k");
-
-                //pr("*****************************");
             }
         }
     }
