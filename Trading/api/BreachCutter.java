@@ -1,12 +1,11 @@
 package api;
 
 import auxiliary.SimpleBar;
-import client.Contract;
-import client.TickType;
-import client.Types;
+import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
 import handler.LiveHandler;
+import util.AutoOrderType;
 import utility.Utility;
 
 import java.time.LocalDate;
@@ -22,6 +21,9 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static api.AutoTraderMain.*;
+import static api.XuTraderHelper.*;
+import static util.AutoOrderType.BREACH_CUTTER;
 import static utility.Utility.*;
 import static utility.Utility.getLastYearLastDay;
 
@@ -145,7 +147,8 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
     }
 
     @Override
-    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+    public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
+        String symbol = ibContractToSymbol(ct);
         switch (tt) {
             case LAST:
                 if (ytdDayData.get(symbol).size() > 0
@@ -163,12 +166,27 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
 
                     if (pos < 0) {
                         if (yDev > 0 || mDev > 0) {
-                            //cut short pos
+                            int id = autoTradeID.incrementAndGet();
+                            Order o = placeBidLimitTIF(price, Math.abs(pos), Types.TimeInForce.DAY);
+                            globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
+                            staticController.placeOrModifyOrder(ct, o,
+                                    new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                            outputDetailedXU(symbol, "**********");
+                            outputDetailedXU(symbol, str("NEW", o.orderId(), " Breach Cutter BUY #:",
+                                    globalIdOrderMap.get(id), "pos", pos));
+                            //cut short pos. Buy back
                             info = "SHORT OFFSIDE";
                         }
                     } else if (pos > 0) {
                         if (yDev < 0 || mDev < 0) {
-                            //cut long pos
+                            int id = autoTradeID.incrementAndGet();
+                            Order o = placeOfferLimitTIF(price, pos, Types.TimeInForce.DAY);
+                            globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
+                            staticController.placeOrModifyOrder(ct, o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                            outputDetailedXU(symbol, "**********");
+                            outputDetailedXU(symbol, str("NEW", o.orderId(), " Breach Cutter #:"
+                                    , globalIdOrderMap.get(id), "pos", pos));
+                            //cut long pos. Sell
                             info = "LONG OFFSIDE";
                         }
                     }

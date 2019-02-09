@@ -85,7 +85,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         holdingsMap.put(hk27, 0.0);
         symbolPosMap.put(ibContractToSymbol(hk27), 0.0);
 
-        Contract sh600519= getShanghaiConnectStock("600519");
+        Contract sh600519 = getShanghaiConnectStock("600519");
         holdingsMap.put(sh600519, 0.0);
         symbolPosMap.put(ibContractToSymbol(sh600519), 0.0);
 
@@ -329,7 +329,8 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
     //live
     @Override
-    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+    public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
+        String symbol = ibContractToSymbol(ct);
         //pr("last symbol ", tt, symbol, price, t.format(f2));
         switch (tt) {
             case LAST:

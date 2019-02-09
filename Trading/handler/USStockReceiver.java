@@ -1,15 +1,18 @@
 package handler;
 
+import client.Contract;
 import client.TickType;
 
 import java.time.LocalDateTime;
 
 import static api.AutoTraderUS.*;
+import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.pr;
 
 public class USStockReceiver implements LiveHandler {
     @Override
-    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+    public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
+        String symbol = ibContractToSymbol(ct);
         switch (tt) {
             case BID:
                 usBidMap.put(symbol, price);

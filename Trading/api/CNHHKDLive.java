@@ -36,6 +36,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.pr;
 
 public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHandler {
@@ -304,7 +305,8 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
     }
 
     @Override
-    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+    public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
+        String symbol = ibContractToSymbol(ct);
         pr("handleprice ", symbol, t, tt, Math.round(10000d / price) / 10000d);
         double pr2 = Math.round(10000d / price) / 10000d;
         if (tt == TickType.ASK) {

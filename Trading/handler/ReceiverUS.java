@@ -2,6 +2,7 @@ package handler;
 
 import api.ChinaData;
 import api.ChinaStock;
+import client.Contract;
 import client.TickType;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.time.ZonedDateTime;
 import static api.AutoTraderMain.*;
 import static api.AutoTraderUS.*;
 import static api.XuTraderHelper.outputDetailedUS;
+import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.str;
 
 
@@ -27,7 +29,8 @@ public class ReceiverUS implements LiveHandler {
 //    }
 
     @Override
-    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+    public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
+        String symbol = ibContractToSymbol(ct);
         ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
         ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
         LocalDateTime usLdt = usZdt.toLocalDateTime();

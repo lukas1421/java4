@@ -805,7 +805,8 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
     }
 
     @Override
-    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+    public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
+        String symbol = ibContractToSymbol(ct);
         if (tt == TickType.CLOSE && symbol.equals("XINA50")) {
             Utility.simpleWriteToFile("FTSE A50" + "\t" + price, true, output);
         }

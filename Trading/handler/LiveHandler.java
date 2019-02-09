@@ -3,14 +3,17 @@ package handler;
 import api.ChinaData;
 import api.ChinaStock;
 import auxiliary.SimpleBar;
+import client.Contract;
 import client.TickType;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
+import static utility.Utility.ibContractToSymbol;
+
 public interface LiveHandler extends GeneralHandler {
-    void handlePrice(TickType tt, String symbol, double price, LocalDateTime t);
+    void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t);
 
     void handleVol(TickType tt, String symbol, double vol, LocalDateTime t);
 
@@ -18,7 +21,8 @@ public interface LiveHandler extends GeneralHandler {
 
     class PriceMapUpdater implements LiveHandler {
         @Override
-        public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+        public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
+            String symbol = ibContractToSymbol(ct);
             if (tt == TickType.LAST) {
                 ChinaStock.priceMap.put(symbol, price);
             } else if (tt == TickType.CLOSE) {
@@ -40,7 +44,8 @@ public interface LiveHandler extends GeneralHandler {
 
     class DefaultLiveHandler implements LiveHandler {
         @Override
-        public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+        public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
+            String symbol = ibContractToSymbol(ct);
             LocalTime lt = t.toLocalTime().truncatedTo(ChronoUnit.MINUTES);
             if (tt == TickType.LAST) {
                 ChinaStock.priceMap.put(symbol, price);
@@ -58,9 +63,11 @@ public interface LiveHandler extends GeneralHandler {
                 ChinaStock.openMap.put(symbol, price);
             }
         }
+
         @Override
         public void handleVol(TickType tt, String symbol, double vol, LocalDateTime t) {
         }
+
         @Override
         public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
 

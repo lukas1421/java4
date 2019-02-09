@@ -127,8 +127,9 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
     }
 
     @Override
-    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+    public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
         //vixMap
+        String symbol = ibContractToSymbol(ct);
         LocalDateTime ldt = roundToXLdt(t, 15);
 
         if (tt == TickType.LAST) {

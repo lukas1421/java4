@@ -2,6 +2,7 @@ package handler;
 
 import api.*;
 import auxiliary.SimpleBar;
+import client.Contract;
 import client.TickType;
 
 import java.time.LocalDateTime;
@@ -28,7 +29,8 @@ public class SGXFutureReceiver implements LiveHandler {
 
 
     @Override
-    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime ldt) {
+    public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime ldt) {
+        String symbol = ibContractToSymbol(ct);
         FutType f = FutType.get(symbol);
         LocalDateTime ldtMin = ldt.truncatedTo(MINUTES);
         LocalTime t = ldtMin.toLocalTime();

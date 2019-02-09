@@ -1,6 +1,7 @@
 package api;
 
 import auxiliary.SimpleBar;
+import client.Contract;
 import client.TickType;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
@@ -19,6 +20,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
+
+import static utility.Utility.ibContractToSymbol;
 
 public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
 
@@ -115,7 +118,8 @@ public class HKData extends JPanel implements LiveHandler, HistoricalHandler {
     }
 
     @Override
-    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime ldt) {
+    public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime ldt) {
+        String symbol = ibContractToSymbol(ct);
         LocalTime t = ldt.toLocalTime();
         if (tt == TickType.LAST) {
             HKStock.hkCurrPrice.put(symbol, price);

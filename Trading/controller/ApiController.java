@@ -1323,8 +1323,7 @@ public class ApiController implements EWrapper {
             Request r = TradingConstants.globalRequestMap.get(reqId);
             LiveHandler lh = (LiveHandler) TradingConstants.globalRequestMap.get(reqId).getHandler();
             try {
-                lh.handlePrice(TickType.get(tickType),
-                        ibContractToSymbol(r.getContract()), price,
+                lh.handlePrice(TickType.get(tickType), r.getContract(), price,
                         LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
             } catch (Exception ex) {
                 pr(" handling price has issues ");

@@ -1,12 +1,14 @@
 package handler;
 
 import api.ChinaData;
+import client.Contract;
 import client.TickType;
 
 import java.time.LocalDateTime;
 
 import static api.AutoTraderHK.*;
 import static api.XuTraderHelper.outputDetailedHK;
+import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.str;
 
 
@@ -23,9 +25,9 @@ public class ReceiverHK implements LiveHandler {
 
     @Override
     // name starts with hk
-    public void handlePrice(TickType tt, String symbol, double price, LocalDateTime t) {
+    public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
         //pr("hk tt name, price t", tt, symbol, price, t);
-
+        String symbol = ibContractToSymbol(ct);
         switch (tt) {
             case LAST:
                 //hkPriceMapDetail.get(name).put(t, price);

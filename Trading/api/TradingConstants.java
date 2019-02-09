@@ -102,7 +102,7 @@ public final class TradingConstants {
             "/home/l/Desktop/Trading/" : "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";
 
     public static final String DESKTOPPATH = System.getProperty("os.name").equalsIgnoreCase("linux") ?
-            "/home/l/Desktop" : "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\";
+            "/home/l/Desktop/" : "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\";
 
     public static final String tdxPath = (System.getProperty("user.name").equals("Luke Shi"))
             ? "G:\\export_1m\\" : "J:\\TDX\\T0002\\export_1m\\";
