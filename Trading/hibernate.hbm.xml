@@ -76,4 +76,21 @@
         <property column="VOLMAP" name="intradayVolBlob" type="blob"/>
     </class>
 
+    <class name="saving.MainBoardSaveDay" table="MAINBOARDSAVEDAY">
+        <id column="TIME" name="time" type="java.time.LocalDate"/>
+        <property column="O" name="open" type="double"/>
+        <property column="H" name="high" type="double"/>
+        <property column="L" name="low" type="double"/>
+        <property column="C" name="close" type="double"/>
+    </class>
+
+    <class name="saving.MainBoardSave5m" table="MAINBOARDSAVE5M">
+        <id column="TIME" name="time" type="java.time.LocalDateTime"/>
+        <property column="O" name="open" type="double"/>
+        <property column="H" name="high" type="double"/>
+        <property column="L" name="low" type="double"/>
+        <property column="C" name="close" type="double"/>
+    </class>
+
+
 </hibernate-mapping>

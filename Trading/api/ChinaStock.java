@@ -1249,8 +1249,8 @@ public final class ChinaStock extends JPanel {
                 double last = indexData.get(index).lastEntry().getValue().getClose();
                 double lastYrEnd = indexData.get(index).ceilingEntry(Utility.getLastYearLastDay()).getValue().getClose();
                 double lastMoEnd = indexData.get(index).ceilingEntry(Utility.getLastMonthLastDay()).getValue().getClose();
-                double ydev = Math.round(10000d * ((last / lastYrEnd) - 1)) / 100d;
-                double mdev = Math.round(10000d * ((last / lastMoEnd) - 1)) / 100d;
+                double ydev = Math.round(1000d * ((last / lastYrEnd) - 1)) / 10d;
+                double mdev = Math.round(1000d * ((last / lastMoEnd) - 1)) / 10d;
 
                 LocalDate lastDay = detailed5mData.get(index).lastEntry().getKey().toLocalDate();
                 NavigableMap<LocalDateTime, SimpleBar> lastDayMap = detailed5mData.get(index).entrySet().stream()
@@ -1272,8 +1272,8 @@ public final class ChinaStock extends JPanel {
                         "||>O%-Day:" + getAboveOpenPercentage(index) + "%",
                         "||yDev:" + ydev + "%" + "(" + lastYrEnd + ")",
                         "||mDev:" + mdev + "%" + "(" + lastMoEnd + ")",
-                        "||prev_day", lastDay, "||prev_PM_chg", lastDayPMChg, "%",
-                        "||prev_p%", lastDayPerc, "%");
+                        "||prevDate", lastDay.format(DateTimeFormatter.ofPattern("M-d")), "||prev_PM_chg", lastDayPMChg, "%",
+                        "||prevP%", lastDayPerc, "%");
             }
         }
 

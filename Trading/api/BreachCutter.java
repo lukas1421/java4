@@ -161,8 +161,9 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
 
                 double delta = size * last * fxMap.getOrDefault(Currency.get(c.currency()), 1.0);
 
-                String out = str(symbol, info, Math.round(size),
-                        ytdDayData.get(symbol).lastEntry().getKey().format(f), last, "||yOpen",
+                String out = str(symbol, info, "Pos:" + Math.round(size),
+                        "|||Last:",
+                        ytdDayData.get(symbol).lastEntry().getKey().format(f), last, "||YYY",
                         ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY)
                                 .getKey().format(f), yOpen,
                         "y#:" + yCount, "yUp%:",
@@ -170,7 +171,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                                 .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
                                 .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d + "%",
                         "yDev", yDev + "%",
-                        "||mOpen ", ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
+                        "||MMM ", ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
                         "m#:" + mCount, "mUp%:",
                         Math.round(1000d * ytdDayData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))

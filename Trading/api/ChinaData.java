@@ -254,6 +254,10 @@ public final class ChinaData extends JPanel {
         JButton saveHibYtdButton = new JButton("Save Hib Ytd");
         JButton saveHibY2Button = new JButton("Save Hib Y2");
 
+        JButton saveMainBoardDay = new JButton("Save MB Day");
+        JButton saveMainBoard5m = new JButton("Save MB 5m");
+
+
         JButton fixYtdZeroButton = new JButton(" fix ytd 0");
         JButton getIBChinaButton = new JButton(" IB A50 Today ");
 
@@ -274,6 +278,8 @@ public final class ChinaData extends JPanel {
         buttonUpPanel.add(saveHibYtdButton);
         buttonUpPanel.add(Box.createHorizontalStrut(10));
         buttonUpPanel.add(saveHibY2Button);
+        buttonUpPanel.add(saveMainBoardDay);
+        buttonUpPanel.add(saveMainBoard5m);
         buttonUpPanel.add(Box.createHorizontalStrut(150));
         buttonUpPanel.add(getSGXA50DetailedButton);
         buttonUpPanel.add(getHKDetailedButton);
@@ -377,6 +383,14 @@ public final class ChinaData extends JPanel {
         //saveStratButton.addActionListener(al -> saveHibGen(strategyTotalMap, new ConcurrentHashMap<>(), ChinaSaveStrat.getInstance()));
         //saveHibYtdButton.addActionListener(al -> hibSaveGenYtd());
         //saveHibY2Button.addActionListener(al -> hibSaveGenY2());
+
+        saveMainBoardDay.addActionListener(al -> {
+            saveMainBoardDay();
+        });
+
+        saveMainBoard5m.addActionListener(al -> {
+            saveMainBoard5M();
+        });
 
         btnLoadBarYtd.addActionListener(al -> CompletableFuture.runAsync(() -> {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(priceBarYtdSource))) {
@@ -683,6 +697,7 @@ public final class ChinaData extends JPanel {
                             cs.setSecondBlob(blobify(mp2.get(name), session));
                         }
                         session.save(cs);
+
                         if (i.get() % 100 == 0) {
                             session.flush();
                         }
@@ -720,6 +735,78 @@ public final class ChinaData extends JPanel {
         }).thenAccept(v -> ChinaMain.updateSystemNotif(Utility.str(" Loading HIB-Y2 done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
     }
 
+    static void saveMainBoardDay() {
+        pr(" save main board day ", indexData.get("sh000001").size());
+        if (indexData.get("sh000001").size() > 0) {
+            SessionFactory sessionF = HibernateUtil.getSessionFactory();
+            try (Session session = sessionF.openSession()) {
+                session.getTransaction().begin();
+
+                session.createQuery("DELETE from " +
+                        MainBoardSaveDay.class.getName()).executeUpdate();
+
+                AtomicLong i = new AtomicLong(0L);
+                try {
+                    indexData.get("sh000001").entrySet().stream().forEachOrdered((e) -> {
+                        //pr(" index data  ", e);
+                        LocalDate k = e.getKey();
+                        SimpleBar v = e.getValue();
+                        MainBoardSaveDay mb = new MainBoardSaveDay(k, v.getOpen(),
+                                v.getHigh(), v.getLow(), v.getClose());
+                        session.saveOrUpdate(mb);
+                        i.incrementAndGet();
+                        if (i.get() % 100 == 0) {
+                            session.flush();
+                        }
+                    });
+                    session.getTransaction().commit();
+                } catch (org.hibernate.exception.LockAcquisitionException x) {
+                    x.printStackTrace();
+                    session.getTransaction().rollback();
+                    session.close();
+                }
+            }
+        } else {
+            pr(" save main board failed ", indexData.get("sh000001").size());
+        }
+    }
+
+    static void saveMainBoard5M() {
+        pr(" save main board day 5m", detailed5mData.get("sh000001").size());
+        if (detailed5mData.get("sh000001").size() > 0) {
+            SessionFactory sessionF = HibernateUtil.getSessionFactory();
+            try (Session session = sessionF.openSession()) {
+                session.getTransaction().begin();
+                session.createQuery("DELETE from " +
+                        MainBoardSave5m.class.getName()).executeUpdate();
+
+                AtomicLong i = new AtomicLong(0L);
+                try {
+                    detailed5mData.get("sh000001").entrySet().stream().forEachOrdered(e -> {
+                        //pr("index 5m ", e);
+                        LocalDateTime k = e.getKey();
+                        SimpleBar v = e.getValue();
+                        MainBoardSave5m mb = new MainBoardSave5m(k, v.getOpen(),
+                                v.getHigh(), v.getLow(), v.getClose());
+                        session.saveOrUpdate(mb);
+                        i.incrementAndGet();
+                        if (i.get() % 100 == 0) {
+                            session.flush();
+                        }
+                    });
+                    session.getTransaction().commit();
+                } catch (org.hibernate.exception.LockAcquisitionException x) {
+                    x.printStackTrace();
+                    session.getTransaction().rollback();
+                    session.close();
+                }
+            }
+        } else {
+            pr(" save main board5m failed ", detailed5mData.get("sh000001").size());
+        }
+    }
+
+
     static void saveChinaOHLC() {
         CompletableFuture.runAsync(() -> {
             SessionFactory sessionF = HibernateUtil.getSessionFactory();
@@ -728,7 +815,8 @@ public final class ChinaData extends JPanel {
                 try {
                     symbolNames.forEach(name -> {
                         if (Utility.noZeroArrayGen(name, openMap, maxMap, minMap, priceMap, closeMap, sizeMap)) {
-                            ChinaSaveOHLCYV c = new ChinaSaveOHLCYV(name, openMap.get(name), maxMap.get(name), minMap.get(name),
+                            ChinaSaveOHLCYV c = new ChinaSaveOHLCYV(name, openMap.get(name),
+                                    maxMap.get(name), minMap.get(name),
                                     priceMap.get(name), closeMap.get(name), sizeMap.get(name).intValue());
 
                             session.saveOrUpdate(c);
