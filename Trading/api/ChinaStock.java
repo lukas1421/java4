@@ -1272,8 +1272,8 @@ public final class ChinaStock extends JPanel {
                         "||>O%-Day:" + getAboveOpenPercentage(index) + "%",
                         "||yDev:" + ydev + "%" + "(" + lastYrEnd + ")",
                         "||mDev:" + mdev + "%" + "(" + lastMoEnd + ")",
-                        "||prevDate", lastDay.format(DateTimeFormatter.ofPattern("M-d")), "||prev_PM_chg", lastDayPMChg, "%",
-                        "||prevP%", lastDayPerc, "%");
+                        "||prevDate", lastDay.format(DateTimeFormatter.ofPattern("M-d"))
+                        , "||prev_PM_chg:" + lastDayPMChg + "%", "||prevP%:" + lastDayPerc + "%");
             }
         }
 
