@@ -44,6 +44,9 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
     private static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
     private static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
 
+    private Map<String, Double> bidMap = new HashMap<>();
+    private Map<String, Double> askMap = new HashMap<>();
+
 
     BreachCutter() {
         String line;
@@ -215,47 +218,52 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
     @Override
     public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
         String symbol = ibContractToSymbol(ct);
-        if (tt == TickType.LAST) {
-            if (ytdDayData.get(symbol).size() > 0
-                    && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
-                double yearOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
-                double monthOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
-                LocalDate lastKey = ytdDayData.get(symbol).lastKey();
+        switch (tt) {
+            case LAST:
+                if (ytdDayData.get(symbol).size() > 0
+                        && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
+                    double yearOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
+                    double monthOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
+                    LocalDate lastKey = ytdDayData.get(symbol).lastKey();
 
-                double yDev = Math.round((price / yearOpen - 1) * 1000d) / 10d;
-                double mDev = Math.round((price / monthOpen - 1) * 1000d) / 10d;
+                    double yDev = Math.round((price / yearOpen - 1) * 1000d) / 10d;
+                    double mDev = Math.round((price / monthOpen - 1) * 1000d) / 10d;
 
 
-                double pos = symbolPosMap.getOrDefault(symbol, 0.0);
+                    double pos = symbolPosMap.getOrDefault(symbol, 0.0);
 
-                pr("Cutter", t.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
-                        , symbol, price, "pos:", pos, "yDev:", yDev + "%" + "(" + yearOpen + ")"
-                        , "mDev:", mDev + "%" + "(" + monthOpen + ")");
+                    pr("Cutter", t.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
+                            , symbol, price, "pos:", pos, "yDev:", yDev + "%" + "(" + yearOpen + ")"
+                            , "mDev:", mDev + "%" + "(" + monthOpen + ")");
 
-                if (pos < 0) {
-                    if (mDev > 0.0) {
-                        int id = autoTradeID.incrementAndGet();
-                        Order o = placeBidLimitTIF(price, Math.abs(pos), Types.TimeInForce.DAY);
-                        globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
-                        staticController.placeOrModifyOrder(ct, o,
-                                new ApiController.IOrderHandler.DefaultOrderHandler(id));
-                        outputDetailedXU(symbol, "*********");
-                        outputDetailedXU(symbol, str("NEW", o.orderId(), " Breach Cutter BUY #:",
-                                globalIdOrderMap.get(id), "pos", pos));
-                    }
-                } else if (pos > 0) {
-                    if (mDev < 0.0) {
-                        int id = autoTradeID.incrementAndGet();
-                        Order o = placeOfferLimitTIF(price, pos, Types.TimeInForce.DAY);
-                        globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
-                        staticController.placeOrModifyOrder(ct, o,
-                                new ApiController.IOrderHandler.DefaultOrderHandler(id));
-                        outputDetailedXU(symbol, "*********");
-                        outputDetailedXU(symbol, str("NEW", o.orderId(), " Breach Cutter sell:"
-                                , globalIdOrderMap.get(id), "pos", pos));
+                    if (pos < 0) {
+                        if (mDev > 0.0) {
+                            int id = autoTradeID.incrementAndGet();
+                            Order o = placeBidLimitTIF(price, Math.abs(pos), Types.TimeInForce.DAY);
+                            globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
+                            staticController.placeOrModifyOrder(ct, o,
+                                    new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                            outputDetailedXU(symbol, "*********");
+                            outputDetailedXU(symbol, str("NEW", o.orderId(), " Breach Cutter BUY #:",
+                                    globalIdOrderMap.get(id), "pos", pos));
+                        }
+                    } else if (pos > 0) {
+                        if (mDev < 0.0) {
+                            int id = autoTradeID.incrementAndGet();
+                            Order o = placeOfferLimitTIF(price, pos, Types.TimeInForce.DAY);
+                            globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
+                            staticController.placeOrModifyOrder(ct, o,
+                                    new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                            outputDetailedXU(symbol, "*********");
+                            outputDetailedXU(symbol, str("NEW", o.orderId(), " Breach Cutter sell:"
+                                    , globalIdOrderMap.get(id), "pos", pos));
+                        }
                     }
                 }
-            }
+            case BID:
+                bidMap.put(symbol, price);
+            case ASK:
+                askMap.put(symbol, price);
         }
     }
 
