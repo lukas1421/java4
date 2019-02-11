@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static api.AutoTraderMain.*;
 import static api.XuTraderHelper.*;
+import static client.Types.TimeInForce.IOC;
 import static util.AutoOrderType.BREACH_CUTTER;
 import static utility.Utility.*;
 import static utility.Utility.getLastYearLastDay;
@@ -237,9 +238,10 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                             , "mDev:", mDev + "%" + "(" + monthOpen + ")");
 
                     if (pos < 0) {
-                        if (price >= monthOpen) {
+                        if (price >= monthOpen && askMap.getOrDefault(symbol, 0.0) != 0.0
+                                && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                             int id = autoTradeID.incrementAndGet();
-                            Order o = placeBidLimitTIF(price, Math.abs(pos), Types.TimeInForce.DAY);
+                            Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos), IOC);
                             globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
                             staticController.placeOrModifyOrder(ct, o,
                                     new ApiController.IOrderHandler.DefaultOrderHandler(id));
@@ -248,9 +250,10 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                                     globalIdOrderMap.get(id), "pos", pos), breachOutput);
                         }
                     } else if (pos > 0) {
-                        if (price <= monthOpen) {
+                        if (price <= monthOpen && bidMap.getOrDefault(symbol, 0.0) != 0.0
+                                && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
                             int id = autoTradeID.incrementAndGet();
-                            Order o = placeOfferLimitTIF(price, pos, Types.TimeInForce.DAY);
+                            Order o = placeOfferLimitTIF(bidMap.get(symbol), pos, IOC);
                             globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
                             staticController.placeOrModifyOrder(ct, o,
                                     new ApiController.IOrderHandler.DefaultOrderHandler(id));
