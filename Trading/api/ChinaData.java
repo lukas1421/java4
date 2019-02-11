@@ -384,13 +384,9 @@ public final class ChinaData extends JPanel {
         //saveHibYtdButton.addActionListener(al -> hibSaveGenYtd());
         //saveHibY2Button.addActionListener(al -> hibSaveGenY2());
 
-        saveMainBoardDay.addActionListener(al -> {
-            saveMainBoardDay();
-        });
+        saveMainBoardDay.addActionListener(al -> saveMainBoardDay());
 
-        saveMainBoard5m.addActionListener(al -> {
-            saveMainBoard5M();
-        });
+        saveMainBoard5m.addActionListener(al -> saveMainBoard5M());
 
         btnLoadBarYtd.addActionListener(al -> CompletableFuture.runAsync(() -> {
             try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(priceBarYtdSource))) {
@@ -742,9 +738,6 @@ public final class ChinaData extends JPanel {
             try (Session session = sessionF.openSession()) {
                 session.getTransaction().begin();
 
-                session.createQuery("DELETE from " +
-                        MainBoardSaveDay.class.getName()).executeUpdate();
-
                 AtomicLong i = new AtomicLong(0L);
                 try {
                     indexData.get("sh000001").entrySet().stream().forEachOrdered((e) -> {
@@ -777,13 +770,10 @@ public final class ChinaData extends JPanel {
             SessionFactory sessionF = HibernateUtil.getSessionFactory();
             try (Session session = sessionF.openSession()) {
                 session.getTransaction().begin();
-                session.createQuery("DELETE from " +
-                        MainBoardSave5m.class.getName()).executeUpdate();
 
                 AtomicLong i = new AtomicLong(0L);
                 try {
                     detailed5mData.get("sh000001").entrySet().stream().forEachOrdered(e -> {
-                        //pr("index 5m ", e);
                         LocalDateTime k = e.getKey();
                         SimpleBar v = e.getValue();
                         MainBoardSave5m mb = new MainBoardSave5m(k, v.getOpen(),
