@@ -1266,14 +1266,14 @@ public final class ChinaStock extends JPanel {
                 double lastDayPMChg = Math.round(10000d * (lastDayClose / lastDayPMOpen - 1)) / 100d;
                 int lastDayPerc = getPercentileForLast(lastDayMap);
 
-                pr("**" + index, priceMapBar.get(index).lastKey(),
-                        priceMapBar.get(index).lastEntry().getValue().getClose(),
-                        ">O%-950 ", getAboveOpenPercentage950(index) + "%",
-                        ">O%-Day", getAboveOpenPercentage(index) + "%",
-                        "yDev:" + ydev + "%" + "(" + lastYrEnd + ")",
-                        "mDev:" + mdev + "%" + "(" + lastMoEnd + ")",
-                        "last_day", lastDay, "last_PM_chg", lastDayPMChg, "%",
-                        "last_p%", lastDayPerc, "%");
+                pr("***" + index, priceMapBar.get(index).lastKey(),
+                        Math.round(priceMapBar.get(index).lastEntry().getValue().getClose()),
+                        "||>O%-950:" + getAboveOpenPercentage950(index) + "%",
+                        "||>O%-Day:" + getAboveOpenPercentage(index) + "%",
+                        "||yDev:" + ydev + "%" + "(" + lastYrEnd + ")",
+                        "||mDev:" + mdev + "%" + "(" + lastMoEnd + ")",
+                        "||prev_day", lastDay, "||prev_PM_chg", lastDayPMChg, "%",
+                        "||prev_p%", lastDayPerc, "%");
             }
         }
 

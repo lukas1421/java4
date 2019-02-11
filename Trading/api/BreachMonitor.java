@@ -85,10 +85,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         holdingsMap.put(hk27, 0.0);
         symbolPosMap.put(ibContractToSymbol(hk27), 0.0);
 
-        Contract sh600519 = getShanghaiConnectStock("600519");
-        holdingsMap.put(sh600519, 0.0);
-        symbolPosMap.put(ibContractToSymbol(sh600519), 0.0);
-
         Contract vix = getVIXContract();
         holdingsMap.put(vix, 0.0);
         symbolPosMap.put(ibContractToSymbol(vix), 0.0);
@@ -297,22 +293,19 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 //                        c.currency(), fxMap.getOrDefault(Currency.get(c.currency()), 1.0),
 //                        Math.round(delta / 1000d), "k");
 
-                String out = str(symbol, info, Math.round(size),
-                        ytdDayData.get(symbol).lastEntry().getKey().format(f), last,
-                        lastChg + "%", "||yOpen",
-                        "y#:" + yCount, "yUp%:",
+                String out = str(symbol, info, "POS:" + (size != 0.0 ? size : 0.0),
+                        "||LAST:", ytdDayData.get(symbol).lastEntry().getKey().format(f), last,
+                        lastChg + "%", "||YYY", "Up%:",
                         Math.round(1000d * ytdDayData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
                                 .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d + "%",
-                        "yDev", yDev + "%" + "(" + ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY)
+                        "yDev:" + yDev + "%" + "(" + ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY)
                                 .getKey().format(f) + " " + yOpen + ")",
-
-                        "||mOpen ",
-                        "m#:" + mCount, "mUp%:",
+                        "||MMM", "Up%:",
                         Math.round(1000d * ytdDayData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
                                 .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d + "%",
-                        "mDev", mDev + "%" + "(" +
+                        "mDev:" + mDev + "%" + "(" +
                                 ytdDayData.get(symbol)
                                         .ceilingEntry(LAST_MONTH_DAY).getKey().format(f) + " " + mOpen + ")");
 
