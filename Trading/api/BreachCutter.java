@@ -130,9 +130,10 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
 
                 double last;
                 last = ytdDayData.get(symbol).lastEntry().getValue().getClose();
-                String info;
+                String info = "";
                 double yDev = Math.round((last / yOpen - 1) * 1000d) / 10d;
                 double mDev = Math.round((last / mOpen - 1) * 1000d) / 10d;
+
                 if (size > 0) {
                     if (yDev > 0 && mDev >= 0) {
                         info = "LONG ON/ON ";
@@ -153,9 +154,6 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                     } else {
                         info = "SHORT OFF/OFF ";
                     }
-                } else {
-                    info = str(yDev == 0.0 ? "yFlat" : (yDev < 0.0 ? "yDown" : "yUp"),
-                            mDev == 0.0 ? "mFlat" : (mDev < 0.0 ? "mDown" : "mUp"));
                 }
 
                 double delta = size * last * fxMap.getOrDefault(Currency.get(c.currency()), 1.0);
@@ -201,7 +199,6 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
             }
             staticController.req1ContractLive(c, this, false);
         }
-
     }
 
     private static int getCalendarYtdDays() {
@@ -231,12 +228,15 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                 double yDev = Math.round((price / yearOpen - 1) * 1000d) / 10d;
                 double mDev = Math.round((price / monthOpen - 1) * 1000d) / 10d;
 
-                pr("Breach Cutter", symbol, price, t, yDev, mDev);
 
                 double pos = symbolPosMap.getOrDefault(symbol, 0.0);
 
+                pr("Cutter", t.toLocalTime().truncatedTo(ChronoUnit.SECONDS)
+                        , symbol, "pos:", pos, price, "yDev:", yDev + "%" + "(" + yearOpen + ")"
+                        , "mDev:", mDev + "%" + "(" + monthOpen + ")");
+
                 if (pos < 0) {
-                    if (yDev > 0 || mDev > 0) {
+                    if (mDev > 0.0) {
                         int id = autoTradeID.incrementAndGet();
                         Order o = placeBidLimitTIF(price, Math.abs(pos), Types.TimeInForce.DAY);
                         globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
@@ -247,7 +247,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                                 globalIdOrderMap.get(id), "pos", pos));
                     }
                 } else if (pos > 0) {
-                    if (yDev < 0 || mDev < 0) {
+                    if (mDev < 0.0) {
                         int id = autoTradeID.incrementAndGet();
                         Order o = placeOfferLimitTIF(price, pos, Types.TimeInForce.DAY);
                         globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));

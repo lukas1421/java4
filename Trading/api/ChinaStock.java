@@ -639,9 +639,7 @@ public final class ChinaStock extends JPanel {
         JScrollPane chartScroll5 = createPane(graph5, "graph scrollpane 5");
         JScrollPane chartScroll6 = createPane(graph6, "graph scrollpane 6");
 
-        paneSet.forEach(p -> {
-            graphPanel.add(p);
-        });
+        paneSet.forEach(p -> graphPanel.add(p));
 
         graphButton.addActionListener(al -> {
             CompletableFuture.runAsync(() -> {
@@ -1125,21 +1123,15 @@ public final class ChinaStock extends JPanel {
 
         add(graphPanel, BorderLayout.CENTER);
 
-        tf11.addActionListener(ae ->
-
-        {
+        tf11.addActionListener(ae -> {
             rangeThresh = Double.parseDouble(tf11.getText());
             out.println(" range for display is " + rangeThresh);
         });
-        tf12.addActionListener(ae ->
-
-        {
+        tf12.addActionListener(ae -> {
             sizeThresh = Double.parseDouble(tf12.getText());
             out.println(" size for display is " + sizeThresh);
         });
-        tf13.addActionListener(ae ->
-
-        {
+        tf13.addActionListener(ae -> {
             rtnThresh = Double.parseDouble(tf13.getText());
             out.println(" return threashold for display is  " + rtnThresh);
         });
