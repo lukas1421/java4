@@ -7,10 +7,7 @@ import controller.ApiController;
 import handler.LiveHandler;
 import utility.Utility;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -41,6 +38,8 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
     private volatile static Map<String, Double> symbolPosMap = new TreeMap<>(String::compareTo);
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
     public static Map<Currency, Double> fxMap = new HashMap<>();
+
+    static File breachOutput = new File(TradingConstants.GLOBALPATH + "breachOrders.txt");
     //private static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
     //private static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
 
@@ -244,9 +243,9 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                             globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
                             staticController.placeOrModifyOrder(ct, o,
                                     new ApiController.IOrderHandler.DefaultOrderHandler(id));
-                            outputDetailedXU(symbol, "*********");
-                            outputDetailedXU(symbol, str("NEW", o.orderId(), "Breach Cutter BUY #:",
-                                    globalIdOrderMap.get(id), "pos", pos));
+                            outputDetailedGen("*********", breachOutput);
+                            outputDetailedGen(str("NEW", o.orderId(), "Breach Cutter BUY #:",
+                                    globalIdOrderMap.get(id), "pos", pos), breachOutput);
                         }
                     } else if (pos > 0) {
                         if (price <= monthOpen) {
@@ -255,9 +254,9 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                             globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
                             staticController.placeOrModifyOrder(ct, o,
                                     new ApiController.IOrderHandler.DefaultOrderHandler(id));
-                            outputDetailedXU(symbol, "*********");
-                            outputDetailedXU(symbol, str("NEW", o.orderId(), "Breach Cutter sell:"
-                                    , globalIdOrderMap.get(id), "pos", pos));
+                            outputDetailedGen("*********", breachOutput);
+                            outputDetailedGen(str("NEW", o.orderId(), "Breach Cutter sell:"
+                                    , globalIdOrderMap.get(id), "pos", pos), breachOutput);
                         }
                     }
                 }

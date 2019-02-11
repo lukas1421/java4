@@ -40,6 +40,6 @@ public class Test {
 
 
     public static void main(String[] args) {
-        Test.readThis();
+        pr(System.getProperty("os.name"));
     }
 }

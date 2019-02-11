@@ -184,7 +184,7 @@ public class XuTraderHelper {
         }
     }
 
-    private static void outputDetailedGen(String s, File detailed) {
+    public static void outputDetailedGen(String s, File detailed) {
         try (BufferedWriter out = new BufferedWriter(new FileWriter(detailed, true))) {
             out.append(s);
             out.newLine();
@@ -192,6 +192,7 @@ public class XuTraderHelper {
             ex.printStackTrace();
         }
     }
+
 
     public static void outputDetailedXU(String symbol, String msg) {
         if (!symbol.equals("")) {
