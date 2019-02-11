@@ -1267,10 +1267,12 @@ public final class ChinaStock extends JPanel {
                 int lastDayPerc = getPercentileForLast(lastDayMap);
 
                 pr("**" + index, priceMapBar.get(index).lastKey(),
+                        priceMapBar.get(index).lastEntry().getValue().getClose(),
                         ">O%-950 ", getAboveOpenPercentage950(index) + "%",
                         ">O%-Day", getAboveOpenPercentage(index) + "%",
-                        "yDev:" + ydev + "%", "mDev:" + mdev + "%"
-                        , "last_day", lastDay, "last_PM_chg", lastDayPMChg, "%",
+                        "yDev:" + ydev + "%" + "(" + lastYrEnd + ")",
+                        "mDev:" + mdev + "%" + "(" + lastMoEnd + ")",
+                        "last_day", lastDay, "last_PM_chg", lastDayPMChg, "%",
                         "last_p%", lastDayPerc, "%");
             }
         }

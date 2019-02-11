@@ -157,9 +157,6 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                 }
 
                 double delta = size * last * fxMap.getOrDefault(Currency.get(c.currency()), 1.0);
-//                pr("delta ", size, last,
-//                        c.currency(), fxMap.getOrDefault(Currency.get(c.currency()), 1.0),
-//                        Math.round(delta / 1000d), "k");
 
                 String out = str(symbol, info, Math.round(size),
                         ytdDayData.get(symbol).lastEntry().getKey().format(f), last, "||yOpen",
