@@ -231,8 +231,8 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
 
                 double pos = symbolPosMap.getOrDefault(symbol, 0.0);
 
-                pr("Cutter", t.toLocalTime().truncatedTo(ChronoUnit.SECONDS)
-                        , symbol, "pos:", pos, price, "yDev:", yDev + "%" + "(" + yearOpen + ")"
+                pr("Cutter", t.toLocalTime().truncatedTo(ChronoUnit.MINUTES)
+                        , symbol, price, "pos:", pos, "yDev:", yDev + "%" + "(" + yearOpen + ")"
                         , "mDev:", mDev + "%" + "(" + monthOpen + ")");
 
                 if (pos < 0) {

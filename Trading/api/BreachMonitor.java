@@ -231,10 +231,14 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             if (!k.equals("USD")) {
                 //if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
                 staticController.reqHistDayData(ibStockReqId.addAndGet(5),
-                        fillContract(c), BreachMonitor::ytdOpen, 20, Types.BarSize._1_day);
+                        fillContract(c), BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
             }
             staticController.req1ContractLive(c, this, false);
         }
+    }
+
+    private static int getCalendarYtdDays() {
+        return (int) ChronoUnit.DAYS.between(LAST_YEAR_DAY, LocalDate.now());
     }
 
     private static void ytdOpen(Contract c, String date, double open, double high, double low,
@@ -296,19 +300,21 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 String out = str(symbol, info, Math.round(size),
                         ytdDayData.get(symbol).lastEntry().getKey().format(f), last,
                         lastChg + "%", "||yOpen",
-                        ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY)
-                                .getKey().format(f), yOpen,
                         "y#:" + yCount, "yUp%:",
                         Math.round(1000d * ytdDayData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
                                 .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) / 10d + "%",
-                        "yDev", yDev + "%",
-                        "||mOpen ", ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
+                        "yDev", yDev + "%" + "(" + ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY)
+                                .getKey().format(f) + " " + yOpen + ")",
+
+                        "||mOpen ",
                         "m#:" + mCount, "mUp%:",
                         Math.round(1000d * ytdDayData.get(symbol).entrySet().stream()
                                 .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
                                 .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) / 10d + "%",
-                        "mDev", mDev + "%", info);
+                        "mDev", mDev + "%" + "(" +
+                                ytdDayData.get(symbol)
+                                        .ceilingEntry(LAST_MONTH_DAY).getKey().format(f) + " " + mOpen + ")");
 
                 pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), size != 0.0 ? "*" : ""
                         , out, Math.round(delta / 1000d) + "k");
