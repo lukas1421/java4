@@ -714,19 +714,19 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 ma20Map.getOrDefault(ticker, 0.0));
     }
 
-    private static int getRecentPmCh(LocalTime lt, String index) {
-        //pr(" getting pmchy yest/today", pmchyMap.getOrDefault(index, 0), getPmchToday(ltof, index));
-        if (lt.isAfter(ltof(5, 0)) && lt.isBefore(ltof(15, 0))) {
-            return getPmchY(lt, index);
-        } else {
-            return getPmchToday(lt, index);
-        }
-    }
+//    private static int getRecentPmCh(LocalTime lt, String index) {
+//        //pr(" getting pmchy yest/today", pmchyMap.getOrDefault(index, 0), getPmchToday(ltof, index));
+//        if (lt.isAfter(ltof(5, 0)) && lt.isBefore(ltof(15, 0))) {
+//            return getPmchY(lt, index);
+//        } else {
+//            return getPmchToday(lt, index);
+//        }
+//    }
 
-    private static int getPmchY(LocalTime lt, String index) {
-        //pr(" getting pmchy yest/today", pmchyMap.getOrDefault(index, 0), getPmchToday(ltof, index));
-        return pmchyMap.getOrDefault(index, 0);
-    }
+//    private static int getPmchY(LocalTime lt, String index) {
+//        //pr(" getting pmchy yest/today", pmchyMap.getOrDefault(index, 0), getPmchToday(ltof, index));
+//        return pmchyMap.getOrDefault(index, 0);
+//    }
 
     private static int getPmchToday(LocalTime t, String ticker) {
         if (t.isAfter(ltof(5, 0)) && t.isBefore(ltof(13, 0))) {
@@ -794,7 +794,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(ibContractToFutType(activeFutCt)));
         //int pmChgY = getPercentileChgFut(futdata, getPrevTradingDate(futdata));
-        int pmChgY = getRecentPmCh(ldt.toLocalTime(), INDEX_000001);
+        //int pmChgY = getRecentPmCh(ldt.toLocalTime(), INDEX_000001);
         int closePercY = getRecentClosePerc(ldt.toLocalTime(), INDEX_000001);
         int openPercY = getOpenPercentile(futdata, getPrevTradingDate(futdata));
         //int pmChg = getPercentileChgFut(futdata, getTradeDate(futdata.lastKey()));
@@ -3972,7 +3972,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     //**********************************************Trade types **********************************************
 
     private void loadXU() {
-        pr("in loadXU");
+        //pr("in loadXU");
         ChinaMain.GLOBAL_REQ_ID.addAndGet(5);
         apcon.getSGXA50Historical2(ChinaMain.GLOBAL_REQ_ID.get(), this);
     }
@@ -4302,7 +4302,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(f));
 
         //int pmChgY = getPercentileChgFut(futdata, futdata.firstKey().toLocalDate());
-        int pmChgY = getRecentPmCh(LocalTime.now(), INDEX_000001);
+        //int pmChgY = getRecentPmCh(LocalTime.now(), INDEX_000001);
         //int closePercY = getClosingPercentile(futdata, futdata.firstKey().toLocalDate());
         int closePercY = getRecentClosePerc(LocalTime.now(), INDEX_000001);
         int openPercY = getOpenPercentile(futdata, futdata.firstKey().toLocalDate());
@@ -4368,8 +4368,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     + "HK Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isHKStock(e.getKey())))
                     + " China Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isChinaStock(e.getKey()))));
             updateLog(str("2D fut p%:", _2dayFutPerc, "1D fut p%", _1dayFutPerc, "1D idx p%", indexPercLast,
-                    "pmChgY:", pmChgY, "openY:", openPercY, "closeY:", closePercY, "pmChg", pmChg,
-                    "||Index pmchy", getRecentPmCh(LocalTime.now(), INDEX_000001)));
+                    "openY:", openPercY, "closeY:", closePercY, "pmChg", pmChg));
             updateLog(" expiring delta " + getExpiringDelta());
         });
     }

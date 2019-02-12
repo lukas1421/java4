@@ -92,11 +92,10 @@ public final class ChinaMain implements IConnectionHandler {
     private final ChinaGraphIndustry gi = new ChinaGraphIndustry();
 
 
-    private static HKData hkdata = new HKData();
-
+    //private static HKData hkdata = new HKData();
     //private static ChinaOption chinaOption = new ChinaOption();
-    private static HistChinaStocks histChina = new HistChinaStocks();
-    private static AutoTraderMain autoMain = new AutoTraderMain();
+    //private static HistChinaStocks histChina = new HistChinaStocks();
+    //private static AutoTraderMain autoMain = new AutoTraderMain();
     private static AutoTraderXU xutrader = new AutoTraderXU(M_CONTROLLER);
 
     //private static HKStock hkstock = new HKStock();
@@ -378,6 +377,7 @@ public final class ChinaMain implements IConnectionHandler {
         m_frame.setVisible(true);
         m_frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
+
         m_frame.setExtendedState(m_frame.getExtendedState() | JFrame.MAXIMIZED_BOTH);
 
         m_frame.addWindowListener(new WindowAdapter() {
@@ -435,9 +435,10 @@ public final class ChinaMain implements IConnectionHandler {
         SwingUtilities.invokeLater(() -> {
 //            m_frame.toFront();
 //            m_frame.repaint();
-            m_frame10.toFront();
-            m_frame10.repaint();
+            m_frame.toFront();
+            m_frame.repaint();
         });
+
         // make initial connection to local host, port 7496, client id 0, 4001 is for with IBAPI
         // m_controller.connect( "127.0.0.1", PORT_IBAPI, 0);
         // m_controller.connect( "127.0.0.1", 7496, 0);

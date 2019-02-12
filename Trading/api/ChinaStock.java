@@ -67,7 +67,7 @@ public final class ChinaStock extends JPanel {
     public static Map<String, String> benchMap = new HashMap<>();
     public static Map<String, String> benchSimpleMap = new HashMap<>();
     public static Map<String, Double> sharpeMap = new HashMap<>();
-    public static Map<String, Integer> pmchyMap = new HashMap<>();
+    //public static Map<String, Integer> pmchyMap = new HashMap<>();
     public static Map<String, Integer> closePercYMap = new HashMap<>();
 
     public static volatile List<String> symbolNames = new ArrayList<>(1000);
@@ -366,17 +366,17 @@ public final class ChinaStock extends JPanel {
             ex.printStackTrace();
         }
 
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(TradingConstants.GLOBALPATH + "pmchy.txt"), "gbk"))) {
-            while ((line = reader1.readLine()) != null) {
-                List<String> al1 = Arrays.asList(line.split("\t"));
-                pr(" pmchy map " + al1);
-                pmchyMap.put(al1.get(0), Integer.parseInt(al1.get(6)));
-                closePercYMap.put(al1.get(0), Integer.parseInt(al1.get(7)));
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+//        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+//                new FileInputStream(TradingConstants.GLOBALPATH + "pmchy.txt"), "gbk"))) {
+//            while ((line = reader1.readLine()) != null) {
+//                List<String> al1 = Arrays.asList(line.split("\t"));
+//                pr(" pmchy map " + al1);
+//                pmchyMap.put(al1.get(0), Integer.parseInt(al1.get(6)));
+//                closePercYMap.put(al1.get(0), Integer.parseInt(al1.get(7)));
+//            }
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
 
         m_model = new BarModel_STOCK();
         symbolNames.forEach(name -> {
@@ -1273,7 +1273,7 @@ public final class ChinaStock extends JPanel {
                         "||yDev:" + ydev + "%" + "(" + lastYrEnd + ")",
                         "||mDev:" + mdev + "%" + "(" + lastMoEnd + ")",
                         "||prevDate", lastDay.format(DateTimeFormatter.ofPattern("M-d"))
-                        , "||prev_PM_chg:" + lastDayPMChg +"%" ,
+                        , "||prev_PM_chg:" + lastDayPMChg + "%",
                         "||prevP%:" + lastDayPerc + "%");
             }
         }

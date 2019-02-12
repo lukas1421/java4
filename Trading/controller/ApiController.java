@@ -950,8 +950,6 @@ public class ApiController implements EWrapper {
         try {
             int reqId = m_reqId.incrementAndGet();
 
-            pr(" requesting 1 stock live ", reqId, ticker, exch, curr);
-
             if (reqId % 90 == 0) {
                 Thread.sleep(1000);
             }
@@ -983,8 +981,8 @@ public class ApiController implements EWrapper {
     private void req1ContractLive(Contract ct, LiveHandler h) {
         try {
             int reqId = m_reqId.incrementAndGet();
-            pr(" req 1 contract live ", reqId, ibContractToSymbol(ct), ct.symbol(), ct.currency(),
-                    ct.lastTradeDateOrContractMonth());
+//            pr(" req 1 contract live ", reqId, ibContractToSymbol(ct), ct.symbol(), ct.currency(),
+//                    ct.lastTradeDateOrContractMonth());
             if (reqId % 90 == 0) {
                 Thread.sleep(1000);
             }
@@ -1028,10 +1026,9 @@ public class ApiController implements EWrapper {
         ChinaData.priceMapBarDetail.keySet().forEach(k -> {
             if (!k.startsWith("sz") && !k.startsWith("sh") && !k.startsWith("FTSEA50")
                     && !k.startsWith("SGXA50PR") && !k.startsWith("SGXA50BM")) {
-                pr(" req Non china trader ", k);
+                //pr(" req Non china trader ", k);
                 //pr(" symbol ", AutoTraderMain.symbolToIBContract(k).symbol());
                 Contract c = AutoTraderMain.symbolToIBContract(k);
-
                 req1ContractLive(c, new LiveHandler.PriceMapUpdater());
             }
         });
@@ -1119,7 +1116,7 @@ public class ApiController implements EWrapper {
 
     //xu data
     public void reqXUDataArray() {
-        pr("requesting XU data begins " + LocalTime.now());
+//        pr("requesting XU data begins " + LocalTime.now());
         Contract frontCt = getFrontFutContract();
         Contract backCt = getBackFutContract();
 
@@ -1148,7 +1145,7 @@ public class ApiController implements EWrapper {
             //pr(" req used " + reqIdFront + " " + globalRequestMap.get(reqIdFront).getContract());
             throw new IllegalArgumentException(" req ID used ");
         }
-        pr("requesting XU data ends");
+//        pr("requesting XU data ends");
     }
 
 
@@ -1175,7 +1172,7 @@ public class ApiController implements EWrapper {
     //requ month open
     public void reqHistDayData(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
                                int duration, BarSize bs) {
-        pr(" requesting hist day data ", reqId, c.symbol());
+//        pr(" requesting hist day data ", reqId, c.symbol());
         //Contract ct = tickerToHKStkContract("5");
         //int duration = 30;
         //BarSize bs = BarSize._1_day;

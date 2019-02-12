@@ -84,8 +84,8 @@ public class EClientSocket extends EClient implements EClientMsgSink {
     public synchronized void eConnect(String host, int port, int clientId, boolean extraAuth) {
         // already connected?
         m_host = checkConnected(host);
-        System.out.println(str("||EClientSocket eConnect|| host, port, clientID, extraAuthor", host,
-                port, clientId, extraAuth));
+//        System.out.println(str("||EClientSocket eConnect|| host, port, clientID, extraAuthor", host,
+//                port, clientId, extraAuth));
 
         m_clientId = clientId;
         m_extraAuth = extraAuth;
