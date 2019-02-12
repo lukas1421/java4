@@ -177,19 +177,21 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         boolean connectionStatus = false;
 
         try {
-            ap.connect("127.0.0.1", 7496, 2, "");
+            pr(" using port 4001");
+            ap.connect("127.0.0.1", 4001, 4, "");
             connectionStatus = true;
-            pr(" connection : status is true ");
+            //pr(" connection : status is true ");
             l.countDown();
+            pr(" Latch counted down 4001 " + LocalTime.now());
         } catch (IllegalStateException ex) {
-            pr(" illegal state exception caught ");
+            pr(" illegal state exception caught ", ex);
         }
 
         if (!connectionStatus) {
-            pr(" using port 4001");
-            ap.connect("127.0.0.1", 4001, 2, "");
+            pr(" using port 7496");
+            ap.connect("127.0.0.1", 7496, 4, "");
             l.countDown();
-            pr(" Latch counted down " + LocalTime.now());
+            pr(" Latch counted down 7496" + LocalTime.now());
         }
 
         try {
@@ -197,6 +199,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
         pr(" Time after latch released " + LocalTime.now());
         reqHoldings(ap);
     }
@@ -218,11 +221,11 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     @Override
     public void positionEnd() {
         //pr(" holdings map ", holdingsMap);
-        holdingsMap.entrySet().stream().forEachOrdered((e)
-                -> pr("symb pos ", ibContractToSymbol(e.getKey()), e.getValue()));
+//        holdingsMap.entrySet().stream().forEachOrdered((e)
+//                -> pr("symb pos ", ibContractToSymbol(e.getKey()), e.getValue()));
         for (Contract c : holdingsMap.keySet()) {
             String k = ibContractToSymbol(c);
-            pr("position end: ticker/symbol ", c.symbol(), k);
+            //pr("position end: ticker/symbol ", c.symbol(), k);
             ytdDayData.put(k, new ConcurrentSkipListMap<>());
             if (!k.equals("USD")) {
                 //if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
@@ -405,6 +408,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
         ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
         es.scheduleAtFixedRate(() -> {
+            pr("**********************************************");
             pr("running @ ", LocalTime.now());
             bm.reqHoldings(staticController);
         }, 1, 1, TimeUnit.MINUTES);

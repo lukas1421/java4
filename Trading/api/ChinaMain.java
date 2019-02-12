@@ -68,7 +68,6 @@ public final class ChinaMain implements IConnectionHandler {
     private final JFrame m_frame9 = new JFrame();
     private final JFrame m_frame10 = new JFrame();
     private final JFrame m_frame11 = new JFrame();
-    private final JFrame m_frame12 = new JFrame();
 
     private final NewTabbedPanel m_tabbedPanel = new NewTabbedPanel(true);
     public static ConnectionPanel m_connectionPanel;
@@ -79,11 +78,12 @@ public final class ChinaMain implements IConnectionHandler {
     public static volatile JLabel connectionIndicator = new JLabel("CONN");
     private final XU xu = new XU();
     private final ChinaStock chinastock = new ChinaStock();
-    //private final ChinaIndex chinaindex = new ChinaIndex();
     private final ChinaKeyMonitor keyMon = new ChinaKeyMonitor();
     private final ChinaData chinaData = new ChinaData();
+
+    //private final ChinaIndex chinaindex = new ChinaIndex();
     //private final ChinaDataMapYtd chinadatamapytd = new ChinaDataMapYtd();
-    private final ChinaDataYesterday chinaDataYtd = new ChinaDataYesterday();
+    //private final ChinaDataYesterday chinaDataYtd = new ChinaDataYesterday();
     //private final ChinaSizeDataYtd csdy = new ChinaSizeDataYtd();
     //private final ChinaSizeData chinaSizeData = new ChinaSizeData();
     private final ChinaPosition chinaPos = new ChinaPosition();
@@ -99,16 +99,12 @@ public final class ChinaMain implements IConnectionHandler {
     private static AutoTraderMain autoMain = new AutoTraderMain();
     private static AutoTraderXU xutrader = new AutoTraderXU(M_CONTROLLER);
 
-    private static HKStock hkstock = new HKStock();
-    private static AutoTraderHK hkTrader = new AutoTraderHK();
-    private static AutoTraderUS usTrader = new AutoTraderUS();
-
+    //private static HKStock hkstock = new HKStock();
+    //private static AutoTraderHK hkTrader = new AutoTraderHK();
+    //private static AutoTraderUS usTrader = new AutoTraderUS();
     //private static USStock usstock = new USStock(M_CONTROLLER);
 
     private SinaStock sinastock1 = SinaStock.getInstance();
-    private ExecutorService pool;
-    //private volatile AnaCompute anacompute = new AnaCompute();
-    //private volatile StratCompute stratcompute = new StratCompute();
     private final ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
 
     public ArrayList<String> accountList() {
@@ -137,7 +133,7 @@ public final class ChinaMain implements IConnectionHandler {
         m_tabbedPanel.addTab("Stock ", chinastock);
         m_tabbedPanel.addTab("XU", xu);
         m_tabbedPanel.addTab("Xu trader ", xutrader);
-        m_tabbedPanel.addTab("hk", hkstock);
+        //m_tabbedPanel.addTab("hk", hkstock);
         //m_tabbedPanel.addTab("Hk trader ", hkTrader);
         //m_tabbedPanel.addTab("Auto trader ", autoMain);
         //m_tabbedPanel.addTab("Ytd", chinaDataYtd);
@@ -149,7 +145,7 @@ public final class ChinaMain implements IConnectionHandler {
         //m_tabbedPanel.addTab(" HK Data", hkdata);
         //m_tabbedPanel.addTab(" HK Stock", hkstock);
         //m_tabbedPanel.addTab("Option", chinaOption);
-        m_tabbedPanel.addTab("Hist China", histChina);
+        //m_tabbedPanel.addTab("Hist China", histChina);
         m_tabbedPanel.addTab("Connection", m_connectionPanel);
         //m_tabbedPanel.addTab("US", usstock);
 
@@ -198,7 +194,7 @@ public final class ChinaMain implements IConnectionHandler {
         JButton startIBChina = new JButton(" ON IB China");
         JButton startIBHK = new JButton(" ON IB HK");
 
-        JButton stopXU = new JButton("Kill XU");
+        //JButton stopXU = new JButton("Kill XU");
         JButton offShcomp = new JButton("Kill Shcomp/ChinaFut");
         JButton saveAll = new JButton("saveAll");
 
@@ -328,11 +324,11 @@ public final class ChinaMain implements IConnectionHandler {
         startIBHK.addActionListener(al -> M_CONTROLLER.reqHKInPosLive());
 
 
-        stopXU.addActionListener((ae) -> {
-//            M_CONTROLLER.cancelTopMktData(SGXFutureReceiver.getReceiverHK());
-//            M_CONTROLLER.cancelTopMktData(xu.getFrontfutHandler());
-//            M_CONTROLLER.cancelTopMktData(xu.getBackfutHandler());
-        });
+//        stopXU.addActionListener((ae) -> {
+////            M_CONTROLLER.cancelTopMktData(SGXFutureReceiver.getReceiverHK());
+////            M_CONTROLLER.cancelTopMktData(xu.getFrontfutHandler());
+////            M_CONTROLLER.cancelTopMktData(xu.getBackfutHandler());
+//        });
 
         //JButton stopAnalysis = new JButton("Stop Analysis");
         //stopAnalysis.addActionListener((ae) -> pool.shutdownNow());
@@ -447,10 +443,10 @@ public final class ChinaMain implements IConnectionHandler {
         // m_controller.connect( "127.0.0.1", 7496, 0);
         CompletableFuture.runAsync(() -> {
             try {
-                M_CONTROLLER.connect("127.0.0.1", 7496, 0, "");
-            } catch (IllegalStateException ex) {
-                pr(" error in controller, using 4001 port ");
                 M_CONTROLLER.connect("127.0.0.1", 4001, 0, "");
+            } catch (IllegalStateException ex) {
+                pr(" error in controller, using 7096 port ");
+                M_CONTROLLER.connect("127.0.0.1", 7496, 0, "");
             }
         });
 

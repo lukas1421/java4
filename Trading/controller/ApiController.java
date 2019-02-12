@@ -302,12 +302,12 @@ public class ApiController implements EWrapper {
 //	}
     public void connect(String host, int port, int clientId, String connectionOpts) {
         pr(" ------------------in connect----------------- " + host + " " + port + " " + clientId);
-        pr(str(" checking connection BEFORE----", checkConnection(), port));
+        //pr(str(" checking connection BEFORE----", checkConnection(), port));
         m_client.eConnect(host, port, clientId);
         startMsgProcessingThread();
-        pr(str(" checking connection AFTER-----" + checkConnection(), port));
+        //pr(str(" checking connection AFTER-----" + checkConnection(), port));
         sendEOM();
-        pr(str(" checking connection AFTER EOM-----", checkConnection(), port));
+        //pr(str(" checking connection AFTER EOM-----", checkConnection(), port));
     }
 
     public ApiConnection client() {

@@ -261,9 +261,9 @@ public final class ChinaDataYesterday extends JPanel {
                     ChinaMain.updateSystemNotif(Utility.str("Fetching done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
                     SwingUtilities.invokeLater(this::repaint);
                 }).thenRun(() -> {
-                    compute();
-                    ChinaMain.updateSystemNotif(Utility.str("Computing ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
-                    SwingUtilities.invokeLater(this::repaint);
+                    //compute();
+                    //ChinaMain.updateSystemNotif(Utility.str("Computing ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
+                    //SwingUtilities.invokeLater(this::repaint);
                 });
             }
             //ChinaMain.updateSystemNotif(ChinaStockHelper.str(" LOAD HIB T DONE ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
@@ -271,7 +271,7 @@ public final class ChinaDataYesterday extends JPanel {
 
         btnCompute.addActionListener(al -> {
             CompletableFuture.runAsync(() -> {
-                compute();
+                //compute();
             }).thenAccept(v -> {
                 ChinaMain.updateSystemNotif(Utility.str("Computing ytd done", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));
             });
@@ -664,7 +664,7 @@ public final class ChinaDataYesterday extends JPanel {
                 e2.printStackTrace();
             }
         }, es).whenComplete((ok, ex) -> {
-            compute();
+            //compute();
         }).thenAccept(
                 v -> {
                     ChinaMain.updateSystemNotif(Utility.str(" Loading Ytd Done ", LocalTime.now().truncatedTo(ChronoUnit.SECONDS)));

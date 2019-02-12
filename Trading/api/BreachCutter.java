@@ -70,20 +70,21 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
 
         CountDownLatch l = new CountDownLatch(1);
 
-        boolean connectionStatus = false;
+        boolean firstPortWorked = false;
 
         try {
-            ap.connect("127.0.0.1", 7496, 3, "");
-            connectionStatus = true;
-            pr(" connection : status is true ");
+            ap.connect("127.0.0.1", 4001, 3, "");
+            firstPortWorked = true;
             l.countDown();
+            pr(" Latch counted down " + LocalTime.now());
+
         } catch (IllegalStateException ex) {
-            pr(" illegal state exception caught ");
+            pr(" illegal state exception caught ", ex);
         }
 
-        if (!connectionStatus) {
-            pr(" using port 4001");
-            ap.connect("127.0.0.1", 4001, 3, "");
+        if (!firstPortWorked) {
+            pr(" using port 7496");
+            ap.connect("127.0.0.1", 7496, 3, "");
             l.countDown();
             pr(" Latch counted down " + LocalTime.now());
         }
@@ -188,8 +189,8 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
 
     @Override
     public void positionEnd() {
-        holdingsMap.entrySet().stream().forEachOrdered(e -> pr("symb pos ",
-                ibContractToSymbol(e.getKey()), e.getValue()));
+//        holdingsMap.entrySet().stream().forEachOrdered(e -> pr("symb pos ",
+//                ibContractToSymbol(e.getKey()), e.getValue()));
         for (Contract c : holdingsMap.keySet()) {
             String k = ibContractToSymbol(c);
             pr("position end: ticker/symbol ", c.symbol(), k);
