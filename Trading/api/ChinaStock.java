@@ -1260,7 +1260,7 @@ public final class ChinaStock extends JPanel {
                 double lastDayPMOpen = detailed5mData.get(index).entrySet().stream()
                         .filter(e -> e.getKey().toLocalDate().equals(lastDay))
                         .filter(e -> e.getKey().toLocalTime().isAfter(ltof(12, 55))).findFirst().map(Entry::getValue)
-                        .map(SimpleBar::getClose).orElse(0.0);
+                        .map(SimpleBar::getOpen).orElse(0.0);
 
                 double lastDayClose = detailed5mData.get(index).lastEntry().getValue().getClose();
                 double lastDayPMChg = Math.round(10000d * (lastDayClose / lastDayPMOpen - 1)) / 100d;

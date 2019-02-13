@@ -82,8 +82,8 @@ public class ChinaOption extends JPanel implements Runnable {
 
     public static LocalDate frontExpiry = getExpiryDateAuto(1);
     public static LocalDate backExpiry = getExpiryDateAuto(2);
-    public static LocalDate thirdExpiry = getOptionExpiryDate(2018, Month.DECEMBER);
-    public static LocalDate fourthExpiry = getOptionExpiryDate(2019, Month.MARCH);
+    public static LocalDate thirdExpiry = getOptionExpiryDate(2019, Month.JUNE);
+    public static LocalDate fourthExpiry = getOptionExpiryDate(2019, Month.SEPTEMBER);
 
     private static String frontMonth = frontExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
     private static String backMonth = backExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
@@ -129,7 +129,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static RowFilter<OptionTableModel, Integer> otmFilter;
     static OptionTableModel model;
 
-    private ChinaOption() {
+    public ChinaOption() {
         otmFilter = new RowFilter<OptionTableModel, Integer>() {
             @Override
             public boolean include(Entry<? extends OptionTableModel, ? extends Integer> entry) {
@@ -530,11 +530,11 @@ public class ChinaOption extends JPanel implements Runnable {
         sorter = (TableRowSorter<OptionTableModel>) optionTable.getRowSorter();
         sorter.setRowFilter(otmFilter);
 
-        es.schedule(() -> {
-            pr(" loading vol hib and intraday vol ");
-            loadVolsHib(); // load previous
-            loadIntradayVolsHib(ChinaVolIntraday.getInstance()); // load intraday
-        }, 15, TimeUnit.SECONDS);
+//        es.schedule(() -> {
+//            pr(" loading vol hib and intraday vol ");
+//            loadVolsHib(); // load previous
+//            loadIntradayVolsHib(ChinaVolIntraday.getInstance()); // load intraday
+//        }, 15, TimeUnit.SECONDS);
     } // end of constructor
 
     private static void updateOptionSystemInfo(String text) {
@@ -792,10 +792,12 @@ public class ChinaOption extends JPanel implements Runnable {
     public static void refresh() {
         sesOption.scheduleAtFixedRate(() -> {
             LocalTime lt = LocalTime.now();
+
             if (lt.isAfter(LocalTime.of(9, 20)) && lt.isBefore(LocalTime.of(15, 15))) {
-                pr(" saving vols hib @", lt);
+                //pr(" saving vols hib @", lt);
                 saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance());
             }
+
             if (!savedVolEOD.get() && checkTimeRangeBool(lt, 15, 0, 15, 15)) {
                 saveVolsCSV();
                 saveHibEOD();
@@ -880,7 +882,8 @@ public class ChinaOption extends JPanel implements Runnable {
             }
             if (timeLapseVolAllExpiries.containsKey(expiryToCheck)) {
                 graphATMLapse.setVolLapse(timeLapseVolAllExpiries.get(expiryToCheck));
-                graphATMLapse.setGraphTitle(expiryToCheck.format(DateTimeFormatter.ofPattern("MM-dd")) + " ATM lapse ");
+                graphATMLapse.setGraphTitle(expiryToCheck.format(DateTimeFormatter.ofPattern("MM-dd"))
+                        + " ATM lapse ");
             }
             graphATMLapse.repaint();
         }
@@ -922,6 +925,7 @@ public class ChinaOption extends JPanel implements Runnable {
                     optionPriceMap.put(resName, Double.parseDouble(res1.get(2)));
                     optionPriceMap.put(resName, Double.parseDouble(res1.get(2)));
                     if (!optionListLive.contains(resName)) {
+                        pr(" adding option name ", resName, f.toString(), expiry);
                         optionListLive.add(resName);
                     }
 
@@ -1284,7 +1288,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
         ses.scheduleAtFixedRate(() -> {
             if (LocalTime.now().isAfter(LocalTime.of(9, 20)) && LocalTime.now().isBefore(LocalTime.of(15, 30))) {
-                pr(" saving vols hib ");
+                //pr(" saving vols hib ");
                 saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance());
             }
         }, 3, 1, TimeUnit.MINUTES);
