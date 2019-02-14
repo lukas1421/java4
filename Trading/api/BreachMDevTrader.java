@@ -96,9 +96,6 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
         Contract hk27 = getGenericContract("27", "SEHK", "HKD", Types.SecType.STK);
         registerContract(hk27);
 
-        Contract vix = getVIXContract();
-        registerContract(vix);
-
         Contract spy = getUSStockContract("SPY");
         registerContract(spy);
 
@@ -114,12 +111,23 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
         Contract jd = getUSStockContract("JD");
         registerContract(jd);
 
+        Contract pdd = getUSStockContract("PDD");
+        registerContract(pdd);
+
+
 
     }
 
     private static void registerContract(Contract ct) {
         contractPosMap.put(ct, 0.0);
         symbolPosMap.put(ibContractToSymbol(ct), 0.0);
+        liveData.put(ibContractToSymbol(ct), new ConcurrentSkipListMap<>());
+        orderBlocked.put(ibContractToSymbol(ct), new AtomicBoolean(false));
+    }
+
+    private static void registerContractPosition(Contract ct, double pos) {
+        contractPosMap.put(ct, pos);
+        symbolPosMap.put(ibContractToSymbol(ct), pos);
         liveData.put(ibContractToSymbol(ct), new ConcurrentSkipListMap<>());
         orderBlocked.put(ibContractToSymbol(ct), new AtomicBoolean(false));
     }
@@ -177,7 +185,7 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
         if (!contract.symbol().equals("USD")) {
-            registerContract(contract);
+            registerContractPosition(contract, position);
         }
     }
 
@@ -199,7 +207,7 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
         return (int) ChronoUnit.DAYS.between(LAST_YEAR_DAY, LocalDate.now());
     }
 
-    static double getDefaultSize(Contract ct) {
+    private static double getDefaultSize(Contract ct) {
 
         if (ct.secType() == Types.SecType.FUT) {
             return 1;
