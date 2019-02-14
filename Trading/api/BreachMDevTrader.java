@@ -23,10 +23,8 @@ import static api.AutoTraderMain.autoTradeID;
 import static api.AutoTraderMain.globalIdOrderMap;
 import static api.XuTraderHelper.*;
 import static client.Types.TimeInForce.IOC;
-import static util.AutoOrderType.BREACH_CUTTER;
 import static util.AutoOrderType.BREACH_MDEV;
 import static utility.Utility.*;
-import static utility.Utility.getLastYearLastDay;
 
 public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHandler {
 
@@ -37,7 +35,7 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
     private static final LocalDate LAST_YEAR_DAY = getLastYearLastDay();
 
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
-    static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
+    private static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
 
     private static final double DELTA_LIMIT = 200000.0;
@@ -61,7 +59,7 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
     private static volatile Map<String, AtomicBoolean> orderBlocked = new HashMap<>();
 
 
-    BreachMDevTrader() {
+    private BreachMDevTrader() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
@@ -84,10 +82,19 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
         }
 
         Contract activeXIN50Fut = AutoTraderXU.gettingActiveContract();
-        contractPosMap.put(activeXIN50Fut, 0.0);
-        symbolPosMap.put(ibContractToSymbol(activeXIN50Fut), 0.0);
-        liveData.put(ibContractToSymbol(activeXIN50Fut), new ConcurrentSkipListMap<>());
-        orderBlocked.put(ibContractToSymbol(activeXIN50Fut), new AtomicBoolean(false));
+        registerContract(activeXIN50Fut);
+//        contractPosMap.put(activeXIN50Fut, 0.0);
+//        symbolPosMap.put(ibContractToSymbol(activeXIN50Fut), 0.0);
+//        liveData.put(ibContractToSymbol(activeXIN50Fut), new ConcurrentSkipListMap<>());
+//        orderBlocked.put(ibContractToSymbol(activeXIN50Fut), new AtomicBoolean(false));
+    }
+
+    private static void registerContract(Contract ct) {
+        contractPosMap.put(ct, 0.0);
+        symbolPosMap.put(ibContractToSymbol(ct), 0.0);
+        liveData.put(ibContractToSymbol(ct), new ConcurrentSkipListMap<>());
+        orderBlocked.put(ibContractToSymbol(ct), new AtomicBoolean(false));
+
     }
 
 
@@ -262,11 +269,8 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
 
 
     public static void main(String[] args) {
-
         BreachMDevTrader trader = new BreachMDevTrader();
         trader.connectAndReqPos();
-
     }
-
 
 }
