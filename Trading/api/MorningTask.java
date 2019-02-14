@@ -119,7 +119,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
         es.scheduleAtFixedRate(() -> pr(" countDown ... "), 0, 1, TimeUnit.SECONDS);
         holdingsResult.forEach((symb, msg) -> pr("*", symb, msg));
-        es.schedule(() -> System.exit(0), 30, TimeUnit.SECONDS);
+        es.schedule(() -> System.exit(0), 15, TimeUnit.SECONDS);
     }
 
     // this

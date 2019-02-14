@@ -37,6 +37,9 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             ytdDayData = new ConcurrentSkipListMap<>(String::compareTo);
 
+    private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDateTime, Double>>
+            liveData = new ConcurrentSkipListMap<>();
+
     private static ApiController staticController;
 
     private volatile static Map<Contract, Double> holdingsMap =
@@ -336,6 +339,11 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         //pr("last symbol ", tt, symbol, price, t.format(f2));
         switch (tt) {
             case LAST:
+                if (!liveData.containsKey(symbol)) {
+                    liveData.put(symbol, new ConcurrentSkipListMap<>());
+                }
+                liveData.get(symbol).put(t, price);
+
                 if (ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
                     double yOpen = ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY).getValue().getOpen();

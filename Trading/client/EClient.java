@@ -2762,7 +2762,7 @@ public abstract class EClient {
 
         if (!m_extraAuth) {
             error(EClientErrors.NO_VALID_ID, EClientErrors.FAIL_SEND_VERIFYMESSAGE,
-                    "  Intent to authenticate needs to be expressed during initial connect request.");
+                    "  Intent to authenticate needs to be expressed during initial connectAndReqPos request.");
             return;
         }
 
@@ -2823,7 +2823,7 @@ public abstract class EClient {
 
         if (!m_extraAuth) {
             error(EClientErrors.NO_VALID_ID, EClientErrors.FAIL_SEND_VERIFYANDAUTHREQUEST,
-                    "  Intent to authenticate needs to be expressed during initial connect request.");
+                    "  Intent to authenticate needs to be expressed during initial connectAndReqPos request.");
             return;
         }
 

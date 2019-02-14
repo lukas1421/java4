@@ -130,7 +130,7 @@ public class ApiController implements EWrapper {
     public void connectAck() {
         //m_connected
         if (m_client.isAsyncEConnect()) {
-            pr(" connect Ack sstarting API ");
+            pr(" connectAndReqPos Ack sstarting API ");
             m_client.startAPI();
         }
     }
@@ -295,13 +295,13 @@ public class ApiController implements EWrapper {
         m_outLogger = outLogger;
     }
 
-    //	public void connect( String host, int port, int clientId) {
-//            pr(" in connect " + host + " " + port + " " + clientId);
+    //	public void connectAndReqPos( String host, int port, int clientId) {
+//            pr(" in connectAndReqPos " + host + " " + port + " " + clientId);
 //            m_client.eConnect(host, port, clientId);
 //            sendEOM();
 //	}
     public void connect(String host, int port, int clientId, String connectionOpts) {
-        pr(" ------------------in connect----------------- " + host + " " + port + " " + clientId);
+        pr(" ------------------in connectAndReqPos----------------- " + host + " " + port + " " + clientId);
         //pr(str(" checking connection BEFORE----", checkConnection(), port));
         m_client.eConnect(host, port, clientId);
         startMsgProcessingThread();

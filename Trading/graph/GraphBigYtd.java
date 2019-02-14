@@ -315,7 +315,7 @@ public class GraphBigYtd extends JComponent implements GraphFillable, MouseListe
             x += WIDTH_YTD;
         }
 
-        //connect ytd to today
+        //connectAndReqPos ytd to today
         if (tmY2 != null && tmYtd != null && tmY2.size() > 0 && tmYtd.size() > 0) {
             g.drawLine(x, closeY, x + 10, closeY);
             double retOPC = round(1000d * (tmYtd.firstEntry().getValue().getOpen() / tmY2.lastEntry().getValue().getClose() - 1)) / 10d;
@@ -409,7 +409,7 @@ public class GraphBigYtd extends JComponent implements GraphFillable, MouseListe
 //            System.out.println( " tmd today " + Optional.ofNullable(mainMap.firstEntry()));
 //            System.out.println( " tmd today all " + Optional.ofNullable(mainMap));
 //        }
-        //connect ytd to today
+        //connectAndReqPos ytd to today
         if (tm != null && tmYtd != null && tm.size() > 0 && tmYtd.size() > 0) {
             g.drawLine(x, closeY, x + 10, closeY);
             double retOPC = round(1000d * (tm.firstEntry().getValue().getOpen() / tmYtd.lastEntry().getValue().getClose() - 1)) / 10d;

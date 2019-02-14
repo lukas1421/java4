@@ -270,8 +270,8 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
             }
             x += WIDTHINDEX;
         }
-        //connect between y2 to y
-        //connect ytd to today
+        //connectAndReqPos between y2 to y
+        //connectAndReqPos ytd to today
         if (tmYtd != null && tmY2 != null && tmYtd.size() > 2 && tmY2.size() > 2) {
             g.drawLine(x, closeY, x + 10, closeY);
             double retOPC = Math.round(1000d * (tmYtd.firstEntry().getValue().getOpen() / tmY2.lastEntry().getValue().getClose() - 1)) / 10d;
@@ -337,7 +337,7 @@ public class GraphBigIndex extends JComponent implements GraphFillable {
             x += WIDTHINDEX;
         }
 
-        //connect ytd to today
+        //connectAndReqPos ytd to today
         if (tm != null && tmYtd != null && tm.size() > 2 && tmYtd.size() > 2) {
             g.drawLine(x, closeY, x + 10, closeY);
             double retOPC = Math.round(1000d * (tm.firstEntry().getValue().getOpen() / tmYtd.lastEntry().getValue().getClose() - 1)) / 10d;

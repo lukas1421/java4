@@ -64,7 +64,7 @@ public class USOvernightTrader extends JPanel {
 
 
     void connectToTWS(int port) {
-        System.out.println(" trying to connect");
+        System.out.println(" trying to connectAndReqPos");
         try {
             usApcon.connect("127.0.0.1", port, 101, "");
         } catch (Exception ex) {

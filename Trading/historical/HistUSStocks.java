@@ -329,11 +329,11 @@ public class HistUSStocks extends JPanel  {
     }
 
     private void connectToTWS() {
-        System.out.println(" trying to connect");
+        System.out.println(" trying to connectAndReqPos");
         try {
             apcon.connect("127.0.0.1", 7496, 101, "");
         } catch (Exception ex) {
-            System.out.println(" connect to tws failed ");
+            System.out.println(" connectAndReqPos to tws failed ");
         }
     }
 

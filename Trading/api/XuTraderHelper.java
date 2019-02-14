@@ -565,7 +565,7 @@ public class XuTraderHelper {
 //    }
 
     public static void connectToTWS() {
-        out.println(" trying to connect");
+        out.println(" trying to connectAndReqPos");
         try {
             AutoTraderMain.apcon.connect("127.0.0.1", 7496, 101, "");
         } catch (Exception ex) {

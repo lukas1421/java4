@@ -440,8 +440,8 @@ public final class ChinaMain implements IConnectionHandler {
         });
 
         // make initial connection to local host, port 7496, client id 0, 4001 is for with IBAPI
-        // m_controller.connect( "127.0.0.1", PORT_IBAPI, 0);
-        // m_controller.connect( "127.0.0.1", 7496, 0);
+        // m_controller.connectAndReqPos( "127.0.0.1", PORT_IBAPI, 0);
+        // m_controller.connectAndReqPos( "127.0.0.1", 7496, 0);
         CompletableFuture.runAsync(() -> {
             try {
                 M_CONTROLLER.connect("127.0.0.1", 4001, 0, "");
@@ -696,7 +696,7 @@ public final class ChinaMain implements IConnectionHandler {
             int port = Integer.parseInt(portNum);
             int clientId = Integer.parseInt(m_clientId.getText());
             pr(" port " + portNum + " client id " + clientId
-                    + " connect options " + m_connectOptionsTF.getText());
+                    + " connectAndReqPos options " + m_connectOptionsTF.getText());
             controller().connect(m_host.getText(), port, clientId, m_connectOptionsTF.getText());
         }
 

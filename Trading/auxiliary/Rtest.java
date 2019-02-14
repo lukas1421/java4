@@ -139,7 +139,7 @@ package auxiliary;
 //                c.close();
 //                System.out.println("Done.");
 //            } else {
-//                System.out.println("Rserve could not connect");
+//                System.out.println("Rserve could not connectAndReqPos");
 //            }
 //        } catch(Exception ex) {
 //            ex.printStackTrace();

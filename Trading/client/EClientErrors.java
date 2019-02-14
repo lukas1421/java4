@@ -4,7 +4,7 @@ public class EClientErrors {
 
     public static final int NO_VALID_ID = -1;
     static final CodeMsgPair ALREADY_CONNECTED = new CodeMsgPair(501, "Already connected.");
-    static final CodeMsgPair CONNECT_FAIL = new CodeMsgPair(502, "Couldn't connect to TWS. Confirm that \"Enable ActiveX and Socket Clients\" "
+    static final CodeMsgPair CONNECT_FAIL = new CodeMsgPair(502, "Couldn't connectAndReqPos to TWS. Confirm that \"Enable ActiveX and Socket Clients\" "
             + "is enabled and connection port is the same as \"Socket Port\" on the TWS \"Edit->Global Configuration...->API->Settings\" menu. "
             + "Live Trading ports: TWS: 7496; IB Gateway: 4001. Simulated Trading ports for new installations of version 954.1 or newer: "
             + "TWS: 7497; IB Gateway: 4002");

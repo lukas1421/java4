@@ -16,7 +16,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static api.AutoTraderMain.*;
@@ -32,12 +31,17 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
     private static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s");
     private static final LocalDate LAST_MONTH_DAY = getLastMonthLastDay();
     private static final LocalDate LAST_YEAR_DAY = getLastYearLastDay();
+
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             ytdDayData = new ConcurrentSkipListMap<>(String::compareTo);
-    private volatile static Map<Contract, Double> holdingsMap =
+
+    private volatile static Map<Contract, Double> contractPosMap =
             new TreeMap<>(Comparator.comparing(Utility::ibContractToSymbol));
+
     private volatile static Map<String, Double> symbolPosMap = new TreeMap<>(String::compareTo);
+
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
+
     public static Map<Currency, Double> fxMap = new HashMap<>();
 
     static File breachOutput = new File(TradingConstants.GLOBALPATH + "breachOrders.txt");
@@ -106,8 +110,24 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
         if (!contract.symbol().equals("USD")) {
-            holdingsMap.put(contract, position);
+            contractPosMap.put(contract, position);
             symbolPosMap.put(ibContractToSymbol(contract), position);
+        }
+    }
+
+    @Override
+    public void positionEnd() {
+//        contractPosMap.entrySet().stream().forEachOrdered(e -> pr("symb pos ",
+//                ibContractToSymbol(e.getKey()), e.getValue()));
+        for (Contract c : contractPosMap.keySet()) {
+            String k = ibContractToSymbol(c);
+            pr("position end: ticker/symbol ", c.symbol(), k);
+            ytdDayData.put(k, new ConcurrentSkipListMap<>());
+            if (!k.equals("USD")) {
+                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
+                        fillContract(c), BreachCutter::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
+            }
+            staticController.req1ContractLive(c, this, false);
         }
     }
 
@@ -119,7 +139,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         } else {
-            double size = holdingsMap.getOrDefault(c, 0.0);
+            double size = contractPosMap.getOrDefault(c, 0.0);
             if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
 
                 double yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
@@ -187,21 +207,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
 
     }
 
-    @Override
-    public void positionEnd() {
-//        holdingsMap.entrySet().stream().forEachOrdered(e -> pr("symb pos ",
-//                ibContractToSymbol(e.getKey()), e.getValue()));
-        for (Contract c : holdingsMap.keySet()) {
-            String k = ibContractToSymbol(c);
-            pr("position end: ticker/symbol ", c.symbol(), k);
-            ytdDayData.put(k, new ConcurrentSkipListMap<>());
-            if (!k.equals("USD")) {
-                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
-                        fillContract(c), BreachCutter::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
-            }
-            staticController.req1ContractLive(c, this, false);
-        }
-    }
+
 
     private static int getCalendarYtdDays() {
         return (int) ChronoUnit.DAYS.between(LAST_YEAR_DAY, LocalDate.now());
