@@ -224,5 +224,6 @@ public enum AutoOrderType {
     HK_POST_PMCUTOFF_LIQ,
 
     BREACH_CUTTER,
+    BREACH_MDEV,
     UNKNOWN
 }

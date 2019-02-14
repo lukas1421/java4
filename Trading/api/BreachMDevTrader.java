@@ -1,18 +1,13 @@
 package api;
 
 import auxiliary.SimpleBar;
-import client.Contract;
-import client.TickType;
-import client.Types;
+import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
 import handler.LiveHandler;
 import utility.Utility;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -23,21 +18,30 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static api.AutoTraderMain.autoTradeID;
+import static api.AutoTraderMain.globalIdOrderMap;
+import static api.XuTraderHelper.*;
+import static client.Types.TimeInForce.IOC;
+import static util.AutoOrderType.BREACH_CUTTER;
+import static util.AutoOrderType.BREACH_MDEV;
 import static utility.Utility.*;
 import static utility.Utility.getLastYearLastDay;
 
 public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHandler {
 
     private static ApiController staticController;
+    private static final DateTimeFormatter f1 = DateTimeFormatter.ofPattern("M-d H:mm");
     private static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s");
     private static final LocalDate LAST_MONTH_DAY = getLastMonthLastDay();
     private static final LocalDate LAST_YEAR_DAY = getLastYearLastDay();
 
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
+    static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
 
     private static final double DELTA_LIMIT = 200000.0;
     public static Map<Currency, Double> fxMap = new HashMap<>();
+    public static Map<String, Double> defaultSizeMap = new HashMap<>();
 
 
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
@@ -51,6 +55,9 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
 
     private volatile static Map<String, Double> symbolPosMap = new TreeMap<>(String::compareTo);
 
+    private Map<String, Double> bidMap = new HashMap<>();
+    private Map<String, Double> askMap = new HashMap<>();
+
 
     BreachMDevTrader() {
         String line;
@@ -59,6 +66,16 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 fxMap.put(Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
+            }
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "defaultSize.txt")))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                defaultSizeMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
             }
         } catch (IOException x) {
             x.printStackTrace();
@@ -171,17 +188,53 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
 
                     double yearOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
                     double monthOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
+                    double pos = symbolPosMap.get(symbol);
 
-                    pr("MDevTrader", symbol, "yOpen:" + yearOpen, "mOpen:" + monthOpen,
-                            liveData.get(symbol).firstKey().format(f2) + " " + liveData.get(symbol).firstEntry().getValue() + "(" +
+                    double firstValue = liveData.get(symbol).firstEntry().getValue();
+                    double lastValue = liveData.get(symbol).lastEntry().getValue();
+                    double defaultS = defaultSizeMap.getOrDefault(symbol, 0.0);
+
+                    pr("MDev", symbol, pos, "DefaultS:", defaultS, "yOpen:" + yearOpen, "mOpen:" + monthOpen,
+                            liveData.get(symbol).firstKey().format(f1) + " " + liveData.get(symbol).firstEntry().getValue() + "(" +
                                     Math.round(10000d * (liveData.get(symbol).firstEntry().getValue() / monthOpen - 1)) / 100d + "%)",
-                            liveData.get(symbol).lastKey().format(f2) + " " + liveData.get(symbol).lastEntry().getValue() + "(" +
+                            liveData.get(symbol).lastKey().format(f1) + " " + liveData.get(symbol).lastEntry().getValue() + "(" +
                                     Math.round(10000d * (liveData.get(symbol).lastEntry().getValue() / monthOpen - 1)) / 100d + "%)");
 
-
+                    if (firstValue < monthOpen && lastValue > monthOpen) {
+                        if (pos <= 0) {
+                            if (askMap.getOrDefault(symbol, 0.0) != 0.0
+                                    && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
+                                int id = autoTradeID.incrementAndGet();
+                                Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos) + defaultS, IOC);
+                                globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_MDEV));
+                                staticController.placeOrModifyOrder(ct, o,
+                                        new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                                outputDetailedGen("*********", breachMDevOutput);
+                                outputDetailedGen(str("NEW", o.orderId(), "Breach MDEV BUY #:",
+                                        globalIdOrderMap.get(id), "pos", pos), breachMDevOutput);
+                            } else if (firstValue > monthOpen && lastValue < monthOpen) {
+                                if (pos >= 0) {
+                                    if (price <= monthOpen && bidMap.getOrDefault(symbol, 0.0) != 0.0
+                                            && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
+                                        int id = autoTradeID.incrementAndGet();
+                                        Order o = placeOfferLimitTIF(bidMap.get(symbol), pos + defaultS, IOC);
+                                        globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_MDEV));
+                                        staticController.placeOrModifyOrder(ct, o,
+                                                new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                                        outputDetailedGen("*********", breachMDevOutput);
+                                        outputDetailedGen(str("NEW", o.orderId(), "Breach MDEV sell:"
+                                                , globalIdOrderMap.get(id)), breachMDevOutput);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+            case BID:
+                bidMap.put(symbol, price);
+            case ASK:
+                askMap.put(symbol, price);
         }
-
     }
 
     @Override
