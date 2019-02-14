@@ -943,4 +943,32 @@ public class Utility {
         }
         return c;
     }
+
+    public static Contract getGenericContract(String symb, String exch, String curr, Types.SecType type) {
+        Contract ct = new Contract();
+        ct.symbol(symb);
+        ct.exchange(exch);
+        ct.currency(curr);
+        ct.secType(type);
+        return ct;
+    }
+
+    public static Contract getUSStockContract(String symb) {
+        Contract ct = new Contract();
+        ct.symbol(symb);
+        ct.exchange("SMART");
+        ct.currency("USD");
+        ct.secType(Types.SecType.STK);
+        return ct;
+    }
+
+    public static Contract getVIXContract() {
+        Contract ct = new Contract();
+        ct.symbol("VIX");
+        ct.exchange("CFE");
+        ct.currency("USD");
+        ct.secType(Types.SecType.FUT);
+        ct.lastTradeDateOrContractMonth("20190213");
+        return ct;
+    }
 }

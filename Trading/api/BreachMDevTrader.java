@@ -83,6 +83,38 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
 
         Contract activeXIN50Fut = AutoTraderXU.gettingActiveContract();
         registerContract(activeXIN50Fut);
+
+        Contract hk2828 = getGenericContract("2828", "SEHK", "HKD", Types.SecType.STK);
+        registerContract(hk2828);
+
+        Contract hk2800 = getGenericContract("2800", "SEHK", "HKD", Types.SecType.STK);
+        registerContract(hk2800);
+
+        Contract hk700 = getGenericContract("700", "SEHK", "HKD", Types.SecType.STK);
+        registerContract(hk700);
+
+        Contract hk27 = getGenericContract("27", "SEHK", "HKD", Types.SecType.STK);
+        registerContract(hk27);
+
+        Contract vix = getVIXContract();
+        registerContract(vix);
+
+        Contract spy = getUSStockContract("SPY");
+        registerContract(spy);
+
+        Contract qqq = getUSStockContract("QQQ");
+        registerContract(qqq);
+
+        Contract baba = getUSStockContract("BABA");
+        registerContract(baba);
+
+        Contract fb = getUSStockContract("FB");
+        registerContract(fb);
+
+        Contract jd = getUSStockContract("JD");
+        registerContract(jd);
+
+
     }
 
     private static void registerContract(Contract ct) {
@@ -90,7 +122,6 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
         symbolPosMap.put(ibContractToSymbol(ct), 0.0);
         liveData.put(ibContractToSymbol(ct), new ConcurrentSkipListMap<>());
         orderBlocked.put(ibContractToSymbol(ct), new AtomicBoolean(false));
-
     }
 
 
@@ -105,7 +136,6 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
             pr(" using port 4001");
             ap.connect("127.0.0.1", 4001, 5, "");
             connectionStatus = true;
-            //pr(" connection : status is true ");
             l.countDown();
             pr(" Latch counted down 4001 " + LocalTime.now());
         } catch (IllegalStateException ex) {
@@ -169,6 +199,16 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
         return (int) ChronoUnit.DAYS.between(LAST_YEAR_DAY, LocalDate.now());
     }
 
+    static double getDefaultSize(Contract ct) {
+
+        if (ct.secType() == Types.SecType.FUT) {
+            return 1;
+        } else if (ct.secType() == Types.SecType.STK && ct.currency().equalsIgnoreCase("USD")) {
+            return 100.0;
+        }
+        return 0.0;
+    }
+
 
     @Override
     public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
@@ -186,7 +226,7 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
 
                     double firstValue = liveData.get(symbol).firstEntry().getValue();
                     double lastValue = liveData.get(symbol).lastEntry().getValue();
-                    double defaultS = defaultSizeMap.getOrDefault(symbol, 0.0);
+                    double defaultS = defaultSizeMap.getOrDefault(symbol, getDefaultSize(ct));
                     boolean orderBlockStatus = orderBlocked.get(symbol).get();
 
                     pr("MDev", symbol, pos, "block:" + orderBlockStatus,

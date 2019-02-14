@@ -65,63 +65,51 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         }
 
         Contract activeXIN50Fut = AutoTraderXU.gettingActiveContract();
-        holdingsMap.put(activeXIN50Fut, 0.0);
-        symbolPosMap.put(ibContractToSymbol(activeXIN50Fut), 0.0);
+        registerContract(activeXIN50Fut);
 
         Contract oil = getOilContract();
-        holdingsMap.put(oil, 0.0);
-        symbolPosMap.put(ibContractToSymbol(oil), 0.0);
+        registerContract(oil);
 
         Contract hk2828 = getGenericContract("2828", "SEHK", "HKD", Types.SecType.STK);
-        holdingsMap.put(hk2828, 0.0);
-        symbolPosMap.put(ibContractToSymbol(hk2828), 0.0);
+        registerContract(hk2828);
 
         Contract hk2800 = getGenericContract("2800", "SEHK", "HKD", Types.SecType.STK);
-        holdingsMap.put(hk2800, 0.0);
-        symbolPosMap.put(ibContractToSymbol(hk2800), 0.0);
+        registerContract(hk2800);
 
         Contract hk700 = getGenericContract("700", "SEHK", "HKD", Types.SecType.STK);
-        holdingsMap.put(hk700, 0.0);
-        symbolPosMap.put(ibContractToSymbol(hk700), 0.0);
+        registerContract(hk700);
 
         Contract hk27 = getGenericContract("27", "SEHK", "HKD", Types.SecType.STK);
-        holdingsMap.put(hk27, 0.0);
-        symbolPosMap.put(ibContractToSymbol(hk27), 0.0);
+        registerContract(hk27);
 
         Contract vix = getVIXContract();
-        holdingsMap.put(vix, 0.0);
-        symbolPosMap.put(ibContractToSymbol(vix), 0.0);
+        registerContract(vix);
 
         Contract spy = getUSStockContract("SPY");
-        holdingsMap.put(spy, 0.0);
-        symbolPosMap.put(ibContractToSymbol(spy), 0.0);
+        registerContract(spy);
 
         Contract qqq = getUSStockContract("QQQ");
-        holdingsMap.put(qqq, 0.0);
-        symbolPosMap.put(ibContractToSymbol(qqq), 0.0);
+        registerContract(qqq);
 
         Contract baba = getUSStockContract("BABA");
-        holdingsMap.put(baba, 0.0);
-        symbolPosMap.put(ibContractToSymbol(baba), 0.0);
+        registerContract(baba);
 
         Contract fb = getUSStockContract("FB");
-        holdingsMap.put(fb, 0.0);
-        symbolPosMap.put(ibContractToSymbol(fb), 0.0);
-
+        registerContract(fb);
 
         Contract jd = getUSStockContract("JD");
-        holdingsMap.put(jd, 0.0);
-        symbolPosMap.put(ibContractToSymbol(jd), 0.0);
+        registerContract(jd);
 
         Contract nflx = getUSStockContract("NFLX");
-        holdingsMap.put(nflx, 0.0);
-        symbolPosMap.put(ibContractToSymbol(nflx), 0.0);
+        registerContract(nflx);
 
         Contract aapl = getUSStockContract("AAPL");
-        holdingsMap.put(aapl, 0.0);
-        symbolPosMap.put(ibContractToSymbol(aapl), 0.0);
+        registerContract(aapl);
+    }
 
-
+    private void registerContract(Contract ct) {
+        holdingsMap.put(ct, 0.0);
+        symbolPosMap.put(ibContractToSymbol(ct), 0.0);
     }
 
     private static Contract getOilContract() {
@@ -131,34 +119,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         ct.currency("USD");
         ct.secType(Types.SecType.FUT);
         ct.lastTradeDateOrContractMonth("20190220");
-        return ct;
-    }
-
-    private static Contract getVIXContract() {
-        Contract ct = new Contract();
-        ct.symbol("VIX");
-        ct.exchange("CFE");
-        ct.currency("USD");
-        ct.secType(Types.SecType.FUT);
-        ct.lastTradeDateOrContractMonth("20190213");
-        return ct;
-    }
-
-    private Contract getUSStockContract(String symb) {
-        Contract ct = new Contract();
-        ct.symbol(symb);
-        ct.exchange("SMART");
-        ct.currency("USD");
-        ct.secType(Types.SecType.STK);
-        return ct;
-    }
-
-    private Contract getGenericContract(String symb, String exch, String curr, Types.SecType type) {
-        Contract ct = new Contract();
-        ct.symbol(symb);
-        ct.exchange(exch);
-        ct.currency(curr);
-        ct.secType(type);
         return ct;
     }
 
