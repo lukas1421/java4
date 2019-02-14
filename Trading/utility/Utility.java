@@ -933,4 +933,14 @@ public class Utility {
         }
         return 50;
     }
+
+    public static Contract fillContract(Contract c) {
+        if (c.symbol().equals("XINA50")) {
+            c.exchange("SGX");
+        }
+        if (c.currency().equals("USD") && c.secType().equals(Types.SecType.STK)) {
+            c.exchange("SMART");
+        }
+        return c;
+    }
 }

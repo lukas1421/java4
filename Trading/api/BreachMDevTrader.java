@@ -83,10 +83,6 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
 
         Contract activeXIN50Fut = AutoTraderXU.gettingActiveContract();
         registerContract(activeXIN50Fut);
-//        contractPosMap.put(activeXIN50Fut, 0.0);
-//        symbolPosMap.put(ibContractToSymbol(activeXIN50Fut), 0.0);
-//        liveData.put(ibContractToSymbol(activeXIN50Fut), new ConcurrentSkipListMap<>());
-//        orderBlocked.put(ibContractToSymbol(activeXIN50Fut), new AtomicBoolean(false));
     }
 
     private static void registerContract(Contract ct) {
@@ -151,11 +147,7 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
         if (!contract.symbol().equals("USD")) {
-            String symbol = ibContractToSymbol(contract);
-            contractPosMap.put(contract, position);
-            symbolPosMap.put(symbol, position);
-            liveData.put(symbol, new ConcurrentSkipListMap<>());
-            orderBlocked.put(symbol, new AtomicBoolean(false));
+            registerContract(contract);
         }
     }
 
@@ -175,16 +167,6 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
 
     private static int getCalendarYtdDays() {
         return (int) ChronoUnit.DAYS.between(LAST_YEAR_DAY, LocalDate.now());
-    }
-
-    private static Contract fillContract(Contract c) {
-        if (c.symbol().equals("XINA50")) {
-            c.exchange("SGX");
-        }
-        if (c.currency().equals("USD") && c.secType().equals(Types.SecType.STK)) {
-            c.exchange("SMART");
-        }
-        return c;
     }
 
 
@@ -246,8 +228,6 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
                                 }
                             }
                         }
-                    } else {
-
                     }
                 }
             case BID:
