@@ -16,6 +16,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static api.AutoTraderMain.autoTradeID;
@@ -57,6 +58,7 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
 
     private Map<String, Double> bidMap = new HashMap<>();
     private Map<String, Double> askMap = new HashMap<>();
+    private static volatile Map<String, AtomicBoolean> orderBlocked = new HashMap<>();
 
 
     BreachMDevTrader() {
@@ -85,6 +87,7 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
         contractPosMap.put(activeXIN50Fut, 0.0);
         symbolPosMap.put(ibContractToSymbol(activeXIN50Fut), 0.0);
         liveData.put(ibContractToSymbol(activeXIN50Fut), new ConcurrentSkipListMap<>());
+        orderBlocked.put(ibContractToSymbol(activeXIN50Fut), new AtomicBoolean(false));
     }
 
 
@@ -141,9 +144,11 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
         if (!contract.symbol().equals("USD")) {
+            String symbol = ibContractToSymbol(contract);
             contractPosMap.put(contract, position);
-            symbolPosMap.put(ibContractToSymbol(contract), position);
-            liveData.put(ibContractToSymbol(contract), new ConcurrentSkipListMap<>());
+            symbolPosMap.put(symbol, position);
+            liveData.put(symbol, new ConcurrentSkipListMap<>());
+            orderBlocked.put(symbol, new AtomicBoolean(false));
         }
     }
 
@@ -186,48 +191,56 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
                 if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
 
-                    double yearOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
-                    double monthOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
+                    double yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
+                    double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
                     double pos = symbolPosMap.get(symbol);
 
                     double firstValue = liveData.get(symbol).firstEntry().getValue();
                     double lastValue = liveData.get(symbol).lastEntry().getValue();
                     double defaultS = defaultSizeMap.getOrDefault(symbol, 0.0);
+                    boolean orderBlockStatus = orderBlocked.get(symbol).get();
 
-                    pr("MDev", symbol, pos, "DefaultS:", defaultS, "yOpen:" + yearOpen, "mOpen:" + monthOpen,
-                            liveData.get(symbol).firstKey().format(f1) + " " + liveData.get(symbol).firstEntry().getValue() + "(" +
-                                    Math.round(10000d * (liveData.get(symbol).firstEntry().getValue() / monthOpen - 1)) / 100d + "%)",
-                            liveData.get(symbol).lastKey().format(f1) + " " + liveData.get(symbol).lastEntry().getValue() + "(" +
-                                    Math.round(10000d * (liveData.get(symbol).lastEntry().getValue() / monthOpen - 1)) / 100d + "%)");
+                    pr("MDev", symbol, pos, "block:" + orderBlockStatus,
+                            "DefaultS:", defaultS, "yOpen:" + yOpen, "mOpen:" + mOpen,
+                            "FV:", liveData.get(symbol).firstKey().format(f1) + " " + liveData.get(symbol).firstEntry().getValue() + "(" +
+                                    Math.round(1000d * (liveData.get(symbol).firstEntry().getValue() / mOpen - 1)) / 10d + "%)",
+                            "LV:", liveData.get(symbol).lastKey().format(f1) + " " + liveData.get(symbol).lastEntry().getValue() + "(" +
+                                    Math.round(1000d * (liveData.get(symbol).lastEntry().getValue() / mOpen - 1)) / 10d + "%)");
 
-                    if (firstValue < monthOpen && lastValue > monthOpen) {
-                        if (pos <= 0) {
-                            if (askMap.getOrDefault(symbol, 0.0) != 0.0
-                                    && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
-                                int id = autoTradeID.incrementAndGet();
-                                Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos) + defaultS, IOC);
-                                globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_MDEV));
-                                staticController.placeOrModifyOrder(ct, o,
-                                        new ApiController.IOrderHandler.DefaultOrderHandler(id));
-                                outputDetailedGen("*********", breachMDevOutput);
-                                outputDetailedGen(str("NEW", o.orderId(), "Breach MDEV BUY #:",
-                                        globalIdOrderMap.get(id), "pos", pos), breachMDevOutput);
-                            } else if (firstValue > monthOpen && lastValue < monthOpen) {
-                                if (pos >= 0) {
-                                    if (price <= monthOpen && bidMap.getOrDefault(symbol, 0.0) != 0.0
-                                            && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
-                                        int id = autoTradeID.incrementAndGet();
-                                        Order o = placeOfferLimitTIF(bidMap.get(symbol), pos + defaultS, IOC);
-                                        globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_MDEV));
-                                        staticController.placeOrModifyOrder(ct, o,
-                                                new ApiController.IOrderHandler.DefaultOrderHandler(id));
-                                        outputDetailedGen("*********", breachMDevOutput);
-                                        outputDetailedGen(str("NEW", o.orderId(), "Breach MDEV sell:"
-                                                , globalIdOrderMap.get(id)), breachMDevOutput);
+                    if (!orderBlocked.get(symbol).get()) {
+                        if (firstValue < mOpen && lastValue > mOpen) {
+                            if (pos <= 0) {
+                                if (askMap.getOrDefault(symbol, 0.0) != 0.0
+                                        && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
+                                    orderBlocked.get(symbol).set(true);
+                                    int id = autoTradeID.incrementAndGet();
+                                    Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos) + defaultS, IOC);
+                                    globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_MDEV));
+                                    staticController.placeOrModifyOrder(ct, o,
+                                            new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                                    outputDetailedGen("*********", breachMDevOutput);
+                                    outputDetailedGen(str("NEW", o.orderId(), "Breach MDEV BUY:",
+                                            globalIdOrderMap.get(id), "pos", pos), breachMDevOutput);
+                                } else if (firstValue > mOpen && lastValue < mOpen) {
+                                    if (pos >= 0) {
+                                        if (bidMap.getOrDefault(symbol, 0.0) != 0.0
+                                                && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
+                                            orderBlocked.get(symbol).set(true);
+                                            int id = autoTradeID.incrementAndGet();
+                                            Order o = placeOfferLimitTIF(bidMap.get(symbol), pos + defaultS, IOC);
+                                            globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_MDEV));
+                                            staticController.placeOrModifyOrder(ct, o,
+                                                    new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                                            outputDetailedGen("*********", breachMDevOutput);
+                                            outputDetailedGen(str("NEW", o.orderId(), "Breach MDEV SELL:"
+                                                    , globalIdOrderMap.get(id)), breachMDevOutput);
+                                        }
                                     }
                                 }
                             }
                         }
+                    } else {
+
                     }
                 }
             case BID:
