@@ -37,11 +37,9 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
     private static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
-
     private static final double DELTA_LIMIT = 200000.0;
     public static Map<Currency, Double> fxMap = new HashMap<>();
     public static Map<String, Double> defaultSizeMap = new HashMap<>();
-
 
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             ytdDayData = new ConcurrentSkipListMap<>(String::compareTo);
