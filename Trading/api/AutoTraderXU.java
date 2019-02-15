@@ -218,7 +218,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
 
     private static final int MAX_HALFHOUR_SIZE = 2;
-    private static final int MAX_QUARTERHOUR_SIZE = 2;
 
     //profit taker
     private static final double hiThresh = 0.02;
@@ -4179,7 +4178,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     @Override
     public void handle(int orderId, int errorCode, String errorMsg) {
         //outputDetailedXU(symbol,str("ERROR LIVE ID:", orderId, "code", errorCode, "MSG", errorMsg));
-        outputToError(str("ERROR LIVE ID:", orderId, "code", errorCode, "MSG", errorMsg));
+        outputToError(str("ERROR LIVE ORDER HANDLER ID:"
+                , LocalTime.now(), orderId, "code", errorCode, "MSG", errorMsg));
 
         if (errorCode != 504 || LocalTime.now().getSecond() < 5) {
             updateLog(" handle error code " + errorCode + " message " + errorMsg);
