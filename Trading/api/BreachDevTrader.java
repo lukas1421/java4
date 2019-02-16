@@ -26,7 +26,7 @@ import static client.Types.TimeInForce.IOC;
 import static util.AutoOrderType.BREACH_MDEV;
 import static utility.Utility.*;
 
-public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHandler {
+public class BreachDevTrader implements LiveHandler, ApiController.IPositionHandler {
 
     private static ApiController staticController;
     private static final DateTimeFormatter f1 = DateTimeFormatter.ofPattern("M-d H:mm");
@@ -57,7 +57,7 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
     private static volatile Map<String, AtomicBoolean> orderBlocked = new HashMap<>();
 
 
-    private BreachMDevTrader() {
+    private BreachDevTrader() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
@@ -111,7 +111,6 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
 
         Contract pdd = getUSStockContract("PDD");
         registerContract(pdd);
-
 
 
     }
@@ -195,7 +194,7 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
             ytdDayData.put(k, new ConcurrentSkipListMap<>());
             if (!k.equals("USD")) {
                 staticController.reqHistDayData(ibStockReqId.addAndGet(5),
-                        fillContract(c), BreachMDevTrader::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
+                        fillContract(c), BreachDevTrader::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
             }
             staticController.req1ContractLive(c, this, false);
         }
@@ -248,8 +247,9 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
                                 if (askMap.getOrDefault(symbol, 0.0) != 0.0
                                         && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                                     orderBlocked.get(symbol).set(true);
+                                    double size = Math.abs(pos) + (price > yOpen ? defaultS : 0);
                                     int id = autoTradeID.incrementAndGet();
-                                    Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos) + defaultS, IOC);
+                                    Order o = placeBidLimitTIF(askMap.get(symbol), size, IOC);
                                     globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_MDEV));
                                     staticController.placeOrModifyOrder(ct, o,
                                             new ApiController.IOrderHandler.DefaultOrderHandler(id));
@@ -261,8 +261,9 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
                                         if (bidMap.getOrDefault(symbol, 0.0) != 0.0
                                                 && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
                                             orderBlocked.get(symbol).set(true);
+                                            double size = pos + (price < yOpen ? defaultS : 0);
                                             int id = autoTradeID.incrementAndGet();
-                                            Order o = placeOfferLimitTIF(bidMap.get(symbol), pos + defaultS, IOC);
+                                            Order o = placeOfferLimitTIF(bidMap.get(symbol), size, IOC);
                                             globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_MDEV));
                                             staticController.placeOrModifyOrder(ct, o,
                                                     new ApiController.IOrderHandler.DefaultOrderHandler(id));
@@ -295,7 +296,7 @@ public class BreachMDevTrader implements LiveHandler, ApiController.IPositionHan
 
 
     public static void main(String[] args) {
-        BreachMDevTrader trader = new BreachMDevTrader();
+        BreachDevTrader trader = new BreachDevTrader();
         trader.connectAndReqPos();
     }
 
