@@ -6,11 +6,13 @@ import util.AutoOrderType;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.str;
 
 public class OrderAugmented {
 
-    private String symbol;
+    private Contract contract;
+    //private String symbol;
     private final LocalDateTime orderTime;
     private Order order;
     private String msg;
@@ -20,8 +22,8 @@ public class OrderAugmented {
     private LocalDateTime finalActionTime;
 
 
-    public OrderAugmented(String name, LocalDateTime t, Order o, String m, AutoOrderType tt) {
-        symbol = name;
+    public OrderAugmented(Contract ct, LocalDateTime t, Order o, String m, AutoOrderType tt) {
+        contract = ct;
         orderTime = t;
         order = o;
         msg = m;
@@ -31,8 +33,8 @@ public class OrderAugmented {
         primaryOrder.set(true);
     }
 
-    public OrderAugmented(String name, LocalDateTime t, Order o, AutoOrderType tt) {
-        symbol = name;
+    public OrderAugmented(Contract ct, LocalDateTime t, Order o, AutoOrderType tt) {
+        contract = ct;
         orderTime = t;
         order = o;
         msg = "";
@@ -42,8 +44,8 @@ public class OrderAugmented {
         primaryOrder.set(true);
     }
 
-    public OrderAugmented(String symb, LocalDateTime t, Order o, AutoOrderType tt, boolean primary) {
-        symbol = symb;
+    public OrderAugmented(Contract ct, LocalDateTime t, Order o, AutoOrderType tt, boolean primary) {
+        contract = ct;
         orderTime = t;
         order = o;
         msg = "";
@@ -79,7 +81,7 @@ public class OrderAugmented {
     }
 
     public OrderAugmented() {
-        symbol = "";
+        contract = new Contract();
         orderTime = LocalDateTime.MIN;
         order = new Order();
         msg = "";
@@ -97,8 +99,12 @@ public class OrderAugmented {
         return order;
     }
 
+    public Contract getContract() {
+        return contract;
+    }
+
     public String getSymbol() {
-        return symbol;
+        return ibContractToSymbol(contract);
     }
 
     public String getMsg() {
@@ -123,8 +129,8 @@ public class OrderAugmented {
 
     @Override
     public String toString() {
-        return str(symbol, "T: ", orderTime.toLocalTime(),
-                "Order:", order, "msg:", msg, "Tradetype", orderType,
+        return str(ibContractToSymbol(contract), "T: ", orderTime.toLocalTime(),
+                "Order:", order, "msg:", msg, "Trade type", orderType,
                 "Status:", augmentedOrderStatus);
     }
 }

@@ -80,7 +80,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
 
                 int newID = autoTradeID.incrementAndGet();
                 controller.placeOrModifyOrder(ct, o, new GuaranteeUSHandler(primaryID, newID, controller));
-                globalIdOrderMap.put(newID, new OrderAugmented(symbol, LocalDateTime.now(), o,
+                globalIdOrderMap.put(newID, new OrderAugmented(ct, LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
 //                outputDetailedUS(str(globalIdOrderMap.get(primaryID).getOrder().orderId(),

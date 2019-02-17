@@ -79,8 +79,7 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
 
                 int id = AutoTraderMain.autoTradeID.incrementAndGet();
                 controller.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(primaryID, id, controller));
-                globalIdOrderMap.put(id, new OrderAugmented(
-                        ibContractToSymbol(activeFutCt), LocalDateTime.now(), o,
+                globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
                 outputToAll(str(globalIdOrderMap.get(primaryID).getOrder().orderId(),

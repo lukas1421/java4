@@ -4,6 +4,7 @@ import auxiliary.SimpleBar;
 import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
+import handler.GuaranteeDevHandler;
 import handler.LiveHandler;
 import utility.Utility;
 
@@ -52,9 +53,25 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
     private volatile static Map<String, Double> symbolPosMap = new TreeMap<>(String::compareTo);
 
-    private Map<String, Double> bidMap = new HashMap<>();
-    private Map<String, Double> askMap = new HashMap<>();
+    private static Map<String, Double> bidMap = new HashMap<>();
+    private static Map<String, Double> askMap = new HashMap<>();
     private static volatile Map<String, AtomicBoolean> orderBlocked = new HashMap<>();
+
+
+    public static double getLiveData(String symb) {
+        if (liveData.containsKey(symb) && liveData.get(symb).size() > 0) {
+            return liveData.get(symb).lastEntry().getValue();
+        }
+        return 0.0;
+    }
+
+    public static double getBid(String symb) {
+        return bidMap.getOrDefault(symb, 0.0);
+    }
+
+    public static double getAsk(String symb) {
+        return askMap.getOrDefault(symb, 0.0);
+    }
 
 
     private BreachDevTrader() {
@@ -250,9 +267,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                     double size = Math.abs(pos) + (price > yOpen ? defaultS : 0);
                                     int id = autoTradeID.incrementAndGet();
                                     Order o = placeBidLimitTIF(askMap.get(symbol), size, IOC);
-                                    globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_MDEV));
+                                    globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_MDEV));
                                     staticController.placeOrModifyOrder(ct, o,
-                                            new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                                            new GuaranteeDevHandler(id, staticController));
                                     outputDetailedGen("*********", breachMDevOutput);
                                     outputDetailedGen(str("NEW", o.orderId(), "Breach MDEV BUY:",
                                             globalIdOrderMap.get(id), "pos", pos), breachMDevOutput);
@@ -264,9 +281,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                             double size = Math.round(pos) + (price < yOpen ? defaultS : 0);
                                             int id = autoTradeID.incrementAndGet();
                                             Order o = placeOfferLimitTIF(bidMap.get(symbol), size, IOC);
-                                            globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_MDEV));
+                                            globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_MDEV));
                                             staticController.placeOrModifyOrder(ct, o,
-                                                    new ApiController.IOrderHandler.DefaultOrderHandler(id));
+                                                    new GuaranteeDevHandler(id, staticController));
                                             outputDetailedGen("*********", breachMDevOutput);
                                             outputDetailedGen(str("NEW", o.orderId(), "Breach MDEV SELL:"
                                                     , globalIdOrderMap.get(id)), breachMDevOutput);

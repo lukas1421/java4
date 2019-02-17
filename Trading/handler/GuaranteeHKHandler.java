@@ -76,7 +76,7 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
 
                 int id = autoTradeID.incrementAndGet();
                 controller.placeOrModifyOrder(ct, o, new GuaranteeHKHandler(id, controller));
-                globalIdOrderMap.put(id, new OrderAugmented(symbol, LocalDateTime.now(), o,
+                globalIdOrderMap.put(id, new OrderAugmented(ct, LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 
                 outputDetailedHK(symbol, str(prevOrder.orderId(), "->", o.orderId(),

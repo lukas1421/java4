@@ -249,7 +249,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                                 && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                             int id = autoTradeID.incrementAndGet();
                             Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos), IOC);
-                            globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
+                            globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                             staticController.placeOrModifyOrder(ct, o,
                                     new ApiController.IOrderHandler.DefaultOrderHandler(id));
                             outputDetailedGen("*********", breachOutput);
@@ -261,7 +261,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                                 && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
                             int id = autoTradeID.incrementAndGet();
                             Order o = placeOfferLimitTIF(bidMap.get(symbol), pos, IOC);
-                            globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_CUTTER));
+                            globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                             staticController.placeOrModifyOrder(ct, o,
                                     new ApiController.IOrderHandler.DefaultOrderHandler(id));
                             outputDetailedGen("*********", breachOutput);
