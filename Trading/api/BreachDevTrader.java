@@ -242,8 +242,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                     Math.round(1000d * (liveData.get(symbol).lastEntry().getValue() / mOpen - 1)) / 10d + "%)");
 
                     if (!orderBlocked.get(symbol).get()) {
-                        if (firstValue < mOpen && lastValue > mOpen) {
-                            if (pos <= 0) {
+                        if (firstValue < mOpen && price > mOpen) {
+                            if (pos <= 0 && (pos < 0 || price > yOpen)) {
                                 if (askMap.getOrDefault(symbol, 0.0) != 0.0
                                         && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                                     orderBlocked.get(symbol).set(true);
@@ -256,12 +256,12 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                     outputDetailedGen("*********", breachMDevOutput);
                                     outputDetailedGen(str("NEW", o.orderId(), "Breach MDEV BUY:",
                                             globalIdOrderMap.get(id), "pos", pos), breachMDevOutput);
-                                } else if (firstValue > mOpen && lastValue < mOpen) {
-                                    if (pos >= 0) {
+                                } else if (firstValue > mOpen && price < mOpen) {
+                                    if (pos >= 0 && (pos > 0 || price < yOpen)) {
                                         if (bidMap.getOrDefault(symbol, 0.0) != 0.0
                                                 && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
                                             orderBlocked.get(symbol).set(true);
-                                            double size = pos + (price < yOpen ? defaultS : 0);
+                                            double size = Math.round(pos) + (price < yOpen ? defaultS : 0);
                                             int id = autoTradeID.incrementAndGet();
                                             Order o = placeOfferLimitTIF(bidMap.get(symbol), size, IOC);
                                             globalIdOrderMap.put(id, new OrderAugmented(symbol, t, o, BREACH_MDEV));
