@@ -247,16 +247,17 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     double pos = symbolPosMap.get(symbol);
 
                     double firstValue = liveData.get(symbol).firstEntry().getValue();
-                    double lastValue = liveData.get(symbol).lastEntry().getValue();
                     double defaultS = defaultSizeMap.getOrDefault(symbol, getDefaultSize(ct));
                     boolean orderBlockStatus = orderBlocked.get(symbol).get();
 
-                    pr("MDev", symbol, pos, "block:" + orderBlockStatus,
-                            "DefaultS:", defaultS, "yOpen:" + yOpen, "mOpen:" + mOpen,
+                    pr("Dev", symbol, pos, "block?" + orderBlockStatus,
+                            "Default:", defaultS, "yOpen:" + yOpen
+                                    + "(" + Math.round(1000d * (price / yOpen - 1)) / 10d + "%)"
+                            , "mOpen:" + mOpen,
                             "FV:", liveData.get(symbol).firstKey().format(f1) + " " + liveData.get(symbol).firstEntry().getValue() + "(" +
                                     Math.round(1000d * (liveData.get(symbol).firstEntry().getValue() / mOpen - 1)) / 10d + "%)",
-                            "LV:", liveData.get(symbol).lastKey().format(f1) + " " + liveData.get(symbol).lastEntry().getValue() + "(" +
-                                    Math.round(1000d * (liveData.get(symbol).lastEntry().getValue() / mOpen - 1)) / 10d + "%)");
+                            "LV:", liveData.get(symbol).lastKey().format(f1) + " " + price + "(" +
+                                    Math.round(1000d * (price / mOpen - 1)) / 10d + "%)");
 
                     if (!orderBlocked.get(symbol).get()) {
                         if (firstValue < mOpen && price > mOpen) {
