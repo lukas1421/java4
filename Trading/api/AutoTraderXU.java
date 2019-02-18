@@ -407,8 +407,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             ses.scheduleAtFixedRate(this::requestExecHistory, 0, 1, TimeUnit.MINUTES);
         });
 
-        JButton stopComputeButton = new JButton("Stop Processing");
-        stopComputeButton.addActionListener(l -> ses2.shutdown());
+        //JButton stopComputeButton = new JButton("Stop Processing");
+        //stopComputeButton.addActionListener(l -> ses2.shutdown());
 
         JButton execButton = new JButton("Exec");
         execButton.addActionListener(l -> requestExecHistory());
@@ -566,7 +566,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         controlPanel2.add(widthLabel);
         controlPanel2.add(graphWidthUp);
         controlPanel2.add(graphWidthDown);
-        controlPanel2.add(stopComputeButton);
+        //controlPanel2.add(stopComputeButton);
         //controlPanel2.add(maAnalysisButton);
 
         JLabel bid1 = new JLabel("1");

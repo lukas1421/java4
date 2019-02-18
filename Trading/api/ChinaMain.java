@@ -227,8 +227,8 @@ public final class ChinaMain implements IConnectionHandler {
             ChinaOption.refresh();
         });
 
-        JButton loadYesterday = new JButton("Load Yest");
-        loadYesterday.addActionListener((ae) -> ChinaDataYesterday.loadYesterdayData());
+        //JButton loadYesterday = new JButton("Load Yest");
+        //loadYesterday.addActionListener((ae) -> ChinaDataYesterday.loadYesterdayData());
 
         JButton loadChinaBar = new JButton("Load Bar");
         loadChinaBar.addActionListener((ae) -> ChinaData.loadPriceBar());
@@ -253,8 +253,8 @@ public final class ChinaMain implements IConnectionHandler {
 //        JButton computeVR = new JButton("Compute VR");
 //        computeVR.addActionListener((ae) -> ChinaSizeRatio.computeSizeRatio());
 
-        JButton showBigGraph = new JButton("Big Graph");
-        showBigGraph.addActionListener((ae) -> m_frame7.setVisible(!m_frame7.isVisible()));
+        //JButton showBigGraph = new JButton("Big Graph");
+        //showBigGraph.addActionListener((ae) -> m_frame7.setVisible(!m_frame7.isVisible()));
 
         JButton computeIndustry = new JButton("Industry");
         computeIndustry.addActionListener((ae) -> {
@@ -334,8 +334,8 @@ public final class ChinaMain implements IConnectionHandler {
         //offShcomp.addActionListener((ae) -> ses.shutdown());
         saveAll.addActionListener((al) -> XU.saveXU());
         threadManager.add(getSinaData);
-        threadManager.add(loadYesterday);
-        threadManager.add(showBigGraph);
+        //threadManager.add(loadYesterday);
+        //threadManager.add(showBigGraph);
         threadManager.add(computeIndustry);
         threadManager.add(Box.createHorizontalStrut(30));
         threadManager.add(killAllDiags);
@@ -500,7 +500,7 @@ public final class ChinaMain implements IConnectionHandler {
                                     SwingUtilities.invokeLater(() -> {
                                         pr(" fetching data ");
                                         getSinaData.doClick();
-                                        loadYesterday.doClick();
+                                        //loadYesterday.doClick();
                                         startIBHK.doClick();
                                     });
 

@@ -111,7 +111,8 @@ public final class TradingConstants {
     public static final int GLOBALWIDTH = 1900;
 
     public static final Predicate<? super Map.Entry<LocalTime, ?>> TRADING_HOURS =
-            e -> ((e.getKey().isAfter(LocalTime.of(9, 29)) && e.getKey().isBefore(LocalTime.of(11, 31))) || Utility.PM_PRED.test(e));
+            e -> ((e.getKey().isAfter(LocalTime.of(9, 29)) && e.getKey().isBefore(LocalTime.of(11, 31)))
+                    || Utility.PM_PRED.test(e));
 
     public static final Predicate<LocalDateTime> STOCK_COLLECTION_TIME =
             lt -> !lt.toLocalDate().getDayOfWeek().equals(DayOfWeek.SATURDAY) &&
@@ -141,22 +142,13 @@ public final class TradingConstants {
     }
 
     private static LocalDate getFutureExpiryDate(int year, Month m) {
-        //LocalDate res = LocalDate.of(year, m.plus(1), 1);
         LocalDate res = LocalDate.of(year, m, 1).plusMonths(1);
-//        while (res.getDayOfWeek() != TradingConstants.futExpiryWeekDay) {
-//            res = res.minusDays(1);
-//        }
-        //pr(" get fut expiry date ", res);
         int count = 0;
         while (count < 2) {
             res = res.minusDays(1);
-
-            if (res.getDayOfWeek() != DayOfWeek.SATURDAY && res.getDayOfWeek() != DayOfWeek.SUNDAY
-                    && !res.equals(LocalDate.of(2018, 12, 31))) {
+            if (res.getDayOfWeek() != DayOfWeek.SATURDAY && res.getDayOfWeek() != DayOfWeek.SUNDAY) {
                 count++;
             }
-            //pr(" res count ", res, count);
-            //pr("fut expiry date ", res);
         }
 
         return res;
@@ -171,5 +163,4 @@ public final class TradingConstants {
         LocalDate res = getFutureExpiryDate(LocalDate.of(year, m, 1));
         return res.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
     }
-
 }

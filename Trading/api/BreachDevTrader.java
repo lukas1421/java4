@@ -254,7 +254,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                             "Default:", defaultS, "yOpen:" + yOpen
                                     + "(" + Math.round(1000d * (price / yOpen - 1)) / 10d + "%)"
                             , "mOpen:" + mOpen,
-                            "FV:", liveData.get(symbol).firstKey().format(f1) + " " + liveData.get(symbol).firstEntry().getValue() + "(" +
+                            "FV:", liveData.get(symbol).firstKey().format(f1) + " " + liveData.get(symbol).firstEntry().getValue()
+                                    + "(" +
                                     Math.round(1000d * (liveData.get(symbol).firstEntry().getValue() / mOpen - 1)) / 10d + "%)",
                             "LV:", liveData.get(symbol).lastKey().format(f1) + " " + price + "(" +
                                     Math.round(1000d * (price / mOpen - 1)) / 10d + "%)");
