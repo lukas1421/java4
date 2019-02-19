@@ -274,7 +274,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                             new GuaranteeDevHandler(id, staticController));
                                     outputDetailedGen("*********", breachMDevOutput);
                                     outputDetailedGen(str("NEW", o.orderId(), "Breach MDEV BUY:",
-                                            globalIdOrderMap.get(id), "pos", pos), breachMDevOutput);
+                                            globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
+                                            "price", price, "first value", firstValue), breachMDevOutput);
                                 } else if (firstValue > mOpen && price < mOpen) {
                                     if (pos >= 0 && (pos > 0 || price < yOpen)) {
                                         if (bidMap.getOrDefault(symbol, 0.0) != 0.0
@@ -288,7 +289,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                                     new GuaranteeDevHandler(id, staticController));
                                             outputDetailedGen("*********", breachMDevOutput);
                                             outputDetailedGen(str("NEW", o.orderId(), "Breach MDEV SELL:"
-                                                    , globalIdOrderMap.get(id)), breachMDevOutput);
+                                                    , globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen,
+                                                    "mOpen", mOpen, "price", price, "first value", firstValue)
+                                                    , breachMDevOutput);
                                         }
                                     }
                                 }
