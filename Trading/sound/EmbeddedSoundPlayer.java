@@ -31,7 +31,8 @@ public class EmbeddedSoundPlayer {
     }
 
     public void playClip() {
-        if (LocalTime.now().isAfter(LocalTime.of(8, 59)) && LocalTime.now().isBefore(LocalTime.of(15, 0))) {
+        if (LocalTime.now().isAfter(LocalTime.of(8, 59))
+                && LocalTime.now().isBefore(LocalTime.of(15, 0))) {
             try {
                 player.play();
             } catch (MediaException ex) {
