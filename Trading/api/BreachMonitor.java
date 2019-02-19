@@ -105,6 +105,9 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
         Contract aapl = getUSStockContract("AAPL");
         registerContract(aapl);
+
+        Contract pfe = getUSStockContract("PFE");
+        registerContract(pfe);
     }
 
     private void registerContract(Contract ct) {
@@ -209,6 +212,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
+            if (symbol.equalsIgnoreCase("PFE")) {
+                pr("pfe data ", symbol, ld, open, high, low, close);
+            }
+
         } else {
             double size = holdingsMap.getOrDefault(c, 0.0);
             if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {

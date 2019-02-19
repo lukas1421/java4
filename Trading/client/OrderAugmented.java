@@ -129,7 +129,7 @@ public class OrderAugmented {
 
     @Override
     public String toString() {
-        return str(ibContractToSymbol(contract), "T: ", orderTime.toLocalTime(),
+        return str(ibContractToSymbol(contract), "T: ", orderTime,
                 "Order:", order, "msg:", msg, "Trade type", orderType,
                 "Status:", augmentedOrderStatus);
     }

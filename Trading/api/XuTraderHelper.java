@@ -193,6 +193,12 @@ public class XuTraderHelper {
         }
     }
 
+    static void outputToSymbolFile(String symbol, String msg, File detailed) {
+        if (!symbol.equals("")) {
+            outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
+        }
+        outputDetailedGen(msg, detailed);
+    }
 
     public static void outputDetailedXU(String symbol, String msg) {
         if (!symbol.equals("")) {

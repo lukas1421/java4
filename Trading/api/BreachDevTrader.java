@@ -136,14 +136,14 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         contractPosMap.put(ct, 0.0);
         symbolPosMap.put(ibContractToSymbol(ct), 0.0);
         liveData.put(ibContractToSymbol(ct), new ConcurrentSkipListMap<>());
-        orderBlocked.put(ibContractToSymbol(ct), new AtomicBoolean(false));
+        //orderBlocked.put(ibContractToSymbol(ct), new AtomicBoolean(false));
     }
 
     private static void registerContractPosition(Contract ct, double pos) {
         contractPosMap.put(ct, pos);
         symbolPosMap.put(ibContractToSymbol(ct), pos);
         liveData.put(ibContractToSymbol(ct), new ConcurrentSkipListMap<>());
-        orderBlocked.put(ibContractToSymbol(ct), new AtomicBoolean(false));
+        //orderBlocked.put(ibContractToSymbol(ct), new AtomicBoolean(false));
     }
 
 
@@ -248,6 +248,11 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
                     double firstValue = liveData.get(symbol).firstEntry().getValue();
                     double defaultS = defaultSizeMap.getOrDefault(symbol, getDefaultSize(ct));
+
+                    if (!orderBlocked.containsKey(symbol)) {
+                        orderBlocked.put(symbol, new AtomicBoolean(false));
+                    }
+
                     boolean orderBlockStatus = orderBlocked.get(symbol).get();
 
                     pr("Dev", symbol, pos, "block?" + orderBlockStatus,
@@ -272,8 +277,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_MDEV));
                                     staticController.placeOrModifyOrder(ct, o,
                                             new GuaranteeDevHandler(id, staticController));
-                                    outputDetailedGen("*********", breachMDevOutput);
-                                    outputDetailedGen(str("NEW", o.orderId(), "Breach MDEV BUY:",
+                                    outputToSymbolFile(symbol, "********", breachMDevOutput);
+                                    outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach MDEV BUY:",
                                             globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
                                             "price", price, "first value", firstValue), breachMDevOutput);
                                 } else if (firstValue > mOpen && price < mOpen) {
@@ -287,8 +292,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                             globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_MDEV));
                                             staticController.placeOrModifyOrder(ct, o,
                                                     new GuaranteeDevHandler(id, staticController));
-                                            outputDetailedGen("*********", breachMDevOutput);
-                                            outputDetailedGen(str("NEW", o.orderId(), "Breach MDEV SELL:"
+                                            outputToSymbolFile(symbol, "********", breachMDevOutput);
+                                            outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach MDEV SELL:"
                                                     , globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen,
                                                     "mOpen", mOpen, "price", price, "first value", firstValue)
                                                     , breachMDevOutput);

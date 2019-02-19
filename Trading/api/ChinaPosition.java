@@ -1214,9 +1214,9 @@ public class ChinaPosition extends JPanel {
 
     static void updatePosition() {
         ChinaData.priceMapBar.keySet().forEach(s -> tradesMap.put(s, new ConcurrentSkipListMap<>()));
-        getOpenPositionsNormal();
-        getCurrentPositionNormal();
-        getCurrentPositionMargin();
+        //getOpenPositionsNormal();
+        //getCurrentPositionNormal();
+        //getCurrentPositionMargin();
     }
 
     static Map<String, Integer> getNetPosition() {

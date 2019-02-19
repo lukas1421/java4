@@ -46,7 +46,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
     @Override
     public void orderState(OrderState orderState) {
-        LocalTime now = LocalTime.now();
+        LocalDateTime now = LocalDateTime.now();
         if (globalIdOrderMap.containsKey(currentID)) {
             globalIdOrderMap.get(currentID).setFinalActionTime(LocalDateTime.now());
             globalIdOrderMap.get(currentID).setAugmentedOrderStatus(orderState.status());
@@ -61,7 +61,9 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                         "*GUARANTEE DEV FILL*", idStatusMap.get(currentID), "->", orderState.status(), now,
                         "ID:", currentID, globalIdOrderMap.get(currentID),
                         "TIF:", globalIdOrderMap.get(currentID).getOrder().tif());
-                outputDetailedUS(globalIdOrderMap.get(primaryID).getSymbol(), msg);
+                //outputDetailedGen(globalIdOrderMap.get(primaryID).getSymbol(), msg);
+                outputDetailedGen(msg, breachMDevOutput);
+
             }
 
             if (orderState.status() == PendingCancel && globalIdOrderMap.get(currentID).getOrder().tif() == IOC) {
