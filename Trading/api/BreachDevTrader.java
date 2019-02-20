@@ -15,8 +15,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -40,6 +39,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
     private static final double DELTA_LIMIT = 200000.0;
     public static Map<Currency, Double> fxMap = new HashMap<>();
+    public static Map<String, Double> multiplierMap = new HashMap<>();
+
     public static Map<String, Double> defaultSizeMap = new HashMap<>();
 
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
@@ -85,6 +86,17 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         } catch (IOException x) {
             x.printStackTrace();
         }
+
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "multiplier.txt")))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                multiplierMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
+            }
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "defaultSize.txt")))) {
@@ -211,11 +223,29 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     }
 
     private static double getDefaultSize(Contract ct) {
-
         if (ct.secType() == Types.SecType.FUT) {
             return 1;
         } else if (ct.secType() == Types.SecType.STK && ct.currency().equalsIgnoreCase("USD")) {
             return 100.0;
+        }
+        return 0.0;
+    }
+
+    private static double getDelta(Contract ct, double price, double size, double fx) {
+        if (size != 0.0) {
+            if (ct.secType() == Types.SecType.STK) {
+                //pr("get delta stock,symbol price size fx delta", ibContractToSymbol(ct), price, size, fx, price * size * fx);
+                return price * size * fx;
+            } else if (ct.secType() == Types.SecType.FUT) {
+                if (multiplierMap.containsKey(ibContractToSymbol(ct))) {
+//                    pr("get delta stock", ibContractToSymbol(ct), price, size, fx,
+//                            multiplierMap.get(ibContractToSymbol(ct)),
+//                            multiplierMap.get(ibContractToSymbol(ct)) * price * size * fx);
+                    return price * size * fx * multiplierMap.get(ibContractToSymbol(ct));
+                } else {
+                    throw new IllegalStateException("no multiplier");
+                }
+            }
         }
         return 0.0;
     }
@@ -243,6 +273,13 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     }
 
                     boolean orderBlockStatus = orderBlocked.get(symbol).get();
+                    long delta = Math.round(1 / 1000d * getDelta(ct, price, pos,
+                            fxMap.getOrDefault(Currency.get(ct.currency()), 1.0)));
+
+                    double totalDelta =
+                            contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
+                                    , getPriceFromLiveData(e.getKey()), e.getValue(),
+                                    fxMap.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
 
                     pr("Dev", symbol, pos, "block?" + orderBlockStatus,
                             "Default:", defaultS, "yOpen:" + yOpen
@@ -252,7 +289,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                     + "(" +
                                     Math.round(1000d * (liveData.get(symbol).firstEntry().getValue() / mOpen - 1)) / 10d + "%)",
                             "LV:", liveData.get(symbol).lastKey().format(f1) + " " + price + "(" +
-                                    Math.round(1000d * (price / mOpen - 1)) / 10d + "%)");
+                                    Math.round(1000d * (price / mOpen - 1)) / 10d + "%)"
+                            , "Delta:" + delta + "k");
+
 
                     if (!orderBlocked.get(symbol).get()) {
                         if (firstValue < mOpen && price > mOpen) {
@@ -300,6 +339,14 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         }
     }
 
+    private static double getPriceFromLiveData(Contract ct) {
+        String symbol = ibContractToSymbol(ct);
+        if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
+            return liveData.get(symbol).lastEntry().getValue();
+        }
+        return 0.0;
+    }
+
     @Override
     public void handleVol(TickType tt, String symbol, double vol, LocalDateTime t) {
 
@@ -314,6 +361,17 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     public static void main(String[] args) {
         BreachDevTrader trader = new BreachDevTrader();
         trader.connectAndReqPos();
+
+        ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
+        es.scheduleAtFixedRate(() -> {
+            double totalDelta =
+                    contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
+                            , getPriceFromLiveData(e.getKey()), e.getValue(),
+                            fxMap.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
+            pr("current total delta: ", totalDelta);
+
+        }, 0, 10, TimeUnit.SECONDS);
     }
 
 }
+
