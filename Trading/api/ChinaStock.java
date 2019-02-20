@@ -146,7 +146,7 @@ public final class ChinaStock extends JPanel {
     private String stock2 = "sh000001";
     private String stock3 = "sh000016";
     private String stock4 = "sh000300";
-    private String stock5 = "sz399006";
+    private String stock5 = "sz399001";
     private String stock6 = "sh000905";
     private String stock7 = "sz399006";
 
