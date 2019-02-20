@@ -28,6 +28,7 @@ import static utility.Utility.*;
 
 public class BreachDevTrader implements LiveHandler, ApiController.IPositionHandler {
 
+    private static double totalDelta = 0.0;
     private static ApiController staticController;
     private static final DateTimeFormatter f1 = DateTimeFormatter.ofPattern("M-d H:mm");
     private static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s");
@@ -37,7 +38,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
     private static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
-    private static final double DELTA_LIMIT = 200000.0;
+    private static final double HI_LIMIT = 2000000.0;
+    private static final double LO_LIMIT = -2000000.0;
+
     public static Map<Currency, Double> fxMap = new HashMap<>();
     public static Map<String, Double> multiplierMap = new HashMap<>();
 
@@ -273,13 +276,16 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     }
 
                     boolean orderBlockStatus = orderBlocked.get(symbol).get();
-                    long delta = Math.round(1 / 1000d * getDelta(ct, price, pos,
-                            fxMap.getOrDefault(Currency.get(ct.currency()), 1.0)));
+                    double delta = getDelta(ct, price, pos,
+                            fxMap.getOrDefault(Currency.get(ct.currency()), 1.0));
 
-                    double totalDelta =
-                            contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
-                                    , getPriceFromLiveData(e.getKey()), e.getValue(),
-                                    fxMap.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
+                    String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
+                            fxMap.getOrDefault(Currency.get(ct.currency()), 1.0))));
+
+//                    double totalDelta =
+//                            contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
+//                                    , getPriceFromLiveData(e.getKey()), e.getValue(),
+//                                    fxMap.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
 
                     pr("Dev", symbol, pos, "block?" + orderBlockStatus,
                             "Default:", defaultS, "yOpen:" + yOpen
@@ -290,12 +296,14 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                     Math.round(1000d * (liveData.get(symbol).firstEntry().getValue() / mOpen - 1)) / 10d + "%)",
                             "LV:", liveData.get(symbol).lastKey().format(f1) + " " + price + "(" +
                                     Math.round(1000d * (price / mOpen - 1)) / 10d + "%)"
-                            , "Delta:" + delta + "k");
+                            , pos != 0.0 ? ("Delta:" + deltaDisplay
+                                    + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
+                                    + "%)" : "")) : "");
 
 
                     if (!orderBlocked.get(symbol).get()) {
                         if (firstValue < mOpen && price > mOpen) {
-                            if (pos <= 0 && (pos < 0 || price > yOpen)) {
+                            if (pos <= 0 && (pos < 0 || (price > yOpen && totalDelta < HI_LIMIT))) {
                                 if (askMap.getOrDefault(symbol, 0.0) != 0.0
                                         && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                                     orderBlocked.get(symbol).set(true);
@@ -310,7 +318,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                             globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
                                             "price", price, "first value", firstValue), breachMDevOutput);
                                 } else if (firstValue > mOpen && price < mOpen) {
-                                    if (pos >= 0 && (pos > 0 || price < yOpen)) {
+                                    if (pos >= 0 && (pos > 0 || (price < yOpen && totalDelta > LO_LIMIT))) {
                                         if (bidMap.getOrDefault(symbol, 0.0) != 0.0
                                                 && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
                                             orderBlocked.get(symbol).set(true);
@@ -364,12 +372,11 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
         ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
         es.scheduleAtFixedRate(() -> {
-            double totalDelta =
+            totalDelta =
                     contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
                             , getPriceFromLiveData(e.getKey()), e.getValue(),
                             fxMap.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
             pr("current total delta: ", totalDelta);
-
         }, 0, 10, TimeUnit.SECONDS);
     }
 
