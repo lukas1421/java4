@@ -19,8 +19,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static api.AutoTraderMain.autoTradeID;
-import static api.AutoTraderMain.globalIdOrderMap;
+import static api.AutoTraderMain.*;
 import static api.XuTraderHelper.*;
 import static client.Types.TimeInForce.IOC;
 import static util.AutoOrderType.BREACH_MDEV;
@@ -28,6 +27,7 @@ import static utility.Utility.*;
 
 public class BreachDevTrader implements LiveHandler, ApiController.IPositionHandler {
 
+    private static DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d H:mm:ss");
     private static double totalDelta = 0.0;
     private static ApiController staticController;
     private static final DateTimeFormatter f1 = DateTimeFormatter.ofPattern("M-d H:mm");
@@ -187,6 +187,11 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
 
     private void reqHoldings(ApiController ap) {
+        ap.reqPositions(this);
+    }
+
+    private void stimulatePositions(ApiController ap) {
+        ap.cancelPositions(this);
         ap.reqPositions(this);
     }
 
@@ -364,14 +369,16 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         BreachDevTrader trader = new BreachDevTrader();
         trader.connectAndReqPos();
 
-        ScheduledExecutorService es = Executors.newScheduledThreadPool(1);
+        ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
         es.scheduleAtFixedRate(() -> {
             totalDelta = contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
                     , getPriceFromLiveData(e.getKey()), e.getValue(),
                     fxMap.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
-            pr(LocalDateTime.now().format(DateTimeFormatter.ofPattern("M-d H:mm:ss")),
-                    "current total delta:", totalDelta);
+            pr(LocalDateTime.now().format(f),
+                    "current total delta:", Math.round(totalDelta / 1000d) + "k");
         }, 0, 10, TimeUnit.SECONDS);
+
+        es.scheduleAtFixedRate(() -> trader.stimulatePositions(staticController), 60, 60, TimeUnit.SECONDS);
     }
 
 }
