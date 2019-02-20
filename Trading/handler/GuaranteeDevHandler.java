@@ -62,7 +62,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                         "ID:", currentID, globalIdOrderMap.get(currentID),
                         "TIF:", globalIdOrderMap.get(currentID).getOrder().tif());
                 //outputDetailedGen(globalIdOrderMap.get(primaryID).getSymbol(), msg);
-                outputDetailedGen(msg, breachMDevOutput);
+                outputToSymbolFile(globalIdOrderMap.get(primaryID).getSymbol(), msg, breachMDevOutput);
 
             }
 
@@ -88,13 +88,14 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 globalIdOrderMap.put(newID, new OrderAugmented(ct, LocalDateTime.now(), o,
                         globalIdOrderMap.get(currentID).getOrderType(), false));
 
-                outputDetailedGen(str(globalIdOrderMap.get(primaryID).getOrder().orderId(),
-                        prevOrder.orderId(), "->", o.orderId(),
-                        "BREACH RESUBMIT:", globalIdOrderMap.get(newID).getOrderType(),
-                        o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), "Primary? " +
-                                globalIdOrderMap.get(newID).isPrimaryOrder(),
-                        "current", globalIdOrderMap.get(newID), "bid ask sp last"
-                        , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", lastPrice), breachMDevOutput);
+                outputToSymbolFile(globalIdOrderMap.get(primaryID).getSymbol(),
+                        str(globalIdOrderMap.get(primaryID).getOrder().orderId(),
+                                prevOrder.orderId(), "->", o.orderId(),
+                                "BREACH RESUBMIT:", globalIdOrderMap.get(newID).getOrderType(),
+                                o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), "Primary? " +
+                                        globalIdOrderMap.get(newID).isPrimaryOrder(),
+                                "current", globalIdOrderMap.get(newID), "bid ask sp last"
+                                , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", lastPrice), breachMDevOutput);
             }
             idStatusMap.put(currentID, orderState.status());
         }

@@ -184,7 +184,7 @@ public class XuTraderHelper {
         }
     }
 
-    public static void outputDetailedGen(String s, File detailed) {
+    static void outputDetailedGen(String s, File detailed) {
         try (BufferedWriter out = new BufferedWriter(new FileWriter(detailed, true))) {
             out.append(s);
             out.newLine();
@@ -193,7 +193,7 @@ public class XuTraderHelper {
         }
     }
 
-    static void outputToSymbolFile(String symbol, String msg, File detailed) {
+    public static void outputToSymbolFile(String symbol, String msg, File detailed) {
         if (!symbol.equals("")) {
             outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
         }
