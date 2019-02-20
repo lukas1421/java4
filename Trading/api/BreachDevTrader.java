@@ -369,7 +369,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             totalDelta = contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
                     , getPriceFromLiveData(e.getKey()), e.getValue(),
                     fxMap.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
-            pr("current total delta:", totalDelta);
+            pr(LocalDateTime.now().format(DateTimeFormatter.ofPattern("M-d H:mm:ss")),
+                    "current total delta:", totalDelta);
         }, 0, 10, TimeUnit.SECONDS);
     }
 
