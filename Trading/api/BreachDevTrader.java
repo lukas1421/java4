@@ -291,7 +291,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                             "Default:", defaultS, "yOpen:" + yOpen
                                     + "(" + Math.round(1000d * (price / yOpen - 1)) / 10d + "%)"
                             , "mOpen:" + mOpen,
-                            "FV:", liveData.get(symbol).firstKey().format(f1) + " " + liveData.get(symbol).firstEntry().getValue()
+                            "FV:", liveData.get(symbol).firstKey().format(f1) + " " +
+                                    liveData.get(symbol).firstEntry().getValue()
                                     + "(" +
                                     Math.round(1000d * (liveData.get(symbol).firstEntry().getValue() / mOpen - 1)) / 10d + "%)",
                             "LV:", liveData.get(symbol).lastKey().format(f1) + " " + price + "(" +
@@ -303,7 +304,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
                     if (!orderBlocked.get(symbol).get()) {
                         if (firstValue < mOpen && price > mOpen) {
-                            if (pos <= 0 && (pos < 0 || (price > yOpen && totalDelta < HI_LIMIT))) {
+                            if (pos < 0 && (pos == 0 && price > yOpen && totalDelta < HI_LIMIT)) {
                                 if (askMap.getOrDefault(symbol, 0.0) != 0.0
                                         && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                                     orderBlocked.get(symbol).set(true);
@@ -317,24 +318,24 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                     outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach MDEV BUY:",
                                             globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
                                             "price", price, "first value", firstValue), breachMDevOutput);
-                                } else if (firstValue > mOpen && price < mOpen) {
-                                    if (pos >= 0 && (pos > 0 || (price < yOpen && totalDelta > LO_LIMIT))) {
-                                        if (bidMap.getOrDefault(symbol, 0.0) != 0.0
-                                                && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
-                                            orderBlocked.get(symbol).set(true);
-                                            double size = Math.round(pos) + (price < yOpen ? defaultS : 0);
-                                            int id = autoTradeID.incrementAndGet();
-                                            Order o = placeOfferLimitTIF(bidMap.get(symbol), size, IOC);
-                                            globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_MDEV));
-                                            staticController.placeOrModifyOrder(ct, o,
-                                                    new GuaranteeDevHandler(id, staticController));
-                                            outputToSymbolFile(symbol, "********", breachMDevOutput);
-                                            outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach MDEV SELL:"
-                                                    , globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen,
-                                                    "mOpen", mOpen, "price", price, "first value", firstValue)
-                                                    , breachMDevOutput);
-                                        }
-                                    }
+                                }
+                            }
+                        } else if (firstValue > mOpen && price < mOpen) {
+                            if (pos > 0 || (pos == 0 && price < yOpen && totalDelta > LO_LIMIT)) {
+                                if (bidMap.getOrDefault(symbol, 0.0) != 0.0
+                                        && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
+                                    orderBlocked.get(symbol).set(true);
+                                    double size = Math.round(pos) + (price < yOpen ? defaultS : 0);
+                                    int id = autoTradeID.incrementAndGet();
+                                    Order o = placeOfferLimitTIF(bidMap.get(symbol), size, IOC);
+                                    globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_MDEV));
+                                    staticController.placeOrModifyOrder(ct, o,
+                                            new GuaranteeDevHandler(id, staticController));
+                                    outputToSymbolFile(symbol, "********", breachMDevOutput);
+                                    outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach MDEV SELL:"
+                                            , globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen,
+                                            "mOpen", mOpen, "price", price, "first value", firstValue)
+                                            , breachMDevOutput);
                                 }
                             }
                         }
