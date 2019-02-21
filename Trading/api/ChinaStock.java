@@ -1250,21 +1250,25 @@ public final class ChinaStock extends JPanel {
                 double mdev = Math.round(1000d * ((last / lastMoEnd) - 1)) / 10d;
 
                 LocalDate lastDay = detailed5mData.get(index).lastEntry().getKey().toLocalDate();
+
                 NavigableMap<LocalDateTime, SimpleBar> lastDayMap = detailed5mData.get(index).entrySet().stream()
                         .filter(e -> e.getKey().toLocalDate().equals(lastDay))
                         .collect(toMap(Map.Entry::getKey, Map.Entry::getValue, (u, v) -> u, TreeMap::new));
 
-                double lastDayPMOpen = detailed5mData.get(index).entrySet().stream()
-                        .filter(e -> e.getKey().toLocalDate().equals(lastDay))
+                double lastDayPMOpen = lastDayMap.entrySet().stream()
                         .filter(e -> e.getKey().toLocalTime().isAfter(ltof(12, 55))).findFirst().map(Entry::getValue)
                         .map(SimpleBar::getOpen).orElse(0.0);
 
+                double lastDayOpen = lastDayMap.firstEntry().getValue().getOpen();
+                //pr("last day open ", index, lastDayMap.firstEntry());
+
                 double lastDayClose = detailed5mData.get(index).lastEntry().getValue().getClose();
+
+                double lastDayAMChg = Math.round(10000d * (lastDayPMOpen / lastDayOpen - 1)) / 100d;
                 double lastDayPMChg = Math.round(10000d * (lastDayClose / lastDayPMOpen - 1)) / 100d;
                 int lastDayPerc = getPercentileForLast(lastDayMap);
 
                 if (priceMapBar.containsKey(index) && priceMapBar.get(index).size() != 0) {
-
                     pr("***" + index, priceMapBar.get(index).lastKey(),
                             Math.round(priceMapBar.get(index).lastEntry().getValue().getClose()),
                             "||>O%-950:" + getAboveOpenPercentage950(index) + "%",
@@ -1272,12 +1276,14 @@ public final class ChinaStock extends JPanel {
                             "||yDev:" + ydev + "%" + "(" + lastYrEnd + ")",
                             "||mDev:" + mdev + "%" + "(" + lastMoEnd + ")",
                             "||DateY", lastDay.format(DateTimeFormatter.ofPattern("M-d"))
+                            , "||AM_chgY:" + lastDayAMChg + "%"
                             , "||PM_chgY:" + lastDayPMChg + "%",
                             "||P%Y:" + lastDayPerc + "%");
                 } else {
                     pr("***" + index, "||yDev:" + ydev + "%" + "(" + lastYrEnd + ")",
                             "||mDev:" + mdev + "%" + "(" + lastMoEnd + ")",
                             "||DateY", lastDay.format(DateTimeFormatter.ofPattern("M-d"))
+                            , "||AM_chgY:" + lastDayAMChg + "%"
                             , "||PM_chgY:" + lastDayPMChg + "%",
                             "||P%Y:" + lastDayPerc + "%");
 

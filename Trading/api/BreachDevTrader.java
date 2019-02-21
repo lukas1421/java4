@@ -378,7 +378,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     "current total delta:", Math.round(totalDelta / 1000d) + "k");
         }, 0, 10, TimeUnit.SECONDS);
 
-        es.scheduleAtFixedRate(() -> trader.stimulatePositions(staticController), 60, 60, TimeUnit.SECONDS);
+        //es.scheduleAtFixedRate(() -> trader.stimulatePositions(staticController), 60, 60, TimeUnit.SECONDS);
     }
 
 }

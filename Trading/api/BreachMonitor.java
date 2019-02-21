@@ -212,10 +212,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
-            if (symbol.equalsIgnoreCase("PFE")) {
-                pr("pfe data ", symbol, ld, open, high, low, close);
-            }
-
         } else {
             double size = holdingsMap.getOrDefault(c, 0.0);
             if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
@@ -266,7 +262,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 //                        c.currency(), fxMap.getOrDefault(Currency.get(c.currency()), 1.0),
 //                        Math.round(delta / 1000d), "k");
 
-                String out = str(symbol, info, "POS:" + (size != 0.0 ? size : 0.0),
+                String out = str(symbol, info, "POS:" + (size),
                         "||LAST:", ytdDayData.get(symbol).lastEntry().getKey().format(f), last,
                         lastChg + "%", "||YYY", "Up%:" +
                                 Math.round(100d * ytdDayData.get(symbol).entrySet().stream()

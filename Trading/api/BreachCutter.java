@@ -4,6 +4,7 @@ import auxiliary.SimpleBar;
 import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
+import handler.GuaranteeDevHandler;
 import handler.LiveHandler;
 import utility.Utility;
 
@@ -208,7 +209,6 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
     }
 
 
-
     private static int getCalendarYtdDays() {
         return (int) ChronoUnit.DAYS.between(LAST_YEAR_DAY, LocalDate.now());
     }
@@ -251,9 +251,9 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                             Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos), IOC);
                             globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                             staticController.placeOrModifyOrder(ct, o,
-                                    new ApiController.IOrderHandler.DefaultOrderHandler(id));
-                            outputDetailedGen("*********", breachOutput);
-                            outputDetailedGen(str("NEW", o.orderId(), "Breach Cutter BUY #:",
+                                    new GuaranteeDevHandler(id, staticController));
+                            outputToSymbolFile(symbol, "*********", breachOutput);
+                            outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach Cutter BUY #:",
                                     globalIdOrderMap.get(id), "pos", pos), breachOutput);
                         }
                     } else if (pos > 0) {
@@ -263,9 +263,9 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                             Order o = placeOfferLimitTIF(bidMap.get(symbol), pos, IOC);
                             globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                             staticController.placeOrModifyOrder(ct, o,
-                                    new ApiController.IOrderHandler.DefaultOrderHandler(id));
-                            outputDetailedGen("*********", breachOutput);
-                            outputDetailedGen(str("NEW", o.orderId(), "Breach Cutter sell:"
+                                    new GuaranteeDevHandler(id, staticController));
+                            outputToSymbolFile(symbol, "*********", breachOutput);
+                            outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach Cutter sell:"
                                     , globalIdOrderMap.get(id), "pos", pos), breachOutput);
                         }
                     }
