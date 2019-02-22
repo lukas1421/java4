@@ -276,12 +276,12 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         boolean noMoreCutting = cuttingBlocked.get(symbol).get();
 
         if (usLt.isAfter(ltof(15, 30)) && usLt.isBefore(ltof(16, 0)) && !noMoreCutting) {
-
             if (pos < 0.0 && price > mOpen) {
                 if (askMap.getOrDefault(symbol, 0.0) != 0.0
                         && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                     cuttingBlocked.get(symbol).set(true);
-                    double size = Math.abs(pos) + (price > yOpen ? defaultS : 0);
+                    //double size = Math.abs(pos) + (price > yOpen ? defaultS : 0);
+                    double size = Math.abs(pos);
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeBidLimitTIF(askMap.get(symbol), size, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
@@ -297,7 +297,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 if (bidMap.getOrDefault(symbol, 0.0) != 0.0
                         && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
                     cuttingBlocked.get(symbol).set(true);
-                    double size = Math.round(pos) + (price < yOpen ? defaultS : 0);
+                    //double size = Math.round(pos) + (price < yOpen ? defaultS : 0);
+                    double size = pos;
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeOfferLimitTIF(bidMap.get(symbol), size, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
@@ -344,19 +345,21 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
                             fxMap.getOrDefault(Currency.get(ct.currency()), 1.0))));
 
-                    pr("Dev", symbol, pos, "block?" + orderBlockStatus,
-                            "Default:", defaultS, "yOpen:" + yOpen
-                                    + "(" + Math.round(1000d * (price / yOpen - 1)) / 10d + "%)"
-                            , "mOpen:" + mOpen,
-                            "FV:", liveData.get(symbol).firstKey().format(f1) + " " +
-                                    liveData.get(symbol).firstEntry().getValue()
-                                    + "(" +
-                                    Math.round(1000d * (liveData.get(symbol).firstEntry().getValue() / mOpen - 1)) / 10d + "%)",
-                            "LV:", liveData.get(symbol).lastKey().format(f1) + " " + price + "(" +
-                                    Math.round(1000d * (price / mOpen - 1)) / 10d + "%)"
-                            , pos != 0.0 ? ("Delta:" + deltaDisplay
-                                    + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
-                                    + "%)" : "")) : "");
+                    if (pos != 0) {
+                        pr("Dev", symbol, pos, "block?" + orderBlockStatus,
+                                "Default:", defaultS, "yOpen:" + yOpen
+                                        + "(" + Math.round(1000d * (price / yOpen - 1)) / 10d + "%)"
+                                , "mOpen:" + mOpen,
+                                "FV:", liveData.get(symbol).firstKey().format(f1) + " " +
+                                        liveData.get(symbol).firstEntry().getValue()
+                                        + "(" +
+                                        Math.round(1000d * (liveData.get(symbol).firstEntry().getValue() / mOpen - 1)) / 10d + "%)",
+                                "LV:", liveData.get(symbol).lastKey().format(f1) + " " + price + "(" +
+                                        Math.round(1000d * (price / mOpen - 1)) / 10d + "%)"
+                                , pos != 0.0 ? ("Delta:" + deltaDisplay
+                                        + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
+                                        + "%)" : "")) : "");
+                    }
 
 
                     if (!orderBlocked.get(symbol).get()) {
