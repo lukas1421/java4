@@ -12,6 +12,7 @@ import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -22,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static api.AutoTraderMain.*;
 import static api.XuTraderHelper.*;
 import static client.Types.TimeInForce.IOC;
+import static util.AutoOrderType.BREACH_CUTTER;
 import static util.AutoOrderType.BREACH_MDEV;
 import static utility.Utility.*;
 
@@ -42,9 +44,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static final double LO_LIMIT = -2000000.0;
 
     public static Map<Currency, Double> fxMap = new HashMap<>();
-    public static Map<String, Double> multiplierMap = new HashMap<>();
-
-    public static Map<String, Double> defaultSizeMap = new HashMap<>();
+    private static Map<String, Double> multiplierMap = new HashMap<>();
+    private static Map<String, Double> defaultSizeMap = new HashMap<>();
 
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             ytdDayData = new ConcurrentSkipListMap<>(String::compareTo);
@@ -60,6 +61,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static Map<String, Double> bidMap = new HashMap<>();
     private static Map<String, Double> askMap = new HashMap<>();
     private static volatile Map<String, AtomicBoolean> orderBlocked = new HashMap<>();
+    private static volatile Map<String, AtomicBoolean> cuttingBlocked = new HashMap<>();
 
 
     public static double getLiveData(String symb) {
@@ -259,12 +261,69 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     }
 
 
+    private static void breachCutter(Contract ct, double price, LocalDateTime t) {
+        String symbol = ibContractToSymbol(ct);
+        double pos = symbolPosMap.get(symbol);
+        double yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
+        double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
+        double defaultS = defaultSizeMap.getOrDefault(symbol, getDefaultSize(ct));
+        ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalTime usLt = usZdt.toLocalTime();
+
+        pr("china zone, nyzone ", t.toLocalTime(), usLt);
+
+        if (!cuttingBlocked.containsKey(symbol)) {
+            cuttingBlocked.put(symbol, new AtomicBoolean(false));
+        }
+
+        boolean noMoreCutting = cuttingBlocked.get(symbol).get();
+
+        if (usLt.isAfter(ltof(15, 30)) && usLt.isBefore(ltof(16, 0)) && !noMoreCutting) {
+
+            if (pos < 0.0 && price > mOpen) {
+                if (askMap.getOrDefault(symbol, 0.0) != 0.0
+                        && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
+                    cuttingBlocked.get(symbol).set(true);
+                    double size = Math.abs(pos) + (price > yOpen ? defaultS : 0);
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeBidLimitTIF(askMap.get(symbol), size, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
+                    staticController.placeOrModifyOrder(ct, o,
+                            new GuaranteeDevHandler(id, staticController));
+                    outputToSymbolFile(symbol, "********", breachMDevOutput);
+                    outputToSymbolFile(symbol, str(o.orderId(), "Breach Cutter BUY:",
+                            globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
+                            "price", price), breachMDevOutput);
+                }
+
+            } else if (pos > 0.0 && price < mOpen) {
+                if (bidMap.getOrDefault(symbol, 0.0) != 0.0
+                        && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
+                    cuttingBlocked.get(symbol).set(true);
+                    double size = Math.round(pos) + (price < yOpen ? defaultS : 0);
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeOfferLimitTIF(bidMap.get(symbol), size, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
+                    staticController.placeOrModifyOrder(ct, o,
+                            new GuaranteeDevHandler(id, staticController));
+                    outputToSymbolFile(symbol, "********", breachMDevOutput);
+                    outputToSymbolFile(symbol, str(o.orderId(), "Breach Cutter SELL:"
+                            , globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen,
+                            "mOpen", mOpen, "price", price), breachMDevOutput);
+                }
+            }
+        }
+    }
+
+
     @Override
     public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
         String symbol = ibContractToSymbol(ct);
         switch (tt) {
             case LAST:
                 liveData.get(symbol).put(t, price);
+                breachCutter(ct, price, t);
 
                 if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
