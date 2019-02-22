@@ -261,17 +261,13 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     }
 
 
-    private static void breachCutter(Contract ct, double price, LocalDateTime t) {
+    private static void breachCutter(Contract ct, double price, LocalDateTime t, double yOpen, double mOpen) {
         String symbol = ibContractToSymbol(ct);
         double pos = symbolPosMap.get(symbol);
-        double yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
-        double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
         double defaultS = defaultSizeMap.getOrDefault(symbol, getDefaultSize(ct));
         ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
         ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
         LocalTime usLt = usZdt.toLocalTime();
-
-        pr("china zone, nyzone ", t.toLocalTime(), usLt);
 
         if (!cuttingBlocked.containsKey(symbol)) {
             cuttingBlocked.put(symbol, new AtomicBoolean(false));
@@ -309,8 +305,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                             new GuaranteeDevHandler(id, staticController));
                     outputToSymbolFile(symbol, "********", breachMDevOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), "Breach Cutter SELL:"
-                            , globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen,
-                            "mOpen", mOpen, "price", price), breachMDevOutput);
+                            , globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen, "price", price),
+                            breachMDevOutput);
                 }
             }
         }
@@ -323,14 +319,16 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         switch (tt) {
             case LAST:
                 liveData.get(symbol).put(t, price);
-                breachCutter(ct, price, t);
 
                 if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
 
+
                     double yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
                     double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
                     double pos = symbolPosMap.get(symbol);
+
+                    breachCutter(ct, price, t, yOpen, mOpen);
 
                     double firstValue = liveData.get(symbol).firstEntry().getValue();
                     double defaultS = defaultSizeMap.getOrDefault(symbol, getDefaultSize(ct));
