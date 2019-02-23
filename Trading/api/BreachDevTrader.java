@@ -192,11 +192,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         ap.reqPositions(this);
     }
 
-    private void stimulatePositions(ApiController ap) {
-        ap.cancelPositions(this);
-        ap.reqPositions(this);
-    }
-
 
     private static void ytdOpen(Contract c, String date, double open, double high, double low,
                                 double close, int volume) {
@@ -217,10 +212,10 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     @Override
     public void positionEnd() {
         for (Contract c : contractPosMap.keySet()) {
-            String k = ibContractToSymbol(c);
-            pr(" symbol in pos ", k);
-            ytdDayData.put(k, new ConcurrentSkipListMap<>());
-            if (!k.equals("USD")) {
+            String symb = ibContractToSymbol(c);
+            pr(" symbol in pos ", symb);
+            ytdDayData.put(symb, new ConcurrentSkipListMap<>());
+            if (!symb.equals("USD")) {
                 staticController.reqHistDayData(ibStockReqId.addAndGet(5),
                         fillContract(c), BreachDevTrader::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
             }
@@ -285,7 +280,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                             new GuaranteeDevHandler(id, staticController));
                     outputToSymbolFile(symbol, "********", breachMDevOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), "Breach Cutter BUY:",
-                            globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
+                            globalIdOrderMap.get(id), "currPos", pos, "yOpen", yOpen, "mOpen", mOpen,
                             "price", price), breachMDevOutput);
                 }
             } else if (pos > 0.0 && price < mOpen) {
@@ -301,7 +296,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                             new GuaranteeDevHandler(id, staticController));
                     outputToSymbolFile(symbol, "********", breachMDevOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), "Breach Cutter SELL:",
-                            globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
+                            globalIdOrderMap.get(id), "currPos", pos, "yOpen", yOpen, "mOpen", mOpen,
                             "price", price), breachMDevOutput);
                 }
             }
@@ -359,7 +354,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
                     if (!orderBlocked.get(symbol).get()) {
                         if (firstValue < mOpen && price > mOpen) {
-                            if (pos < 0 && (pos == 0 && price > yOpen && totalDelta < HI_LIMIT)) {
+                            if (pos < 0 || (pos == 0 && price > yOpen && totalDelta < HI_LIMIT)) {
                                 if (askMap.getOrDefault(symbol, 0.0) != 0.0
                                         && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                                     orderBlocked.get(symbol).set(true);
@@ -403,10 +398,10 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         }
     }
 
-    private static double getPriceFromLiveData(Contract ct) {
+    private static double getPriceFromYtd(Contract ct) {
         String symbol = ibContractToSymbol(ct);
-        if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
-            return liveData.get(symbol).lastEntry().getValue();
+        if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
+            return ytdDayData.get(symbol).lastEntry().getValue().getClose();
         }
         return 0.0;
     }
@@ -428,13 +423,12 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
         es.scheduleAtFixedRate(() -> {
             totalDelta = contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
-                    , getPriceFromLiveData(e.getKey()), e.getValue(),
+                    , getPriceFromYtd(e.getKey()), e.getValue(),
                     fxMap.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
             pr(LocalDateTime.now().format(f),
                     "current total delta:", Math.round(totalDelta / 1000d) + "k");
         }, 0, 10, TimeUnit.SECONDS);
 
-        //es.scheduleAtFixedRate(() -> trader.stimulatePositions(staticController), 60, 60, TimeUnit.SECONDS);
     }
 
 }
