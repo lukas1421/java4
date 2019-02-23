@@ -428,8 +428,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             pr(LocalDateTime.now().format(f),
                     "current total delta:", Math.round(totalDelta / 1000d) + "k");
         }, 0, 10, TimeUnit.SECONDS);
-
     }
-
 }
 
