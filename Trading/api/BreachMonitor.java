@@ -42,7 +42,9 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
     private static ApiController staticController;
 
-    private volatile static Map<Contract, Double> holdingsMap =
+    private static Map<String, Double> multiplierMap = new HashMap<>();
+
+    private volatile static Map<Contract, Double> contractPosMap =
             new TreeMap<>(Comparator.comparing(Utility::ibContractToSymbol));
 
     private volatile static Map<String, Double> symbolPosMap = new TreeMap<>(String::compareTo);
@@ -59,6 +61,16 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 fxMap.put(Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
+            }
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "multiplier.txt")))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                multiplierMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
             }
         } catch (IOException x) {
             x.printStackTrace();
@@ -87,52 +99,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
         Contract activeXIN50Fut = AutoTraderXU.gettingActiveContract();
         registerContract(activeXIN50Fut);
-
-//        Contract oil = getOilContract();
-//        registerContract(oil);
-//
-//        Contract hk2828 = getGenericContract("2828", "SEHK", "HKD", Types.SecType.STK);
-//        registerContract(hk2828);
-//
-//        Contract hk2800 = getGenericContract("2800", "SEHK", "HKD", Types.SecType.STK);
-//        registerContract(hk2800);
-//
-//        Contract hk700 = getGenericContract("700", "SEHK", "HKD", Types.SecType.STK);
-//        registerContract(hk700);
-//
-//        Contract hk27 = getGenericContract("27", "SEHK", "HKD", Types.SecType.STK);
-//        registerContract(hk27);
-//
-//        Contract vix = getVIXContract();
-//        registerContract(vix);
-//
-//        Contract spy = getUSStockContract("SPY");
-//        registerContract(spy);
-//
-//        Contract qqq = getUSStockContract("QQQ");
-//        registerContract(qqq);
-//
-//        Contract baba = getUSStockContract("BABA");
-//        registerContract(baba);
-//
-//        Contract fb = getUSStockContract("FB");
-//        registerContract(fb);
-//
-//        Contract jd = getUSStockContract("JD");
-//        registerContract(jd);
-//
-//        Contract nflx = getUSStockContract("NFLX");
-//        registerContract(nflx);
-//
-//        Contract aapl = getUSStockContract("AAPL");
-//        registerContract(aapl);
-//
-//        Contract pfe = getUSStockContract("PFE");
-//        registerContract(pfe);
     }
 
     private void registerContract(Contract ct) {
-        holdingsMap.put(ct, 0.0);
+        contractPosMap.put(ct, 0.0);
         symbolPosMap.put(ibContractToSymbol(ct), 0.0);
     }
 
@@ -200,17 +170,17 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
         if (!contract.symbol().equals("USD")) {
-            holdingsMap.put(contract, position);
+            contractPosMap.put(contract, position);
             symbolPosMap.put(ibContractToSymbol(contract), position);
         }
     }
 
     @Override
     public void positionEnd() {
-        //pr(" holdings map ", holdingsMap);
-//        holdingsMap.entrySet().stream().forEachOrdered((e)
+        //pr(" holdings map ", contractPosMap);
+//        contractPosMap.entrySet().stream().forEachOrdered((e)
 //                -> pr("symb pos ", ibContractToSymbol(e.getKey()), e.getValue()));
-        for (Contract c : holdingsMap.keySet()) {
+        for (Contract c : contractPosMap.keySet()) {
             String k = ibContractToSymbol(c);
             //pr("position end: ticker/symbol ", c.symbol(), k);
             ytdDayData.put(k, new ConcurrentSkipListMap<>());
@@ -234,7 +204,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         } else {
-            double size = holdingsMap.getOrDefault(c, 0.0);
+            double pos = contractPosMap.getOrDefault(c, 0.0);
             if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
 
                 double yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
@@ -253,7 +223,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 double lastChg = Math.round((last / secLast - 1) * 1000d) / 10d;
                 double yDev = Math.round((last / yOpen - 1) * 1000d) / 10d;
                 double mDev = Math.round((last / mOpen - 1) * 1000d) / 10d;
-                if (size > 0) {
+                if (pos > 0) {
                     if (yDev > 0 && mDev >= 0) {
                         info = "LONG ON/ON ";
                     } else if (yDev > 0 && mDev <= 0) {
@@ -263,7 +233,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                     } else {
                         info = "LONG OFF/OFF";
                     }
-                } else if (size < 0) {
+                } else if (pos < 0) {
                     if (yDev < 0 && mDev <= 0) {
                         info = "SHORT ON/ON ";
                     } else if (yDev > 0 && mDev <= 0) {
@@ -278,12 +248,12 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                             mDev == 0.0 ? "mFlat" : (mDev < 0.0 ? "mDown" : "mUp"));
                 }
 
-                double delta = size * last * fxMap.getOrDefault(Currency.get(c.currency()), 1.0);
+                double delta = pos * last * fxMap.getOrDefault(Currency.get(c.currency()), 1.0);
 //                pr("delta ", size, last,
 //                        c.currency(), fxMap.getOrDefault(Currency.get(c.currency()), 1.0),
 //                        Math.round(delta / 1000d), "k");
 
-                String out = str(symbol, info, "POS:" + (size),
+                String out = str(symbol, info, "POS:" + (pos),
                         "||LAST:", ytdDayData.get(symbol).lastEntry().getKey().format(f), last,
                         lastChg + "%", "||YYY", "Up%:" +
                                 Math.round(100d * ytdDayData.get(symbol).entrySet().stream()
@@ -296,11 +266,12 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                                         .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
                                         .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) + "%",
                         "mDev:" + mDev + "%" + "(" +
-                                ytdDayData.get(symbol)
-                                        .ceilingEntry(LAST_MONTH_DAY).getKey().format(f) + " " + mOpen + ")");
+                                ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey().format(f) + " " + mOpen + ")");
 
-                pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), size != 0.0 ? "*" : ""
-                        , out, Math.round(delta / 1000d) + "k");
+                if (pos != 0.0) {
+                    pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
+                            , out, Math.round(delta / 1000d) + "k");
+                }
             }
         }
     }
@@ -382,16 +353,40 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         }
     }
 
-    @Override
-    public void handleVol(TickType tt, String symbol, double vol, LocalDateTime t) {
-        //pr("handle vol ", tt, symbol, vol, t);
+    public static void computeNetDelta() {
 
     }
 
     @Override
-    public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
-        //pr("handle generic ", tt, symbol, value, t);
+    public void handleVol(TickType tt, String symbol, double vol, LocalDateTime t) {
+    }
 
+    @Override
+    public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
+    }
+
+    private static double getPriceFromYtd(Contract ct) {
+        String symbol = ibContractToSymbol(ct);
+        if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
+            return ytdDayData.get(symbol).lastEntry().getValue().getClose();
+        }
+        return 0.0;
+
+    }
+
+    private static double getDelta(Contract ct, double price, double size, double fx) {
+        if (size != 0.0) {
+            if (ct.secType() == Types.SecType.STK) {
+                return price * size * fx;
+            } else if (ct.secType() == Types.SecType.FUT) {
+                if (multiplierMap.containsKey(ibContractToSymbol(ct))) {
+                    return price * size * fx * multiplierMap.get(ibContractToSymbol(ct));
+                } else {
+                    throw new IllegalStateException("no multiplier");
+                }
+            }
+        }
+        return 0.0;
     }
 
     public static void main(String[] args) {
@@ -404,5 +399,13 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             pr("running @ ", LocalTime.now());
             bm.reqHoldings(staticController);
         }, 1, 1, TimeUnit.MINUTES);
+
+        es.scheduleAtFixedRate(() -> {
+            double totalDelta = contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
+                    , getPriceFromYtd(e.getKey()), e.getValue(),
+                    fxMap.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
+            pr(LocalDateTime.now().format(f2),
+                    "current total delta:", Math.round(totalDelta / 1000d) + "k");
+        }, 15, 15, TimeUnit.SECONDS);
     }
 }

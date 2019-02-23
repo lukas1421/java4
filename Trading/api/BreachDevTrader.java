@@ -244,13 +244,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static double getDelta(Contract ct, double price, double size, double fx) {
         if (size != 0.0) {
             if (ct.secType() == Types.SecType.STK) {
-                //pr("get delta stock,symbol price size fx delta", ibContractToSymbol(ct), price, size, fx, price * size * fx);
                 return price * size * fx;
             } else if (ct.secType() == Types.SecType.FUT) {
                 if (multiplierMap.containsKey(ibContractToSymbol(ct))) {
-//                    pr("get delta stock", ibContractToSymbol(ct), price, size, fx,
-//                            multiplierMap.get(ibContractToSymbol(ct)),
-//                            multiplierMap.get(ibContractToSymbol(ct)) * price * size * fx);
                     return price * size * fx * multiplierMap.get(ibContractToSymbol(ct));
                 } else {
                     throw new IllegalStateException("no multiplier");
