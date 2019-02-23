@@ -64,50 +64,71 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             x.printStackTrace();
         }
 
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "breachHKNames.txt")))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                registerContract(getGenericContract(al1.get(0), "SEHK", "HKD", Types.SecType.STK));
+            }
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+
+
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "breachUSNames.txt")))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                registerContract(getUSStockContract(al1.get(0)));
+            }
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+
         Contract activeXIN50Fut = AutoTraderXU.gettingActiveContract();
         registerContract(activeXIN50Fut);
 
-        Contract oil = getOilContract();
-        registerContract(oil);
-
-        Contract hk2828 = getGenericContract("2828", "SEHK", "HKD", Types.SecType.STK);
-        registerContract(hk2828);
-
-        Contract hk2800 = getGenericContract("2800", "SEHK", "HKD", Types.SecType.STK);
-        registerContract(hk2800);
-
-        Contract hk700 = getGenericContract("700", "SEHK", "HKD", Types.SecType.STK);
-        registerContract(hk700);
-
-        Contract hk27 = getGenericContract("27", "SEHK", "HKD", Types.SecType.STK);
-        registerContract(hk27);
-
-        Contract vix = getVIXContract();
-        registerContract(vix);
-
-        Contract spy = getUSStockContract("SPY");
-        registerContract(spy);
-
-        Contract qqq = getUSStockContract("QQQ");
-        registerContract(qqq);
-
-        Contract baba = getUSStockContract("BABA");
-        registerContract(baba);
-
-        Contract fb = getUSStockContract("FB");
-        registerContract(fb);
-
-        Contract jd = getUSStockContract("JD");
-        registerContract(jd);
-
-        Contract nflx = getUSStockContract("NFLX");
-        registerContract(nflx);
-
-        Contract aapl = getUSStockContract("AAPL");
-        registerContract(aapl);
-
-        Contract pfe = getUSStockContract("PFE");
-        registerContract(pfe);
+//        Contract oil = getOilContract();
+//        registerContract(oil);
+//
+//        Contract hk2828 = getGenericContract("2828", "SEHK", "HKD", Types.SecType.STK);
+//        registerContract(hk2828);
+//
+//        Contract hk2800 = getGenericContract("2800", "SEHK", "HKD", Types.SecType.STK);
+//        registerContract(hk2800);
+//
+//        Contract hk700 = getGenericContract("700", "SEHK", "HKD", Types.SecType.STK);
+//        registerContract(hk700);
+//
+//        Contract hk27 = getGenericContract("27", "SEHK", "HKD", Types.SecType.STK);
+//        registerContract(hk27);
+//
+//        Contract vix = getVIXContract();
+//        registerContract(vix);
+//
+//        Contract spy = getUSStockContract("SPY");
+//        registerContract(spy);
+//
+//        Contract qqq = getUSStockContract("QQQ");
+//        registerContract(qqq);
+//
+//        Contract baba = getUSStockContract("BABA");
+//        registerContract(baba);
+//
+//        Contract fb = getUSStockContract("FB");
+//        registerContract(fb);
+//
+//        Contract jd = getUSStockContract("JD");
+//        registerContract(jd);
+//
+//        Contract nflx = getUSStockContract("NFLX");
+//        registerContract(nflx);
+//
+//        Contract aapl = getUSStockContract("AAPL");
+//        registerContract(aapl);
+//
+//        Contract pfe = getUSStockContract("PFE");
+//        registerContract(pfe);
     }
 
     private void registerContract(Contract ct) {

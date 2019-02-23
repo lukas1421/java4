@@ -280,8 +280,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 if (askMap.getOrDefault(symbol, 0.0) != 0.0
                         && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                     cuttingBlocked.get(symbol).set(true);
-                    //double size = Math.abs(pos) + (price > yOpen ? defaultS : 0);
-                    double size = Math.abs(pos);
+                    double size = Math.abs(pos) + (price > yOpen ? defaultS : 0);
+                    //double size = Math.abs(pos);
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeBidLimitTIF(askMap.get(symbol), size, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
@@ -292,22 +292,21 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                             globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
                             "price", price), breachMDevOutput);
                 }
-
             } else if (pos > 0.0 && price < mOpen) {
                 if (bidMap.getOrDefault(symbol, 0.0) != 0.0
                         && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
                     cuttingBlocked.get(symbol).set(true);
-                    //double size = Math.round(pos) + (price < yOpen ? defaultS : 0);
-                    double size = pos;
+                    double size = pos + (price < yOpen ? defaultS : 0);
+                    //double size = pos;
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeOfferLimitTIF(bidMap.get(symbol), size, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                     staticController.placeOrModifyOrder(ct, o,
                             new GuaranteeDevHandler(id, staticController));
                     outputToSymbolFile(symbol, "********", breachMDevOutput);
-                    outputToSymbolFile(symbol, str(o.orderId(), "Breach Cutter SELL:"
-                            , globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen, "price", price),
-                            breachMDevOutput);
+                    outputToSymbolFile(symbol, str(o.orderId(), "Breach Cutter SELL:",
+                            globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
+                            "price", price), breachMDevOutput);
                 }
             }
         }
