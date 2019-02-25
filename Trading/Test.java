@@ -3,6 +3,7 @@ import auxiliary.SimpleBar;
 import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.Month;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -16,14 +17,12 @@ import static utility.Utility.pr;
 public class Test {
 
 
+    public static LocalDate getLastMonthLastDay(LocalDate d) {
+        LocalDate now = d.withDayOfMonth(1);
+        return now.minusDays(1L);
+    }
+
     public static void main(String[] args) {
-
-        LocalDateTime ldt = LocalDateTime.now();
-        ZonedDateTime chinaZdt = ZonedDateTime.of(ldt, chinaZone);
-        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
-        LocalDateTime usLdt = usZdt.toLocalDateTime();
-        //LocalDateTime lt = usLdt.toLocalTime();
-
-        pr("ldt chinaZdt, usZdt, usLDt", ldt, chinaZdt, usZdt, usLdt);
+        pr(getLastMonthLastDay(LocalDate.of(2019, Month.MARCH,1)));
     }
 }

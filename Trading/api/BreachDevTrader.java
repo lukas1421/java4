@@ -213,7 +213,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     public void positionEnd() {
         for (Contract c : contractPosMap.keySet()) {
             String symb = ibContractToSymbol(c);
-            pr(" symbol in pos ", symb);
+            pr(" symbol in positionEnd ", symb);
             ytdDayData.put(symb, new ConcurrentSkipListMap<>());
             if (!symb.equals("USD")) {
                 staticController.reqHistDayData(ibStockReqId.addAndGet(5),
@@ -264,6 +264,10 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             cuttingBlocked.put(symbol, new AtomicBoolean(false));
         }
 
+        if (!orderBlocked.containsKey(symbol)) {
+            orderBlocked.put(symbol, new AtomicBoolean(false));
+        }
+
         boolean noMoreCutting = cuttingBlocked.get(symbol).get();
 
         if (usLt.isAfter(ltof(15, 30)) && usLt.isBefore(ltof(16, 0)) && !noMoreCutting) {
@@ -271,8 +275,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 if (askMap.getOrDefault(symbol, 0.0) != 0.0
                         && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                     cuttingBlocked.get(symbol).set(true);
+                    orderBlocked.get(symbol).set(true);
                     double size = Math.abs(pos) + (price > yOpen ? defaultS : 0);
-                    //double size = Math.abs(pos);
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeBidLimitTIF(askMap.get(symbol), size, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
@@ -287,8 +291,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 if (bidMap.getOrDefault(symbol, 0.0) != 0.0
                         && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
                     cuttingBlocked.get(symbol).set(true);
+                    orderBlocked.get(symbol).set(true);
                     double size = pos + (price < yOpen ? defaultS : 0);
-                    //double size = pos;
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeOfferLimitTIF(bidMap.get(symbol), size, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
@@ -314,7 +318,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
 
-
                     double yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
                     double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
                     double pos = symbolPosMap.get(symbol);
@@ -335,21 +338,21 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
                             fxMap.getOrDefault(Currency.get(ct.currency()), 1.0))));
 
-                    if (pos != 0) {
-                        pr("Dev", symbol, pos, "block?" + orderBlockStatus,
-                                "Default:", defaultS, "yOpen:" + yOpen
-                                        + "(" + Math.round(1000d * (price / yOpen - 1)) / 10d + "%)"
-                                , "mOpen:" + mOpen,
-                                "FV:", liveData.get(symbol).firstKey().format(f1) + " " +
-                                        liveData.get(symbol).firstEntry().getValue()
-                                        + "(" +
-                                        Math.round(1000d * (liveData.get(symbol).firstEntry().getValue() / mOpen - 1)) / 10d + "%)",
-                                "LV:", liveData.get(symbol).lastKey().format(f1) + " " + price + "(" +
-                                        Math.round(1000d * (price / mOpen - 1)) / 10d + "%)"
-                                , pos != 0.0 ? ("Delta:" + deltaDisplay
-                                        + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
-                                        + "%)" : "")) : "");
-                    }
+//                    if (pos != 0) {
+                    pr("Dev", symbol, pos, "block?" + orderBlockStatus,
+                            "Default:", defaultS, "yOpen:" + yOpen
+                                    + "(" + Math.round(1000d * (price / yOpen - 1)) / 10d + "%)"
+                            , "mOpen:" + mOpen,
+                            "FV:", liveData.get(symbol).firstKey().format(f1) + " " +
+                                    liveData.get(symbol).firstEntry().getValue()
+                                    + "(" +
+                                    Math.round(1000d * (liveData.get(symbol).firstEntry().getValue() / mOpen - 1)) / 10d + "%)",
+                            "LV:", liveData.get(symbol).lastKey().format(f1) + " " + price + "(" +
+                                    Math.round(1000d * (price / mOpen - 1)) / 10d + "%)"
+                            , pos != 0.0 ? ("Delta:" + deltaDisplay
+                                    + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
+                                    + "%)" : "")) : "");
+//                    }
 
 
                     if (!orderBlocked.get(symbol).get()) {
