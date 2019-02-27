@@ -260,13 +260,13 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         double prevClose = getLastPriceFromYtd(ct);
 
 
-        if (t.toLocalDate().getDayOfMonth() <= 10 && prevClose != 0.0 && pos == 0.0 &&
-                usLt.isAfter(ltof(15, 45)) && usLt.isBefore(ltof(16, 0))) {
+        if (pos == 0.0 && t.toLocalDate().getDayOfMonth() <= 10 && prevClose != 0.0 &&
+                usLt.isAfter(ltof(9, 30)) && usLt.isBefore(ltof(16, 0))) {
 
             pr("breach adder/symb/day/prevC/pos/uslt/price/yOpen/mOpen ",
                     symbol, t.toLocalDate().getDayOfMonth(), prevClose, pos, usLt, price, yOpen, mOpen);
 
-            if (price < prevClose && price > yOpen && price > mOpen) {
+            if (price > prevClose && price > yOpen && price > mOpen) {
                 if (askMap.getOrDefault(symbol, 0.0) != 0.0
                         && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
 
@@ -282,7 +282,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                             "price", price), breachMDevOutput);
                 }
 
-            } else if (price > prevClose && price < yOpen && price < mOpen) {
+            } else if (price < prevClose && price < yOpen && price < mOpen) {
                 orderBlocked.put(symbol, new AtomicBoolean(true));
                 int id = autoTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(bidMap.get(symbol), defaultS, IOC);
