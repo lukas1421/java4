@@ -23,8 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static api.AutoTraderMain.*;
 import static api.XuTraderHelper.*;
 import static client.Types.TimeInForce.IOC;
-import static util.AutoOrderType.BREACH_CUTTER;
-import static util.AutoOrderType.BREACH_MDEV;
+import static util.AutoOrderType.*;
 import static utility.Utility.*;
 
 public class BreachDevTrader implements LiveHandler, ApiController.IPositionHandler {
@@ -251,6 +250,48 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         return 0.0;
     }
 
+    private static void breachAdder(Contract ct, double price, LocalDateTime t, double yOpen, double mOpen) {
+        String symbol = ibContractToSymbol(ct);
+        double pos = symbolPosMap.get(symbol);
+        double defaultS = defaultSizeMap.getOrDefault(symbol, getDefaultSize(ct));
+        ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalTime usLt = usZdt.toLocalTime();
+        double prevClose = getLastPriceFromYtd(ct);
+
+        if (t.toLocalDate().getDayOfMonth() <= 10 && prevClose != 0.0 && pos == 0.0 &&
+                usLt.isAfter(ltof(15, 45)) && usLt.isBefore(ltof(16, 0))) {
+
+            if (price < prevClose && price > yOpen && price > mOpen) {
+                if (askMap.getOrDefault(symbol, 0.0) != 0.0
+                        && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeBidLimitTIF(askMap.get(symbol), defaultS, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
+                    staticController.placeOrModifyOrder(ct, o,
+                            new GuaranteeDevHandler(id, staticController));
+                    outputToSymbolFile(symbol, "********", breachMDevOutput);
+                    outputToSymbolFile(symbol, str(o.orderId(), "Breach ADDER BUY:",
+                            globalIdOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
+                            "price", price), breachMDevOutput);
+                }
+
+            } else if (price > prevClose && price < yOpen && price < mOpen) {
+                int id = autoTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(bidMap.get(symbol), defaultS, IOC);
+                globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
+                staticController.placeOrModifyOrder(ct, o,
+                        new GuaranteeDevHandler(id, staticController));
+                outputToSymbolFile(symbol, "********", breachMDevOutput);
+                outputToSymbolFile(symbol, str(o.orderId(), "Breach ADDER SELL:",
+                        globalIdOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
+                        "price", price), breachMDevOutput);
+
+            }
+
+        }
+    }
+
 
     private static void breachCutter(Contract ct, double price, LocalDateTime t, double yOpen, double mOpen) {
         String symbol = ibContractToSymbol(ct);
@@ -322,6 +363,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
                     double pos = symbolPosMap.get(symbol);
 
+                    breachAdder(ct, price, t, yOpen, mOpen);
                     breachCutter(ct, price, t, yOpen, mOpen);
 
                     double firstValue = liveData.get(symbol).firstEntry().getValue();
@@ -401,7 +443,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         }
     }
 
-    private static double getPriceFromYtd(Contract ct) {
+    private static double getLastPriceFromYtd(Contract ct) {
         String symbol = ibContractToSymbol(ct);
         if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
             return ytdDayData.get(symbol).lastEntry().getValue().getClose();
@@ -426,7 +468,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
         es.scheduleAtFixedRate(() -> {
             totalDelta = contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
-                    , getPriceFromYtd(e.getKey()), e.getValue(),
+                    , getLastPriceFromYtd(e.getKey()), e.getValue(),
                     fxMap.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
             pr(LocalDateTime.now().format(f),
                     "current total delta:", Math.round(totalDelta / 1000d) + "k");
