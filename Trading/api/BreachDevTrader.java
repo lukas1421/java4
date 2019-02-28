@@ -140,14 +140,21 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static void registerContract(Contract ct) {
         contractPosMap.put(ct, 0.0);
         symbolPosMap.put(ibContractToSymbol(ct), 0.0);
-        liveData.put(ibContractToSymbol(ct), new ConcurrentSkipListMap<>());
+        String symbol = ibContractToSymbol(ct);
+        if (!liveData.containsKey(symbol)) {
+            liveData.put(symbol, new ConcurrentSkipListMap<>());
+        }
         //orderBlocked.put(ibContractToSymbol(ct), new AtomicBoolean(false));
     }
 
     private static void registerContractPosition(Contract ct, double pos) {
+
         contractPosMap.put(ct, pos);
         symbolPosMap.put(ibContractToSymbol(ct), pos);
-        liveData.put(ibContractToSymbol(ct), new ConcurrentSkipListMap<>());
+        String symbol = ibContractToSymbol(ct);
+        if (!liveData.containsKey(symbol)) {
+            liveData.put(ibContractToSymbol(ct), new ConcurrentSkipListMap<>());
+        }
         //orderBlocked.put(ibContractToSymbol(ct), new AtomicBoolean(false));
     }
 
