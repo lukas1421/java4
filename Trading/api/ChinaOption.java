@@ -353,7 +353,7 @@ public class ChinaOption extends JPanel implements Runnable {
         p.select("Graph1");
         rightPanel.add(p, BorderLayout.SOUTH);
 
-        JButton saveVolsButton = new JButton(" Save Vols ");
+        JButton saveVolsCSVButton = new JButton(" Save Vols CSV");
         JButton saveVolsHibButton = new JButton(" Save Vols hib ");
         JButton getPreviousVolButton = new JButton("Prev Vol");
 
@@ -404,11 +404,7 @@ public class ChinaOption extends JPanel implements Runnable {
         saveIntradayButton.addActionListener(l -> saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance()));
         loadIntradayButton.addActionListener(l -> loadIntradayVolsHib(ChinaVolIntraday.getInstance()));
         showDeltaButton.addActionListener(l -> showDelta = !showDelta);
-        getPreviousVolButton.addActionListener(l -> {
-                    loadVolsHib();
-                    //loadPreviousOptionsExcel();
-                }
-        );
+        getPreviousVolButton.addActionListener(l -> loadVolsHib());
 
         frontMonthButton.addActionListener(l -> {
             expiryToCheck = frontExpiry;
@@ -431,7 +427,7 @@ public class ChinaOption extends JPanel implements Runnable {
         });
         computeOnButton.addActionListener(l -> computeOn = computeOnButton.isSelected());
 
-        saveVolsButton.addActionListener(l -> {
+        saveVolsCSVButton.addActionListener(l -> {
             if (LocalTime.now().isAfter(LocalTime.of(15, 0))) {
                 saveVolsCSV();
             } else {
@@ -450,7 +446,7 @@ public class ChinaOption extends JPanel implements Runnable {
             //ChinaOptionHelper.getVolsFromVolOutputToHib();
         });
 
-        controlPanelTop.add(saveVolsButton);
+        controlPanelTop.add(saveVolsCSVButton);
         controlPanelTop.add(saveVolsHibButton);
         controlPanelTop.add(getPreviousVolButton);
 
@@ -805,10 +801,9 @@ public class ChinaOption extends JPanel implements Runnable {
             }
         }, 3, 1, TimeUnit.MINUTES);
 
-        sesOption.scheduleAtFixedRate(() -> {
-            timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
-                    + (LocalTime.now().getSecond() == 0 ? ":00" : ""));
-        }, 0, 1, TimeUnit.SECONDS);
+        sesOption.scheduleAtFixedRate(() ->
+                timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
+                        + (LocalTime.now().getSecond() == 0 ? ":00" : "")), 0, 1, TimeUnit.SECONDS);
 
     }
 
@@ -831,8 +826,6 @@ public class ChinaOption extends JPanel implements Runnable {
                 URLConnection urlconnPutFront = urlPutFront.openConnection();
 
                 String callStringBack = "http://hq.sinajs.cn/list=OP_UP_510050" + backMonth;
-                //pr(" front back month ", frontMonth, backMonth, thirdMonth, fourthMonth);
-                //pr(" expiry ", frontExpiry, backExpiry, thirdExpiry, fourthExpiry);
                 URL urlCallBack = new URL(callStringBack);
                 URLConnection urlconnCallBack = urlCallBack.openConnection();
 
@@ -882,8 +875,7 @@ public class ChinaOption extends JPanel implements Runnable {
             }
             if (timeLapseVolAllExpiries.containsKey(expiryToCheck)) {
                 graphATMLapse.setVolLapse(timeLapseVolAllExpiries.get(expiryToCheck));
-                graphATMLapse.setGraphTitle(expiryToCheck.format(DateTimeFormatter.ofPattern("MM-dd"))
-                        + " ATM lapse ");
+                graphATMLapse.setGraphTitle(expiryToCheck.format(DateTimeFormatter.ofPattern("MM-dd")) + " ATM lapse ");
             }
             graphATMLapse.repaint();
         }
