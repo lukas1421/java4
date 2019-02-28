@@ -30,7 +30,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
     private static DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d H:mm:ss");
     private static double totalDelta = 0.0;
-    private static ApiController staticController;
+    private static ApiController apCtrl;
     private static final DateTimeFormatter f1 = DateTimeFormatter.ofPattern("M-d H:mm");
     private static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s");
     private static final LocalDate LAST_MONTH_DAY = getLastMonthLastDay();
@@ -42,9 +42,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static final double HI_LIMIT = 2000000.0;
     private static final double LO_LIMIT = -2000000.0;
 
-    public static Map<Currency, Double> fxMap = new HashMap<>();
-    private static Map<String, Double> multiplierMap = new HashMap<>();
-    private static Map<String, Double> defaultSizeMap = new HashMap<>();
+    public static Map<Currency, Double> fx = new HashMap<>();
+    private static Map<String, Double> multi = new HashMap<>();
+    private static Map<String, Double> defaultSize = new HashMap<>();
 
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             ytdDayData = new ConcurrentSkipListMap<>(String::compareTo);
@@ -59,8 +59,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
     private static Map<String, Double> bidMap = new HashMap<>();
     private static Map<String, Double> askMap = new HashMap<>();
-    private static volatile Map<String, AtomicBoolean> orderBlocked = new HashMap<>();
-    private static volatile Map<String, AtomicBoolean> cuttingBlocked = new HashMap<>();
+    //private static volatile Map<String, AtomicBoolean> addingBlocked = new HashMap<>();
+    //private static volatile Map<String, AtomicBoolean> cuttingBlocked = new HashMap<>();
+    private static volatile Map<String, AtomicBoolean> tradingBlocked = new HashMap<>();
 
 
     public static double getLiveData(String symb) {
@@ -85,7 +86,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                fxMap.put(Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
+                fx.put(Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
             }
         } catch (IOException x) {
             x.printStackTrace();
@@ -95,7 +96,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 new FileInputStream(TradingConstants.GLOBALPATH + "multiplier.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                multiplierMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
+                multi.put(al1.get(0), Double.parseDouble(al1.get(1)));
             }
         } catch (IOException x) {
             x.printStackTrace();
@@ -106,7 +107,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 new FileInputStream(TradingConstants.GLOBALPATH + "defaultSize.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                defaultSizeMap.put(al1.get(0), Double.parseDouble(al1.get(1)));
+                defaultSize.put(al1.get(0), Double.parseDouble(al1.get(1)));
             }
         } catch (IOException x) {
             x.printStackTrace();
@@ -144,25 +145,22 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         if (!liveData.containsKey(symbol)) {
             liveData.put(symbol, new ConcurrentSkipListMap<>());
         }
-        //orderBlocked.put(ibContractToSymbol(ct), new AtomicBoolean(false));
     }
 
     private static void registerContractPosition(Contract ct, double pos) {
-
         contractPosMap.put(ct, pos);
         symbolPosMap.put(ibContractToSymbol(ct), pos);
         String symbol = ibContractToSymbol(ct);
         if (!liveData.containsKey(symbol)) {
             liveData.put(ibContractToSymbol(ct), new ConcurrentSkipListMap<>());
         }
-        //orderBlocked.put(ibContractToSymbol(ct), new AtomicBoolean(false));
     }
 
 
     public void connectAndReqPos() {
         ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
-        staticController = ap;
+        apCtrl = ap;
         CountDownLatch l = new CountDownLatch(1);
         boolean connectionStatus = false;
 
@@ -222,10 +220,10 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             pr(" symbol in positionEnd ", symb);
             ytdDayData.put(symb, new ConcurrentSkipListMap<>());
             if (!symb.equals("USD")) {
-                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
+                apCtrl.reqHistDayData(ibStockReqId.addAndGet(5),
                         fillContract(c), BreachDevTrader::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
             }
-            staticController.req1ContractLive(c, this, false);
+            apCtrl.req1ContractLive(c, this, false);
         }
     }
 
@@ -247,8 +245,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             if (ct.secType() == Types.SecType.STK) {
                 return price * size * fx;
             } else if (ct.secType() == Types.SecType.FUT) {
-                if (multiplierMap.containsKey(ibContractToSymbol(ct))) {
-                    return price * size * fx * multiplierMap.get(ibContractToSymbol(ct));
+                if (multi.containsKey(ibContractToSymbol(ct))) {
+                    return price * size * fx * multi.get(ibContractToSymbol(ct));
                 } else {
 
                     throw new IllegalStateException(str("no multiplier",
@@ -262,50 +260,45 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static void breachAdder(Contract ct, double price, LocalDateTime t, double yOpen, double mOpen) {
         String symbol = ibContractToSymbol(ct);
         double pos = symbolPosMap.get(symbol);
-        double defaultS = defaultSizeMap.getOrDefault(symbol, getDefaultSize(ct));
+        double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
         ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
         ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
         LocalTime usLt = usZdt.toLocalTime();
         double prevClose = getLastPriceFromYtd(ct);
 
 
-        boolean blocked = orderBlocked.containsKey(symbol) && orderBlocked.get(symbol).get();
+        boolean blocked = tradingBlocked.containsKey(symbol) && tradingBlocked.get(symbol).get();
 
-        if (pos == 0.0 && t.toLocalDate().getDayOfMonth() <= 10 && prevClose != 0.0 &&
+        if (pos == 0.0 && prevClose != 0.0 &&
                 usLt.isAfter(ltof(9, 30)) && usLt.isBefore(ltof(16, 0)) && !blocked) {
-
-            orderBlocked.put(symbol, new AtomicBoolean(true));
 
             pr(t.toLocalDate(), "breach adder", symbol,
                     "pos", pos, "uslt", usLt, "prevC", prevClose, "price", price, "yOpen", yOpen, "mOpen", mOpen);
 
             if (price > prevClose && price > yOpen && price > mOpen && totalDelta < HI_LIMIT) {
-                if (askMap.getOrDefault(symbol, 0.0) != 0.0
-                        && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
-
-                    orderBlocked.put(symbol, new AtomicBoolean(true));
+                if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
+                    tradingBlocked.put(symbol, new AtomicBoolean(true));
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeBidLimitTIF(askMap.get(symbol), defaultS, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                    staticController.placeOrModifyOrder(ct, o,
-                            new GuaranteeDevHandler(id, staticController));
+                    apCtrl.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apCtrl));
                     outputToSymbolFile(symbol, str("********", t), breachMDevOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), "Breach ADDER BUY:",
                             globalIdOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
-                            "price", price), breachMDevOutput);
+                            "prevClose", prevClose, "price", price), breachMDevOutput);
                 }
-
             } else if (price < prevClose && price < yOpen && price < mOpen && totalDelta > LO_LIMIT) {
-                orderBlocked.put(symbol, new AtomicBoolean(true));
-                int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(bidMap.get(symbol), defaultS, IOC);
-                globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                staticController.placeOrModifyOrder(ct, o,
-                        new GuaranteeDevHandler(id, staticController));
-                outputToSymbolFile(symbol, str("********", t), breachMDevOutput);
-                outputToSymbolFile(symbol, str(o.orderId(), "Breach ADDER SELL:",
-                        globalIdOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
-                        "price", price), breachMDevOutput);
+                if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
+                    tradingBlocked.put(symbol, new AtomicBoolean(true));
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeOfferLimitTIF(bidMap.get(symbol), defaultS, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
+                    apCtrl.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apCtrl));
+                    outputToSymbolFile(symbol, str("********", t), breachMDevOutput);
+                    outputToSymbolFile(symbol, str(o.orderId(), "Breach ADDER SELL:",
+                            globalIdOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
+                            "prevClose", prevClose, "price", price), breachMDevOutput);
+                }
             }
         }
     }
@@ -314,48 +307,35 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static void breachCutter(Contract ct, double price, LocalDateTime t, double yOpen, double mOpen) {
         String symbol = ibContractToSymbol(ct);
         double pos = symbolPosMap.get(symbol);
-        double defaultS = defaultSizeMap.getOrDefault(symbol, getDefaultSize(ct));
-        ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
-        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
-        LocalTime usLt = usZdt.toLocalTime();
+        double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
 
-        if (!cuttingBlocked.containsKey(symbol)) {
-            cuttingBlocked.put(symbol, new AtomicBoolean(false));
-        }
+        boolean blocked = tradingBlocked.containsKey(symbol) && tradingBlocked.get(symbol).get();
 
-        if (!orderBlocked.containsKey(symbol)) {
-            orderBlocked.put(symbol, new AtomicBoolean(false));
-        }
-
-
-        if (usLt.isAfter(ltof(15, 30)) && usLt.isBefore(ltof(16, 0)) && !cuttingBlocked.get(symbol).get()) {
+        if (!blocked) {
             if (pos < 0.0 && (price > mOpen || price > yOpen)) {
-                if (askMap.getOrDefault(symbol, 0.0) != 0.0
-                        && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
-                    cuttingBlocked.get(symbol).set(true);
-                    orderBlocked.get(symbol).set(true);
+                if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
+                    tradingBlocked.put(symbol, new AtomicBoolean(true));
                     double size = Math.abs(pos) + ((price > mOpen && price > yOpen) ? defaultS : 0);
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeBidLimitTIF(askMap.get(symbol), size, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                    staticController.placeOrModifyOrder(ct, o,
-                            new GuaranteeDevHandler(id, staticController));
+                    apCtrl.placeOrModifyOrder(ct, o,
+                            new GuaranteeDevHandler(id, apCtrl));
                     outputToSymbolFile(symbol, str("********", t), breachMDevOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), "Breach Cutter BUY:",
                             globalIdOrderMap.get(id), "currPos", pos, "yOpen", yOpen, "mOpen", mOpen,
                             "price", price), breachMDevOutput);
                 }
             } else if (pos > 0.0 && (price < mOpen || price < yOpen)) {
-                if (bidMap.getOrDefault(symbol, 0.0) != 0.0
-                        && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
-                    cuttingBlocked.get(symbol).set(true);
-                    orderBlocked.get(symbol).set(true);
+                if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
+                    tradingBlocked.put(symbol, new AtomicBoolean(true));
+
                     double size = pos + ((price < yOpen && price < mOpen) ? defaultS : 0);
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeOfferLimitTIF(bidMap.get(symbol), size, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                    staticController.placeOrModifyOrder(ct, o,
-                            new GuaranteeDevHandler(id, staticController));
+                    apCtrl.placeOrModifyOrder(ct, o,
+                            new GuaranteeDevHandler(id, apCtrl));
                     outputToSymbolFile(symbol, str("********", t), breachMDevOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), "Breach Cutter SELL:",
                             globalIdOrderMap.get(id), "currPos", pos, "yOpen", yOpen, "mOpen", mOpen,
@@ -377,33 +357,26 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
 
                     double yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
+                    LocalDate mFirstDate = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey();
                     double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
                     double pos = symbolPosMap.get(symbol);
 
-                    breachAdder(ct, price, t, yOpen, mOpen);
                     breachCutter(ct, price, t, yOpen, mOpen);
+                    breachAdder(ct, price, t, yOpen, mOpen);
 
+                    double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
 
-                    LocalDateTime firstKey = liveData.get(symbol).firstEntry().getKey();
-                    double firstValue = liveData.get(symbol).firstEntry().getValue();
-                    double defaultS = defaultSizeMap.getOrDefault(symbol, getDefaultSize(ct));
+                    boolean blocked = tradingBlocked.containsKey(symbol) && tradingBlocked.get(symbol).get();
 
-                    if (!orderBlocked.containsKey(symbol)) {
-                        orderBlocked.put(symbol, new AtomicBoolean(false));
-                    }
-
-                    boolean orderBlockStatus = orderBlocked.get(symbol).get();
-                    double delta = getDelta(ct, price, pos,
-                            fxMap.getOrDefault(Currency.get(ct.currency()), 1.0));
+                    double delta = getDelta(ct, price, pos, fx.getOrDefault(Currency.get(ct.currency()), 1.0));
 
                     String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
-                            fxMap.getOrDefault(Currency.get(ct.currency()), 1.0))));
+                            fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
 
-//                    if (pos != 0) {
-                    pr("Dev", symbol, pos, "block?" + orderBlockStatus,
+                    pr("Dev", symbol, pos, "block?" + blocked,
                             "Default:", defaultS, "yOpen:" + yOpen
                                     + "(" + Math.round(1000d * (price / yOpen - 1)) / 10d + "%)"
-                            , "mOpen:" + mOpen,
+                            , "mOpen/Date:" + mFirstDate + " " + mOpen,
                             "FV:", liveData.get(symbol).firstKey().format(f1) + " " +
                                     liveData.get(symbol).firstEntry().getValue()
                                     + "(" +
@@ -413,47 +386,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                             , pos != 0.0 ? ("Delta:" + deltaDisplay
                                     + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
                                     + "%)" : "")) : "");
-//                    }
 
-
-                    if (!orderBlocked.get(symbol).get()) {
-                        if (firstValue < mOpen && price > mOpen) {
-                            if (pos < 0 || (pos == 0 && price > yOpen && totalDelta < HI_LIMIT)) {
-                                if (askMap.getOrDefault(symbol, 0.0) != 0.0
-                                        && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
-                                    orderBlocked.get(symbol).set(true);
-                                    double size = Math.abs(pos) + (price > yOpen ? defaultS : 0);
-                                    int id = autoTradeID.incrementAndGet();
-                                    Order o = placeBidLimitTIF(askMap.get(symbol), size, IOC);
-                                    globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_MDEV));
-                                    staticController.placeOrModifyOrder(ct, o,
-                                            new GuaranteeDevHandler(id, staticController));
-                                    outputToSymbolFile(symbol, str("********", t), breachMDevOutput);
-                                    outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach MDEV BUY:",
-                                            globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
-                                            "price", price, "first value", firstKey, firstValue), breachMDevOutput);
-                                }
-                            }
-                        } else if (firstValue > mOpen && price < mOpen) {
-                            if (pos > 0 || (pos == 0 && price < yOpen && totalDelta > LO_LIMIT)) {
-                                if (bidMap.getOrDefault(symbol, 0.0) != 0.0
-                                        && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
-                                    orderBlocked.get(symbol).set(true);
-                                    double size = Math.round(pos) + (price < yOpen ? defaultS : 0);
-                                    int id = autoTradeID.incrementAndGet();
-                                    Order o = placeOfferLimitTIF(bidMap.get(symbol), size, IOC);
-                                    globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_MDEV));
-                                    staticController.placeOrModifyOrder(ct, o,
-                                            new GuaranteeDevHandler(id, staticController));
-                                    outputToSymbolFile(symbol, str("********", t), breachMDevOutput);
-                                    outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach MDEV SELL:"
-                                            , globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen,
-                                            "mOpen", mOpen, "price", price, "first value", firstKey, firstValue)
-                                            , breachMDevOutput);
-                                }
-                            }
-                        }
-                    }
                 }
             case BID:
                 bidMap.put(symbol, price);
@@ -488,7 +421,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         es.scheduleAtFixedRate(() -> {
             totalDelta = contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
                     , getLastPriceFromYtd(e.getKey()), e.getValue(),
-                    fxMap.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
+                    fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
             pr(LocalDateTime.now().format(f),
                     "current total delta:", Math.round(totalDelta / 1000d) + "k");
         }, 0, 10, TimeUnit.SECONDS);

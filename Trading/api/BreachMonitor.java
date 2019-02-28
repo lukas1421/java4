@@ -98,8 +98,11 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     }
 
     private void registerContract(Contract ct) {
-        contractPosMap.put(ct, 0.0);
-        symbolPosMap.put(ibContractToSymbol(ct), 0.0);
+        String symbol = ibContractToSymbol(ct);
+        if (symbol.equalsIgnoreCase("SGXA50PR")) {
+            contractPosMap.put(ct, 0.0);
+            symbolPosMap.put(symbol, 0.0);
+        }
     }
 
     private static Contract getOilContract() {
@@ -165,7 +168,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     //positions
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
-        if (!contract.symbol().equals("USD")) {
+        if (!contract.symbol().equals("USD") && !ibContractToSymbol(contract).equalsIgnoreCase("SGXA50PR")) {
             contractPosMap.put(contract, position);
             symbolPosMap.put(ibContractToSymbol(contract), position);
         }
@@ -207,6 +210,8 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
                 long yCount = ytdDayData.get(symbol).entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY)).count();
+//                pr(symbol, "last entry ", ytdDayData.get(symbol).lastEntry());
+
                 double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
                 long mCount = ytdDayData.get(symbol).entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY)).count();
@@ -246,7 +251,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
                 double delta = pos * last * fxMap.getOrDefault(Currency.get(c.currency()), 1.0);
 //                pr("delta ", size, last,
-//                        c.currency(), fxMap.getOrDefault(Currency.get(c.currency()), 1.0),
+//                        c.currency(), fx.getOrDefault(Currency.get(c.currency()), 1.0),
 //                        Math.round(delta / 1000d), "k");
 
                 String out = str(symbol, info, "POS:" + (pos),

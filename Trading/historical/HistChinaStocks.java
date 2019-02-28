@@ -1450,7 +1450,7 @@ public class HistChinaStocks extends JPanel {
 
 //                if (s.startsWith("hk")) {
 //                    openPos = currentPositionMap.getOrDefault(s, 0) - wtdChgInPosition.getOrDefault(s, 0);
-//                    pr(s, "wtd mtm ", " fx ", fxMap.getOrDefault(currencyMap.getOrDefault(s, CNY), 1.0),
+//                    pr(s, "wtd mtm ", " fx ", fx.getOrDefault(currencyMap.getOrDefault(s, CNY), 1.0),
 //                            "open pos ", openPos, "last ", chinaWtd.get(s).lastEntry().getValue().getClose(),
 //                            "last week close", lastWeekCloseMap.getOrDefault(s, 0.0), "default",
 //                            chinaWtd.get(s).firstEntry().getValue().getOpen());

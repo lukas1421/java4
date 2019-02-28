@@ -1063,7 +1063,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                             LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd"))
                                     .equals(LocalDate.now()) && LocalTime.now().isBefore(ltof(15, 0)))) {
 //                        pr(" get expiring delta ", e.getValue(), futPriceMap.getOrDefault(e.getKey(),
-//                                SinaStock.FTSE_OPEN), ChinaPosition.fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey().getSymbol(),
+//                                SinaStock.FTSE_OPEN), ChinaPosition.fx.getOrDefault(currencyMap.getOrDefault(e.getKey().getSymbol(),
 //                                CNY), 1.0));
                         return e.getValue() * futPriceMap.getOrDefault(e.getKey(), SinaStock.FTSE_OPEN)
                                 * ChinaPosition.fxMap.getOrDefault
