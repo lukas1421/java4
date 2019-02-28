@@ -4,7 +4,7 @@ import auxiliary.SimpleBar;
 import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
-import handler.GuaranteeDevHandler;
+import handler.SureDevHandler;
 import handler.LiveHandler;
 import utility.Utility;
 
@@ -29,15 +29,17 @@ import static utility.Utility.*;
 public class BreachDevTrader implements LiveHandler, ApiController.IPositionHandler {
 
     private static DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d H:mm:ss");
-    private static double totalDelta = 0.0;
-    private static ApiController apCtrl;
     private static final DateTimeFormatter f1 = DateTimeFormatter.ofPattern("M-d H:mm");
     private static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s");
+
+    private static double totalDelta = 0.0;
+    private static ApiController apCtrl;
+
     private static final LocalDate LAST_MONTH_DAY = getLastMonthLastDay();
     private static final LocalDate LAST_YEAR_DAY = getLastYearLastDay();
 
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
-    private static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
+    private static File devOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
     private static final double HI_LIMIT = 2000000.0;
     private static final double LO_LIMIT = -2000000.0;
@@ -237,7 +239,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         } else if (ct.secType() == Types.SecType.STK && ct.currency().equalsIgnoreCase("USD")) {
             return 100.0;
         }
-        return 0.0;
+        throw new IllegalStateException(str(ibContractToSymbol(ct), " no default size "));
     }
 
     private static double getDelta(Contract ct, double price, double size, double fx) {
@@ -261,19 +263,15 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         String symbol = ibContractToSymbol(ct);
         double pos = symbolPosMap.get(symbol);
         double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
-        ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
-        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
-        LocalTime usLt = usZdt.toLocalTime();
         double prevClose = getLastPriceFromYtd(ct);
 
 
         boolean blocked = tradingBlocked.containsKey(symbol) && tradingBlocked.get(symbol).get();
 
-        if (pos == 0.0 && prevClose != 0.0 &&
-                usLt.isAfter(ltof(9, 30)) && usLt.isBefore(ltof(16, 0)) && !blocked) {
+        if (!blocked && pos == 0.0 && prevClose != 0.0) {
 
-            pr(t.toLocalDate(), "breach adder", symbol,
-                    "pos", pos, "uslt", usLt, "prevC", prevClose, "price", price, "yOpen", yOpen, "mOpen", mOpen);
+            pr(t.format(f1), "breach adder", symbol, "pos", pos, "prevC", prevClose,
+                    "price", price, "yOpen", yOpen, "mOpen", mOpen);
 
             if (price > prevClose && price > yOpen && price > mOpen && totalDelta < HI_LIMIT) {
                 if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
@@ -281,11 +279,11 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeBidLimitTIF(askMap.get(symbol), defaultS, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                    apCtrl.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apCtrl));
-                    outputToSymbolFile(symbol, str("********", t), breachMDevOutput);
-                    outputToSymbolFile(symbol, str(o.orderId(), "Breach ADDER BUY:",
+                    apCtrl.placeOrModifyOrder(ct, o, new SureDevHandler(id, apCtrl));
+                    outputToSymbolFile(symbol, str("********", t), devOutput);
+                    outputToSymbolFile(symbol, str(o.orderId(), "ADDER BUY:",
                             globalIdOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
-                            "prevClose", prevClose, "price", price), breachMDevOutput);
+                            "prevClose", prevClose, "price", price), devOutput);
                 }
             } else if (price < prevClose && price < yOpen && price < mOpen && totalDelta > LO_LIMIT) {
                 if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
@@ -293,11 +291,11 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeOfferLimitTIF(bidMap.get(symbol), defaultS, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                    apCtrl.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apCtrl));
-                    outputToSymbolFile(symbol, str("********", t), breachMDevOutput);
-                    outputToSymbolFile(symbol, str(o.orderId(), "Breach ADDER SELL:",
+                    apCtrl.placeOrModifyOrder(ct, o, new SureDevHandler(id, apCtrl));
+                    outputToSymbolFile(symbol, str("********", t), devOutput);
+                    outputToSymbolFile(symbol, str(o.orderId(), "ADDER SELL:",
                             globalIdOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
-                            "prevClose", prevClose, "price", price), breachMDevOutput);
+                            "prevClose", prevClose, "price", price), devOutput);
                 }
             }
         }
@@ -307,39 +305,32 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static void breachCutter(Contract ct, double price, LocalDateTime t, double yOpen, double mOpen) {
         String symbol = ibContractToSymbol(ct);
         double pos = symbolPosMap.get(symbol);
-        double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
-
         boolean blocked = tradingBlocked.containsKey(symbol) && tradingBlocked.get(symbol).get();
 
         if (!blocked) {
             if (pos < 0.0 && (price > mOpen || price > yOpen)) {
                 if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                     tradingBlocked.put(symbol, new AtomicBoolean(true));
-                    double size = Math.abs(pos) + ((price > mOpen && price > yOpen) ? defaultS : 0);
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeBidLimitTIF(askMap.get(symbol), size, IOC);
+                    Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos), IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                    apCtrl.placeOrModifyOrder(ct, o,
-                            new GuaranteeDevHandler(id, apCtrl));
-                    outputToSymbolFile(symbol, str("********", t), breachMDevOutput);
-                    outputToSymbolFile(symbol, str(o.orderId(), "Breach Cutter BUY:",
-                            globalIdOrderMap.get(id), "currPos", pos, "yOpen", yOpen, "mOpen", mOpen,
-                            "price", price), breachMDevOutput);
+                    apCtrl.placeOrModifyOrder(ct, o, new SureDevHandler(id, apCtrl));
+                    outputToSymbolFile(symbol, str("********", t), devOutput);
+                    outputToSymbolFile(symbol, str(o.orderId(), "Cutter BUY:",
+                            globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
+                            "price", price), devOutput);
                 }
             } else if (pos > 0.0 && (price < mOpen || price < yOpen)) {
                 if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
                     tradingBlocked.put(symbol, new AtomicBoolean(true));
-
-                    double size = pos + ((price < yOpen && price < mOpen) ? defaultS : 0);
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeOfferLimitTIF(bidMap.get(symbol), size, IOC);
+                    Order o = placeOfferLimitTIF(bidMap.get(symbol), pos, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                    apCtrl.placeOrModifyOrder(ct, o,
-                            new GuaranteeDevHandler(id, apCtrl));
-                    outputToSymbolFile(symbol, str("********", t), breachMDevOutput);
-                    outputToSymbolFile(symbol, str(o.orderId(), "Breach Cutter SELL:",
-                            globalIdOrderMap.get(id), "currPos", pos, "yOpen", yOpen, "mOpen", mOpen,
-                            "price", price), breachMDevOutput);
+                    apCtrl.placeOrModifyOrder(ct, o, new SureDevHandler(id, apCtrl));
+                    outputToSymbolFile(symbol, str("********", t), devOutput);
+                    outputToSymbolFile(symbol, str(o.orderId(), "Cutter SELL:",
+                            globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
+                            "price", price), devOutput);
                 }
             }
         }
@@ -356,6 +347,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
 
+                    LocalDate yFirstDate = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getKey();
                     double yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
                     LocalDate mFirstDate = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey();
                     double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
@@ -373,16 +365,12 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
                             fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
 
-                    pr("Dev", symbol, pos, "block?" + blocked,
-                            "Default:", defaultS, "yOpen:" + yOpen
+                    pr(symbol, "POS:", pos, "block?" + blocked, "Default:", defaultS,
+                            "yOpen/Date:" + yFirstDate + " " + yOpen
                                     + "(" + Math.round(1000d * (price / yOpen - 1)) / 10d + "%)"
-                            , "mOpen/Date:" + mFirstDate + " " + mOpen,
-                            "FV:", liveData.get(symbol).firstKey().format(f1) + " " +
-                                    liveData.get(symbol).firstEntry().getValue()
-                                    + "(" +
-                                    Math.round(1000d * (liveData.get(symbol).firstEntry().getValue() / mOpen - 1)) / 10d + "%)",
-                            "LV:", liveData.get(symbol).lastKey().format(f1) + " " + price + "(" +
-                                    Math.round(1000d * (price / mOpen - 1)) / 10d + "%)"
+                            , "mOpen/Date:" + mFirstDate + " " + mOpen
+                                    + "(" + Math.round(1000d * (price / mOpen - 1)) / 10d + "%)",
+                            "Last:", liveData.get(symbol).lastKey().format(f1) + " " + price
                             , pos != 0.0 ? ("Delta:" + deltaDisplay
                                     + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
                                     + "%)" : "")) : "");

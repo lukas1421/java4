@@ -18,7 +18,7 @@ import static client.OrderStatus.PendingCancel;
 import static client.Types.TimeInForce.IOC;
 import static utility.Utility.str;
 
-public class GuaranteeDevHandler implements ApiController.IOrderHandler {
+public class SureDevHandler implements ApiController.IOrderHandler {
 
     private static Map<Integer, OrderStatus> idStatusMap = new ConcurrentHashMap<>();
     private int primaryID;
@@ -27,7 +27,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
     private static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
 
-    public GuaranteeDevHandler(int id, ApiController ap) {
+    public SureDevHandler(int id, ApiController ap) {
         primaryID = id;
         currentID = id;
         idStatusMap.put(id, OrderStatus.ConstructedInHandler);
@@ -35,7 +35,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
     }
 
 
-    private GuaranteeDevHandler(int prim, int id, ApiController ap) {
+    private SureDevHandler(int prim, int id, ApiController ap) {
         primaryID = prim;
         currentID = id;
         idStatusMap.put(id, OrderStatus.ConstructedInHandler);
@@ -83,7 +83,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 o.tif(IOC);
 
                 int newID = autoTradeID.incrementAndGet();
-                controller.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(primaryID, newID, controller));
+                controller.placeOrModifyOrder(ct, o, new SureDevHandler(primaryID, newID, controller));
                 globalIdOrderMap.put(newID, new OrderAugmented(ct, LocalDateTime.now(), o,
                         globalIdOrderMap.get(currentID).getOrderType(), false));
 
