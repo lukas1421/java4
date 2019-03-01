@@ -106,7 +106,9 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
                 g.setColor(Color.black);
 
                 if ((double) e.getKey() == volNow.lastKey()) {
-                    g.drawString(LocalDate.now().toString(), x, getHeight() / 2 + 20);
+                    g.drawString(LocalDate.now().toString(), getWidth() / 2, 40);
+
+//                    g.drawString(LocalDate.now().toString(), x, getHeight() / 2 + 20);
                 }
 
 
@@ -118,7 +120,8 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
                             + "", x + 10, Math.max(10, yPrev1 + 10));
 
                     if ((double) e.getKey() == volPrev1.lastKey()) {
-                        g.drawString(previousTradingDate.toString(), x, getHeight() / 2);
+                        g.drawString(previousTradingDate.toString(), getWidth() / 2, 20);
+                        //g.drawString("prev Date ", x, getHeight() / 2);
                     }
                 }
                 //g.setColor(Color.black);

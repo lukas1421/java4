@@ -14,6 +14,7 @@ import saving.ChinaVolIntraday;
 import saving.ChinaVolSave;
 import saving.HibernateUtil;
 import util.NewTabbedPanel;
+import util.Util;
 import utility.Utility;
 
 import javax.swing.*;
@@ -98,7 +99,7 @@ public class ChinaOption extends JPanel implements Runnable {
     //private static double stockPrice = 0.0;
     static double interestRate = 0.04;
 
-    public static volatile LocalDate previousTradingDate = LocalDate.now();
+    public static volatile LocalDate previousTradingDate = LocalDate.MIN;
     public static volatile LocalDate pricingDate = LocalDate.now();
     private static LocalDate savingDate = LocalDate.now();
     private static LocalDate saveCutoffDate = savingDate.minusDays(7L);
@@ -141,7 +142,7 @@ public class ChinaOption extends JPanel implements Runnable {
             }
         };
 
-        getLastTradingDate();
+        //getLastTradingDate();
         loadOptionTickers();
 
         expiryList.add(frontExpiry);
@@ -559,26 +560,26 @@ public class ChinaOption extends JPanel implements Runnable {
         graphTS2.repaint();
     }
 
-    private static void getLastTradingDate() {
-        int lineNo = 0;
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
-            String line;
-            while ((line = reader1.readLine()) != null) {
-                List<String> al1 = Arrays.asList(line.split("\t"));
-                if (lineNo > 2) {
-                    throw new IllegalArgumentException(" ERROR: date map has more than 3 lines ");
-                }
-                if (Double.parseDouble(al1.get(1)) != Double.parseDouble(al1.get(2))) {
-                    previousTradingDate = LocalDate.parse(al1.get(0));
-                }
-                lineNo++;
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-        System.out.println(" ChinaOption.PreviousTradingDate: " + previousTradingDate);
-    }
+//    private static void getLastTradingDate() {
+//        int lineNo = 0;
+//        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+//                new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
+//            String line;
+//            while ((line = reader1.readLine()) != null) {
+//                List<String> al1 = Arrays.asList(line.split("\t"));
+//                if (lineNo > 2) {
+//                    throw new IllegalArgumentException(" ERROR: date map has more than 3 lines ");
+//                }
+//                if (Double.parseDouble(al1.get(1)) != Double.parseDouble(al1.get(2))) {
+//                    previousTradingDate = LocalDate.parse(al1.get(0));
+//                }
+//                lineNo++;
+//            }
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//        //System.out.println(" ChinaOption.PreviousTradingDate: " + previousTradingDate);
+//    }
 
     private void outputOptions() {
         pr(" outputting options");
@@ -1063,11 +1064,11 @@ public class ChinaOption extends JPanel implements Runnable {
                     histVol.get(ticker).put(volDate, volPrev);
                 }
 
-                if (volDate.equals(previousTradingDate)) {
-                    if (!ticker.equals("")) {
-                        impliedVolMapYtd.put(ticker, volPrev);
-                    }
-                }
+//                if (volDate.equals(previousTradingDate)) {
+//                    if (!ticker.equals("")) {
+//                        impliedVolMapYtd.put(ticker, volPrev);
+//                    }
+//                }
             }
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -1084,6 +1085,14 @@ public class ChinaOption extends JPanel implements Runnable {
             //pr(" expiry is " + expiry);
             //timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(System.out::println);
         }
+        pr("print histvol ");
+
+        histVol.forEach(Utility::pr);
+
+        histVol.keySet().forEach(k -> impliedVolMapYtd.put(k, histVol.get(k).lastEntry().getValue()));
+        previousTradingDate =
+                histVol.entrySet().stream().flatMap(e -> e.getValue().keySet().stream())
+                        .max(Comparator.naturalOrder()).get();
     }
 
     private static void loadVolsHib() {
@@ -1097,7 +1106,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
         pr(" loading previous vols from hib ");
 
-        AtomicInteger i = new AtomicInteger(0);
+        //AtomicInteger i = new AtomicInteger(0);
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
 
         try (Session session = sessionF.openSession()) {
@@ -1108,8 +1117,8 @@ public class ChinaOption extends JPanel implements Runnable {
 
                 for (Object o : list) {
                     ChinaVolSave c = (ChinaVolSave) o;
-//                    pr(str(c.getVolDate(), c.getCallPut(), c.getStrike(), c.getExpiryDate(),
-//                            c.getVol(), c.getMoneyness(), c.getOptionTicker()));
+                    pr(str(c.getVolDate(), c.getCallPut(), c.getStrike(), c.getExpiryDate(),
+                            c.getVol(), c.getMoneyness(), c.getOptionTicker()));
                     //pr(" counter is " + i.incrementAndGet());
                     LocalDate volDate = c.getVolDate();
                     LocalDate expiry = c.getExpiryDate();
@@ -1133,11 +1142,11 @@ public class ChinaOption extends JPanel implements Runnable {
                         histVol.get(ticker).put(volDate, volPrev);
                     }
 
-                    if (volDate.equals(previousTradingDate)) {
-                        if (!ticker.equals("")) {
-                            impliedVolMapYtd.put(ticker, volPrev);
-                        }
-                    }
+//                    if (volDate.equals(LocalDate.of(2019, Month.FEBRUARY, 28))) {
+//                        if (!ticker.equals("")) {
+//                            impliedVolMapYtd.put(ticker, volPrev);
+//                        }
+//                    }
                 }
                 //session.getTransaction().commit();
                 session.close();
@@ -1152,6 +1161,18 @@ public class ChinaOption extends JPanel implements Runnable {
             pr(" expiry is " + expiry);
             //timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(Utility::pr);
         }
+
+        pr("print histvol ");
+
+        histVol.forEach(Utility::pr);
+
+        histVol.keySet().forEach(k -> impliedVolMapYtd.put(k,
+                histVol.get(k).entrySet().stream().filter(e -> e.getKey().isBefore(LocalDate.now()))
+                        .max(Comparator.comparing(Map.Entry::getKey)).map(Map.Entry::getValue).orElse(0.0)));
+
+        previousTradingDate = histVol.entrySet().stream().flatMap(e -> e.getValue().keySet().stream())
+                .filter(e -> e.isBefore(LocalDate.now()))
+                .max(Comparator.naturalOrder()).orElse(LocalDate.MIN);
     }
 
 

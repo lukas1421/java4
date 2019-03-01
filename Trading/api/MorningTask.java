@@ -809,7 +809,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         if (tt == TickType.CLOSE && symbol.equals("XINA50")) {
             Utility.simpleWriteToFile("FTSE A50" + "\t" + price, true, output);
         }
-        //pr("handle price  ", symbol, tt, price, t);
+        pr("handle price  ", symbol, tt, price, t);
     }
 
     @Override
