@@ -41,8 +41,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
     private static File devOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
-    private static final double HI_LIMIT = 1500000.0;
-    private static final double LO_LIMIT = -1500000.0;
+    private static final double HI_LIMIT = 2000000.0;
+    private static final double LO_LIMIT = -2000000.0;
 
     public static Map<Currency, Double> fx = new HashMap<>();
     private static Map<String, Double> multi = new HashMap<>();
@@ -117,16 +117,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
         Contract activeXIN50Fut = AutoTraderXU.gettingActiveContract();
         registerContract(activeXIN50Fut);
-
-//        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-//                new FileInputStream(TradingConstants.GLOBALPATH + "breachHKNames.txt")))) {
-//            while ((line = reader1.readLine()) != null) {
-//                List<String> al1 = Arrays.asList(line.split("\t"));
-//                registerContract(getGenericContract(al1.get(0), "SEHK", "HKD", Types.SecType.STK));
-//            }
-//        } catch (IOException x) {
-//            x.printStackTrace();
-//        }
 
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
@@ -250,7 +240,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 if (multi.containsKey(ibContractToSymbol(ct))) {
                     return price * size * fx * multi.get(ibContractToSymbol(ct));
                 } else {
-
                     throw new IllegalStateException(str("no multiplier",
                             ibContractToSymbol(ct)));
                 }
@@ -269,7 +258,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             defaultS = getDefaultSize(ct);
         }
         double prevClose = getLastPriceFromYtd(ct);
-
 
         boolean blocked = tradingBlocked.containsKey(symbol) && tradingBlocked.get(symbol).get();
 
