@@ -312,7 +312,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         double pos = symbolPosMap.get(symbol);
         boolean blocked = tradingBlocked.containsKey(symbol) && tradingBlocked.get(symbol).get();
 
-        if (!blocked) {
+        if (!blocked && pos != 0.0) {
             if (pos < 0.0 && (price > mOpen || price > yOpen)) {
                 if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                     tradingBlocked.put(symbol, new AtomicBoolean(true));
@@ -361,9 +361,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     breachCutter(ct, price, t, yOpen, mOpen);
                     breachAdder(ct, price, t, yOpen, mOpen);
 
-                    //pr(" default size map ", defaultSize);
-
-                    double defaultS = defaultSize.get(symbol);
+                    double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
 
                     boolean blocked = tradingBlocked.containsKey(symbol) && tradingBlocked.get(symbol).get();
 
