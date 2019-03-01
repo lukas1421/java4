@@ -1274,12 +1274,13 @@ public class ChinaOption extends JPanel implements Runnable {
         jf.setLayout(new FlowLayout());
         jf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         jf.setVisible(true);
-        ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
 
+        ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
         ses.scheduleAtFixedRate(co, 0, 5, SECONDS);
 
         ses.scheduleAtFixedRate(() -> {
-            if (LocalTime.now().isAfter(LocalTime.of(9, 20)) && LocalTime.now().isBefore(LocalTime.of(15, 30))) {
+            if (LocalTime.now().isAfter(LocalTime.of(9, 20))
+                    && LocalTime.now().isBefore(LocalTime.of(15, 30))) {
                 //pr(" saving vols hib ");
                 saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance());
             }
@@ -1289,6 +1290,7 @@ public class ChinaOption extends JPanel implements Runnable {
             timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
                     + (LocalTime.now().getSecond() == 0 ? ":00" : ""));
         }, 0, 1, TimeUnit.SECONDS);
+
     }
 
     class OptionTableModel extends javax.swing.table.AbstractTableModel {

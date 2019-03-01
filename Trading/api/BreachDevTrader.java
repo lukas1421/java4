@@ -41,8 +41,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
     private static File devOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
-    private static final double HI_LIMIT = 2000000.0;
-    private static final double LO_LIMIT = -2000000.0;
+    private static final double HI_LIMIT = 1500000.0;
+    private static final double LO_LIMIT = -1500000.0;
 
     public static Map<Currency, Double> fx = new HashMap<>();
     private static Map<String, Double> multi = new HashMap<>();
@@ -262,7 +262,12 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static void breachAdder(Contract ct, double price, LocalDateTime t, double yOpen, double mOpen) {
         String symbol = ibContractToSymbol(ct);
         double pos = symbolPosMap.get(symbol);
-        double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
+        double defaultS;
+        if (defaultSize.containsKey(symbol)) {
+            defaultS = defaultSize.get(symbol);
+        } else {
+            defaultS = getDefaultSize(ct);
+        }
         double prevClose = getLastPriceFromYtd(ct);
 
 
@@ -356,7 +361,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     breachCutter(ct, price, t, yOpen, mOpen);
                     breachAdder(ct, price, t, yOpen, mOpen);
 
-                    double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
+                    //pr(" default size map ", defaultSize);
+
+                    double defaultS = defaultSize.get(symbol);
 
                     boolean blocked = tradingBlocked.containsKey(symbol) && tradingBlocked.get(symbol).get();
 

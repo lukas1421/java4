@@ -37,6 +37,7 @@ import static api.ChinaData.priceMapBarYtd;
 import static api.TradingConstants.STOCK_COLLECTION_TIME;
 import static api.XuTraderHelper.getTradeDate;
 import static api.XuTraderHelper.outputToAll;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static utility.Utility.pr;
 
 public final class ChinaMain implements IConnectionHandler {
@@ -93,7 +94,7 @@ public final class ChinaMain implements IConnectionHandler {
 
 
     //private static HKData hkdata = new HKData();
-    //private static ChinaOption chinaOption = new ChinaOption();
+    private static ChinaOption chinaOption = new ChinaOption();
     //private static HistChinaStocks histChina = new HistChinaStocks();
     //private static AutoTraderMain autoMain = new AutoTraderMain();
     private static AutoTraderXU xutrader = new AutoTraderXU(M_CONTROLLER);
@@ -143,7 +144,7 @@ public final class ChinaMain implements IConnectionHandler {
         //m_tabbedPanel.addTab("Size ytd", csdy);
         //m_tabbedPanel.addTab(" HK Data", hkdata);
         //m_tabbedPanel.addTab(" HK Stock", hkstock);
-        //m_tabbedPanel.addTab("Option", chinaOption);
+        m_tabbedPanel.addTab("Option", chinaOption);
         //m_tabbedPanel.addTab("Hist China", histChina);
         m_tabbedPanel.addTab("Connection", m_connectionPanel);
         //m_tabbedPanel.addTab("US", usstock);
@@ -200,7 +201,7 @@ public final class ChinaMain implements IConnectionHandler {
         JButton getSinaData = new JButton("get Index");
 
         getSinaData.addActionListener((ae) -> {
-            ses.scheduleAtFixedRate(sinastock1, 0, 1, TimeUnit.SECONDS);
+            ses.scheduleAtFixedRate(sinastock1, 0, 1, SECONDS);
             xu.startIndex();
             ses.scheduleAtFixedRate(() -> {
                 if (STOCK_COLLECTION_TIME.test(LocalDateTime.now())) {
@@ -221,9 +222,9 @@ public final class ChinaMain implements IConnectionHandler {
                 //ChinaBigGraph.setGraph(ChinaStock.selectedNameStock);
                 ChinaBigGraph.refresh();
                 AutoTraderXU.set20DayBullBear();
-            }, 0, 1, TimeUnit.SECONDS);
+            }, 0, 1, SECONDS);
 
-            //ses.scheduleAtFixedRate(chinaOption, 0, 5, SECONDS);
+            ses.scheduleAtFixedRate(chinaOption, 0, 5, SECONDS);
             ChinaOption.refresh();
         });
 
@@ -536,14 +537,14 @@ public final class ChinaMain implements IConnectionHandler {
                                         ChinaStock.computeButton.doClick();
                                     });
                                     xutrader.openingRefresh();
-                                }, 5, TimeUnit.SECONDS);
+                                }, 5, SECONDS);
 
                                 ses.schedule(() -> {
                                     SwingUtilities.invokeLater(() -> {
                                         ChinaStock.computeButton.doClick();
                                         ChinaStock.graphButton.doClick();
                                     });
-                                }, 10, TimeUnit.SECONDS);
+                                }, 10, SECONDS);
                             }
                         });
                         t.setRepeats(false);
