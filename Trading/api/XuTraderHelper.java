@@ -184,7 +184,7 @@ public class XuTraderHelper {
         }
     }
 
-    static void outputDetailedGen(String s, File detailed) {
+    private static void outputDetailedGen(String s, File detailed) {
         try (BufferedWriter out = new BufferedWriter(new FileWriter(detailed, true))) {
             out.append(s);
             out.newLine();

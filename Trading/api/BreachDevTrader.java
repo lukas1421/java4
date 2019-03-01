@@ -118,15 +118,15 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         Contract activeXIN50Fut = AutoTraderXU.gettingActiveContract();
         registerContract(activeXIN50Fut);
 
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(TradingConstants.GLOBALPATH + "breachHKNames.txt")))) {
-            while ((line = reader1.readLine()) != null) {
-                List<String> al1 = Arrays.asList(line.split("\t"));
-                registerContract(getGenericContract(al1.get(0), "SEHK", "HKD", Types.SecType.STK));
-            }
-        } catch (IOException x) {
-            x.printStackTrace();
-        }
+//        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+//                new FileInputStream(TradingConstants.GLOBALPATH + "breachHKNames.txt")))) {
+//            while ((line = reader1.readLine()) != null) {
+//                List<String> al1 = Arrays.asList(line.split("\t"));
+//                registerContract(getGenericContract(al1.get(0), "SEHK", "HKD", Types.SecType.STK));
+//            }
+//        } catch (IOException x) {
+//            x.printStackTrace();
+//        }
 
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(

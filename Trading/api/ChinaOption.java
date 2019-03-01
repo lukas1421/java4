@@ -1026,74 +1026,74 @@ public class ChinaOption extends JPanel implements Runnable {
         return 0.0;
     }
 
-    private static void loadPreviousOptionsExcel() {
-        String line;
-        NavigableMap<LocalDate, TreeMap<LocalDate, TreeMap<Integer, Double>>>
-                timeLapseMoneynessVolAllExpiries = new TreeMap<>();
-
-        for (LocalDate expiry : expiryList) {
-            timeLapseMoneynessVolAllExpiries.put(expiry, new TreeMap<>());
-            timeLapseVolAllExpiries.put(expiry, new TreeMap<>());
-        }
-
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(TradingConstants.GLOBALPATH + "volOutput.csv")))) {
-            while ((line = reader1.readLine()) != null) {
-                List<String> al1 = Arrays.asList(line.split(","));
-                LocalDate volDate = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/M/d"));
-                CallPutFlag f = al1.get(1).equalsIgnoreCase("C") ? CALL : PUT;
-                double strike = Double.parseDouble(al1.get(2));
-                LocalDate expiry = LocalDate.parse(al1.get(3), DateTimeFormatter.ofPattern("yyyy/M/dd"));
-                double volPrev = Double.parseDouble(al1.get(4));
-                int moneyness = Integer.parseInt(al1.get(5));
-                String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
-
-                if (expiryList.contains(expiry)) {
-                    if (!timeLapseMoneynessVolAllExpiries.get(expiry).containsKey(volDate)) {
-                        timeLapseMoneynessVolAllExpiries.get(expiry).put(volDate, new TreeMap<>());
-                    }
-                    if ((f == CALL && moneyness >= 100) || (f == PUT && moneyness < 100)) {
-                        timeLapseMoneynessVolAllExpiries.get(expiry).get(volDate).put(moneyness, volPrev);
-                    }
-                }
-
-                if (histVol.containsKey(ticker)) {
-                    histVol.get(ticker).put(volDate, volPrev);
-                } else {
-                    histVol.put(ticker, new ConcurrentSkipListMap<>());
-                    histVol.get(ticker).put(volDate, volPrev);
-                }
-
-//                if (volDate.equals(previousTradingDate)) {
-//                    if (!ticker.equals("")) {
-//                        impliedVolMapYtd.put(ticker, volPrev);
+//    private static void loadPreviousOptionsExcel() {
+//        String line;
+//        NavigableMap<LocalDate, TreeMap<LocalDate, TreeMap<Integer, Double>>>
+//                timeLapseMoneynessVolAllExpiries = new TreeMap<>();
+//
+//        for (LocalDate expiry : expiryList) {
+//            timeLapseMoneynessVolAllExpiries.put(expiry, new TreeMap<>());
+//            timeLapseVolAllExpiries.put(expiry, new TreeMap<>());
+//        }
+//
+//        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+//                new FileInputStream(TradingConstants.GLOBALPATH + "volOutput.csv")))) {
+//            while ((line = reader1.readLine()) != null) {
+//                List<String> al1 = Arrays.asList(line.split(","));
+//                LocalDate volDate = LocalDate.parse(al1.get(0), DateTimeFormatter.ofPattern("yyyy/M/d"));
+//                CallPutFlag f = al1.get(1).equalsIgnoreCase("C") ? CALL : PUT;
+//                double strike = Double.parseDouble(al1.get(2));
+//                LocalDate expiry = LocalDate.parse(al1.get(3), DateTimeFormatter.ofPattern("yyyy/M/dd"));
+//                double volPrev = Double.parseDouble(al1.get(4));
+//                int moneyness = Integer.parseInt(al1.get(5));
+//                String ticker = getOptionTicker(tickerOptionsMap, f, strike, expiry);
+//
+//                if (expiryList.contains(expiry)) {
+//                    if (!timeLapseMoneynessVolAllExpiries.get(expiry).containsKey(volDate)) {
+//                        timeLapseMoneynessVolAllExpiries.get(expiry).put(volDate, new TreeMap<>());
+//                    }
+//                    if ((f == CALL && moneyness >= 100) || (f == PUT && moneyness < 100)) {
+//                        timeLapseMoneynessVolAllExpiries.get(expiry).get(volDate).put(moneyness, volPrev);
 //                    }
 //                }
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-
-//        timeLapseMoneynessVolFront.entrySet().forEach(System.out::println);
-//        timeLapseMoneynessVolFront.forEach((key, value) ->
-//        timeLapseVolFront.put(key, ChinaOptionHelper.getVolByMoneyness(value, 100)));
-//        timeLapseVolFront.entrySet().forEach(System.out::println);
-
-        for (LocalDate expiry : expiryList) {
-            timeLapseMoneynessVolAllExpiries.get(expiry).forEach((k, v) ->
-                    timeLapseVolAllExpiries.get(expiry).put(k, ChinaOptionHelper.getVolByMoneyness(v, 100)));
-            //pr(" expiry is " + expiry);
-            //timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(System.out::println);
-        }
-        pr("print histvol ");
-
-        histVol.forEach(Utility::pr);
-
-        histVol.keySet().forEach(k -> impliedVolMapYtd.put(k, histVol.get(k).lastEntry().getValue()));
-        previousTradingDate =
-                histVol.entrySet().stream().flatMap(e -> e.getValue().keySet().stream())
-                        .max(Comparator.naturalOrder()).get();
-    }
+//
+//                if (histVol.containsKey(ticker)) {
+//                    histVol.get(ticker).put(volDate, volPrev);
+//                } else {
+//                    histVol.put(ticker, new ConcurrentSkipListMap<>());
+//                    histVol.get(ticker).put(volDate, volPrev);
+//                }
+//
+////                if (volDate.equals(previousTradingDate)) {
+////                    if (!ticker.equals("")) {
+////                        impliedVolMapYtd.put(ticker, volPrev);
+////                    }
+////                }
+//            }
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//
+////        timeLapseMoneynessVolFront.entrySet().forEach(System.out::println);
+////        timeLapseMoneynessVolFront.forEach((key, value) ->
+////        timeLapseVolFront.put(key, ChinaOptionHelper.getVolByMoneyness(value, 100)));
+////        timeLapseVolFront.entrySet().forEach(System.out::println);
+//
+//        for (LocalDate expiry : expiryList) {
+//            timeLapseMoneynessVolAllExpiries.get(expiry).forEach((k, v) ->
+//                    timeLapseVolAllExpiries.get(expiry).put(k, ChinaOptionHelper.getVolByMoneyness(v, 100)));
+//            //pr(" expiry is " + expiry);
+//            //timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(System.out::println);
+//        }
+//        pr("print histvol ");
+//
+//        histVol.forEach(Utility::pr);
+//
+//        histVol.keySet().forEach(k -> impliedVolMapYtd.put(k, histVol.get(k).lastEntry().getValue()));
+//        previousTradingDate =
+//                histVol.entrySet().stream().flatMap(e -> e.getValue().keySet().stream())
+//                        .max(Comparator.naturalOrder()).get();
+//    }
 
     private static void loadVolsHib() {
         NavigableMap<LocalDate, TreeMap<LocalDate, TreeMap<Integer, Double>>>
@@ -1161,10 +1161,7 @@ public class ChinaOption extends JPanel implements Runnable {
             pr(" expiry is " + expiry);
             //timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(Utility::pr);
         }
-
-        //pr("print histvol ");
-        //histVol.forEach(Utility::pr);
-
+        
         histVol.keySet().forEach(k -> impliedVolMapYtd.put(k,
                 histVol.get(k).entrySet().stream().filter(e -> e.getKey().isBefore(LocalDate.now()))
                         .max(Comparator.comparing(Map.Entry::getKey)).map(Map.Entry::getValue).orElse(0.0)));

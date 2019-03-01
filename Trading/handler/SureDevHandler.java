@@ -60,9 +60,7 @@ public class SureDevHandler implements ApiController.IOrderHandler {
                         "*GUARANTEE DEV FILL*", idStatusMap.get(currentID), "->", orderState.status(), now,
                         "ID:", currentID, globalIdOrderMap.get(currentID),
                         "TIF:", globalIdOrderMap.get(currentID).getOrder().tif());
-                //outputDetailedGen(globalIdOrderMap.get(primaryID).getSymbol(), msg);
                 outputToSymbolFile(globalIdOrderMap.get(primaryID).getSymbol(), msg, breachMDevOutput);
-
             }
 
             if (orderState.status() == PendingCancel && globalIdOrderMap.get(currentID).getOrder().tif() == IOC) {
