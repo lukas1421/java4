@@ -1162,9 +1162,8 @@ public class ChinaOption extends JPanel implements Runnable {
             //timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(Utility::pr);
         }
 
-        pr("print histvol ");
-
-        histVol.forEach(Utility::pr);
+        //pr("print histvol ");
+        //histVol.forEach(Utility::pr);
 
         histVol.keySet().forEach(k -> impliedVolMapYtd.put(k,
                 histVol.get(k).entrySet().stream().filter(e -> e.getKey().isBefore(LocalDate.now()))
