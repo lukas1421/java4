@@ -269,10 +269,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                         "mDev:" + mDev + "%" + "(" +
                                 ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey().format(f) + " " + mOpen + ")");
 
-                //if (pos != 0.0) {
-                pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
-                        , out, Math.round(delta / 1000d) + "k");
-                //}
+                if (pos != 0.0) {
+                    pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
+                            , out, Math.round(delta / 1000d) + "k");
+                }
             }
         }
     }

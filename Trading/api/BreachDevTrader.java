@@ -63,8 +63,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static Map<String, Double> askMap = new HashMap<>();
     //private static volatile Map<String, AtomicBoolean> addingBlocked = new HashMap<>();
     //private static volatile Map<String, AtomicBoolean> cuttingBlocked = new HashMap<>();
-    private static volatile Map<String, AtomicBoolean> tradingBlocked = new HashMap<>();
-
+    //private static volatile Map<String, AtomicBoolean> tradingBlocked = new HashMap<>();
+    private static volatile Map<String, AtomicBoolean> addedMap = new HashMap<>();
+    private static volatile Map<String, AtomicBoolean> liquidatedMap = new HashMap<>();
 
     public static double getLiveData(String symb) {
         if (liveData.containsKey(symb) && liveData.get(symb).size() > 0) {
@@ -259,16 +260,17 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         }
         double prevClose = getLastPriceFromYtd(ct);
 
-        boolean blocked = tradingBlocked.containsKey(symbol) && tradingBlocked.get(symbol).get();
+        boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
+        boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
 
-        if (!blocked && pos == 0.0 && prevClose != 0.0) {
+        if (!added && !liquidated && pos == 0.0 && prevClose != 0.0) {
 
             pr(t.format(f1), "breach adder", symbol, "pos", pos, "prevC", prevClose,
                     "price", price, "yOpen", yOpen, "mOpen", mOpen);
 
             if (price > prevClose && price > yOpen && price > mOpen && totalDelta < HI_LIMIT) {
                 if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
-                    tradingBlocked.put(symbol, new AtomicBoolean(true));
+                    addedMap.put(symbol, new AtomicBoolean(true));
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeBidLimitTIF(askMap.get(symbol), defaultS, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
@@ -280,7 +282,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 }
             } else if (price < prevClose && price < yOpen && price < mOpen && totalDelta > LO_LIMIT) {
                 if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
-                    tradingBlocked.put(symbol, new AtomicBoolean(true));
+                    addedMap.put(symbol, new AtomicBoolean(true));
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeOfferLimitTIF(bidMap.get(symbol), defaultS, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
@@ -298,12 +300,17 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static void breachCutter(Contract ct, double price, LocalDateTime t, double yOpen, double mOpen) {
         String symbol = ibContractToSymbol(ct);
         double pos = symbolPosMap.get(symbol);
-        boolean blocked = tradingBlocked.containsKey(symbol) && tradingBlocked.get(symbol).get();
+        boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
+        boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
+        ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalDateTime usLdt = usZdt.toLocalDateTime();
+        LocalTime uslt = usLdt.toLocalTime();
 
-        if (!blocked && pos != 0.0) {
+        if (!liquidated && (!added || ltBetween(uslt, 15, 30, 16, 0)) && pos != 0.0) {
             if (pos < 0.0 && (price > mOpen || price > yOpen)) {
                 if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
-                    tradingBlocked.put(symbol, new AtomicBoolean(true));
+                    liquidatedMap.put(symbol, new AtomicBoolean(true));
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos), IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
@@ -315,7 +322,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 }
             } else if (pos > 0.0 && (price < mOpen || price < yOpen)) {
                 if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
-                    tradingBlocked.put(symbol, new AtomicBoolean(true));
+                    liquidatedMap.put(symbol, new AtomicBoolean(true));
                     int id = autoTradeID.incrementAndGet();
                     Order o = placeOfferLimitTIF(bidMap.get(symbol), pos, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
@@ -351,7 +358,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
                     double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
 
-                    boolean blocked = tradingBlocked.containsKey(symbol) && tradingBlocked.get(symbol).get();
+                    boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
+                    boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
 
                     double delta = getDelta(ct, price, pos, fx.getOrDefault(Currency.get(ct.currency()), 1.0));
 
@@ -359,7 +367,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                             fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
 
                     if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
-                        pr(symbol, "POS:", pos, "block?" + blocked, "Default:", defaultS,
+                        pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,
                                 "yOpen/Date:" + yFirstDate + " " + yOpen
                                         + "(" + Math.round(1000d * (price / yOpen - 1)) / 10d + "%)"
                                 , "mOpen/Date:" + mFirstDate + " " + mOpen
