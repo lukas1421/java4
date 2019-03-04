@@ -55,17 +55,17 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             liveData = new ConcurrentSkipListMap<>();
 
     private volatile static Map<Contract, Double> contractPosMap =
-            new TreeMap<>(Comparator.comparing(Utility::ibContractToSymbol));
+            new ConcurrentSkipListMap<>(Comparator.comparing(Utility::ibContractToSymbol));
 
-    private volatile static Map<String, Double> symbolPosMap = new TreeMap<>(String::compareTo);
+    private volatile static Map<String, Double> symbolPosMap = new ConcurrentSkipListMap<>(String::compareTo);
 
-    private static Map<String, Double> bidMap = new HashMap<>();
-    private static Map<String, Double> askMap = new HashMap<>();
+    private static Map<String, Double> bidMap = new ConcurrentHashMap<>();
+    private static Map<String, Double> askMap = new ConcurrentHashMap<>();
     //private static volatile Map<String, AtomicBoolean> addingBlocked = new HashMap<>();
     //private static volatile Map<String, AtomicBoolean> cuttingBlocked = new HashMap<>();
     //private static volatile Map<String, AtomicBoolean> tradingBlocked = new HashMap<>();
-    private static volatile Map<String, AtomicBoolean> addedMap = new HashMap<>();
-    private static volatile Map<String, AtomicBoolean> liquidatedMap = new HashMap<>();
+    private static volatile Map<String, AtomicBoolean> addedMap = new ConcurrentHashMap<>();
+    private static volatile Map<String, AtomicBoolean> liquidatedMap = new ConcurrentHashMap<>();
 
     public static double getLiveData(String symb) {
         if (liveData.containsKey(symb) && liveData.get(symb).size() > 0) {
@@ -307,7 +307,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         LocalDateTime usLdt = usZdt.toLocalDateTime();
         LocalTime uslt = usLdt.toLocalTime();
 
-        if (!liquidated && (!added || ltBetween(uslt, 15, 30, 16, 0)) && pos != 0.0) {
+        if (!liquidated && (!added || ltBetween(uslt, 15, 50, 16, 0)) && pos != 0.0) {
             if (pos < 0.0 && (price > mOpen || price > yOpen)) {
                 if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                     liquidatedMap.put(symbol, new AtomicBoolean(true));
@@ -317,6 +317,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     apCtrl.placeOrModifyOrder(ct, o, new SureDevHandler(id, apCtrl));
                     outputToSymbolFile(symbol, str("********", t), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), "Cutter BUY:",
+                            "added?" + added, added ? "closeCutter" : "live cutter",
                             globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
                             "price", price), devOutput);
                 }
@@ -329,6 +330,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     apCtrl.placeOrModifyOrder(ct, o, new SureDevHandler(id, apCtrl));
                     outputToSymbolFile(symbol, str("********", t), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), "Cutter SELL:",
+                            "added?" + added, added ? "close cut" : "live cut",
                             globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
                             "price", price), devOutput);
                 }
