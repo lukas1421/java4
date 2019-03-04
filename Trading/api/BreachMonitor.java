@@ -99,7 +99,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
     private void registerContract(Contract ct) {
         String symbol = ibContractToSymbol(ct);
-        if (symbol.equalsIgnoreCase("SGXA50PR")) {
+        if (!symbol.equalsIgnoreCase("SGXA50PR")) {
             contractPosMap.put(ct, 0.0);
             symbolPosMap.put(symbol, 0.0);
         }
@@ -269,10 +269,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                         "mDev:" + mDev + "%" + "(" +
                                 ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey().format(f) + " " + mOpen + ")");
 
-                if (pos != 0.0) {
-                    pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
-                            , out, Math.round(delta / 1000d) + "k");
-                }
+                //if (pos != 0.0) {
+                pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
+                        , out, Math.round(delta / 1000d) + "k");
+                //}
             }
         }
     }
@@ -352,10 +352,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                     //pr("*", out, yBreachStatus, mBreachStatus);
                 }
         }
-    }
-
-    public static void computeNetDelta() {
-
     }
 
     @Override

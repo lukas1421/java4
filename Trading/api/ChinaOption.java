@@ -428,14 +428,14 @@ public class ChinaOption extends JPanel implements Runnable {
         });
         computeOnButton.addActionListener(l -> computeOn = computeOnButton.isSelected());
 
-        saveVolsCSVButton.addActionListener(l -> {
-            if (LocalTime.now().isAfter(LocalTime.of(15, 0))) {
-                saveVolsCSV();
-            } else {
-                pr(" cannot save before 15 pm ");
-                //JOptionPane.showMessageDialog(null, " cannot save before 15pm");
-            }
-        });
+//        saveVolsCSVButton.addActionListener(l -> {
+//            if (LocalTime.now().isAfter(LocalTime.of(15, 0))) {
+//                saveVolsCSV();
+//            } else {
+//                pr(" cannot save before 15 pm ");
+//                //JOptionPane.showMessageDialog(null, " cannot save before 15pm");
+//            }
+//        });
 
         saveVolsHibButton.addActionListener(l -> {
             if (LocalTime.now().isAfter(LocalTime.of(15, 0))) {
@@ -709,25 +709,25 @@ public class ChinaOption extends JPanel implements Runnable {
     }
 
 
-    private static void saveVolsCSV() {
-
-        File output = new File(TradingConstants.GLOBALPATH + "volOutput.csv");
-
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
-            saveVolHelper(out, savingDate, CALL, strikeVolMapCall, frontExpiry, currentStockPrice);
-            saveVolHelper(out, savingDate, CALL, strikeVolMapCall, backExpiry, currentStockPrice);
-            saveVolHelper(out, savingDate, CALL, strikeVolMapCall, thirdExpiry, currentStockPrice);
-            saveVolHelper(out, savingDate, CALL, strikeVolMapCall, fourthExpiry, currentStockPrice);
-
-            saveVolHelper(out, savingDate, PUT, strikeVolMapPut, frontExpiry, currentStockPrice);
-            saveVolHelper(out, savingDate, PUT, strikeVolMapPut, backExpiry, currentStockPrice);
-            saveVolHelper(out, savingDate, PUT, strikeVolMapPut, thirdExpiry, currentStockPrice);
-            saveVolHelper(out, savingDate, PUT, strikeVolMapPut, fourthExpiry, currentStockPrice);
-
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
+//    private static void saveVolsCSV() {
+//
+//        File output = new File(TradingConstants.GLOBALPATH + "volOutput.csv");
+//
+//        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
+//            saveVolHelper(out, savingDate, CALL, strikeVolMapCall, frontExpiry, currentStockPrice);
+//            saveVolHelper(out, savingDate, CALL, strikeVolMapCall, backExpiry, currentStockPrice);
+//            saveVolHelper(out, savingDate, CALL, strikeVolMapCall, thirdExpiry, currentStockPrice);
+//            saveVolHelper(out, savingDate, CALL, strikeVolMapCall, fourthExpiry, currentStockPrice);
+//
+//            saveVolHelper(out, savingDate, PUT, strikeVolMapPut, frontExpiry, currentStockPrice);
+//            saveVolHelper(out, savingDate, PUT, strikeVolMapPut, backExpiry, currentStockPrice);
+//            saveVolHelper(out, savingDate, PUT, strikeVolMapPut, thirdExpiry, currentStockPrice);
+//            saveVolHelper(out, savingDate, PUT, strikeVolMapPut, fourthExpiry, currentStockPrice);
+//
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
+//    }
 
     private static void saveHibEOD() {
         SessionFactory sessionF = HibernateUtil.getSessionFactory();
@@ -796,7 +796,7 @@ public class ChinaOption extends JPanel implements Runnable {
             }
 
             if (!savedVolEOD.get() && checkTimeRangeBool(lt, 15, 0, 15, 15)) {
-                saveVolsCSV();
+                //saveVolsCSV();
                 saveHibEOD();
                 savedVolEOD.set(true);
             }
@@ -1161,7 +1161,7 @@ public class ChinaOption extends JPanel implements Runnable {
             pr(" expiry is " + expiry);
             //timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(Utility::pr);
         }
-        
+
         histVol.keySet().forEach(k -> impliedVolMapYtd.put(k,
                 histVol.get(k).entrySet().stream().filter(e -> e.getKey().isBefore(LocalDate.now()))
                         .max(Comparator.comparing(Map.Entry::getKey)).map(Map.Entry::getValue).orElse(0.0)));
@@ -1264,7 +1264,8 @@ public class ChinaOption extends JPanel implements Runnable {
             Matcher matcher;
             List<String> datalist;
             URLConnection conn = allCalls.openConnection();
-            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(conn.getInputStream(), "gbk"))) {
+            try (BufferedReader reader2 = new BufferedReader(
+                    new InputStreamReader(conn.getInputStream(), "gbk"))) {
                 while ((line = reader2.readLine()) != null) {
                     matcher = ChinaOptionHelper.DATA_PATTERN.matcher(line);
                     datalist = Arrays.asList(line.split(","));
