@@ -317,7 +317,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     apCtrl.placeOrModifyOrder(ct, o, new SureDevHandler(id, apCtrl));
                     outputToSymbolFile(symbol, str("********", t), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), "Cutter BUY:",
-                            "added?" + added, added ? "closeCutter" : "live cutter",
+                            "added?" + added, added ? "close cut" : "live cut",
                             globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
                             "price", price), devOutput);
                 }
