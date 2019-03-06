@@ -296,6 +296,20 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         }
     }
 
+    private static boolean timeIsOk(Contract ct, LocalDateTime chinaTime) {
+
+        if (ct.currency().equalsIgnoreCase("USD") && ct.secType() == Types.SecType.STK) {
+            ZonedDateTime chinaZdt = ZonedDateTime.of(chinaTime, chinaZone);
+            ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+            LocalTime usLt = usZdt.toLocalDateTime().toLocalTime();
+
+            return ltBetween(usLt, 9, 29, 16, 1);
+        } else if (ct.currency().equalsIgnoreCase("HKD") && ct.secType() == Types.SecType.STK) {
+            return ltBetween(chinaTime.toLocalTime(), 9, 29, 16, 1);
+        }
+        return true;
+    }
+
 
     private static void breachCutter(Contract ct, double price, LocalDateTime t, double yOpen, double mOpen) {
         String symbol = ibContractToSymbol(ct);
@@ -355,8 +369,11 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
                     double pos = symbolPosMap.get(symbol);
 
-                    breachCutter(ct, price, t, yOpen, mOpen);
-                    breachAdder(ct, price, t, yOpen, mOpen);
+
+                    if (timeIsOk(ct, t)) {
+                        breachCutter(ct, price, t, yOpen, mOpen);
+                        breachAdder(ct, price, t, yOpen, mOpen);
+                    }
 
                     double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
 
