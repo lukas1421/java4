@@ -457,6 +457,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     public static void main(String[] args) {
         BreachDevTrader trader = new BreachDevTrader();
         trader.connectAndReqPos();
+        apDev.cancelAllOrders();
 
         ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
         es.scheduleAtFixedRate(() -> {

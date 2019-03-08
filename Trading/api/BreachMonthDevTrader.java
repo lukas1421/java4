@@ -156,7 +156,7 @@ public class BreachMonthDevTrader implements LiveHandler, ApiController.IPositio
 
         try {
             pr(" using port 4001");
-            ap.connect("127.0.0.1", 4001, 5, "");
+            ap.connect("127.0.0.1", 4001, 6, "");
             connectionStatus = true;
             l.countDown();
             pr(" Latch counted down 4001 " + LocalTime.now());
@@ -166,7 +166,7 @@ public class BreachMonthDevTrader implements LiveHandler, ApiController.IPositio
 
         if (!connectionStatus) {
             pr(" using port 7496");
-            ap.connect("127.0.0.1", 7496, 5, "");
+            ap.connect("127.0.0.1", 7496, 6, "");
             l.countDown();
             pr(" Latch counted down 7496" + LocalTime.now());
         }
@@ -187,7 +187,7 @@ public class BreachMonthDevTrader implements LiveHandler, ApiController.IPositio
     }
 
 
-    private static void ytdOpen(Contract c, String date, double open, double high, double low,
+    private static void mtdOpen(Contract c, String date, double open, double high, double low,
                                 double close, int volume) {
         String symbol = ibContractToSymbol(c);
         if (!date.startsWith("finished")) {
@@ -211,7 +211,7 @@ public class BreachMonthDevTrader implements LiveHandler, ApiController.IPositio
             mtdDayData.put(symb, new ConcurrentSkipListMap<>());
             if (!symb.equals("USD")) {
                 apMonthDev.reqHistDayData(ibStockReqId.addAndGet(5),
-                        fillContract(c), BreachMonthDevTrader::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
+                        fillContract(c), BreachMonthDevTrader::mtdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
             }
             apMonthDev.req1ContractLive(c, this, false);
         }
@@ -318,9 +318,9 @@ public class BreachMonthDevTrader implements LiveHandler, ApiController.IPositio
                 if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
                     liquidatedMap.put(symbol, new AtomicBoolean(true));
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeBidLimitTIF(bidMap.get(symbol), Math.abs(pos), GTC);
+                    Order o = placeBidLimitTIF(bidMap.get(symbol), Math.abs(pos), IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                    apMonthDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
+                    apMonthDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apMonthDev));
                     outputToSymbolFile(symbol, str("********", t), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), "Cutter BUY:",
                             "added?" + added, globalIdOrderMap.get(id), "pos", pos, "mOpen", mOpen,
@@ -330,9 +330,9 @@ public class BreachMonthDevTrader implements LiveHandler, ApiController.IPositio
                 if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                     liquidatedMap.put(symbol, new AtomicBoolean(true));
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeOfferLimitTIF(askMap.get(symbol), pos, GTC);
+                    Order o = placeOfferLimitTIF(askMap.get(symbol), pos, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                    apMonthDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
+                    apMonthDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apMonthDev));
                     outputToSymbolFile(symbol, str("********", t), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), "Cutter SELL:",
                             "added?" + added, added ? "close cut" : "live cut",
@@ -399,8 +399,9 @@ public class BreachMonthDevTrader implements LiveHandler, ApiController.IPositio
 
 
                     if (timeIsOk(ct, t)) {
-                        breachCutter(ct, price, t, mOpen);
-                        breachAdder(ct, price, t, mOpen);
+                        pr(" time is ok going into breach cutter adder ", symbol, price, t, mOpen);
+                        //breachCutter(ct, price, t, mOpen);
+                        //breachAdder(ct, price, t, mOpen);
                     }
 
                     double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
