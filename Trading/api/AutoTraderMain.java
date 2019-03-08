@@ -429,7 +429,7 @@ public class AutoTraderMain extends JPanel {
         return LocalTime.of(h, m);
     }
 
-    static boolean ltBetween(LocalTime lt, int h1, int m1, int h2, int m2) {
+    static boolean ltBtwn(LocalTime lt, int h1, int m1, int h2, int m2) {
         return lt.isAfter(ltof(h1, m1)) && lt.isBefore(ltof(h2, m2));
     }
 
