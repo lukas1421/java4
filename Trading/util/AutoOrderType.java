@@ -225,6 +225,7 @@ public enum AutoOrderType {
 
     BREACH_ADDER,
     BREACH_CUTTER,
+    BREACH_WEEKLY_CUTTER,
     BREACH_MDEV,
     UNKNOWN
 }

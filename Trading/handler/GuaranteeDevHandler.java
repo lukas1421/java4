@@ -18,7 +18,7 @@ import static client.OrderStatus.PendingCancel;
 import static client.Types.TimeInForce.IOC;
 import static utility.Utility.str;
 
-public class SureDevHandler implements ApiController.IOrderHandler {
+public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
     private static Map<Integer, OrderStatus> idStatusMap = new ConcurrentHashMap<>();
     private int primaryID;
@@ -27,7 +27,7 @@ public class SureDevHandler implements ApiController.IOrderHandler {
     private static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
 
-    public SureDevHandler(int id, ApiController ap) {
+    public GuaranteeDevHandler(int id, ApiController ap) {
         primaryID = id;
         currentID = id;
         idStatusMap.put(id, OrderStatus.ConstructedInHandler);
@@ -35,7 +35,7 @@ public class SureDevHandler implements ApiController.IOrderHandler {
     }
 
 
-    private SureDevHandler(int prim, int id, ApiController ap) {
+    private GuaranteeDevHandler(int prim, int id, ApiController ap) {
         primaryID = prim;
         currentID = id;
         idStatusMap.put(id, OrderStatus.ConstructedInHandler);
@@ -81,7 +81,7 @@ public class SureDevHandler implements ApiController.IOrderHandler {
                 o.tif(IOC);
 
                 int newID = autoTradeID.incrementAndGet();
-                controller.placeOrModifyOrder(ct, o, new SureDevHandler(primaryID, newID, controller));
+                controller.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(primaryID, newID, controller));
                 globalIdOrderMap.put(newID, new OrderAugmented(ct, LocalDateTime.now(), o,
                         globalIdOrderMap.get(currentID).getOrderType(), false));
 
@@ -106,7 +106,7 @@ public class SureDevHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-        outputToError(str("ERROR:", "Guarantee Gen handler:", currentID, errorCode, errorMsg
+        outputToError(str("ERROR:", "Guarantee Dev handler:", currentID, errorCode, errorMsg
                 , globalIdOrderMap.get(currentID)));
     }
 }

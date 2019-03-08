@@ -23,6 +23,11 @@ public class Test {
     }
 
     public static void main(String[] args) {
-        pr(getLastMonthLastDay(LocalDate.of(2019, Month.MARCH,1)));
+
+        LocalDate today = LocalDate.now();
+        pr(today.getDayOfWeek());
+
+
+        //pr(getLastMonthLastDay(LocalDate.of(2019, Month.MARCH, 1)));
     }
 }

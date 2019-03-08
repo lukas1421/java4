@@ -4,7 +4,7 @@ import auxiliary.SimpleBar;
 import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
-import handler.SureDevHandler;
+import handler.GuaranteeDevHandler;
 import handler.LiveHandler;
 import utility.Utility;
 
@@ -251,7 +251,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                             Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos), IOC);
                             globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                             staticController.placeOrModifyOrder(ct, o,
-                                    new SureDevHandler(id, staticController));
+                                    new GuaranteeDevHandler(id, staticController));
                             outputToSymbolFile(symbol, "*********", breachOutput);
                             outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach Cutter BUY #:",
                                     globalIdOrderMap.get(id), "pos", pos), breachOutput);
@@ -263,7 +263,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                             Order o = placeOfferLimitTIF(bidMap.get(symbol), pos, IOC);
                             globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                             staticController.placeOrModifyOrder(ct, o,
-                                    new SureDevHandler(id, staticController));
+                                    new GuaranteeDevHandler(id, staticController));
                             outputToSymbolFile(symbol, "*********", breachOutput);
                             outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach Cutter sell:"
                                     , globalIdOrderMap.get(id), "pos", pos), breachOutput);

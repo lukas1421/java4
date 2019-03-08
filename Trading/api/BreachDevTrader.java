@@ -4,15 +4,13 @@ import auxiliary.SimpleBar;
 import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
-import handler.SureDevHandler;
+import handler.GuaranteeDevHandler;
 import handler.LiveHandler;
+import handler.PatientDevHandler;
 import utility.Utility;
 
 import java.io.*;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -22,6 +20,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static api.AutoTraderMain.*;
 import static api.XuTraderHelper.*;
+import static client.Types.TimeInForce.GTC;
 import static client.Types.TimeInForce.IOC;
 import static util.AutoOrderType.*;
 import static utility.Utility.*;
@@ -33,7 +32,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s");
 
     private static double totalDelta = 0.0;
-    private static ApiController apCtrl;
+    private static ApiController apDev;
 
     private static final LocalDate LAST_MONTH_DAY = getLastMonthLastDay();
     private static final LocalDate LAST_YEAR_DAY = getLastYearLastDay();
@@ -153,7 +152,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     public void connectAndReqPos() {
         ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
-        apCtrl = ap;
+        apDev = ap;
         CountDownLatch l = new CountDownLatch(1);
         boolean connectionStatus = false;
 
@@ -213,10 +212,10 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             pr(" symbol in positionEnd ", symb);
             ytdDayData.put(symb, new ConcurrentSkipListMap<>());
             if (!symb.equals("USD")) {
-                apCtrl.reqHistDayData(ibStockReqId.addAndGet(5),
+                apDev.reqHistDayData(ibStockReqId.addAndGet(5),
                         fillContract(c), BreachDevTrader::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
             }
-            apCtrl.req1ContractLive(c, this, false);
+            apDev.req1ContractLive(c, this, false);
         }
     }
 
@@ -268,25 +267,25 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             pr(t.format(f1), "breach adder", symbol, "pos", pos, "prevC", prevClose,
                     "price", price, "yOpen", yOpen, "mOpen", mOpen);
 
-            if (price > prevClose && price > yOpen && price > mOpen && totalDelta < HI_LIMIT) {
-                if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
+            if (price > yOpen && price > mOpen && totalDelta < HI_LIMIT) {
+                if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
                     addedMap.put(symbol, new AtomicBoolean(true));
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeBidLimitTIF(askMap.get(symbol), defaultS, IOC);
+                    Order o = placeBidLimitTIF(bidMap.get(symbol), defaultS, GTC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                    apCtrl.placeOrModifyOrder(ct, o, new SureDevHandler(id, apCtrl));
+                    apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
                     outputToSymbolFile(symbol, str("********", t), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), "ADDER BUY:",
                             globalIdOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
                             "prevClose", prevClose, "price", price), devOutput);
                 }
-            } else if (price < prevClose && price < yOpen && price < mOpen && totalDelta > LO_LIMIT) {
-                if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
+            } else if (price < yOpen && price < mOpen && totalDelta > LO_LIMIT) {
+                if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                     addedMap.put(symbol, new AtomicBoolean(true));
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeOfferLimitTIF(bidMap.get(symbol), defaultS, IOC);
+                    Order o = placeOfferLimitTIF(askMap.get(symbol), defaultS, GTC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                    apCtrl.placeOrModifyOrder(ct, o, new SureDevHandler(id, apCtrl));
+                    apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
                     outputToSymbolFile(symbol, str("********", t), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), "ADDER SELL:",
                             globalIdOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
@@ -297,7 +296,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     }
 
     private static boolean timeIsOk(Contract ct, LocalDateTime chinaTime) {
-
         if (ct.currency().equalsIgnoreCase("USD") && ct.secType() == Types.SecType.STK) {
             ZonedDateTime chinaZdt = ZonedDateTime.of(chinaTime, chinaZone);
             ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
@@ -321,30 +319,67 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         LocalDateTime usLdt = usZdt.toLocalDateTime();
         LocalTime uslt = usLdt.toLocalTime();
 
-        if (!liquidated && (!added || ltBetween(uslt, 15, 50, 16, 0)) && pos != 0.0) {
+        if (!liquidated && pos != 0.0) {
             if (pos < 0.0 && (price > mOpen || price > yOpen)) {
+                if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
+                    liquidatedMap.put(symbol, new AtomicBoolean(true));
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeBidLimitTIF(bidMap.get(symbol), Math.abs(pos), GTC);
+                    globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
+                    apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
+                    outputToSymbolFile(symbol, str("********", t), devOutput);
+                    outputToSymbolFile(symbol, str(o.orderId(), "Cutter BUY:",
+                            "added?" + added, globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
+                            "price", price), devOutput);
+                }
+            } else if (pos > 0.0 && (price < mOpen || price < yOpen)) {
                 if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                     liquidatedMap.put(symbol, new AtomicBoolean(true));
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos), IOC);
+                    Order o = placeOfferLimitTIF(askMap.get(symbol), pos, GTC);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                    apCtrl.placeOrModifyOrder(ct, o, new SureDevHandler(id, apCtrl));
+                    apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
                     outputToSymbolFile(symbol, str("********", t), devOutput);
-                    outputToSymbolFile(symbol, str(o.orderId(), "Cutter BUY:",
+                    outputToSymbolFile(symbol, str(o.orderId(), "Cutter SELL:",
                             "added?" + added, added ? "close cut" : "live cut",
                             globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
                             "price", price), devOutput);
                 }
-            } else if (pos > 0.0 && (price < mOpen || price < yOpen)) {
+            }
+        }
+    }
+
+    private static void weeklyCutter(Contract ct, double price, LocalDateTime t, double yOpen, double mOpen) {
+        String symbol = ibContractToSymbol(ct);
+        double pos = symbolPosMap.get(symbol);
+        ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalDateTime usLdt = usZdt.toLocalDateTime();
+        LocalTime uslt = usLdt.toLocalTime();
+        DayOfWeek dow = t.getDayOfWeek();
+
+        if (dow == DayOfWeek.FRIDAY && ltBetween(uslt, 15, 30, 16, 0) && pos != 0.0) {
+            if (pos < 0.0 && (price > mOpen || price > yOpen)) {
                 if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
                     liquidatedMap.put(symbol, new AtomicBoolean(true));
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeOfferLimitTIF(bidMap.get(symbol), pos, IOC);
-                    globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                    apCtrl.placeOrModifyOrder(ct, o, new SureDevHandler(id, apCtrl));
+                    Order o = placeBidLimitTIF(price, Math.abs(pos), IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_WEEKLY_CUTTER));
+                    apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
                     outputToSymbolFile(symbol, str("********", t), devOutput);
-                    outputToSymbolFile(symbol, str(o.orderId(), "Cutter SELL:",
-                            "added?" + added, added ? "close cut" : "live cut",
+                    outputToSymbolFile(symbol, str(o.orderId(), "weekly cutter BUY:",
+                            globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
+                            "price", price), devOutput);
+                }
+            } else if (pos > 0.0 && (price < mOpen || price < yOpen)) {
+                if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
+                    liquidatedMap.put(symbol, new AtomicBoolean(true));
+                    int id = autoTradeID.incrementAndGet();
+                    Order o = placeOfferLimitTIF(price, pos, IOC);
+                    globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_WEEKLY_CUTTER));
+                    apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
+                    outputToSymbolFile(symbol, str("********", t), devOutput);
+                    outputToSymbolFile(symbol, str(o.orderId(), "weekly cutter SELL:",
                             globalIdOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
                             "price", price), devOutput);
                 }
@@ -387,9 +422,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
                     if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
                         pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,
-                                "yOpen/Date:" + yFirstDate + " " + yOpen
+                                "yOpen:" + yFirstDate + " " + yOpen
                                         + "(" + Math.round(1000d * (price / yOpen - 1)) / 10d + "%)"
-                                , "mOpen/Date:" + mFirstDate + " " + mOpen
+                                , "mOpen:" + mFirstDate + " " + mOpen
                                         + "(" + Math.round(1000d * (price / mOpen - 1)) / 10d + "%)",
                                 "Last:", liveData.get(symbol).lastKey().format(f1) + " " + price
                                 , pos != 0.0 ? ("Delta:" + deltaDisplay
