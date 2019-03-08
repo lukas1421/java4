@@ -427,7 +427,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                         + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
                                         + "%)" : "")) : "");
                     }
-
                 }
             case BID:
                 bidMap.put(symbol, price);

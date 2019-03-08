@@ -238,8 +238,7 @@ public class BreachMonthDevTrader implements LiveHandler, ApiController.IPositio
                 if (multi.containsKey(ibContractToSymbol(ct))) {
                     return price * size * fx * multi.get(ibContractToSymbol(ct));
                 } else {
-                    throw new IllegalStateException(str("no multiplier",
-                            ibContractToSymbol(ct)));
+                    throw new IllegalStateException(str("no multiplier", ibContractToSymbol(ct)));
                 }
             }
         }
@@ -305,7 +304,6 @@ public class BreachMonthDevTrader implements LiveHandler, ApiController.IPositio
         }
         return true;
     }
-
 
     private static void breachCutter(Contract ct, double price, LocalDateTime t, double mOpen) {
         String symbol = ibContractToSymbol(ct);
@@ -453,6 +451,7 @@ public class BreachMonthDevTrader implements LiveHandler, ApiController.IPositio
     public static void main(String[] args) {
         BreachMonthDevTrader trader = new BreachMonthDevTrader();
         trader.connectAndReqPos();
+        apMonthDev.cancelAllOrders();
 
         ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
         es.scheduleAtFixedRate(() -> {

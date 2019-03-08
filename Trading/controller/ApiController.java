@@ -1771,6 +1771,7 @@ public class ApiController implements EWrapper {
     }
 
     public void cancelAllOrders() {
+        pr(" globally cancelling order ");
         m_client.reqGlobalCancel();
         sendEOM();
     }
