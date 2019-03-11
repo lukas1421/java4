@@ -21,7 +21,7 @@ public class PatientDevHandler implements ApiController.IOrderHandler {
 
     private static Map<Integer, OrderStatus> idStatusMap = new ConcurrentHashMap<>();
     private int tradeID;
-    private ApiController controller;
+    //private ApiController controller;
     private static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
 

@@ -270,7 +270,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
                     addedMap.put(symbol, new AtomicBoolean(true));
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeBidLimitTIF(bidMap.get(symbol), defaultS, GTC);
+                    Order o = placeBidLimitTIF(bidMap.get(symbol), defaultS, DAY);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
                     apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
                     outputToSymbolFile(symbol, str("********", t), devOutput);
@@ -282,7 +282,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
                     addedMap.put(symbol, new AtomicBoolean(true));
                     int id = autoTradeID.incrementAndGet();
-                    Order o = placeOfferLimitTIF(askMap.get(symbol), defaultS, GTC);
+                    Order o = placeOfferLimitTIF(askMap.get(symbol), defaultS, DAY);
                     globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
                     apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
                     outputToSymbolFile(symbol, str("********", t), devOutput);
