@@ -1,11 +1,11 @@
-import client.Contract;
-import client.Types;
+import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
 
 import java.time.LocalTime;
 import java.util.concurrent.CountDownLatch;
 
+import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.pr;
 
 public class TestAPI {
@@ -30,6 +30,26 @@ public class TestAPI {
         pr(c.symbol(), date, open, high, low, close, volume);
     }
 
+    static class TradesHandler implements ApiController.ITradeReportHandler {
+
+        @Override
+        public void tradeReport(String tradeKey, Contract contract, Execution execution) {
+            pr("key symb exec ", tradeKey, ibContractToSymbol(contract), execution.price(), execution.shares());
+
+        }
+
+        @Override
+        public void tradeReportEnd() {
+            pr("trade report  end ");
+
+        }
+
+        @Override
+        public void commissionReport(String tradeKey, CommissionReport commissionReport) {
+
+        }
+    }
+
 
     public static void main(String[] args) {
         ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
@@ -38,7 +58,7 @@ public class TestAPI {
         boolean connectionStatus = false;
 
         try {
-            ap.connect("127.0.0.1", 7496, 2, "");
+            ap.connect("127.0.0.1", 7496, 100, "");
             connectionStatus = true;
             pr(" connection status is true ");
             l.countDown();
@@ -48,7 +68,7 @@ public class TestAPI {
 
         if (!connectionStatus) {
             pr(" using port 4001 ");
-            ap.connect("127.0.0.1", 4001, 2, "");
+            ap.connect("127.0.0.1", 4001, 100, "");
             l.countDown();
             pr(" Latch counted down " + LocalTime.now());
         }
@@ -60,6 +80,7 @@ public class TestAPI {
         }
 
         pr(" Time after latch released " + LocalTime.now());
+        ap.reqExecutions(new ExecutionFilter(), new TradesHandler());
 
         //ap.reqPositions(new ApiController.IPositionHandler.DefaultPositionHandler());
 

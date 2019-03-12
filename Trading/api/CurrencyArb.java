@@ -17,7 +17,7 @@ public class CurrencyArb {
 
     private static Proxy proxy = Proxy.NO_PROXY;
 
-    static void getBOCFX() {
+    private static void getBOCFX() {
         pr(" getting BOCFX ");
         String urlString = "https://www.xushi-exchange.com/shopex.aspx";
         String line1;
