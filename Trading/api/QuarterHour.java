@@ -4,7 +4,7 @@ import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import static api.AutoTraderMain.ltof;
+import static utility.Utility.ltof;
 
 public enum QuarterHour {
     Q900(ltof(9, 0)),

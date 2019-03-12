@@ -1,9 +1,11 @@
 package client;
 
 import TradeType.FutureTrade;
+import net.bytebuddy.pool.TypePool;
 import util.AutoOrderType;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static utility.Utility.ibContractToSymbol;

@@ -1,10 +1,11 @@
-package api;
+package DevTrader;
 
+import api.Currency;
+import api.TradingConstants;
 import auxiliary.SimpleBar;
 import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
-import handler.GuaranteeDevHandler;
 import handler.LiveHandler;
 import utility.Utility;
 
@@ -19,10 +20,12 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static api.AutoTraderMain.*;
-import static api.XuTraderHelper.*;
+import static DevTrader.BreachDevTrader.devOrderMap;
+import static DevTrader.BreachDevTrader.devTradeID;
 import static client.Types.TimeInForce.IOC;
 import static util.AutoOrderType.BREACH_CUTTER;
+import static utility.TradingUtility.placeBidLimitTIF;
+import static utility.TradingUtility.placeOfferLimitTIF;
 import static utility.Utility.*;
 import static utility.Utility.getLastYearLastDay;
 
@@ -43,9 +46,9 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
 
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
 
-    public static Map<Currency, Double> fxMap = new HashMap<>();
+    public static Map<api.Currency, Double> fxMap = new HashMap<>();
 
-    static File breachOutput = new File(TradingConstants.GLOBALPATH + "breachOrders.txt");
+    private static File breachOutput = new File(TradingConstants.GLOBALPATH + "breachOrders.txt");
     //private static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
     //private static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
 
@@ -53,13 +56,13 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
     private Map<String, Double> askMap = new HashMap<>();
 
 
-    BreachCutter() {
+    private BreachCutter() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                fxMap.put(Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
+                fxMap.put(api.Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
             }
         } catch (IOException x) {
             x.printStackTrace();
@@ -247,26 +250,26 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                     if (pos < 0) {
                         if (price >= monthOpen && askMap.getOrDefault(symbol, 0.0) != 0.0
                                 && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
-                            int id = autoTradeID.incrementAndGet();
+                            int id = devTradeID.incrementAndGet();
                             Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos), IOC);
-                            globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
+                            devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                             staticController.placeOrModifyOrder(ct, o,
                                     new GuaranteeDevHandler(id, staticController));
                             outputToSymbolFile(symbol, "*********", breachOutput);
                             outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach Cutter BUY #:",
-                                    globalIdOrderMap.get(id), "pos", pos), breachOutput);
+                                    devOrderMap.get(id), "pos", pos), breachOutput);
                         }
                     } else if (pos > 0) {
                         if (price <= monthOpen && bidMap.getOrDefault(symbol, 0.0) != 0.0
                                 && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
-                            int id = autoTradeID.incrementAndGet();
+                            int id = devTradeID.incrementAndGet();
                             Order o = placeOfferLimitTIF(bidMap.get(symbol), pos, IOC);
-                            globalIdOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
+                            devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                             staticController.placeOrModifyOrder(ct, o,
                                     new GuaranteeDevHandler(id, staticController));
                             outputToSymbolFile(symbol, "*********", breachOutput);
                             outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach Cutter sell:"
-                                    , globalIdOrderMap.get(id), "pos", pos), breachOutput);
+                                    , devOrderMap.get(id), "pos", pos), breachOutput);
                         }
                     }
                 }

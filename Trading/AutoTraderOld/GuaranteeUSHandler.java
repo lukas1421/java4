@@ -1,6 +1,5 @@
-package handler;
+package AutoTraderOld;
 
-import api.AutoTraderMain;
 import client.*;
 import controller.ApiController;
 
@@ -9,14 +8,14 @@ import java.time.LocalTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static api.AutoTraderMain.autoTradeID;
-import static api.AutoTraderMain.globalIdOrderMap;
-import static api.AutoTraderUS.*;
-import static api.XuTraderHelper.outputDetailedUS;
-import static api.XuTraderHelper.outputToError;
+import static AutoTraderOld.AutoTraderMain.autoTradeID;
+import static AutoTraderOld.AutoTraderMain.globalIdOrderMap;
+import static AutoTraderOld.AutoTraderUS.*;
+import static utility.TradingUtility.outputToError;
 import static client.OrderStatus.Filled;
 import static client.OrderStatus.PendingCancel;
 import static client.Types.TimeInForce.IOC;
+import static utility.Utility.outputDetailedUSSymbol;
 import static utility.Utility.str;
 
 public class GuaranteeUSHandler implements ApiController.IOrderHandler {
@@ -59,7 +58,7 @@ public class GuaranteeUSHandler implements ApiController.IOrderHandler {
                         "*GUARANTEE US FILL*", idStatusMap.get(defaultID), "->", orderState.status(), now,
                         "ID:", defaultID, globalIdOrderMap.get(defaultID),
                         "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
-                outputDetailedUS(globalIdOrderMap.get(primaryID).getSymbol(), msg);
+                outputDetailedUSSymbol(globalIdOrderMap.get(primaryID).getSymbol(), msg);
             }
 
             if (orderState.status() == PendingCancel && globalIdOrderMap.get(defaultID).getOrder().tif() == IOC) {

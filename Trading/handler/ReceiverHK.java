@@ -6,8 +6,8 @@ import client.TickType;
 
 import java.time.LocalDateTime;
 
-import static api.AutoTraderHK.*;
-import static api.XuTraderHelper.outputDetailedHK;
+import static AutoTraderOld.AutoTraderHK.*;
+import static AutoTraderOld.XuTraderHelper.outputDetailedHK;
 import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.str;
 

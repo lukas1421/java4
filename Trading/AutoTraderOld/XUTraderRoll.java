@@ -1,8 +1,10 @@
-package api;
+package AutoTraderOld;
 
+import api.FutType;
 import client.*;
 import controller.ApiController;
 import util.AutoOrderType;
+import utility.TradingUtility;
 
 import javax.swing.*;
 import java.time.LocalDateTime;
@@ -10,14 +12,14 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.concurrent.CountDownLatch;
 
-import static api.XuTraderHelper.outputToAll;
+import static AutoTraderOld.XuTraderHelper.outputToAll;
 import static utility.Utility.*;
 
 public class XUTraderRoll extends JPanel {
 
     private static ApiController apcon;
-    private static Contract frontContract = getFrontFutContract();
-    private static Contract backContract = getBackFutContract();
+    private static Contract frontContract = TradingUtility.getFrontFutContract();
+    private static Contract backContract = TradingUtility.getBackFutContract();
     public static volatile EnumMap<FutType, Integer> contractID = new EnumMap<FutType, Integer>(FutType.class);
     public static CountDownLatch latch = new CountDownLatch(2);
 
@@ -63,19 +65,19 @@ public class XUTraderRoll extends JPanel {
 
     void shortRoll(double p) {
         int id = AutoTraderMain.autoTradeID.incrementAndGet();
-        Order o = XuTraderHelper.placeOfferLimit(p, 1);
+        Order o = TradingUtility.placeOfferLimit(p, 1);
         AutoTraderMain.globalIdOrderMap.put(id, new OrderAugmented(
                 (AutoTraderXU.activeFutCt), LocalDateTime.now(), o, AutoOrderType.SHORT_ROLL));
-        apcon.placeOrModifyOrder(longRollContract(), o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
+        apcon.placeOrModifyOrder(longRollContract(), o, new AutoOrderDefaultHandler(id));
         outputToAll(str(o.orderId(), " Short Roll ", AutoTraderMain.globalIdOrderMap.get(id)));
     }
 
     public static void longRoll(double p) {
         int id = AutoTraderMain.autoTradeID.incrementAndGet();
-        Order o = XuTraderHelper.placeBidLimit(p, 1);
+        Order o = TradingUtility.placeBidLimit(p, 1);
         AutoTraderMain.globalIdOrderMap.put(id, new OrderAugmented(
                 (AutoTraderXU.activeFutCt), LocalDateTime.now(), o, AutoOrderType.LONG_ROLL));
-        apcon.placeOrModifyOrder(longRollContract(), o, new ApiController.IOrderHandler.DefaultOrderHandler(id));
+        apcon.placeOrModifyOrder(longRollContract(), o, new AutoOrderDefaultHandler(id));
         outputToAll(str(o.orderId(), " Long Roll ", AutoTraderMain.globalIdOrderMap.get(id)));
     }
 

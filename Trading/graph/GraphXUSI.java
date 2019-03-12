@@ -1,5 +1,6 @@
 package graph;
 
+import AutoTraderOld.AutoTraderXU;
 import api.*;
 import auxiliary.SimpleBar;
 

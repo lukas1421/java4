@@ -1,5 +1,6 @@
 package api;
 
+import AutoTraderOld.AutoTraderXU;
 import auxiliary.Analysis;
 import auxiliary.Dividends;
 import client.ExecutionFilter;
@@ -11,7 +12,6 @@ import controller.ApiController;
 import controller.ApiController.IConnectionHandler;
 import controller.Formats;
 import graph.GraphIndustry;
-import historical.HistChinaStocks;
 import saving.Hibtask;
 import util.*;
 import util.IConnectionConfiguration.DefaultConnectionConfiguration;
@@ -31,12 +31,12 @@ import java.util.ArrayList;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static api.AutoTraderMain.ltof;
+import static utility.Utility.ltof;
 import static api.ChinaData.priceMapBar;
 import static api.ChinaData.priceMapBarYtd;
 import static api.TradingConstants.STOCK_COLLECTION_TIME;
-import static api.XuTraderHelper.getTradeDate;
-import static api.XuTraderHelper.outputToAll;
+import static AutoTraderOld.XuTraderHelper.getTradeDate;
+import static AutoTraderOld.XuTraderHelper.outputToAll;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static utility.Utility.pr;
 
@@ -221,7 +221,7 @@ public final class ChinaMain implements IConnectionHandler {
             ses.scheduleAtFixedRate(() -> {
                 //ChinaBigGraph.setGraph(ChinaStock.selectedNameStock);
                 ChinaBigGraph.refresh();
-                AutoTraderXU.set20DayBullBear();
+                //AutoTraderXU.set20DayBullBear();
             }, 0, 1, SECONDS);
 
             ses.scheduleAtFixedRate(chinaOption, 0, 5, SECONDS);

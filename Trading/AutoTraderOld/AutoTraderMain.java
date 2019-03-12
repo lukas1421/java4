@@ -1,15 +1,19 @@
-package api;
+package AutoTraderOld;
 
+import api.HalfHour;
+import api.MinuteHour;
+import api.QuarterHour;
+import api.TradingConstants;
 import client.*;
 import controller.ApiController;
 import util.AutoOrderType;
+import utility.TradingUtility;
 
 import javax.swing.*;
 import java.io.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -22,7 +26,7 @@ import java.util.function.Function;
 
 import static api.ChinaData.priceMapBarDetail;
 import static api.ChinaStock.*;
-import static api.XuTraderHelper.*;
+import static AutoTraderOld.XuTraderHelper.*;
 import static client.OrderStatus.*;
 import static util.AutoOrderType.*;
 import static utility.Utility.*;
@@ -47,8 +51,8 @@ public class AutoTraderMain extends JPanel {
     }
 
     //global
-    public static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
-    public static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
+    static AtomicBoolean globalTradingOn = new AtomicBoolean(false);
+    static volatile AtomicInteger autoTradeID = new AtomicInteger(100);
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap =
             new ConcurrentSkipListMap<>();
     public static volatile Map<Integer, Order> liveIDOrderMap = new ConcurrentHashMap<>();
@@ -63,10 +67,6 @@ public class AutoTraderMain extends JPanel {
     static File xuDetailOutput = new File(TradingConstants.GLOBALPATH + "xuOrdersDetailed.txt");
     static File hkDetailOutput = new File(TradingConstants.GLOBALPATH + "hkOrdersDetailed.txt");
     static File usDetailOutput = new File(TradingConstants.GLOBALPATH + "usOrdersDetailed.txt");
-
-    //zones
-    public static final ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
-    public static final ZoneId nyZone = ZoneId.of("America/New_York");
 
     //position
     static volatile Map<String, Double> ibPositionMap = new ConcurrentHashMap<>();
@@ -425,22 +425,6 @@ public class AutoTraderMain extends JPanel {
         throw new IllegalStateException(" not found");
     }
 
-    public static LocalTime ltof(int h, int m) {
-        return LocalTime.of(h, m);
-    }
-
-    static boolean ltBtwn(LocalTime lt, int h1, int m1, int h2, int m2) {
-        return lt.isAfter(ltof(h1, m1)) && lt.isBefore(ltof(h2, m2));
-    }
-
-    static LocalTime ltof(int h, int m, int s) {
-        return LocalTime.of(h, m, s);
-    }
-
-    static LocalDateTime ldtof(LocalDate d, LocalTime t) {
-        return LocalDateTime.of(d, t);
-    }
-
     static LocalDateTime getLastOrderTime(String symbol, AutoOrderType type) {
         return globalIdOrderMap.entrySet().stream()
                 .filter(e -> e.getValue().getSymbol().equals(symbol))
@@ -588,9 +572,9 @@ public class AutoTraderMain extends JPanel {
                         return getHKFutContract(symbol);
                     case USD:
                         if (symbol.equals("SGXA50")) {
-                            return getFrontFutContract();
+                            return TradingUtility.getFrontFutContract();
                         } else if (symbol.equals("SGXA50BM")) {
-                            return getBackFutContract();
+                            return TradingUtility.getBackFutContract();
                         } else if (symbol.equals("SGXA50PR")) {
                             return getExpiredFutContract();
                         }
@@ -650,6 +634,58 @@ public class AutoTraderMain extends JPanel {
         ct.currency("USD");
         ct.secType(Types.SecType.STK);
         return ct;
+    }
+
+    static double getTotalFilledSignedQForType(AutoOrderType type) {
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == Filled)
+                .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
+                .sum();
+    }
+
+    static OrderStatus getLastPrimaryOrderStatus(String symbol, AutoOrderType type) {
+        long size = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getSymbol().equals(symbol))
+                .filter(e -> e.getValue().isPrimaryOrder())
+                .filter(e -> e.getValue().getOrderType() == type).count();
+
+        if (size == 0L) {
+            return NoOrder;
+        }
+
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getSymbol().equals(symbol))
+                .filter(e -> e.getValue().isPrimaryOrder())
+                .filter(e -> e.getValue().getOrderType() == type)
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getAugmentedOrderStatus())
+                .orElseThrow(() -> new IllegalStateException("no status"));
+
+    }
+
+    static OrderStatus getLastOrderStatusForType(String symbol, AutoOrderType type) {
+        long size = globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getSymbol().equals(symbol))
+                .filter(e -> e.getValue().getOrderType() == type).count();
+
+        if (size == 0L) {
+            return NoOrder;
+        }
+
+        return globalIdOrderMap.entrySet().stream()
+                .filter(e -> e.getValue().getOrderType() == type)
+                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
+                .map(e -> e.getValue().getAugmentedOrderStatus())
+                .orElseThrow(() -> new IllegalStateException("no status"));
+    }
+
+    static void outputDetailedHKSymbol(String symbol, String msg) {
+        if (globalIdOrderMap.entrySet().stream().noneMatch(e -> e.getValue().getSymbol().equals(symbol))) {
+            outputDetailedGen(LocalDateTime.now().toString()
+                    , new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
+        }
+        outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
     }
 
 //    static LocalDateTime ldtof(LocalDate d, LocalTime t) {

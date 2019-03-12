@@ -1,17 +1,5 @@
-import auxiliary.SimpleBar;
-
-import java.io.*;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.Month;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ConcurrentSkipListMap;
 
-import static api.AutoTraderMain.chinaZone;
-import static api.AutoTraderMain.nyZone;
 import static utility.Utility.pr;
 
 public class Test {

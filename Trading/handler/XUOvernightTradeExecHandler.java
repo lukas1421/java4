@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
-import static api.AutoTraderXU.overnightTradesMap;
+import static AutoTraderOld.AutoTraderXU.overnightTradesMap;
 import static utility.Utility.ibContractToFutType;
 import static utility.Utility.ibContractToSymbol;
 

@@ -2,12 +2,14 @@
  * and conditions of the IB API Non-Commercial License or the IB API Commercial License, as applicable. */
 package controller;
 
+import AutoTraderOld.*;
 import api.*;
 import client.*;
 import client.Types.*;
 import controller.ApiConnection.ILogger;
 import handler.*;
 import historical.Request;
+import utility.TradingUtility;
 import utility.Utility;
 
 import javax.swing.*;
@@ -26,15 +28,13 @@ import java.util.*;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static api.AutoTraderMain.*;
+import static AutoTraderOld.AutoTraderMain.*;
 import static api.ChinaMain.controller;
 import static api.ChinaMain.ibConnLatch;
-import static api.XuTraderHelper.*;
-import static client.OrderStatus.Filled;
+import static AutoTraderOld.XuTraderHelper.*;
 import static java.util.stream.Collectors.toList;
 import static utility.Utility.*;
 
@@ -189,7 +189,7 @@ public class ApiController implements EWrapper {
 
         void show(String string);
 
-        public static class DefaultConnectionHandler implements IConnectionHandler {
+        class DefaultConnectionHandler implements IConnectionHandler {
             @Override
             public void connected() {
                 m_connected = true;
@@ -216,7 +216,7 @@ public class ApiController implements EWrapper {
             public void message(int id, int errorCode, String errorMsg) {
                 if (errorCode != 2104 && errorCode != 2105 && errorCode != 2106 && errorCode != 2108 &&
                         errorCode != 2119) {
-                    pr(" DefaultHandler error ID " + id + " error code " + errorCode + " errormsg " + errorMsg);
+                    pr(" DefaultConnHandler error ID " + id + " error code " + errorCode + " errormsg " + errorMsg);
                 }
             }
 
@@ -1117,8 +1117,8 @@ public class ApiController implements EWrapper {
     //xu data
     public void reqXUDataArray() {
 //        pr("requesting XU data begins " + LocalTime.now());
-        Contract frontCt = getFrontFutContract();
-        Contract backCt = getBackFutContract();
+        Contract frontCt = TradingUtility.getFrontFutContract();
+        Contract backCt = TradingUtility.getBackFutContract();
 
         m_reqId.getAndIncrement();
         int reqIdFront = m_reqId.getAndIncrement();
@@ -1199,8 +1199,8 @@ public class ApiController implements EWrapper {
 
     public void getSGXA50Historical2(int reqID, HistoricalHandler hh) {
         Contract previousFut = getExpiredFutContract();
-        Contract frontFut = getFrontFutContract();
-        Contract backFut = getBackFutContract();
+        Contract frontFut = TradingUtility.getFrontFutContract();
+        Contract backFut = TradingUtility.getBackFutContract();
 
         String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
@@ -1608,124 +1608,6 @@ public class ApiController implements EWrapper {
 
         void handle(int errorCode, String errorMsg);
 
-        class DefaultOrderHandler implements IOrderHandler {
-            static Set<Integer> createdOrderSet = new HashSet<>();
-            static Set<Integer> filledOrderSet = new HashSet<>();
-            static Set<Integer> pendingCancelledOrderSet = new HashSet<>();
-            static Set<Integer> apiCancelledOrderSet = new HashSet<>();
-            static Set<Integer> cancelledOrderSet = new HashSet<>();
-            static Set<Integer> predSubmittedOrderSet = new HashSet<>();
-            static Set<Integer> submittedOrderSet = new HashSet<>();
-            static Set<Integer> elseOrderSet = new HashSet<>();
-            static Map<Integer, OrderStatus> idStatusMap = new ConcurrentHashMap<>();
-
-            int defaultID;
-
-            public DefaultOrderHandler() {
-                defaultID = 0;
-            }
-
-            public DefaultOrderHandler(int i) {
-                defaultID = i;
-                idStatusMap.put(i, OrderStatus.ConstructedInHandler);
-            }
-
-            @Override
-            public void orderState(OrderState orderState) {
-                LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.SECONDS);
-                if (orderState.status() != idStatusMap.get(defaultID) && orderState.status() == Filled) {
-                    String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                            "**FILLS**", idStatusMap.get(defaultID), "->", orderState.status(), now,
-                            "ID:", defaultID, globalIdOrderMap.get(defaultID),
-                            "TIF:", globalIdOrderMap.get(defaultID).getOrder().tif());
-                    String symbol = globalIdOrderMap.get(defaultID).getSymbol();
-                    outputSymbolMsg(symbol, msg);
-                    idStatusMap.put(defaultID, orderState.status());
-                }
-
-                if (globalIdOrderMap.containsKey(defaultID)) {
-                    globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
-                    globalIdOrderMap.get(defaultID).setAugmentedOrderStatus(orderState.status());
-                } else {
-                    throw new IllegalStateException(" global id order map doesn't " +
-                            "contain default ID " + defaultID);
-                }
-
-                if (orderState.status() == OrderStatus.Created) {
-                    if (!createdOrderSet.contains(defaultID)) {
-                        String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        //outputDetailedXU(msg);
-                        createdOrderSet.add(defaultID);
-                    }
-                } else if (orderState.status() == OrderStatus.PreSubmitted) {
-                    if (!predSubmittedOrderSet.contains(defaultID)) {
-                        String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        //outputDetailedXU(msg);
-                        predSubmittedOrderSet.add(defaultID);
-                    }
-                } else if (orderState.status() == OrderStatus.Submitted) {
-                    if (!submittedOrderSet.contains(defaultID)) {
-                        String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        //outputDetailedXU(msg);
-                        submittedOrderSet.add(defaultID);
-                    }
-                } else if (orderState.status() == Filled) {
-                    if (!filledOrderSet.contains(defaultID)) {
-                        String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        //outputPurelyOrdersXU(msg);
-                        filledOrderSet.add(defaultID);
-                    }
-                } else if (orderState.status() == OrderStatus.ApiCancelled) {
-                    if (!apiCancelledOrderSet.contains(defaultID)) {
-                        String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        //outputPurelyOrdersXU(msg);
-                        apiCancelledOrderSet.add(defaultID);
-                    }
-                } else if (orderState.status() == OrderStatus.PendingCancel) {
-                    if (!pendingCancelledOrderSet.contains(defaultID)) {
-                        String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        //outputPurelyOrdersXU(msg);
-                        pendingCancelledOrderSet.add(defaultID);
-                    }
-                } else if (orderState.status() == OrderStatus.Cancelled) {
-                    if (!cancelledOrderSet.contains(defaultID)) {
-                        String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        //outputPurelyOrdersXU(msg);
-                        cancelledOrderSet.add(defaultID);
-                    }
-                } else {
-                    if (!elseOrderSet.contains(defaultID)) {
-                        String msg = str(globalIdOrderMap.get(defaultID).getOrder().orderId(),
-                                "ELSE||", orderState.status(), "||", now, defaultID, globalIdOrderMap.get(defaultID));
-                        //outputPurelyOrdersXU(msg);
-                        elseOrderSet.add(defaultID);
-                    }
-                }
-            }
-
-            @Override
-            public void orderStatus(OrderStatus status, int filled, int remaining, double avgFillPrice, long permId,
-                                    int parentId, double lastFillPrice, int clientId, String whyHeld) {
-                outputDetailedXU(ibContractToSymbol(AutoTraderXU.activeFutCt)
-                        , str("||OrderStatus||", defaultID,
-                                globalIdOrderMap.get(defaultID), status, filled,
-                                remaining, avgFillPrice, permId, parentId, lastFillPrice, clientId, whyHeld));
-            }
-
-            @Override
-            public void handle(int errorCode, String errorMsg) {
-                outputToError(str("Default Order handler:", "ERROR", defaultID, errorCode, errorMsg
-                        , globalIdOrderMap.get(defaultID)));
-                pr(" handle error code " + errorCode + " message " + errorMsg);
-            }
-        }
     }
 
     private double getDeltaImpactCny(Contract ct, Order o) {
@@ -1738,12 +1620,12 @@ public class ApiController implements EWrapper {
 
     public void placeOrModifyOrder(Contract ct, final Order o, final IOrderHandler handler) {
         double impact = getDeltaImpactCny(ct, o);
-        if (Math.abs(impact) > 1000000) {
-            outputToAll(str("IMPACT TOO BIG", impact, ct.symbol(), o.action(),
-                    o.lmtPrice(), o.totalQuantity()));
-            globalTradingOn.set(false);
-            return;
-        }
+//        if (Math.abs(impact) > 1000000) {
+//            outputToAll(str("IMPACT TOO BIG", impact, ct.symbol(), o.action(),
+//                    o.lmtPrice(), o.totalQuantity()));
+//            globalTradingOn.set(false);
+//            return;
+//        }
 
         if (o.totalQuantity() == 0.0) {
             outputToAll(str(" quantity is 0 ", ct.symbol(), o.action(),

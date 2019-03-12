@@ -14,7 +14,6 @@ import saving.ChinaVolIntraday;
 import saving.ChinaVolSave;
 import saving.HibernateUtil;
 import util.NewTabbedPanel;
-import util.Util;
 import utility.Utility;
 
 import javax.swing.*;
@@ -48,11 +47,11 @@ import java.util.stream.Collectors;
 import static api.CallPutFlag.CALL;
 import static api.CallPutFlag.PUT;
 import static api.ChinaOptionHelper.*;
-import static api.XuTraderHelper.checkTimeRangeBool;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static saving.Hibtask.unblob;
+import static utility.TradingUtility.checkTimeRangeBool;
 import static utility.Utility.*;
 
 //import javax.swing.table.TableRowSorter;
@@ -804,7 +803,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
         sesOption.scheduleAtFixedRate(() ->
                 timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString()
-                        + (LocalTime.now().getSecond() == 0 ? ":00" : "")), 0, 1, TimeUnit.SECONDS);
+                        + (LocalTime.now().getSecond() == 0 ? ":00" : "")), 0, 1, SECONDS);
 
     }
 
@@ -1016,7 +1015,7 @@ public class ChinaOption extends JPanel implements Runnable {
         }
     }
 
-    static double getATMVol(LocalDate exp) {
+    public static double getATMVol(LocalDate exp) {
         if (strikeVolMapCall.containsKey(exp) && strikeVolMapPut.containsKey(exp) &&
                 strikeVolMapCall.get(exp).size() > 0 && strikeVolMapPut.get(exp).size() > 0 && currentStockPrice != 0.0) {
             return getVolByMoneyness(
@@ -1117,8 +1116,8 @@ public class ChinaOption extends JPanel implements Runnable {
 
                 for (Object o : list) {
                     ChinaVolSave c = (ChinaVolSave) o;
-                    pr(str(c.getVolDate(), c.getCallPut(), c.getStrike(), c.getExpiryDate(),
-                            c.getVol(), c.getMoneyness(), c.getOptionTicker()));
+//                    pr(str(c.getVolDate(), c.getCallPut(), c.getStrike(), c.getExpiryDate(),
+//                            c.getVol(), c.getMoneyness(), c.getOptionTicker()));
                     //pr(" counter is " + i.incrementAndGet());
                     LocalDate volDate = c.getVolDate();
                     LocalDate expiry = c.getExpiryDate();

@@ -36,7 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.*;
 import java.util.stream.Collectors;
 
-import static api.AutoTraderMain.ltof;
+import static utility.Utility.ltof;
 import static api.ChinaData.*;
 import static api.ChinaDataYesterday.*;
 import static api.ChinaSizeRatio.*;

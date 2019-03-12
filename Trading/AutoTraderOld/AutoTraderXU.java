@@ -1,17 +1,18 @@
-package api;
+package AutoTraderOld;
 
 import TradeType.FutureTrade;
 import TradeType.TradeBlock;
+import api.*;
 import auxiliary.SimpleBar;
 import client.*;
 import controller.ApiController;
 import graph.DisplayGranularity;
 import graph.GraphXuTrader;
-import handler.GuaranteeXUHandler;
 import handler.HistoricalHandler;
 import handler.XUOvernightTradeExecHandler;
 import sound.EmbeddedSoundPlayer;
 import util.AutoOrderType;
+import utility.TradingUtility;
 import utility.Utility;
 
 import javax.swing.*;
@@ -32,17 +33,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static api.AutoTraderMain.*;
+import static AutoTraderOld.AutoTraderMain.*;
 import static api.ChinaData.priceMapBar;
 import static api.ChinaData.priceMapBarDetail;
-import static api.ChinaDataYesterday.ma20Map;
 import static api.ChinaOption.getATMVol;
 import static api.ChinaPosition.*;
 import static api.ChinaStock.*;
-import static api.ChinaStockHelper.reverseComp;
+import static utility.Utility.reverseComp;
 import static api.Currency.CNY;
 import static api.TradingConstants.*;
-import static api.XuTraderHelper.*;
+import static AutoTraderOld.XuTraderHelper.*;
 import static client.OrderStatus.*;
 import static client.Types.TimeInForce.IOC;
 import static java.time.temporal.ChronoUnit.*;
@@ -157,12 +157,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     //display
     public static volatile Predicate<LocalDateTime> displayPred = e -> true;
-    private final static Contract frontFut = utility.Utility.getFrontFutContract();
-    private final static Contract backFut = utility.Utility.getBackFutContract();
+    private final static Contract frontFut = TradingUtility.getFrontFutContract();
+    private final static Contract backFut = TradingUtility.getBackFutContract();
 
     @SuppressWarnings("unused")
     private static Predicate<? super Map.Entry<FutType, ?>> graphPred = e -> true;
-    public static volatile Contract activeFutCt = gettingActiveContract();
+    public static volatile Contract activeFutCt = TradingUtility.gettingActiveContract();
 
     public static volatile DisplayGranularity gran = DisplayGranularity._5MDATA;
     private static volatile Map<Double, Double> activeFutLiveOrder = new ConcurrentHashMap<>();
@@ -225,7 +225,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     private static final double retreatHIThresh = 0.85 * hiThresh;
     private static final double retreatLOThresh = 0.85 * loThresh;
 
-    AutoTraderXU(ApiController ap) {
+    public AutoTraderXU(ApiController ap) {
         pr(str(" ****** front fut ******* ", frontFut.symbol(), frontFut.lastTradeDateOrContractMonth()));
         pr(str(" ****** back fut ******* ", backFut.symbol(), backFut.lastTradeDateOrContractMonth()));
 
@@ -265,10 +265,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         bidLimitButton.addActionListener(l -> {
             pr(" buying limit ");
             int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimit(bidMap.get(ibContractToFutType(activeFutCt)), 1.0);
+            Order o = TradingUtility.placeBidLimit(bidMap.get(ibContractToFutType(activeFutCt)), 1.0);
             globalIdOrderMap.put(id, new OrderAugmented(activeFutCt
                     , LocalDateTime.now(), o, AutoOrderType.ON_BID));
-            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+            apcon.placeOrModifyOrder(activeFutCt, o, new AutoOrderDefaultHandler(id));
             outputDetailedXU(ibContractToSymbol(activeFutCt),
                     str(o.orderId(), " Bidding Limit ", globalIdOrderMap.get(id)));
         });
@@ -278,8 +278,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         offerLimitButton.addActionListener(l -> {
             pr(" selling limit ");
             int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimit(askMap.get(ibContractToFutType(activeFutCt)), 1.0);
-            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+            Order o = TradingUtility.placeOfferLimit(askMap.get(ibContractToFutType(activeFutCt)), 1.0);
+            apcon.placeOrModifyOrder(activeFutCt, o, new AutoOrderDefaultHandler(id));
             globalIdOrderMap.put(id, new OrderAugmented(activeFutCt,
                     LocalDateTime.now(), o, "offer limit", ON_OFFER));
             String symbol = ibContractToSymbol(activeFutCt);
@@ -290,9 +290,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         buyOfferButton.addActionListener(l -> {
             pr(" buy offer ");
             int id = autoTradeID.incrementAndGet();
-            Order o = buyAtOffer(askMap.get(ibContractToFutType(activeFutCt)), 1.0);
+            Order o = TradingUtility.buyAtOffer(askMap.get(ibContractToFutType(activeFutCt)), 1.0);
             globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, LocalDateTime.now(), o, "lift offer", LIFT_OFFER));
-            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+            apcon.placeOrModifyOrder(activeFutCt, o, new AutoOrderDefaultHandler(id));
             outputDetailedXU(ibContractToSymbol(activeFutCt),
                     str(o.orderId(), " Lift Offer ", globalIdOrderMap.get(id)));
         });
@@ -301,10 +301,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         sellBidButton.addActionListener(l -> {
             pr(" sell bid ");
             int id = autoTradeID.incrementAndGet();
-            Order o = sellAtBid(bidMap.get(ibContractToFutType(activeFutCt)), 1.0);
+            Order o = TradingUtility.sellAtBid(bidMap.get(ibContractToFutType(activeFutCt)), 1.0);
             globalIdOrderMap.put(id, new OrderAugmented(activeFutCt
                     , LocalDateTime.now(), o, "hit bid", HIT_BID));
-            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+            apcon.placeOrModifyOrder(activeFutCt, o, new AutoOrderDefaultHandler(id));
             outputDetailedXU(ibContractToSymbol(activeFutCt),
                     str(o.orderId(), " Hitting bid ", globalIdOrderMap.get(id)));
         });
@@ -612,8 +612,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         double bidPrice = bidPriceList.getOrDefault(l.getName(), 0.0);
                         if (checkIfOrderPriceMakeSense(bidPrice) && futMarketOpen(LocalTime.now())) {
                             int id = autoTradeID.incrementAndGet();
-                            Order o = placeBidLimit(bidPrice, 1.0);
-                            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+                            Order o = TradingUtility.placeBidLimit(bidPrice, 1.0);
+                            apcon.placeOrModifyOrder(activeFutCt, o, new AutoOrderDefaultHandler(id));
                             globalIdOrderMap.put(id, new OrderAugmented(
                                     activeFutCt, LocalDateTime.now(), o, ON_BID));
 //                            outputDetailedXU(symbol,str(o.orderId(), " MANUAL BID || bid price ", bidPrice,
@@ -642,8 +642,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
                         if (checkIfOrderPriceMakeSense(offerPrice) && futMarketOpen(LocalTime.now())) {
                             int id = autoTradeID.incrementAndGet();
-                            Order o = placeOfferLimit(offerPrice, 1.0);
-                            apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler(id));
+                            Order o = TradingUtility.placeOfferLimit(offerPrice, 1.0);
+                            apcon.placeOrModifyOrder(activeFutCt, o, new AutoOrderDefaultHandler(id));
                             globalIdOrderMap.put(id, new OrderAugmented(
                                     activeFutCt, LocalDateTime.now(), o, ON_OFFER));
 //                            outputDetailedXU(symbol,str(o.orderId(), " MANUAL OFFER||offer price "
@@ -675,7 +675,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         add(chartScroll);
     }
 
-    void openingProcess() {
+    public void openingProcess() {
         pr(" xu opening process ");
         apcon.reqPositions(this);
         apcon.reqDeepMktData(activeFutCt, 10, this);
@@ -688,28 +688,28 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         showTradesButton.doClick();
     }
 
-    void openingRefresh() {
+    public void openingRefresh() {
         //refreshButton.doClick();
         processTradesButton.doClick();
     }
 
 
-    static void set20DayBullBear() {
-        String ticker = "sh000016";
-        if (ma20Map.getOrDefault(ticker, 0.0) == 0.0 || priceMap.getOrDefault(ticker, 0.0) == 0.0) {
-            _20DayMA = MASentiment.Directionless;
-        } else if (priceMap.get(ticker) < ma20Map.get(ticker)) {
-            _20DayMA = MASentiment.Bearish;
-        } else if (priceMap.get(ticker) > ma20Map.get(ticker)) {
-            _20DayMA = MASentiment.Bullish;
-        }
-    }
-
-    private static String get20DayBullBear() {
-        String ticker = "sh000001";
-        return str(_20DayMA, "Price: ", priceMap.getOrDefault(ticker, 0.0), "MA20: ",
-                ma20Map.getOrDefault(ticker, 0.0));
-    }
+//    static void set20DayBullBear() {
+//        String ticker = "sh000016";
+//        if (ma20Map.getOrDefault(ticker, 0.0) == 0.0 || priceMap.getOrDefault(ticker, 0.0) == 0.0) {
+//            _20DayMA = MASentiment.Directionless;
+//        } else if (priceMap.get(ticker) < ma20Map.get(ticker)) {
+//            _20DayMA = MASentiment.Bearish;
+//        } else if (priceMap.get(ticker) > ma20Map.get(ticker)) {
+//            _20DayMA = MASentiment.Bullish;
+//        }
+//    }
+//
+//    private static String get20DayBullBear() {
+//        String ticker = "sh000001";
+//        return str(_20DayMA, "Price: ", priceMap.getOrDefault(ticker, 0.0), "MA20: ",
+//                ma20Map.getOrDefault(ticker, 0.0));
+//    }
 
 //    private static int getRecentPmCh(LocalTime lt, String index) {
 //        //pr(" getting pmchy yest/today", pmchyMap.getOrDefault(index, 0), getPmchToday(ltof, index));
@@ -877,12 +877,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return false;
         } else {
             LocalTime maxT = priceMapBar.get(symbol).entrySet().stream()
-                    .filter(e -> checkTimeRangeBool(e.getKey(), 9, 29, 9, 41))
+                    .filter(e -> TradingUtility.checkTimeRangeBool(e.getKey(), 9, 29, 9, 41))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MIN);
 
             LocalTime minT = priceMapBar.get(symbol).entrySet().stream()
-                    .filter(e -> checkTimeRangeBool(e.getKey(), 9, 29, 9, 41))
+                    .filter(e -> TradingUtility.checkTimeRangeBool(e.getKey(), 9, 29, 9, 41))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(Map.Entry::getKey).orElse(LocalTime.MAX);
 
@@ -899,7 +899,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return false;
         } else {
             double f10max = priceMapBar.get(name).entrySet().stream()
-                    .filter(e -> checkTimeRangeBool(e.getKey(), 9, 30, 9, 41))
+                    .filter(e -> TradingUtility.checkTimeRangeBool(e.getKey(), 9, 30, 9, 41))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
 //            if (detailedPrint.get() && LocalTime.now().isBefore(ltof(10, 0))) {
@@ -918,12 +918,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             LocalDate prevDate = futdata.firstKey().toLocalDate();
 
             double prevMax = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(prevDate))
-                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .filter(e -> TradingUtility.checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
 
             double prevMin = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(prevDate))
-                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .filter(e -> TradingUtility.checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(e -> e.getValue().getLow()).orElse(0.0);
 
@@ -946,12 +946,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             return 0;
         } else if (futdata.lastKey().isAfter(LocalDateTime.of(dt, ltof(13, 0)))) {
             double prevMax = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
-                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .filter(e -> TradingUtility.checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
 
             double prevMin = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
-                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .filter(e -> TradingUtility.checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(e -> e.getValue().getLow()).orElse(0.0);
 
@@ -982,12 +982,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     .getValue().getOpen();
 
             double prevMax = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
-                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .filter(e -> TradingUtility.checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
 
             double prevMin = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
-                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .filter(e -> TradingUtility.checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(e -> e.getValue().getLow()).orElse(0.0);
 
@@ -1039,20 +1039,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return this;
     }
 
-    static Contract gettingActiveContract() {
-        long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(),
-                LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd")));
-        //return frontFut;
-        pr(" **********  days until expiry **********", daysUntilFrontExp);
-        if (daysUntilFrontExp <= 1) {
-            pr(" using back fut ");
-            return backFut;
-        } else {
-            pr(" using front fut ");
-            return frontFut;
-        }
-    }
-
     private static double getExpiringDelta() {
         return currentPosMap.entrySet().stream()
                 .mapToDouble(e -> {
@@ -1074,7 +1060,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 }).sum();
     }
 
-    static double getFutDelta() {
+    public static double getFutDelta() {
         LocalDateTime now = LocalDateTime.now();
         LocalDate frontMonthExpiryDate = LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY,
                 DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -1113,7 +1099,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 return e.getValue();
             }
         }
-        return new OrderAugmented();
+        throw new IllegalStateException(str(" findOrderByTWSID: order not found for TWSID", twsId));
+        //return new OrderAugmented();
     }
 
 //    /**
@@ -1427,7 +1414,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             if (freshPrice > halfHourOpen && !noMoreBuy.get() &&
                     hHrXUDevDirection.get(symbol).get(h) != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, 1, IOC);
+                Order o = TradingUtility.placeBidLimitTIF(freshPrice, 1, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "h hr dev buy #:", h));
@@ -1435,7 +1422,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             } else if (freshPrice < halfHourOpen && !noMoreSell.get() &&
                     hHrXUDevDirection.get(symbol).get(h) != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, 1, IOC);
+                Order o = TradingUtility.placeOfferLimitTIF(freshPrice, 1, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "h hr dev sell #:", h));
@@ -1546,7 +1533,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 (SECONDS.between(lastFutHiloTime, nowMilli) >= waitTimeSec || futHiLoDirection == Direction.Flat)) {
             if (!noMoreBuy.get() && (last > maxP || maxT.isAfter(minT)) && futHiLoDirection != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
+                Order o = TradingUtility.placeBidLimitTIF(freshPrice, buySize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, SGXA50_HILO));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "fut hilo buy #:", futHiloOrdersNum,
@@ -1558,7 +1545,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 futHiLoDirection = Direction.Long;
             } else if (!noMoreSell.get() && (last < minP || minT.isAfter(maxT)) && futHiLoDirection != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, sellSize, IOC);
+                Order o = TradingUtility.placeOfferLimitTIF(freshPrice, sellSize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, SGXA50_HILO));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "fut hilo sell #:", futHiloOrdersNum,
@@ -1595,7 +1582,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         if (currPos < 0 & last > open - safetyMargin) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimitTIF(last, Math.abs(currPos), IOC);
+            Order o = TradingUtility.placeBidLimitTIF(last, Math.abs(currPos), IOC);
             globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, str(o.orderId(), "xu W post cutoff liq BUY#:", numPostCutoffOrders
@@ -1603,7 +1590,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     "safetymargin", safetyMargin, "cut level", open - safetyMargin));
         } else if (currPos > 0 && last < open + safetyMargin) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimitTIF(last, currPos, IOC);
+            Order o = TradingUtility.placeOfferLimitTIF(last, currPos, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, str(o.orderId(), "xu W post cutoff liq SELL#:", numPostCutoffOrders
@@ -1639,7 +1626,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         if (currPos < 0 & freshPrice > open - safetyMargin) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
+            Order o = TradingUtility.placeBidLimitTIF(freshPrice, Math.abs(currPos), IOC);
             globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, SGXA50_POST_CUTOFF_LIQ));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, str(o.orderId(), "fut post cutoff liq BUY#:", numPostCutoffOrders
@@ -1647,7 +1634,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     "safetymargin", safetyMargin, "cut level", open - safetyMargin));
         } else if (currPos > 0 && freshPrice < open + safetyMargin) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimitTIF(freshPrice, currPos, IOC);
+            Order o = TradingUtility.placeOfferLimitTIF(freshPrice, currPos, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, SGXA50_POST_CUTOFF_LIQ));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, str(o.orderId(), "fut post cutoff liq SELL#:", numPostCutoffOrders
@@ -1901,7 +1888,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 && filled <= -1 && pos < 0 && (numOrders % 2 == 1)) {
             int id = autoTradeID.incrementAndGet();
             buySize = Math.max(1, Math.floor(Math.abs(pos) / 2));
-            Order o = placeBidLimitTIF(last, buySize, IOC);
+            Order o = TradingUtility.placeBidLimitTIF(last, buySize, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, "**********");
@@ -1913,7 +1900,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 && filled >= 1 && pos > 0 && (numOrders % 2 == 1)) {
             int id = autoTradeID.incrementAndGet();
             sellSize = Math.max(1, Math.floor(Math.abs(pos) / 2));
-            Order o = placeOfferLimitTIF(last, sellSize, IOC);
+            Order o = TradingUtility.placeOfferLimitTIF(last, sellSize, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, "**********");
@@ -1927,7 +1914,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 if (!noMoreBuy.get() && last > weekOpen && futWeekDevDir != Direction.Long) {
                     int id = autoTradeID.incrementAndGet();
                     buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? wBaseSize : 0)) : wBaseSize;
-                    Order o = placeBidLimitTIF(last, buySize, IOC);
+                    Order o = TradingUtility.placeBidLimitTIF(last, buySize, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                     outputDetailedXU(symbol, "**********");
@@ -1938,7 +1925,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 } else if (!noMoreSell.get() && last < weekOpen && futWeekDevDir != Direction.Short) {
                     int id = autoTradeID.incrementAndGet();
                     sellSize = pos > 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? wBaseSize : 0)) : wBaseSize;
-                    Order o = placeOfferLimitTIF(last, sellSize, IOC);
+                    Order o = TradingUtility.placeOfferLimitTIF(last, sellSize, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                     outputDetailedXU(symbol, "**********");
@@ -2026,7 +2013,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 && filled <= -1 && pos < 0 && (numOrders % 2 == 1)) {
             int id = autoTradeID.incrementAndGet();
             buySize = Math.max(1, Math.floor(Math.abs(pos) / 2));
-            Order o = placeBidLimitTIF(last, buySize, IOC);
+            Order o = TradingUtility.placeBidLimitTIF(last, buySize, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, "**********");
@@ -2038,7 +2025,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 && filled >= 1 && pos > 0 && (numOrders % 2 == 1)) {
             int id = autoTradeID.incrementAndGet();
             sellSize = Math.max(1, Math.floor(Math.abs(pos) / 2));
-            Order o = placeOfferLimitTIF(last, sellSize, IOC);
+            Order o = TradingUtility.placeOfferLimitTIF(last, sellSize, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, "**********");
@@ -2052,7 +2039,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 if (!noMoreBuy.get() && last > open && futNightDevDir != Direction.Long) {
                     int id = autoTradeID.incrementAndGet();
                     buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? nightBaseSize : 0)) : nightBaseSize;
-                    Order o = placeBidLimitTIF(last, buySize, IOC);
+                    Order o = TradingUtility.placeBidLimitTIF(last, buySize, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                     outputDetailedXU(symbol, "**********");
@@ -2063,7 +2050,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 } else if (!noMoreSell.get() && last < open && futNightDevDir != Direction.Short) {
                     int id = autoTradeID.incrementAndGet();
                     sellSize = pos > 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? nightBaseSize : 0)) : nightBaseSize;
-                    Order o = placeOfferLimitTIF(last, sellSize, IOC);
+                    Order o = TradingUtility.placeOfferLimitTIF(last, sellSize, IOC);
                     globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
                     apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                     outputDetailedXU(symbol, "**********");
@@ -2187,7 +2174,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             if (false && !noMoreBuy.get() && last > open && futDevDir != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
                 //buySize = pos < 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? baseSize : 0)) : baseSize;
-                Order o = placeBidLimitTIF(last, buySize, IOC);
+                Order o = TradingUtility.placeBidLimitTIF(last, buySize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, "**********");
@@ -2198,7 +2185,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             } else if (!noMoreSell.get() && last < open && futDevDir != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
                 //sellSize = pos > 0 ? (Math.abs(pos) + (numOrders % 2 == 0 ? baseSize : 0)) : baseSize;
-                Order o = placeOfferLimitTIF(last, sellSize, IOC);
+                Order o = TradingUtility.placeOfferLimitTIF(last, sellSize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, ot));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, "**********");
@@ -2766,7 +2753,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double askPrice = askMap.get(f);
         LocalTime cutoff = ltof(13, 30);
 
-        if (!checkTimeRangeBool(lt, 12, 58, 13, 30)) {
+        if (!TradingUtility.checkTimeRangeBool(lt, 12, 58, 13, 30)) {
             return;
         }
 
@@ -2857,7 +2844,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             if (!noMoreBuy.get() && (indexLast > pmMaxSoFar || pmMaxT.isAfter(pmMinT))
                     && indexPmHiLoDir != Direction.Long) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, buyQ, IOC);
+                Order o = TradingUtility.placeBidLimitTIF(freshPrice, buyQ, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, FTSEA50_PM_HILO));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, "**********");
@@ -2873,7 +2860,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             } else if (!noMoreSell.get() && (indexLast < pmMinSoFar || pmMinT.isAfter(pmMaxT))
                     && indexPmHiLoDir != Direction.Short) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, sellQ, IOC);
+                Order o = TradingUtility.placeOfferLimitTIF(freshPrice, sellQ, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, FTSEA50_PM_HILO));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, "**********");
@@ -2929,14 +2916,14 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         if (SECONDS.between(lastOrderTime, nowMilli) > liqWaitSecs) {
             if (pos < 0) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, size, IOC);
+                Order o = TradingUtility.placeBidLimitTIF(freshPrice, size, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, SGXA50_CLOSE_LIQ));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), " close liq XU buy #:", numOrderCloseLiq,
                         globalIdOrderMap.get(id), "last order time", lastOrderTime, "currPos", pos, "size", size));
             } else if (pos > 0) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, size, IOC);
+                Order o = TradingUtility.placeOfferLimitTIF(freshPrice, size, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, SGXA50_CLOSE_LIQ));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), " close liq XU sell #:", numOrderCloseLiq
@@ -3043,7 +3030,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         if (lt.isAfter(cutoff) && lt.isBefore(amClose)) {
             if (currPos < 0 && indexLast > openIndex - safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos) + reverseAddon, IOC);
+                Order o = TradingUtility.placeBidLimitTIF(freshPrice, Math.abs(currPos) + reverseAddon, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, FTSEA50_POST_AMCUTOFF));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, "**********");
@@ -3052,7 +3039,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         "safetymargin ", safetyMargin, "safety level ", openIndex - safetyMargin));
             } else if (currPos > 0 && indexLast < openIndex + safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, currPos + reverseAddon, IOC);
+                Order o = TradingUtility.placeOfferLimitTIF(freshPrice, currPos + reverseAddon, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, FTSEA50_POST_AMCUTOFF));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, "**********");
@@ -3098,7 +3085,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         if (lt.isAfter(pmCutoff) && lt.isBefore(pmClose)) {
             if (currPos < 0 && indexLast > pmOpen - safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, Math.abs(currPos) + reverseAddOn, IOC);
+                Order o = TradingUtility.placeBidLimitTIF(freshPrice, Math.abs(currPos) + reverseAddOn, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, FTSEA50_POST_PMCUTOFF));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, "**********");
@@ -3107,7 +3094,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                         "safetymargin ", safetyMargin, "safety level", pmOpen - safetyMargin));
             } else if (currPos > 0 && indexLast < pmOpen + safetyMargin) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, currPos + reverseAddOn, IOC);
+                Order o = TradingUtility.placeOfferLimitTIF(freshPrice, currPos + reverseAddOn, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, FTSEA50_POST_PMCUTOFF));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, "**********");
@@ -3672,7 +3659,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     && totalMASignedQ + totalSizeTradedOtherOrders < 0)) {
                 int id = autoTradeID.incrementAndGet();
                 buySize = 1;
-                Order o = placeBidLimitTIF(freshPrice, buySize, IOC);
+                Order o = TradingUtility.placeBidLimitTIF(freshPrice, buySize, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, PERC_MA));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "perc MA buy", "#:", numOrders, globalIdOrderMap.get(id)
@@ -3686,7 +3673,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     && totalMASignedQ + totalSizeTradedOtherOrders > 0) && lt.isAfter(ltof(14, 50))) {
 
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, CONSERVATIVE_SIZE, IOC);
+                Order o = TradingUtility.placeOfferLimitTIF(freshPrice, CONSERVATIVE_SIZE, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, PERC_MA));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "perc MA sell", "#:", numOrders, globalIdOrderMap.get(id)
@@ -3707,7 +3694,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double ask = askMap.get(f);
         if (numTestOrders < 1) {
             int id = autoTradeID.incrementAndGet();
-            Order o = placeOfferLimitTIF(freshPrice + 10.0, 1, IOC);
+            Order o = TradingUtility.placeOfferLimitTIF(freshPrice + 10.0, 1, IOC);
             globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, "Test ", TEST));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
             outputDetailedXU(symbol, str(o.orderId(), "Test trade ", freshPrice, "bid ask", bid, ask));
@@ -3736,18 +3723,18 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         LocalDateTime lastOrderTime = getLastOrderTime(symbol, OVERNIGHT);
 
-        if (checkTimeRangeBool(lt, 3, 0, 5, 0)
+        if (TradingUtility.checkTimeRangeBool(lt, 3, 0, 5, 0)
                 && MINUTES.between(lastOrderTime, nowMilli) > ORDER_WAIT_TIME) {
             if (currDelta > getBearishTarget() && currPerc > HI_PERC && pmPercChg > PMCHY_HI) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(freshPrice, CONSERVATIVE_SIZE, IOC);
+                Order o = TradingUtility.placeOfferLimitTIF(freshPrice, CONSERVATIVE_SIZE, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, "Overnight Short", OVERNIGHT));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "O/N sell @ ", freshPrice, "curr p%", currPerc,
                         "pmPercChg ", pmPercChg));
             } else if (currDelta < getBullishTarget() && currPerc < LO_PERC && pmPercChg < PMCHY_LO) {
                 int id = autoTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(freshPrice, CONSERVATIVE_SIZE, IOC);
+                Order o = TradingUtility.placeBidLimitTIF(freshPrice, CONSERVATIVE_SIZE, IOC);
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, "Overnight Long", OVERNIGHT));
                 apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
                 outputDetailedXU(symbol, str(o.orderId(), "O/N buy @ ", freshPrice, "curr p%", currPerc,
@@ -3788,7 +3775,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                     }
                     e.getValue().setMsg(str(" more aggressive price:", o.action(),
                             o.action() == Types.Action.BUY ? ask : bid));
-                    apcon.placeOrModifyOrder(activeFutCt, o, new DefaultOrderHandler());
+                    apcon.placeOrModifyOrder(activeFutCt, o, new AutoOrderDefaultHandler());
                     e.getValue().setAugmentedOrderStatus(OrderStatus.Cancelled);
                 });
     }
@@ -4122,7 +4109,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     @Override
     public void handle(int errorCode, String errorMsg) {
         outputDetailedXU(ibContractToSymbol(activeFutCt), "ERROR code " + errorCode + " message " + errorMsg);
-        outputToError("ERROR code " + errorCode + " message " + errorMsg);
+        TradingUtility.outputToError("ERROR code " + errorCode + " message " + errorMsg);
         updateLog(" ERROR code " + errorCode + " message " + errorMsg);
     }
 
@@ -4176,7 +4163,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     @Override
     public void handle(int orderId, int errorCode, String errorMsg) {
         //outputDetailedXU(symbol,str("ERROR LIVE ID:", orderId, "code", errorCode, "MSG", errorMsg));
-        outputToError(str("ERROR LIVE ORDER HANDLER ID:"
+        TradingUtility.outputToError(str("ERROR LIVE ORDER HANDLER ID:"
                 , LocalTime.now(), orderId, "code", errorCode, "MSG", errorMsg));
 
         if (errorCode != 504 || LocalTime.now().getSecond() < 5) {
@@ -4363,8 +4350,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
             updateLog(" MTM + Trade " + r(netTradePnl + mtmPnl));
             updateLog("pos:" + currentPosMap.getOrDefault(f, 0) + " Delta " + r(getNetPtfDelta()) +
                     " Stock Delta " + r(ChinaPosition.getStockPtfDelta()) + " Fut Delta " + r(getFutDelta())
-                    + "HK Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isHKStock(e.getKey())))
-                    + " China Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> isChinaStock(e.getKey()))));
+                    + "HK Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> TradingUtility.isHKStock(e.getKey())))
+                    + " China Delta " + r(ChinaPosition.getStockPtfDeltaCustom(e -> TradingUtility.isChinaStock(e.getKey()))));
             updateLog(str("2D fut p%:", _2dayFutPerc, "1D fut p%", _1dayFutPerc, "1D idx p%", indexPercLast,
                     "openY:", openPercY, "closeY:", closePercY, "pmChg", pmChg));
             updateLog(" expiring delta " + getExpiringDelta());

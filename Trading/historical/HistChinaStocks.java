@@ -1,5 +1,6 @@
 package historical;
 
+import AutoTraderOld.AutoTraderMain;
 import TradeType.MarginTrade;
 import TradeType.NormalTrade;
 import TradeType.Trade;
@@ -14,6 +15,7 @@ import graph.GraphChinaPnl;
 import handler.IBTradesHandler;
 import handler.SGXPositionHandler;
 import utility.SharpeUtility;
+import utility.TradingUtility;
 import utility.Utility;
 
 import javax.swing.*;
@@ -558,9 +560,9 @@ public class HistChinaStocks extends JPanel {
                             ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                                     getExpiredFutContract(), HistChinaStocks::handleIBWtdData, 7);
                             ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                                    getFrontFutContract(), HistChinaStocks::handleIBWtdData, 7);
+                                    TradingUtility.getFrontFutContract(), HistChinaStocks::handleIBWtdData, 7);
                             ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                                    getBackFutContract(), HistChinaStocks::handleIBWtdData, 7);
+                                    TradingUtility.getBackFutContract(), HistChinaStocks::handleIBWtdData, 7);
                         }
                 ));
 
@@ -617,9 +619,9 @@ public class HistChinaStocks extends JPanel {
             CompletableFuture.runAsync(() -> {
                 ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), getExpiredFutContract()
                         , HistChinaStocks::handleIBWtdData, 7);
-                ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), getFrontFutContract()
+                ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), TradingUtility.getFrontFutContract()
                         , HistChinaStocks::handleIBWtdData, 7);
-                ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), getBackFutContract(),
+                ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), TradingUtility.getBackFutContract(),
                         HistChinaStocks::handleIBWtdData, 7);
                 stockList.forEach(s -> {
                     if (s.startsWith("hk")) {

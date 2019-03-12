@@ -12,10 +12,7 @@ import org.hibernate.Session;
 import java.awt.*;
 import java.io.*;
 import java.sql.Blob;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
@@ -28,7 +25,6 @@ import java.util.function.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static api.AutoTraderMain.ltof;
 import static api.ChinaData.priceMapBar;
 import static api.ChinaStock.*;
 import static api.TradingConstants.tdxPath;
@@ -80,6 +76,9 @@ public class Utility {
     public static final LocalTime TIMEMAX = LocalTime.MAX.truncatedTo(ChronoUnit.MINUTES);
     public static final BetweenTime<LocalTime> TIME_BETWEEN = (t1, b1, t2, b2) -> (t -> t.isAfter(b1 ? t1.minusMinutes(1) : t1) && t.isBefore(b2 ? t2.plusMinutes(1) : t2));
     public static final GenTimePred<LocalTime, Boolean> ENTRY_BTWN_GEN = (t1, b1, t2, b2) -> (e -> e.getKey().isAfter(b1 ? t1.minusMinutes(1) : t1) && e.getKey().isBefore(b2 ? t2.plusMinutes(1) : t2));
+    //zones
+    public static final ZoneId chinaZone = ZoneId.of("Asia/Shanghai");
+    public static final ZoneId nyZone = ZoneId.of("America/New_York");
     public static BiPredicate<? super Map<String, ? extends Map<LocalTime, ?>>, String> NORMAL_MAP = (mp, name) -> mp.containsKey(name) && !mp.get(name).isEmpty() && mp.get(name).size() > 0;
     public static Predicate<LocalTime> chinaTradingTimeHist = t -> (t.isAfter(LocalTime.of(9, 30)) && t.isBefore(LocalTime.of(11, 31))) ||
             (t.isAfter(LocalTime.of(13, 0)) && t.isBefore(LocalTime.of(15, 1)));
@@ -784,27 +783,6 @@ public class Utility {
         return ct;
     }
 
-    public static Contract getFrontFutContract() {
-        Contract ct = new Contract();
-        ct.symbol("XINA50");
-        ct.exchange("SGX");
-        ct.currency("USD");
-        pr("front exp date ", TradingConstants.A50_FRONT_EXPIRY);
-        ct.lastTradeDateOrContractMonth(TradingConstants.A50_FRONT_EXPIRY);
-        ct.secType(Types.SecType.FUT);
-        return ct;
-    }
-
-    public static Contract getBackFutContract() {
-        Contract ct = new Contract();
-        ct.symbol("XINA50");
-        ct.exchange("SGX");
-        ct.currency("USD");
-        ct.lastTradeDateOrContractMonth(TradingConstants.A50_BACK_EXPIRY);
-        ct.secType(Types.SecType.FUT);
-        return ct;
-    }
-
     @SuppressWarnings("SpellCheckingInspection")
     public static String ibContractToSymbol(Contract ct) {
         if (ct.symbol().equals("XINA50") && ct.secType() == Types.SecType.FUT) {
@@ -971,4 +949,68 @@ public class Utility {
         ct.lastTradeDateOrContractMonth("20190213");
         return ct;
     }
+
+    public static boolean ltBtwn(LocalTime lt, int h1, int m1, int h2, int m2) {
+        return lt.isAfter(ltof(h1, m1)) && lt.isBefore(ltof(h2, m2));
+    }
+
+    public static int getMinuteBetween(LocalTime t1, LocalTime t2) {
+        if (t1.isBefore(LocalTime.of(11, 30)) && t2.isAfter(LocalTime.of(13, 0))) {
+            return (int) (ChronoUnit.MINUTES.between(t1, t2) - 90);
+        }
+        return (int) ChronoUnit.MINUTES.between(t1, t2);
+    }
+
+    public static void outputDetailedGen(String s, File detailed) {
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(detailed, true))) {
+            out.append(s);
+            out.newLine();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static void outputToSymbolFile(String symbol, String msg, File detailed) {
+        if (!symbol.equals("")) {
+            outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
+        }
+        outputDetailedGen(msg, detailed);
+    }
+
+    public static void outputDetailedUSSymbol(String symbol, String msg) {
+        outputDetailedGen(LocalDateTime.now().toString(), new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
+        outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
+    }
+
+    public static void outputDetailedXUSymbol(String symbol, String msg) {
+//        if (globalIdOrderMap.entrySet().stream().noneMatch(e -> e.getValue().getSymbol().equals(symbol))) {
+//            outputDetailedGen(LocalDateTime.now().toString()
+//                    , new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
+//        }
+        outputDetailedGen(LocalDateTime.now().toString(), new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
+        outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
+    }
+
+    public static LocalDateTime ldtof(LocalDate d, LocalTime t) {
+        return LocalDateTime.of(d, t);
+    }
+
+    public static <T> Comparator<T> reverseComp(Comparator<T> c) {
+        return c.reversed();
+    }
+
+    public static LocalTime ltof(int h, int m) {
+        return LocalTime.of(h, m);
+    }
+
+    public static LocalTime ltof(int h, int m, int s) {
+        return LocalTime.of(h, m, s);
+    }
+
+//    public static void outputDetailedUS(String symbol, String msg) {
+//        if (!symbol.equals("")) {
+//            outputDetailedUSSymbol(symbol, msg);
+//        }
+//        outputDetailedGen(msg, usDetailOutput);
+//    }
 }

@@ -1,5 +1,7 @@
 package graph;
 
+import AutoTraderOld.AutoTraderXU;
+import AutoTraderOld.XuTraderHelper;
 import TradeType.MAIdea;
 import TradeType.TradeBlock;
 import api.*;
@@ -28,8 +30,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static api.AutoTraderMain.liveIDOrderMap;
-import static api.AutoTraderXU.*;
+import static AutoTraderOld.AutoTraderMain.liveIDOrderMap;
+import static AutoTraderOld.AutoTraderXU.*;
 import static api.TradingConstants.FTSE_INDEX;
 import static utility.Utility.getPercentileForLast;
 import static client.OrderStatus.*;

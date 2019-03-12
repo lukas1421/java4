@@ -186,10 +186,6 @@ public final class ChinaStockHelper {
         outputPMBToFile(inMap, output);
     }
 
-    static <T> Comparator<T> reverseComp(Comparator<T> c) {
-        return c.reversed();
-    }
-
     private static double computeReturn(NavigableMap<LocalTime, SimpleBar> tm) {
         if (tm.size() > 0) {
             double last = tm.lastEntry().getValue().getClose();

@@ -5,7 +5,7 @@ import client.TickType;
 
 import java.time.LocalDateTime;
 
-import static api.AutoTraderUS.*;
+import static AutoTraderOld.AutoTraderUS.*;
 import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.pr;
 

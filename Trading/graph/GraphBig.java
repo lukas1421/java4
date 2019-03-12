@@ -1,5 +1,6 @@
 package graph;
 
+import AutoTraderOld.AutoTraderXU;
 import api.*;
 import auxiliary.SimpleBar;
 import utility.Utility;
@@ -22,7 +23,7 @@ import static api.ChinaData.*;
 import static api.ChinaDataYesterday.*;
 import static api.ChinaStock.*;
 import static api.ChinaStockHelper.*;
-import static api.XuTraderHelper.getMAGenLT;
+import static AutoTraderOld.XuTraderHelper.getMAGenLT;
 import static java.lang.Double.min;
 import static java.lang.Math.log;
 import static java.lang.Math.round;

@@ -1,5 +1,6 @@
 package api;
 
+import AutoTraderOld.AutoTraderXU;
 import TradeType.*;
 import auxiliary.SimpleBar;
 import client.*;
@@ -9,6 +10,7 @@ import handler.HistoricalHandler;
 import handler.IBPositionHandler;
 import util.AutoOrderType;
 import utility.SharpeUtility;
+import utility.TradingUtility;
 import utility.Utility;
 
 import javax.swing.*;
@@ -41,15 +43,15 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static api.AutoTraderMain.*;
+import static AutoTraderOld.AutoTraderMain.*;
 import static api.ChinaData.*;
 import static api.ChinaMain.currentTradingDate;
 import static api.ChinaPosition.costMap;
 import static api.ChinaStock.*;
-import static api.ChinaStockHelper.reverseComp;
+import static utility.Utility.reverseComp;
 import static api.Currency.CNY;
 import static api.Currency.USD;
-import static api.XuTraderHelper.getTradeDate;
+import static AutoTraderOld.XuTraderHelper.getTradeDate;
 import static client.OrderStatus.Filled;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
@@ -116,9 +118,9 @@ public class ChinaPosition extends JPanel {
     private static TableRowSorter<BarModel_POS> sorter;
     static ScheduledExecutorService ex = Executors.newScheduledThreadPool(10);
 
-    private static final Predicate<Map.Entry<String, ?>> CHINA_STOCK_PRED = m -> isChinaStock(m.getKey());
+    private static final Predicate<Map.Entry<String, ?>> CHINA_STOCK_PRED = m -> TradingUtility.isChinaStock(m.getKey());
     private static final Predicate<Map.Entry<String, ?>> FUT_PRED = m -> m.getKey().startsWith("SGXA50");
-    private static final Predicate<Map.Entry<String, ?>> HK_PRED = e -> isHKStock(e.getKey());
+    private static final Predicate<Map.Entry<String, ?>> HK_PRED = e -> TradingUtility.isHKStock(e.getKey());
 
     //private static volatile Predicate<Map.Entry<String, ?>> GEN_MTM_PRED = CHINA_STOCK_PRED.or(FUT_PRED);
     private static volatile Predicate<Map.Entry<String, ?>> GEN_MTM_PRED = e -> true;
@@ -770,7 +772,7 @@ public class ChinaPosition extends JPanel {
         return 0.0;
     }
 
-    static double getNetPtfDelta() {
+    public static double getNetPtfDelta() {
         return getStockPtfDelta() + AutoTraderXU.getFutDelta();
     }
 
@@ -789,15 +791,7 @@ public class ChinaPosition extends JPanel {
         return openDelta + tradedDelta;
     }
 
-    static boolean isChinaStock(String s) {
-        return s.startsWith("sz") || s.startsWith("sh");
-    }
-
-    static boolean isHKStock(String s) {
-        return s.startsWith("hk");
-    }
-
-    static double getStockPtfDelta() {
+    public static double getStockPtfDelta() {
         double openDelta = openPositionMap.entrySet().stream()
                 .filter(e -> !e.getKey().startsWith("SGXA50"))
                 .mapToDouble(e -> fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
@@ -811,7 +805,7 @@ public class ChinaPosition extends JPanel {
         return openDelta + tradedDelta;
     }
 
-    static double getStockPtfDeltaCustom(Predicate<? super Map.Entry<String, ?>> p) {
+    public static double getStockPtfDeltaCustom(Predicate<? super Map.Entry<String, ?>> p) {
         double openDelta = openPositionMap.entrySet().stream()
                 .filter(p).mapToDouble(e ->
                         fxMap.getOrDefault(currencyMap.getOrDefault(e.getKey(), CNY), 1.0)
@@ -1876,7 +1870,7 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
 
         if (!ChinaPosition.tradesMap.containsKey(symbol)) {
             pr(" inputting new entry for ticker ", symbol);
-            XuTraderHelper.outputToError(str(" trade map does not include symbol ", symbol));
+            TradingUtility.outputToError(str(" trade map does not include symbol ", symbol));
 
             pr("last expire is", TradingConstants.getFutLastExpiry());
             pr("front expire is", TradingConstants.getFutFrontExpiry());

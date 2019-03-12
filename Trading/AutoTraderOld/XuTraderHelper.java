@@ -1,13 +1,12 @@
-package api;
+package AutoTraderOld;
 
 import TradeType.FutureTrade;
+import api.*;
 import auxiliary.SimpleBar;
 import client.Order;
-import client.OrderStatus;
-import client.OrderType;
-import client.Types;
 import controller.ApiController;
 import util.AutoOrderType;
+import utility.TradingUtility;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,7 +17,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -28,8 +26,8 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static api.AutoTraderMain.*;
-import static api.AutoTraderXU.activeFutCt;
+import static AutoTraderOld.AutoTraderMain.*;
+import static AutoTraderOld.AutoTraderXU.activeFutCt;
 import static api.ChinaData.priceMapBar;
 import static api.ChinaStock.currencyMap;
 import static api.Currency.CNY;
@@ -134,17 +132,6 @@ public class XuTraderHelper {
 //        }
 //    }
 
-    public static void outputToError(String s) {
-        pr(s);
-        File output = new File(TradingConstants.GLOBALPATH + "autoError.txt");
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
-            out.append(s);
-            out.newLine();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
     public static void outputToUSPriceTest(String s) {
         pr(s);
         File output = new File(TradingConstants.GLOBALPATH + "usPriceTest.txt");
@@ -169,35 +156,19 @@ public class XuTraderHelper {
 //    }
 
     public static void outputToAll(String s) {
-        outputDetailedXU("", s);
-        outputDetailedHK("", s);
-        outputDetailedUS("", s);
+        outputDetailedXUSymbol("", s);
+        outputDetailedHKSymbol("", s);
+        outputDetailedUSSymbol("", s);
     }
 
-    public static void outputSymbolMsg(String symbol, String msg) {
+    static void outputSymbolMsg(String symbol, String msg) {
         if (symbol.startsWith("hk")) {
             outputDetailedHK(symbol, msg);
         } else if (symbol.startsWith("SGXA50")) {
             outputDetailedXU(symbol, msg);
-        } else if (currencyMap.getOrDefault(symbol, CNY).equals("USD")) {
-            outputDetailedUS(symbol, msg);
+        } else if (currencyMap.getOrDefault(symbol, CNY) == Currency.USD) {
+            outputDetailedUSSymbol(symbol, msg);
         }
-    }
-
-    private static void outputDetailedGen(String s, File detailed) {
-        try (BufferedWriter out = new BufferedWriter(new FileWriter(detailed, true))) {
-            out.append(s);
-            out.newLine();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public static void outputToSymbolFile(String symbol, String msg, File detailed) {
-        if (!symbol.equals("")) {
-            outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
-        }
-        outputDetailedGen(msg, detailed);
     }
 
     public static void outputDetailedXU(String symbol, String msg) {
@@ -207,42 +178,11 @@ public class XuTraderHelper {
         outputDetailedGen(msg, xuDetailOutput);
     }
 
-    private static void outputDetailedXUSymbol(String symbol, String msg) {
-        if (globalIdOrderMap.entrySet().stream().noneMatch(e -> e.getValue().getSymbol().equals(symbol))) {
-            outputDetailedGen(LocalDateTime.now().toString()
-                    , new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
-        }
-        outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
-    }
-
     public static void outputDetailedHK(String symbol, String msg) {
         if (!symbol.equals("")) {
             outputDetailedHKSymbol(symbol, msg);
         }
         outputDetailedGen(msg, hkDetailOutput);
-    }
-
-    private static void outputDetailedHKSymbol(String symbol, String msg) {
-        if (globalIdOrderMap.entrySet().stream().noneMatch(e -> e.getValue().getSymbol().equals(symbol))) {
-            outputDetailedGen(LocalDateTime.now().toString()
-                    , new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
-        }
-        outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
-    }
-
-    public static void outputDetailedUS(String symbol, String msg) {
-        if (!symbol.equals("")) {
-            outputDetailedUSSymbol(symbol, msg);
-        }
-        outputDetailedGen(msg, usDetailOutput);
-    }
-
-    private static void outputDetailedUSSymbol(String symbol, String msg) {
-        if (globalIdOrderMap.entrySet().stream().noneMatch(e -> e.getValue().getSymbol().equals(symbol))) {
-            outputDetailedGen(LocalDateTime.now().toString()
-                    , new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
-        }
-        outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
     }
 
     static <T extends Temporal> int getPercentileForLastPred(NavigableMap<T, SimpleBar> mp,
@@ -308,76 +248,6 @@ public class XuTraderHelper {
             return (int) Math.round(100d * ((x - min) / (max - min)));
         }
         return 50;
-    }
-
-    static Order placeOfferLimit(double p, double quantity) {
-        return placeOfferLimitTIF(p, quantity, Types.TimeInForce.DAY);
-    }
-
-    static Order placeOfferLimitTIF(double p, double quantity, Types.TimeInForce tif) {
-        if (quantity <= 0) throw new IllegalStateException(" cannot have negative or 0 quantity");
-        System.out.println(" place offer limit " + p);
-        Order o = new Order();
-        o.action(Types.Action.SELL);
-        o.lmtPrice(p);
-        o.orderType(OrderType.LMT);
-        o.totalQuantity(quantity);
-        o.tif(tif);
-        o.outsideRth(true);
-        return o;
-    }
-
-    static Order placeShortSellLimitTIF(double p, double quantity, Types.TimeInForce tif) {
-        if (quantity <= 0) throw new IllegalStateException(" cannot have negative or 0 quantity");
-        System.out.println(" place short sell " + p);
-        Order o = new Order();
-        o.action(Types.Action.SSHORT);
-        o.lmtPrice(p);
-        o.orderType(OrderType.LMT);
-        o.totalQuantity(quantity);
-        o.tif(tif);
-        o.outsideRth(true);
-        return o;
-    }
-
-
-    static Order placeBidLimit(double p, double quantity) {
-        return placeBidLimitTIF(p, quantity, Types.TimeInForce.DAY);
-    }
-
-    static Order placeBidLimitTIF(double p, double quantity, Types.TimeInForce tif) {
-        if (quantity <= 0) throw new IllegalStateException(" cannot have 0 quantity ");
-        System.out.println(" place bid limit " + p);
-        Order o = new Order();
-        o.action(Types.Action.BUY);
-        o.lmtPrice(p);
-        o.orderType(OrderType.LMT);
-        o.totalQuantity(quantity);
-        o.outsideRth(true);
-        o.tif(tif);
-        return o;
-    }
-
-    static Order buyAtOffer(double p, double quantity) {
-        System.out.println(" buy at offer " + p);
-        Order o = new Order();
-        o.action(Types.Action.BUY);
-        o.lmtPrice(p);
-        o.orderType(OrderType.LMT);
-        o.totalQuantity(quantity);
-        o.outsideRth(true);
-        return o;
-    }
-
-    static Order sellAtBid(double p, double quantity) {
-        System.out.println(" sell at bid " + p);
-        Order o = new Order();
-        o.action(Types.Action.SELL);
-        o.lmtPrice(p);
-        o.orderType(OrderType.LMT);
-        o.totalQuantity(quantity);
-        o.outsideRth(true);
-        return o;
     }
 
 
@@ -600,17 +470,6 @@ public class XuTraderHelper {
         return e -> e.isAfter(LocalTime.of(hour1, min1)) && e.isBefore(LocalTime.of(hour2, min2));
     }
 
-    static boolean checkTimeRangeBool(LocalTime t, int hrBeg, int minBeg, int hrEnd, int minEnd) {
-        return t.isAfter(LocalTime.of(hrBeg, minBeg)) && t.isBefore(LocalTime.of(hrEnd, minEnd));
-    }
-
-    static int getMinuteBetween(LocalTime t1, LocalTime t2) {
-        if (t1.isBefore(LocalTime.of(11, 30)) && t2.isAfter(LocalTime.of(13, 0))) {
-            return (int) (ChronoUnit.MINUTES.between(t1, t2) - 90);
-        }
-        return (int) ChronoUnit.MINUTES.between(t1, t2);
-    }
-
     public static void computeMAStrategy() {
         //output the following to a file
         // time in minute, buy/sell, index value, fut value,
@@ -699,12 +558,12 @@ public class XuTraderHelper {
             return 0;
         } else {
             double prevMax = data.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(d))
-                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .filter(e -> TradingUtility.checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
 
             double prevMin = data.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(d))
-                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .filter(e -> TradingUtility.checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(e -> e.getValue().getLow()).orElse(0.0);
 
@@ -738,7 +597,7 @@ public class XuTraderHelper {
 
 
     public static LocalDate getTradeDate(LocalDateTime ldt) {
-        if (checkTimeRangeBool(ldt.toLocalTime(), 0, 0, 5, 0)) {
+        if (TradingUtility.checkTimeRangeBool(ldt.toLocalTime(), 0, 0, 5, 0)) {
             return ldt.toLocalDate().minusDays(1);
         }
         return ldt.toLocalDate();
@@ -756,50 +615,6 @@ public class XuTraderHelper {
 
     static boolean futMarketOpen(LocalTime t) {
         return !(t.isAfter(LocalTime.of(5, 0)) && t.isBefore(LocalTime.of(9, 0)));
-    }
-
-    static double getTotalFilledSignedQForType(AutoOrderType type) {
-        return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == type)
-                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Filled)
-                .mapToDouble(e1 -> e1.getValue().getOrder().signedTotalQuantity())
-                .sum();
-    }
-
-    static OrderStatus getLastPrimaryOrderStatus(String symbol, AutoOrderType type) {
-        long size = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getSymbol().equals(symbol))
-                .filter(e -> e.getValue().isPrimaryOrder())
-                .filter(e -> e.getValue().getOrderType() == type).count();
-
-        if (size == 0L) {
-            return OrderStatus.NoOrder;
-        }
-
-        return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getSymbol().equals(symbol))
-                .filter(e -> e.getValue().isPrimaryOrder())
-                .filter(e -> e.getValue().getOrderType() == type)
-                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .map(e -> e.getValue().getAugmentedOrderStatus())
-                .orElseThrow(() -> new IllegalStateException("no status"));
-
-    }
-
-    static OrderStatus getLastOrderStatusForType(String symbol, AutoOrderType type) {
-        long size = globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getSymbol().equals(symbol))
-                .filter(e -> e.getValue().getOrderType() == type).count();
-
-        if (size == 0L) {
-            return OrderStatus.NoOrder;
-        }
-
-        return globalIdOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == type)
-                .max(Comparator.comparing(e -> e.getValue().getOrderTime()))
-                .map(e -> e.getValue().getAugmentedOrderStatus())
-                .orElseThrow(() -> new IllegalStateException("no status"));
     }
 
     private static int getSizeForDelta(double price, double fx, double delta) {
@@ -845,12 +660,12 @@ public class XuTraderHelper {
         } else if (futdata.lastKey().isAfter(LocalDateTime.of(dt, LocalTime.of(13, 0)))) {
 
             double prevMax = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
-                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .filter(e -> TradingUtility.checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
                     .max(Comparator.comparingDouble(e -> e.getValue().getHigh()))
                     .map(e -> e.getValue().getHigh()).orElse(0.0);
 
             double prevMin = futdata.entrySet().stream().filter(e -> e.getKey().toLocalDate().equals(dt))
-                    .filter(e -> checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
+                    .filter(e -> TradingUtility.checkTimeRangeBool(e.getKey().toLocalTime(), 9, 29, 15, 0))
                     .min(Comparator.comparingDouble(e -> e.getValue().getLow()))
                     .map(e -> e.getValue().getLow()).orElse(0.0);
 

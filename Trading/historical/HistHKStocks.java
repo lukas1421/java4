@@ -1,6 +1,6 @@
 package historical;
 
-import api.AutoTraderMain;
+import AutoTraderOld.AutoTraderMain;
 import api.TradingConstants;
 import auxiliary.SimpleBar;
 import client.Types;
@@ -38,15 +38,15 @@ public class HistHKStocks extends JPanel {
 
     private static final String CUTOFFTIME = getDataCutoff();
     private static final int DAYSTOREQUESTYTD = (int) Math.round(ChronoUnit.DAYS.between(
-            LocalDate.of(LocalDate.now().getYear() - 1, Month.DECEMBER, 31), LocalDate.now()) * 252 / 365);
+            LocalDate.of(LocalDate.now().getYear() - 1, Month.DECEMBER, 31), LocalDate.now()) * 252.0 / 365.0);
 
     private static final int DAYSTOREQUESTWTD = (int) ChronoUnit.DAYS.between(
             getMondayOfWeek(LocalDateTime.now()), LocalDate.now()) + 1;
 
 
     //public static volatile long totalBeingProcessed = 0;
-    static volatile AtomicLong stocksProcessedYtd = new AtomicLong(0);
-    static volatile AtomicLong stocksProcessedWtd = new AtomicLong(0);
+    private static volatile AtomicLong stocksProcessedYtd = new AtomicLong(0);
+    private static volatile AtomicLong stocksProcessedWtd = new AtomicLong(0);
 
     private static volatile Semaphore sm = new Semaphore(50);
 
@@ -451,7 +451,6 @@ public class HistHKStocks extends JPanel {
 
         }
     }
-
 
 
     public static void main(String[] args) {

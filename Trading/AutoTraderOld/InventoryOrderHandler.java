@@ -1,7 +1,7 @@
-package handler;
+package AutoTraderOld;
 
-import api.AutoTraderMain;
-import api.XuTraderHelper;
+import AutoTraderOld.AutoTraderMain;
+import AutoTraderOld.XuTraderHelper;
 import client.OrderState;
 import client.OrderStatus;
 import controller.ApiController;
@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 
-import static api.AutoTraderMain.globalIdOrderMap;
+import static AutoTraderOld.AutoTraderMain.globalIdOrderMap;
 import static utility.Utility.str;
 
 public class InventoryOrderHandler implements ApiController.IOrderHandler {

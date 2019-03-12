@@ -1,18 +1,18 @@
-package handler;
+package AutoTraderOld;
 
-import api.AutoTraderMain;
 import api.FutType;
 import client.*;
 import controller.ApiController;
+import utility.TradingUtility;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static api.AutoTraderMain.globalIdOrderMap;
-import static api.AutoTraderXU.*;
-import static api.XuTraderHelper.*;
+import static AutoTraderOld.AutoTraderMain.globalIdOrderMap;
+import static AutoTraderOld.AutoTraderXU.*;
+import static AutoTraderOld.XuTraderHelper.*;
 import static client.OrderStatus.*;
 import static utility.Utility.*;
 
@@ -101,7 +101,7 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-        outputToError(str("ERROR", "Guarantee XU handler: defaultID", defaultID, "error code",
+        TradingUtility.outputToError(str("ERROR", "Guarantee XU handler: defaultID", defaultID, "error code",
                 errorCode, errorMsg, globalIdOrderMap.get(defaultID)));
     }
 }

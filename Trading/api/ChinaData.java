@@ -8,6 +8,7 @@ import client.Types;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import saving.*;
+import utility.TradingUtility;
 import utility.Utility;
 
 import javax.swing.*;
@@ -31,7 +32,7 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static api.AutoTraderMain.*;
+import static AutoTraderOld.AutoTraderMain.*;
 import static api.ChinaDataYesterday.convertTimeToInt;
 import static api.ChinaMain.*;
 import static api.ChinaStock.*;
@@ -426,24 +427,24 @@ public final class ChinaData extends JPanel {
 
         {
             controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                    getFrontFutContract(), ChinaData::handleSGX50HistData, 7);
+                    TradingUtility.getFrontFutContract(), ChinaData::handleSGX50HistData, 7);
             controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                    getBackFutContract(), ChinaData::handleSGX50HistData, 7);
+                    TradingUtility.getBackFutContract(), ChinaData::handleSGX50HistData, 7);
         }));
 
         getSGXA50TodayButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
             controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                    getFrontFutContract(), ChinaData::handleSGXDataToday, 2);
+                    TradingUtility.getFrontFutContract(), ChinaData::handleSGXDataToday, 2);
             controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                    getBackFutContract(), ChinaData::handleSGXDataToday, 2);
+                    TradingUtility.getBackFutContract(), ChinaData::handleSGXDataToday, 2);
         }));
 
         getSGXA50DetailedButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
             pr(" getting detailed wtd XU ");
             controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                    getFrontFutContract(), ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
+                    TradingUtility.getFrontFutContract(), ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
             controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                    getBackFutContract(), ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
+                    TradingUtility.getBackFutContract(), ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
         }));
 
         getHKDetailedButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
@@ -513,7 +514,6 @@ public final class ChinaData extends JPanel {
     static void outputRecentTradingDate() {
         System.out.println(" most recent trading date " + ChinaMain.currentTradingDate.toString());
         File output = new File(TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt");
-        //MorningTask.clearFile(usTestOutput);
         Utility.simpleWriteToFile(ChinaMain.currentTradingDate.toString(), false, output);
     }
 
@@ -531,11 +531,11 @@ public final class ChinaData extends JPanel {
 
     private static void retrieveDataAll() {
         CompletableFuture.runAsync(() -> controller().getHistoricalCustom(
-                GLOBAL_REQ_ID.addAndGet(5), getFrontFutContract()
+                GLOBAL_REQ_ID.addAndGet(5), TradingUtility.getFrontFutContract()
                 , ChinaData::handleSGX50HistData, 7));
 
         CompletableFuture.runAsync(() -> controller().getHistoricalCustom(
-                GLOBAL_REQ_ID.addAndGet(5), getBackFutContract()
+                GLOBAL_REQ_ID.addAndGet(5), TradingUtility.getBackFutContract()
                 , ChinaData::handleSGX50HistData, 7));
 
         getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0));

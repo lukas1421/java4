@@ -3,9 +3,6 @@ package graph;
 import TradeType.TradeBlock;
 import api.*;
 import auxiliary.SimpleBar;
-import client.OrderAugmented;
-import client.OrderStatus;
-import client.Types;
 import historical.HistChinaStocks;
 import utility.Utility;
 
@@ -23,14 +20,12 @@ import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import static api.AutoTraderMain.ltof;
-import static api.AutoTraderXU.findOrderByTWSID;
+import static utility.Utility.ltof;
 import static api.ChinaData.priceMapBar;
 import static api.ChinaData.priceMapBarDetail;
 import static api.ChinaKeyMonitor.dispGran;
 import static api.ChinaStock.closeMap;
-import static api.XuTraderHelper.getTradeDate;
-import static client.OrderStatus.*;
+import static AutoTraderOld.XuTraderHelper.getTradeDate;
 import static graph.GraphBar.pmbDetailToSimpleBarT;
 import static java.lang.Math.*;
 import static java.util.Optional.ofNullable;
@@ -107,26 +102,26 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
 //                    .collect(Collectors.joining(",")));
 //        });
 
-        AutoTraderMain.liveIDOrderMap.forEach((k, v) -> {
-            OrderAugmented oa = findOrderByTWSID(k);
-            OrderStatus s = oa.getAugmentedOrderStatus();
-            if (oa.getSymbol() != null && oa.getSymbol().equals(symbol)) {
-                if (s != Filled && s != PendingCancel && s != Inactive && s != DeadlineCancelled) {
-                    int y = getY(v.lmtPrice());
-                    if (v.action().equals(Types.Action.BUY)) {
-                        g.setColor(Color.blue);
-                        g.drawLine(0, y, getWidth(), y);
-                        g.drawString(str("B ", v.totalQuantity(), " at ", v.lmtPrice(),
-                                oa.getOrderType(), oa.getAugmentedOrderStatus()), Math.round(getWidth() * 7 / 8), y + 10);
-                    } else if (v.action().equals(Types.Action.SELL)) {
-                        g.setColor(Color.red);
-                        g.drawLine(0, y, getWidth(), y);
-                        g.drawString(str("S ", v.totalQuantity(), " at ", v.lmtPrice()
-                                , oa.getOrderType(), oa.getAugmentedOrderStatus()), Math.round(getWidth() * 7 / 8), y + 10);
-                    }
-                }
-            }
-        });
+//        AutoTraderMain.liveIDOrderMap.forEach((k, v) -> {
+//            OrderAugmented oa = findOrderByTWSID(k);
+//            OrderStatus s = oa.getAugmentedOrderStatus();
+//            if (!Optional.ofNullable(oa.getSymbol()).orElse("").equals("") && oa.getSymbol().equals(symbol)) {
+//                if (s != Filled && s != PendingCancel && s != Inactive && s != DeadlineCancelled) {
+//                    int y = getY(v.lmtPrice());
+//                    if (v.action().equals(Types.Action.BUY)) {
+//                        g.setColor(Color.blue);
+//                        g.drawLine(0, y, getWidth(), y);
+//                        g.drawString(str("B ", v.totalQuantity(), " at ", v.lmtPrice(),
+//                                oa.getOrderType(), oa.getAugmentedOrderStatus()), Math.round(getWidth() * 7 / 8), y + 10);
+//                    } else if (v.action().equals(Types.Action.SELL)) {
+//                        g.setColor(Color.red);
+//                        g.drawLine(0, y, getWidth(), y);
+//                        g.drawString(str("S ", v.totalQuantity(), " at ", v.lmtPrice()
+//                                , oa.getOrderType(), oa.getAugmentedOrderStatus()), Math.round(getWidth() * 7 / 8), y + 10);
+//                    }
+//                }
+//            }
+//        });
 
         height = getHeight() - 70;
         minToday = getMin();

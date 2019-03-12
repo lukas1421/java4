@@ -2,6 +2,7 @@ package api;
 
 //import static auxiliary.Analysis.symbolNames;
 
+import AutoTraderOld.AutoTraderXU;
 import auxiliary.SimpleBar;
 import graph.GraphBar;
 import graph.GraphXU;

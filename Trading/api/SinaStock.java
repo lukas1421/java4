@@ -19,11 +19,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static api.AutoTraderMain.SGXA50_AUTO_VOL_THRESH;
-import static api.AutoTraderMain.globalTradingOn;
-import static api.AutoTraderXU.expiryToGet;
 import static api.ChinaData.*;
-import static api.ChinaOption.getATMVol;
 import static api.ChinaStock.*;
 import static api.TradingConstants.FTSE_INDEX;
 import static api.TradingConstants.STOCK_COLLECTION_TIME;
@@ -118,25 +114,6 @@ public class SinaStock implements Runnable {
                     if (ldt.toLocalTime().isAfter(LocalTime.of(9, 20))
                             && ldt.toLocalTime().isBefore(LocalTime.of(15, 5))) { //change this later
                         priceMapBarDetail.get(FTSE_INDEX).put(ldt, currIndexPrice);
-
-                        if (globalTradingOn.get()) {
-                            double atmVol = getATMVol(expiryToGet);
-                            if (atmVol > SGXA50_AUTO_VOL_THRESH) {
-                                //indexHiLo(ldt, currIndexPrice); // open to 10, guarantee
-                                //indexPostAMCutoffLiq(ldt, currIndexPrice);
-                                //indexPmHiLo(ldt, currIndexPrice); // 13:00 to 13:30, guarantee
-                                //indexPostPMCutoffLiq(ldt, currIndexPrice);
-                            }
-
-                            //indexOpenDeviationTrader(ldt, currIndexPrice); // open to 10, no guarantee, same size
-                            //indexPmOpenDeviationTrader(ldt, currIndexPrice); // 13 to 13:30pm, no guarantee, same size
-                            //intradayMAProfitTaker(ldt, currIndexPrice); //all day, guarantee
-                            //AutoTraderXU.indexFirstTickTrader(ldt, currIndexPrice); //1 tick, guarantee (decommission)
-                            //AutoTraderXU.closeProfitTaker(ldt, currIndexPrice);
-                            //AutoTraderXU.firstTickMAProfitTaker(ldt, currIndexPrice);
-                            //AutoTraderXU.indexHiloAccumulator(ldt, currIndexPrice);
-                            //AutoTraderXU.intraday1stTickAccumulator(ldt, currIndexPrice);
-                        }
                     }
                 }
 
@@ -183,8 +160,8 @@ public class SinaStock implements Runnable {
                             double last = Utility.pd(datalist, 3);
                             sizeTotalMap.get(ticker).put(lt, Utility.pd(datalist, 9) / 1000000d);
 
-                            if (isIndex(ticker) && lt.isAfter(AutoTraderMain.ltof(9, 0))
-                                    && lt.isBefore(AutoTraderMain.ltof(15, 5))) {
+                            if (isIndex(ticker) && lt.isAfter(Utility.ltof(9, 0))
+                                    && lt.isBefore(Utility.ltof(15, 5))) {
                                 priceMapBarDetail.get(ticker).put(ldt, last);
                             }
 

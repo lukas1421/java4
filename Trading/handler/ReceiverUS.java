@@ -4,16 +4,14 @@ import api.ChinaData;
 import api.ChinaStock;
 import client.Contract;
 import client.TickType;
+import utility.Utility;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZonedDateTime;
 
-import static api.AutoTraderMain.*;
-import static api.AutoTraderUS.*;
-import static api.XuTraderHelper.outputDetailedUS;
-import static utility.Utility.ibContractToSymbol;
-import static utility.Utility.str;
+import static AutoTraderOld.AutoTraderUS.*;
+import static utility.Utility.*;
 
 
 public class ReceiverUS implements LiveHandler {
@@ -31,8 +29,8 @@ public class ReceiverUS implements LiveHandler {
     @Override
     public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
         String symbol = ibContractToSymbol(ct);
-        ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
-        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        ZonedDateTime chinaZdt = ZonedDateTime.of(t, Utility.chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(Utility.nyZone);
         LocalDateTime usLdt = usZdt.toLocalDateTime();
         LocalTime usLt = usLdt.toLocalTime();
 
@@ -73,7 +71,7 @@ public class ReceiverUS implements LiveHandler {
     public void handleGeneric(TickType tt, String symbol, double value, LocalDateTime t) {
         switch (tt) {
             case SHORTABLE:
-                outputDetailedUS(symbol, str("US handle generic", tt, symbol, value, t));
+                outputDetailedUSSymbol(symbol, str("US handle generic", tt, symbol, value, t));
                 usShortableValueMap.put(symbol, value);
                 break;
 
