@@ -6,10 +6,11 @@ import TradeType.NormalTrade;
 import TradeType.Trade;
 import TradeType.TradeBlock;
 import api.*;
-import api.Currency;
+import enums.Currency;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.ExecutionFilter;
+import enums.FutType;
 import graph.GraphBarTemporal;
 import graph.GraphChinaPnl;
 import handler.IBTradesHandler;
@@ -44,7 +45,7 @@ import static api.ChinaData.wtdSharpe;
 import static api.ChinaMain.GLOBAL_REQ_ID;
 import static api.ChinaPosition.tradesMap;
 import static api.ChinaStock.currencyMap;
-import static api.Currency.CNY;
+import static enums.Currency.CNY;
 import static utility.Utility.*;
 
 @SuppressWarnings("SpellCheckingInspection")

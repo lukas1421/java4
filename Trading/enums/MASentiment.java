@@ -1,4 +1,4 @@
-package api;
+package enums;
 
 public enum MASentiment {
 

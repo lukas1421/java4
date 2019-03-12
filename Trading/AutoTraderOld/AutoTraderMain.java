@@ -1,7 +1,7 @@
 package AutoTraderOld;
 
-import api.HalfHour;
-import api.MinuteHour;
+import enums.HalfHour;
+import enums.MinuteHour;
 import api.QuarterHour;
 import api.TradingConstants;
 import client.*;
@@ -56,7 +56,7 @@ public class AutoTraderMain extends JPanel {
     public static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap =
             new ConcurrentSkipListMap<>();
     public static volatile Map<Integer, Order> liveIDOrderMap = new ConcurrentHashMap<>();
-    static volatile Map<String, TreeSet<Order>> liveSymbolOrderSet = new ConcurrentHashMap<>();
+    public static volatile Map<String, TreeSet<Order>> liveSymbolOrderSet = new ConcurrentHashMap<>();
     static final double SGXA50_AUTO_VOL_THRESH = 0.4;
 
     static volatile AtomicBoolean noMoreSell = new AtomicBoolean(false);

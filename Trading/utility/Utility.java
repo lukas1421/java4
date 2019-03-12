@@ -5,6 +5,7 @@ import api.*;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
+import enums.FutType;
 import graph.GraphIndustry;
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
@@ -54,7 +55,8 @@ public class Utility {
     //Map.Entry.comparingByValue(Comparator.comparingDouble(SimpleBar::getHigh));
 
     @SuppressWarnings("ComparatorMethodParameterNotUsed")
-    public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_LOW = Comparator.comparingDouble(e -> e.getValue().getLow());
+    public static final Comparator<? super Map.Entry<? extends Temporal, SimpleBar>> BAR_LOW =
+            Comparator.comparingDouble(e -> e.getValue().getLow());
     //(e1, e2) -> e1.getValue().getLow() >= e2.getValue().getLow() ? 1 : -1;
 
     public static final Predicate<? super Map.Entry<LocalTime, ?>> IS_OPEN_PRED = e -> e.getKey().isAfter(LocalTime.of(9, 29, 59));
@@ -403,9 +405,7 @@ public class Utility {
             LocalTime t = LocalTime.of(9, 30);
             while (t.isBefore(LocalTime.of(15, 1))) {
                 if (t.isAfter(LocalTime.of(11, 30)) && t.isBefore(LocalTime.of(13, 0))) {
-                    if (tm.containsKey(t)) {
-                        tm.remove(t);
-                    }
+                    tm.remove(t);
                 } else {
                     if (!tm.containsKey(t) || testZero.test(tm.get(t))) {
                         System.out.println(" for min " + t);

@@ -9,6 +9,7 @@ import auxiliary.SimpleBar;
 import client.OrderAugmented;
 import client.OrderStatus;
 import client.Types;
+import enums.FutType;
 import utility.SharpeUtility;
 
 import javax.swing.*;

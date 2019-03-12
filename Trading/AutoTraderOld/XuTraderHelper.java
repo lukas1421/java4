@@ -5,6 +5,8 @@ import api.*;
 import auxiliary.SimpleBar;
 import client.Order;
 import controller.ApiController;
+import enums.Currency;
+import enums.Direction;
 import util.AutoOrderType;
 import utility.TradingUtility;
 
@@ -30,7 +32,7 @@ import static AutoTraderOld.AutoTraderMain.*;
 import static AutoTraderOld.AutoTraderXU.activeFutCt;
 import static api.ChinaData.priceMapBar;
 import static api.ChinaStock.currencyMap;
-import static api.Currency.CNY;
+import static enums.Currency.CNY;
 import static api.TradingConstants.FTSE_INDEX;
 import static java.lang.System.out;
 import static utility.Utility.*;

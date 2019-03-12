@@ -5,6 +5,7 @@ import TradeType.*;
 import auxiliary.SimpleBar;
 import client.*;
 import controller.ApiController;
+import enums.Currency;
 import graph.GraphPnl;
 import handler.HistoricalHandler;
 import handler.IBPositionHandler;
@@ -49,8 +50,8 @@ import static api.ChinaMain.currentTradingDate;
 import static api.ChinaPosition.costMap;
 import static api.ChinaStock.*;
 import static utility.Utility.reverseComp;
-import static api.Currency.CNY;
-import static api.Currency.USD;
+import static enums.Currency.CNY;
+import static enums.Currency.USD;
 import static AutoTraderOld.XuTraderHelper.getTradeDate;
 import static client.OrderStatus.Filled;
 import static java.util.stream.Collectors.toCollection;
@@ -93,7 +94,7 @@ public class ChinaPosition extends JPanel {
     private static volatile NavigableMap<LocalTime, Double> mtmDeltaMap;
     private static volatile NavigableMap<String, Double> benchExposureMap;
     private static volatile Map<String, Double> pureMtmMap;
-    public static Map<Currency, Double> fxMap = new HashMap<>();
+    public static Map<enums.Currency, Double> fxMap = new HashMap<>();
     private static volatile double mtmDeltaSharpe;
     private static volatile double minuteNetPnlSharpe;
 

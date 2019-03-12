@@ -1,6 +1,6 @@
 package DevTrader;
 
-import api.Currency;
+import enums.Currency;
 import api.TradingConstants;
 import auxiliary.SimpleBar;
 import client.Contract;
@@ -50,7 +50,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
 
-    public static Map<api.Currency, Double> fxMap = new HashMap<>();
+    public static Map<Currency, Double> fxMap = new HashMap<>();
 
 
     private BreachMonitor() {
@@ -59,7 +59,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                fxMap.put(api.Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
+                fxMap.put(Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
             }
         } catch (IOException x) {
             x.printStackTrace();
@@ -252,7 +252,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                             mDev == 0.0 ? "mFlat" : (mDev < 0.0 ? "mDown" : "mUp"));
                 }
 
-                double delta = pos * last * fxMap.getOrDefault(api.Currency.get(c.currency()), 1.0);
+                double delta = pos * last * fxMap.getOrDefault(Currency.get(c.currency()), 1.0);
 //                pr("delta ", size, last,
 //                        c.currency(), fx.getOrDefault(Currency.get(c.currency()), 1.0),
 //                        Math.round(delta / 1000d), "k");

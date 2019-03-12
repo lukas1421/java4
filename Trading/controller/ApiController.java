@@ -7,6 +7,7 @@ import api.*;
 import client.*;
 import client.Types.*;
 import controller.ApiConnection.ILogger;
+import enums.FutType;
 import handler.*;
 import historical.Request;
 import utility.TradingUtility;

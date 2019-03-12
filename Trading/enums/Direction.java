@@ -1,4 +1,4 @@
-package api;
+package enums;
 
 public enum Direction {
     Long(1), Flat(0), Short(-1);

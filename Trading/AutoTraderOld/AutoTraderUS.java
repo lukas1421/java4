@@ -1,8 +1,8 @@
 package AutoTraderOld;
 
-import api.Direction;
-import api.HalfHour;
-import api.MinuteHour;
+import enums.Direction;
+import enums.HalfHour;
+import enums.MinuteHour;
 import api.QuarterHour;
 import client.Contract;
 import client.Order;

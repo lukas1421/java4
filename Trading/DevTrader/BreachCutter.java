@@ -1,6 +1,6 @@
 package DevTrader;
 
-import api.Currency;
+import enums.Currency;
 import api.TradingConstants;
 import auxiliary.SimpleBar;
 import client.*;
@@ -46,7 +46,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
 
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
 
-    public static Map<api.Currency, Double> fxMap = new HashMap<>();
+    public static Map<Currency, Double> fxMap = new HashMap<>();
 
     private static File breachOutput = new File(TradingConstants.GLOBALPATH + "breachOrders.txt");
     //private static volatile NavigableMap<Integer, OrderAugmented> globalIdOrderMap = new ConcurrentSkipListMap<>();
@@ -62,7 +62,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                fxMap.put(api.Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
+                fxMap.put(Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
             }
         } catch (IOException x) {
             x.printStackTrace();

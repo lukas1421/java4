@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import static api.ChinaPosition.fxMap;
 import static api.ChinaPosition.getCurrentDelta;
 import static api.ChinaStock.*;
-import static api.Currency.CNY;
+import static enums.Currency.CNY;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 

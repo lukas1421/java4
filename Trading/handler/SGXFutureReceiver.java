@@ -5,6 +5,7 @@ import api.*;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.TickType;
+import enums.FutType;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;

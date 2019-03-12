@@ -2,7 +2,7 @@ package handler;
 
 import TradeType.*;
 import api.ChinaMain;
-import api.FutType;
+import enums.FutType;
 import api.TradingConstants;
 import client.CommissionReport;
 import client.Contract;

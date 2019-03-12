@@ -1,6 +1,6 @@
 package AutoTraderOld;
 
-import api.FutType;
+import enums.FutType;
 import client.*;
 import controller.ApiController;
 import util.AutoOrderType;

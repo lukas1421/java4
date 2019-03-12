@@ -1,6 +1,6 @@
 package DevTrader;
 
-import api.Currency;
+import enums.Currency;
 import api.TradingConstants;
 import auxiliary.SimpleBar;
 import client.*;
@@ -47,7 +47,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static final double HI_LIMIT = 2000000.0;
     private static final double LO_LIMIT = -2000000.0;
 
-    public static Map<api.Currency, Double> fx = new HashMap<>();
+    public static Map<Currency, Double> fx = new HashMap<>();
     private static Map<String, Double> multi = new HashMap<>();
     private static Map<String, Double> defaultSize = new HashMap<>();
 
@@ -92,7 +92,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                fx.put(api.Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
+                fx.put(Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
             }
         } catch (IOException x) {
             x.printStackTrace();
@@ -416,10 +416,10 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
                     boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
 
-                    double delta = getDelta(ct, price, pos, fx.getOrDefault(api.Currency.get(ct.currency()), 1.0));
+                    double delta = getDelta(ct, price, pos, fx.getOrDefault(Currency.get(ct.currency()), 1.0));
 
                     String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
-                            fx.getOrDefault(api.Currency.get(ct.currency()), 1.0))));
+                            fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
 
                     if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
                         pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,

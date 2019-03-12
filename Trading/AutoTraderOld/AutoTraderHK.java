@@ -1,6 +1,6 @@
 package AutoTraderOld;
 
-import api.Direction;
+import enums.Direction;
 import api.TradingConstants;
 import client.Contract;
 import client.Order;

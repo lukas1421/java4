@@ -5,6 +5,7 @@ import auxiliary.SimpleBar;
 import auxiliary.Strategy;
 import auxiliary.Strategy.StratType;
 import client.Types;
+import enums.Currency;
 import graph.GraphBar;
 import graph.GraphFillable;
 import graph.GraphIndustry;
@@ -57,7 +58,7 @@ public final class ChinaStock extends JPanel {
     //public static Map<String, Double> weightMap = new HashMap<>();
     public static Map<String, String> nameMap = new HashMap<>();
     public static Map<String, Types.SecType> secTypeMap = new HashMap<>();
-    public static Map<String, Currency> currencyMap = new HashMap<>();
+    public static Map<String, enums.Currency> currencyMap = new HashMap<>();
     //static Map<String, String> shortNameMap = new HashMap<>();
     public static Map<String, String> industryNameMap = new HashMap<>();
     public static Map<String, String> shortIndustryMap = new HashMap<>();

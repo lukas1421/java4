@@ -2,7 +2,7 @@ package handler;
 
 import TradeType.FutureTrade;
 import TradeType.TradeBlock;
-import api.FutType;
+import enums.FutType;
 import client.CommissionReport;
 import client.Contract;
 import client.Execution;

@@ -1,8 +1,12 @@
 package graph;
 
+import AutoTraderOld.AutoTraderMain;
 import TradeType.TradeBlock;
 import api.*;
 import auxiliary.SimpleBar;
+import client.OrderAugmented;
+import client.OrderStatus;
+import client.Types;
 import historical.HistChinaStocks;
 import utility.Utility;
 
@@ -19,7 +23,10 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Collectors;
 
+import static AutoTraderOld.AutoTraderXU.findOrderByTWSID;
+import static client.OrderStatus.*;
 import static utility.Utility.ltof;
 import static api.ChinaData.priceMapBar;
 import static api.ChinaData.priceMapBarDetail;
@@ -95,33 +102,36 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
         Graphics2D g2 = (Graphics2D) g;
         g.setColor(Color.black);
 
-//        AutoTraderMain.liveSymbolOrderSet.entrySet().stream().filter(e -> e.getKey().equals(symbol)).forEach(e -> {
-//            pr("symbol, liveOrders", e.getKey(), e.getValue().stream()
-//                    .map(e1 -> str(e1.orderId(), e1.action(), e1.lmtPrice(), e1.totalQuantity(),
-//                            findOrderByTWSID(e1.orderId()).getAugmentedOrderStatus()))
-//                    .collect(Collectors.joining(",")));
-//        });
 
-//        AutoTraderMain.liveIDOrderMap.forEach((k, v) -> {
-//            OrderAugmented oa = findOrderByTWSID(k);
-//            OrderStatus s = oa.getAugmentedOrderStatus();
-//            if (!Optional.ofNullable(oa.getSymbol()).orElse("").equals("") && oa.getSymbol().equals(symbol)) {
-//                if (s != Filled && s != PendingCancel && s != Inactive && s != DeadlineCancelled) {
-//                    int y = getY(v.lmtPrice());
-//                    if (v.action().equals(Types.Action.BUY)) {
-//                        g.setColor(Color.blue);
-//                        g.drawLine(0, y, getWidth(), y);
-//                        g.drawString(str("B ", v.totalQuantity(), " at ", v.lmtPrice(),
-//                                oa.getOrderType(), oa.getAugmentedOrderStatus()), Math.round(getWidth() * 7 / 8), y + 10);
-//                    } else if (v.action().equals(Types.Action.SELL)) {
-//                        g.setColor(Color.red);
-//                        g.drawLine(0, y, getWidth(), y);
-//                        g.drawString(str("S ", v.totalQuantity(), " at ", v.lmtPrice()
-//                                , oa.getOrderType(), oa.getAugmentedOrderStatus()), Math.round(getWidth() * 7 / 8), y + 10);
-//                    }
-//                }
-//            }
-//        });
+        AutoTraderMain.liveSymbolOrderSet.entrySet().stream().filter(e -> e.getKey().equals(symbol)).forEach(e -> {
+            pr("symbol, liveOrders", e.getKey(), e.getValue().stream()
+                    .map(e1 -> str(e1.orderId(), e1.action(), e1.lmtPrice(), e1.totalQuantity(),
+                            findOrderByTWSID(e1.orderId()).getAugmentedOrderStatus()))
+                    .collect(Collectors.joining(",")));
+        });
+
+        AutoTraderMain.liveIDOrderMap.forEach((k, v) -> {
+            OrderAugmented oa = findOrderByTWSID(k);
+            OrderStatus s = oa.getAugmentedOrderStatus();
+            if (!Optional.ofNullable(oa.getSymbol()).orElse("").equals("") && oa.getSymbol().equals(symbol)) {
+                if (s != Filled && s != PendingCancel && s != Inactive && s != DeadlineCancelled) {
+                    int y = getY(v.lmtPrice());
+                    if (v.action().equals(Types.Action.BUY)) {
+                        g.setColor(Color.blue);
+                        g.drawLine(0, y, getWidth(), y);
+                        g.drawString(str("B ", v.totalQuantity(), " at ", v.lmtPrice(),
+                                oa.getOrderType(), oa.getAugmentedOrderStatus()), (int) Math.round(getWidth() * 7.0 / 8.0),
+                                y + 10);
+                    } else if (v.action().equals(Types.Action.SELL)) {
+                        g.setColor(Color.red);
+                        g.drawLine(0, y, getWidth(), y);
+                        g.drawString(str("S ", v.totalQuantity(), " at ", v.lmtPrice()
+                                , oa.getOrderType(), oa.getAugmentedOrderStatus()), (int) Math.round(getWidth() * 7.0 / 8.0)
+                                , y + 10);
+                    }
+                }
+            }
+        });
 
         height = getHeight() - 70;
         minToday = getMin();

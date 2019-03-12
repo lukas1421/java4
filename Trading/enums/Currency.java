@@ -1,4 +1,4 @@
-package api;
+package enums;
 
 import java.util.HashMap;
 import java.util.Map;

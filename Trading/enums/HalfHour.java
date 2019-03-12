@@ -1,4 +1,4 @@
-package api;
+package enums;
 
 import java.time.LocalTime;
 import java.util.HashMap;
