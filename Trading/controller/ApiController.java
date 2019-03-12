@@ -1620,7 +1620,7 @@ public class ApiController implements EWrapper {
     }
 
     public void placeOrModifyOrder(Contract ct, final Order o, final IOrderHandler handler) {
-        double impact = getDeltaImpactCny(ct, o);
+        //double impact = getDeltaImpactCny(ct, o);
 //        if (Math.abs(impact) > 1000000) {
 //            outputToAll(str("IMPACT TOO BIG", impact, ct.symbol(), o.action(),
 //                    o.lmtPrice(), o.totalQuantity()));

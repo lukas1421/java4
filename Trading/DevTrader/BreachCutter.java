@@ -69,12 +69,12 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
         }
     }
 
-    private static ApiController staticController;
+    private static ApiController cutterController;
 
     private void connectAndReqHoldings() {
         ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
-        staticController = ap;
+        cutterController = ap;
 
         CountDownLatch l = new CountDownLatch(1);
 
@@ -128,10 +128,10 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
             pr("position end: ticker/symbol ", c.symbol(), k);
             ytdDayData.put(k, new ConcurrentSkipListMap<>());
             if (!k.equals("USD")) {
-                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
+                cutterController.reqHistDayData(ibStockReqId.addAndGet(5),
                         fillContract(c), BreachCutter::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
             }
-            staticController.req1ContractLive(c, this, false);
+            cutterController.req1ContractLive(c, this, false);
         }
     }
 
@@ -253,8 +253,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                             int id = devTradeID.incrementAndGet();
                             Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos), IOC);
                             devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                            staticController.placeOrModifyOrder(ct, o,
-                                    new GuaranteeDevHandler(id, staticController));
+                            cutterController.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, cutterController));
                             outputToSymbolFile(symbol, "*********", breachOutput);
                             outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach Cutter BUY #:",
                                     devOrderMap.get(id), "pos", pos), breachOutput);
@@ -265,8 +264,8 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                             int id = devTradeID.incrementAndGet();
                             Order o = placeOfferLimitTIF(bidMap.get(symbol), pos, IOC);
                             devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                            staticController.placeOrModifyOrder(ct, o,
-                                    new GuaranteeDevHandler(id, staticController));
+                            cutterController.placeOrModifyOrder(ct, o,
+                                    new GuaranteeDevHandler(id, cutterController));
                             outputToSymbolFile(symbol, "*********", breachOutput);
                             outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach Cutter sell:"
                                     , devOrderMap.get(id), "pos", pos), breachOutput);

@@ -26,6 +26,7 @@ import static utility.Utility.*;
 public class BreachDevTrader implements LiveHandler, ApiController.IPositionHandler {
 
 
+    static final int MAX_ATTEMPTS = 20;
     static volatile NavigableMap<Integer, OrderAugmented> devOrderMap =
             new ConcurrentSkipListMap<>();
     static volatile AtomicInteger devTradeID = new AtomicInteger(100);
