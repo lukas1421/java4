@@ -174,7 +174,7 @@ public class XuTraderHelper {
         }
     }
 
-    public static void outputDetailedXU(String symbol, String msg) {
+    static void outputDetailedXU(String symbol, String msg) {
         if (!symbol.equals("")) {
             outputDetailedXUSymbol(symbol, msg);
         }
@@ -215,7 +215,7 @@ public class XuTraderHelper {
         return 50;
     }
 
-    static <T extends Temporal> int getPercentileForDouble(NavigableMap<T, Double> map) {
+    private static <T extends Temporal> int getPercentileForDouble(NavigableMap<T, Double> map) {
         if (map.size() > 1) {
             double max = map.entrySet().stream().mapToDouble(Map.Entry::getValue).max().orElse(0.0);
             double min = map.entrySet().stream().mapToDouble(Map.Entry::getValue).min().orElse(0.0);
@@ -316,7 +316,7 @@ public class XuTraderHelper {
         return LocalDateTime.of(TDate, LocalTime.MIN);
     }
 
-    static double roundToXUPricePassive(double x, Direction dir) {
+    private static double roundToXUPricePassive(double x, Direction dir) {
         return (Math.round(x * 10) - Math.round(x * 10) % 25 + (dir == Direction.Long ? 0 : 25)) / 10d;
     }
 

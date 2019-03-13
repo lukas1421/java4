@@ -202,6 +202,7 @@ public class Contract implements Cloneable {
     }
 
     public Contract() {
+        m_symbol = "";
         m_conid = 0;
         m_strike = 0;
         m_includeExpired = false;
@@ -224,10 +225,10 @@ public class Contract implements Cloneable {
     }
 
     public Contract(int p_conId, String p_symbol, String p_secType, String p_lastTradeDateOrContractMonth,
-            double p_strike, String p_right, String p_multiplier,
-            String p_exchange, String p_currency, String p_localSymbol, String p_tradingClass,
-            ArrayList<ComboLeg> p_comboLegs, String p_primaryExch, boolean p_includeExpired,
-            String p_secIdType, String p_secId) {
+                    double p_strike, String p_right, String p_multiplier,
+                    String p_exchange, String p_currency, String p_localSymbol, String p_tradingClass,
+                    ArrayList<ComboLeg> p_comboLegs, String p_primaryExch, boolean p_includeExpired,
+                    String p_secIdType, String p_secId) {
 
         m_conid = p_conId;
         m_symbol = p_symbol;

@@ -1113,7 +1113,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
                 return e.getValue();
             }
         }
-        throw new IllegalStateException(str(" findOrderByTWSID: order not found for TWSID", twsId));
+        return new OrderAugmented();
+        //throw new IllegalStateException(str(" findOrderByTWSID: order not found for TWSID", twsId));
     }
 
 //    /**

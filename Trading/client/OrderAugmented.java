@@ -106,7 +106,10 @@ public class OrderAugmented {
     }
 
     public String getSymbol() {
-        return ibContractToSymbol(contract);
+        if (!contract.symbol().equals("")) {
+            return ibContractToSymbol(contract);
+        }
+        return "";
     }
 
     public String getMsg() {
