@@ -240,19 +240,20 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     }
 
     private static double getDelta(Contract ct, double price, double size, double fx) {
-        if (size != 0.0) {
-            if (ct.secType() == Types.SecType.STK) {
-                return price * size * fx;
-            } else if (ct.secType() == Types.SecType.FUT) {
-                if (multi.containsKey(ibContractToSymbol(ct))) {
-                    return price * size * fx * multi.get(ibContractToSymbol(ct));
-                } else {
-                    throw new IllegalStateException(str("no multiplier",
-                            ibContractToSymbol(ct)));
-                }
+
+        if (ct.secType() == Types.SecType.STK) {
+            return price * size * fx;
+        } else if (ct.secType() == Types.SecType.FUT) {
+            if (multi.containsKey(ibContractToSymbol(ct))) {
+                return price * size * fx * multi.get(ibContractToSymbol(ct));
+            } else {
+                outputToSymbolFile(ibContractToSymbol(ct), str("no multi", price, size, fx), devOutput);
+                throw new IllegalStateException(str("no multiplier", ibContractToSymbol(ct)));
             }
         }
-        return 0.0;
+        outputToSymbolFile(ibContractToSymbol(ct), str(" cannot get delta for symbol type"
+                , ct.symbol(), ct.secType()), devOutput);
+        throw new IllegalStateException(str(" cannot get delta for symbol type", ct.symbol(), ct.secType()));
     }
 
     private static void breachAdder(Contract ct, double price, LocalDateTime t, double yOpen, double mOpen) {
