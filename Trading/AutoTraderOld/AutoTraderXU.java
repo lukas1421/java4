@@ -838,13 +838,12 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         double atmVol = getATMVol(expiryToGet);
 
         //if (atmVol > SGXA50_AUTO_VOL_THRESH) {
-
         //if (checkIfHoliday(LocalDate.now()) || atmVol > SGXA50_AUTO_VOL_THRESH) {
         //cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(10, 0, 0));
         //cancelAllOrdersAfterDeadline(ldt.toLocalTime(), ltof(13, 30, 0));
 
         if (globalTradingOn.get()) {
-            sgxDev(ldt, price);
+            //sgxDev(ldt, price);
             //sgxNightDev(ldt, price);
             //sgxWDev(ldt, price);
             //sgxWCutoffLiq(ldt, price);
@@ -1097,15 +1096,24 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         }
     }
 
+//    public static OrderAugmented findOrderByTWSID(int twsId, NavigableMap<Integer, OrderAugmented> map) {
+//        for (Map.Entry<Integer, OrderAugmented> e : map.entrySet()) {
+//            if (e.getValue().getOrder().orderId() == twsId) {
+//                return e.getValue();
+//            }
+//        }
+//
+//        throw new IllegalStateException(str(" findOrderByTWSID: order not found for TWSID", twsId));
+//        //return new OrderAugmented();
+//    }
+
     public static OrderAugmented findOrderByTWSID(int twsId) {
         for (Map.Entry<Integer, OrderAugmented> e : globalIdOrderMap.entrySet()) {
             if (e.getValue().getOrder().orderId() == twsId) {
                 return e.getValue();
             }
         }
-
         throw new IllegalStateException(str(" findOrderByTWSID: order not found for TWSID", twsId));
-        //return new OrderAugmented();
     }
 
 //    /**
@@ -1146,8 +1154,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //            }
 //        }
 //    }
-
-//
 //    /**
 //     * take profit for XU
 //     *
@@ -1190,7 +1196,6 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //            pr(" XU relative profit taker, status: ", symbol, lt, lastStatus);
 //            return;
 //        }
-//
 //        if (SECONDS.between(lastOrderTime, nowMilli) > 300) {
 //            if ((minSoFar / open - 1 < loThresh) && (freshPrice / minSoFar - 1 > retreatHIThresh)
 //                    && currPos < 0) {

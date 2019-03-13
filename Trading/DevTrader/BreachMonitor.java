@@ -39,7 +39,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDateTime, Double>>
             liveData = new ConcurrentSkipListMap<>();
 
-    private static ApiController staticController;
+    private static ApiController brMonController;
 
     private static Map<String, Double> multiplierMap = new HashMap<>();
 
@@ -127,11 +127,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         return ct;
     }
 
-
     private void getFromIB() {
         ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
-        staticController = ap;
+        brMonController = ap;
         CountDownLatch l = new CountDownLatch(1);
         boolean connectionStatus = false;
 
@@ -139,7 +138,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             pr(" using port 4001");
             ap.connect("127.0.0.1", 4001, 4, "");
             connectionStatus = true;
-            //pr(" connection : status is true ");
             l.countDown();
             pr(" Latch counted down 4001 " + LocalTime.now());
         } catch (IllegalStateException ex) {
@@ -164,7 +162,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     }
 
     private void reqHoldings(ApiController ap) {
-        //pr(" request holdings ");
         ap.reqPositions(this);
     }
 
@@ -188,10 +185,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             ytdDayData.put(k, new ConcurrentSkipListMap<>());
             if (!k.equals("USD")) {
                 //if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
-                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
+                brMonController.reqHistDayData(ibStockReqId.addAndGet(5),
                         fillContract(c), BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
             }
-            staticController.req1ContractLive(c, this, false);
+            brMonController.req1ContractLive(c, this, false);
         }
     }
 
@@ -272,10 +269,16 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                         "mDev:" + mDev + "%" + "(" +
                                 ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey().format(f) + " " + mOpen + ")");
 
-                if (pos != 0.0) {
-                    pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
-                            , out, Math.round(delta / 1000d) + "k");
-                }
+                double getLot = (10000 / last) < 100 ? 100 : Math.floor(10000 / last / 100)*100;
+                pr(str(symbol, last, getLot));
+
+
+//                if (pos != 0.0) {
+//                    pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
+//                            , out, Math.round(delta / 1000d) + "k");
+//                }
+
+
             }
         }
     }
@@ -397,7 +400,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         es.scheduleAtFixedRate(() -> {
             pr("**********************************************");
             pr("running @ ", LocalTime.now());
-            bm.reqHoldings(staticController);
+            bm.reqHoldings(brMonController);
         }, 1, 1, TimeUnit.MINUTES);
 
         es.scheduleAtFixedRate(() -> {

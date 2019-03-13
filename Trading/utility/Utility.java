@@ -936,6 +936,9 @@ public class Utility {
         ct.symbol(symb);
         ct.exchange("SMART");
         ct.currency("USD");
+        if (symb.equals("ASHR") || symb.equals("MSFT") || symb.equals("CSCO")) {
+            ct.primaryExch("ARCA");
+        }
         ct.secType(Types.SecType.STK);
         return ct;
     }

@@ -1,18 +1,49 @@
+import DevTrader.BreachMonitor;
+import api.TradingConstants;
 import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.time.LocalTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
 
-import static utility.Utility.ibContractToSymbol;
-import static utility.Utility.pr;
+import static utility.Utility.*;
 
 public class TestAPI {
 
+    private volatile static Map<String, Double> contractPosMap = new ConcurrentSkipListMap<>(String::compareTo);
+    private volatile static Map<String, Double> symbolPosMap = new ConcurrentSkipListMap<>(String::compareTo);
+    private volatile static Map<String, Double> symbolPriceMap = new ConcurrentSkipListMap<>(String::compareTo);
+
 
     TestAPI() {
+        String line;
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "breachUSNames.txt")))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                registerContract(getUSStockContract(al1.get(0)));
+            }
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+    }
 
+    private void registerContract(Contract ct) {
+        String symbol = ibContractToSymbol(ct);
+        if (!symbol.equalsIgnoreCase("SGXA50PR")) {
+            symbolPosMap.put(symbol, 0.0);
+            symbolPriceMap.put(symbol, 0.0);
+        }
     }
 
     private Contract getUSStockContract(String symb) {
@@ -28,26 +59,6 @@ public class TestAPI {
                            double close, int volume) {
         String symbol = utility.Utility.ibContractToSymbol(c);
         pr(c.symbol(), date, open, high, low, close, volume);
-    }
-
-    static class TradesHandler implements ApiController.ITradeReportHandler {
-
-        @Override
-        public void tradeReport(String tradeKey, Contract contract, Execution execution) {
-            pr("key symb exec ", tradeKey, ibContractToSymbol(contract), execution.price(), execution.shares());
-
-        }
-
-        @Override
-        public void tradeReportEnd() {
-            pr("trade report  end ");
-
-        }
-
-        @Override
-        public void commissionReport(String tradeKey, CommissionReport commissionReport) {
-
-        }
     }
 
 
@@ -80,9 +91,7 @@ public class TestAPI {
         }
 
         pr(" Time after latch released " + LocalTime.now());
-        ap.reqExecutions(new ExecutionFilter(), new TradesHandler());
 
-        //ap.reqPositions(new ApiController.IPositionHandler.DefaultPositionHandler());
 
     }
 }

@@ -112,8 +112,8 @@ public class GraphMonitor extends JComponent implements GraphFillable, MouseList
 
         AutoTraderMain.liveIDOrderMap.forEach((k, v) -> {
             OrderAugmented oa = findOrderByTWSID(k);
-            OrderStatus s = oa.getAugmentedOrderStatus();
             if (!Optional.ofNullable(oa.getSymbol()).orElse("").equals("") && oa.getSymbol().equals(symbol)) {
+                OrderStatus s = oa.getAugmentedOrderStatus();
                 if (s != Filled && s != PendingCancel && s != Inactive && s != DeadlineCancelled) {
                     int y = getY(v.lmtPrice());
                     if (v.action().equals(Types.Action.BUY)) {

@@ -7,6 +7,7 @@ import api.*;
 import client.*;
 import client.Types.*;
 import controller.ApiConnection.ILogger;
+import enums.Currency;
 import enums.FutType;
 import handler.*;
 import historical.Request;
@@ -1615,16 +1616,15 @@ public class ApiController implements EWrapper {
         String curr = ct.currency();
         double totalQ = o.totalQuantity();
         double lmtPrice = o.lmtPrice();
-        double xxxCny = ChinaPosition.fxMap.getOrDefault(curr, 1.0);
+        double xxxCny = ChinaPosition.fxMap.getOrDefault(Currency.get(curr), 1.0);
         return xxxCny * lmtPrice * totalQ;
     }
 
     public void placeOrModifyOrder(Contract ct, final Order o, final IOrderHandler handler) {
-        //double impact = getDeltaImpactCny(ct, o);
-//        if (Math.abs(impact) > 1000000) {
-//            outputToAll(str("IMPACT TOO BIG", impact, ct.symbol(), o.action(),
+//        double impact = getDeltaImpactCny(ct, o, );
+//        if (Math.abs(impact) > 300000) {
+//            TradingUtility.outputToError(str("IMPACT TOO BIG", impact, ct.symbol(), o.action(),
 //                    o.lmtPrice(), o.totalQuantity()));
-//            globalTradingOn.set(false);
 //            return;
 //        }
 

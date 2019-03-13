@@ -20,7 +20,9 @@ public enum Currency {
     }
 
     public static Currency get(String curr) {
-        if (curr.equalsIgnoreCase("CNH")) return lookup.get("CNY");
+        if (curr.equalsIgnoreCase("CNH")) {
+            return lookup.get("CNY");
+        }
 
         if (lookup.containsKey(curr)) {
             return lookup.get(curr);

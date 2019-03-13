@@ -161,6 +161,7 @@ public class XuTraderHelper {
         outputDetailedXUSymbol("", s);
         outputDetailedHKSymbol("", s);
         outputDetailedUSSymbol("", s);
+
     }
 
     static void outputSymbolMsg(String symbol, String msg) {
