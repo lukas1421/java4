@@ -207,7 +207,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
-        if (!contract.symbol().equals("USD")) {
+        if (!contract.symbol().equals("USD") && position != 0.0) {
             registerContractPosition(contract, position);
         }
     }
