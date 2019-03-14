@@ -50,7 +50,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
 
-    public static Map<Currency, Double> fxMap = new HashMap<>();
+    private static Map<Currency, Double> fx = new HashMap<>();
 
 
     private BreachMonitor() {
@@ -59,7 +59,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                fxMap.put(Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
+                fx.put(Currency.get(al1.get(0)), Double.parseDouble(al1.get(1)));
             }
         } catch (IOException x) {
             x.printStackTrace();
@@ -249,7 +249,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                             mDev == 0.0 ? "mFlat" : (mDev < 0.0 ? "mDown" : "mUp"));
                 }
 
-                double delta = pos * last * fxMap.getOrDefault(Currency.get(c.currency()), 1.0);
+                double delta = pos * last * fx.getOrDefault(Currency.get(c.currency()), 1.0);
 //                pr("delta ", size, last,
 //                        c.currency(), fx.getOrDefault(Currency.get(c.currency()), 1.0),
 //                        Math.round(delta / 1000d), "k");
@@ -403,12 +403,27 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             bm.reqHoldings(brMonController);
         }, 1, 1, TimeUnit.MINUTES);
 
+
         es.scheduleAtFixedRate(() -> {
             double totalDelta = contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
                     , getPriceFromYtd(e.getKey()), e.getValue(),
-                    fxMap.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
+                    fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
+            double totalAbsDelta = contractPosMap.entrySet().stream().mapToDouble(e ->
+                    Math.abs(getDelta(e.getKey(), getPriceFromYtd(e.getKey()), e.getValue(),
+                            fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();
+            double longDelta = contractPosMap.entrySet().stream().mapToDouble(e ->
+                    Math.max(0, getDelta(e.getKey(), getPriceFromYtd(e.getKey()), e.getValue(),
+                            fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();
+
+            double shortDelta = contractPosMap.entrySet().stream().mapToDouble(e ->
+                    Math.min(0, getDelta(e.getKey(), getPriceFromYtd(e.getKey()), e.getValue(),
+                            fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();
+
             pr(LocalDateTime.now().format(f2),
-                    "current total delta:", Math.round(totalDelta / 1000d) + "k");
+                    "current total delta:", Math.round(totalDelta / 1000d) + "k",
+                    "abs delta, ", Math.round(totalAbsDelta / 1000d) + "k",
+                    "long/short", Math.round(longDelta / 1000d) + "k",
+                    Math.round(shortDelta / 1000d) + "k");
         }, 15, 15, TimeUnit.SECONDS);
     }
 }
