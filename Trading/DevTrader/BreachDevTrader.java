@@ -273,11 +273,13 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
         boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
         boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
+        double devFromMonthOpen = price / mOpen - 1;
 
-        if (!added && !liquidated && pos == 0.0 && prevClose != 0.0 && totalAbsDelta < ABS_LIMIT) {
+        if (!added && !liquidated && pos == 0.0 && prevClose != 0.0 && totalAbsDelta < ABS_LIMIT
+                && Math.abs(devFromMonthOpen) < 0.01) {
 
             pr(t.format(f1), "breach adder", symbol, "pos", pos, "prevC", prevClose,
-                    "price", price, "yOpen", yOpen, "mOpen", mOpen);
+                    "price", price, "yOpen", yOpen, "mOpen", mOpen, "devFromMOpen", devFromMonthOpen);
 
             if (price > yOpen && price > mOpen && totalDelta < HI_LIMIT) {
                 if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.003) {
