@@ -273,15 +273,15 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
         boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
         boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
-        double devFromMonthOpen = price / mOpen - 1;
+        //double devFromMonthOpen = price / mOpen - 1;
 
-        if (!added && !liquidated && pos == 0.0 && prevClose != 0.0 && totalAbsDelta < ABS_LIMIT
-                && Math.abs(devFromMonthOpen) < 0.01) {
+        if (!added && !liquidated && pos == 0.0 && prevClose != 0.0 && totalAbsDelta < ABS_LIMIT) {
 
             pr(t.format(f1), "breach adder", symbol, "pos", pos, "prevC", prevClose,
-                    "price", price, "yOpen", yOpen, "mOpen", mOpen, "devFromMOpen", devFromMonthOpen);
+                    "price", price, "yOpen", yOpen, "mOpen", mOpen, "devFromMOpen");
 
-            if (price > yOpen && price > mOpen && totalDelta < HI_LIMIT) {
+            if (price > yOpen && price > mOpen && totalDelta < HI_LIMIT
+                    && (price / Math.max(yOpen, mOpen) < 0.02)) {
                 if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.003) {
                     addedMap.put(symbol, new AtomicBoolean(true));
                     int id = devTradeID.incrementAndGet();
@@ -292,10 +292,13 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                         outputToSymbolFile(symbol, str("********", t), devOutput);
                         outputToSymbolFile(symbol, str(o.orderId(), "ADDER BUY:",
                                 devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
-                                "prevClose", prevClose, "price", price), devOutput);
+                                "prevClose", prevClose, "price", price, "devFromOpen",
+                                r(price / Math.max(yOpen, mOpen) - 1))
+                                , devOutput);
                     }
                 }
-            } else if (price < yOpen && price < mOpen && totalDelta > LO_LIMIT) {
+            } else if (price < yOpen && price < mOpen && totalDelta > LO_LIMIT &&
+                    price / Math.min(yOpen, mOpen) > -0.02) {
                 if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.003) {
                     addedMap.put(symbol, new AtomicBoolean(true));
                     int id = devTradeID.incrementAndGet();
@@ -307,7 +310,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                         outputToSymbolFile(symbol, str("********", t), devOutput);
                         outputToSymbolFile(symbol, str(o.orderId(), "ADDER SELL:",
                                 devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
-                                "prevClose", prevClose, "price", price), devOutput);
+                                "prevClose", prevClose, "price", price, "devMonthOpen",
+                                r(price / Math.min(mOpen, yOpen) - 1)),
+                                devOutput);
                     }
                 }
             }
