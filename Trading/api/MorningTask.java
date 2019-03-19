@@ -862,7 +862,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
             double size = holdingsMap.getOrDefault(c, 0.0);
             if (morningYtdData.containsKey(symbol) && morningYtdData.get(symbol).size() > 0) {
 
-                pr(" last year day, last month day ", LAST_YEAR_DAY, LAST_MONTH_DAY);
+                //pr(" last year day, last month day ", LAST_YEAR_DAY, LAST_MONTH_DAY);
 
                 double yOpen = morningYtdData.get(symbol).higherEntry(LAST_YEAR_DAY).getValue().getOpen();
 
