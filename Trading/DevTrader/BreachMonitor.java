@@ -269,7 +269,8 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                         "mDev:" + mDev + "%" + "(" +
                                 ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey().format(f) + " " + mOpen + ")");
 
-//                double getLot = (10000 / last) < 100 ? 100 : Math.floor(10000 / last / 100)*100;
+//                double getLot = last > 300 ? 0 :
+//                        ((10000 / last) < 100 ? 100 : Math.floor(10000 / last / 100) * 100);
 //                pr(str(symbol, last, getLot));
 
 

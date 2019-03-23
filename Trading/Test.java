@@ -1,44 +1,37 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.*;
 import java.time.LocalDate;
+import java.util.regex.Matcher;
 
 import static utility.Utility.pr;
 
 public class Test {
 
-
-    public static LocalDate getLastMonthLastDay(LocalDate d) {
-        LocalDate now = d.withDayOfMonth(1);
-        return now.minusDays(1L);
-    }
-
-    public static class class1 {
-        public static volatile int class1Var = 5;
-
-        public static int getC1() {
-            return class1.class1Var;
-        }
-
-        public static void resetC1(int x) {
-            class1Var = x;
-        }
-    }
-
-    public static class class2 {
-        public static volatile int class2Var = 10;
-
-        public static int getC1() {
-            return class1.class1Var;
-        }
-    }
-
     public static void main(String[] args) {
-        class1 c1 = new class1();
-        class2 c2 = new class2();
 
-        //pr(class1.class1Var);
-        class1.resetC1(10);
-        pr(class1.getC1());
-        pr(class2.getC1());
-
-
+        SocketAddress addr = new InetSocketAddress("127.0.0.1", 1080);
+        Proxy proxy = new Proxy(Proxy.Type.SOCKS, addr);
+        Proxy proxy1 = Proxy.NO_PROXY;
+        URL url = null;
+        try {
+            //url = new URL("http://hq.sinajs.cn/list=" + "sh000001");
+            url = new URL("https://www.google.com");
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        try {
+            assert url != null;
+            URLConnection conn = url.openConnection(proxy);
+            String line1;
+            try (BufferedReader reader2 = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                while ((line1 = reader2.readLine()) != null) {
+                    pr(line1);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
