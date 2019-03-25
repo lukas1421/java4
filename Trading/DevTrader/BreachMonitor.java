@@ -23,6 +23,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import static utility.TradingUtility.gettingActiveContract;
 import static utility.Utility.*;
@@ -273,6 +274,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 //                        ((10000 / last) < 100 ? 100 : Math.floor(10000 / last / 100) * 100);
 //                pr(str(symbol, last, getLot));
 
+//                if (symbol.equals("FOXA")) {
+//                    pr("foxa", ytdDayData.get(symbol));
+//                }
+
 
                 if (pos != 0.0) {
                     pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
@@ -282,6 +287,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
             }
         }
+
     }
 
 
@@ -426,5 +432,25 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                     "long/short", Math.round(longDelta / 1000d) + "k",
                     Math.round(shortDelta / 1000d) + "k");
         }, 15, 15, TimeUnit.SECONDS);
+
+        es.scheduleAtFixedRate(() -> {
+            for (String symbol : symbolPosMap.keySet()) {
+                Map<LocalDate, Double> m1 = ytdDayData.get(symbol).entrySet().stream()
+                        .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getClose(), (a, b) -> a,
+                                TreeMap::new));
+                Map<LocalDate, Double> benchMap = ytdDayData.get("QQQ").entrySet().stream()
+                        .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
+                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getClose(), (a, b) -> a,
+                                TreeMap::new));
+
+                if (m1.size() != 0 && benchMap.size() != 0 && m1.size() == benchMap.size()) {
+                    pr(symbol, "QQQ");
+                    pr(r(utility.VarCorrUtility.getCorrelation(m1, benchMap)));
+                } else {
+                    pr("map size diff ", symbol, "QQQ", m1.size(), benchMap.size());
+                }
+            }
+        }, 10, 60, TimeUnit.SECONDS);
     }
 }

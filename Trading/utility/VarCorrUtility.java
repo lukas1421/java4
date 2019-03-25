@@ -1,3 +1,5 @@
+package utility;
+
 import org.apache.commons.math3.stat.correlation.Covariance;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.apache.commons.math3.stat.descriptive.moment.Variance;
@@ -9,6 +11,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static utility.Utility.pr;
+import static utility.Utility.r;
 
 public class VarCorrUtility {
 
@@ -84,9 +87,10 @@ public class VarCorrUtility {
         return (sumOfProduct - m1.size() * avgM1 * avgM2) / (m1.size() - 1);
     }
 
-    private static double getCorrelation(Map<LocalDate, Double> m1, Map<LocalDate, Double> m2) {
+    public static double getCorrelation(Map<LocalDate, Double> m1, Map<LocalDate, Double> m2) {
 
-        if (m1.size() <= 1 || m2.size() <= 1 || m1.size() != m2.size()) {
+        if (m1.size() <= 1 || m2.size() <= 1) {
+            //return 0.0;
             throw new IllegalStateException(" get covar from map failed ");
         }
 
@@ -94,16 +98,16 @@ public class VarCorrUtility {
         double var2 = getVarFromMap(m2);
         double covar = getCovarFromMap(m1, m2);
 
-
         double[] l1 = m1.entrySet().stream().mapToDouble(Map.Entry::getValue).toArray();
         double[] l2 = m2.entrySet().stream().mapToDouble(Map.Entry::getValue).toArray();
 
-        pr("APACHE Var1", new Variance().evaluate(l1));
-        pr("APACHE Var2", new Variance().evaluate(l2));
-        pr("APACHE covar", new Covariance().covariance(l1, l2, true));
-        pr("APACHE correl", new PearsonsCorrelation().correlation(l1, l2));
+//        pr("APACHE Var1,Var2,covar,correl", new Variance().evaluate(l1),
+//                new Variance().evaluate(l2), new Covariance().covariance(l1, l2),
+//                new PearsonsCorrelation().correlation(l1, l2));
 
-        pr("var1, var2, covar ", var1, var2, covar);
+        pr("APACHE ,correl", r(new PearsonsCorrelation().correlation(l1, l2)));
+
+        //pr("var1, var2, covar ", var1, var2, covar);
         return covar / (Math.sqrt(var1) * Math.sqrt(var2));
     }
 
@@ -113,18 +117,17 @@ public class VarCorrUtility {
         //pr(getCovar(l1, l2, false));
         //pr(getCovar(l1, l2, true));
         //pr(getCovar(l2, l2, false));
-
         //pr(getVar(l));
 
         Map<LocalDate, Double> l3 = new LinkedHashMap<>();
-        l3.put(LocalDate.of(2019, Month.JANUARY, 1), 300.0);
-        l3.put(LocalDate.of(2019, Month.JANUARY, 2), 2.0);
+        l3.put(LocalDate.of(2019, Month.JANUARY, 1), 13.0);
+        l3.put(LocalDate.of(2019, Month.JANUARY, 2), 23.0);
         l3.put(LocalDate.of(2019, Month.JANUARY, 3), 3.0);
         l3.put(LocalDate.of(2019, Month.JANUARY, 4), 4.0);
         l3.put(LocalDate.of(2019, Month.JANUARY, 5), 5.0);
         l3.put(LocalDate.of(2019, Month.JANUARY, 6), 6.0);
         l3.put(LocalDate.of(2019, Month.JANUARY, 7), 7.0);
-        l3.put(LocalDate.of(2019, Month.JANUARY, 8), 8.0);
+        l3.put(LocalDate.of(2019, Month.JANUARY, 8), -8.0);
         l3.put(LocalDate.of(2019, Month.JANUARY, 9), 9.0);
         l3.put(LocalDate.of(2019, Month.JANUARY, 10), 100.0);
         //pr(getVarFromMap(l3));
@@ -143,7 +146,6 @@ public class VarCorrUtility {
 
         //pr(getCovarFromMap(l3, l4));
         pr(getCorrelation(l3, l4));
-
 
     }
 
