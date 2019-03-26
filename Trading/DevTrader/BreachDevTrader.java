@@ -294,8 +294,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                         outputToSymbolFile(symbol, str("********", t), devOutput);
                         outputToSymbolFile(symbol, str(o.orderId(), "ADDER BUY:",
                                 devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
-                                "prevClose", prevClose, "price", price, "devFromOpen",
-                                r(price / Math.max(yOpen, mOpen) - 1))
+                                "prevClose", prevClose, "price", price, "devFromMaxOpen",
+                                r10000(price / Math.max(yOpen, mOpen) - 1))
                                 , devOutput);
                     }
                 }
@@ -312,8 +312,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                         outputToSymbolFile(symbol, str("********", t), devOutput);
                         outputToSymbolFile(symbol, str(o.orderId(), "ADDER SELL:",
                                 devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
-                                "prevClose", prevClose, "price", price, "devMonthOpen",
-                                r(price / Math.min(mOpen, yOpen) - 1)),
+                                "prevClose", prevClose, "price", price, "devFromMinOpen",
+                                r10000(price / Math.min(mOpen, yOpen) - 1)),
                                 devOutput);
                     }
                 }
