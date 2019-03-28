@@ -8,6 +8,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -116,6 +118,8 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
 //        System.out.println(" volsmle 3" + volSmileThird);
 //        System.out.println(" volsmle 4 " + volSmileFourth);
 
+        g.drawString(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                , getWidth() - 80, getHeight() - 20);
 
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2.5F));
         g.drawString(" Current Vols 4 Expiries", 20, 30);

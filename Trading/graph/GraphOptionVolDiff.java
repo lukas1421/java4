@@ -8,6 +8,8 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.NavigableMap;
 import java.util.TreeMap;
@@ -22,7 +24,6 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
     private double currentPrice;
     private NavigableMap<Double, Double> volNow = new TreeMap<>();
     private NavigableMap<Double, Double> volPrev1 = new TreeMap<>();
-    private NavigableMap<Double, Double> volPrev2 = new TreeMap<>();
 
 
     private int mouseYCord = Integer.MAX_VALUE;
@@ -56,9 +57,15 @@ public class GraphOptionVolDiff extends JComponent implements MouseMotionListene
     @Override
     protected void paintComponent(Graphics g) {
 
+        g.drawString(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                , getWidth() - 80, getHeight() - 20);
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 2.5F));
         g.drawString(" Vol Diff " + ChinaOption.expiryToCheck, 20, 30);
         g.setFont(g.getFont().deriveFont(g.getFont().getSize() * 0.4F));
+
+        //pr("vol now vol prev ");
+        //pr(volNow);
+        //pr(volPrev1);
 
         if (volNow.size() > 0) {
             double minVol = minGen(volNow.values().stream().reduce(Math::min).orElse(0.0),

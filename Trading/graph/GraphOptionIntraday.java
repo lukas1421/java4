@@ -119,6 +119,9 @@ public class GraphOptionIntraday extends JComponent implements MouseListener, Mo
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
 
+        g.drawString(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+                , getWidth() - 80, getHeight() - 20);
+
         height = getHeight() - 70;
         min = getMin();
         max = getMax();
