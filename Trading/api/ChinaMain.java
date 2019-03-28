@@ -41,6 +41,8 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static utility.Utility.pr;
 
 public final class ChinaMain implements IConnectionHandler {
+
+    public static final LocalTime START_ENGINE_TIME = LocalTime.now();
     public static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now());
     public static volatile LocalDate currentTradingDate = getTradeDate(LocalDateTime.now());
 
@@ -218,14 +220,10 @@ public final class ChinaMain implements IConnectionHandler {
 
             ses.scheduleAtFixedRate(ChinaStock::computeIndex, 0, 1, TimeUnit.MINUTES);
 
-            ses.scheduleAtFixedRate(() -> {
-                //ChinaBigGraph.setGraph(ChinaStock.selectedNameStock);
-                ChinaBigGraph.refresh();
-                //AutoTraderXU.set20DayBullBear();
-            }, 0, 1, SECONDS);
+            ses.scheduleAtFixedRate(ChinaBigGraph::refresh, 0, 1, SECONDS);
 
             ses.scheduleAtFixedRate(chinaOption, 0, 5, SECONDS);
-            ChinaOption.refresh();
+            ChinaOption.saveVolsUpdateTime();
         });
 
         //JButton loadYesterday = new JButton("Load Yest");

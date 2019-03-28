@@ -113,11 +113,6 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
     @Override
     protected void paintComponent(Graphics g) {
 
-//        System.out.println(" volsmle 1 " + volSmileFront);
-//        System.out.println(" volsmle 2 " + volSmileBack);
-//        System.out.println(" volsmle 3" + volSmileThird);
-//        System.out.println(" volsmle 4 " + volSmileFourth);
-
         g.drawString(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))
                 , getWidth() - 80, getHeight() - 20);
 

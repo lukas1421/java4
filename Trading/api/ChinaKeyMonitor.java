@@ -679,7 +679,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
 
         refreshButton.addActionListener(al -> {
             if (displayPos) {
-                //System.out.println(" displaying pos in refresh");
+                //System.out.println(" displaying pos in saveVolsUpdateTime");
                 if (ChinaPosition.openPositionMap.size() > 0) {
 
                     Map<String, Integer> resMap = ChinaPosition.getNetPosition();
@@ -692,7 +692,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
                     processGraphMonitors(l);
                 }
             } else if (displaySharp) {
-                System.out.println(" displaying sharpe in refresh ");
+                System.out.println(" displaying sharpe in saveVolsUpdateTime ");
                 LinkedList<String> l = new LinkedList<>(sharpMapMaster.get(yqm).keySet());
 
 
@@ -1009,7 +1009,7 @@ public class ChinaKeyMonitor extends JPanel implements Runnable {
         System.out.println(" running now ");
         //timeLabel.setText(LocalTime.now().truncatedTo(ChronoUnit.SECONDS).toString());
         timeLabel.setText(getCurrentTime());
-        //refresh();
+        //saveVolsUpdateTime();
 
     }
 }

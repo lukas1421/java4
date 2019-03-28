@@ -723,7 +723,7 @@ public final class ChinaStock extends JPanel {
 
                 //ftes.scheduleAtFixedRate(ChinaIndex::repaintGraph, 0, 5, TimeUnit.SECONDS);
 
-                //ChinaBigGraph.refresh();
+                //ChinaBigGraph.saveVolsUpdateTime();
                 ftes.scheduleAtFixedRate(ChinaStock::refreshGraphs, 0, 1, TimeUnit.SECONDS);
 
                 ftes.scheduleAtFixedRate(() -> {

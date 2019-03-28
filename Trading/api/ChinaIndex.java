@@ -170,7 +170,7 @@ final class ChinaIndex extends JPanel {
         computeButton.addActionListener(l -> computeAll());
         controlPanel.add(computeButton);
 
-        JButton refreshTableButton = new JButton("refresh");
+        JButton refreshTableButton = new JButton("saveVolsUpdateTime");
 
 //        refreshTableButton.addActionListener(l -> {
 //            updateIndexTable();
@@ -277,7 +277,7 @@ final class ChinaIndex extends JPanel {
 
 //    static void repaintGraph() {
 //        SwingUtilities.invokeLater(() -> {
-//            gYtd.refresh();
+//            gYtd.saveVolsUpdateTime();
 //            graphPanel.repaint();
 //        });
 //    }
