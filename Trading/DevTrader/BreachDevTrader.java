@@ -466,6 +466,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                             fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
 
                     if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
+                        //pr(symbol, liveData.get(symbol));
                         pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,
                                 "yOpen:" + yFirstDate + " " + yOpen
                                         + "(" + Math.round(1000d * (price / yOpen - 1)) / 10d + "%)"

@@ -10,6 +10,7 @@ import controller.ApiController;
 import controller.ApiController.IConnectionHandler.DefaultConnectionHandler;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
+import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import utility.Utility;
 
 import java.io.*;
@@ -25,8 +26,10 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static utility.Utility.*;
+import static utility.Utility.getUSStockContract;
 
 public final class MorningTask implements HistoricalHandler, LiveHandler, ApiController.IPositionHandler {
 
@@ -39,6 +42,20 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
     private volatile static Map<Contract, Double> holdingsMap =
             new TreeMap<>(Comparator.comparing(Utility::ibContractToSymbol));
     private static Map<String, String> holdingsResult = new TreeMap<>(String::compareTo);
+
+    private volatile static Map<Contract, Double> contractPrice =
+            new TreeMap<>(Comparator.comparing(Utility::ibContractToSymbol));
+
+    private volatile static Map<String, Integer> symbolSize = new TreeMap<>(String::compareTo);
+
+    private static File breachUSNames = new File(TradingConstants.GLOBALPATH + "breachUSNames.txt");
+    private static File chinaAll = new File(TradingConstants.GLOBALPATH + "ChinaAll.txt");
+    private static File chinaAllTest = new File(TradingConstants.GLOBALPATH + "ChinaAllTest.txt");
+
+    private static File testFile = new File(TradingConstants.GLOBALPATH + "breachUSNamesTest.txt");
+
+    private static LinkedList<LinkedList<String>> chinaAllOutputString = new LinkedList<>();
+
 
     public static File output = new File(TradingConstants.GLOBALPATH + "morningOutput.txt");
     private static File bocOutput = new File(TradingConstants.GLOBALPATH + "BOCUSD.txt");
@@ -75,6 +92,20 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         holdingsMap.put(getUSIndexContract("SPX"), 0.0);
         holdingsMap.put(getUSStockContract("QQQ"), 0.0);
 
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(breachUSNames.getAbsolutePath())))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                contractPrice.put(getUSStockContract(al1.get(0)), 0.0);
+
+                //registerContract(getUSStockContract(al1.get(0)));
+                //defaultSize.put(al1.get(0), Double.parseDouble(al1.get(1)));
+            }
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+
+
     }
 
     private Contract getUSIndexContract(String symb) {
@@ -86,14 +117,14 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         return ct;
     }
 
-    private Contract getUSStockContract(String symb) {
-        Contract ct = new Contract();
-        ct.symbol(symb);
-        ct.exchange("SMART");
-        ct.currency("USD");
-        ct.secType(Types.SecType.STK);
-        return ct;
-    }
+//    private Contract getUSStockContract(String symb) {
+//        Contract ct = new Contract();
+//        ct.symbol(symb);
+//        ct.exchange("SMART");
+//        ct.currency("USD");
+//        ct.secType(Types.SecType.STK);
+//        return ct;
+//    }
 
     private static void runThis() {
         MorningTask mt = new MorningTask();
@@ -118,7 +149,22 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
         //es.scheduleAtFixedRate(() -> pr(" countDown ... "), 0, 1, TimeUnit.SECONDS);
         holdingsResult.forEach((symb, msg) -> pr("*", symb, msg));
-        es.schedule(() -> System.exit(0), 15, TimeUnit.SECONDS);
+
+//        es.scheduleAtFixedRate(() -> {
+//            pr("printing symbol size ");
+//            symbolSize.forEach(Utility::pr);
+//            outputToBreach();
+//        }, 15, 15, TimeUnit.SECONDS);
+
+        es.schedule(() -> {
+            pr("printing symbol size ");
+            symbolSize.forEach(Utility::pr);
+            outputToBreach();
+            updateChinaAll();
+        }, 10, TimeUnit.SECONDS);
+
+
+        //es.schedule(() -> System.exit(0), 15, TimeUnit.SECONDS);
     }
 
     // this
@@ -430,7 +476,8 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
     @SuppressWarnings("SpellCheckingInspection")
     private static void getBOCFX2() {
         String line;
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(new FileInputStream(bocOutput), "GBK"))) {
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(bocOutput), "GBK"))) {
             while ((line = reader1.readLine()) != null) {
                 pr(" outputting BOCFX " + line);
                 Utility.simpleWrite(line, true);
@@ -511,12 +558,12 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         getUSDDetailed(ap);
         getHKDDetailed(ap);
         getUSPricesAfterMarket(ap);
-        reqHoldings(ap);
-
+        //reqHoldings(ap);
         getXINA50Index(ap);
 
 
-        //pr(" requesting position ");
+        breachUSNamesData();
+
 
         AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
         ap.reqAccountSummary("All", tags, new ApiController.IAccountSummaryHandler.AccountInfoHandler());
@@ -849,6 +896,18 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         }
     }
 
+    private void breachUSNamesData() {
+        for (Contract c : contractPrice.keySet()) {
+            String k = ibContractToSymbol(c);
+            //holdingsResult.put(k, "");
+            morningYtdData.put(k, new ConcurrentSkipListMap<>());
+            if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
+                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
+                        fillContract(c), MorningTask::breachPriceHandler, 10, Types.BarSize._1_day);
+            }
+        }
+    }
+
     private static void morningYtdOpen(Contract c, String date, double open, double high, double low,
                                        double close, int volume) {
         String symbol = utility.Utility.ibContractToSymbol(c);
@@ -917,6 +976,76 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                 Utility.simpleWriteToFile(out, true, positionOutput);
             }
         }
+    }
+
+    private static void breachPriceHandler(Contract c, String date, double open, double high, double low,
+                                           double close, int volume) {
+
+        String symbol = utility.Utility.ibContractToSymbol(c);
+
+        if (!date.startsWith("finished")) {
+            LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
+            morningYtdData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
+        } else {
+            double last;
+            last = morningYtdData.get(symbol).lastEntry().getValue().getClose();
+            int defaultSize = close > 300 ? 0 : (int) (Math.round(10000.0 / last / 100.0)) * 100;
+            pr("last", symbol, last, defaultSize);
+            symbolSize.put(symbol, defaultSize);
+        }
+    }
+
+    private static void outputToBreach() {
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(breachUSNames, false))) {
+            symbolSize.forEach((k, v) -> {
+                if (v != 0) {
+                    try {
+                        out.append(getStrTabbed(k, v));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        out.newLine();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private static void updateChinaAll() {
+        String line;
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(chinaAll.getAbsolutePath())))) {
+            while ((line = reader1.readLine()) != null) {
+                LinkedList<String> al1 = new LinkedList<>(Arrays.asList(line.split("\t")));
+
+                if (al1.get(4).equals("USD") && al1.get(5).equals("STK")) {
+                    pr(al1);
+                } else {
+                    chinaAllOutputString.add(al1);
+                }
+            }
+        } catch (
+                IOException x) {
+            x.printStackTrace();
+        }
+
+        symbolSize.forEach((k, v) -> {
+            LinkedList<String> l = new LinkedList<>(Arrays.asList(k, k, "美", "美", "USD", "STK"));
+            chinaAllOutputString.add(l);
+        });
+
+
+        clearFile(chinaAll);
+        chinaAllOutputString.forEach(l -> {
+            simpleWriteToFile(String.join("\t", l), true, chinaAll);
+        });
+
+
     }
 
     private static Contract fillContract(Contract c) {

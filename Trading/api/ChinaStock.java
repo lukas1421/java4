@@ -307,7 +307,8 @@ public final class ChinaStock extends JPanel {
 
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(TradingConstants.GLOBALPATH + "ChinaAll.txt"), "gbk"))) {
+                new FileInputStream(TradingConstants.GLOBALPATH + "ChinaAll.txt")))) {
+            //new FileInputStream(TradingConstants.GLOBALPATH + "ChinaAll.txt"), "gbk"))) {
 
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
