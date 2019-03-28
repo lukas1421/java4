@@ -42,7 +42,7 @@ import static utility.Utility.pr;
 
 public final class ChinaMain implements IConnectionHandler {
 
-    public static final LocalTime START_ENGINE_TIME = LocalTime.now();
+    static final LocalTime START_ENGINE_TIME = LocalTime.now();
     public static final LocalDate MONDAY_OF_WEEK = Utility.getMondayOfWeek(LocalDateTime.now());
     public static volatile LocalDate currentTradingDate = getTradeDate(LocalDateTime.now());
 

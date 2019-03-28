@@ -129,7 +129,7 @@ public class ChinaOption extends JPanel implements Runnable {
     private static RowFilter<OptionTableModel, Integer> otmFilter;
     static OptionTableModel model;
 
-    public ChinaOption() {
+    ChinaOption() {
         otmFilter = new RowFilter<OptionTableModel, Integer>() {
             @Override
             public boolean include(Entry<? extends OptionTableModel, ? extends Integer> entry) {
@@ -532,9 +532,9 @@ public class ChinaOption extends JPanel implements Runnable {
         es.schedule(() -> {
             pr(" loading vol hib and intraday vol ");
             loadVolsHib();
-            loadIntradayVolsHib(ChinaVolIntraday.getInstance()); // load intraday
+            loadIntradayVolsHib(ChinaVolIntraday.getInstance());
         }, 15, TimeUnit.SECONDS);
-    } // end of constructor
+    }
 
     private static void updateOptionSystemInfo(String text) {
         SwingUtilities.invokeLater(() -> {
@@ -712,20 +712,16 @@ public class ChinaOption extends JPanel implements Runnable {
 
 
 //    private static void saveVolsCSV() {
-//
 //        File output = new File(TradingConstants.GLOBALPATH + "volOutput.csv");
-//
 //        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
 //            saveVolHelper(out, savingDate, CALL, strikeVolMapCall, frontExpiry, currentStockPrice);
 //            saveVolHelper(out, savingDate, CALL, strikeVolMapCall, backExpiry, currentStockPrice);
 //            saveVolHelper(out, savingDate, CALL, strikeVolMapCall, thirdExpiry, currentStockPrice);
 //            saveVolHelper(out, savingDate, CALL, strikeVolMapCall, fourthExpiry, currentStockPrice);
-//
 //            saveVolHelper(out, savingDate, PUT, strikeVolMapPut, frontExpiry, currentStockPrice);
 //            saveVolHelper(out, savingDate, PUT, strikeVolMapPut, backExpiry, currentStockPrice);
 //            saveVolHelper(out, savingDate, PUT, strikeVolMapPut, thirdExpiry, currentStockPrice);
 //            saveVolHelper(out, savingDate, PUT, strikeVolMapPut, fourthExpiry, currentStockPrice);
-//
 //        } catch (IOException ex) {
 //            ex.printStackTrace();
 //        }
@@ -803,8 +799,6 @@ public class ChinaOption extends JPanel implements Runnable {
                             tickerOptionsMap.get(e.getKey()).getExpiryDate().equals(expiryToCheck))
                     .collect(Collectors.toMap(e -> tickerOptionsMap.get(e.getKey()).getStrike()
                             , Map.Entry::getValue, (a, b) -> a, TreeMap::new));
-            //pr("ytd call map ", callMap);
-            //pr(" ytd put map ", putMap);
 
             SwingUtilities.invokeLater(() -> {
                 graphVolDiff.setVolPrev1(getVolSmile(callMap, putMap, currentStockPrice));
@@ -847,75 +841,76 @@ public class ChinaOption extends JPanel implements Runnable {
                     + (LocalTime.now().getSecond() == 0 ? ":00" : ""));
         });
 
-        //if (computeOn) {
-        try {
-            String callStringFront = "http://hq.sinajs.cn/list=OP_UP_510050" + frontMonth;
-            URL urlCallFront = new URL(callStringFront);
-            URLConnection urlconnCallFront = urlCallFront.openConnection();
+        if (computeOn) {
+            try {
+                String callStringFront = "http://hq.sinajs.cn/list=OP_UP_510050" + frontMonth;
+                URL urlCallFront = new URL(callStringFront);
+                URLConnection urlconnCallFront = urlCallFront.openConnection();
 
-            String putStringFront = "http://hq.sinajs.cn/list=OP_DOWN_510050" + frontMonth;
-            URL urlPutFront = new URL(putStringFront);
-            URLConnection urlconnPutFront = urlPutFront.openConnection();
+                String putStringFront = "http://hq.sinajs.cn/list=OP_DOWN_510050" + frontMonth;
+                URL urlPutFront = new URL(putStringFront);
+                URLConnection urlconnPutFront = urlPutFront.openConnection();
 
-            String callStringBack = "http://hq.sinajs.cn/list=OP_UP_510050" + backMonth;
-            URL urlCallBack = new URL(callStringBack);
-            URLConnection urlconnCallBack = urlCallBack.openConnection();
+                String callStringBack = "http://hq.sinajs.cn/list=OP_UP_510050" + backMonth;
+                URL urlCallBack = new URL(callStringBack);
+                URLConnection urlconnCallBack = urlCallBack.openConnection();
 
-            String putStringBack = "http://hq.sinajs.cn/list=OP_DOWN_510050" + backMonth;
-            URL urlPutBack = new URL(putStringBack);
-            URLConnection urlconnPutBack = urlPutBack.openConnection();
+                String putStringBack = "http://hq.sinajs.cn/list=OP_DOWN_510050" + backMonth;
+                URL urlPutBack = new URL(putStringBack);
+                URLConnection urlconnPutBack = urlPutBack.openConnection();
 
-            String callStringThird = "http://hq.sinajs.cn/list=OP_UP_510050" + thirdMonth;
-            URL urlCallThird = new URL(callStringThird);
-            URLConnection urlconnCallThird = urlCallThird.openConnection();
+                String callStringThird = "http://hq.sinajs.cn/list=OP_UP_510050" + thirdMonth;
+                URL urlCallThird = new URL(callStringThird);
+                URLConnection urlconnCallThird = urlCallThird.openConnection();
 
-            String putStringThird = "http://hq.sinajs.cn/list=OP_DOWN_510050" + thirdMonth;
-            URL urlPutThird = new URL(putStringThird);
-            URLConnection urlconnPutThird = urlPutThird.openConnection();
+                String putStringThird = "http://hq.sinajs.cn/list=OP_DOWN_510050" + thirdMonth;
+                URL urlPutThird = new URL(putStringThird);
+                URLConnection urlconnPutThird = urlPutThird.openConnection();
 
-            String callStringFourth = "http://hq.sinajs.cn/list=OP_UP_510050" + fourthMonth;
-            URL urlCallFourth = new URL(callStringFourth);
-            URLConnection urlconnCallFourth = urlCallFourth.openConnection();
+                String callStringFourth = "http://hq.sinajs.cn/list=OP_UP_510050" + fourthMonth;
+                URL urlCallFourth = new URL(callStringFourth);
+                URLConnection urlconnCallFourth = urlCallFourth.openConnection();
 
-            String putStringFourth = "http://hq.sinajs.cn/list=OP_DOWN_510050" + fourthMonth;
-            URL urlPutFourth = new URL(putStringFourth);
-            URLConnection urlconnPutFourth = urlPutFourth.openConnection();
+                String putStringFourth = "http://hq.sinajs.cn/list=OP_DOWN_510050" + fourthMonth;
+                URL urlPutFourth = new URL(putStringFourth);
+                URLConnection urlconnPutFourth = urlPutFourth.openConnection();
 
-            getOptionInfo(urlconnCallFront, CALL, frontExpiry);
-            getOptionInfo(urlconnPutFront, PUT, frontExpiry);
-            getOptionInfo(urlconnCallBack, CALL, backExpiry);
-            getOptionInfo(urlconnPutBack, PUT, backExpiry);
-            getOptionInfo(urlconnCallThird, CALL, thirdExpiry);
-            getOptionInfo(urlconnPutThird, PUT, thirdExpiry);
-            getOptionInfo(urlconnCallFourth, CALL, fourthExpiry);
-            getOptionInfo(urlconnPutFourth, PUT, fourthExpiry);
+                getOptionInfo(urlconnCallFront, CALL, frontExpiry);
+                getOptionInfo(urlconnPutFront, PUT, frontExpiry);
+                getOptionInfo(urlconnCallBack, CALL, backExpiry);
+                getOptionInfo(urlconnPutBack, PUT, backExpiry);
+                getOptionInfo(urlconnCallThird, CALL, thirdExpiry);
+                getOptionInfo(urlconnPutThird, PUT, thirdExpiry);
+                getOptionInfo(urlconnCallFourth, CALL, fourthExpiry);
+                getOptionInfo(urlconnPutFourth, PUT, fourthExpiry);
 
-        } catch (IOException ex2) {
-            ex2.printStackTrace();
-        }
-
-
-        for (LocalDate d : expiryList) {
-            if (strikeVolMapCall.containsKey(d) && strikeVolMapPut.containsKey(d)
-                    && timeLapseVolAllExpiries.containsKey(d)) {
-                NavigableMap<Integer, Double> todayMoneynessVol =
-                        mergePutCallVolsMoneyness(strikeVolMapCall.get(d), strikeVolMapPut.get(d), currentStockPrice);
-                timeLapseVolAllExpiries.get(d).put(pricingDate, getVolByMoneyness(todayMoneynessVol, 100));
+            } catch (IOException ex2) {
+                ex2.printStackTrace();
             }
-        }
-        if (timeLapseVolAllExpiries.containsKey(expiryToCheck)) {
+
+
+            for (LocalDate d : expiryList) {
+                if (strikeVolMapCall.containsKey(d) && strikeVolMapPut.containsKey(d)
+                        && timeLapseVolAllExpiries.containsKey(d)) {
+                    NavigableMap<Integer, Double> todayMoneynessVol =
+                            mergePutCallVolsMoneyness(strikeVolMapCall.get(d), strikeVolMapPut.get(d), currentStockPrice);
+                    timeLapseVolAllExpiries.get(d).put(pricingDate, getVolByMoneyness(todayMoneynessVol, 100));
+                }
+            }
+            if (timeLapseVolAllExpiries.containsKey(expiryToCheck)) {
+                SwingUtilities.invokeLater(() -> {
+                    graphATMLapse.setVolLapse(timeLapseVolAllExpiries.get(expiryToCheck));
+                    graphATMLapse.setGraphTitle(expiryToCheck.format(DateTimeFormatter.ofPattern("MM-dd")) + " ATM lapse ");
+                });
+            }
+
             SwingUtilities.invokeLater(() -> {
-                graphATMLapse.setVolLapse(timeLapseVolAllExpiries.get(expiryToCheck));
-                graphATMLapse.setGraphTitle(expiryToCheck.format(DateTimeFormatter.ofPattern("MM-dd")) + " ATM lapse ");
+                graphTS.repaint();
+                graphTS2.repaint();
+                graphVolDiff.repaint();
+                graphATMLapse.repaint();
             });
         }
-
-        SwingUtilities.invokeLater(() -> {
-            graphTS.repaint();
-            graphTS2.repaint();
-            graphVolDiff.repaint();
-            graphATMLapse.repaint();
-        });
     }
 
     private static void getOptionInfo(URLConnection conn, CallPutFlag f, LocalDate expiry) {
@@ -1023,18 +1018,15 @@ public class ChinaOption extends JPanel implements Runnable {
                     .filter(e -> tickerOptionsMap.containsKey(e.getKey()) &&
                             tickerOptionsMap.get(e.getKey()).getCallOrPut() == CALL
                             && tickerOptionsMap.get(e.getKey()).getExpiryDate().equals(expiryToCheck))
-                    .collect(Collectors.toMap(e1 ->
-                                    tickerOptionsMap.get(e1.getKey()).getStrike(),
+                    .collect(Collectors.toMap(e1 -> tickerOptionsMap.get(e1.getKey()).getStrike(),
                             Map.Entry::getValue, (a, b) -> a, TreeMap::new));
 
 
             NavigableMap<Double, Double> putMap = impliedVolMapYtd.entrySet().stream()
                     .filter(e -> tickerOptionsMap.containsKey(e.getKey()) &&
-                            tickerOptionsMap.get(e.getKey())
-                                    .getCallOrPut() == PUT &&
+                            tickerOptionsMap.get(e.getKey()).getCallOrPut() == PUT &&
                             tickerOptionsMap.get(e.getKey()).getExpiryDate().equals(expiryToCheck))
-                    .collect(Collectors.toMap(e1 ->
-                                    tickerOptionsMap.get(e1.getKey()).getStrike(),
+                    .collect(Collectors.toMap(e1 -> tickerOptionsMap.get(e1.getKey()).getStrike(),
                             Map.Entry::getValue, (a, b) -> a, TreeMap::new));
 
             graphVolDiff.setVolPrev1(getVolSmile(callMap, putMap, currentStockPrice));
@@ -1053,7 +1045,8 @@ public class ChinaOption extends JPanel implements Runnable {
 
     public static double getATMVol(LocalDate exp) {
         if (strikeVolMapCall.containsKey(exp) && strikeVolMapPut.containsKey(exp) &&
-                strikeVolMapCall.get(exp).size() > 0 && strikeVolMapPut.get(exp).size() > 0 && currentStockPrice != 0.0) {
+                strikeVolMapCall.get(exp).size() > 0 && strikeVolMapPut.get(exp).size() > 0
+                && currentStockPrice != 0.0) {
             return getVolByMoneyness(
                     mergePutCallVolsMoneyness(strikeVolMapCall.get(exp),
                             strikeVolMapPut.get(exp), currentStockPrice), 100);
@@ -1167,23 +1160,6 @@ public class ChinaOption extends JPanel implements Runnable {
         });
         return res;
     }
-
-//    private static double getCurrentATMVol(NavigableMap<Double, Double> callMap
-//            , NavigableMap<Double, Double> putMap, double spot) {
-//        NavigableMap<Integer, Double> res = new TreeMap<>();
-//        callMap.forEach((k, v) -> {
-//            if (k > spot) {
-//                res.put((int) Math.round(k / spot * 100), v);
-//            }
-//        });
-//        putMap.forEach((k, v) -> {
-//            if (k < spot) {
-//                res.put((int) Math.round(k / spot * 100), v);
-//            }
-//        });
-//
-//        return 0.0;
-//    }
 
     private static NavigableMap<Double, Double> getVolSmile(NavigableMap<Double, Double> callMap
             , NavigableMap<Double, Double> putMap, double spot) {
