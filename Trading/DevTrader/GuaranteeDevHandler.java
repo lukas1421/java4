@@ -3,7 +3,6 @@ package DevTrader;
 import api.TradingConstants;
 import client.*;
 import controller.ApiController;
-import utility.Utility;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -81,8 +80,13 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 Order prevOrder = devOrderMap.get(currentID).getOrder();
                 Order o = new Order();
                 o.action(prevOrder.action());
-                o.lmtPrice(prevOrder.action() == Types.Action.BUY ? bid :
-                        (prevOrder.action() == Types.Action.SELL ? ask : lastPrice));
+                if (attempts.get() > PASSIVE_ATTEMPTS) {
+                    o.lmtPrice(lastPrice);
+                } else {
+                    o.lmtPrice(prevOrder.action() == Types.Action.BUY ? bid :
+                            (prevOrder.action() == Types.Action.SELL ? ask : lastPrice));
+                }
+
                 o.orderType(OrderType.LMT);
                 o.totalQuantity(prevOrder.totalQuantity());
                 o.outsideRth(true);
@@ -106,6 +110,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
             }
             idStatusMap.put(currentID, orderState.status());
         }
+
     }
 
     @Override

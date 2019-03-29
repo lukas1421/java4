@@ -164,7 +164,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         }, 10, TimeUnit.SECONDS);
 
 
-        //es.schedule(() -> System.exit(0), 15, TimeUnit.SECONDS);
+        es.schedule(() -> System.exit(0), 60, TimeUnit.SECONDS);
     }
 
     // this

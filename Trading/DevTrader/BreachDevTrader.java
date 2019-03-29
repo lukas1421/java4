@@ -27,9 +27,9 @@ import static utility.Utility.*;
 public class BreachDevTrader implements LiveHandler, ApiController.IPositionHandler {
 
 
-    static final int MAX_ATTEMPTS = 20;
-    static volatile NavigableMap<Integer, OrderAugmented> devOrderMap =
-            new ConcurrentSkipListMap<>();
+    static final int MAX_ATTEMPTS = 100;
+    static final int PASSIVE_ATTEMPTS = 50;
+    static volatile NavigableMap<Integer, OrderAugmented> devOrderMap = new ConcurrentSkipListMap<>();
     static volatile AtomicInteger devTradeID = new AtomicInteger(100);
 
 
@@ -439,6 +439,10 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         switch (tt) {
             case LAST:
                 liveData.get(symbol).put(t, price);
+
+//                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
+//                    pr(symbol, t, price, ytdDayData.get(symbol).firstKey());
+//                }
 
                 if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
