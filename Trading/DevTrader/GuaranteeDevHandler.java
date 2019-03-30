@@ -15,8 +15,7 @@ import static client.OrderStatus.Filled;
 import static client.OrderStatus.PendingCancel;
 import static client.Types.TimeInForce.IOC;
 import static utility.TradingUtility.outputToError;
-import static utility.Utility.outputToSymbolFile;
-import static utility.Utility.str;
+import static utility.Utility.*;
 
 public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
@@ -80,12 +79,16 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 Order prevOrder = devOrderMap.get(currentID).getOrder();
                 Order o = new Order();
                 o.action(prevOrder.action());
-                if (attempts.get() > PASSIVE_ATTEMPTS) {
-                    o.lmtPrice(lastPrice);
-                } else {
-                    o.lmtPrice(prevOrder.action() == Types.Action.BUY ? bid :
-                            (prevOrder.action() == Types.Action.SELL ? ask : lastPrice));
-                }
+//                if (attempts.get() > PASSIVE_ATTEMPTS) {
+//                    o.lmtPrice(lastPrice);
+//                } else {
+//                    o.lmtPrice(prevOrder.action() == Types.Action.BUY ? bid :
+//                            (prevOrder.action() == Types.Action.SELL ? ask : lastPrice));
+//                }
+
+                o.lmtPrice(prevOrder.action() == Types.Action.BUY ? getBid(bid, ask, lastPrice, attempts.get()) :
+                        (prevOrder.action() == Types.Action.SELL ? getAsk(bid, ask, lastPrice, attempts.get())
+                                : lastPrice));
 
                 o.orderType(OrderType.LMT);
                 o.totalQuantity(prevOrder.totalQuantity());
@@ -111,6 +114,24 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
             idStatusMap.put(currentID, orderState.status());
         }
 
+    }
+
+    private static double getBid(double bid, double ask, double price, int attemptsSoFar) {
+        if (attemptsSoFar < 20) {
+            return bid;
+        } else if (attemptsSoFar > 100) {
+            return price;
+        }
+        return bid + (price - bid) * (attemptsSoFar - 20) / 80;
+    }
+
+    private static double getAsk(double bid, double ask, double price, int attemptsSoFar) {
+        if (attemptsSoFar < 20) {
+            return ask;
+        } else if (attemptsSoFar > 100) {
+            return price;
+        }
+        return ask - (ask - price) * (attemptsSoFar - 20) / 80;
     }
 
     @Override

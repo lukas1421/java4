@@ -12,16 +12,8 @@ import static utility.Utility.pr;
 
 public class Test {
 
-    private static Predicate<Integer> biggerThan(int x) {
-        return e -> e > x;
-    }
-
-    static void showAllBiggerThanX() {
-
-    }
 
     public static void main(String[] args) {
-        List<Integer> l = Arrays.asList(1, 2, 3, 4, 10, 12);
-        l.stream().filter(e -> e > 10).forEach(System.out::println);
+
     }
 }
