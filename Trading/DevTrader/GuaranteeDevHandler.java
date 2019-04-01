@@ -52,7 +52,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
     public void orderState(OrderState orderState) {
         LocalDateTime now = LocalDateTime.now();
         if (!devOrderMap.containsKey(currentID)) {
-            outputToError(" dev id order map doesn't contain ID" + currentID);
+            outputToSpecial(" dev id order map doesn't contain ID" + currentID);
             throw new IllegalStateException(" dev id order map doesn't contain ID" + currentID);
         }
 
@@ -112,6 +112,8 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 o.orderType(OrderType.LMT);
 
                 //bug, partial fills
+
+                o.totalQuantity(lastQ);
                 if (aot == AutoOrderType.BREACH_CUTTER) {
                     if (lastQ != Math.abs(livePos)) {
                         o.totalQuantity(Math.abs(livePos));
@@ -124,8 +126,6 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                             o.totalQuantity(0.0);
                         }
                     }
-                } else {
-                    o.totalQuantity(lastQ);
                 }
 
                 o.outsideRth(true);
@@ -166,20 +166,22 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 o.orderType(OrderType.LMT);
 
 
+                o.totalQuantity(lastQ);
+
                 if (aot == AutoOrderType.BREACH_CUTTER) {
                     if (lastQ != Math.abs(livePos)) {
                         o.totalQuantity(Math.abs(livePos));
                     }
                 } else if (aot == AutoOrderType.BREACH_ADDER) {
-                    if (getLivePos(symbol) != 0.0) {
+                    if (livePos != 0.0) {
                         if (defaultSize > Math.abs(livePos)) {
                             o.totalQuantity(defaultSize - Math.abs(livePos));
                         } else {
+                            outputToSpecial(str(symbol, "live pos > defaultSize ", livePos, defaultSize
+                                    , currentID, prevOrder));
                             o.totalQuantity(0.0);
                         }
                     }
-                } else {
-                    o.totalQuantity(lastQ);
                 }
 
                 o.outsideRth(true);
