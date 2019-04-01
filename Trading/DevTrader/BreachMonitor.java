@@ -370,6 +370,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                             "mDev", mDev + "%", info);
                     //pr("*", out, yBreachStatus, mBreachStatus);
                 }
+                break;
         }
     }
 

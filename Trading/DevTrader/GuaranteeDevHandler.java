@@ -92,7 +92,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
                 outputToSymbolFile(devOrderMap.get(primaryID).getSymbol(),
                         str(devOrderMap.get(primaryID).getOrder().orderId(),
-                                prevOrder.orderId(), "->", o.orderId(),
+                                prevOrder.orderId(), "->", o.orderId(), "ID", currentID, "->", newID,
                                 "MAX ATTEMPTS EXCEEDED, Switch to PatientDev:"
                                 , devOrderMap.get(newID).getOrderType(),
                                 o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
@@ -130,7 +130,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
                 outputToSymbolFile(devOrderMap.get(primaryID).getSymbol(),
                         str(devOrderMap.get(primaryID).getOrder().orderId(),
-                                prevOrder.orderId(), "->", o.orderId(),
+                                prevOrder.orderId(), "->", o.orderId(), "ID", currentID, "->", newID,
                                 "BREACH RESUBMIT:", devOrderMap.get(newID).getOrderType(),
                                 o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), "Primary? " +
                                         devOrderMap.get(newID).isPrimaryOrder(),

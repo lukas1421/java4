@@ -292,7 +292,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                         devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
                         apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
                         outputToSymbolFile(symbol, str("********", t), devOutput);
-                        outputToSymbolFile(symbol, str(o.orderId(), "ADDER BUY:",
+                        outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER BUY:",
                                 devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
                                 "prevClose", prevClose, "price", price, "devFromMaxOpen",
                                 r10000(price / Math.max(yOpen, mOpen) - 1))
@@ -310,7 +310,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                         devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
                         apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
                         outputToSymbolFile(symbol, str("********", t), devOutput);
-                        outputToSymbolFile(symbol, str(o.orderId(), "ADDER SELL:",
+                        outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER SELL:",
                                 devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
                                 "prevClose", prevClose, "price", price, "devFromMinOpen",
                                 r10000(price / Math.min(mOpen, yOpen) - 1)),
@@ -350,7 +350,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                     apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
                     outputToSymbolFile(symbol, str("********", t), devOutput);
-                    outputToSymbolFile(symbol, str(o.orderId(), "Cutter BUY:",
+                    outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter BUY:",
                             "added?" + added, devOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
                             "price", price), devOutput);
                 }
@@ -362,7 +362,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                     apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
                     outputToSymbolFile(symbol, str("********", t), devOutput);
-                    outputToSymbolFile(symbol, str(o.orderId(), "Cutter SELL:",
+                    outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter SELL:",
                             "added?" + added, devOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
                             "price", price), devOutput);
                 }
@@ -485,10 +485,13 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                                         + "%)" : "")) : "");
                     }
                 }
+                break;
             case BID:
                 bidMap.put(symbol, price);
+                break;
             case ASK:
                 askMap.put(symbol, price);
+                break;
         }
     }
 
