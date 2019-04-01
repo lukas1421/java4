@@ -558,7 +558,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         getUSDDetailed(ap);
         getHKDDetailed(ap);
         getUSPricesAfterMarket(ap);
-        //reqHoldings(ap);
+        reqHoldings(ap);
         getXINA50Index(ap);
 
 
@@ -877,6 +877,10 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         if (!contract.symbol().equals("USD")) {
             holdingsMap.put(contract, position);
         }
+
+        if (position != 0.0) {
+            symbolSize.put(ibContractToSymbol(contract), 0);
+        }
     }
 
     @Override
@@ -1035,10 +1039,16 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         }
 
         symbolSize.forEach((k, v) -> {
-            LinkedList<String> l = new LinkedList<>(Arrays.asList(k, k, "美", "美", "USD", "STK"));
-            chinaAllOutputString.add(l);
+            chinaAllOutputString.add(new LinkedList<>(Arrays.asList(k, k, "美", "美", "USD", "STK")));
         });
 
+        //need to add stocks in position but not in symbolSize
+        holdingsMap.forEach((ct, v) -> {
+            String k = ibContractToSymbol(ct);
+            if (!symbolSize.containsKey(k) && v != 0.0) {
+                chinaAllOutputString.add(new LinkedList<>(Arrays.asList(k, k, "美", "美", "USD", "STK")));
+            }
+        });
 
         clearFile(chinaAll);
         chinaAllOutputString.forEach(l -> {
