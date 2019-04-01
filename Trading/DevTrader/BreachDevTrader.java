@@ -440,17 +440,18 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             case LAST:
                 liveData.get(symbol).put(t, price);
 
-//                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
-//                    pr(symbol, t, price, ytdDayData.get(symbol).firstKey());
-//                }
+                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
+                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstEntry()
+                            , "mFirst", ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY));
+                }
 
                 if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
 
-                    LocalDate yFirstDate = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getKey();
-                    double yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
-                    LocalDate mFirstDate = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey();
-                    double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
+                    LocalDate yFirstDate = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getKey();
+                    double yOpen = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getValue().getClose();
+                    LocalDate mFirstDate = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey();
+                    double mOpen = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose();
                     double pos = symbolPosMap.get(symbol);
 
 
