@@ -143,8 +143,19 @@ public class TradingUtility {
     }
 
     public static void outputToError(String s) {
-        pr(s);
+        //pr(s);
         File output = new File(TradingConstants.GLOBALPATH + "autoError.txt");
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
+            out.append(s);
+            out.newLine();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    public static void outputToSpecial(String s) {
+        //pr(s);
+        File output = new File(TradingConstants.GLOBALPATH + "specialError.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
             out.append(s);
             out.newLine();

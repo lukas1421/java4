@@ -3,9 +3,11 @@ package DevTrader;
 import api.TradingConstants;
 import client.*;
 import controller.ApiController;
+import util.AutoOrderType;
 
 import java.io.File;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,6 +18,7 @@ import static client.OrderStatus.PendingCancel;
 import static client.Types.TimeInForce.DAY;
 import static client.Types.TimeInForce.IOC;
 import static utility.TradingUtility.outputToError;
+import static utility.TradingUtility.outputToSpecial;
 import static utility.Utility.*;
 
 public class GuaranteeDevHandler implements ApiController.IOrderHandler {
@@ -48,11 +51,38 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
     @Override
     public void orderState(OrderState orderState) {
         LocalDateTime now = LocalDateTime.now();
-        if (devOrderMap.containsKey(currentID)) {
-            devOrderMap.get(currentID).setFinalActionTime(LocalDateTime.now());
-            devOrderMap.get(currentID).setAugmentedOrderStatus(orderState.status());
-        } else {
+        if (!devOrderMap.containsKey(currentID)) {
+            outputToError(" dev id order map doesn't contain ID" + currentID);
             throw new IllegalStateException(" dev id order map doesn't contain ID" + currentID);
+        }
+
+        devOrderMap.get(currentID).setFinalActionTime(LocalDateTime.now());
+        devOrderMap.get(currentID).setAugmentedOrderStatus(orderState.status());
+
+        double lastQ = devOrderMap.get(currentID).getOrder().totalQuantity();
+        String symbol = devOrderMap.get(currentID).getSymbol();
+        double currPos = Math.abs(getLivePos(symbol));
+        AutoOrderType aot = devOrderMap.get(currentID).getOrderType();
+        double livePos = getLivePos(symbol);
+        double defaultSize = getDefaultSize(symbol);
+
+        if (aot == AutoOrderType.BREACH_CUTTER) {
+            if (lastQ != Math.abs(currPos)) {
+                outputToSpecial(str(LocalDateTime.now(), symbol, currentID,
+                        devOrderMap.get(currentID), "breach cutting, currPos changed, partial filled"));
+
+                outputToSymbolFile(symbol, str(LocalDateTime.now(), currentID,
+                        devOrderMap.get(currentID),
+                        "breach cutting, currPos changed"), breachMDevOutput);
+            }
+        } else if (aot == AutoOrderType.BREACH_ADDER) {
+            if (currPos != 0.0) {
+                outputToSpecial(str(LocalDateTime.now(), symbol, currentID,
+                        devOrderMap.get(currentID), "breach adding, currPos not 0"));
+                outputToSymbolFile(symbol, str(LocalDateTime.now(), currentID,
+                        devOrderMap.get(currentID),
+                        "breach adding, currPos not 0"), breachMDevOutput);
+            }
         }
 
         if (orderState.status() != idStatusMap.get(currentID)) {
@@ -67,10 +97,10 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
             } else if (attempts.get() > MAX_ATTEMPTS) {
 
                 Contract ct = devOrderMap.get(currentID).getContract();
-                String symbol = devOrderMap.get(currentID).getSymbol();
                 double lastPrice = BreachDevTrader.getLiveData(symbol);
                 double bid = BreachDevTrader.getBid(symbol);
                 double ask = BreachDevTrader.getAsk(symbol);
+
 
                 Order prevOrder = devOrderMap.get(currentID).getOrder();
                 Order o = new Order();
@@ -80,7 +110,24 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                         (prevOrder.action() == Types.Action.SELL ? r(ask) : r(lastPrice)));
 
                 o.orderType(OrderType.LMT);
-                o.totalQuantity(prevOrder.totalQuantity());
+
+                //bug, partial fills
+                if (aot == AutoOrderType.BREACH_CUTTER) {
+                    if (prevOrder.totalQuantity() != Math.abs(livePos)) {
+                        o.totalQuantity(Math.abs(livePos));
+                    }
+                } else if (aot == AutoOrderType.BREACH_ADDER) {
+                    if (getLivePos(symbol) != 0.0) {
+                        if (defaultSize > Math.abs(livePos)) {
+                            o.totalQuantity(getDefaultSize(symbol) - Math.abs(livePos));
+                        } else {
+                            o.totalQuantity(0.0);
+                        }
+                    }
+                } else {
+                    o.totalQuantity(lastQ);
+                }
+
                 o.outsideRth(true);
                 o.tif(DAY);
 
@@ -98,15 +145,15 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                                 o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
                                 "newID", devOrderMap.get(newID), "bid ask sprd last"
                                 , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", lastPrice,
-                                "attempts ", attempts.get()), breachMDevOutput);
+                                "attempts ", attempts.get(), getLivePos(symbol)), breachMDevOutput);
 
 
             } else if (orderState.status() == PendingCancel && devOrderMap.get(currentID).getOrder().tif() == IOC) {
                 Contract ct = devOrderMap.get(currentID).getContract();
-                String symbol = devOrderMap.get(currentID).getSymbol();
                 double lastPrice = BreachDevTrader.getLiveData(symbol);
                 double bid = BreachDevTrader.getBid(symbol);
                 double ask = BreachDevTrader.getAsk(symbol);
+
 
                 Order prevOrder = devOrderMap.get(currentID).getOrder();
                 Order o = new Order();
@@ -117,7 +164,24 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                                 : lastPrice));
 
                 o.orderType(OrderType.LMT);
-                o.totalQuantity(prevOrder.totalQuantity());
+
+
+                if (aot == AutoOrderType.BREACH_CUTTER) {
+                    if (prevOrder.totalQuantity() != Math.abs(livePos)) {
+                        o.totalQuantity(Math.abs(livePos));
+                    }
+                } else if (aot == AutoOrderType.BREACH_ADDER) {
+                    if (getLivePos(symbol) != 0.0) {
+                        if (defaultSize > Math.abs(livePos)) {
+                            o.totalQuantity(getDefaultSize(symbol) - Math.abs(livePos));
+                        } else {
+                            o.totalQuantity(0.0);
+                        }
+                    }
+                } else {
+                    o.totalQuantity(lastQ);
+                }
+
                 o.outsideRth(true);
                 o.tif(IOC);
 
@@ -136,7 +200,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                                         devOrderMap.get(newID).isPrimaryOrder(),
                                 "current", devOrderMap.get(newID), "bid ask sp last"
                                 , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", lastPrice,
-                                "attempts ", attempts.get()), breachMDevOutput);
+                                "attempts ", attempts.get(), "currPos", getLivePos(symbol)), breachMDevOutput);
             }
             idStatusMap.put(currentID, orderState.status());
         }

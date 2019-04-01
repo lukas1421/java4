@@ -139,6 +139,14 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         }
     }
 
+    static double getDefaultSize(String symb) {
+        if (defaultSize.containsKey(symb)) {
+            return defaultSize.get(symb);
+        }
+        outputToSpecial(str(LocalDateTime.now(), symb, "no default size "));
+        return 0.0;
+    }
+
     private static void registerContract(Contract ct) {
         contractPosMap.put(ct, 0.0);
         symbolPosMap.put(ibContractToSymbol(ct), 0.0);
@@ -205,6 +213,16 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         }
+    }
+
+    static double getLivePos(String symb) {
+        if (symbolPosMap.containsKey(symb)) {
+            return symbolPosMap.get(symb);
+        }
+        outputToSpecial(str(LocalTime.now(), " get live pos from breach dev not found ", symb));
+        outputToError(str(LocalTime.now(), " get live pos from breach dev not found ", symb));
+        return 0.0;
+        //throw new IllegalStateException(" not ")
     }
 
     @Override
@@ -386,49 +404,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         } else {
             outputToSymbolFile(symbol, str("delta impact check PASSED ", impact), devOutput);
             return true;
-        }
-    }
-
-    private static void weeklyCutter(Contract ct, double price, LocalDateTime t, double yOpen, double mOpen) {
-        String symbol = ibContractToSymbol(ct);
-        double pos = symbolPosMap.get(symbol);
-        boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
-        ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
-        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
-        LocalDateTime usLdt = usZdt.toLocalDateTime();
-        LocalTime uslt = usLdt.toLocalTime();
-        DayOfWeek wd = t.getDayOfWeek();
-
-        if (!liquidated && wd == DayOfWeek.FRIDAY && ltBtwn(uslt, 15, 30, 16, 0) && pos != 0.0) {
-            if (pos < 0.0 && (price > mOpen || price > yOpen)) {
-                if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
-                    liquidatedMap.put(symbol, new AtomicBoolean(true));
-                    int id = devTradeID.incrementAndGet();
-                    Order o = placeBidLimitTIF(price, Math.abs(pos), IOC);
-                    if (checkDeltaImpact(ct, o)) {
-                        devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_WEEKLY_CUTTER));
-                        apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
-                        outputToSymbolFile(symbol, str("********", t), devOutput);
-                        outputToSymbolFile(symbol, str(o.orderId(), "weekly cutter BUY:",
-                                devOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
-                                "price", price), devOutput);
-                    }
-                }
-            } else if (pos > 0.0 && (price < mOpen || price < yOpen)) {
-                if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
-                    liquidatedMap.put(symbol, new AtomicBoolean(true));
-                    int id = devTradeID.incrementAndGet();
-                    Order o = placeOfferLimitTIF(price, pos, IOC);
-                    if (checkDeltaImpact(ct, o)) {
-                        devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_WEEKLY_CUTTER));
-                        apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
-                        outputToSymbolFile(symbol, str("********", t), devOutput);
-                        outputToSymbolFile(symbol, str(o.orderId(), "weekly cutter SELL:",
-                                devOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
-                                "price", price), devOutput);
-                    }
-                }
-            }
         }
     }
 
