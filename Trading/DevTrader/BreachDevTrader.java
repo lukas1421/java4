@@ -279,8 +279,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
             pr(t.format(f1), "breach adder", symbol, "pos", pos, "prevC", prevClose,
                     "price", price, "yOpen", yOpen, "mOpen", mOpen, "devFromMaxOpen",
-                    (price / Math.max(yOpen, mOpen) - 1), "devFromMin",
-                    (price / Math.min(yOpen, mOpen) - 1));
+                    r10000(price / Math.max(yOpen, mOpen) - 1), "devFromMin",
+                    r10000(price / Math.min(yOpen, mOpen) - 1));
 
             if (price > yOpen && price > mOpen && totalDelta < HI_LIMIT
                     && ((price / Math.max(yOpen, mOpen) - 1) < 0.02)) {
