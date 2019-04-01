@@ -76,8 +76,8 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 Order o = new Order();
                 o.action(prevOrder.action());
 
-                o.lmtPrice(prevOrder.action() == Types.Action.BUY ? bid :
-                        (prevOrder.action() == Types.Action.SELL ? ask : lastPrice));
+                o.lmtPrice(prevOrder.action() == Types.Action.BUY ? r(bid) :
+                        (prevOrder.action() == Types.Action.SELL ? r(ask) : r(lastPrice)));
 
                 o.orderType(OrderType.LMT);
                 o.totalQuantity(prevOrder.totalQuantity());
@@ -145,20 +145,20 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
     private static double getBid(double bid, double ask, double price, int attemptsSoFar) {
         if (attemptsSoFar < 20) {
-            return bid;
+            return r(bid);
         } else if (attemptsSoFar > 100) {
-            return price;
+            return r(price);
         }
-        return bid + (price - bid) * (attemptsSoFar - 20) / 80;
+        return r(bid + (price - bid) * (attemptsSoFar - 20) / 80);
     }
 
     private static double getAsk(double bid, double ask, double price, int attemptsSoFar) {
         if (attemptsSoFar < 20) {
-            return ask;
+            return r(ask);
         } else if (attemptsSoFar > 100) {
-            return price;
+            return r(price);
         }
-        return ask - (ask - price) * (attemptsSoFar - 20) / 80;
+        return r(ask - (ask - price) * (attemptsSoFar - 20) / 80);
     }
 
     @Override
