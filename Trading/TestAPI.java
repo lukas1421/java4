@@ -46,14 +46,6 @@ public class TestAPI {
         }
     }
 
-    private Contract getUSStockContract(String symb) {
-        Contract ct = new Contract();
-        ct.symbol(symb);
-        ct.exchange("SMART");
-        ct.currency("USD");
-        ct.secType(Types.SecType.STK);
-        return ct;
-    }
 
     static void handleHist(Contract c, String date, double open, double high, double low,
                            double close, int volume) {
