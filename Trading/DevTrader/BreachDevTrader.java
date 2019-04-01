@@ -47,9 +47,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
     private static File devOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
-    private static final double HI_LIMIT = 2000000.0;
-    private static final double LO_LIMIT = -2000000.0;
-    private static final double ABS_LIMIT = 3000000.0;
+    private static final double HI_LIMIT = 2500000.0;
+    private static final double LO_LIMIT = -2500000.0;
+    private static final double ABS_LIMIT = 3500000.0;
 
     public static Map<Currency, Double> fx = new HashMap<>();
     private static Map<String, Double> multi = new HashMap<>();
@@ -440,24 +440,26 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             case LAST:
                 liveData.get(symbol).put(t, price);
 
-                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
-                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstEntry()
-                            , "mFirst", ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY));
-                }
+//                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
+//                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
+//                            ytdDayData.get(symbol).firstEntry().getValue().getClose(),
+//                            "mFirst", ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey(),
+//                            ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose());
+//                }
 
                 if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
 
-                    LocalDate yFirstDate = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getKey();
-                    double yOpen = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getValue().getClose();
-                    LocalDate mFirstDate = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey();
-                    double mOpen = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose();
+                    LocalDate yStartDate = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getKey();
+                    double yStart = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getValue().getClose();
+                    LocalDate mStartDate = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey();
+                    double mStart = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose();
                     double pos = symbolPosMap.get(symbol);
 
 
                     if (timeIsOk(ct, t)) {
-                        breachCutter(ct, price, t, yOpen, mOpen);
-                        breachAdder(ct, price, t, yOpen, mOpen);
+                        breachCutter(ct, price, t, yStart, mStart);
+                        breachAdder(ct, price, t, yStart, mStart);
                     }
 
                     double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
@@ -473,10 +475,10 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
                         //pr(symbol, liveData.get(symbol));
                         pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,
-                                "yOpen:" + yFirstDate + " " + yOpen
-                                        + "(" + Math.round(1000d * (price / yOpen - 1)) / 10d + "%)"
-                                , "mOpen:" + mFirstDate + " " + mOpen
-                                        + "(" + Math.round(1000d * (price / mOpen - 1)) / 10d + "%)",
+                                "yStart:" + yStartDate + " " + yStart
+                                        + "(" + Math.round(1000d * (price / yStart - 1)) / 10d + "%)"
+                                , "mStart:" + mStartDate + " " + mStart
+                                        + "(" + Math.round(1000d * (price / mStart - 1)) / 10d + "%)",
                                 "Last:", liveData.get(symbol).lastKey().format(f1) + " " + price
                                 , pos != 0.0 ? ("Delta:" + deltaDisplay
                                         + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)

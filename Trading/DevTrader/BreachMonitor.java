@@ -200,20 +200,26 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     private static void ytdOpen(Contract c, String date, double open, double high, double low,
                                 double close, int volume) {
         String symbol = utility.Utility.ibContractToSymbol(c);
+
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         } else {
             double pos = contractPosMap.getOrDefault(c, 0.0);
             if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
+                double yOpen;
+                long yCount;
 
-                double yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
+                if (ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
+                    yOpen = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getValue().getClose();
+                } else {
+                    yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
+                }
 
-                long yCount = ytdDayData.get(symbol).entrySet().stream()
+                yCount = ytdDayData.get(symbol).entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY)).count();
-//                pr(symbol, "last entry ", ytdDayData.get(symbol).lastEntry());
 
-                double mOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
+                double mOpen = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose();
                 long mCount = ytdDayData.get(symbol).entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY)).count();
                 double last;
@@ -268,7 +274,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                                         .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
                                         .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) + "%",
                         "mDev:" + mDev + "%" + "(" +
-                                ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getKey().format(f) + " " + mOpen + ")");
+                                ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey().format(f) + " " + mOpen + ")");
 
 //                double getLot = last > 300 ? 0 :
 //                        ((10000 / last) < 100 ? 100 : Math.floor(10000 / last / 100) * 100);
