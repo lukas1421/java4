@@ -61,7 +61,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
         double lastQ = devOrderMap.get(currentID).getOrder().totalQuantity();
         String symbol = devOrderMap.get(currentID).getSymbol();
-        double currPos = Math.abs(getLivePos(symbol));
+        double currPos = getLivePos(symbol);
         AutoOrderType aot = devOrderMap.get(currentID).getOrderType();
         double livePos = getLivePos(symbol);
         double defaultSize = getDefaultSize(symbol);
@@ -113,13 +113,13 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
                 //bug, partial fills
                 if (aot == AutoOrderType.BREACH_CUTTER) {
-                    if (prevOrder.totalQuantity() != Math.abs(livePos)) {
+                    if (lastQ != Math.abs(livePos)) {
                         o.totalQuantity(Math.abs(livePos));
                     }
                 } else if (aot == AutoOrderType.BREACH_ADDER) {
                     if (getLivePos(symbol) != 0.0) {
                         if (defaultSize > Math.abs(livePos)) {
-                            o.totalQuantity(getDefaultSize(symbol) - Math.abs(livePos));
+                            o.totalQuantity(defaultSize - Math.abs(livePos));
                         } else {
                             o.totalQuantity(0.0);
                         }
@@ -167,13 +167,13 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
 
                 if (aot == AutoOrderType.BREACH_CUTTER) {
-                    if (prevOrder.totalQuantity() != Math.abs(livePos)) {
+                    if (lastQ != Math.abs(livePos)) {
                         o.totalQuantity(Math.abs(livePos));
                     }
                 } else if (aot == AutoOrderType.BREACH_ADDER) {
                     if (getLivePos(symbol) != 0.0) {
                         if (defaultSize > Math.abs(livePos)) {
-                            o.totalQuantity(getDefaultSize(symbol) - Math.abs(livePos));
+                            o.totalQuantity(defaultSize - Math.abs(livePos));
                         } else {
                             o.totalQuantity(0.0);
                         }

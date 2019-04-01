@@ -220,7 +220,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             return symbolPosMap.get(symb);
         }
         outputToSpecial(str(LocalTime.now(), " get live pos from breach dev not found ", symb));
-        outputToError(str(LocalTime.now(), " get live pos from breach dev not found ", symb));
         return 0.0;
         //throw new IllegalStateException(" not ")
     }
