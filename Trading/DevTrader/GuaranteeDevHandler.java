@@ -117,7 +117,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                     }
                 } else if (aot == AutoOrderType.BREACH_ADDER) {
                     if (livePos != 0.0) {
-                        if (defaultSize - Math.abs(livePos) > 100.0) {
+                        if (defaultSize - Math.abs(livePos) >= 100.0) {
                             double roundPos = Math.floor((defaultSize - Math.abs(livePos)) / 100d) * 100d;
                             o.totalQuantity(roundPos);
                         } else {
@@ -141,10 +141,9 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                                 "MAX ATTEMPTS EXCEEDED, Switch to PatientDev:"
                                 , devOrderMap.get(newID).getOrderType(),
                                 o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
-                                "newID", devOrderMap.get(newID), "bid ask sprd last"
-                                , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", lastPrice,
-                                "attempts ", attempts.get(), livePos), breachMDevOutput);
-
+                                "new Order:", devOrderMap.get(newID), "bid ask sprd last"
+                                , bid, ask, Math.round(10000d * (ask / bid - 1)) + "bp", lastPrice,
+                                "attempts ", attempts.get(), "pos", livePos), breachMDevOutput);
 
             } else if (orderState.status() == PendingCancel && devOrderMap.get(currentID).getOrder().tif() == IOC) {
                 Contract ct = devOrderMap.get(currentID).getContract();
@@ -170,7 +169,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                     }
                 } else if (aot == AutoOrderType.BREACH_ADDER) {
                     if (livePos != 0.0) {
-                        if (defaultSize - Math.abs(livePos) > 100.0) {
+                        if (defaultSize - Math.abs(livePos) >= 100.0) {
                             double roundPos = Math.floor((defaultSize - Math.abs(livePos)) / 100d) * 100d;
                             o.totalQuantity(roundPos);
                         } else {
@@ -195,11 +194,10 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                         str(devOrderMap.get(primaryID).getOrder().orderId(),
                                 prevOrder.orderId(), "->", o.orderId(), "ID", currentID, "->", newID,
                                 "BREACH RESUBMIT:", devOrderMap.get(newID).getOrderType(),
-                                o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(), "Primary? " +
-                                        devOrderMap.get(newID).isPrimaryOrder(),
+                                o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
                                 "current", devOrderMap.get(newID), "bid ask sp last"
                                 , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", lastPrice,
-                                "attempts ", attempts.get(), "currPos", livePos), breachMDevOutput);
+                                "attempts ", attempts.get(), "pos:", livePos), breachMDevOutput);
             }
             idStatusMap.put(currentID, orderState.status());
         }
