@@ -61,28 +61,26 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
         double lastQ = devOrderMap.get(currentID).getOrder().totalQuantity();
         String symbol = devOrderMap.get(currentID).getSymbol();
-        double currPos = getLivePos(symbol);
         AutoOrderType aot = devOrderMap.get(currentID).getOrderType();
         double livePos = getLivePos(symbol);
         double defaultSize = getDefaultSize(symbol);
 
         if (aot == AutoOrderType.BREACH_CUTTER) {
-            if (lastQ != Math.abs(currPos)) {
+            if (lastQ != Math.abs(livePos)) {
                 outputToSpecial(str(LocalDateTime.now(), symbol, currentID,
                         devOrderMap.get(currentID), "breach cutting, currPos changed, partial filled",
-                        "lastQ, currPos", lastQ, currPos));
+                        "lastQ, currPos", lastQ, livePos));
 
                 outputToSymbolFile(symbol, str(LocalDateTime.now(), currentID,
-                        devOrderMap.get(currentID),
-                        "breach cutting, currPos changed"), breachMDevOutput);
+                        devOrderMap.get(currentID), "breach cutting, pos changed"), breachMDevOutput);
             }
         } else if (aot == AutoOrderType.BREACH_ADDER) {
-            if (currPos != 0.0) {
+            if (livePos != 0.0) {
                 outputToSpecial(str(LocalDateTime.now(), symbol, currentID,
                         devOrderMap.get(currentID), "breach adding, currPos not 0"));
                 outputToSymbolFile(symbol, str(LocalDateTime.now(), currentID,
                         devOrderMap.get(currentID),
-                        "breach adding, currPos not 0", "currPos", currPos), breachMDevOutput);
+                        "breach adding, currPos not 0", "currPos", livePos), breachMDevOutput);
             }
         }
 
@@ -111,8 +109,6 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                         (prevOrder.action() == Types.Action.SELL ? r(ask) : r(lastPrice)));
 
                 o.orderType(OrderType.LMT);
-
-                //bug, partial fills
 
                 o.totalQuantity(lastQ);
                 if (aot == AutoOrderType.BREACH_CUTTER) {
@@ -147,7 +143,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                                 o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
                                 "newID", devOrderMap.get(newID), "bid ask sprd last"
                                 , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", lastPrice,
-                                "attempts ", attempts.get(), getLivePos(symbol)), breachMDevOutput);
+                                "attempts ", attempts.get(), livePos), breachMDevOutput);
 
 
             } else if (orderState.status() == PendingCancel && devOrderMap.get(currentID).getOrder().tif() == IOC) {
@@ -155,7 +151,6 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 double lastPrice = BreachDevTrader.getLiveData(symbol);
                 double bid = BreachDevTrader.getBid(symbol);
                 double ask = BreachDevTrader.getAsk(symbol);
-
 
                 Order prevOrder = devOrderMap.get(currentID).getOrder();
                 Order o = new Order();
@@ -204,7 +199,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                                         devOrderMap.get(newID).isPrimaryOrder(),
                                 "current", devOrderMap.get(newID), "bid ask sp last"
                                 , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", lastPrice,
-                                "attempts ", attempts.get(), "currPos", getLivePos(symbol)), breachMDevOutput);
+                                "attempts ", attempts.get(), "currPos", livePos), breachMDevOutput);
             }
             idStatusMap.put(currentID, orderState.status());
         }
@@ -237,7 +232,10 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-        outputToError(str("ERROR:", "Guarantee Dev handler:", currentID, errorCode, errorMsg
+        outputToSymbolFile(devOrderMap.get(currentID).getSymbol(), str("Guarantee Dev Handler error",
+                "Code", errorCode, "msg", errorMsg), breachMDevOutput);
+
+        outputToError(str("ERROR:", "Guarantee Dev Handler:", currentID, errorCode, errorMsg
                 , devOrderMap.get(currentID)));
     }
 }
