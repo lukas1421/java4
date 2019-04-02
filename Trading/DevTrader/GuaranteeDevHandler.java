@@ -68,19 +68,19 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
         if (aot == AutoOrderType.BREACH_CUTTER) {
             if (lastQ != Math.abs(livePos)) {
                 outputToSpecial(str(LocalDateTime.now(), symbol, currentID,
-                        devOrderMap.get(currentID), "breach cutting, currPos changed, partial filled",
-                        "lastQ, currPos", lastQ, livePos));
+                        devOrderMap.get(currentID), "breach cutting, pos partialFill, lastQ, pos"
+                        , lastQ, livePos));
 
                 outputToSymbolFile(symbol, str(LocalDateTime.now(), currentID,
-                        devOrderMap.get(currentID), "breach cutting, pos changed"), breachMDevOutput);
+                        devOrderMap.get(currentID), "breach cutting, pos changed, lastQ, pos",
+                        lastQ, livePos), breachMDevOutput);
             }
         } else if (aot == AutoOrderType.BREACH_ADDER) {
             if (livePos != 0.0) {
                 outputToSpecial(str(LocalDateTime.now(), symbol, currentID,
-                        devOrderMap.get(currentID), "breach adding, currPos not 0"));
+                        devOrderMap.get(currentID), "breach adding, pos not 0"));
                 outputToSymbolFile(symbol, str(LocalDateTime.now(), currentID,
-                        devOrderMap.get(currentID),
-                        "breach adding, currPos not 0", "currPos", livePos), breachMDevOutput);
+                        devOrderMap.get(currentID), "breach adding, pos not 0:", livePos), breachMDevOutput);
             }
         }
 
