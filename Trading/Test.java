@@ -14,6 +14,11 @@ public class Test {
 
 
     public static void main(String[] args) {
+        double defaultSize = 500;
+        double livePos = 355;
 
+        double roundPos = Math.floor((defaultSize - Math.abs(livePos)) / 100d) * 100d;
+
+        pr(roundPos);
     }
 }

@@ -341,45 +341,6 @@ public class BreachMonthDevTrader implements LiveHandler, ApiController.IPositio
         }
     }
 
-    private static void weeklyCutter(Contract ct, double price, LocalDateTime t, double mOpen) {
-        String symbol = ibContractToSymbol(ct);
-        double pos = symbolPosMap.get(symbol);
-        boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
-        ZonedDateTime chinaZdt = ZonedDateTime.of(t, chinaZone);
-        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
-        LocalDateTime usLdt = usZdt.toLocalDateTime();
-        LocalTime uslt = usLdt.toLocalTime();
-        DayOfWeek wd = t.getDayOfWeek();
-
-        if (!liquidated && wd == DayOfWeek.FRIDAY && ltBtwn(uslt, 15, 30, 16, 0) && pos != 0.0) {
-            if (pos < 0.0 && price > mOpen) {
-                if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
-                    liquidatedMap.put(symbol, new AtomicBoolean(true));
-                    int id = devTradeID.incrementAndGet();
-                    Order o = placeBidLimitTIF(price, Math.abs(pos), IOC);
-                    devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_WEEKLY_CUTTER));
-                    apMonthDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apMonthDev));
-                    outputToSymbolFile(symbol, str("********", t), devOutput);
-                    outputToSymbolFile(symbol, str(o.orderId(), "weekly cutter BUY:",
-                            devOrderMap.get(id), "pos", pos, "mOpen", mOpen,
-                            "price", price), devOutput);
-                }
-            } else if (pos > 0.0 && price < mOpen) {
-                if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
-                    liquidatedMap.put(symbol, new AtomicBoolean(true));
-                    int id = devTradeID.incrementAndGet();
-                    Order o = placeOfferLimitTIF(price, pos, IOC);
-                    devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_WEEKLY_CUTTER));
-                    apMonthDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apMonthDev));
-                    outputToSymbolFile(symbol, str("********", t), devOutput);
-                    outputToSymbolFile(symbol, str(o.orderId(), "weekly cutter SELL:",
-                            devOrderMap.get(id), "pos", pos, "mOpen", mOpen,
-                            "price", price), devOutput);
-                }
-            }
-        }
-    }
-
 
     @Override
     public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
@@ -424,10 +385,13 @@ public class BreachMonthDevTrader implements LiveHandler, ApiController.IPositio
                     }
 
                 }
+                break;
             case BID:
                 bidMap.put(symbol, price);
+                break;
             case ASK:
                 askMap.put(symbol, price);
+                break;
         }
     }
 

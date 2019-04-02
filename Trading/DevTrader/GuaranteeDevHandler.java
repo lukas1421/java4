@@ -69,7 +69,8 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
         if (aot == AutoOrderType.BREACH_CUTTER) {
             if (lastQ != Math.abs(currPos)) {
                 outputToSpecial(str(LocalDateTime.now(), symbol, currentID,
-                        devOrderMap.get(currentID), "breach cutting, currPos changed, partial filled"));
+                        devOrderMap.get(currentID), "breach cutting, currPos changed, partial filled",
+                        "lastQ, currPos", lastQ, currPos));
 
                 outputToSymbolFile(symbol, str(LocalDateTime.now(), currentID,
                         devOrderMap.get(currentID),
@@ -81,7 +82,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                         devOrderMap.get(currentID), "breach adding, currPos not 0"));
                 outputToSymbolFile(symbol, str(LocalDateTime.now(), currentID,
                         devOrderMap.get(currentID),
-                        "breach adding, currPos not 0"), breachMDevOutput);
+                        "breach adding, currPos not 0", "currPos", currPos), breachMDevOutput);
             }
         }
 
@@ -119,9 +120,10 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                         o.totalQuantity(Math.abs(livePos));
                     }
                 } else if (aot == AutoOrderType.BREACH_ADDER) {
-                    if (getLivePos(symbol) != 0.0) {
-                        if (defaultSize > Math.abs(livePos)) {
-                            o.totalQuantity(defaultSize - Math.abs(livePos));
+                    if (livePos != 0.0) {
+                        if (defaultSize - Math.abs(livePos) > 100.0) {
+                            double roundPos = Math.floor((defaultSize - Math.abs(livePos)) / 100d) * 100d;
+                            o.totalQuantity(roundPos);
                         } else {
                             o.totalQuantity(0.0);
                         }
@@ -165,7 +167,6 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
                 o.orderType(OrderType.LMT);
 
-
                 o.totalQuantity(lastQ);
 
                 if (aot == AutoOrderType.BREACH_CUTTER) {
@@ -174,10 +175,11 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                     }
                 } else if (aot == AutoOrderType.BREACH_ADDER) {
                     if (livePos != 0.0) {
-                        if (defaultSize > Math.abs(livePos)) {
-                            o.totalQuantity(defaultSize - Math.abs(livePos));
+                        if (defaultSize - Math.abs(livePos) > 100.0) {
+                            double roundPos = Math.floor((defaultSize - Math.abs(livePos)) / 100d) * 100d;
+                            o.totalQuantity(roundPos);
                         } else {
-                            outputToSpecial(str(symbol, "live pos > defaultSize ", livePos, defaultSize
+                            outputToSpecial(str(symbol, "live pos - defaultSize < 100 ", livePos, defaultSize
                                     , currentID, prevOrder));
                             o.totalQuantity(0.0);
                         }
