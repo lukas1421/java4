@@ -974,6 +974,7 @@ public class Utility {
     }
 
     public static void outputToSymbolFile(String symbol, String msg, File detailed) {
+        pr("output", symbol, msg);
         if (!symbol.equals("")) {
             outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
         }

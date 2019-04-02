@@ -513,7 +513,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     "abs delta, ", Math.round(totalAbsDelta / 1000d) + "k",
                     "long/short", Math.round(longDelta / 1000d) + "k",
                     Math.round(shortDelta / 1000d) + "k");
-        }, 0, 10, TimeUnit.SECONDS);
+        }, 0, 1, TimeUnit.MINUTES);
     }
 }
 

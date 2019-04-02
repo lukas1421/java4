@@ -79,7 +79,7 @@ public class TradingUtility {
 
     public static Order placeOfferLimitTIF(double p, double quantity, Types.TimeInForce tif) {
         if (quantity <= 0) throw new IllegalStateException(" cannot have negative or 0 quantity");
-        System.out.println(" place offer limit " + p);
+        //System.out.println(" place offer limit " + p);
         Order o = new Order();
         o.action(Types.Action.SELL);
         o.lmtPrice(p);
@@ -92,7 +92,7 @@ public class TradingUtility {
 
     static Order placeShortSellLimitTIF(double p, double quantity, Types.TimeInForce tif) {
         if (quantity <= 0) throw new IllegalStateException(" cannot have negative or 0 quantity");
-        System.out.println(" place short sell " + p);
+        //System.out.println(" place short sell " + p);
         Order o = new Order();
         o.action(Types.Action.SSHORT);
         o.lmtPrice(p);
@@ -105,7 +105,7 @@ public class TradingUtility {
 
     public static Order placeBidLimitTIF(double p, double quantity, Types.TimeInForce tif) {
         if (quantity <= 0) throw new IllegalStateException(" cannot have 0 quantity ");
-        System.out.println(" place bid limit " + p);
+        //pr(" place bid limit " + p);
         Order o = new Order();
         o.action(Types.Action.BUY);
         o.lmtPrice(p);
@@ -117,7 +117,7 @@ public class TradingUtility {
     }
 
     public static Order buyAtOffer(double p, double quantity) {
-        System.out.println(" buy at offer " + p);
+        //System.out.println(" buy at offer " + p);
         Order o = new Order();
         o.action(Types.Action.BUY);
         o.lmtPrice(p);
@@ -128,7 +128,7 @@ public class TradingUtility {
     }
 
     public static Order sellAtBid(double p, double quantity) {
-        System.out.println(" sell at bid " + p);
+        //System.out.println(" sell at bid " + p);
         Order o = new Order();
         o.action(Types.Action.SELL);
         o.lmtPrice(p);
