@@ -65,6 +65,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
     private volatile static Map<String, Double> symbolPosMap = new ConcurrentSkipListMap<>(String::compareTo);
 
+    private static Map<String, Double> lastMap = new ConcurrentHashMap<>();
     private static Map<String, Double> bidMap = new ConcurrentHashMap<>();
     private static Map<String, Double> askMap = new ConcurrentHashMap<>();
     //private static volatile Map<String, AtomicBoolean> addingBlocked = new HashMap<>();
@@ -73,11 +74,15 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static volatile Map<String, AtomicBoolean> addedMap = new ConcurrentHashMap<>();
     private static volatile Map<String, AtomicBoolean> liquidatedMap = new ConcurrentHashMap<>();
 
-    static double getLiveData(String symb) {
-        if (liveData.containsKey(symb) && liveData.get(symb).size() > 0) {
-            return liveData.get(symb).lastEntry().getValue();
-        }
-        return 0.0;
+//    static double getLiveData(String symb) {
+//        if (liveData.containsKey(symb) && liveData.get(symb).size() > 0) {
+//            return liveData.get(symb).lastEntry().getValue();
+//        }
+//        return 0.0;
+//    }
+
+    static double getLast(String symb) {
+        return lastMap.getOrDefault(symb, 0.0);
     }
 
     static double getBid(String symb) {
@@ -412,6 +417,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         switch (tt) {
             case LAST:
                 liveData.get(symbol).put(t, price);
+                lastMap.put(symbol, price);
 
 //                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
 //                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),

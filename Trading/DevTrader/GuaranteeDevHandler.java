@@ -96,7 +96,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
             } else if (attempts.get() > MAX_ATTEMPTS) {
 
                 Contract ct = devOrderMap.get(currentID).getContract();
-                double lastPrice = BreachDevTrader.getLiveData(symbol);
+                double lastPrice = BreachDevTrader.getLast(symbol);
                 double bid = BreachDevTrader.getBid(symbol);
                 double ask = BreachDevTrader.getAsk(symbol);
 
@@ -147,7 +147,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
             } else if (orderState.status() == PendingCancel && devOrderMap.get(currentID).getOrder().tif() == IOC) {
                 Contract ct = devOrderMap.get(currentID).getContract();
-                double lastPrice = BreachDevTrader.getLiveData(symbol);
+                double lastPrice = BreachDevTrader.getLast(symbol);
                 double bid = BreachDevTrader.getBid(symbol);
                 double ask = BreachDevTrader.getAsk(symbol);
 

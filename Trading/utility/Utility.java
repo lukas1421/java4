@@ -991,7 +991,8 @@ public class Utility {
 //            outputDetailedGen(LocalDateTime.now().toString()
 //                    , new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
 //        }
-        outputDetailedGen(LocalDateTime.now().toString(), new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
+        outputDetailedGen(LocalDateTime.now().toString(),
+                new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
         outputDetailedGen(msg, new File(TradingConstants.GLOBALPATH + symbol + ".txt"));
     }
 

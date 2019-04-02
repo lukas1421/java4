@@ -561,9 +561,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         reqHoldings(ap);
         getXINA50Index(ap);
 
-
         breachUSNamesData();
-
 
         AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
         ap.reqAccountSummary("All", tags, new ApiController.IAccountSummaryHandler.AccountInfoHandler());
