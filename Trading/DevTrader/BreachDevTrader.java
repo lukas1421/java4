@@ -293,10 +293,10 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
         if (!added && !liquidated && pos == 0.0 && prevClose != 0.0 && totalAbsDelta < ABS_LIMIT) {
 
-            pr(t.format(f1), "breach adder", symbol, "pos", pos, "prevC", prevClose,
-                    "price", price, "yOpen", yOpen, "mOpen", mOpen, "devFromMaxOpen",
-                    r10000(price / Math.max(yOpen, mOpen) - 1), "devFromMin",
-                    r10000(price / Math.min(yOpen, mOpen) - 1));
+//            pr(t.format(f1), "breach adder", symbol, "pos", pos, "prevC", prevClose,
+//                    "price", price, "yOpen", yOpen, "mOpen", mOpen, "devFromMaxOpen",
+//                    r10000(price / Math.max(yOpen, mOpen) - 1), "devFromMin",
+//                    r10000(price / Math.min(yOpen, mOpen) - 1));
 
             if (price > yOpen && price > mOpen && totalDelta < HI_LIMIT
                     && ((price / Math.max(yOpen, mOpen) - 1) < 0.02)) {
@@ -445,18 +445,18 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
                             fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
 
-                    if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
-                        //pr(symbol, liveData.get(symbol));
-                        pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,
-                                "yStart:" + yStartDate + " " + yStart
-                                        + "(" + Math.round(1000d * (price / yStart - 1)) / 10d + "%)"
-                                , "mStart:" + mStartDate + " " + mStart
-                                        + "(" + Math.round(1000d * (price / mStart - 1)) / 10d + "%)",
-                                "Last:", liveData.get(symbol).lastKey().format(f1) + " " + price
-                                , pos != 0.0 ? ("Delta:" + deltaDisplay
-                                        + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
-                                        + "%)" : "")) : "");
-                    }
+//                    if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
+//                        //pr(symbol, liveData.get(symbol));
+//                        pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,
+//                                "yStart:" + yStartDate + " " + yStart
+//                                        + "(" + Math.round(1000d * (price / yStart - 1)) / 10d + "%)"
+//                                , "mStart:" + mStartDate + " " + mStart
+//                                        + "(" + Math.round(1000d * (price / mStart - 1)) / 10d + "%)",
+//                                "Last:", liveData.get(symbol).lastKey().format(f1) + " " + price
+//                                , pos != 0.0 ? ("Delta:" + deltaDisplay
+//                                        + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
+//                                        + "%)" : "")) : "");
+//                    }
                 }
                 break;
             case BID:
