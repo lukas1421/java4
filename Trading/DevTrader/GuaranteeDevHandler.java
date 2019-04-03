@@ -138,7 +138,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                                 "MAX ATTEMPTS EXCEEDED, Switch to PatientDev:"
                                 , devOrderMap.get(newID).getOrderType(),
                                 o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
-                                "new Order:", devOrderMap.get(newID), "bid ask sprd last"
+                                devOrderMap.get(newID), "bid ask sprd last"
                                 , bid, ask, Math.round(10000d * (ask / bid - 1)) + "bp", lastPrice,
                                 "attempts ", attempts.get(), "pos", livePos), breachMDevOutput);
 
@@ -190,10 +190,10 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 outputToSymbolFile(devOrderMap.get(primaryID).getSymbol(),
                         str(devOrderMap.get(primaryID).getOrder().orderId(),
                                 prevOrder.orderId(), "->", o.orderId(), "ID", currentID, "->", newID,
-                                "BREACH RESUBMIT:", devOrderMap.get(newID).getOrderType(),
+                                "RESUBMIT:", devOrderMap.get(newID).getOrderType(),
                                 o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
-                                "current", devOrderMap.get(newID), "bid ask sp last"
-                                , bid, ask, Math.round(10000d * (ask / bid - 1)), "bp", lastPrice,
+                                devOrderMap.get(newID), "bid ask sp last"
+                                , bid, ask, Math.round(10000d * (ask / bid - 1)) + "bp", lastPrice,
                                 "attempts ", attempts.get(), "pos:", livePos), breachMDevOutput);
             }
             idStatusMap.put(currentID, orderState.status());
