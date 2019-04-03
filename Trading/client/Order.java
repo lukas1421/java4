@@ -1376,6 +1376,6 @@ public class Order {
     }
 
     public String toString() {
-        return Utility.str(m_orderId, m_action, m_tif, m_orderType, m_totalQuantity, "at", m_lmtPrice);
+        return Utility.str(m_orderId, m_action, m_tif, m_orderType, m_totalQuantity, m_lmtPrice);
     }
 }

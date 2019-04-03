@@ -68,11 +68,11 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
         if (aot == AutoOrderType.BREACH_CUTTER) {
             if (lastQ != Math.abs(livePos)) {
                 outputToSpecial(str(LocalDateTime.now(), symbol, currentID,
-                        devOrderMap.get(currentID), "breach cutting, pos partialFill, lastQ, pos"
+                        devOrderMap.get(currentID), "breach cutting, pos partialFill, lastQ, livePos"
                         , lastQ, livePos));
 
                 outputToSymbolFile(symbol, str(LocalDateTime.now(), currentID,
-                        devOrderMap.get(currentID), "breach cutting, pos changed, lastQ, pos",
+                        devOrderMap.get(currentID), "breach cutting, pos changed, lastQ, livePos",
                         lastQ, livePos), breachMDevOutput);
             }
         } else if (aot == AutoOrderType.BREACH_ADDER) {
@@ -94,12 +94,10 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 outputToSymbolFile(devOrderMap.get(primaryID).getSymbol(), msg, breachMDevOutput);
 
             } else if (attempts.get() > MAX_ATTEMPTS) {
-
                 Contract ct = devOrderMap.get(currentID).getContract();
                 double lastPrice = BreachDevTrader.getLast(symbol);
                 double bid = BreachDevTrader.getBid(symbol);
                 double ask = BreachDevTrader.getAsk(symbol);
-
 
                 Order prevOrder = devOrderMap.get(currentID).getOrder();
                 Order o = new Order();
@@ -230,10 +228,11 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
     @Override
     public void handle(int errorCode, String errorMsg) {
-        outputToSymbolFile(devOrderMap.get(currentID).getSymbol(), str("Guarantee Dev Handler error",
-                "Code", errorCode, "msg", errorMsg), breachMDevOutput);
-
-        outputToError(str("ERROR:", "Guarantee Dev Handler:", currentID, errorCode, errorMsg
+        if (errorCode != 202 && errorCode != 2109) { //exclude order cancelled
+            outputToSymbolFile(devOrderMap.get(currentID).getSymbol(), str("Guarantee Dev Handler error",
+                    "Code", errorCode, "msg", errorMsg), breachMDevOutput);
+        }
+        outputToError(str("ERROR Guarantee Dev Handler:", currentID, errorCode, errorMsg
                 , devOrderMap.get(currentID)));
     }
 }

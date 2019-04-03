@@ -1,11 +1,9 @@
 package DevTrader;
 
+import client.*;
 import enums.Currency;
 import api.TradingConstants;
 import auxiliary.SimpleBar;
-import client.Contract;
-import client.TickType;
-import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
 import handler.LiveHandler;
@@ -28,7 +26,7 @@ import java.util.stream.Collectors;
 import static utility.TradingUtility.gettingActiveContract;
 import static utility.Utility.*;
 
-public class BreachMonitor implements LiveHandler, ApiController.IPositionHandler {
+public class BreachMonitor implements LiveHandler, ApiController.IPositionHandler, ApiController.ITradeReportHandler {
 
     private static final DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d");
     private static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:ss");
@@ -160,10 +158,17 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
         pr(" Time after latch released " + LocalTime.now());
         reqHoldings(ap);
+        getExecs(ap);
     }
 
     private void reqHoldings(ApiController ap) {
         ap.reqPositions(this);
+    }
+
+    private void getExecs(ApiController ap) {
+        //uniqueTradeKeySet = new HashSet<>();
+        //tradesMap.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
+        ap.reqExecutions(new ExecutionFilter(), this);
     }
 
     //positions
@@ -406,9 +411,29 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         return 0.0;
     }
 
+    @Override
+    public void tradeReport(String tradeKey, Contract contract, Execution execution) {
+
+        pr("bm trade report", tradeKey, ibContractToSymbol(contract),
+                execution.shares(), execution.price(), (execution.side().equals("BOT")) ? "BOT" : "SOLD",
+                LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss")));
+
+    }
+
+    @Override
+    public void tradeReportEnd() {
+
+    }
+
+    @Override
+    public void commissionReport(String tradeKey, CommissionReport commissionReport) {
+
+    }
+
     public static void main(String[] args) {
         BreachMonitor bm = new BreachMonitor();
         bm.getFromIB();
+
 
         ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
         es.scheduleAtFixedRate(() -> {
@@ -440,24 +465,26 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                     Math.round(shortDelta / 1000d) + "k");
         }, 15, 15, TimeUnit.SECONDS);
 
-        es.scheduleAtFixedRate(() -> {
-            for (String symbol : symbolPosMap.keySet()) {
-                Map<LocalDate, Double> m1 = ytdDayData.get(symbol).entrySet().stream()
-                        .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
-                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getClose(), (a, b) -> a,
-                                TreeMap::new));
-                Map<LocalDate, Double> benchMap = ytdDayData.get("QQQ").entrySet().stream()
-                        .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
-                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getClose(), (a, b) -> a,
-                                TreeMap::new));
-
-                if (m1.size() != 0 && benchMap.size() != 0 && m1.size() == benchMap.size()) {
-                    pr(symbol, "QQQ");
-                    pr(r(utility.VarCorrUtility.getCorrelation(m1, benchMap)));
-                } else {
-                    pr("map size diff ", symbol, "QQQ", m1.size(), benchMap.size());
-                }
-            }
-        }, 10, 60, TimeUnit.SECONDS);
+//        es.scheduleAtFixedRate(() -> {
+//            for (String symbol : symbolPosMap.keySet()) {
+//                Map<LocalDate, Double> m1 = ytdDayData.get(symbol).entrySet().stream()
+//                        .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
+//                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getClose(), (a, b) -> a,
+//                                TreeMap::new));
+//                Map<LocalDate, Double> benchMap = ytdDayData.get("QQQ").entrySet().stream()
+//                        .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
+//                        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().getClose(), (a, b) -> a,
+//                                TreeMap::new));
+//
+//                if (m1.size() != 0 && benchMap.size() != 0 && m1.size() == benchMap.size()) {
+//                    pr(symbol, "QQQ");
+//                    pr(r(utility.VarCorrUtility.getCorrelation(m1, benchMap)));
+//                } else {
+//                    pr("map size diff ", symbol, "QQQ", m1.size(), benchMap.size());
+//                }
+//            }
+//        }, 10, 60, TimeUnit.SECONDS);
     }
+
+
 }
