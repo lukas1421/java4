@@ -7,7 +7,6 @@ import util.AutoOrderType;
 
 import java.io.File;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -230,7 +229,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
     public void handle(int errorCode, String errorMsg) {
         if (errorCode != 202 && errorCode != 2109) { //exclude order cancelled
             outputToSymbolFile(devOrderMap.get(currentID).getSymbol(), str("Guarantee Dev Handler error",
-                    "Code", errorCode, "msg", errorMsg), breachMDevOutput);
+                    "Code", errorCode, errorMsg), breachMDevOutput);
         }
         outputToError(str("ERROR Guarantee Dev Handler:", currentID, errorCode, errorMsg
                 , devOrderMap.get(currentID)));
