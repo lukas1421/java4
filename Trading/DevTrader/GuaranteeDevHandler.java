@@ -55,7 +55,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
             throw new IllegalStateException(" dev id order map doesn't contain ID" + currentID);
         }
 
-        devOrderMap.get(currentID).setFinalActionTime(LocalDateTime.now());
+        //devOrderMap.get(currentID).setFinalActionTime(LocalDateTime.now());
         devOrderMap.get(currentID).setAugmentedOrderStatus(orderState.status());
 
         double lastQ = devOrderMap.get(currentID).getOrder().totalQuantity();

@@ -5,6 +5,8 @@ import java.net.*;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 
@@ -13,11 +15,14 @@ import static utility.Utility.pr;
 public class Test {
 
     public static void main(String[] args) {
-        double defaultSize = 500;
-        double livePos = 355;
 
-        double roundPos = Math.floor((defaultSize - Math.abs(livePos)) / 100d) * 100d;
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> System.out.println("Shutdown Hook is running !")));
+        System.out.println("Application Terminating ...");
 
-        pr(roundPos);
+
+        new ScheduledThreadPoolExecutor(1)
+                .schedule(() -> System.exit(0), 20, TimeUnit.SECONDS);
+
+
     }
 }
