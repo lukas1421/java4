@@ -41,13 +41,13 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
     @Override
     public void orderState(OrderState orderState) {
         globalIdOrderMap.get(defaultID).setAugmentedOrderStatus(orderState.status());
-        globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
+//        globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
 
         if (orderState.status() == OrderStatus.Filled) {
 //            filledOrderSingleOutput.put(defaultID, new AtomicBoolean(true));
 
             if (!filledOrdersSet.contains(defaultID)) {
-                globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
+//                globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
                 String msg = str(LocalTime.now().truncatedTo(ChronoUnit.SECONDS),
                         "||Order||", defaultID, globalIdOrderMap.get(defaultID), orderState.status());
                 XuTraderHelper.outputDetailedXU(globalIdOrderMap.get(defaultID).getSymbol(), msg);
@@ -71,7 +71,7 @@ public class InventoryOrderHandler implements ApiController.IOrderHandler {
             }
             System.out.println(" order state filled ends");
         } else if (orderState.status() == OrderStatus.Cancelled || orderState.status() == OrderStatus.ApiCancelled) {
-            globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
+//            globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
             String msg = str(" order cancelled ", defaultID,
                     AutoTraderMain.globalIdOrderMap.get(defaultID).getOrder().orderId(),
                     AutoTraderMain.globalIdOrderMap.get(defaultID).getOrder());

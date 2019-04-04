@@ -35,7 +35,7 @@ public class GuaranteeHKHandler implements ApiController.IOrderHandler {
         LocalDateTime ldtNow = LocalDateTime.now();
         String symbol = "";
         if (globalIdOrderMap.containsKey(defaultID)) {
-            globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
+//            globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
             globalIdOrderMap.get(defaultID).setAugmentedOrderStatus(orderState.status());
             symbol = globalIdOrderMap.get(defaultID).getSymbol();
         } else {

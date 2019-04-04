@@ -119,7 +119,7 @@ public class AutoTraderMain extends JPanel {
                         if ((sta != Filled) && (sta != PendingCancel) && (sta != Cancelled) &&
                                 (sta != DeadlineCancelled)) {
                             apcon.cancelOrder(e.getValue().getOrder().orderId());
-                            e.getValue().setFinalActionTime(LocalDateTime.now());
+                            //e.getValue().setFinalActionTime(LocalDateTime.now());
                             e.getValue().setAugmentedOrderStatus(OrderStatus.DeadlineCancelled);
                             outputToAll(str(now, " Cancel ALL after deadline ",
                                     e.getValue().getOrder().orderId(), e.getValue().getSymbol(),
@@ -482,7 +482,7 @@ public class AutoTraderMain extends JPanel {
                         if ((sta != Filled) && (sta != PendingCancel) && (sta != Cancelled) &&
                                 (sta != DeadlineCancelled)) {
                             apcon.cancelOrder(e.getValue().getOrder().orderId());
-                            e.getValue().setFinalActionTime(LocalDateTime.now());
+                            //.getValue().setFinalActionTime(LocalDateTime.now());
                             e.getValue().setAugmentedOrderStatus(OrderStatus.DeadlineCancelled);
                             String msg = str(now, " Cancel after deadline ",
                                     e.getValue().getOrder().orderId(), "status CHG:",

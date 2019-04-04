@@ -524,9 +524,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         Runtime.getRuntime().addShutdownHook(new Thread(() -> devOrderMap.forEach((k, v) -> {
             if (v.getAugmentedOrderStatus() != OrderStatus.Filled &&
                     v.getAugmentedOrderStatus() != OrderStatus.PendingCancel) {
-                outputToSymbolFile(v.getSymbol(), str("closing VM",
-                        LocalDateTime.now().format(f1)
-                        , "Order not filled nor cancelled", v), devOutput);
+                outputToSymbolFile(v.getSymbol(), str("Shutdown status",
+                        LocalDateTime.now().format(f1), v.getAugmentedOrderStatus(), v), devOutput);
             }
         })));
     }

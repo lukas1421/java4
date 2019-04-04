@@ -54,7 +54,7 @@ public class AutoOrderDefaultHandler implements ApiController.IOrderHandler {
         }
 
         if (globalIdOrderMap.containsKey(defaultID)) {
-            globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
+            //globalIdOrderMap.get(defaultID).setFinalActionTime(LocalDateTime.now());
             globalIdOrderMap.get(defaultID).setAugmentedOrderStatus(orderState.status());
         } else {
             throw new IllegalStateException(" global id order map doesn't " +

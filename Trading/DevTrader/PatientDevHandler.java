@@ -33,7 +33,7 @@ public class PatientDevHandler implements ApiController.IOrderHandler {
     public void orderState(OrderState orderState) {
         LocalDateTime now = LocalDateTime.now();
         if (devOrderMap.containsKey(tradeID)) {
-            devOrderMap.get(tradeID).setFinalActionTime(LocalDateTime.now());
+//            devOrderMap.get(tradeID).setFinalActionTime(LocalDateTime.now());
             devOrderMap.get(tradeID).setAugmentedOrderStatus(orderState.status());
         } else {
             throw new IllegalStateException(" global id order map doesn't contain ID" + tradeID);
