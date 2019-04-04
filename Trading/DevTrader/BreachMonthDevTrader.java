@@ -427,5 +427,4 @@ public class BreachMonthDevTrader implements LiveHandler, ApiController.IPositio
                     "current total delta:", Math.round(totalDelta / 1000d) + "k");
         }, 0, 10, TimeUnit.SECONDS);
     }
-
 }

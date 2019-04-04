@@ -134,7 +134,6 @@ public class OrderAugmented {
 
     @Override
     public String toString() {
-        return str(ibContractToSymbol(contract), "T:", orderTime,
-                "Order:", order, "Type:", orderType, "Status:", augmentedOrderStatus, "||");
+        return str(ibContractToSymbol(contract), orderTime, order, orderType, augmentedOrderStatus, "||");
     }
 }
