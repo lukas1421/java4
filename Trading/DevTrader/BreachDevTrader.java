@@ -47,9 +47,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
     private static File devOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
-    private static final double HI_LIMIT = 2500000.0;
-    private static final double LO_LIMIT = -2500000.0;
-    private static final double ABS_LIMIT = 3500000.0;
+    private static final double HI_LIMIT = 3000000.0;
+    private static final double LO_LIMIT = -3000000.0;
+    private static final double ABS_LIMIT = 4000000.0;
 
     public static Map<Currency, Double> fx = new HashMap<>();
     private static Map<String, Double> multi = new HashMap<>();
