@@ -18,6 +18,7 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import static client.Types.TimeInForce.*;
 import static util.AutoOrderType.*;
@@ -521,13 +522,16 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     Math.round(shortDelta / 1000d) + "k");
         }, 0, 1, TimeUnit.MINUTES);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> devOrderMap.forEach((k, v) -> {
-            if (v.getAugmentedOrderStatus() != OrderStatus.Filled &&
-                    v.getAugmentedOrderStatus() != OrderStatus.PendingCancel) {
-                outputToSymbolFile(v.getSymbol(), str("Shutdown status",
-                        LocalDateTime.now().format(f1), v.getAugmentedOrderStatus(), v), devOutput);
-            }
-        })));
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            pr("closing hook ");
+            devOrderMap.forEach((k, v) -> {
+                if (v.getAugmentedOrderStatus() != OrderStatus.Filled &&
+                        v.getAugmentedOrderStatus() != OrderStatus.PendingCancel) {
+                    outputToSymbolFile(v.getSymbol(), str("Shutdown status",
+                            LocalDateTime.now().format(f1), v.getAugmentedOrderStatus(), v), devOutput);
+                }
+            });
+        }));
     }
 }
 
