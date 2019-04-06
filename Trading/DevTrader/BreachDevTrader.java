@@ -18,7 +18,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 
 import static client.Types.TimeInForce.*;
 import static util.AutoOrderType.*;

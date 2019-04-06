@@ -5,6 +5,7 @@ import net.bytebuddy.pool.TypePool;
 import util.AutoOrderType;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -21,6 +22,7 @@ public class OrderAugmented {
     private final AutoOrderType orderType;
     private OrderStatus augmentedOrderStatus;
     private AtomicBoolean primaryOrder = new AtomicBoolean(false);
+    private static DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d H:mm:ss.SSS");
 
 
     public OrderAugmented(Contract ct, LocalDateTime t, Order o, String m, AutoOrderType tt) {
@@ -30,7 +32,6 @@ public class OrderAugmented {
         msg = m;
         orderType = tt;
         augmentedOrderStatus = OrderStatus.Created;
-        //finalActionTime = LocalDateTime.MIN;
         primaryOrder.set(true);
     }
 
@@ -41,7 +42,6 @@ public class OrderAugmented {
         msg = "";
         orderType = tt;
         augmentedOrderStatus = OrderStatus.Created;
-        //finalActionTime = LocalDateTime.MIN;
         primaryOrder.set(true);
     }
 
@@ -52,7 +52,6 @@ public class OrderAugmented {
         msg = "";
         orderType = tt;
         augmentedOrderStatus = OrderStatus.Created;
-        //finalActionTime = LocalDateTime.MIN;
         primaryOrder.set(primary);
     }
 
@@ -88,7 +87,6 @@ public class OrderAugmented {
         msg = "";
         orderType = AutoOrderType.UNKNOWN;
         augmentedOrderStatus = OrderStatus.Created;
-        //finalActionTime = LocalDateTime.MIN;
         primaryOrder.set(true);
     }
 
@@ -119,10 +117,6 @@ public class OrderAugmented {
         return orderType;
     }
 
-//    public void setFinalActionTime(LocalDateTime t) {
-//        finalActionTime = t;
-//    }
-
     public void setAugmentedOrderStatus(OrderStatus s) {
         augmentedOrderStatus = s;
     }
@@ -133,6 +127,7 @@ public class OrderAugmented {
 
     @Override
     public String toString() {
-        return str(ibContractToSymbol(contract), orderTime, order, orderType, augmentedOrderStatus);
+        return str(ibContractToSymbol(contract),
+                orderTime.format(f), order, orderType, augmentedOrderStatus);
     }
 }
