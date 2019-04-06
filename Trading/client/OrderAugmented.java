@@ -9,20 +9,19 @@ import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static DevTrader.BreachDevTrader.f3;
 import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.str;
 
 public class OrderAugmented {
 
     private Contract contract;
-    //private String symbol;
     private final LocalDateTime orderTime;
     private Order order;
     private String msg;
     private final AutoOrderType orderType;
     private OrderStatus augmentedOrderStatus;
     private AtomicBoolean primaryOrder = new AtomicBoolean(false);
-    private static DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d H:mm:ss.SSS");
 
 
     public OrderAugmented(Contract ct, LocalDateTime t, Order o, String m, AutoOrderType tt) {
@@ -128,6 +127,6 @@ public class OrderAugmented {
     @Override
     public String toString() {
         return str(ibContractToSymbol(contract),
-                orderTime.format(f), order, orderType, augmentedOrderStatus);
+                orderTime.format(f3), order, orderType, augmentedOrderStatus);
     }
 }

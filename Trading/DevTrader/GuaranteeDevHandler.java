@@ -190,9 +190,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 outputToSymbolFile(devOrderMap.get(primaryID).getSymbol(),
                         str(devOrderMap.get(primaryID).getOrder().orderId(),
                                 prevOrder.orderId(), "->", o.orderId(), "ID", currentID, "->", newID,
-                                "RESUBMIT:", devOrderMap.get(newID).getOrderType(),
-                                o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
-                                devOrderMap.get(newID), "bid ask sp last"
+                                "RESUBMIT:", devOrderMap.get(newID), "bid ask sprd last"
                                 , bid, ask, Math.round(10000d * (ask / bid - 1)) + "bp", lastPrice,
                                 "attempts ", attempts.get(), "pos:", livePos), breachMDevOutput);
             }

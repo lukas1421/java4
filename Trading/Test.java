@@ -15,8 +15,9 @@ import java.util.regex.Matcher;
 import static utility.Utility.pr;
 
 public class Test {
-    private static DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d H:mm:ss:SSS");
+    public static final DateTimeFormatter f3 = DateTimeFormatter.ofPattern("M-d H:mm:s.SSSS");
+    //private static DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d H:mm:ss:SSS");
     public static void main(String[] args) {
-        pr(LocalDateTime.now().format(f));
+        pr(LocalDateTime.now().format(f3));
     }
 }

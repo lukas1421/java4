@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static DevTrader.BreachDevTrader.devOrderMap;
+import static DevTrader.BreachDevTrader.f3;
 import static utility.TradingUtility.outputToError;
 import static utility.Utility.outputToSymbolFile;
 import static client.OrderStatus.Filled;
@@ -42,10 +43,8 @@ public class PatientDevHandler implements ApiController.IOrderHandler {
         if (orderState.status() != idStatusMap.get(tradeID)) {
             if (orderState.status() == Filled) {
                 String msg = Utility.str(devOrderMap.get(tradeID).getOrder().orderId(),
-                        devOrderMap.get(tradeID).getOrder().orderId(),
-                        "*PATIENT DEV FILL*", idStatusMap.get(tradeID), "->", orderState.status(), now,
-                        "ID:", tradeID, devOrderMap.get(tradeID),
-                        "TIF:", devOrderMap.get(tradeID).getOrder().tif());
+                        tradeID, "*PATIENT DEV FILL*", idStatusMap.get(tradeID), "->", orderState.status(),
+                        now.format(f3), devOrderMap.get(tradeID));
                 outputToSymbolFile(devOrderMap.get(tradeID).getSymbol(), msg, breachMDevOutput);
             }
             idStatusMap.put(tradeID, orderState.status());
