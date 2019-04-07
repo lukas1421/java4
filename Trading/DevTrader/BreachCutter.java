@@ -235,7 +235,6 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
                     double yearOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
                     double monthOpen = ytdDayData.get(symbol).ceilingEntry(LAST_MONTH_DAY).getValue().getClose();
-                    LocalDate lastKey = ytdDayData.get(symbol).lastKey();
 
                     double yDev = Math.round((price / yearOpen - 1) * 1000d) / 10d;
                     double mDev = Math.round((price / monthOpen - 1) * 1000d) / 10d;

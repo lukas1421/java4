@@ -26,11 +26,9 @@ import static utility.Utility.*;
 
 public class BreachDevTrader implements LiveHandler, ApiController.IPositionHandler {
 
-
     static final int MAX_ATTEMPTS = 100;
     static volatile NavigableMap<Integer, OrderAugmented> devOrderMap = new ConcurrentSkipListMap<>();
     static volatile AtomicInteger devTradeID = new AtomicInteger(100);
-
 
     private static DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d H:mm:ss");
     private static final DateTimeFormatter f1 = DateTimeFormatter.ofPattern("M-d H:mm");
@@ -46,9 +44,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
     private static File devOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
-    private static final double HI_LIMIT = 3000000.0;
-    private static final double LO_LIMIT = -3000000.0;
-    private static final double ABS_LIMIT = 4000000.0;
+    private static final double HI_LIMIT = 4000000.0;
+    private static final double LO_LIMIT = -4000000.0;
+    private static final double ABS_LIMIT = 5000000.0;
 
     public static Map<Currency, Double> fx = new HashMap<>();
     private static Map<String, Double> multi = new HashMap<>();
@@ -68,18 +66,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     private static Map<String, Double> lastMap = new ConcurrentHashMap<>();
     private static Map<String, Double> bidMap = new ConcurrentHashMap<>();
     private static Map<String, Double> askMap = new ConcurrentHashMap<>();
-    //private static volatile Map<String, AtomicBoolean> addingBlocked = new HashMap<>();
-    //private static volatile Map<String, AtomicBoolean> cuttingBlocked = new HashMap<>();
-    //private static volatile Map<String, AtomicBoolean> tradingBlocked = new HashMap<>();
     private static volatile Map<String, AtomicBoolean> addedMap = new ConcurrentHashMap<>();
     private static volatile Map<String, AtomicBoolean> liquidatedMap = new ConcurrentHashMap<>();
-
-//    static double getLiveData(String symb) {
-//        if (liveData.containsKey(symb) && liveData.get(symb).size() > 0) {
-//            return liveData.get(symb).lastEntry().getValue();
-//        }
-//        return 0.0;
-//    }
 
     static double getLast(String symb) {
         return lastMap.getOrDefault(symb, 0.0);
@@ -92,7 +80,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     static double getAsk(String symb) {
         return askMap.getOrDefault(symb, 0.0);
     }
-
 
     private BreachDevTrader() {
         String line;
@@ -115,7 +102,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         } catch (IOException x) {
             x.printStackTrace();
         }
-
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "defaultNonUSSize.txt")))) {
@@ -225,7 +211,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         }
         outputToSpecial(str(LocalTime.now(), " get live pos from breach dev not found ", symb));
         return 0.0;
-        //throw new IllegalStateException(" not ")
     }
 
     @Override
@@ -294,7 +279,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
         boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
         boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
-        //double devFromMonthOpen = price / mOpen - 1;
 
         if (!added && !liquidated && pos == 0.0 && prevClose != 0.0 && totalAbsDelta < ABS_LIMIT) {
 
@@ -441,16 +425,15 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                         breachAdder(ct, price, t, yStart, mStart);
                     }
 
-                    double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
-
-                    boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
-                    boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
-
-                    double delta = getDelta(ct, price, pos, fx.getOrDefault(Currency.get(ct.currency()), 1.0));
-
-                    String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
-                            fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
-
+//                    double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
+//
+//                    boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
+//                    boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
+//
+//                    double delta = getDelta(ct, price, pos, fx.getOrDefault(Currency.get(ct.currency()), 1.0));
+//
+//                    String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
+//                            fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
 //                    if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
 //                        //pr(symbol, liveData.get(symbol));
 //                        pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,

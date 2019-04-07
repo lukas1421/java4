@@ -51,11 +51,10 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
     public void orderState(OrderState orderState) {
         LocalDateTime now = LocalDateTime.now();
         if (!devOrderMap.containsKey(currentID)) {
-            outputToSpecial(" dev id order map doesn't contain ID" + currentID);
-            throw new IllegalStateException(" dev id order map doesn't contain ID" + currentID);
+            outputToSpecial("dev id order map doesn't contain ID" + currentID);
+            throw new IllegalStateException("dev id order map doesn't contain ID" + currentID);
         }
 
-        //devOrderMap.get(currentID).setFinalActionTime(LocalDateTime.now());
         devOrderMap.get(currentID).setAugmentedOrderStatus(orderState.status());
 
         double lastQ = devOrderMap.get(currentID).getOrder().totalQuantity();
@@ -76,9 +75,9 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
             }
         } else if (aot == AutoOrderType.BREACH_ADDER) {
             if (livePos != 0.0) {
-                outputToSpecial(str(LocalDateTime.now(), symbol, currentID,
+                outputToSpecial(str(LocalDateTime.now().format(f2), symbol, currentID,
                         devOrderMap.get(currentID), "breach adding, pos not 0"));
-                outputToSymbolFile(symbol, str(LocalDateTime.now(), currentID,
+                outputToSymbolFile(symbol, str(LocalDateTime.now().format(f2), currentID,
                         devOrderMap.get(currentID), "breach adding, pos not 0:", livePos), breachMDevOutput);
             }
         }
@@ -136,9 +135,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                         str(devOrderMap.get(primaryID).getOrder().orderId(),
                                 prevOrder.orderId(), "->", o.orderId(), "ID", currentID, "->", newID,
                                 "MAX ATTEMPTS EXCEEDED, Switch to PatientDev:"
-                                , devOrderMap.get(newID).getOrderType(),
-                                o.tif(), o.action(), o.lmtPrice(), o.totalQuantity(),
-                                devOrderMap.get(newID), "bid ask sprd last"
+                                , devOrderMap.get(newID), "b/a sprd last"
                                 , bid, ask, Math.round(10000d * (ask / bid - 1)) + "bp", lastPrice,
                                 "attempts ", attempts.get(), "pos", livePos), breachMDevOutput);
 
