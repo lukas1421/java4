@@ -34,8 +34,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
     private static DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d H:mm:ss");
     private static final DateTimeFormatter f1 = DateTimeFormatter.ofPattern("M-d H:mm");
-    private static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s");
-    public static final DateTimeFormatter f3 = DateTimeFormatter.ofPattern("M-d H:mm:s.SSS");
+    public static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s.SSS");
 
     private static double totalDelta = 0.0;
     private static double totalAbsDelta = 0.0;
@@ -531,6 +530,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                             LocalDateTime.now().format(f1), v.getAugmentedOrderStatus(), v), devOutput);
                 }
             });
+            apDev.cancelAllOrders();
         }));
     }
 }

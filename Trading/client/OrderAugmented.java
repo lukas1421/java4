@@ -1,15 +1,12 @@
 package client;
 
 import TradeType.FutureTrade;
-import net.bytebuddy.pool.TypePool;
 import util.AutoOrderType;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static DevTrader.BreachDevTrader.f3;
+import static DevTrader.BreachDevTrader.f2;
 import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.str;
 
@@ -126,7 +123,6 @@ public class OrderAugmented {
 
     @Override
     public String toString() {
-        return str(ibContractToSymbol(contract),
-                orderTime.format(f3), order, orderType, augmentedOrderStatus);
+        return str(ibContractToSymbol(contract), orderTime.format(f2), order, orderType, augmentedOrderStatus);
     }
 }

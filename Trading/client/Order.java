@@ -7,6 +7,8 @@ import utility.Utility;
 
 import java.util.ArrayList;
 
+import static utility.Utility.str;
+
 public class Order {
 
     final public static int CUSTOMER = 0;
@@ -1376,6 +1378,6 @@ public class Order {
     }
 
     public String toString() {
-        return Utility.str(m_orderId, m_action, m_tif, m_orderType, m_totalQuantity, m_lmtPrice);
+        return str(m_orderId, m_action, m_tif, m_orderType, m_totalQuantity, m_lmtPrice);
     }
 }

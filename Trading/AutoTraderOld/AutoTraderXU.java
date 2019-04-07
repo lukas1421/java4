@@ -4173,12 +4173,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
     //live
     @Override
     public void handle(int orderId, int errorCode, String errorMsg) {
-        //outputDetailedXU(symbol,str("ERROR LIVE ID:", orderId, "code", errorCode, "MSG", errorMsg));
-        TradingUtility.outputToError(str("ERROR LIVE ORDER HANDLER ID:"
-                , LocalTime.now(), orderId, "code", errorCode, "MSG", errorMsg));
-
-        if (errorCode != 504 || LocalTime.now().getSecond() < 5) {
-            updateLog(" handle error code " + errorCode + " message " + errorMsg);
+        if (errorCode != 504) {
+            TradingUtility.outputToError(str("ERROR LIVE ORDER HANDLER ID:"
+                    , LocalTime.now(), orderId, "code", errorCode, "MSG", errorMsg));
         }
     }
 

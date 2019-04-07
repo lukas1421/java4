@@ -4,7 +4,6 @@ import api.TradingConstants;
 import client.OrderState;
 import client.OrderStatus;
 import controller.ApiController;
-import utility.Utility;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -12,7 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static DevTrader.BreachDevTrader.devOrderMap;
-import static DevTrader.BreachDevTrader.f3;
+import static DevTrader.BreachDevTrader.f2;
 import static utility.TradingUtility.outputToError;
 import static utility.Utility.outputToSymbolFile;
 import static client.OrderStatus.Filled;
@@ -34,7 +33,6 @@ public class PatientDevHandler implements ApiController.IOrderHandler {
     public void orderState(OrderState orderState) {
         LocalDateTime now = LocalDateTime.now();
         if (devOrderMap.containsKey(tradeID)) {
-//            devOrderMap.get(tradeID).setFinalActionTime(LocalDateTime.now());
             devOrderMap.get(tradeID).setAugmentedOrderStatus(orderState.status());
         } else {
             throw new IllegalStateException(" global id order map doesn't contain ID" + tradeID);
@@ -42,10 +40,10 @@ public class PatientDevHandler implements ApiController.IOrderHandler {
 
         if (orderState.status() != idStatusMap.get(tradeID)) {
             if (orderState.status() == Filled) {
-                String msg = Utility.str(devOrderMap.get(tradeID).getOrder().orderId(),
-                        tradeID, "*PATIENT DEV FILL*", idStatusMap.get(tradeID), "->", orderState.status(),
-                        now.format(f3), devOrderMap.get(tradeID));
-                outputToSymbolFile(devOrderMap.get(tradeID).getSymbol(), msg, breachMDevOutput);
+                outputToSymbolFile(devOrderMap.get(tradeID).getSymbol(),
+                        str(devOrderMap.get(tradeID).getOrder().orderId(), tradeID, "*PATIENT DEV FILL*"
+                                , idStatusMap.get(tradeID) + "->" + orderState.status(),
+                                now.format(f2), devOrderMap.get(tradeID)), breachMDevOutput);
             }
             idStatusMap.put(tradeID, orderState.status());
         }
