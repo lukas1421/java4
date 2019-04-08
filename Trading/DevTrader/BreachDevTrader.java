@@ -389,7 +389,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             outputToSymbolFile(symbol, str("IMPACT TOO BIG ", impact), devOutput);
             return false;
         } else {
-            outputToSymbolFile(symbol, str("delta impact check PASSED ", impact), devOutput);
+            outputToSymbolFile(symbol, str("delta impact check PASSED ", Math.round(impact)), devOutput);
             return true;
         }
     }
