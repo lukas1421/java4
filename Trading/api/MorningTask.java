@@ -148,7 +148,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         //pr("done and starting exiting sequence in 5");
         ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
         //es.scheduleAtFixedRate(() -> pr(" countDown ... "), 0, 1, TimeUnit.SECONDS);
-        holdingsResult.forEach((symb, msg) -> pr("*", symb, msg));
+        //holdingsResult.forEach((symb, msg) -> pr("*", symb, msg));
 
 //        es.scheduleAtFixedRate(() -> {
 //            pr("printing symbol size ");
@@ -157,11 +157,11 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 //        }, 15, 15, TimeUnit.SECONDS);
 
         es.schedule(() -> {
-            pr("printing symbol size ");
+            pr("***Delay 20s*** output to breach, updateChinaAll ");
             symbolSize.forEach(Utility::pr);
             outputToBreach();
             updateChinaAll();
-        }, 10, TimeUnit.SECONDS);
+        }, 20, TimeUnit.SECONDS);
 
 
         es.schedule(() -> System.exit(0), 60, TimeUnit.SECONDS);
@@ -992,7 +992,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
             double last;
             last = morningYtdData.get(symbol).lastEntry().getValue().getClose();
             int defaultSize = close > 300 ? 0 : (int) (Math.round(10000.0 / last / 100.0)) * 100;
-            pr("last", symbol, last, defaultSize);
+            pr("Breach handler", symbol, last, defaultSize);
             symbolSize.put(symbol, defaultSize);
         }
     }
@@ -1025,9 +1025,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
             while ((line = reader1.readLine()) != null) {
                 LinkedList<String> al1 = new LinkedList<>(Arrays.asList(line.split("\t")));
 
-                if (al1.get(4).equals("USD") && al1.get(5).equals("STK")) {
-                    pr(al1);
-                } else {
+                if (!(al1.get(4).equals("USD") && al1.get(5).equals("STK"))) {
                     chinaAllOutputString.add(al1);
                 }
             }
@@ -1052,24 +1050,14 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         chinaAllOutputString.forEach(l -> {
             simpleWriteToFile(String.join("\t", l), true, chinaAll);
         });
-
-
     }
 
     private static Contract fillContract(Contract c) {
-//        pr("symb ", Optional.ofNullable(c.symbol()),
-//                "curr", Optional.ofNullable(c.currency()),
-//                "exch", Optional.ofNullable(c.exchange()),
-//                "prim exch", Optional.ofNullable(c.primaryExch()),
-//                "secType", Optional.ofNullable(c.secType())
-//        );
         if (c.symbol().equals("XINA50")) {
-            //pr(" us no exchange ");
             c.exchange("SGX");
         }
 
         if (c.currency().equals("USD") && c.secType().equals(Types.SecType.STK)) {
-            //pr(" USD STOCK ", c.symbol());
             c.exchange("SMART");
         }
         return c;
