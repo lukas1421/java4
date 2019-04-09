@@ -497,9 +497,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                             fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();
 
             pr(LocalDateTime.now().format(f),
-                    "current total delta:", Math.round(totalDelta / 1000d) + "k",
-                    "abs delta, ", Math.round(totalAbsDelta / 1000d) + "k",
-                    "long/short", Math.round(longDelta / 1000d) + "k",
+                    "||net delta:" + Math.round(totalDelta / 1000d) + "k",
+                    "||abs delta:" + Math.round(totalAbsDelta / 1000d) + "k",
+                    "||long/short:", Math.round(longDelta / 1000d) + "k",
                     Math.round(shortDelta / 1000d) + "k");
         }, 0, 1, TimeUnit.MINUTES);
 

@@ -99,9 +99,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
                 contractPrice.put(getUSStockContract(al1.get(0)), 0.0);
-
-                //registerContract(getUSStockContract(al1.get(0)));
-                //defaultSize.put(al1.get(0), Double.parseDouble(al1.get(1)));
             }
         } catch (IOException x) {
             x.printStackTrace();
@@ -132,7 +129,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         MorningTask mt = new MorningTask();
 
         Utility.clearFile(output);
-        //processShcomp();
 
         mt.getFromIB();
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
@@ -201,12 +197,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         }
     }
 
-    private void reqHoldings(ApiController ap) {
-        //pr(" request holdings ");
-        ap.reqPositions(this);
-    }
-
-
     @SuppressWarnings("unused")
     static void writeIndex(BufferedWriter out) {
         String line;
@@ -243,7 +233,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         //Proxy proxy = new Proxy(Proxy.Type.HTTP,new InetSocketAddress("127.0.0.1",1080));
         for (String e : etfs) {
             urlString = "https://www.bloomberg.com/quote/" + e;
-            //pr(" etf is " + e);
 
             try {
                 URL url = new URL(urlString);
@@ -560,7 +549,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         getUSDDetailed(ap);
         getHKDDetailed(ap);
         getUSPricesAfterMarket(ap);
-        reqHoldings(ap);
+        ap.reqPositions(this);
         getXINA50Index(ap);
 
         //breachUSNamesData();
