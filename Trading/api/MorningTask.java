@@ -36,15 +36,20 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
     static final DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d");
     private static final LocalDate LAST_MONTH_DAY = getLastMonthLastDay();
     private static final LocalDate LAST_YEAR_DAY = getLastYearLastDay();
+
     private static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             morningYtdData = new ConcurrentSkipListMap<>(String::compareTo);
+
     private static ApiController staticController;
+
     private volatile static Map<Contract, Double> holdingsMap =
             new TreeMap<>(Comparator.comparing(Utility::ibContractToSymbol));
-    private static Map<String, String> holdingsResult = new TreeMap<>(String::compareTo);
 
     private volatile static Map<Contract, Double> contractPrice =
             new TreeMap<>(Comparator.comparing(Utility::ibContractToSymbol));
+
+    private static Map<String, String> holdingsResult = new TreeMap<>(String::compareTo);
+
 
     private volatile static Map<String, Integer> symbolSize = new TreeMap<>(String::compareTo);
 
@@ -133,9 +138,9 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
             //writeIndexTDX(out);
             //writeETF(out);
-            writeA50(out);
+            //writeA50(out);
             //writeA50_MW(out);
-            writeA50FT(out);
+            //writeA50FT(out);
             //writeXIN0U(out);
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -616,7 +621,10 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
         String formatTime = lt.format(dtf);
 
+        pr(" requesting a50 index");
         ap.req1ContractLive(c, this, true);
+//        ap.reqHistDayData(ibStockReqId.addAndGet(5),
+//                fillContract(c), MorningTask::a50Handler, 5, Types.BarSize._1_day);
 
     }
 
@@ -849,6 +857,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
     public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
         String symbol = ibContractToSymbol(ct);
         if (tt == TickType.CLOSE && symbol.equals("XINA50")) {
+            pr("handle price  ", symbol, tt, price, t);
             Utility.simpleWriteToFile("FTSE A50" + "\t" + price, true, output);
         }
         pr("handle price  ", symbol, tt, price, t);
@@ -995,6 +1004,14 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                 Utility.simpleWriteToFile(out, true, positionOutput);
             }
         }
+    }
+
+    private static void a50Handler(Contract c, String date, double open, double high, double low,
+                                   double close, int volume) {
+        LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
+
+        pr("a50 handling ");
+        pr("a50 handler ", c.symbol(), ld, open, high, low, close);
     }
 
     private static void breachPriceHandler(Contract c, String date, double open, double high, double low,
