@@ -185,12 +185,22 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         //pr(" holdings map ", contractPosMap);
 //        contractPosMap.entrySet().stream().forEachOrdered((e)
 //                -> pr("symb pos ", ibContractToSymbol(e.getKey()), e.getValue()));
+        AtomicInteger counter = new AtomicInteger(0);
         for (Contract c : contractPosMap.keySet()) {
             String k = ibContractToSymbol(c);
             //pr("position end: ticker/symbol ", c.symbol(), k);
             ytdDayData.put(k, new ConcurrentSkipListMap<>());
             if (!k.equals("USD")) {
                 //if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
+                counter.incrementAndGet();
+                pr("counter ", counter.get(), k);
+                if (counter.get() != 0 && counter.get() % 50 == 0) {
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
                 brMonController.reqHistDayData(ibStockReqId.addAndGet(5),
                         fillContract(c), BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
             }

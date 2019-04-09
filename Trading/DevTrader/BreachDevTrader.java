@@ -296,7 +296,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     if (checkDeltaImpact(ct, o)) {
                         devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
                         apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
-                        outputToSymbolFile(symbol, str("********", t), devOutput);
+                        outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                         outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER BUY:",
                                 devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
                                 "prevClose", prevClose, "price", price, "devFromMaxOpen",
@@ -314,12 +314,11 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     if (checkDeltaImpact(ct, o)) {
                         devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
                         apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
-                        outputToSymbolFile(symbol, str("********", t), devOutput);
+                        outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                         outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER SELL:",
                                 devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
                                 "prevClose", prevClose, "price", price, "devFromMinOpen",
-                                r10000(price / Math.min(mOpen, yOpen) - 1)),
-                                devOutput);
+                                r10000(price / Math.min(mOpen, yOpen) - 1)), devOutput);
                     }
                 }
             }

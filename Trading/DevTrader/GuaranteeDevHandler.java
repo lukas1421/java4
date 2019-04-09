@@ -137,7 +137,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                                 "MAX ATTEMPTS EXCEEDED, Switch to PatientDev:"
                                 , devOrderMap.get(newID), "b/a sprd last"
                                 , bid, ask, Math.round(10000d * (ask / bid - 1)) + "bp", lastPrice,
-                                "attempts ", attempts.get(), "pos", livePos), breachMDevOutput);
+                                "attempts:" + attempts.get(), "pos", livePos), breachMDevOutput);
 
             } else if (orderState.status() == PendingCancel && devOrderMap.get(currentID).getOrder().tif() == IOC) {
                 Contract ct = devOrderMap.get(currentID).getContract();
@@ -226,7 +226,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
             outputToSymbolFile(devOrderMap.get(currentID).getSymbol(), str("Guarantee Dev Handler error",
                     "Code", errorCode, errorMsg), breachMDevOutput);
         }
-        outputToError(str("ERROR Guarantee Dev Handler:", currentID, errorCode, errorMsg
+        outputToError(str("ERROR Guarantee Dev Handler ID:", currentID, "Code", errorCode, errorMsg
                 , devOrderMap.get(currentID)));
     }
 }

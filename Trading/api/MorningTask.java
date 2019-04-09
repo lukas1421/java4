@@ -89,9 +89,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
             ex.printStackTrace();
         }
 
-        holdingsMap.put(getUSIndexContract("SPX"), 0.0);
-        holdingsMap.put(getUSStockContract("QQQ"), 0.0);
-
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(breachUSNames.getAbsolutePath())))) {
             while ((line = reader1.readLine()) != null) {
@@ -561,7 +558,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         reqHoldings(ap);
         getXINA50Index(ap);
 
-        breachUSNamesData();
+        //breachUSNamesData();
 
         AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
         ap.reqAccountSummary("All", tags, new ApiController.IAccountSummaryHandler.AccountInfoHandler());
@@ -889,25 +886,45 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         for (Contract c : holdingsMap.keySet()) {
 
             String k = ibContractToSymbol(c);
-            holdingsResult.put(k, "");
-            morningYtdData.put(k, new ConcurrentSkipListMap<>());
-            if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
-                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
-                        fillContract(c), MorningTask::morningYtdOpen, 365, Types.BarSize._1_day);
-            }
-        }
-    }
 
-    private void breachUSNamesData() {
+            if (contractPrice.keySet().stream().map(Utility::ibContractToSymbol).
+                    noneMatch(e -> e.equalsIgnoreCase(k))) {
+                contractPrice.put(c, 0.0);
+            }
+
+            holdingsResult.put(k, "");
+//            morningYtdData.put(k, new ConcurrentSkipListMap<>());
+//            if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
+//                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
+//                        fillContract(c), MorningTask::morningYtdOpen, 365, Types.BarSize._1_day);
+//            }
+        }
+
+        AtomicInteger counter = new AtomicInteger(1);
+
         for (Contract c : contractPrice.keySet()) {
             String k = ibContractToSymbol(c);
-            //holdingsResult.put(k, "");
+
             morningYtdData.put(k, new ConcurrentSkipListMap<>());
+
             if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
+                pr("counter ", counter.get(), k);
+
+                if (counter.get() % 50 == 0) {
+                    try {
+                        pr("sleeping for 5 secs ", counter.get());
+                        Thread.sleep(5000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
                 staticController.reqHistDayData(ibStockReqId.addAndGet(5),
-                        fillContract(c), MorningTask::breachPriceHandler, 10, Types.BarSize._1_day);
+                        fillContract(c), MorningTask::breachPriceHandler, 5, Types.BarSize._1_day);
+                counter.incrementAndGet();
             }
         }
+
     }
 
     private static void morningYtdOpen(Contract c, String date, double open, double high, double low,
@@ -991,7 +1008,11 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         } else {
             double last;
             last = morningYtdData.get(symbol).lastEntry().getValue().getClose();
-            int defaultSize = close > 300 ? 0 : (int) (Math.round(10000.0 / last / 100.0)) * 100;
+            if (last == 0.0) {
+                throw new IllegalStateException(str(symbol, " last price 0"));
+            }
+            int defaultSize = close > 300.0 ? 0 : (int) (Math.round(12500.0 / last / 100.0)) * 100;
+
             pr("Breach handler", symbol, last, defaultSize);
             symbolSize.put(symbol, defaultSize);
         }
