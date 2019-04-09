@@ -64,17 +64,15 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
         try {
             ap.connect("127.0.0.1", 7496, 2, "");
             connectionStatus = true;
-            pr(" connection status is true ");
             l.countDown();
         } catch (IllegalStateException ex) {
-            pr(" illegal state exception caught ");
+            pr(" illegal state exception caught ", ex.getMessage());
         }
 
         if (!connectionStatus) {
             pr(" using port 4001 ");
             ap.connect("127.0.0.1", 4001, 2, "");
             l.countDown();
-            pr(" Latch counted down" + LocalTime.now());
         }
 
         try {
@@ -82,8 +80,6 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        pr(" Time after latch released " + LocalTime.now());
-
         ap.reqPositions(this);
     }
 
@@ -104,13 +100,11 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
     public void position(String account, Contract contract, double position, double avgCost) {
         if (!contract.symbol().equals("USD")) {
             contractPosition.put(contract, position);
-            //symbolLotsize.put(ibContractToSymbol(contract), 0);
         }
     }
 
     @Override
     public void positionEnd() {
-
         for (Contract c : contractPosition.keySet()) {
             breachNameSet.add(ibContractToSymbol(c));
         }
@@ -119,12 +113,7 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
 
         for (String k : breachNameSet) {
             Contract c = getUSStockContract(k);
-
             symbolBarData.put(k, new ConcurrentSkipListMap<>());
-
-            //if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
-            pr("counter ", counter.get(), k);
-
             if (counter.get() % 50 == 0) {
                 try {
                     pr("sleeping for 5 secs ", counter.get());
@@ -133,11 +122,9 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
                     e.printStackTrace();
                 }
             }
-
             staticController.reqHistDayData(ibStockReqId.addAndGet(5),
                     c, DevUSNamesAdder::breachPriceHandler, 5, Types.BarSize._1_day);
             counter.incrementAndGet();
-            //   }
         }
 
     }
@@ -151,15 +138,9 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             symbolBarData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         } else {
-            double last;
-            last = symbolBarData.get(symbol).lastEntry().getValue().getClose();
-            if (last == 0.0) {
-                throw new IllegalStateException(str(symbol, " last price 0"));
-            }
+            double last = symbolBarData.get(symbol).lastEntry().getValue().getClose();
             int defaultSize = close > 300.0 ? 0 : (int) (Math.round(12500.0 / last / 100.0)) * 100;
-
             pr("Breach handler", symbol, last, defaultSize);
-
             symbolLotsize.put(symbol, defaultSize);
         }
     }
@@ -201,9 +182,8 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
             x.printStackTrace();
         }
 
-        symbolLotsize.forEach((k, v) -> {
-            chinaAllOutputString.add(new LinkedList<>(Arrays.asList(k, k, "美", "美", "USD", "STK")));
-        });
+        symbolLotsize.forEach((k, v) ->
+                chinaAllOutputString.add(new LinkedList<>(Arrays.asList(k, k, "美", "美", "USD", "STK"))));
 
         contractPosition.forEach((ct, v) -> {
             String k = ibContractToSymbol(ct);
@@ -213,21 +193,6 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
         });
 
         clearFile(chinaAll);
-        chinaAllOutputString.forEach(l -> {
-            simpleWriteToFile(String.join("\t", l), true, chinaAll);
-        });
+        chinaAllOutputString.forEach(l -> simpleWriteToFile(String.join("\t", l), true, chinaAll));
     }
-
-    private static Contract fillContract(Contract c) {
-        if (c.symbol().equals("XINA50")) {
-            c.exchange("SGX");
-        }
-
-        if (c.currency().equals("USD") && c.secType().equals(Types.SecType.STK)) {
-            c.exchange("SMART");
-        }
-        return c;
-    }
-
-
 }
