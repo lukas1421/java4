@@ -348,6 +348,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         if (!liquidated && pos != 0.0) {
             if (pos < 0.0 && (price > mOpen || price > yOpen)) {
                 if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
+
+                    checkIfAdderPending(symbol);
                     liquidatedMap.put(symbol, new AtomicBoolean(true));
                     int id = devTradeID.incrementAndGet();
                     Order o = placeBidLimitTIF(bidMap.get(symbol), Math.abs(pos), IOC);
@@ -360,6 +362,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 }
             } else if (pos > 0.0 && (price < mOpen || price < yOpen)) {
                 if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
+
+                    checkIfAdderPending(symbol);
                     liquidatedMap.put(symbol, new AtomicBoolean(true));
                     int id = devTradeID.incrementAndGet();
                     Order o = placeOfferLimitTIF(askMap.get(symbol), pos, IOC);
@@ -372,6 +376,18 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 }
             }
         }
+    }
+
+
+    private static void checkIfAdderPending(String symbol) {
+        devOrderMap.entrySet().stream().filter(e -> e.getValue().getSymbol().equalsIgnoreCase(symbol))
+                .filter(e -> e.getValue().getOrderType() == BREACH_ADDER)
+                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Submitted)
+                .forEach(e -> {
+                    outputToSymbolFile(symbol, str("Cancel submitted before cutting"
+                            , e.getValue()), devOutput);
+                    apDev.cancelOrder(e.getValue().getOrder().orderId());
+                });
     }
 
 

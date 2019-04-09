@@ -38,6 +38,7 @@ import static api.ChinaMain.controller;
 import static api.ChinaMain.ibConnLatch;
 import static AutoTraderOld.XuTraderHelper.*;
 import static java.util.stream.Collectors.toList;
+import static utility.TradingUtility.outputToSpecial;
 import static utility.Utility.*;
 
 public class ApiController implements EWrapper {
@@ -1648,13 +1649,13 @@ public class ApiController implements EWrapper {
     }
 
     public void cancelOrder(int orderId) {
-        pr(" cancelling order in Apicontroller " + orderId);
+        outputToSpecial(" cancelling order in Apicontroller " + orderId);
         m_client.cancelOrder(orderId);
         sendEOM();
     }
 
     public void cancelAllOrders() {
-        pr(" globally cancelling order ");
+        outputToSpecial(" globally cancelling order ");
         m_client.reqGlobalCancel();
         sendEOM();
     }
