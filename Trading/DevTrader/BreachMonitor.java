@@ -469,9 +469,9 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                             fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();
 
             pr(LocalDateTime.now().format(f2),
-                    "current total delta:", Math.round(totalDelta / 1000d) + "k",
-                    "abs delta, ", Math.round(totalAbsDelta / 1000d) + "k",
-                    "long/short", Math.round(longDelta / 1000d) + "k",
+                    "||Net delta:", Math.round(totalDelta / 1000d) + "k",
+                    "||abs delta:", Math.round(totalAbsDelta / 1000d) + "k",
+                    "||long/short", Math.round(longDelta / 1000d) + "k",
                     Math.round(shortDelta / 1000d) + "k");
         }, 15, 15, TimeUnit.SECONDS);
 

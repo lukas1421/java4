@@ -134,9 +134,9 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
             //writeIndexTDX(out);
             //writeETF(out);
-            //writeA50(out);
-            //writeA50_MW(out);
-            //writeA50FT(out);
+            writeA50(out);
+            writeA50_MW(out);
+            writeA50FT(out);
             //writeXIN0U(out);
         } catch (IOException ex) {
             ex.printStackTrace();
@@ -148,18 +148,12 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         //es.scheduleAtFixedRate(() -> pr(" countDown ... "), 0, 1, TimeUnit.SECONDS);
         //holdingsResult.forEach((symb, msg) -> pr("*", symb, msg));
 
-//        es.scheduleAtFixedRate(() -> {
-//            pr("printing symbol size ");
+//        es.schedule(() -> {
+//            pr("***Delay 20s*** output to breach, updateChinaAll ");
 //            symbolSize.forEach(Utility::pr);
 //            outputToBreach();
-//        }, 15, 15, TimeUnit.SECONDS);
-
-        es.schedule(() -> {
-            pr("***Delay 20s*** output to breach, updateChinaAll ");
-            symbolSize.forEach(Utility::pr);
-            outputToBreach();
-            updateChinaAll();
-        }, 20, TimeUnit.SECONDS);
+//            updateChinaAll();
+//        }, 20, TimeUnit.SECONDS);
 
 
         es.schedule(() -> System.exit(0), 60, TimeUnit.SECONDS);
@@ -549,7 +543,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         getUSDDetailed(ap);
         getHKDDetailed(ap);
         getUSPricesAfterMarket(ap);
-        ap.reqPositions(this);
+        //ap.reqPositions(this);
         getXINA50Index(ap);
 
         //breachUSNamesData();
@@ -642,17 +636,6 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 
     private int generateReqId(Contract contract) {
         return ibStockReqId.incrementAndGet();
-//        int reqId;
-//        if (contract.secType() == Types.SecType.CASH) {
-//            reqId = 10000;
-//        } else if (contract.secType() == Types.SecType.STK) {
-//            reqId = ibStockReqId.incrementAndGet();
-//        } else if (contract.secType() == Types.SecType.FUT) {
-//            reqId = 20000;
-//        } else {
-//            reqId = 100000;
-//        }
-//        return reqId;
     }
 
     @SuppressWarnings({"SpellCheckingInspection", "ConstantConditions"})
