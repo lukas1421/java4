@@ -196,7 +196,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 pr("counter ", counter.get(), k);
                 if (counter.get() != 0 && counter.get() % 50 == 0) {
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(5000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
