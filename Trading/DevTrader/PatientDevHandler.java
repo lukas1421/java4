@@ -13,15 +13,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import static DevTrader.BreachDevTrader.devOrderMap;
 import static DevTrader.BreachDevTrader.f2;
 import static utility.TradingUtility.outputToError;
-import static utility.Utility.outputToSymbolFile;
 import static client.OrderStatus.Filled;
-import static utility.Utility.str;
+import static utility.Utility.*;
 
 public class PatientDevHandler implements ApiController.IOrderHandler {
 
     private static Map<Integer, OrderStatus> idStatusMap = new ConcurrentHashMap<>();
     private int tradeID;
     private static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
+    private static File fillsOutput = new File(TradingConstants.GLOBALPATH + "fills.txt");
 
 
     PatientDevHandler(int id) {
@@ -44,6 +44,8 @@ public class PatientDevHandler implements ApiController.IOrderHandler {
                         str(devOrderMap.get(tradeID).getOrder().orderId(), tradeID, "*PATIENT DEV FILL*"
                                 , idStatusMap.get(tradeID) + "->" + orderState.status(),
                                 now.format(f2), devOrderMap.get(tradeID)), breachMDevOutput);
+                outputDetailedGen(str(devOrderMap.get(tradeID).getSymbol(), now.format(f2),
+                        devOrderMap.get(tradeID)), fillsOutput);
             }
             idStatusMap.put(tradeID, orderState.status());
         }

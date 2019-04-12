@@ -27,6 +27,8 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
     private int currentID;
     private ApiController controller;
     private static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
+    private static File fillsOutput = new File(TradingConstants.GLOBALPATH + "fills.txt");
+
     private AtomicInteger attempts = new AtomicInteger(0);
 
 
@@ -90,6 +92,9 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                         "ID:", currentID, devOrderMap.get(currentID),
                         "TIF:", devOrderMap.get(currentID).getOrder().tif(), "attempts:", attempts.get());
                 outputToSymbolFile(devOrderMap.get(primaryID).getSymbol(), msg, breachMDevOutput);
+
+                outputDetailedGen(str(devOrderMap.get(currentID).getSymbol(), now.format(f2),
+                        devOrderMap.get(currentID)), fillsOutput);
 
             } else if (attempts.get() > MAX_ATTEMPTS) {
                 Contract ct = devOrderMap.get(currentID).getContract();

@@ -157,7 +157,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         }
 
         pr(" Time after latch released " + LocalTime.now());
-        reqHoldings(ap);
+        ap.reqPositions(this);
         getExecs(ap);
     }
 
@@ -450,6 +450,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             pr("**********************************************");
             pr("running @ ", LocalTime.now());
             bm.reqHoldings(brMonController);
+            //brMonController.reqPositions(this);
         }, 1, 1, TimeUnit.MINUTES);
 
 
