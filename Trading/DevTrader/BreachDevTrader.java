@@ -226,11 +226,20 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     public void positionEnd() {
         for (Contract c : contractPosMap.keySet()) {
             String symb = ibContractToSymbol(c);
+            AtomicInteger counter = new AtomicInteger(1);
             pr(" symbol in positionEnd ", symb);
             ytdDayData.put(symb, new ConcurrentSkipListMap<>());
             if (!symb.equals("USD")) {
+                if (counter.get() % 50 == 0) {
+                    try {
+                        Thread.sleep(5000L);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
                 apDev.reqHistDayData(ibStockReqId.addAndGet(5),
                         fillContract(c), BreachDevTrader::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
+                counter.incrementAndGet();
             }
             apDev.req1ContractLive(c, this, false);
         }
