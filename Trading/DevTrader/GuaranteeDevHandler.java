@@ -31,7 +31,6 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
     private AtomicInteger attempts = new AtomicInteger(0);
 
-
     GuaranteeDevHandler(int id, ApiController ap) {
         primaryID = id;
         currentID = id;
