@@ -153,9 +153,12 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 Order o = new Order();
                 o.action(prevOrder.action());
 
-                o.lmtPrice(prevOrder.action() == Types.Action.BUY ? getBid(bid, ask, lastPrice, attempts.get()) :
-                        (prevOrder.action() == Types.Action.SELL ? getAsk(bid, ask, lastPrice, attempts.get())
-                                : lastPrice));
+//                o.lmtPrice(prevOrder.action() == Types.Action.BUY ? getBid(bid, ask, lastPrice, attempts.get()) :
+//                        (prevOrder.action() == Types.Action.SELL ? getAsk(bid, ask, lastPrice, attempts.get())
+//                                : lastPrice));
+
+                o.lmtPrice(prevOrder.action() == Types.Action.BUY ? bid :
+                        (prevOrder.action() == Types.Action.SELL ? ask : lastPrice));
 
                 o.orderType(OrderType.LMT);
 
