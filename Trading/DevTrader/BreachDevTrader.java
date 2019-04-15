@@ -298,37 +298,33 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
             if (price > yOpen && price > mOpen && totalDelta < HI_LIMIT) {
                 //&& ((price / Math.max(yOpen, mOpen) - 1) < 0.02)) {
-                if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.003) {
-                    addedMap.put(symbol, new AtomicBoolean(true));
-                    int id = devTradeID.incrementAndGet();
-                    Order o = placeBidLimitTIF(bidMap.get(symbol), defaultS, DAY);
-                    if (checkDeltaImpact(ct, o)) {
-                        devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                        apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
-                        outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
-                        outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER BUY:",
-                                devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
-                                "prevClose", prevClose, "price", price, "devFromMaxOpen",
-                                r10000(price / Math.max(yOpen, mOpen) - 1))
-                                , devOutput);
-                    }
+                addedMap.put(symbol, new AtomicBoolean(true));
+                int id = devTradeID.incrementAndGet();
+                Order o = placeBidLimitTIF(bidMap.getOrDefault(symbol, price), defaultS, DAY);
+                if (checkDeltaImpact(ct, o)) {
+                    devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
+                    apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
+                    outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
+                    outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER BUY:",
+                            devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
+                            "prevClose", prevClose, "price", price, "devFromMaxOpen",
+                            r10000(price / Math.max(yOpen, mOpen) - 1))
+                            , devOutput);
                 }
             } else if (price < yOpen && price < mOpen && totalDelta > LO_LIMIT) {
                 // && (price / Math.min(yOpen, mOpen) - 1) > -0.02) {
-                if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.003) {
-                    addedMap.put(symbol, new AtomicBoolean(true));
-                    int id = devTradeID.incrementAndGet();
-                    Order o = placeOfferLimitTIF(askMap.get(symbol), defaultS, DAY);
+                addedMap.put(symbol, new AtomicBoolean(true));
+                int id = devTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(askMap.getOrDefault(symbol, price), defaultS, DAY);
 
-                    if (checkDeltaImpact(ct, o)) {
-                        devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                        apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
-                        outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
-                        outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER SELL:",
-                                devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
-                                "prevClose", prevClose, "price", price, "devFromMinOpen",
-                                r10000(price / Math.min(mOpen, yOpen) - 1)), devOutput);
-                    }
+                if (checkDeltaImpact(ct, o)) {
+                    devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
+                    apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
+                    outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
+                    outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER SELL:",
+                            devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
+                            "prevClose", prevClose, "price", price, "devFromMinOpen",
+                            r10000(price / Math.min(mOpen, yOpen) - 1)), devOutput);
                 }
             }
         }
@@ -356,33 +352,27 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
         if (!liquidated && pos != 0.0) {
             if (pos < 0.0 && (price > mOpen || price > yOpen)) {
-                if (bidMap.containsKey(symbol) && Math.abs(bidMap.get(symbol) / price - 1) < 0.01) {
-
-                    checkIfAdderPending(symbol);
-                    liquidatedMap.put(symbol, new AtomicBoolean(true));
-                    int id = devTradeID.incrementAndGet();
-                    Order o = placeBidLimitTIF(bidMap.get(symbol), Math.abs(pos), IOC);
-                    devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                    apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
-                    outputToSymbolFile(symbol, str("********", t), devOutput);
-                    outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter BUY:",
-                            "added?" + added, devOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
-                            "price", price), devOutput);
-                }
+                checkIfAdderPending(symbol);
+                liquidatedMap.put(symbol, new AtomicBoolean(true));
+                int id = devTradeID.incrementAndGet();
+                Order o = placeBidLimitTIF(bidMap.getOrDefault(symbol, price), Math.abs(pos), IOC);
+                devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
+                apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
+                outputToSymbolFile(symbol, str("********", t), devOutput);
+                outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter BUY:",
+                        "added?" + added, devOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
+                        "price", price), devOutput);
             } else if (pos > 0.0 && (price < mOpen || price < yOpen)) {
-                if (askMap.containsKey(symbol) && Math.abs(askMap.get(symbol) / price - 1) < 0.01) {
-
-                    checkIfAdderPending(symbol);
-                    liquidatedMap.put(symbol, new AtomicBoolean(true));
-                    int id = devTradeID.incrementAndGet();
-                    Order o = placeOfferLimitTIF(askMap.get(symbol), pos, IOC);
-                    devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                    apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
-                    outputToSymbolFile(symbol, str("********", t), devOutput);
-                    outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter SELL:",
-                            "added?" + added, devOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
-                            "price", price), devOutput);
-                }
+                checkIfAdderPending(symbol);
+                liquidatedMap.put(symbol, new AtomicBoolean(true));
+                int id = devTradeID.incrementAndGet();
+                Order o = placeOfferLimitTIF(askMap.getOrDefault(symbol, price), pos, IOC);
+                devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
+                apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
+                outputToSymbolFile(symbol, str("********", t), devOutput);
+                outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter SELL:",
+                        "added?" + added, devOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
+                        "price", price), devOutput);
             }
         }
     }
