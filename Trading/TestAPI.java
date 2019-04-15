@@ -8,7 +8,9 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -26,16 +28,16 @@ public class TestAPI {
 
 
     TestAPI() {
-        String line;
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(TradingConstants.GLOBALPATH + "breachUSNames.txt")))) {
-            while ((line = reader1.readLine()) != null) {
-                List<String> al1 = Arrays.asList(line.split("\t"));
-                registerContract(getUSStockContract(al1.get(0)));
-            }
-        } catch (IOException x) {
-            x.printStackTrace();
-        }
+//        String line;
+//        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+//                new FileInputStream(TradingConstants.GLOBALPATH + "breachUSNames.txt")))) {
+//            while ((line = reader1.readLine()) != null) {
+//                List<String> al1 = Arrays.asList(line.split("\t"));
+//                registerContract(getUSStockContract(al1.get(0)));
+//            }
+//        } catch (IOException x) {
+//            x.printStackTrace();
+//        }
     }
 
     private void registerContract(Contract ct) {
@@ -46,6 +48,18 @@ public class TestAPI {
         }
     }
 
+
+    private static Contract getFrontFutContract() {
+        Contract ct = new Contract();
+        ct.symbol("XINA50");
+        ct.exchange("SGX");
+        ct.currency("USD");
+        pr("front exp date ", TradingConstants.A50_FRONT_EXPIRY);
+        //ct.localSymbol("XINA50");
+        //ct.lastTradeDateOrContractMonth(TradingConstants.A50_FRONT_EXPIRY);
+        ct.secType(Types.SecType.CONTFUT);
+        return ct;
+    }
 
     static void handleHist(Contract c, String date, double open, double high, double low,
                            double close, int volume) {
@@ -83,6 +97,13 @@ public class TestAPI {
         }
 
         pr(" Time after latch released " + LocalTime.now());
+
+        Contract ct = getFrontFutContract();
+
+        ap.reqHistDayData(100,
+                ct, (contract, date, open, high, low, close, vol) -> {
+                    pr(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")), open, high, low, close);
+                }, 365, Types.BarSize._1_day);
 
 
     }

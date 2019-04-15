@@ -785,8 +785,9 @@ public class Utility {
 
     @SuppressWarnings("SpellCheckingInspection")
     public static String ibContractToSymbol(Contract ct) {
-        if (ct.symbol().equals("XINA50") && ct.secType() == Types.SecType.FUT) {
-            if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutFrontExpiry())) {
+        if (ct.symbol().equals("XINA50")) {
+            if (ct.secType() == Types.SecType.CONTFUT ||
+                    ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutFrontExpiry())) {
                 return "SGXA50";
             } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutBackExpiry())) {
                 return "SGXA50BM";
@@ -912,12 +913,21 @@ public class Utility {
         return 50;
     }
 
-    public static Contract fillContract(Contract c) {
-        if (c.symbol().equals("XINA50")) {
-            c.exchange("SGX");
+    public static Contract histCompatibleCt(Contract c) {
+        if (c.secType() == Types.SecType.FUT) {
+            Contract newC = new Contract();
+            newC.symbol(c.symbol());
+            newC.exchange(c.exchange());
+            newC.currency(c.currency());
+            newC.secType(Types.SecType.CONTFUT);
+            newC.lastTradeDateOrContractMonth("");
+            return newC;
         }
-        if (c.currency().equals("USD") && c.secType().equals(Types.SecType.STK)) {
+
+        if (c.currency().equals("USD") && c.secType().equals(Types.SecType.STK)
+                && c.exchange().equalsIgnoreCase("SMART")) {
             c.exchange("SMART");
+            return c;
         }
         return c;
     }

@@ -1175,7 +1175,7 @@ public class ApiController implements EWrapper {
     //requ month open
     public void reqHistDayData(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
                                int duration, BarSize bs) {
-//        pr(" requesting hist day data ", reqId, c.symbol());
+        pr(" requesting hist day data ", reqId, c.symbol());
         //Contract ct = tickerToHKStkContract("5");
         //int duration = 30;
         //BarSize bs = BarSize._1_day;

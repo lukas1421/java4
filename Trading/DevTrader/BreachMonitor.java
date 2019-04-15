@@ -21,7 +21,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import static utility.TradingUtility.gettingActiveContract;
 import static utility.Utility.*;
@@ -158,7 +157,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
         pr(" Time after latch released " + LocalTime.now());
         ap.reqPositions(this);
-        getExecs(ap);
+        //getExecs(ap);
     }
 
     private void reqHoldings(ApiController ap) {
@@ -193,7 +192,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             if (!k.equals("USD")) {
                 //if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
                 counter.incrementAndGet();
-                pr("counter ", counter.get(), k);
+                //pr("counter ", counter.get(), k);
                 if (counter.get() != 0 && counter.get() % 50 == 0) {
                     try {
                         Thread.sleep(5000);
@@ -202,9 +201,11 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                     }
                 }
                 brMonController.reqHistDayData(ibStockReqId.addAndGet(5),
-                        fillContract(c), BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
+                        histCompatibleCt(c), BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
+                brMonController.req1ContractLive(c, this, false);
+                pr("mon requesting", ibStockReqId.get(), ibContractToSymbol(c), c.exchange(), c.getSecType());
+
             }
-            brMonController.req1ContractLive(c, this, false);
         }
     }
 
@@ -218,7 +219,13 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
-            ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
+
+            if (ytdDayData.containsKey(symbol)) {
+                ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
+            } else {
+                pr("not contain symbol: ", symbol);
+            }
+
         } else {
             double pos = contractPosMap.getOrDefault(c, 0.0);
             if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
@@ -300,10 +307,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 //                }
 
 
-                if (pos != 0.0) {
-                    pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
-                            , out, Math.round(delta / 1000d) + "k");
-                }
+//                if (pos != 0.0) {
+                pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
+                        , out, Math.round(delta / 1000d) + "k");
+//                }
 
 
             }

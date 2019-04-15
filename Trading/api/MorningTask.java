@@ -607,7 +607,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         pr(" requesting a50 index");
         ap.req1ContractLive(c, this, true);
 //        ap.reqHistDayData(ibStockReqId.addAndGet(5),
-//                fillContract(c), MorningTask::a50Handler, 5, Types.BarSize._1_day);
+//                histCompatibleCt(c), MorningTask::a50Handler, 5, Types.BarSize._1_day);
 
     }
 
@@ -877,7 +877,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 //            morningYtdData.put(k, new ConcurrentSkipListMap<>());
 //            if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
 //                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
-//                        fillContract(c), MorningTask::morningYtdOpen, 365, Types.BarSize._1_day);
+//                        histCompatibleCt(c), MorningTask::morningYtdOpen, 365, Types.BarSize._1_day);
 //            }
         }
 

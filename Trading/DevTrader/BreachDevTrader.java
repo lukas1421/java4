@@ -238,7 +238,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     }
                 }
                 apDev.reqHistDayData(ibStockReqId.addAndGet(5),
-                        fillContract(c), BreachDevTrader::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
+                        histCompatibleCt(c), BreachDevTrader::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
                 counter.incrementAndGet();
             }
             apDev.req1ContractLive(c, this, false);
