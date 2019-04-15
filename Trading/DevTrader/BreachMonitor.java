@@ -203,7 +203,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 brMonController.reqHistDayData(ibStockReqId.addAndGet(5),
                         histCompatibleCt(c), BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
                 brMonController.req1ContractLive(c, this, false);
-                pr("mon requesting", ibStockReqId.get(), ibContractToSymbol(c), c.exchange(), c.getSecType());
+//                pr("mon requesting", ibStockReqId.get(), ibContractToSymbol(c), c.exchange(), c.getSecType());
 
             }
         }
@@ -307,12 +307,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 //                }
 
 
-//                if (pos != 0.0) {
-                pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
-                        , out, Math.round(delta / 1000d) + "k");
-//                }
-
-
+                if (pos != 0.0) {
+                    pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
+                            , out, Math.round(delta / 1000d) + "k");
+                }
             }
         }
 

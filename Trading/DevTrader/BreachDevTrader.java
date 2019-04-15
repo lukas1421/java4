@@ -420,8 +420,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 liveData.get(symbol).put(t, price);
                 lastMap.put(symbol, price);
 
-                pr("handle price last ", symbol, t, price, ytdDayData.get(symbol));
-
+                //pr("handle price last ", symbol, t, price, ytdDayData.get(symbol));
 //                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
 //                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
 //                            ytdDayData.get(symbol).firstEntry().getValue().getClose(),

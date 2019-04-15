@@ -256,7 +256,7 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
         boolean connectionStatus = false;
 
         try {
-            ap.connect("127.0.0.1", 7496, 3, "");
+            ap.connect("127.0.0.1", 7496, 10, "");
             connectionStatus = true;
             pr(" connection status is true ");
             l.countDown();
@@ -266,7 +266,7 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
 
         if (!connectionStatus) {
             pr(" using port 4001 ");
-            ap.connect("127.0.0.1", 4001, 3, "");
+            ap.connect("127.0.0.1", 4001, 10, "");
             l.countDown();
             pr(" Latch counted down " + LocalTime.now());
         }
