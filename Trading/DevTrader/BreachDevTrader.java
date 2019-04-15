@@ -46,7 +46,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
     private static final double HI_LIMIT = 4000000.0;
     private static final double LO_LIMIT = -4000000.0;
-    private static final double ABS_LIMIT = 5000000.0;
+    //private static final double ABS_LIMIT = 5000000.0;
 
     public static Map<Currency, Double> fx = new HashMap<>();
     private static Map<String, Double> multi = new HashMap<>();
@@ -201,6 +201,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         String symbol = utility.Utility.ibContractToSymbol(c);
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
+            //pr("ytd open  ", symbol, ld, close);
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         }
     }
@@ -229,8 +230,9 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             AtomicInteger counter = new AtomicInteger(1);
             pr(" symbol in positionEnd ", symb);
             ytdDayData.put(symb, new ConcurrentSkipListMap<>());
+
             if (!symb.equals("USD")) {
-                if (counter.get() % 50 == 0) {
+                if (counter.get() % 40 == 0) {
                     try {
                         Thread.sleep(5000L);
                     } catch (InterruptedException e) {
@@ -238,7 +240,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     }
                 }
                 apDev.reqHistDayData(ibStockReqId.addAndGet(5),
-                        histCompatibleCt(c), BreachDevTrader::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
+                        histCompatibleCt(c), BreachDevTrader::ytdOpen,
+                        getCalendarYtdDays() + 10, Types.BarSize._1_day);
                 counter.incrementAndGet();
             }
             apDev.req1ContractLive(c, this, false);
@@ -289,7 +292,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
         boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
 
-        if (!added && !liquidated && pos == 0.0 && prevClose != 0.0 && totalAbsDelta < ABS_LIMIT) {
+        if (!added && !liquidated && pos == 0.0 && prevClose != 0.0) {
 
 //            pr(t.format(f1), "breach adder", symbol, "pos", pos, "prevC", prevClose,
 //                    "price", price, "yOpen", yOpen, "mOpen", mOpen, "devFromMaxOpen",
@@ -417,6 +420,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                 liveData.get(symbol).put(t, price);
                 lastMap.put(symbol, price);
 
+                pr("handle price last ", symbol, t, price, ytdDayData.get(symbol));
+
 //                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
 //                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
 //                            ytdDayData.get(symbol).firstEntry().getValue().getClose(),
@@ -439,27 +444,27 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                         breachAdder(ct, price, t, yStart, mStart);
                     }
 
-//                    double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
-//
-//                    boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
-//                    boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
-//
-//                    double delta = getDelta(ct, price, pos, fx.getOrDefault(Currency.get(ct.currency()), 1.0));
-//
-//                    String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
-//                            fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
-//                    if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
-//                        //pr(symbol, liveData.get(symbol));
-//                        pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,
-//                                "yStart:" + yStartDate + " " + yStart
-//                                        + "(" + Math.round(1000d * (price / yStart - 1)) / 10d + "%)"
-//                                , "mStart:" + mStartDate + " " + mStart
-//                                        + "(" + Math.round(1000d * (price / mStart - 1)) / 10d + "%)",
-//                                "Last:", liveData.get(symbol).lastKey().format(f1) + " " + price
-//                                , pos != 0.0 ? ("Delta:" + deltaDisplay
-//                                        + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
-//                                        + "%)" : "")) : "");
-//                    }
+                    double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
+
+                    boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
+                    boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
+
+                    double delta = getDelta(ct, price, pos, fx.getOrDefault(Currency.get(ct.currency()), 1.0));
+
+                    String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
+                            fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
+                    if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
+                        //pr(symbol, liveData.get(symbol));
+                        pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,
+                                "yStart:" + yStartDate + " " + yStart
+                                        + "(" + Math.round(1000d * (price / yStart - 1)) / 10d + "%)"
+                                , "mStart:" + mStartDate + " " + mStart
+                                        + "(" + Math.round(1000d * (price / mStart - 1)) / 10d + "%)",
+                                "Last:", liveData.get(symbol).lastKey().format(f1) + " " + price
+                                , pos != 0.0 ? ("Delta:" + deltaDisplay
+                                        + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
+                                        + "%)" : "")) : "");
+                    }
                 }
                 break;
             case BID:
