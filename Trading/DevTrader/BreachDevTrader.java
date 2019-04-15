@@ -452,18 +452,18 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
                     String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
                             fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
-                    if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
-                        //pr(symbol, liveData.get(symbol));
-                        pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,
-                                "yStart:" + yStartDate + " " + yStart
-                                        + "(" + Math.round(1000d * (price / yStart - 1)) / 10d + "%)"
-                                , "mStart:" + mStartDate + " " + mStart
-                                        + "(" + Math.round(1000d * (price / mStart - 1)) / 10d + "%)",
-                                "Last:", liveData.get(symbol).lastKey().format(f1) + " " + price
-                                , pos != 0.0 ? ("Delta:" + deltaDisplay
-                                        + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
-                                        + "%)" : "")) : "");
-                    }
+//                    if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
+//                        //pr(symbol, liveData.get(symbol));
+//                        pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,
+//                                "yStart:" + yStartDate + " " + yStart
+//                                        + "(" + Math.round(1000d * (price / yStart - 1)) / 10d + "%)"
+//                                , "mStart:" + mStartDate + " " + mStart
+//                                        + "(" + Math.round(1000d * (price / mStart - 1)) / 10d + "%)",
+//                                "Last:", liveData.get(symbol).lastKey().format(f1) + " " + price
+//                                , pos != 0.0 ? ("Delta:" + deltaDisplay
+//                                        + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
+//                                        + "%)" : "")) : "");
+//                    }
                 }
                 break;
             case BID:
