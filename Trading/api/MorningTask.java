@@ -26,12 +26,12 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import static utility.Utility.*;
 import static utility.Utility.getUSStockContract;
 
-public final class MorningTask implements HistoricalHandler, LiveHandler, ApiController.IPositionHandler {
+public final class MorningTask implements HistoricalHandler, LiveHandler, ApiController.IPositionHandler
+        , ApiController.IAccountSummaryHandler {
 
     static final DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d");
     private static final LocalDate LAST_MONTH_DAY = getLastMonthLastDay();
@@ -549,7 +549,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         //breachUSNamesData();
 
         AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
-        ap.reqAccountSummary("All", tags, new ApiController.IAccountSummaryHandler.AccountInfoHandler());
+        ap.reqAccountSummary("All", tags, this);
     }
 
     private void getUSDDetailed(ApiController ap) {
@@ -1071,5 +1071,20 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
             c.exchange("SMART");
         }
         return c;
+    }
+
+    @Override
+    public void accountSummary(String account, AccountSummaryTag tag, String value, String currency) {
+        String output = getStrCheckNull(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
+                , account, tag, value, currency);
+        if (LocalDateTime.now().toLocalTime().getSecond() < 20) {
+            pr("Account Pnl: ", output, "**********************");
+        }
+
+    }
+
+    @Override
+    public void accountSummaryEnd() {
+
     }
 }

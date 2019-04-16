@@ -497,8 +497,8 @@ public class ApiController implements EWrapper {
                 if (LocalDateTime.now().toLocalTime().getSecond() < 20) {
                     pr("Account Pnl: ", output, "**********************");
                 }
-                AutoTraderXU.updateLog(str("Account pnl", output));
-                AutoTraderXU.currentIBNAV = Double.parseDouble(value);
+                //AutoTraderXU.updateLog(str("Account pnl", output));
+                //AutoTraderXU.currentIBNAV = Double.parseDouble(value);
             }
 
             @Override
@@ -593,7 +593,6 @@ public class ApiController implements EWrapper {
         if (handler2 != null) {
             handler2.marketValueSummaryEnd();
         }
-
         recEOM();
     }
 
