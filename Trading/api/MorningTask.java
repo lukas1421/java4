@@ -1044,9 +1044,8 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
             x.printStackTrace();
         }
 
-        symbolSize.forEach((k, v) -> {
-            chinaAllOutputString.add(new LinkedList<>(Arrays.asList(k, k, "美", "美", "USD", "STK")));
-        });
+        symbolSize.forEach((k, v) ->
+                chinaAllOutputString.add(new LinkedList<>(Arrays.asList(k, k, "美", "美", "USD", "STK"))));
 
         //need to add stocks in position but not in symbolSize
         holdingsMap.forEach((ct, v) -> {
