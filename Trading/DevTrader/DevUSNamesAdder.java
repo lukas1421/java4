@@ -98,7 +98,7 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
 
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
-        if (!contract.symbol().equals("USD")) {
+        if (contract.secType() == Types.SecType.STK && contract.currency().equalsIgnoreCase("USD")) {
             contractPosition.put(contract, position);
         }
     }
@@ -124,6 +124,7 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
             }
             staticController.reqHistDayData(ibStockReqId.addAndGet(5),
                     c, DevUSNamesAdder::breachPriceHandler, 5, Types.BarSize._1_day);
+            pr("dev us names ", ibContractToSymbol(c), ibStockReqId.get());
             counter.incrementAndGet();
         }
 
