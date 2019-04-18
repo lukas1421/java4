@@ -88,18 +88,18 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 //        }
 
 
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(TradingConstants.GLOBALPATH + "breachUSNames.txt")))) {
-            while ((line = reader1.readLine()) != null) {
-                List<String> al1 = Arrays.asList(line.split("\t"));
-                registerContract(getUSStockContract(al1.get(0)));
-            }
-        } catch (IOException x) {
-            x.printStackTrace();
-        }
-
-        Contract activeXIN50Fut = gettingActiveContract();
-        registerContract(activeXIN50Fut);
+//        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+//                new FileInputStream(TradingConstants.GLOBALPATH + "breachUSNames.txt")))) {
+//            while ((line = reader1.readLine()) != null) {
+//                List<String> al1 = Arrays.asList(line.split("\t"));
+//                registerContract(getUSStockContract(al1.get(0)));
+//            }
+//        } catch (IOException x) {
+//            x.printStackTrace();
+//        }
+//
+//        Contract activeXIN50Fut = gettingActiveContract();
+//        registerContract(activeXIN50Fut);
     }
 
     private void registerContract(Contract ct) {
@@ -174,6 +174,8 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         if (!contract.symbol().equals("USD") && !ibContractToSymbol(contract).equalsIgnoreCase("SGXA50PR")) {
             contractPosMap.put(contract, position);
             symbolPosMap.put(ibContractToSymbol(contract), position);
+
+            //pr("put in position ", contract.symbol(), ibContractToSymbol(contract), position);
         }
     }
 
@@ -181,19 +183,19 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     public void positionEnd() {
         for (Contract c : contractPosMap.keySet()) {
             String k = ibContractToSymbol(c);
+
             ytdDayData.put(k, new ConcurrentSkipListMap<>());
-            if (!k.equals("USD")) {
-                CompletableFuture.runAsync(() -> {
-                    try {
-                        semaphore.acquire();
-                        brMonController.reqHistDayData(ibStockReqId.addAndGet(5),
-                                histCompatibleCt(c), BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                });
-            }
-            brMonController.req1ContractLive(c, this, false);
+            CompletableFuture.runAsync(() -> {
+                try {
+                    semaphore.acquire();
+                    Contract histCt = histCompatibleCt(c);
+                    brMonController.reqHistDayData(ibStockReqId.addAndGet(5),
+                            histCt, BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+            brMonController.req1ContractLive(liveCompatibleCt(c), this, false);
         }
     }
 
