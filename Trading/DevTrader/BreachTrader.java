@@ -24,7 +24,7 @@ import static util.AutoOrderType.*;
 import static utility.TradingUtility.*;
 import static utility.Utility.*;
 
-public class BreachDevTrader implements LiveHandler, ApiController.IPositionHandler {
+public class BreachTrader implements LiveHandler, ApiController.IPositionHandler {
 
     static final int MAX_ATTEMPTS = 100;
     static volatile NavigableMap<Integer, OrderAugmented> devOrderMap = new ConcurrentSkipListMap<>();
@@ -83,7 +83,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
     private static Semaphore histSemaphore = new Semaphore(45);
 
-    private BreachDevTrader() {
+    private BreachTrader() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
@@ -238,7 +238,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
                     try {
                         histSemaphore.acquire();
                         apDev.reqHistDayData(ibStockReqId.addAndGet(5),
-                                histCompatibleCt(c), BreachDevTrader::ytdOpen,
+                                histCompatibleCt(c), BreachTrader::ytdOpen,
                                 getCalendarYtdDays() + 10, Types.BarSize._1_day);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
@@ -496,7 +496,7 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
 
 
     public static void main(String[] args) {
-        BreachDevTrader trader = new BreachDevTrader();
+        BreachTrader trader = new BreachTrader();
         trader.connectAndReqPos();
         apDev.cancelAllOrders();
 

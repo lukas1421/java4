@@ -20,8 +20,8 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static DevTrader.BreachDevTrader.devOrderMap;
-import static DevTrader.BreachDevTrader.devTradeID;
+import static DevTrader.BreachTrader.devOrderMap;
+import static DevTrader.BreachTrader.devTradeID;
 import static client.Types.TimeInForce.IOC;
 import static util.AutoOrderType.BREACH_CUTTER;
 import static utility.TradingUtility.placeBidLimitTIF;

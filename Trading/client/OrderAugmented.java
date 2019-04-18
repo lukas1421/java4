@@ -6,7 +6,7 @@ import util.AutoOrderType;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static DevTrader.BreachDevTrader.f2;
+import static DevTrader.BreachTrader.f2;
 import static utility.Utility.ibContractToSymbol;
 import static utility.Utility.str;
 

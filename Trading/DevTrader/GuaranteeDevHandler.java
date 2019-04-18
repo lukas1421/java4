@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static DevTrader.BreachDevTrader.*;
+import static DevTrader.BreachTrader.*;
 import static client.OrderStatus.Filled;
 import static client.OrderStatus.PendingCancel;
 import static client.Types.TimeInForce.DAY;
@@ -97,9 +97,9 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
             } else if (attempts.get() > MAX_ATTEMPTS) {
                 Contract ct = devOrderMap.get(currentID).getContract();
-                double lastPrice = BreachDevTrader.getLast(symbol);
-                double bid = BreachDevTrader.getBid(symbol);
-                double ask = BreachDevTrader.getAsk(symbol);
+                double lastPrice = BreachTrader.getLast(symbol);
+                double bid = BreachTrader.getBid(symbol);
+                double ask = BreachTrader.getAsk(symbol);
 
                 Order prevOrder = devOrderMap.get(currentID).getOrder();
                 Order o = new Order();
@@ -145,9 +145,9 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
             } else if (orderState.status() == PendingCancel && devOrderMap.get(currentID).getOrder().tif() == IOC) {
                 Contract ct = devOrderMap.get(currentID).getContract();
-                double lastPrice = BreachDevTrader.getLast(symbol);
-                double bid = BreachDevTrader.getBid(symbol);
-                double ask = BreachDevTrader.getAsk(symbol);
+                double lastPrice = BreachTrader.getLast(symbol);
+                double bid = BreachTrader.getBid(symbol);
+                double ask = BreachTrader.getAsk(symbol);
 
                 Order prevOrder = devOrderMap.get(currentID).getOrder();
                 Order o = new Order();

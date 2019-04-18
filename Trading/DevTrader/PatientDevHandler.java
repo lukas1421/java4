@@ -10,8 +10,8 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static DevTrader.BreachDevTrader.devOrderMap;
-import static DevTrader.BreachDevTrader.f2;
+import static DevTrader.BreachTrader.devOrderMap;
+import static DevTrader.BreachTrader.f2;
 import static utility.TradingUtility.outputToError;
 import static client.OrderStatus.Filled;
 import static utility.Utility.*;
