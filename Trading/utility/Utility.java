@@ -924,11 +924,11 @@ public class Utility {
             return newC;
         }
 
-//        if (c.currency().equals("USD") && c.secType().equals(Types.SecType.STK)
-//                && c.exchange().equalsIgnoreCase("SMART")) {
-//            c.exchange("SMART");
-//            return c;
-//        }
+        if (c.currency().equals("USD") && c.secType().equals(Types.SecType.STK)
+                && c.exchange().equalsIgnoreCase("SMART")) {
+            c.exchange("SMART");
+            return c;
+        }
         return c;
     }
 

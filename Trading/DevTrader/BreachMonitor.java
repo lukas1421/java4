@@ -77,15 +77,15 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             x.printStackTrace();
         }
 
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(TradingConstants.GLOBALPATH + "breachHKNames.txt")))) {
-            while ((line = reader1.readLine()) != null) {
-                List<String> al1 = Arrays.asList(line.split("\t"));
-                registerContract(getGenericContract(al1.get(0), "SEHK", "HKD", Types.SecType.STK));
-            }
-        } catch (IOException x) {
-            x.printStackTrace();
-        }
+//        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+//                new FileInputStream(TradingConstants.GLOBALPATH + "breachHKNames.txt")))) {
+//            while ((line = reader1.readLine()) != null) {
+//                List<String> al1 = Arrays.asList(line.split("\t"));
+//                registerContract(getGenericContract(al1.get(0), "SEHK", "HKD", Types.SecType.STK));
+//            }
+//        } catch (IOException x) {
+//            x.printStackTrace();
+//        }
 
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
@@ -161,18 +161,12 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
         pr(" Time after latch released " + LocalTime.now());
         ap.reqPositions(this);
-        //getExecs(ap);
     }
 
     private void reqHoldings(ApiController ap) {
         ap.reqPositions(this);
     }
 
-    private void getExecs(ApiController ap) {
-        //uniqueTradeKeySet = new HashSet<>();
-        //tradesMap.replaceAll((k, v) -> new ConcurrentSkipListMap<>());
-        ap.reqExecutions(new ExecutionFilter(), this);
-    }
 
     //positions
     @Override
@@ -185,37 +179,18 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
     @Override
     public void positionEnd() {
-        //pr(" holdings map ", contractPosMap);
-//        contractPosMap.entrySet().stream().forEachOrdered((e)
-//                -> pr("symb pos ", ibContractToSymbol(e.getKey()), e.getValue()));
-        //AtomicInteger counter = new AtomicInteger(1);
         for (Contract c : contractPosMap.keySet()) {
             String k = ibContractToSymbol(c);
-            //pr("position end: ticker/symbol ", c.symbol(), k);
             ytdDayData.put(k, new ConcurrentSkipListMap<>());
             if (!k.equals("USD")) {
-//                if (counter.get() % 40 == 0) {
-//                    try {
-//                        Thread.sleep(10000L);
-//                    } catch (InterruptedException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
-
                 CompletableFuture.runAsync(() -> {
                     try {
                         semaphore.acquire();
                         brMonController.reqHistDayData(ibStockReqId.addAndGet(5),
                                 histCompatibleCt(c), BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
-
-//                pr("requesting sem:", semaphore.availablePermits(),
-//                        ibStockReqId.get(), ibContractToSymbol(c), c.exchange(), c.getSecType());
-
-                        //pr("thread name in req ", Thread.currentThread().getName());
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-
                 });
             }
             brMonController.req1ContractLive(c, this, false);
@@ -230,8 +205,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                                 double close, int volume) {
         String symbol = utility.Utility.ibContractToSymbol(c);
 
-        //pr("ytd open", symbol, date, open, close);
-
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
 
@@ -242,8 +215,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             }
 
         } else {
-            //pr("finished thread get name ", Thread.currentThread().getName());
-            //pr("releasing sem ", semaphore.availablePermits(), Thread.currentThread().getName());
             semaphore.release();
 
             double pos = contractPosMap.getOrDefault(c, 0.0);
@@ -482,9 +453,11 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             double totalDelta = contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
                     , getPriceFromYtd(e.getKey()), e.getValue(),
                     fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
+
             double totalAbsDelta = contractPosMap.entrySet().stream().mapToDouble(e ->
                     Math.abs(getDelta(e.getKey(), getPriceFromYtd(e.getKey()), e.getValue(),
                             fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();
+
             double longDelta = contractPosMap.entrySet().stream().mapToDouble(e ->
                     Math.max(0, getDelta(e.getKey(), getPriceFromYtd(e.getKey()), e.getValue(),
                             fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();

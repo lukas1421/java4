@@ -203,7 +203,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         String symbol = utility.Utility.ibContractToSymbol(c);
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
-            //pr("ytd open  ", symbol, ld, close);
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         } else {
             histSemaphore.release(1);
@@ -235,7 +234,6 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             ytdDayData.put(symb, new ConcurrentSkipListMap<>());
 
             if (!symb.equals("USD")) {
-
                 CompletableFuture.runAsync(() -> {
                     try {
                         histSemaphore.acquire();
