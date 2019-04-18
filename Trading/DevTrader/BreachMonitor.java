@@ -174,8 +174,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         if (!contract.symbol().equals("USD") && !ibContractToSymbol(contract).equalsIgnoreCase("SGXA50PR")) {
             contractPosMap.put(contract, position);
             symbolPosMap.put(ibContractToSymbol(contract), position);
-
-            //pr("put in position ", contract.symbol(), ibContractToSymbol(contract), position);
         }
     }
 

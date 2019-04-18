@@ -937,19 +937,11 @@ public class Utility {
     }
 
     public static Contract liveCompatibleCt(Contract c) {
-
         if (c.symbol().equalsIgnoreCase("XINA50") && c.exchange() == null) {
             pr(" adding exchange in hist compatible");
             c.exchange("SGX");
         }
-//        if (c.secType() == Types.SecType.FUT) {
-//            Contract newC = new Contract();
-//            newC.symbol(c.symbol());
-//            newC.exchange(c.exchange());
-//            newC.currency(c.currency());
-//            newC.lastTradeDateOrContractMonth(c.lastTradeDateOrContractMonth());
-//            return newC;
-//        }
+
         if (c.currency().equalsIgnoreCase("USD") && c.secType() == Types.SecType.STK) {
             return getUSStockContract(c.symbol());
         }
