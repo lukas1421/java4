@@ -4,6 +4,8 @@ import api.TradingConstants;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
+import com.mchange.v2.codegen.bean.CompleteConstructorGeneratorExtension;
+import com.sun.xml.internal.ws.util.CompletedFuture;
 import controller.ApiConnection;
 import controller.ApiController;
 import utility.Utility;
@@ -39,6 +41,8 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
     private volatile static Set<String> breachNameSet = new TreeSet<>();
 
     private volatile static Map<String, Integer> symbolLotsize = new TreeMap<>(String::compareTo);
+
+    private static Semaphore semaphore = new Semaphore(45);
 
 
     private DevUSNamesAdder() {
@@ -109,23 +113,21 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
             breachNameSet.add(ibContractToSymbol(c));
         }
 
-        AtomicInteger counter = new AtomicInteger(1);
 
         for (String k : breachNameSet) {
             Contract c = getUSStockContract(k);
             symbolBarData.put(k, new ConcurrentSkipListMap<>());
-            if (counter.get() % 50 == 0) {
+
+            CompletableFuture.runAsync(() -> {
                 try {
-                    pr("sleeping for 5 secs ", counter.get());
-                    Thread.sleep(5000);
+                    semaphore.acquire();
+                    staticController.reqHistDayData(ibStockReqId.addAndGet(5),
+                            c, DevUSNamesAdder::breachPriceHandler, 5, Types.BarSize._1_day);
+                    pr("dev us names ", ibContractToSymbol(c), ibStockReqId.get());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }
-            staticController.reqHistDayData(ibStockReqId.addAndGet(5),
-                    c, DevUSNamesAdder::breachPriceHandler, 5, Types.BarSize._1_day);
-            pr("dev us names ", ibContractToSymbol(c), ibStockReqId.get());
-            counter.incrementAndGet();
+            });
         }
 
     }
@@ -139,6 +141,7 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             symbolBarData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         } else {
+            semaphore.release();
             double last = symbolBarData.get(symbol).lastEntry().getValue().getClose();
             int defaultSize = close > 300.0 ? 0 : (int) (Math.round(12500.0 / last / 100.0)) * 100;
             pr("Breach handler", symbol, last, defaultSize);
