@@ -81,6 +81,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
         return askMap.getOrDefault(symb, 0.0);
     }
 
+    private static Semaphore histSemaphore = new Semaphore(45);
+
     private BreachDevTrader() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
@@ -203,6 +205,8 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             //pr("ytd open  ", symbol, ld, close);
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
+        } else {
+            histSemaphore.release(1);
         }
     }
 
@@ -227,22 +231,21 @@ public class BreachDevTrader implements LiveHandler, ApiController.IPositionHand
     public void positionEnd() {
         for (Contract c : contractPosMap.keySet()) {
             String symb = ibContractToSymbol(c);
-            AtomicInteger counter = new AtomicInteger(1);
             pr(" symbol in positionEnd ", symb);
             ytdDayData.put(symb, new ConcurrentSkipListMap<>());
 
             if (!symb.equals("USD")) {
-                if (counter.get() % 40 == 0) {
+
+                CompletableFuture.runAsync(() -> {
                     try {
-                        Thread.sleep(5000L);
+                        histSemaphore.acquire();
+                        apDev.reqHistDayData(ibStockReqId.addAndGet(5),
+                                histCompatibleCt(c), BreachDevTrader::ytdOpen,
+                                getCalendarYtdDays() + 10, Types.BarSize._1_day);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                }
-                apDev.reqHistDayData(ibStockReqId.addAndGet(5),
-                        histCompatibleCt(c), BreachDevTrader::ytdOpen,
-                        getCalendarYtdDays() + 10, Types.BarSize._1_day);
-                counter.incrementAndGet();
+                });
             }
             apDev.req1ContractLive(c, this, false);
         }

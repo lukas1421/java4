@@ -50,6 +50,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
     private static Map<Currency, Double> fx = new HashMap<>();
 
+    private static Semaphore semaphore = new Semaphore(40);
+
+    static ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
+
 
     private BreachMonitor() {
         String line;
@@ -184,28 +188,37 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         //pr(" holdings map ", contractPosMap);
 //        contractPosMap.entrySet().stream().forEachOrdered((e)
 //                -> pr("symb pos ", ibContractToSymbol(e.getKey()), e.getValue()));
-        AtomicInteger counter = new AtomicInteger(0);
+        //AtomicInteger counter = new AtomicInteger(1);
         for (Contract c : contractPosMap.keySet()) {
             String k = ibContractToSymbol(c);
             //pr("position end: ticker/symbol ", c.symbol(), k);
             ytdDayData.put(k, new ConcurrentSkipListMap<>());
             if (!k.equals("USD")) {
-                //if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
-                counter.incrementAndGet();
-                //pr("counter ", counter.get(), k);
-                if (counter.get() != 0 && counter.get() % 50 == 0) {
+//                if (counter.get() % 40 == 0) {
+//                    try {
+//                        Thread.sleep(10000L);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                }
+
+                CompletableFuture.runAsync(() -> {
                     try {
-                        Thread.sleep(5000);
+                        semaphore.acquire();
+                        brMonController.reqHistDayData(ibStockReqId.addAndGet(5),
+                                histCompatibleCt(c), BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
+
+//                pr("requesting sem:", semaphore.availablePermits(),
+//                        ibStockReqId.get(), ibContractToSymbol(c), c.exchange(), c.getSecType());
+
+                        //pr("thread name in req ", Thread.currentThread().getName());
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
-                }
-                brMonController.reqHistDayData(ibStockReqId.addAndGet(5),
-                        histCompatibleCt(c), BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
-                brMonController.req1ContractLive(c, this, false);
-//                pr("mon requesting", ibStockReqId.get(), ibContractToSymbol(c), c.exchange(), c.getSecType());
 
+                });
             }
+            brMonController.req1ContractLive(c, this, false);
         }
     }
 
@@ -217,6 +230,8 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                                 double close, int volume) {
         String symbol = utility.Utility.ibContractToSymbol(c);
 
+        //pr("ytd open", symbol, date, open, close);
+
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
 
@@ -227,6 +242,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             }
 
         } else {
+            //pr("finished thread get name ", Thread.currentThread().getName());
+            //pr("releasing sem ", semaphore.availablePermits(), Thread.currentThread().getName());
+            semaphore.release();
+
             double pos = contractPosMap.getOrDefault(c, 0.0);
             if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
                 double yOpen;
