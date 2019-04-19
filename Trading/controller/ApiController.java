@@ -1103,6 +1103,10 @@ public class ApiController implements EWrapper {
         ct.symbol(ticker);
         ct.exchange(ex);
         ct.currency(curr);
+        if (ticker.equals("ASHR") || ticker.equals("MSFT") || ticker.equals("CSCO")) {
+            pr("setting primary exchange", ticker);
+            ct.primaryExch("ARCA");
+        }
         ct.secType(SecType.STK);
         return ct;
     }

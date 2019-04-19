@@ -3987,7 +3987,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return apcon;
     }
 
-    public static void updateLog(String s) {
+    private static void updateLog(String s) {
         SwingUtilities.invokeLater(() -> {
             outputArea.append(s);
             outputArea.append("\n");

@@ -457,7 +457,7 @@ public final class ChinaMain implements IConnectionHandler {
                 M_CONTROLLER.reqXUDataArray();
                 M_CONTROLLER.reqNonChinaTrader();
                 M_CONTROLLER.reqHKAutoTrader();
-                M_CONTROLLER.reqUSAutoTrader();
+                //M_CONTROLLER.reqUSAutoTrader();
                 M_CONTROLLER.reqHKInPosLive();
                 AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
                 M_CONTROLLER.reqAccountSummary("All", tags

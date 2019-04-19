@@ -949,7 +949,7 @@ public class ChinaOption extends JPanel implements Runnable {
                     optionPriceMap.put(resName, Double.parseDouble(res1.get(2)));
                     optionPriceMap.put(resName, Double.parseDouble(res1.get(2)));
                     if (!optionListLive.contains(resName)) {
-                        pr(" adding option name ", resName, f.toString(), expiry);
+                        //pr(" adding option name ", resName, f.toString(), expiry);
                         optionListLive.add(resName);
                     }
 

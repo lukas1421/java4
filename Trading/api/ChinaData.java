@@ -423,9 +423,7 @@ public final class ChinaData extends JPanel {
             //ChinaStockHelper.buildA50FromSSYtdY2();
         });
 
-        getSGXA50HistButton.addActionListener(l -> CompletableFuture.runAsync(() ->
-
-        {
+        getSGXA50HistButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
             controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
                     TradingUtility.getFrontFutContract(), ChinaData::handleSGX50HistData, 7);
             controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),

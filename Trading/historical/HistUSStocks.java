@@ -34,12 +34,12 @@ import static utility.Utility.getMondayOfWeek;
 
 //import javax.swing.table.TableRowSorter;
 
-public class HistUSStocks extends JPanel  {
+public class HistUSStocks extends JPanel {
 
     //static final String USCHINASTOCKFILE = "USChinaStocks.txt";
     private static final String USALLFILE = "USAll.txt";
     //static final String USFAMOUSFILE = "USFamous.txt";
-    private static final String USCurrent= USALLFILE;
+    private static final String USCurrent = USALLFILE;
 
     private static volatile Semaphore sm = new Semaphore(50);
     private static final LocalDate MONDAY_OF_WEEK = getMondayOfWeek(LocalDateTime.now());
@@ -47,7 +47,7 @@ public class HistUSStocks extends JPanel  {
     private static final String CUTOFFTIME = getDataCutoff();
     private static final int DAYSTOREQUESTYtd = (int) Math.round(ChronoUnit.DAYS.between(
             LocalDate.of(LocalDate.now().getYear() - 1, Month.DECEMBER, 31),
-            LocalDate.now())*252/365) ;
+            LocalDate.now()) * 252 / 365);
 
     private static final int DAYSTOREQUESTWtd = (int) ChronoUnit.DAYS.between(
             getMondayOfWeek(LocalDateTime.now()), LocalDate.now()) + 2;
@@ -143,14 +143,14 @@ public class HistUSStocks extends JPanel  {
         JScrollPane jp1 = new JScrollPane(graphYtd) {
             @Override
             public Dimension getPreferredSize() {
-                Dimension d =  super.getPreferredSize();
+                Dimension d = super.getPreferredSize();
                 d.height = 250;
                 d.width = 1900;
                 return d;
             }
         };
 
-        JScrollPane jp2 = new JScrollPane(graphWtd){
+        JScrollPane jp2 = new JScrollPane(graphWtd) {
             @Override
             public Dimension getPreferredSize() {
                 Dimension d = super.getPreferredSize();
@@ -159,7 +159,6 @@ public class HistUSStocks extends JPanel  {
                 return d;
             }
         };
-
 
 
         JPanel controlPanel = new JPanel() {
@@ -193,8 +192,8 @@ public class HistUSStocks extends JPanel  {
         });
 
         JButton outputYtdButton = new JButton("Output Y");
-        outputYtdButton.addActionListener(al->{
-            if(USALLYtd.containsKey(selectedStock)) {
+        outputYtdButton.addActionListener(al -> {
+            if (USALLYtd.containsKey(selectedStock)) {
                 Utility.clearFile(usTestOutput);
                 USALLYtd.get(selectedStock).forEach((key, value) -> Utility.simpleWriteToFile(
                         Utility.getStrTabbed(key, value.getOpen(), value.getHigh()
@@ -206,8 +205,8 @@ public class HistUSStocks extends JPanel  {
         });
 
         JButton outputWtdButton = new JButton("Output W");
-        outputWtdButton.addActionListener(al-> {
-            if(USALLWtd.containsKey(selectedStock)) {
+        outputWtdButton.addActionListener(al -> {
+            if (USALLWtd.containsKey(selectedStock)) {
                 Utility.clearFile(usTestOutput);
                 USALLWtd.get(selectedStock).forEach((key, value) -> Utility.simpleWriteToFile(
                         Utility.getStrTabbed(key, value.getOpen(), value.getHigh()
@@ -217,7 +216,6 @@ public class HistUSStocks extends JPanel  {
                 System.out.println(" cannot find stock for outputting wtd " + selectedStock);
             }
         });
-
 
 
         controlPanel.add(refreshButton);
@@ -233,7 +231,7 @@ public class HistUSStocks extends JPanel  {
         controlPanel.add(totalStocksLabelWtd);
 
 
-        graphPanel.setLayout(new GridLayout(2,1));
+        graphPanel.setLayout(new GridLayout(2, 1));
         graphPanel.add(jp1);
         graphPanel.add(jp2);
 
@@ -241,7 +239,7 @@ public class HistUSStocks extends JPanel  {
         setLayout(new BorderLayout());
         add(controlPanel, BorderLayout.NORTH);
         add(scroll, BorderLayout.CENTER);
-        add(graphPanel,BorderLayout.SOUTH);
+        add(graphPanel, BorderLayout.SOUTH);
 
         tab.setAutoCreateRowSorter(true);
         //TableRowSorter<BarModel_US> sorter = (TableRowSorter<BarModel_US>) tab.getRowSorter();
@@ -275,11 +273,14 @@ public class HistUSStocks extends JPanel  {
         USALLWtd.keySet().forEach(this::request1StockWtd);
     }
 
-    private Contract generateUSStkContract(String stock) {
+    private Contract generateUSStkContract(String symb) {
         Contract ct = new Contract();
-        ct.symbol(stock);
+        ct.symbol(symb);
         ct.currency("USD");
         ct.exchange("SMART");
+        if (symb.equals("ASHR") || symb.equals("MSFT") || symb.equals("CSCO")) {
+            ct.primaryExch("ARCA");
+        }
         ct.secType(Types.SecType.STK);
         return ct;
     }
@@ -356,7 +357,7 @@ public class HistUSStocks extends JPanel  {
                 LocalDate.of(2016, Month.DECEMBER, 31));
         double mean = SharpeUtility.getMean(ret);
         double sd = SharpeUtility.getSD(ret);
-        double sr = SharpeUtility.getSharpe(ret,252);
+        double sr = SharpeUtility.getSharpe(ret, 252);
         double perc = SharpeUtility.getPercentile(USALLYtd.get(stock));
         USResultMapYtd.get(stock).fillResult(mean, sd, sr, perc);
         System.out.println(Utility.getStrTabbed(" stock mean sd sr perc", stock, mean, sd, sr, perc));
@@ -367,12 +368,12 @@ public class HistUSStocks extends JPanel  {
         NavigableMap<LocalDateTime, Double> ret = SharpeUtility.getReturnSeries(USALLWtd.get(stock),
                 LocalDateTime.of(MONDAY_OF_WEEK.minusDays(1), LocalTime.MIN));
         double mean = SharpeUtility.getMean(ret);
-        double sd = SharpeUtility.getSD(ret)*Math.sqrt(78); //get day vol
-        double sr = SharpeUtility.getSharpe(ret,78); //get day SR
+        double sd = SharpeUtility.getSD(ret) * Math.sqrt(78); //get day vol
+        double sr = SharpeUtility.getSharpe(ret, 78); //get day SR
         double perc = SharpeUtility.getPercentile(USALLWtd.get(stock));
         USResultMapWtd.get(stock).fillResult(mean, sd, sr, perc);
         System.out.println(Utility.getStrTabbed(" wtd stock mean sd sr perc size firstEntry last Entry",
-                stock, mean, sd, sr, perc,ret.size(), ret.firstEntry(), ret.lastEntry()));
+                stock, mean, sd, sr, perc, ret.size(), ret.firstEntry(), ret.lastEntry()));
     }
 
 
@@ -386,7 +387,6 @@ public class HistUSStocks extends JPanel  {
         jf.setVisible(true);
         CompletableFuture.runAsync(us::connectToTWS);
     }
-
 
 
     class YtdHandler implements handler.HistoricalHandler {
@@ -413,7 +413,7 @@ public class HistUSStocks extends JPanel  {
             cal.setTime(dt);
             LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
             LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
-            LocalDateTime ldt = LocalDateTime.of(ld,lt);
+            LocalDateTime ldt = LocalDateTime.of(ld, lt);
 
             LocalDate monOfWeek = getMondayOfWeek(LocalDateTime.now());
 
