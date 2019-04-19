@@ -1270,26 +1270,26 @@ public final class ChinaStock extends JPanel {
                 double lastDayPMChg = Math.round(10000d * (lastDayClose / lastDayPMOpen - 1)) / 100d;
                 int lastDayPerc = getPercentileForLast(lastDayMap);
 
-                if (priceMapBar.containsKey(index) && priceMapBar.get(index).size() != 0) {
-                    pr("***" + index, priceMapBar.get(index).lastKey(),
-                            Math.round(priceMapBar.get(index).lastEntry().getValue().getClose()),
-                            "||>O%-950:" + getAboveOpenPercentage950(index) + "%",
-                            "||>O%-Day:" + getAboveOpenPercentage(index) + "%",
-                            "||yDev:" + ydev + "%" + "(" + lastYrEnd + ")",
-                            "||mDev:" + mdev + "%" + "(" + lastMoEnd + ")",
-                            "||DateY", lastDay.format(DateTimeFormatter.ofPattern("M-d"))
-                            , "||AM_chgY:" + lastDayAMChg + "%"
-                            , "||PM_chgY:" + lastDayPMChg + "%",
-                            "||P%Y:" + lastDayPerc + "%");
-                } else {
-                    pr("***" + index, "||yDev:" + ydev + "%" + "(" + lastYrEnd + ")",
-                            "||mDev:" + mdev + "%" + "(" + lastMoEnd + ")",
-                            "||DateY", lastDay.format(DateTimeFormatter.ofPattern("M-d"))
-                            , "||AM_chgY:" + lastDayAMChg + "%"
-                            , "||PM_chgY:" + lastDayPMChg + "%",
-                            "||P%Y:" + lastDayPerc + "%");
-
-                }
+//                if (priceMapBar.containsKey(index) && priceMapBar.get(index).size() != 0) {
+//                    pr("***" + index, priceMapBar.get(index).lastKey(),
+//                            Math.round(priceMapBar.get(index).lastEntry().getValue().getClose()),
+//                            "||>O%-950:" + getAboveOpenPercentage950(index) + "%",
+//                            "||>O%-Day:" + getAboveOpenPercentage(index) + "%",
+//                            "||yDev:" + ydev + "%" + "(" + lastYrEnd + ")",
+//                            "||mDev:" + mdev + "%" + "(" + lastMoEnd + ")",
+//                            "||DateY", lastDay.format(DateTimeFormatter.ofPattern("M-d"))
+//                            , "||AM_chgY:" + lastDayAMChg + "%"
+//                            , "||PM_chgY:" + lastDayPMChg + "%",
+//                            "||P%Y:" + lastDayPerc + "%");
+//                } else {
+//                    pr("***" + index, "||yDev:" + ydev + "%" + "(" + lastYrEnd + ")",
+//                            "||mDev:" + mdev + "%" + "(" + lastMoEnd + ")",
+//                            "||DateY", lastDay.format(DateTimeFormatter.ofPattern("M-d"))
+//                            , "||AM_chgY:" + lastDayAMChg + "%"
+//                            , "||PM_chgY:" + lastDayPMChg + "%",
+//                            "||P%Y:" + lastDayPerc + "%");
+//
+//                }
             }
         }
 
