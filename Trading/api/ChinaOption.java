@@ -832,7 +832,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        pr(" running China option @ " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
+//        pr(" running China option @ " + LocalTime.now().truncatedTo(ChronoUnit.SECONDS));
 
         SwingUtilities.invokeLater(() -> {
             priceLabel.setText(currentStockPrice + "");
@@ -1111,7 +1111,7 @@ public class ChinaOption extends JPanel implements Runnable {
         for (LocalDate expiry : expiryList) {
             timeLapseMoneynessVolAllExpiries.get(expiry).forEach((k, v) ->
                     timeLapseVolAllExpiries.get(expiry).put(k, ChinaOptionHelper.getVolByMoneyness(v, 100)));
-            pr(" expiry is " + expiry);
+//            pr(" expiry is " + expiry);
             //timeLapseMoneynessVolAllExpiries.get(expiry).entrySet().forEach(Utility::pr);
         }
 

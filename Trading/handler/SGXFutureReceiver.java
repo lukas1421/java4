@@ -46,7 +46,7 @@ public class SGXFutureReceiver implements LiveHandler {
                 AutoTraderXU.askMap.put(f, price);
                 break;
             case CLOSE:
-                pr("fut close in receiver: ", symbol, " close ", price);
+//                pr("fut close in receiver: ", symbol, " close ", price);
                 break;
             case LAST:
                 ChinaStock.priceMap.put(symbol, price);

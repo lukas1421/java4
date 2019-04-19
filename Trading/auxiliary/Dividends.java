@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static api.ChinaData.dateMap;
 
 public class Dividends {
 
@@ -29,13 +28,13 @@ public class Dividends {
     }
 
     public static void dealWithDividends() {
-        LocalDate today = dateMap.get(2);
+        //LocalDate today = dateMap.get(2);
         LocalDate ytd;
         LocalDate y2;
-        ytd = dateMap.get(1);
-        y2 = dateMap.get(0);
-        System.out.println(" ytd is " + ytd);
-        System.out.println(" y2 is " + y2);
+//        ytd = dateMap.get(1);
+//        y2 = dateMap.get(0);
+//        System.out.println(" ytd is " + ytd);
+//        System.out.println(" y2 is " + y2);
 
         Map<String, Dividends> divTable = getDiv();
         divTable.forEach((ticker, div) -> {

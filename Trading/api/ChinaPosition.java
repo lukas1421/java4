@@ -1869,53 +1869,45 @@ class IBPosTradesHandler implements ApiController.ITradeReportHandler {
         String symbol = ibContractToSymbol(contract);
 
 
-        if (!ChinaPosition.tradesMap.containsKey(symbol)) {
-            pr(" inputting new entry for ticker ", symbol);
-            TradingUtility.outputToError(str(" trade map does not include symbol ", symbol));
+        if (ChinaPosition.tradesMap.containsKey(symbol)) {
 
-            pr("last expire is", TradingConstants.getFutLastExpiry());
-            pr("front expire is", TradingConstants.getFutFrontExpiry());
-            pr("back expire is", TradingConstants.getFutBackExpiry());
+            int sign = (execution.side().equals("BOT")) ? 1 : -1;
 
-            throw new IllegalStateException(str(" trade map does not include symbol ", symbol));
-        }
+            LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
+            LocalDate d = ldt.toLocalDate();
+            LocalTime t = ldt.toLocalTime();
+            LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
+            //pr("china pos ", tradeKey, contract.symbol(), execution.time(), ldt);
 
-        int sign = (execution.side().equals("BOT")) ? 1 : -1;
+            LocalDate tradeDate = getTradeDate(LocalDateTime.now());
 
-        LocalDateTime ldt = LocalDateTime.parse(execution.time(), DateTimeFormatter.ofPattern("yyyyMMdd  HH:mm:ss"));
-        LocalDate d = ldt.toLocalDate();
-        LocalTime t = ldt.toLocalTime();
-        LocalTime lt = roundUpLocalTime(ldt.toLocalTime());
-        //pr("china pos ", tradeKey, contract.symbol(), execution.time(), ldt);
-
-        LocalDate tradeDate = getTradeDate(LocalDateTime.now());
-
-        if (contract.secType() == Types.SecType.STK && currencyMap.getOrDefault(symbol, CNY) == USD) {
-            ZonedDateTime chinaZdt = ZonedDateTime.of(ldt, chinaZone);
-            ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
-            LocalDateTime usLdt = usZdt.toLocalDateTime();
-            lt = usLdt.toLocalTime();
-        }
-
-        if (symbol.startsWith("SGXA50")) {
-            //pr("SGX", "ldt", ldt, "tradedate", tradeDate);
-            if (ldt.getDayOfMonth() == tradeDate.getDayOfMonth() && t.isAfter(LocalTime.of(8, 59))) {
-                if (ChinaPosition.tradesMap.get(symbol).containsKey(lt)) {
-                    ChinaPosition.tradesMap.get(symbol).get(lt)
-                            .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
-                } else {
-                    ChinaPosition.tradesMap.get(symbol).put(lt,
-                            new TradeBlock(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
-                }
+            if (contract.secType() == Types.SecType.STK && currencyMap.getOrDefault(symbol, CNY) == USD) {
+                ZonedDateTime chinaZdt = ZonedDateTime.of(ldt, chinaZone);
+                ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+                LocalDateTime usLdt = usZdt.toLocalDateTime();
+                lt = usLdt.toLocalTime();
             }
-        } else if (contract.secType() == Types.SecType.STK) {
-            if (ldt.getDayOfMonth() == tradeDate.getDayOfMonth()) {
-                if (ChinaPosition.tradesMap.get(symbol).containsKey(lt)) {
-                    ChinaPosition.tradesMap.get(symbol).get(lt)
-                            .addTrade(new IBStockTrade(execution.price(), (int) Math.round(sign * execution.shares())));
-                } else {
-                    ChinaPosition.tradesMap.get(symbol).put(lt, new TradeBlock(new IBStockTrade(execution.price(),
-                            (int) Math.round(sign * execution.shares()))));
+
+            if (symbol.startsWith("SGXA50")) {
+                //pr("SGX", "ldt", ldt, "tradedate", tradeDate);
+                if (ldt.getDayOfMonth() == tradeDate.getDayOfMonth() && t.isAfter(LocalTime.of(8, 59))) {
+                    if (ChinaPosition.tradesMap.get(symbol).containsKey(lt)) {
+                        ChinaPosition.tradesMap.get(symbol).get(lt)
+                                .addTrade(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares())));
+                    } else {
+                        ChinaPosition.tradesMap.get(symbol).put(lt,
+                                new TradeBlock(new FutureTrade(execution.price(), (int) Math.round(sign * execution.shares()))));
+                    }
+                }
+            } else if (contract.secType() == Types.SecType.STK) {
+                if (ldt.getDayOfMonth() == tradeDate.getDayOfMonth()) {
+                    if (ChinaPosition.tradesMap.get(symbol).containsKey(lt)) {
+                        ChinaPosition.tradesMap.get(symbol).get(lt)
+                                .addTrade(new IBStockTrade(execution.price(), (int) Math.round(sign * execution.shares())));
+                    } else {
+                        ChinaPosition.tradesMap.get(symbol).put(lt, new TradeBlock(new IBStockTrade(execution.price(),
+                                (int) Math.round(sign * execution.shares()))));
+                    }
                 }
             }
         }

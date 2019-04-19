@@ -301,8 +301,8 @@ public final class ChinaStock extends JPanel {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            pr("day ", s, indexData.get(s).firstEntry(), indexData.get(s).lastEntry());
-            pr(" 5m ", s, detailed5mData.get(s).firstEntry(), detailed5mData.get(s).lastEntry());
+//            pr("day ", s, indexData.get(s).firstEntry(), indexData.get(s).lastEntry());
+//            pr(" 5m ", s, detailed5mData.get(s).firstEntry(), detailed5mData.get(s).lastEntry());
         });
 
 
@@ -1240,7 +1240,7 @@ public final class ChinaStock extends JPanel {
     }
 
     static void computeIndex() {
-        pr(" computing index ", LocalTime.now());
+//        pr(" computing index ", LocalTime.now());
         //String index = "sh000016";
         for (String index : indexList) {
 

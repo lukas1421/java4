@@ -79,10 +79,10 @@ public final class ChinaData extends JPanel {
     public static volatile Map<String, Double> wtdSharpe = new HashMap<>();
 
     //very important. This date map is always the last 3 days of A share, not including T)
-    public static volatile Map<Integer, LocalDate> dateMap = new HashMap<>();
+//    public static volatile Map<Integer, LocalDate> dateMap = new HashMap<>();
 
-    static volatile NavigableMap<LocalDate, Double> ftseOpenMap = new TreeMap<>();
-    public static volatile NavigableMap<LocalDate, Double> ftseCloseMap = new TreeMap<>();
+//    static volatile NavigableMap<LocalDate, Double> ftseOpenMap = new TreeMap<>();
+//    public static volatile NavigableMap<LocalDate, Double> ftseCloseMap = new TreeMap<>();
 
     public static List<LocalTime> tradeTime = new LinkedList<>();
     public static List<LocalTime> tradeTimePure = new LinkedList<>();
@@ -139,27 +139,27 @@ public final class ChinaData extends JPanel {
         });
 
         //initialize date map
-        int lineNo = 0;
-        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-                new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
-            String line;
-            while ((line = reader1.readLine()) != null) {
-                List<String> al1 = Arrays.asList(line.split("\t"));
-                if (lineNo > 2) {
-                    throw new IllegalArgumentException(" ERROR: date map has more than 3 lines ");
-                }
-
-                dateMap.put(lineNo, LocalDate.parse(al1.get(0)));
-                ftseOpenMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(1)));
-                ftseCloseMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(2)));
-                closeMap.put(FTSE_INDEX, Double.parseDouble(al1.get(2)));
-                currentTradingDate = LocalDate.parse(al1.get(0));
-                System.out.println(str(" datemap ", lineNo, dateMap.getOrDefault(lineNo, LocalDate.MIN)));
-                lineNo++;
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }
+//        int lineNo = 0;
+//        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+//                new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
+//            String line;
+//            while ((line = reader1.readLine()) != null) {
+//                List<String> al1 = Arrays.asList(line.split("\t"));
+//                if (lineNo > 2) {
+//                    throw new IllegalArgumentException(" ERROR: date map has more than 3 lines ");
+//                }
+//
+////                dateMap.put(lineNo, LocalDate.parse(al1.get(0)));
+////                ftseOpenMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(1)));
+////                ftseCloseMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(2)));
+////                closeMap.put(FTSE_INDEX, Double.parseDouble(al1.get(2)));
+////                currentTradingDate = LocalDate.parse(al1.get(0));
+////                System.out.println(str(" datemap ", lineNo, dateMap.getOrDefault(lineNo, LocalDate.MIN)));
+//                lineNo++;
+//            }
+//        } catch (IOException ex) {
+//            ex.printStackTrace();
+//        }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(
                 TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt")))) {
@@ -247,7 +247,7 @@ public final class ChinaData extends JPanel {
         JButton getYtdButton = new JButton("Ytd");
 
 
-        JButton tdxButton = new JButton("TDX");
+        //JButton tdxButton = new JButton("TDX");
         JButton retrieveAllButton = new JButton("RetrieveAll");
         JButton retrieveTodayButton = new JButton("RetrieveToday");
         JButton outputPricesButton = new JButton("Output prices");
@@ -317,7 +317,6 @@ public final class ChinaData extends JPanel {
         buttonDownPanel.add(getSGXA50TodayButton);
 
         buttonDownPanel.add(Box.createHorizontalStrut(10));
-        buttonDownPanel.add(tdxButton);
         buttonDownPanel.add(retrieveAllButton);
         buttonDownPanel.add(retrieveTodayButton);
         buttonDownPanel.add(outputPricesButton);
@@ -409,26 +408,20 @@ public final class ChinaData extends JPanel {
 
         getFXButton.addActionListener(al -> ChinaStockHelper.getHistoricalFX());
 
-        buildA50Button.addActionListener(al ->
-
-        {
-            System.out.println(" building A50 ");
-            System.out.println(" date map " + dateMap);
-            System.out.println(" ftse open map " + ftseOpenMap);
-
-            ChinaStockHelper.buildA50FromSS(ftseOpenMap.get(dateMap.get(2)));
-            ChinaStockHelper.buildA50Gen(ftseOpenMap.get(dateMap.get(1)), ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
-            ChinaStockHelper.buildA50Gen(ftseOpenMap.get(dateMap.get(0)), ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
+        buildA50Button.addActionListener(al -> {
+//            ChinaStockHelper.buildA50FromSS(ftseOpenMap.get(dateMap.get(2)));
+//            ChinaStockHelper.buildA50Gen(ftseOpenMap.get(dateMap.get(1)), ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
+//            ChinaStockHelper.buildA50Gen(ftseOpenMap.get(dateMap.get(0)), ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
             //ChinaStockHelper.buildA50FromSS();
             //ChinaStockHelper.buildA50FromSSYtdY2();
         });
 
-        getSGXA50HistButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
-            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                    TradingUtility.getFrontFutContract(), ChinaData::handleSGX50HistData, 7);
-            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
-                    TradingUtility.getBackFutContract(), ChinaData::handleSGX50HistData, 7);
-        }));
+//        getSGXA50HistButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
+//            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+//                    TradingUtility.getFrontFutContract(), ChinaData::handleSGX50HistData, 7);
+//            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+//                    TradingUtility.getBackFutContract(), ChinaData::handleSGX50HistData, 7);
+//        }));
 
         getSGXA50TodayButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
             controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
@@ -477,10 +470,10 @@ public final class ChinaData extends JPanel {
         });
 
 
-        tdxButton.addActionListener(l ->
-                getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0)));
+//        tdxButton.addActionListener(l ->
+//                getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0)));
 
-        retrieveAllButton.addActionListener(l -> retrieveDataAll());
+//        retrieveAllButton.addActionListener(l -> retrieveDataAll());
 
         retrieveTodayButton.addActionListener(l -> getTodayTDX(ChinaMain.currentTradingDate));
 
@@ -527,17 +520,15 @@ public final class ChinaData extends JPanel {
         });
     }
 
-    private static void retrieveDataAll() {
-        CompletableFuture.runAsync(() -> controller().getHistoricalCustom(
-                GLOBAL_REQ_ID.addAndGet(5), TradingUtility.getFrontFutContract()
-                , ChinaData::handleSGX50HistData, 7));
-
-        CompletableFuture.runAsync(() -> controller().getHistoricalCustom(
-                GLOBAL_REQ_ID.addAndGet(5), TradingUtility.getBackFutContract()
-                , ChinaData::handleSGX50HistData, 7));
-
-        getFromTDX(dateMap.get(2), dateMap.get(1), dateMap.get(0));
-    }
+//    private static void retrieveDataAll() {
+//        CompletableFuture.runAsync(() -> controller().getHistoricalCustom(
+//                GLOBAL_REQ_ID.addAndGet(5), TradingUtility.getFrontFutContract()
+//                , ChinaData::handleSGX50HistData, 7));
+//
+//        CompletableFuture.runAsync(() -> controller().getHistoricalCustom(
+//                GLOBAL_REQ_ID.addAndGet(5), TradingUtility.getBackFutContract()
+//                , ChinaData::handleSGX50HistData, 7));
+//    }
 
     static void loadPriceBar() {
         CompletableFuture.runAsync(() -> {
@@ -891,65 +882,65 @@ public final class ChinaData extends JPanel {
         return 0.0;
     }
 
-    private static void handleSGX50HistData(Contract c, String date, double open, double high, double low,
-                                            double close, int volume) {
-
-        String ticker = ibContractToSymbol(c);
-        LocalDate currDate = ChinaData.dateMap.get(2);
-        LocalDate ytd = ChinaData.dateMap.get(1);
-        LocalDate y2 = ChinaData.dateMap.get(0);
-
-        if (!date.startsWith("finished")) {
-            Date dt = new Date(Long.parseLong(date) * 1000);
-            Calendar cal = Calendar.getInstance();
-            cal.setTime(dt);
-            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
-            LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
-
-            if (ld.isAfter(MONDAY_OF_WEEK.minusDays(1L))) {
-
-                if ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
-                        || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1)))) {
-
-                    LocalDateTime ldt = LocalDateTime.of(ld, lt);
-                    LocalDateTime ltTo5 = Utility.roundTo5Ldt(ldt);
-                    if (!chinaWtd.get(ticker).containsKey(ltTo5)) {
-                        chinaWtd.get(ticker).put(ltTo5, new SimpleBar(open, high, low, close));
-                    } else {
-                        chinaWtd.get(ticker).get(ltTo5).updateBar(open, high, low, close);
-                    }
-                }
-            }
-
-
-            if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
-                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
-
-                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get(ticker).lowerEntry(lt))
-                        .map(Entry::getValue).orElse(0.0);
-                ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(open, high, low, close));
-                ChinaData.sizeTotalMap.get(ticker).put(lt, volume * 1d + previousVol);
-            }
-
-            if (ld.equals(ytd) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
-                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
-                ChinaData.priceMapBarYtd.get(ticker).put(lt, new SimpleBar(open, high, low, close));
-                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get(ticker).lowerEntry(lt))
-                        .map(Entry::getValue).orElse(0.0);
-                ChinaData.sizeTotalMapYtd.get(ticker).put(lt, volume * 1d + previousVol);
-            }
-
-            if (ld.equals(y2) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
-                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
-                ChinaData.priceMapBarY2.get(ticker).put(lt, new SimpleBar(open, high, low, close));
-                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapY2.get(ticker).lowerEntry(lt))
-                        .map(Entry::getValue).orElse(0.0);
-                ChinaData.sizeTotalMapY2.get(ticker).put(lt, volume * 1d + previousVol);
-            }
-        } else {
-            System.out.println(str(date, open, high, low, close));
-        }
-    }
+//    private static void handleSGX50HistData(Contract c, String date, double open, double high, double low,
+//                                            double close, int volume) {
+//
+//        String ticker = ibContractToSymbol(c);
+//        LocalDate currDate = ChinaData.dateMap.get(2);
+//        LocalDate ytd = ChinaData.dateMap.get(1);
+//        LocalDate y2 = ChinaData.dateMap.get(0);
+//
+//        if (!date.startsWith("finished")) {
+//            Date dt = new Date(Long.parseLong(date) * 1000);
+//            Calendar cal = Calendar.getInstance();
+//            cal.setTime(dt);
+//            LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+//            LocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+//
+//            if (ld.isAfter(MONDAY_OF_WEEK.minusDays(1L))) {
+//
+//                if ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
+//                        || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1)))) {
+//
+//                    LocalDateTime ldt = LocalDateTime.of(ld, lt);
+//                    LocalDateTime ltTo5 = Utility.roundTo5Ldt(ldt);
+//                    if (!chinaWtd.get(ticker).containsKey(ltTo5)) {
+//                        chinaWtd.get(ticker).put(ltTo5, new SimpleBar(open, high, low, close));
+//                    } else {
+//                        chinaWtd.get(ticker).get(ltTo5).updateBar(open, high, low, close);
+//                    }
+//                }
+//            }
+//
+//
+//            if (ld.equals(currDate) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
+//                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
+//
+//                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get(ticker).lowerEntry(lt))
+//                        .map(Entry::getValue).orElse(0.0);
+//                ChinaData.priceMapBar.get(ticker).put(lt, new SimpleBar(open, high, low, close));
+//                ChinaData.sizeTotalMap.get(ticker).put(lt, volume * 1d + previousVol);
+//            }
+//
+//            if (ld.equals(ytd) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
+//                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
+//                ChinaData.priceMapBarYtd.get(ticker).put(lt, new SimpleBar(open, high, low, close));
+//                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapYtd.get(ticker).lowerEntry(lt))
+//                        .map(Entry::getValue).orElse(0.0);
+//                ChinaData.sizeTotalMapYtd.get(ticker).put(lt, volume * 1d + previousVol);
+//            }
+//
+//            if (ld.equals(y2) && ((lt.isAfter(LocalTime.of(9, 29)) && lt.isBefore(LocalTime.of(11, 31)))
+//                    || (lt.isAfter(LocalTime.of(12, 59)) && lt.isBefore(LocalTime.of(15, 1))))) {
+//                ChinaData.priceMapBarY2.get(ticker).put(lt, new SimpleBar(open, high, low, close));
+//                double previousVol = Optional.ofNullable(ChinaData.sizeTotalMapY2.get(ticker).lowerEntry(lt))
+//                        .map(Entry::getValue).orElse(0.0);
+//                ChinaData.sizeTotalMapY2.get(ticker).put(lt, volume * 1d + previousVol);
+//            }
+//        } else {
+//            System.out.println(str(date, open, high, low, close));
+//        }
+//    }
 
     private static void handleSGXDataToday(Contract c, String date, double open, double high, double low,
                                            double close, int volume) {

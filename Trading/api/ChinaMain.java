@@ -214,7 +214,7 @@ public final class ChinaMain implements IConnectionHandler {
                     ChinaData.outputPrices();
                     MorningTask.getBOCFX();
                     ChinaData.outputRecentTradingDate();
-                    ChinaStockHelper.outputIndexFut();
+                    //ChinaStockHelper.outputIndexFut();
                 }
             }, 5, 5, TimeUnit.MINUTES);
 
@@ -316,10 +316,8 @@ public final class ChinaMain implements IConnectionHandler {
         startXU.addActionListener((ae) -> M_CONTROLLER.reqXUDataArray());
 
         //startHK.addActionListener(al -> M_CONTROLLER.reqHKLiveData());
-
-        startIBChina.addActionListener(al -> M_CONTROLLER.reqA50Live());
-
-        startIBHK.addActionListener(al -> M_CONTROLLER.reqHKInPosLive());
+        //startIBChina.addActionListener(al -> M_CONTROLLER.reqA50Live());
+        //startIBHK.addActionListener(al -> M_CONTROLLER.reqHKInPosLive());
 
 
 //        stopXU.addActionListener((ae) -> {
@@ -455,10 +453,10 @@ public final class ChinaMain implements IConnectionHandler {
                 ibConnLatch.await();
                 pr(" ib conn latch finished waiting " + LocalTime.now());
                 M_CONTROLLER.reqXUDataArray();
-                M_CONTROLLER.reqNonChinaTrader();
-                M_CONTROLLER.reqHKAutoTrader();
-                //M_CONTROLLER.reqUSAutoTrader();
-                M_CONTROLLER.reqHKInPosLive();
+//                M_CONTROLLER.reqNonChinaTrader();
+//                M_CONTROLLER.reqHKAutoTrader();
+//                M_CONTROLLER.reqUSAutoTrader();
+//                M_CONTROLLER.reqHKInPosLive();
                 AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
                 M_CONTROLLER.reqAccountSummary("All", tags
                         , new ApiController.IAccountSummaryHandler.AccountInfoHandler());
@@ -488,7 +486,7 @@ public final class ChinaMain implements IConnectionHandler {
                                     outputToAll(LocalDateTime.now().toString());
 
                                     pr(" hib ");
-                                    if (LocalTime.now().isAfter(ltof(9, 5))) {
+                                    if (LocalTime.now().isAfter(ltof(9, 30))) {
                                         if (LocalTime.now().isBefore(ltof(15, 0))) {
                                             Hibtask.loadHibGenPrice();
                                         }
@@ -509,9 +507,7 @@ public final class ChinaMain implements IConnectionHandler {
                                     CompletableFuture.runAsync(ChinaPosition::updatePosition)
                                             .thenRun(ChinaPosition::getOpenTradePositionForFuture);
 
-
                                     //M_CONTROLLER.
-
                                     SwingUtilities.invokeLater(() -> {
                                         pr(" mon ");
                                         ChinaKeyMonitor.refreshButton.doClick();

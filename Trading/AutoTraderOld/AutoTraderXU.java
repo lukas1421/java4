@@ -4018,7 +4018,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 //            }
 
             if (lt.equals(ltof(4, 44))) {
-                pr(" filling fut am close ", name, ldt, close);
+//                pr(" filling fut am close ", name, ldt, close);
                 AutoTraderXU.fut5amClose.put(FutType.get(name), close);
             }
 

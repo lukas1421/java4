@@ -54,7 +54,7 @@ public class TestAPI {
         ct.symbol("XINA50");
         ct.exchange("SGX");
         ct.currency("USD");
-        pr("front exp date ", TradingConstants.A50_FRONT_EXPIRY);
+//        pr("front exp date ", TradingConstants.A50_FRONT_EXPIRY);
         //ct.localSymbol("XINA50");
         //ct.lastTradeDateOrContractMonth(TradingConstants.A50_FRONT_EXPIRY);
         ct.secType(Types.SecType.CONTFUT);

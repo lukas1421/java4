@@ -675,13 +675,13 @@ public final class ChinaStockHelper {
         sizeMap.put(FTSE_INDEX, Math.round(ChinaData.sizeTotalMap.get(FTSE_INDEX).lastEntry().getValue()));
     }
 
-    @SuppressWarnings("unused")
-    public static void buildA50FromSSYtdY2() {
-        double openY2 = ChinaData.ftseOpenMap.get(ChinaData.dateMap.get(0));
-        double openYtd = ChinaData.ftseOpenMap.get(ChinaData.dateMap.get(1));
-        buildA50Gen(openYtd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
-        buildA50Gen(openY2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
-    }
+//    @SuppressWarnings("unused")
+//    public static void buildA50FromSSYtdY2() {
+//        double openY2 = ChinaData.ftseOpenMap.get(ChinaData.dateMap.get(0));
+//        double openYtd = ChinaData.ftseOpenMap.get(ChinaData.dateMap.get(1));
+//        buildA50Gen(openYtd, ChinaData.priceMapBarYtd, ChinaData.sizeTotalMapYtd);
+//        buildA50Gen(openY2, ChinaData.priceMapBarY2, ChinaData.sizeTotalMapY2);
+//    }
 
     static void buildA50Gen(double open, Map<String, ? extends NavigableMap<LocalTime, SimpleBar>> mp,
                             Map<String, ? extends NavigableMap<LocalTime, Double>> volmp) {
