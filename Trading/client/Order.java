@@ -1195,7 +1195,7 @@ public class Order {
     public Order() {
         m_activeStartTime = EMPTY_STR;
         m_activeStopTime = EMPTY_STR;
-        m_outsideRth = false;
+        //m_outsideRth = false;
         m_origin = CUSTOMER;
         m_designatedLocation = EMPTY_STR;
         m_optOutSmartRouting = false;
