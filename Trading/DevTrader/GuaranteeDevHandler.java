@@ -152,7 +152,8 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                                 "attempts:" + attempts.get(), "pos", livePos), breachMDevOutput);
 
 
-            } else if (orderState.status() == PendingCancel && devOrderMap.get(currentID).getOrder().tif() == IOC) {
+            } else if (orderState.status() == PendingCancel && devOrderMap.get(currentID).getOrder().tif() == IOC
+                    && !pastOrderSet.contains(lastOrderID)) {
                 pastOrderSet.add(lastOrderID);
 
                 Contract ct = devOrderMap.get(currentID).getContract();
