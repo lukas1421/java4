@@ -57,7 +57,7 @@ public class AutoTraderMain extends JPanel {
             new ConcurrentSkipListMap<>();
     public static volatile Map<Integer, Order> liveIDOrderMap = new ConcurrentHashMap<>();
     public static volatile Map<String, TreeSet<Order>> liveSymbolOrderSet = new ConcurrentHashMap<>();
-    static final double SGXA50_AUTO_VOL_THRESH = 0.4;
+//    static final double SGXA50_AUTO_VOL_THRESH = 0.4;
 
     static volatile AtomicBoolean noMoreSell = new AtomicBoolean(false);
     static volatile AtomicBoolean noMoreBuy = new AtomicBoolean(true);

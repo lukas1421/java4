@@ -95,7 +95,7 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
             pr("***Delay 20s*** output to breach, updateChinaAll ");
             symbolLotsize.forEach(Utility::pr);
             outputToBreach();
-            updateChinaAll();
+//            updateChinaAll();
         }, 20, TimeUnit.SECONDS);
         es.schedule(() -> System.exit(0), 60, TimeUnit.SECONDS);
     }

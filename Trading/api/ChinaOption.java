@@ -816,7 +816,7 @@ public class ChinaOption extends JPanel implements Runnable {
                 saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance());
             }
 
-            pr("engine start time ", ChinaMain.START_ENGINE_TIME);
+            //pr("engine start time ", ChinaMain.START_ENGINE_TIME);
 
             if (ChinaMain.START_ENGINE_TIME.isBefore(ltof(15, 0)) &&
                     !savedVolEOD.get() && checkTimeRangeBool(lt, 15, 0, 15, 15)) {
