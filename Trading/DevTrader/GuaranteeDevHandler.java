@@ -3,12 +3,15 @@ package DevTrader;
 import api.TradingConstants;
 import client.*;
 import controller.ApiController;
+import controller.ConcurrentHashSet;
 import util.AutoOrderType;
 
 import java.io.File;
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static DevTrader.BreachTrader.*;
@@ -30,6 +33,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
     private static File fillsOutput = new File(TradingConstants.GLOBALPATH + "fills.txt");
 
     private AtomicInteger attempts = new AtomicInteger(0);
+    private Set<Integer> pastOrderSet = new ConcurrentSkipListSet<>();
 
     GuaranteeDevHandler(int id, ApiController ap) {
         primaryID = id;
@@ -61,6 +65,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
         double lastQ = devOrderMap.get(currentID).getOrder().totalQuantity();
         String symbol = devOrderMap.get(currentID).getSymbol();
         AutoOrderType aot = devOrderMap.get(currentID).getOrderType();
+        int lastOrderID = devOrderMap.get(currentID).getOrder().orderId();
         double livePos = getLivePos(symbol);
         double defaultSize = getDefaultSize(symbol);
 
@@ -95,7 +100,10 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 outputDetailedGen(str(devOrderMap.get(currentID).getSymbol(), now.format(f2),
                         devOrderMap.get(currentID)), fillsOutput);
 
-            } else if (attempts.get() > MAX_ATTEMPTS) {
+            } else if (attempts.get() > MAX_ATTEMPTS && !pastOrderSet.contains(lastOrderID)) {
+
+                pastOrderSet.add(lastOrderID);
+
                 Contract ct = devOrderMap.get(currentID).getContract();
                 double lastPrice = BreachTrader.getLast(symbol);
                 double bid = BreachTrader.getBid(symbol);
@@ -143,7 +151,10 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                                 , bid, ask, Math.round(10000d * (ask / bid - 1)) + "bp", lastPrice,
                                 "attempts:" + attempts.get(), "pos", livePos), breachMDevOutput);
 
+
             } else if (orderState.status() == PendingCancel && devOrderMap.get(currentID).getOrder().tif() == IOC) {
+                pastOrderSet.add(lastOrderID);
+
                 Contract ct = devOrderMap.get(currentID).getContract();
                 double lastPrice = BreachTrader.getLast(symbol);
                 double bid = BreachTrader.getBid(symbol);
