@@ -5,6 +5,7 @@ import client.Contract;
 import client.Order;
 import client.OrderType;
 import client.Types;
+import historical.Request;
 
 import javax.naming.OperationNotSupportedException;
 import java.io.BufferedWriter;
@@ -13,13 +14,20 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static utility.Utility.pr;
 
 public class TradingUtility {
+
+    public static final String A50_LAST_EXPIRY = getFutLastExpiry().format(TradingConstants.expPattern);
+    public static final String A50_FRONT_EXPIRY = getFutFrontExpiry().format(TradingConstants.expPattern);
+    public static final String A50_BACK_EXPIRY = getFutBackExpiry().format(TradingConstants.expPattern);
+    public static volatile Map<Integer, Request> globalRequestMap = new ConcurrentHashMap<>();
 
     private TradingUtility() throws OperationNotSupportedException {
         throw new OperationNotSupportedException(" cannot instantiate utility class ");
@@ -27,7 +35,7 @@ public class TradingUtility {
 
 
     public static Contract getActiveContract() {
-        long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(), TradingConstants.getFutFrontExpiry());
+        long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(), getFutFrontExpiry());
         //return frontFut;
         pr(" **********  days until expiry **********", daysUntilFrontExp);
         if (daysUntilFrontExp <= 1) {
@@ -57,7 +65,7 @@ public class TradingUtility {
         ct.symbol("XINA50");
         ct.exchange("SGX");
         ct.currency("USD");
-        ct.lastTradeDateOrContractMonth(TradingConstants.A50_BACK_EXPIRY);
+        ct.lastTradeDateOrContractMonth(A50_BACK_EXPIRY);
         ct.secType(Types.SecType.FUT);
         return ct;
     }
@@ -67,8 +75,8 @@ public class TradingUtility {
         ct.symbol("XINA50");
         ct.exchange("SGX");
         ct.currency("USD");
-        pr("front exp date ", TradingConstants.A50_FRONT_EXPIRY);
-        ct.lastTradeDateOrContractMonth(TradingConstants.A50_FRONT_EXPIRY);
+        pr("front exp date ", A50_FRONT_EXPIRY);
+        ct.lastTradeDateOrContractMonth(A50_FRONT_EXPIRY);
         ct.secType(Types.SecType.FUT);
         return ct;
     }
@@ -177,7 +185,7 @@ public class TradingUtility {
         }
     }
 
-    public static LocalDate getThirdWednesday(LocalDate day) {
+    private static LocalDate getThirdWednesday(LocalDate day) {
         LocalDate currDay = LocalDate.of(day.getYear(), day.getMonth(), 1);
         while (currDay.getDayOfWeek() != DayOfWeek.WEDNESDAY) {
             currDay = currDay.plusDays(1L);
@@ -192,4 +200,71 @@ public class TradingUtility {
     }
 
 
+    private static LocalDate getFutureExpiryDate(LocalDate d) {
+        LocalDate res = LocalDate.of(d.getYear(), d.getMonth(), 1).plusMonths(1);
+        int count = 0;
+        while (count < 2) {
+            res = res.minusDays(1);
+            if (res.getDayOfWeek() != DayOfWeek.SATURDAY && res.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                count++;
+            }
+        }
+        return res;
+    }
+
+    public static LocalDate getFut2BackExpiry() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = LocalDate.now();
+        LocalTime time = LocalTime.now();
+
+        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
+        if (today.isAfter(thisMonthExpiryDate) ||
+                (today.isEqual(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
+            return getFutureExpiryDate(today.plusMonths(3L));
+        } else {
+            return getFutureExpiryDate(today.plusMonths(2L));
+        }
+        //return A50_BACK_EXPIRY;
+    }
+
+    private static LocalDate getFutBackExpiry() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDate today = LocalDate.now();
+        LocalTime time = LocalTime.now();
+
+        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
+
+        if (today.isAfter(thisMonthExpiryDate) ||
+                (today.isEqual(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
+            return getFutureExpiryDate(today.plusMonths(2L));
+        } else {
+            return getFutureExpiryDate(today.plusMonths(1L));
+        }
+    }
+
+    public static LocalDate getFutLastExpiry() {
+        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+        LocalTime time = now.toLocalTime();
+        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
+        if (today.isAfter(thisMonthExpiryDate) ||
+                (today.isEqual(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
+            return getFutureExpiryDate(today);
+        } else {
+            return getFutureExpiryDate(today.minusMonths(1L));
+        }
+    }
+
+    public static LocalDate getFutFrontExpiry() {
+        LocalDate today = LocalDate.now();
+        LocalTime time = LocalTime.now();
+        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
+
+        if (today.isAfter(thisMonthExpiryDate) ||
+                (today.equals(thisMonthExpiryDate) && time.isAfter(LocalTime.of(15, 0)))) {
+            return getFutureExpiryDate(today.plusMonths(1L));
+        } else {
+            return getFutureExpiryDate(today);
+        }
+    }
 }

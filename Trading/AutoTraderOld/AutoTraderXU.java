@@ -484,7 +484,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         });
 
         frontFutButton.setSelected(activeFutCt.lastTradeDateOrContractMonth().equalsIgnoreCase(
-                TradingConstants.A50_FRONT_EXPIRY));
+                TradingUtility.A50_FRONT_EXPIRY));
 
         JRadioButton backFutButton = new JRadioButton("Back");
         backFutButton.addActionListener(l -> {
@@ -493,7 +493,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         });
 
         backFutButton.setSelected(activeFutCt.lastTradeDateOrContractMonth().equalsIgnoreCase(
-                TradingConstants.A50_BACK_EXPIRY));
+                TradingUtility.A50_BACK_EXPIRY));
 
         JRadioButton _1mButton = new JRadioButton("1m");
         _1mButton.addActionListener(l -> gran = DisplayGranularity._1MDATA);
@@ -1046,10 +1046,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return currentPosMap.entrySet().stream()
                 .mapToDouble(e -> {
                     if ((e.getKey() == FutType.PreviousFut &&
-                            getFutLastExpiry().equals(LocalDate.now())
+                            TradingUtility.getFutLastExpiry().equals(LocalDate.now())
                             && LocalTime.now().isAfter(ltof(15, 0)))
                             || (e.getKey() == FutType.FrontFut &&
-                            TradingConstants.getFutFrontExpiry()
+                            TradingUtility.getFutFrontExpiry()
                                     .equals(LocalDate.now()) && LocalTime.now().isBefore(ltof(15, 0)))) {
 //                        pr(" get expiring delta ", e.getValue(), futPriceMap.getOrDefault(e.getKey(),
 //                                SinaStock.FTSE_OPEN), ChinaPosition.fx.getOrDefault(currencyMap.getOrDefault(e.getKey().getSymbol(),
@@ -1065,7 +1065,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     public static double getFutDelta() {
         LocalDateTime now = LocalDateTime.now();
-        LocalDate frontMonthExpiryDate = TradingConstants.getFutFrontExpiry();
+        LocalDate frontMonthExpiryDate = TradingUtility.getFutFrontExpiry();
         return currentPosMap.entrySet().stream()
                 .mapToDouble(e -> {
                     double factor = 1.0;

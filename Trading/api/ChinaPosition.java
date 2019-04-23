@@ -904,7 +904,7 @@ public class ChinaPosition extends JPanel {
                 new FileInputStream(TradingConstants.GLOBALPATH + "futExpiry.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                if (al1.get(1).equalsIgnoreCase(TradingConstants.A50_LAST_EXPIRY)) {
+                if (al1.get(1).equalsIgnoreCase(TradingUtility.A50_LAST_EXPIRY)) {
                     futExpiryUnits = Integer.parseInt(al1.get(2));
                     pr(str(" fut expiry level and units ", futExpiryUnits));
                 }
@@ -921,7 +921,7 @@ public class ChinaPosition extends JPanel {
                 new FileInputStream(TradingConstants.GLOBALPATH + "futExpiry.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                if (al1.get(1).equalsIgnoreCase(TradingConstants.A50_LAST_EXPIRY)) {
+                if (al1.get(1).equalsIgnoreCase(TradingUtility.A50_LAST_EXPIRY)) {
                     futExpiryDate = LocalDate.parse(al1.get(1), DateTimeFormatter.ofPattern("yyyyMMdd"));
                     pr(str(" fut expiry date ", futExpiryDate));
                 }

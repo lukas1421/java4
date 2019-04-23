@@ -177,10 +177,10 @@ public class HistChinaStocks extends JPanel {
                 new FileInputStream(TradingConstants.GLOBALPATH + "futExpiry.txt")))) {
             while ((line = reader1.readLine()) != null) {
                 List<String> al1 = Arrays.asList(line.split("\t"));
-                if (al1.get(1).equalsIgnoreCase(TradingConstants.A50_LAST_EXPIRY)) {
+                if (al1.get(1).equalsIgnoreCase(TradingUtility.A50_LAST_EXPIRY)) {
                     futExpiryLevel = Double.parseDouble(al1.get(3));
                     futExpiryUnits = Integer.parseInt(al1.get(2));
-                    pr(str(" prevfut expiry date+level+units ", TradingConstants.A50_LAST_EXPIRY,
+                    pr(str(" prevfut expiry date+level+units ", TradingUtility.A50_LAST_EXPIRY,
                             futExpiryLevel, futExpiryUnits));
                 }
             }

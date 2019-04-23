@@ -1,6 +1,7 @@
 package api;
 
 import historical.Request;
+import utility.TradingUtility;
 import utility.Utility;
 
 import java.time.*;
@@ -10,92 +11,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 public final class TradingConstants {
-    //    public static final String A50_FRONT_EXPIRY = "20171129";
-//    public static final String A50_BACK_EXPIRY = "20171228";
-    //to push
-    private static final DayOfWeek futExpiryWeekDay = DayOfWeek.THURSDAY;
-//    public static final String A50_LAST_EXPIRY = getFutureExpiryDateString(2018, Month.FEBRUARY, futExpiryWeekDay);
-//    public static final String A50_FRONT_EXPIRY = getFutureExpiryDateString(2018, Month.MARCH, futExpiryWeekDay);
-//    public static final String A50_BACK_EXPIRY = getFutureExpiryDateString(2018, Month.APRIL, futExpiryWeekDay);
 
-    private static DateTimeFormatter expPattern = DateTimeFormatter.ofPattern("yyyyMMdd");
-
-
-    public static final String A50_LAST_EXPIRY = getFutLastExpiry().format(expPattern);
-    public static final String A50_FRONT_EXPIRY = getFutFrontExpiry().format(expPattern);
-    public static final String A50_BACK_EXPIRY = getFutBackExpiry().format(expPattern);
-
-    //public static final LocalDate A50_FRONT_EXP_DATE =;
+    public static final DateTimeFormatter expPattern = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     public static final String FTSE_INDEX = "FTSEA50";
     public static final String INDEX_000001 = "sh000001";
     public static final String INDEX_000016 = "sh000016";
-    public static volatile Map<Integer, Request> globalRequestMap = new ConcurrentHashMap<>();
 
-
-    public static LocalDate getFutLastExpiry() {
-        LocalDate today = LocalDate.now();
-        LocalDateTime now = LocalDateTime.now();
-        LocalTime time = now.toLocalTime();
-        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
-        if (today.isAfter(thisMonthExpiryDate) ||
-                (today.isEqual(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
-            return getFutureExpiryDate(today);
-        } else {
-            return getFutureExpiryDate(today.minusMonths(1L));
-        }
-    }
-
-
-    public static LocalDate getFutFrontExpiry() {
-        LocalDate today = LocalDate.now();
-        LocalTime time = LocalTime.now();
-        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
-
-        if (today.isAfter(thisMonthExpiryDate) ||
-                (today.equals(thisMonthExpiryDate) && time.isAfter(LocalTime.of(15, 0)))) {
-            return getFutureExpiryDate(today.plusMonths(1L));
-        } else {
-            return getFutureExpiryDate(today);
-        }
-    }
-
-    public static LocalDate getFutBackExpiry() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDate today = LocalDate.now();
-        LocalTime time = LocalTime.now();
-
-        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
-
-        //pr(" getFutBackExpiry/this month expire date ", getFutureExpiryDate(today));
-        //pr(" plus month 1 L ")
-
-        if (today.isAfter(thisMonthExpiryDate) ||
-                (today.isEqual(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
-            //pr(" plus 2 month ", getFutureExpiryDateString(today.plusMonths(2L)));
-            return getFutureExpiryDate(today.plusMonths(2L));
-        } else {
-            //pr(" plus 1 month ", getFutureExpiryDateString(today.plusMonths(1L)));
-            //pr("today plus 1 month ", today.plusMonths(1L));
-            return getFutureExpiryDate(today.plusMonths(1L));
-        }
-        //return A50_BACK_EXPIRY;
-    }
-
-    public static LocalDate getFut2BackExpiry() {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDate today = LocalDate.now();
-        LocalTime time = LocalTime.now();
-
-        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
-        if (today.isAfter(thisMonthExpiryDate) ||
-                (today.isEqual(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
-            return getFutureExpiryDate(today.plusMonths(3L));
-        } else {
-            return getFutureExpiryDate(today.plusMonths(2L));
-        }
-        //return A50_BACK_EXPIRY;
-    }
 
     public static final String GLOBALPATH = System.getProperty("os.name").equalsIgnoreCase("linux") ?
             "/home/l/Desktop/Trading/" : "C:\\Users\\" + System.getProperty("user.name") + "\\Desktop\\Trading\\";
@@ -130,23 +52,6 @@ public final class TradingConstants {
 
     private TradingConstants() {
         throw new UnsupportedOperationException(" all constants ");
-    }
-
-    private static LocalDate getFutureExpiryDate(LocalDate d) {
-        LocalDate res = LocalDate.of(d.getYear(), d.getMonth(), 1).plusMonths(1);
-        int count = 0;
-        while (count < 2) {
-            res = res.minusDays(1);
-            if (res.getDayOfWeek() != DayOfWeek.SATURDAY && res.getDayOfWeek() != DayOfWeek.SUNDAY) {
-                count++;
-            }
-        }
-        return res;
-    }
-
-    private static String getFutureExpiryDateString(LocalDate d) {
-        LocalDate res = getFutureExpiryDate(LocalDate.of(d.getYear(), d.getMonth(), 1));
-        return res.format(Utility.futExpPattern);
     }
 
 

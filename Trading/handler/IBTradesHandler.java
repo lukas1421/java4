@@ -3,12 +3,12 @@ package handler;
 import TradeType.*;
 import api.ChinaMain;
 import enums.FutType;
-import api.TradingConstants;
 import client.CommissionReport;
 import client.Contract;
 import client.Execution;
 import controller.ApiController;
 import historical.HistChinaStocks;
+import utility.TradingUtility;
 import utility.Utility;
 
 import java.time.LocalDate;
@@ -72,7 +72,7 @@ public class IBTradesHandler implements ApiController.ITradeReportHandler {
             String ticker = f.getSymbol();
             if (ticker.equalsIgnoreCase("SGXA50PR")) {
                 chinaTradeMap.get(ticker).put(LocalDateTime.of(LocalDate
-                                .parse(TradingConstants.A50_LAST_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd")),
+                                .parse(TradingUtility.A50_LAST_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd")),
                         LocalTime.of(15, 0)),
                         new TradeBlock(new FutureTrade(HistChinaStocks.futExpiryLevel, -1 * HistChinaStocks.futExpiryUnits)));
             }

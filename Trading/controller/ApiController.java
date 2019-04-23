@@ -658,15 +658,15 @@ public class ApiController implements EWrapper {
                             , cd.contract().symbol(), cd.contract().getSecType(), cd.contract().lastTradeDateOrContractMonth()
                             , cd.contract().exchange(), cd.contract().conid());
                     if (ct.symbol().equalsIgnoreCase("XINA50")) {
-                        if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.A50_FRONT_EXPIRY)) {
+                        if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_FRONT_EXPIRY)) {
                             XUTraderRoll.contractID.put(FutType.FrontFut, ct.conid());
                             XUTraderRoll.latch.countDown();
                             pr(" latch counting down ", XUTraderRoll.latch.getCount(), LocalTime.now());
-                        } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.A50_BACK_EXPIRY)) {
+                        } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_BACK_EXPIRY)) {
                             XUTraderRoll.contractID.put(FutType.BackFut, ct.conid());
                             XUTraderRoll.latch.countDown();
                             pr(" latch counting down ", XUTraderRoll.latch.getCount(), LocalTime.now());
-                        } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.A50_LAST_EXPIRY)) {
+                        } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_LAST_EXPIRY)) {
                             XUTraderRoll.contractID.put(FutType.PreviousFut, ct.conid());
                         }
                     }
@@ -924,7 +924,7 @@ public class ApiController implements EWrapper {
         CompletableFuture.runAsync(() -> {
             int reqId = m_reqId.incrementAndGet();
             //Contract ct = generateStockContract(stock, exch, curr);
-            TradingConstants.globalRequestMap.put(reqId, new Request(ct, h));
+            TradingUtility.globalRequestMap.put(reqId, new Request(ct, h));
             String formatTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
             String durationStr = 2 + " " + DurationUnit.DAY.toString().charAt(0);
             m_client.reqHistoricalData(reqId, ct, formatTime, durationStr,
@@ -939,7 +939,7 @@ public class ApiController implements EWrapper {
         CompletableFuture.runAsync(() -> {
             int reqId = m_reqId.incrementAndGet();
             Contract ct = generateStockContract(stock, exch, curr);
-            TradingConstants.globalRequestMap.put(reqId, new Request(ct, h));
+            TradingUtility.globalRequestMap.put(reqId, new Request(ct, h));
             String formatTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
             String durationStr = 1 + " " + DurationUnit.DAY.toString().charAt(0);
             m_client.reqHistoricalData(reqId, ct, formatTime, durationStr,
@@ -956,7 +956,7 @@ public class ApiController implements EWrapper {
                 Thread.sleep(1000);
             }
             Contract ct = generateStockContract(ticker, exch, curr);
-            TradingConstants.globalRequestMap.put(reqId, new Request(ct, h));
+            TradingUtility.globalRequestMap.put(reqId, new Request(ct, h));
             //m_client.reqMktData(reqId, ct, "236,259", snapshot, Collections.<TagValue>emptyList()); for genericTick
             m_client.reqMktData(reqId, ct, "236", snapshot, Collections.<TagValue>emptyList());
         } catch (InterruptedException ex) {
@@ -988,7 +988,7 @@ public class ApiController implements EWrapper {
             if (reqId % 90 == 0) {
                 Thread.sleep(1000);
             }
-            TradingConstants.globalRequestMap.put(reqId, new Request(ct, h));
+            TradingUtility.globalRequestMap.put(reqId, new Request(ct, h));
             m_client.reqMktData(reqId, ct, "", false, Collections.<TagValue>emptyList());
         } catch (InterruptedException ex) {
             ex.printStackTrace();
@@ -1001,7 +1001,7 @@ public class ApiController implements EWrapper {
             if (reqId % 90 == 0) {
                 Thread.sleep(1000);
             }
-            TradingConstants.globalRequestMap.put(reqId, new Request(ct, h));
+            TradingUtility.globalRequestMap.put(reqId, new Request(ct, h));
             m_client.reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
         } catch (InterruptedException ex) {
             ex.printStackTrace();
@@ -1131,9 +1131,9 @@ public class ApiController implements EWrapper {
         int reqIdBack = m_reqId.getAndIncrement();
         //m_reqId.
 
-        if (!TradingConstants.globalRequestMap.containsKey(reqIdFront) && !TradingConstants.globalRequestMap.containsKey(reqIdBack)) {
-            TradingConstants.globalRequestMap.put(reqIdFront, new Request(frontCt, SGXFutureReceiver.getReceiver()));
-            TradingConstants.globalRequestMap.put(reqIdBack, new Request(backCt, SGXFutureReceiver.getReceiver()));
+        if (!TradingUtility.globalRequestMap.containsKey(reqIdFront) && !TradingUtility.globalRequestMap.containsKey(reqIdBack)) {
+            TradingUtility.globalRequestMap.put(reqIdFront, new Request(frontCt, SGXFutureReceiver.getReceiver()));
+            TradingUtility.globalRequestMap.put(reqIdBack, new Request(backCt, SGXFutureReceiver.getReceiver()));
             if (m_client.isConnected()) {
                 m_client.reqMktData(reqIdFront, frontCt, "", false, Collections.<TagValue>emptyList());
                 m_client.reqMktData(reqIdBack, backCt, "", false, Collections.<TagValue>emptyList());
@@ -1168,7 +1168,7 @@ public class ApiController implements EWrapper {
         WhatToShow whatToShow = WhatToShow.TRADES;
         boolean rthOnly = false;
 
-        TradingConstants.globalRequestMap.put(reqId, new Request(c, dc));
+        TradingUtility.globalRequestMap.put(reqId, new Request(c, dc));
 
         CompletableFuture.runAsync(() -> m_client.reqHistoricalData(reqId, c, "", durationStr,
                 barSize.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
@@ -1186,7 +1186,7 @@ public class ApiController implements EWrapper {
         DurationUnit durationUnit = DurationUnit.DAY;
         String durationStr = duration + " " + durationUnit.toString().charAt(0);
         WhatToShow whatToShow = WhatToShow.TRADES;
-        TradingConstants.globalRequestMap.put(reqId, new Request(c, dc));
+        TradingUtility.globalRequestMap.put(reqId, new Request(c, dc));
         CompletableFuture.runAsync(() -> m_client.reqHistoricalData(reqId, c, "", durationStr,
                 bs.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
     }
@@ -1197,7 +1197,7 @@ public class ApiController implements EWrapper {
         DurationUnit durationUnit = DurationUnit.DAY;
         String durationStr = duration + " " + durationUnit.toString().charAt(0);
         WhatToShow whatToShow = WhatToShow.TRADES;
-        TradingConstants.globalRequestMap.put(reqId, new Request(c, dc));
+        TradingUtility.globalRequestMap.put(reqId, new Request(c, dc));
         CompletableFuture.runAsync(() -> m_client.reqHistoricalData(reqId, c, "", durationStr,
                 bs.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
     }
@@ -1218,8 +1218,8 @@ public class ApiController implements EWrapper {
         WhatToShow whatToShow = WhatToShow.TRADES;
 
 //        if(!globalRequestMap.containsKey(reqID) && !globalRequestMap.containsKey(reqID+1)) {
-        TradingConstants.globalRequestMap.put(reqID, new Request(frontFut, hh));
-        TradingConstants.globalRequestMap.put(reqID + 1, new Request(backFut, hh));
+        TradingUtility.globalRequestMap.put(reqID, new Request(frontFut, hh));
+        TradingUtility.globalRequestMap.put(reqID + 1, new Request(backFut, hh));
 
 
         CompletableFuture.runAsync(() -> {
@@ -1231,7 +1231,7 @@ public class ApiController implements EWrapper {
 
             if (ChronoUnit.DAYS.between(LocalDate.parse(previousFut.lastTradeDateOrContractMonth(),
                     DateTimeFormatter.ofPattern("yyyyMMdd")), LocalDate.now()) < 7) {
-                TradingConstants.globalRequestMap.put(reqID + 2, new Request(previousFut, hh));
+                TradingUtility.globalRequestMap.put(reqID + 2, new Request(previousFut, hh));
                 m_client.reqHistoricalData(reqID + 2, previousFut, "", durationStr,
                         barSize.toString(), whatToShow.toString(), 0, 2,
                         Collections.<TagValue>emptyList());
@@ -1322,9 +1322,9 @@ public class ApiController implements EWrapper {
     // key method. This method is called when market data changes.
     @Override
     public void tickPrice(int reqId, int tickType, double price, int canAutoExecute) {
-        if (TradingConstants.globalRequestMap.containsKey(reqId)) {
-            Request r = TradingConstants.globalRequestMap.get(reqId);
-            LiveHandler lh = (LiveHandler) TradingConstants.globalRequestMap.get(reqId).getHandler();
+        if (TradingUtility.globalRequestMap.containsKey(reqId)) {
+            Request r = TradingUtility.globalRequestMap.get(reqId);
+            LiveHandler lh = (LiveHandler) TradingUtility.globalRequestMap.get(reqId).getHandler();
             try {
                 lh.handlePrice(TickType.get(tickType), r.getContract(), price,
                         LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
@@ -1342,8 +1342,8 @@ public class ApiController implements EWrapper {
         ITopMktDataHandler1 handler1;
         int symb;
 
-        if (TradingConstants.globalRequestMap.containsKey(reqId)) {
-            Request r = TradingConstants.globalRequestMap.get(reqId);
+        if (TradingUtility.globalRequestMap.containsKey(reqId)) {
+            Request r = TradingUtility.globalRequestMap.get(reqId);
             LiveHandler lh = (LiveHandler) r.getHandler();
             lh.handleVol(TickType.get(tickType), ibContractToSymbol(r.getContract()), size,
                     LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
@@ -1367,8 +1367,8 @@ public class ApiController implements EWrapper {
     public void tickGeneric(int reqId, int tickType, double value) {
         ITopMktDataHandler handler = m_topMktDataMap.get(reqId);
 
-        if (TradingConstants.globalRequestMap.containsKey(reqId)) {
-            Request r = TradingConstants.globalRequestMap.get(reqId);
+        if (TradingUtility.globalRequestMap.containsKey(reqId)) {
+            Request r = TradingUtility.globalRequestMap.get(reqId);
             LiveHandler lh = (LiveHandler) r.getHandler();
             lh.handleGeneric(TickType.get(tickType), ibContractToSymbol(r.getContract()), value,
                     LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
@@ -1843,7 +1843,7 @@ public class ApiController implements EWrapper {
     public void reqHistoricalDataUSHK(HistoricalHandler hh, int reqId, Contract contract, String endDateTime, int duration,
                                       DurationUnit durationUnit, BarSize barSize, WhatToShow whatToShow, boolean rthOnly) {
 
-        TradingConstants.globalRequestMap.put(reqId, new Request(contract, hh));
+        TradingUtility.globalRequestMap.put(reqId, new Request(contract, hh));
 
         //pr(" getting historical data simple US HK");
         //pr(" contract " + contract);
@@ -1859,7 +1859,7 @@ public class ApiController implements EWrapper {
         //pr(" getting historical data simple ");
         //pr(" contract " + contract);
         //pr(str("stock reqid ", contract.symbol(), reqId));
-        TradingConstants.globalRequestMap.put(reqId, new Request(contract, hh));
+        TradingUtility.globalRequestMap.put(reqId, new Request(contract, hh));
 
         //pr(" req id is" + reqId);
         String durationStr = duration + " " + durationUnit.toString().charAt(0);
@@ -1883,8 +1883,8 @@ public class ApiController implements EWrapper {
         //pr(str("historical data in apicontroller/reqid / date / close ", reqId, date, close));
 
 
-        if (TradingConstants.globalRequestMap.containsKey(reqId)) {
-            Request r = TradingConstants.globalRequestMap.get(reqId);
+        if (TradingUtility.globalRequestMap.containsKey(reqId)) {
+            Request r = TradingUtility.globalRequestMap.get(reqId);
             String symb = utility.Utility.ibContractToSymbol(r.getContract());
 
             if (r.getCustomFunctionNeeded()) {
@@ -2041,8 +2041,8 @@ public class ApiController implements EWrapper {
     @Override
     public void historicalDataEnd(int reqId) {
         pr(" historical data ending for " + reqId);
-        if (TradingConstants.globalRequestMap.containsKey(reqId)) {
-            Request r = TradingConstants.globalRequestMap.get(reqId);
+        if (TradingUtility.globalRequestMap.containsKey(reqId)) {
+            Request r = TradingUtility.globalRequestMap.get(reqId);
             String symb = ibContractToSymbol(r.getContract());
             if (r.getCustomFunctionNeeded()) {
                 pr(" custom handling needed ");

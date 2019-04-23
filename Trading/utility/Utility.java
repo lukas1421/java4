@@ -776,7 +776,7 @@ public class Utility {
         ct.symbol("XINA50");
         ct.exchange("SGX");
         ct.currency("USD");
-        ct.lastTradeDateOrContractMonth(TradingConstants.A50_LAST_EXPIRY);
+        ct.lastTradeDateOrContractMonth(TradingUtility.A50_LAST_EXPIRY);
         ct.includeExpired(true);
         ct.secType(Types.SecType.FUT);
 //        System.out.println(" get expired fut contract " + " expiry date " + TradingConstants.A50_LAST_EXPIRY + " "
@@ -788,11 +788,11 @@ public class Utility {
     public static String ibContractToSymbol(Contract ct) {
         if (ct.symbol().equals("XINA50")) {
             if (ct.secType() == Types.SecType.CONTFUT ||
-                    ct.lastTradeDateOrContractMonth().equalsIgnoreCase(A50_FRONT_EXPIRY)) {
+                    ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_FRONT_EXPIRY)) {
                 return "SGXA50";
-            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(A50_BACK_EXPIRY)) {
+            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_BACK_EXPIRY)) {
                 return "SGXA50BM";
-            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(A50_LAST_EXPIRY)) {
+            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_LAST_EXPIRY)) {
                 return "SGXA50PR";
             }
         } else if (ct.secType() == Types.SecType.STK && ct.exchange().equals("SEHK") && ct.currency().equals("HKD")) {
@@ -811,11 +811,11 @@ public class Utility {
 //                    , " front expiry ", TradingConstants.getFutFrontExpiry()
 //                    , " back expiry ", TradingConstants.getFutBackExpiry()
 //                    , "previous fut ", TradingConstants.getFutLastExpiry()));
-            if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(A50_FRONT_EXPIRY)) {
+            if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_FRONT_EXPIRY)) {
                 return FutType.FrontFut;
-            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(A50_BACK_EXPIRY)) {
+            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_BACK_EXPIRY)) {
                 return FutType.BackFut;
-            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(A50_LAST_EXPIRY)) {
+            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_LAST_EXPIRY)) {
                 return FutType.PreviousFut;
             }
         }
