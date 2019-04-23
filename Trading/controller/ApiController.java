@@ -494,9 +494,9 @@ public class ApiController implements EWrapper {
             public void accountSummary(String account, AccountSummaryTag tag, String value, String currency) {
                 String output = getStrCheckNull(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
                         , account, tag, value, currency);
-                if (LocalDateTime.now().toLocalTime().getSecond() < 20) {
-                    pr("Account Pnl: ", output, "**********************");
-                }
+//                if (LocalDateTime.now().toLocalTime().getSecond() < 20) {
+                pr("Account Pnl: ", output, "**********************");
+//                }
                 //AutoTraderXU.updateLog(str("Account pnl", output));
                 //AutoTraderXU.currentIBNAV = Double.parseDouble(value);
             }

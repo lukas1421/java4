@@ -1,6 +1,7 @@
 package DevTrader;
 
 import client.*;
+import controller.AccountSummaryTag;
 import enums.Currency;
 import api.TradingConstants;
 import auxiliary.SimpleBar;
@@ -444,7 +445,8 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             pr("**********************************************");
             pr("running @ ", LocalTime.now());
             bm.reqHoldings(brMonController);
-            //brMonController.reqPositions(this);
+            brMonController.reqAccountSummary("All", new AccountSummaryTag[]{AccountSummaryTag.NetLiquidation},
+                    new ApiController.IAccountSummaryHandler.AccountInfoHandler());
         }, 1, 1, TimeUnit.MINUTES);
 
 
