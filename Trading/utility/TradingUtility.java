@@ -34,7 +34,7 @@ public class TradingUtility {
     }
 
 
-    public static Contract getActiveContract() {
+    public static Contract getActiveA50Contract() {
         long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(), getFutFrontExpiry());
         //return frontFut;
         pr(" **********  days until expiry **********", daysUntilFrontExp);
@@ -53,7 +53,7 @@ public class TradingUtility {
         ct.exchange("CFECRYPTO");
         //ct.secType(Types.SecType.CONTFUT);
         ct.secType(Types.SecType.FUT);
-        pr(getActiveBTCExpiry());
+        pr("BTC expiry ", getActiveBTCExpiry());
         ct.lastTradeDateOrContractMonth(getActiveBTCExpiry().format(Utility.futExpPattern));
         ct.currency("USD");
         return ct;
@@ -125,7 +125,6 @@ public class TradingUtility {
 
     public static Order placeBidLimitTIF(double p, double quantity, Types.TimeInForce tif) {
         if (quantity <= 0) throw new IllegalStateException(" cannot have 0 quantity ");
-        //pr(" place bid limit " + p);
         Order o = new Order();
         o.action(Types.Action.BUY);
         o.lmtPrice(p);
@@ -137,7 +136,6 @@ public class TradingUtility {
     }
 
     public static Order buyAtOffer(double p, double quantity) {
-        //System.out.println(" buy at offer " + p);
         Order o = new Order();
         o.action(Types.Action.BUY);
         o.lmtPrice(p);
@@ -148,7 +146,6 @@ public class TradingUtility {
     }
 
     public static Order sellAtBid(double p, double quantity) {
-        //System.out.println(" sell at bid " + p);
         Order o = new Order();
         o.action(Types.Action.SELL);
         o.lmtPrice(p);
@@ -163,7 +160,6 @@ public class TradingUtility {
     }
 
     public static void outputToError(String s) {
-        //pr(s);;
         File output = new File(TradingConstants.GLOBALPATH + "autoError.txt");
         try (BufferedWriter out = new BufferedWriter(new FileWriter(output, true))) {
             out.append(s);
@@ -224,7 +220,6 @@ public class TradingUtility {
         } else {
             return getFutureExpiryDate(today.plusMonths(2L));
         }
-        //return A50_BACK_EXPIRY;
     }
 
     private static LocalDate getFutBackExpiry() {

@@ -166,7 +166,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     @SuppressWarnings("unused")
     private static Predicate<? super Map.Entry<FutType, ?>> graphPred = e -> true;
-    public static volatile Contract activeFutCt = TradingUtility.getActiveContract();
+    public static volatile Contract activeFutCt = TradingUtility.getActiveA50Contract();
 
     public static volatile DisplayGranularity gran = DisplayGranularity._5MDATA;
     private static volatile Map<Double, Double> activeFutLiveOrder = new ConcurrentHashMap<>();

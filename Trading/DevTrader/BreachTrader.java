@@ -115,12 +115,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
             x.printStackTrace();
         }
 
-        Contract activeXIN50Fut = getActiveContract();
-        registerContract(activeXIN50Fut);
-
-        Contract activeBTCFut = getActiveBTCContract() ;
-        registerContract(activeBTCFut);
-
+        registerContract(getActiveA50Contract());
+        registerContract(getActiveBTCContract());
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "breachUSNames.txt")))) {
@@ -273,7 +269,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
             if (multi.containsKey(ibContractToSymbol(ct))) {
                 return price * size * fx * multi.get(ibContractToSymbol(ct));
             } else {
-                outputToSymbolFile(ibContractToSymbol(ct), str("no multi", price, size, fx), devOutput);
+                outputToSymbolFile(ibContractToSymbol(ct), str("no multi", ibContractToSymbol(ct),
+                        price, size, fx), devOutput);
                 throw new IllegalStateException(str("no multiplier", ibContractToSymbol(ct)));
             }
         }
@@ -424,7 +421,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 liveData.get(symbol).put(t, price);
                 lastMap.put(symbol, price);
 
-                pr("handle price last ", symbol, t, price, ytdDayData.get(symbol));
+                //pr("handle price last ", symbol, t, price, ytdDayData.get(symbol));
+
                 if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
                     pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
                             ytdDayData.get(symbol).firstEntry().getValue().getClose(),

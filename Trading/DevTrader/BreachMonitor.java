@@ -97,7 +97,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 //            x.printStackTrace();
 //        }
 //
-//        Contract activeXIN50Fut = getActiveContract();
+//        Contract activeXIN50Fut = getActiveA50Contract();
 //        registerContract(activeXIN50Fut);
     }
 
