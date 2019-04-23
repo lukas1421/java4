@@ -938,6 +938,10 @@ public class Utility {
             c.exchange("SGX");
         }
 
+        if (c.symbol().equalsIgnoreCase("GXBT") && c.exchange() == null) {
+            c.exchange("CFECRYPTO");
+        }
+
         if (c.currency().equalsIgnoreCase("USD") && c.secType() == Types.SecType.STK) {
             return getUSStockContract(c.symbol());
         }
