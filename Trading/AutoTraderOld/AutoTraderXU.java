@@ -166,7 +166,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     @SuppressWarnings("unused")
     private static Predicate<? super Map.Entry<FutType, ?>> graphPred = e -> true;
-    public static volatile Contract activeFutCt = TradingUtility.gettingActiveContract();
+    public static volatile Contract activeFutCt = TradingUtility.getActiveContract();
 
     public static volatile DisplayGranularity gran = DisplayGranularity._5MDATA;
     private static volatile Map<Double, Double> activeFutLiveOrder = new ConcurrentHashMap<>();
@@ -1046,10 +1046,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return currentPosMap.entrySet().stream()
                 .mapToDouble(e -> {
                     if ((e.getKey() == FutType.PreviousFut &&
-                            LocalDate.parse(TradingConstants.getFutLastExpiry(), DateTimeFormatter.ofPattern("yyyyMMdd"))
-                                    .equals(LocalDate.now()) && LocalTime.now().isAfter(ltof(15, 0)))
+                            getFutLastExpiry().equals(LocalDate.now())
+                            && LocalTime.now().isAfter(ltof(15, 0)))
                             || (e.getKey() == FutType.FrontFut &&
-                            LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd"))
+                            TradingConstants.getFutFrontExpiry()
                                     .equals(LocalDate.now()) && LocalTime.now().isBefore(ltof(15, 0)))) {
 //                        pr(" get expiring delta ", e.getValue(), futPriceMap.getOrDefault(e.getKey(),
 //                                SinaStock.FTSE_OPEN), ChinaPosition.fx.getOrDefault(currencyMap.getOrDefault(e.getKey().getSymbol(),
@@ -1065,8 +1065,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     public static double getFutDelta() {
         LocalDateTime now = LocalDateTime.now();
-        LocalDate frontMonthExpiryDate = LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY,
-                DateTimeFormatter.ofPattern("yyyyMMdd"));
+        LocalDate frontMonthExpiryDate = TradingConstants.getFutFrontExpiry();
         return currentPosMap.entrySet().stream()
                 .mapToDouble(e -> {
                     double factor = 1.0;

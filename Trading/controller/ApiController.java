@@ -658,15 +658,15 @@ public class ApiController implements EWrapper {
                             , cd.contract().symbol(), cd.contract().getSecType(), cd.contract().lastTradeDateOrContractMonth()
                             , cd.contract().exchange(), cd.contract().conid());
                     if (ct.symbol().equalsIgnoreCase("XINA50")) {
-                        if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutFrontExpiry())) {
+                        if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.A50_FRONT_EXPIRY)) {
                             XUTraderRoll.contractID.put(FutType.FrontFut, ct.conid());
                             XUTraderRoll.latch.countDown();
                             pr(" latch counting down ", XUTraderRoll.latch.getCount(), LocalTime.now());
-                        } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutBackExpiry())) {
+                        } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.A50_BACK_EXPIRY)) {
                             XUTraderRoll.contractID.put(FutType.BackFut, ct.conid());
                             XUTraderRoll.latch.countDown();
                             pr(" latch counting down ", XUTraderRoll.latch.getCount(), LocalTime.now());
-                        } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutLastExpiry())) {
+                        } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.A50_LAST_EXPIRY)) {
                             XUTraderRoll.contractID.put(FutType.PreviousFut, ct.conid());
                         }
                     }

@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 
 import static api.ChinaData.priceMapBar;
 import static api.ChinaStock.*;
-import static api.TradingConstants.tdxPath;
+import static api.TradingConstants.*;
 import static java.lang.Math.log;
 import static java.lang.Math.round;
 import static java.util.stream.Collectors.groupingBy;
@@ -86,6 +86,7 @@ public class Utility {
             (t.isAfter(LocalTime.of(13, 0)) && t.isBefore(LocalTime.of(15, 1)));
     public static Map.Entry<LocalTime, SimpleBar> defaultEntry =
             new AbstractMap.SimpleEntry<>(LocalTime.MIN, new SimpleBar(0.0));
+    public static DateTimeFormatter futExpPattern = DateTimeFormatter.ofPattern("yyyyMMdd");
 
 
     private static Predicate<LocalTime> tradingTimePred(LocalTime t1, LocalTime t2, LocalTime t3, LocalTime t4) {
@@ -787,11 +788,11 @@ public class Utility {
     public static String ibContractToSymbol(Contract ct) {
         if (ct.symbol().equals("XINA50")) {
             if (ct.secType() == Types.SecType.CONTFUT ||
-                    ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutFrontExpiry())) {
+                    ct.lastTradeDateOrContractMonth().equalsIgnoreCase(A50_FRONT_EXPIRY)) {
                 return "SGXA50";
-            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutBackExpiry())) {
+            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(A50_BACK_EXPIRY)) {
                 return "SGXA50BM";
-            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutLastExpiry())) {
+            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(A50_LAST_EXPIRY)) {
                 return "SGXA50PR";
             }
         } else if (ct.secType() == Types.SecType.STK && ct.exchange().equals("SEHK") && ct.currency().equals("HKD")) {
@@ -810,11 +811,11 @@ public class Utility {
 //                    , " front expiry ", TradingConstants.getFutFrontExpiry()
 //                    , " back expiry ", TradingConstants.getFutBackExpiry()
 //                    , "previous fut ", TradingConstants.getFutLastExpiry()));
-            if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutFrontExpiry())) {
+            if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(A50_FRONT_EXPIRY)) {
                 return FutType.FrontFut;
-            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutBackExpiry())) {
+            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(A50_BACK_EXPIRY)) {
                 return FutType.BackFut;
-            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingConstants.getFutLastExpiry())) {
+            } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(A50_LAST_EXPIRY)) {
                 return FutType.PreviousFut;
             }
         }
@@ -1038,7 +1039,7 @@ public class Utility {
         return LocalTime.of(h, m, s);
     }
 
-//    public static void outputDetailedUS(String symbol, String msg) {
+    //    public static void outputDetailedUS(String symbol, String msg) {
 //        if (!symbol.equals("")) {
 //            outputDetailedUSSymbol(symbol, msg);
 //        }

@@ -1,23 +1,16 @@
-import DevTrader.BreachMonitor;
-import api.TradingConstants;
 import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
+import utility.TradingUtility;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
 
+import static utility.TradingUtility.getActiveBTCExpiry;
 import static utility.Utility.*;
 
 public class TestAPI {
@@ -61,6 +54,17 @@ public class TestAPI {
         return ct;
     }
 
+    public static Contract getActiveBTCContract() {
+        Contract ct = new Contract();
+        ct.symbol("GXBT");
+        ct.exchange("CFECRYPTO");
+        //ct.secType(Types.SecType.CONTFUT);
+        ct.secType(Types.SecType.FUT);
+        ct.lastTradeDateOrContractMonth(getActiveBTCExpiry().format(futExpPattern));
+        ct.currency("USD");
+        return ct;
+    }
+
     static void handleHist(Contract c, String date, double open, double high, double low,
                            double close, int volume) {
         String symbol = utility.Utility.ibContractToSymbol(c);
@@ -98,11 +102,16 @@ public class TestAPI {
 
         pr(" Time after latch released " + LocalTime.now());
 
-        Contract ct = getFrontFutContract();
+        //Contract ct = getFrontFutContract();
+        Contract ct = TradingUtility.getActiveBTCContract();
 
         ap.reqHistDayData(100,
                 ct, (contract, date, open, high, low, close, vol) -> {
-                    pr(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")), open, high, low, close);
+                    if (!date.startsWith("finished")) {
+                        pr(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")), open, high, low, close);
+                    } else {
+                        pr(date, open, close);
+                    }
                 }, 365, Types.BarSize._1_day);
 
 

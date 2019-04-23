@@ -22,7 +22,6 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static utility.TradingUtility.gettingActiveContract;
 import static utility.Utility.*;
 
 public class BreachMonitor implements LiveHandler, ApiController.IPositionHandler, ApiController.ITradeReportHandler {
@@ -98,7 +97,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 //            x.printStackTrace();
 //        }
 //
-//        Contract activeXIN50Fut = gettingActiveContract();
+//        Contract activeXIN50Fut = getActiveContract();
 //        registerContract(activeXIN50Fut);
     }
 

@@ -1,6 +1,5 @@
 package utility;
 
-import AutoTraderOld.XuTraderHelper;
 import api.TradingConstants;
 import client.Contract;
 import client.Order;
@@ -12,6 +11,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -26,9 +26,8 @@ public class TradingUtility {
     }
 
 
-    public static Contract gettingActiveContract() {
-        long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(),
-                LocalDate.parse(TradingConstants.A50_FRONT_EXPIRY, DateTimeFormatter.ofPattern("yyyyMMdd")));
+    public static Contract getActiveContract() {
+        long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(), TradingConstants.getFutFrontExpiry());
         //return frontFut;
         pr(" **********  days until expiry **********", daysUntilFrontExp);
         if (daysUntilFrontExp <= 1) {
@@ -39,6 +38,19 @@ public class TradingUtility {
             return getFrontFutContract();
         }
     }
+
+    public static Contract getActiveBTCContract() {
+        Contract ct = new Contract();
+        ct.symbol("GXBT");
+        ct.exchange("CFECRYPTO");
+        //ct.secType(Types.SecType.CONTFUT);
+        ct.secType(Types.SecType.FUT);
+        pr(getActiveBTCExpiry());
+        ct.lastTradeDateOrContractMonth(getActiveBTCExpiry().format(Utility.futExpPattern));
+        ct.currency("USD");
+        return ct;
+    }
+
 
     public static Contract getBackFutContract() {
         Contract ct = new Contract();
@@ -164,4 +176,20 @@ public class TradingUtility {
             ex.printStackTrace();
         }
     }
+
+    public static LocalDate getThirdWednesday(LocalDate day) {
+        LocalDate currDay = LocalDate.of(day.getYear(), day.getMonth(), 1);
+        while (currDay.getDayOfWeek() != DayOfWeek.WEDNESDAY) {
+            currDay = currDay.plusDays(1L);
+        }
+        return currDay.plusDays(14L);
+    }
+
+    public static LocalDate getActiveBTCExpiry() {
+        LocalDate thisMonthExpiry = getThirdWednesday(LocalDate.now());
+        LocalDate nextMonthExpiry = getThirdWednesday(LocalDate.now().plusMonths(1));
+        return LocalDate.now().isAfter(thisMonthExpiry) ? nextMonthExpiry : thisMonthExpiry;
+    }
+
+
 }

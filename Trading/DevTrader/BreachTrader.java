@@ -115,8 +115,11 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
             x.printStackTrace();
         }
 
-        Contract activeXIN50Fut = gettingActiveContract();
+        Contract activeXIN50Fut = getActiveContract();
         registerContract(activeXIN50Fut);
+
+        Contract activeBTCFut = getActiveBTCContract() ;
+        registerContract(activeBTCFut);
 
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
@@ -421,13 +424,13 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 liveData.get(symbol).put(t, price);
                 lastMap.put(symbol, price);
 
-                //pr("handle price last ", symbol, t, price, ytdDayData.get(symbol));
-//                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
-//                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
-//                            ytdDayData.get(symbol).firstEntry().getValue().getClose(),
-//                            "mFirst", ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey(),
-//                            ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose());
-//                }
+                pr("handle price last ", symbol, t, price, ytdDayData.get(symbol));
+                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
+                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
+                            ytdDayData.get(symbol).firstEntry().getValue().getClose(),
+                            "mFirst", ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey(),
+                            ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose());
+                }
 
                 if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
