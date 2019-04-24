@@ -187,8 +187,9 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 try {
                     semaphore.acquire();
                     Contract histCt = histCompatibleCt(c);
-                    brMonController.reqHistDayData(ibStockReqId.addAndGet(5),
+                    brMonController.reqHistDayData(ibStockReqId.incrementAndGet(),
                             histCt, BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
+                    //pr("position end hist ", k, ibStockReqId.get());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
