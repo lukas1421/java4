@@ -301,10 +301,10 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 .count();
 
 
-        if (numCrosses >= MAX_CROSS_PER_MONTH) {
-            outputToSymbolFile(symbol, str(symbol, numCrosses, "exceeding numCrosses no trade "
-                    , t.format(f1)), devOutput);
-        }
+//        if (numCrosses >= MAX_CROSS_PER_MONTH) {
+//            outputToSymbolFile(symbol, str(symbol, numCrosses, "exceeding numCrosses no trade "
+//                    , t.format(f1)), devOutput);
+//        }
 
         if (!added && !liquidated && pos == 0.0 && prevClose != 0.0 && numCrosses < MAX_CROSS_PER_MONTH) {
 
