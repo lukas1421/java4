@@ -149,6 +149,10 @@ public final class ChinaMain implements IConnectionHandler {
         m_tabbedPanel.addTab("Option", chinaOption);
         //m_tabbedPanel.addTab("Hist China", histChina);
         m_tabbedPanel.addTab("Connection", m_connectionPanel);
+        m_tabbedPanel.addTab("pos", chinaPos);
+        m_tabbedPanel.addTab("mon", keyMon);
+
+
         //m_tabbedPanel.addTab("US", usstock);
 
         m_tabbedPanel.select("Stock ");
@@ -395,46 +399,42 @@ public final class ChinaMain implements IConnectionHandler {
             }
         });
 
-        JPanel bigGraphOnly = new JPanel();
-        bigGraphOnly.setLayout(new BorderLayout());
-        bigGraphOnly.add(bg, BorderLayout.CENTER);
-        m_frame7.add(bigGraphOnly);
-        m_frame7.setTitle("bigGraph");
-        m_frame7.setSize(1920, 1080);
-        m_frame7.setVisible(false);
+//        JPanel bigGraphOnly = new JPanel();
+//        bigGraphOnly.setLayout(new BorderLayout());
+//        bigGraphOnly.add(bg, BorderLayout.CENTER);
+//        m_frame7.add(bigGraphOnly);
+//        m_frame7.setTitle("bigGraph");
+//        m_frame7.setSize(1920, 1080);
+//        m_frame7.setVisible(false);
+//
+//        JPanel graphIndustryOnly = new JPanel();
+//        graphIndustryOnly.setLayout(new BorderLayout());
+//        graphIndustryOnly.add(gi, BorderLayout.CENTER);
+//        m_frame8.add(graphIndustryOnly);
+//        m_frame8.setTitle("IndustryGraph");
+//        m_frame8.setSize(1920, 1080);
+//        m_frame8.setVisible(false);
 
-        JPanel graphIndustryOnly = new JPanel();
-        graphIndustryOnly.setLayout(new BorderLayout());
-        graphIndustryOnly.add(gi, BorderLayout.CENTER);
-        m_frame8.add(graphIndustryOnly);
-        m_frame8.setTitle("IndustryGraph");
-        m_frame8.setSize(1920, 1080);
-        m_frame8.setVisible(false);
+//        JPanel posOnly = new JPanel();
+//        posOnly.setLayout(new BorderLayout());
+//        posOnly.add(chinaPos, BorderLayout.CENTER);
+//        m_frame10.add(posOnly);
+//        m_frame10.setTitle("Pos");
+//        m_frame10.setSize(1920, 1080);
+//        m_frame10.setVisible(true);
+//        m_frame10.setExtendedState(m_frame10.getExtendedState() | JFrame.MAXIMIZED_BOTH);
+//
+//        JPanel ptfMonitor = new JPanel();
+//        ptfMonitor.setLayout(new BorderLayout());
+//        ptfMonitor.add(keyMon, BorderLayout.CENTER);
+//        m_frame11.add(ptfMonitor);
+//        m_frame11.setTitle("Mon");
+//        m_frame11.setSize(1920, 1080);
+//        m_frame11.setVisible(true);
+//        m_frame11.setExtendedState(m_frame11.getExtendedState() | JFrame.MAXIMIZED_BOTH);
 
-        JPanel posOnly = new JPanel();
-        posOnly.setLayout(new BorderLayout());
-        posOnly.add(chinaPos, BorderLayout.CENTER);
-        m_frame10.add(posOnly);
-        m_frame10.setTitle("Pos");
-        m_frame10.setSize(1920, 1080);
-        m_frame10.setVisible(true);
-        m_frame10.setExtendedState(m_frame10.getExtendedState() | JFrame.MAXIMIZED_BOTH);
-
-        JPanel ptfMonitor = new JPanel();
-        ptfMonitor.setLayout(new BorderLayout());
-        ptfMonitor.add(keyMon, BorderLayout.CENTER);
-        m_frame11.add(ptfMonitor);
-        m_frame11.setTitle("Mon");
-        m_frame11.setSize(1920, 1080);
-        m_frame11.setVisible(true);
-        m_frame11.setExtendedState(m_frame11.getExtendedState() | JFrame.MAXIMIZED_BOTH);
-
-        SwingUtilities.invokeLater(() -> {
-//            m_frame.toFront();
-//            m_frame.repaint();
-            m_frame.toFront();
-            m_frame.repaint();
-        });
+        //            m_frame.toFront();
+        SwingUtilities.invokeLater(m_frame::repaint);
 
         // make initial connection to local host, port 7496, client id 0, 4001 is for with IBAPI
         // m_controller.connectAndReqPos( "127.0.0.1", PORT_IBAPI, 0);

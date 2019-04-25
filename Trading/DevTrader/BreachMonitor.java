@@ -235,11 +235,18 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 double mOpen = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose();
                 long mCount = ytdDayData.get(symbol).entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY)).count();
+
+                long numCrosses = ytdDayData.get(symbol).entrySet().stream()
+                        .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
+                        .filter(e -> e.getValue().includes(mOpen))
+                        .count();
+
                 double last;
                 double secLast;
                 last = ytdDayData.get(symbol).lastEntry().getValue().getClose();
                 secLast = ytdDayData.get(symbol).lowerEntry(ytdDayData.get(symbol)
                         .lastKey()).getValue().getClose();
+
                 String info;
                 double lastChg = Math.round((last / secLast - 1) * 1000d) / 10d;
                 double yDev = Math.round((last / yOpen - 1) * 1000d) / 10d;
@@ -275,6 +282,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 //                        Math.round(delta / 1000d), "k");
 
                 String out = str(symbol, info, "POS:" + (pos),
+                        "#x:", numCrosses, mCount,
                         "||LAST:", ytdDayData.get(symbol).lastEntry().getKey().format(f), last,
                         lastChg + "%", "||YYY", "Up%:" +
                                 Math.round(100d * ytdDayData.get(symbol).entrySet().stream()
@@ -288,6 +296,8 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                                         .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) + "%",
                         "mDev:" + mDev + "%" + "(" +
                                 ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey().format(f) + " " + mOpen + ")");
+
+
 
 //                double getLot = last > 300 ? 0 :
 //                        ((10000 / last) < 100 ? 100 : Math.floor(10000 / last / 100) * 100);
@@ -334,6 +344,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
                     double yOpen = ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY).getValue().getOpen();
                     double mOpen = ytdDayData.get(symbol).higherEntry(LAST_MONTH_DAY).getValue().getOpen();
+
                     double last;
                     double secLast;
                     LocalDate lastKey = ytdDayData.get(symbol).lastKey();

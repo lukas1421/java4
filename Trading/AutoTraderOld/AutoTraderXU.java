@@ -419,10 +419,8 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         processTradesButton = new JButton("Process");
         processTradesButton.addActionListener(l -> ses2.scheduleAtFixedRate(() -> {
-            SwingUtilities.invokeLater(() -> {
-                AutoTraderXU.clearLog();
-                AutoTraderXU.updateLog("**************************************************************");
-            });
+            //                AutoTraderXU.updateLog("**************************************************************");
+            SwingUtilities.invokeLater(AutoTraderXU::clearLog);
             AutoTraderXU.computeTradeMapActive();
         }, 0, 10, TimeUnit.SECONDS));
 
@@ -4334,7 +4332,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
         SwingUtilities.invokeLater(() -> {
             updateLog(" Expiry " + activeFutCt.lastTradeDateOrContractMonth());
-            updateLog(str("ATM vol ", expiryToGet, r10000(getATMVol(expiryToGet))));
+//            updateLog(str("ATM vol ", expiryToGet, r10000(getATMVol(expiryToGet))));
             //updateLog(" NAV: " + currentIBNAV);
             updateLog(" P " + futPriceMap.getOrDefault(f, 0.0));
             updateLog(str(" Close3pm ", futPrevClose3pmMap.getOrDefault(f, 0.0),
