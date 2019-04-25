@@ -298,7 +298,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                                 ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey().format(f) + " " + mOpen + ")");
 
 
-
 //                double getLot = last > 300 ? 0 :
 //                        ((10000 / last) < 100 ? 100 : Math.floor(10000 / last / 100) * 100);
 //                pr(str(symbol, last, getLot));
@@ -309,7 +308,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
 
                 if (pos != 0.0) {
-                    pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
+//                    pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
+//                            , out, Math.round(delta / 1000d) + "k");
+                } else {
+                    pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
                             , out, Math.round(delta / 1000d) + "k");
                 }
             }

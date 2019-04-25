@@ -34,6 +34,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     private static final DateTimeFormatter f1 = DateTimeFormatter.ofPattern("M-d H:mm");
     public static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s.SSS");
 
+    private static final int MAX_CROSS_PER_MONTH = 10;
+
     private static double totalDelta = 0.0;
     private static double totalAbsDelta = 0.0;
     private static ApiController apDev;
@@ -293,7 +295,18 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
         boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
         boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
 
-        if (!added && !liquidated && pos == 0.0 && prevClose != 0.0) {
+        long numCrosses = ytdDayData.get(symbol).entrySet().stream()
+                .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
+                .filter(e -> e.getValue().includes(mOpen))
+                .count();
+
+
+        if (numCrosses >= MAX_CROSS_PER_MONTH) {
+            outputToSymbolFile(symbol, str(symbol, numCrosses, "exceeding numCrosses no trade "
+                    , t.format(f1)), devOutput);
+        }
+
+        if (!added && !liquidated && pos == 0.0 && prevClose != 0.0 && numCrosses < MAX_CROSS_PER_MONTH) {
 
 //            pr(t.format(f1), "breach adder", symbol, "pos", pos, "prevC", prevClose,
 //                    "price", price, "yOpen", yOpen, "mOpen", mOpen, "devFromMaxOpen",
@@ -440,6 +453,10 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     LocalDate mStartDate = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey();
                     double mStart = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose();
                     double pos = symbolPosMap.get(symbol);
+                    long numCrosses = ytdDayData.get(symbol).entrySet().stream()
+                            .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
+                            .filter(e -> e.getValue().includes(mStart))
+                            .count();
 
 
                     if (timeIsOk(ct, t)) {
