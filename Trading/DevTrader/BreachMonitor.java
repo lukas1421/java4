@@ -310,9 +310,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 if (pos != 0.0) {
                     pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
                             , out, Math.round(delta / 1000d) + "k");
-                } else {
-//                    pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES)
-//                            , out, Math.round(delta / 1000d) + "k");
                 }
             }
         }
@@ -459,8 +456,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             pr("**********************************************");
             pr("running @ ", LocalTime.now());
             bm.reqHoldings(brMonController);
-            brMonController.reqAccountSummary("All", new AccountSummaryTag[]{AccountSummaryTag.NetLiquidation},
-                    new ApiController.IAccountSummaryHandler.AccountInfoHandler());
         }, 1, 1, TimeUnit.MINUTES);
 
 

@@ -457,8 +457,8 @@ public final class ChinaMain implements IConnectionHandler {
 //                M_CONTROLLER.reqHKAutoTrader();
 //                M_CONTROLLER.reqUSAutoTrader();
 //                M_CONTROLLER.reqHKInPosLive();
-                AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
-                M_CONTROLLER.reqAccountSummary("All", tags
+//                AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};
+                M_CONTROLLER.reqAccountSummary("All", new AccountSummaryTag[]{AccountSummaryTag.NetLiquidation}
                         , new ApiController.IAccountSummaryHandler.AccountInfoHandler());
 //                ses.scheduleAtFixedRate(() -> {
 //                    AccountSummaryTag[] tags = {AccountSummaryTag.NetLiquidation};

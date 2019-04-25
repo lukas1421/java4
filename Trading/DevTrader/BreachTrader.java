@@ -27,6 +27,11 @@ import static utility.Utility.*;
 public class BreachTrader implements LiveHandler, ApiController.IPositionHandler {
 
     static final int MAX_ATTEMPTS = 100;
+    private static final int MAX_CROSS_PER_MONTH = 10;
+    private static final double MAX_ENTRY_DEV = 0.05;
+    private static final double MIN_ENTRY_DEV = -0.05;
+
+
     static volatile NavigableMap<Integer, OrderAugmented> devOrderMap = new ConcurrentSkipListMap<>();
     static volatile AtomicInteger devTradeID = new AtomicInteger(100);
 
@@ -34,7 +39,6 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     private static final DateTimeFormatter f1 = DateTimeFormatter.ofPattern("M-d H:mm");
     public static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s.SSS");
 
-    private static final int MAX_CROSS_PER_MONTH = 10;
 
     private static double totalDelta = 0.0;
     private static double totalAbsDelta = 0.0;
@@ -313,8 +317,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 //                    r10000(price / Math.max(yOpen, mOpen) - 1), "devFromMin",
 //                    r10000(price / Math.min(yOpen, mOpen) - 1));
 
-            if (price > yOpen && price > mOpen && totalDelta < HI_LIMIT) {
-                //&& ((price / Math.max(yOpen, mOpen) - 1) < 0.02)) {
+            if (price > yOpen && price > mOpen && totalDelta < HI_LIMIT
+                    && ((price / Math.max(yOpen, mOpen) - 1) < MAX_ENTRY_DEV)) {
                 addedMap.put(symbol, new AtomicBoolean(true));
                 int id = devTradeID.incrementAndGet();
                 Order o = placeBidLimitTIF(bidMap.getOrDefault(symbol, price), defaultS, DAY);
@@ -328,8 +332,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                             r10000(price / Math.max(yOpen, mOpen) - 1))
                             , devOutput);
                 }
-            } else if (price < yOpen && price < mOpen && totalDelta > LO_LIMIT) {
-                // && (price / Math.min(yOpen, mOpen) - 1) > -0.02) {
+            } else if (price < yOpen && price < mOpen && totalDelta > LO_LIMIT
+                    && (price / Math.min(yOpen, mOpen) - 1) > MIN_ENTRY_DEV) {
                 addedMap.put(symbol, new AtomicBoolean(true));
                 int id = devTradeID.incrementAndGet();
                 Order o = placeOfferLimitTIF(askMap.getOrDefault(symbol, price), defaultS, DAY);
