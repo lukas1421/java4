@@ -80,10 +80,15 @@ public class ChinaOption extends JPanel implements Runnable {
     private static GraphOptionIntraday graphIntraday = new GraphOptionIntraday();
     private static GraphOptionVol graphTS2 = new GraphOptionVol();
 
-    public static LocalDate frontExpiry = getExpiryDateAuto(1);
-    public static LocalDate backExpiry = getExpiryDateAuto(2);
-    public static LocalDate thirdExpiry = getOptionExpiryDate(2019, Month.SEPTEMBER);
-    public static LocalDate fourthExpiry = getOptionExpiryDate(2019, Month.DECEMBER);
+//    public static LocalDate frontExpiry = getExpiryDateAuto(1);
+//    public static LocalDate backExpiry = getExpiryDateAuto(2);
+//    public static LocalDate thirdExpiry = getOptionExpiryDate(2019, Month.SEPTEMBER);
+//    public static LocalDate fourthExpiry = getOptionExpiryDate(2019, Month.DECEMBER);
+
+    public static LocalDate frontExpiry = getNthExpiryDate(1);
+    public static LocalDate backExpiry = getNthExpiryDate(2);
+    public static LocalDate thirdExpiry = getNthExpiryDate(3);
+    public static LocalDate fourthExpiry = getNthExpiryDate(4);
 
     private static String frontMonth = frontExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
     private static String backMonth = backExpiry.format(DateTimeFormatter.ofPattern("YYMM"));

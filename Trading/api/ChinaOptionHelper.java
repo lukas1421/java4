@@ -51,8 +51,8 @@ public class ChinaOptionHelper {
         }
     }
 
-    private static LocalDate getOptionExpiryDate(LocalDate now) {
-        return getOptionExpiryDate(now.getYear(), now.getMonth());
+    public static LocalDate getOptionExpiryDate(LocalDate date) {
+        return getOptionExpiryDate(date.getYear(), date.getMonth());
     }
 
     static LocalDate getOptionExpiryDate(int year, Month m) {
@@ -62,6 +62,23 @@ public class ChinaOptionHelper {
             res = res.minusDays(1);
         }
         return res;
+    }
+
+
+    static LocalDate getNthExpiryDate(int n) {
+        LocalDate today = LocalDate.now();
+        LocalDate expiryThisMonth = getOptionExpiryDate(today);
+        LocalDate firstMonth = today.plusMonths(today.isAfter(expiryThisMonth) ? 1 : 0);
+        LocalDate secondMonth = today.plusMonths(today.isAfter(expiryThisMonth) ? 2 : 1);
+
+        switch (n) {
+            case 1:
+                return getOptionExpiryDate(firstMonth);
+            case 2:
+                return getOptionExpiryDate(secondMonth);
+            default:
+                return getOptionExpiryDate(secondMonth.plusMonths((secondMonth.getMonthValue() % 3 == 0 ? 3 : 1) + (n - 3) * 3));
+        }
     }
 
 
