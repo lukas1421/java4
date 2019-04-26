@@ -113,7 +113,7 @@ public class ChinaOption extends JPanel implements Runnable {
     public static volatile double currentStockPrice;
     private static volatile double previousClose;
     public static volatile LocalDate expiryToCheck = frontExpiry;
-    public static volatile boolean showDelta = false;
+    public static volatile AtomicBoolean showDelta = new AtomicBoolean(false);
     private static volatile boolean computeOn = true;
     private static volatile Map<String, ConcurrentSkipListMap<LocalDate, Double>> histVol = new HashMap<>();
     public static volatile Map<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>> todayImpliedVolMap = new HashMap<>();
@@ -207,9 +207,7 @@ public class ChinaOption extends JPanel implements Runnable {
             public void mouseClicked(MouseEvent e) {
                 try {
                     if (SwingUtilities.isRightMouseButton(e)) {
-                        SwingUtilities.invokeLater(() -> {
-                            model.fireTableDataChanged();
-                        });
+                        SwingUtilities.invokeLater(() -> model.fireTableDataChanged());
                         sorter.setRowFilter(null);
                         filterOn = false;
                     }
@@ -259,9 +257,7 @@ public class ChinaOption extends JPanel implements Runnable {
         JButton fixIntradayVolButton = new JButton(" Fix Intraday");
         JButton refreshYtdButton = new JButton("Refresh All");
         fixIntradayVolButton.addActionListener(l -> fixIntradayVol());
-        refreshYtdButton.addActionListener(l -> {
-            refreshYtd();
-        });
+        refreshYtdButton.addActionListener(l -> refreshYtd());
         controlPanelBottom.add(fixIntradayVolButton);
         controlPanelBottom.add(refreshYtdButton);
 
@@ -402,7 +398,7 @@ public class ChinaOption extends JPanel implements Runnable {
 
         saveIntradayButton.addActionListener(l -> saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance()));
         loadIntradayButton.addActionListener(l -> loadIntradayVolsHib(ChinaVolIntraday.getInstance()));
-        showDeltaButton.addActionListener(l -> showDelta = !showDelta);
+        showDeltaButton.addActionListener(l -> showDelta.set(!showDelta.get()));
         getPreviousVolButton.addActionListener(l -> loadVolsHib());
 
         frontMonthButton.addActionListener(l -> {
@@ -665,7 +661,6 @@ public class ChinaOption extends JPanel implements Runnable {
                         updateOptionSystemInfo(Utility.str("存", saveclass.getSimpleName(),
                                 LocalTime.now().truncatedTo(ChronoUnit.SECONDS), " Taken: ",
                                 ChronoUnit.SECONDS.between(start, LocalTime.now().truncatedTo(ChronoUnit.SECONDS))));
-                        //pr(str(" Vol saving done", LocalTime.now()));
                     }
             );
         } else {
@@ -809,8 +804,6 @@ public class ChinaOption extends JPanel implements Runnable {
             if (lt.isAfter(LocalTime.of(9, 20)) && lt.isBefore(LocalTime.of(15, 15))) {
                 saveIntradayVolsHib(todayImpliedVolMap, ChinaVolIntraday.getInstance());
             }
-
-            //pr("engine start time ", ChinaMain.START_ENGINE_TIME);
 
             if (ChinaMain.START_ENGINE_TIME.isBefore(ltof(15, 0)) &&
                     !savedVolEOD.get() && checkTimeRangeBool(lt, 15, 0, 15, 15)) {

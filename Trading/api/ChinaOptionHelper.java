@@ -41,7 +41,7 @@ public class ChinaOptionHelper {
 
     private static final DayOfWeek OptionExpiryWeekDay = DayOfWeek.WEDNESDAY;
 
-    public static LocalDate getOptionExpiryDate(LocalDate date) {
+    private static LocalDate getOptionExpiryDate(LocalDate date) {
         return getOptionExpiryDate(date.getYear(), date.getMonth());
     }
 

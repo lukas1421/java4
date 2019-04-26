@@ -193,7 +193,7 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
                 //g.setColor(Color.black);
 
 
-                if (showDelta) {
+                if (showDelta.get()) {
                     g.drawString(" [" + Math.round((deltaMapFront.getOrDefault(k, 0.0))) + "d]",
                             x + 20, Math.max(10, yFront - 5));
                 }
@@ -209,7 +209,7 @@ public class GraphOptionVol extends JComponent implements MouseMotionListener, M
                     g.drawString(Math.round(ChinaOptionHelper.interpolateVol(k, volSmileBack) * 100d)
                             + "", x + 10, yBack + 10);
 
-                    if (showDelta) {
+                    if (showDelta.get()) {
                         g.drawString(" [" + Math.round((deltaMapBack.getOrDefault(k, 0.0))) + "d]",
                                 x + 30, Math.max(10, yBack + 10));
                     }
