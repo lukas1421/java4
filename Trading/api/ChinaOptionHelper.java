@@ -41,21 +41,11 @@ public class ChinaOptionHelper {
 
     private static final DayOfWeek OptionExpiryWeekDay = DayOfWeek.WEDNESDAY;
 
-    static LocalDate getExpiryDateAuto(int lag) {
-        LocalDate today = LocalDate.now();
-        LocalDate expiryThisMonth = getOptionExpiryDate(today);
-        if (today.isAfter(expiryThisMonth)) {
-            return getOptionExpiryDate(today.plusMonths(lag));
-        } else {
-            return getOptionExpiryDate(today.plusMonths(lag - 1));
-        }
-    }
-
     public static LocalDate getOptionExpiryDate(LocalDate date) {
         return getOptionExpiryDate(date.getYear(), date.getMonth());
     }
 
-    static LocalDate getOptionExpiryDate(int year, Month m) {
+    private static LocalDate getOptionExpiryDate(int year, Month m) {
         LocalDate res = LocalDate.of(year, m, 1).plusMonths(1);
         res = res.minusDays(1);
         while (res.getDayOfWeek() != ChinaOptionHelper.OptionExpiryWeekDay) {
@@ -77,7 +67,8 @@ public class ChinaOptionHelper {
             case 2:
                 return getOptionExpiryDate(secondMonth);
             default:
-                return getOptionExpiryDate(secondMonth.plusMonths((secondMonth.getMonthValue() % 3 == 0 ? 3 : 1) + (n - 3) * 3));
+                return getOptionExpiryDate(
+                        secondMonth.plusMonths((secondMonth.getMonthValue() % 3 == 0 ? 3 : 1) + (n - 3) * 3));
         }
     }
 

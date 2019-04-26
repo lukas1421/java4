@@ -29,7 +29,6 @@ import java.sql.Blob;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -54,21 +53,18 @@ import static saving.Hibtask.unblob;
 import static utility.TradingUtility.checkTimeRangeBool;
 import static utility.Utility.*;
 
-//import javax.swing.table.TableRowSorter;
-//import org.apache.commons.math3.*;
-
 public class ChinaOption extends JPanel implements Runnable {
 
+
+    private static DateTimeFormatter yymm = DateTimeFormatter.ofPattern("YYMM");
     private static volatile boolean loadedBeforeSaveGuard = false;
-    public static volatile boolean todayVolOnly = false;
+    public static volatile AtomicBoolean todayVolOnly = new AtomicBoolean(false);
     public static volatile AtomicInteger intradayGraphStartTimeOffset = new AtomicInteger(0);
     private static final int CPStringCol = 1;
     private static final int moneynessCol = 9;
     private static volatile String selectedTicker = "";
     static ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
     private static volatile JLabel optionNotif = new JLabel(" Option Notif ");
-    //private static volatile int runFrequency = 6;
-    //private static final List<LocalDate> expiryList = new ArrayList<>();
     private static final NavigableSet<LocalDate> expiryList = new TreeSet<>();
     //static HashMap<String, Option> optionMap = new HashMap<>();
     //public static volatile double frontMonthATMVol = 0.0;
@@ -80,27 +76,21 @@ public class ChinaOption extends JPanel implements Runnable {
     private static GraphOptionIntraday graphIntraday = new GraphOptionIntraday();
     private static GraphOptionVol graphTS2 = new GraphOptionVol();
 
-//    public static LocalDate frontExpiry = getExpiryDateAuto(1);
-//    public static LocalDate backExpiry = getExpiryDateAuto(2);
-//    public static LocalDate thirdExpiry = getOptionExpiryDate(2019, Month.SEPTEMBER);
-//    public static LocalDate fourthExpiry = getOptionExpiryDate(2019, Month.DECEMBER);
-
     public static LocalDate frontExpiry = getNthExpiryDate(1);
     public static LocalDate backExpiry = getNthExpiryDate(2);
     public static LocalDate thirdExpiry = getNthExpiryDate(3);
     public static LocalDate fourthExpiry = getNthExpiryDate(4);
 
-    private static String frontMonth = frontExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
-    private static String backMonth = backExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
-    private static String thirdMonth = thirdExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
-    private static String fourthMonth = fourthExpiry.format(DateTimeFormatter.ofPattern("YYMM"));
+    private static String frontMonth = frontExpiry.format(yymm);
+    private static String backMonth = backExpiry.format(yymm);
+    private static String thirdMonth = thirdExpiry.format(yymm);
+    private static String fourthMonth = fourthExpiry.format(yymm);
 
     private static volatile boolean filterOn = false;
     private static volatile AtomicBoolean savedVolEOD = new AtomicBoolean(false);
 
     private static ScheduledExecutorService sesOption = Executors.newScheduledThreadPool(10);
 
-    //private static double stockPrice = 0.0;
     static double interestRate = 0.04;
 
     public static volatile LocalDate previousTradingDate = LocalDate.MIN;
@@ -146,7 +136,6 @@ public class ChinaOption extends JPanel implements Runnable {
             }
         };
 
-        //getLastTradingDate();
         loadOptionTickers();
 
         expiryList.add(frontExpiry);
@@ -261,9 +250,9 @@ public class ChinaOption extends JPanel implements Runnable {
 
 
         todayVolOnlyButton.addActionListener(l -> {
-            todayVolOnly = !todayVolOnly;
+            todayVolOnly.set(!todayVolOnly.get());
             SwingUtilities.invokeLater(() ->
-                    todayVolOnlyButton.setText(todayVolOnly ? " All Vols " : " Only T Vol"));
+                    todayVolOnlyButton.setText(todayVolOnly.get() ? " All Vols " : " Only T Vol"));
             graphIntraday.repaint();
         });
 
