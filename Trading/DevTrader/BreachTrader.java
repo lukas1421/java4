@@ -28,8 +28,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
     static final int MAX_ATTEMPTS = 100;
     private static final int MAX_CROSS_PER_MONTH = 10;
-    private static final double MAX_ENTRY_DEV = 0.05;
-    private static final double MIN_ENTRY_DEV = -0.05;
+    private static final double MAX_ENTRY_DEV = 0.03;
+    private static final double MIN_ENTRY_DEV = -0.03;
 
 
     static volatile NavigableMap<Integer, OrderAugmented> devOrderMap = new ConcurrentSkipListMap<>();
@@ -225,7 +225,9 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
         String symbol = ibContractToSymbol(contract);
+        pr("position registering ", symbol);
         if (!contract.symbol().equals("USD") &&
+                !symbol.equalsIgnoreCase("SGXA50PR") &&
                 (position != 0 || symbolPosMap.getOrDefault(symbol, 0.0) != 0.0)) {
             registerContractPosition(contract, position);
         }
@@ -235,7 +237,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     public void positionEnd() {
         for (Contract c : contractPosMap.keySet()) {
             String symb = ibContractToSymbol(c);
-            pr(" symbol in positionEnd ", symb);
+//            pr(" symbol in positionEnd ", symb);
             ytdDayData.put(symb, new ConcurrentSkipListMap<>());
 
             if (!symb.equals("USD")) {
@@ -250,7 +252,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     }
                 });
             }
-            apDev.req1ContractLive(c, this, false);
+
+            apDev.req1ContractLive(liveCompatibleCt(c), this, false);
         }
     }
 

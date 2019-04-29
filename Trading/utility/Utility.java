@@ -911,7 +911,8 @@ public class Utility {
 
     public static Contract histCompatibleCt(Contract c) {
         if (c.symbol().equalsIgnoreCase("XINA50") && c.exchange() == null) {
-            pr(" adding exchange in hist compatible");
+            pr(" adding exchange in hist compatible for",
+                    ibContractToSymbol(c));
             c.exchange("SGX");
         }
 
@@ -934,7 +935,7 @@ public class Utility {
 
     public static Contract liveCompatibleCt(Contract c) {
         if (c.symbol().equalsIgnoreCase("XINA50") && c.exchange() == null) {
-            pr(" adding exchange in hist compatible");
+            pr(" adding exchange in hist compatible for", ibContractToSymbol(c));
             c.exchange("SGX");
         }
 
