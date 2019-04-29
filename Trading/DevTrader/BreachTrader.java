@@ -225,10 +225,11 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     @Override
     public void position(String account, Contract contract, double position, double avgCost) {
         String symbol = ibContractToSymbol(contract);
-        pr("position registering ", symbol);
         if (!contract.symbol().equals("USD") &&
                 !symbol.equalsIgnoreCase("SGXA50PR") &&
                 (position != 0 || symbolPosMap.getOrDefault(symbol, 0.0) != 0.0)) {
+
+            pr("position registering ", symbol);
             registerContractPosition(contract, position);
         }
     }
