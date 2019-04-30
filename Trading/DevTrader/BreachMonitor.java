@@ -342,7 +342,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 if (ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
                     double yOpen = ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY).getValue().getOpen();
-                    double mOpen = ytdDayData.get(symbol).higherEntry(LAST_MONTH_DAY).getValue().getOpen();
+                    double mOpen = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose();
 
                     double last;
                     double secLast;
@@ -387,7 +387,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                             , "CHG%:", lastChg + "%", "PREV:", secLastKey.format(f), secLast
                             , "||yOpen", ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f),
                             yOpen, "yDev", yDev + "%",
-                            "||mOpen ", ytdDayData.get(symbol).higherEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
+                            "||mOpen ", ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
                             "mDev", mDev + "%", info);
                     //pr("*", out, yBreachStatus, mBreachStatus);
                 }
