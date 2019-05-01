@@ -39,6 +39,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     private static final DateTimeFormatter f1 = DateTimeFormatter.ofPattern("M-d H:mm");
     public static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s.SSS");
 
+    private static final double ENTRY_SAFETY_MARGIN = 0.003;
+
 
     private static double totalDelta = 0.0;
     private static double totalAbsDelta = 0.0;
@@ -326,14 +328,16 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 addedMap.put(symbol, new AtomicBoolean(true));
                 int id = devTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(Math.min(price, bidMap.getOrDefault(symbol, price)), defaultS, DAY);
+                double bidPrice = Math.min(price, bidMap.getOrDefault(symbol, price)) -
+                        r(ENTRY_SAFETY_MARGIN * price);
+                Order o = placeBidLimitTIF(bidPrice, defaultS, DAY);
                 if (checkDeltaImpact(ct, o)) {
                     devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
                     apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
                     outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER BUY:",
                             devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
-                            "prevClose", prevClose, "price", price, "devFromMaxOpen",
+                            "prevClose", prevClose, "p/b/a", price, getBid(symbol), getAsk(symbol), "devFromMaxOpen",
                             r10000(price / Math.max(yOpen, mOpen) - 1))
                             , devOutput);
                 }
@@ -341,7 +345,10 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     && (price / Math.min(yOpen, mOpen) - 1) > MIN_ENTRY_DEV) {
                 addedMap.put(symbol, new AtomicBoolean(true));
                 int id = devTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(Math.max(price, askMap.getOrDefault(symbol, price)), defaultS, DAY);
+                double offerPrice = Math.max(price, askMap.getOrDefault(symbol, price))
+                        + r(ENTRY_SAFETY_MARGIN * price);
+
+                Order o = placeOfferLimitTIF(offerPrice, defaultS, DAY);
 
                 if (checkDeltaImpact(ct, o)) {
                     devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
@@ -349,7 +356,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER SELL:",
                             devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
-                            "prevClose", prevClose, "price", price, "devFromMinOpen",
+                            "prevClose", prevClose, "p/b/a", price, getBid(symbol), getAsk(symbol), "devFromMinOpen",
                             r10000(price / Math.min(mOpen, yOpen) - 1)), devOutput);
                 }
             }
@@ -444,9 +451,9 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 liveData.get(symbol).put(t, price);
                 lastMap.put(symbol, price);
 
-                if (symbol.equalsIgnoreCase("GXBT")) {
-                    pr("handle price last ", symbol, t, price, ytdDayData.get(symbol));
-                }
+//                if (symbol.equalsIgnoreCase("GXBT")) {
+//                    pr("handle price last ", symbol, t, price, ytdDayData.get(symbol));
+//                }
 
 //                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
 //                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
