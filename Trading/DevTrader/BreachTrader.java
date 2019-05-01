@@ -323,9 +323,10 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
             if (price > yOpen && price > mOpen && totalDelta < HI_LIMIT
                     && ((price / Math.max(yOpen, mOpen) - 1) < MAX_ENTRY_DEV)) {
+
                 addedMap.put(symbol, new AtomicBoolean(true));
                 int id = devTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(bidMap.getOrDefault(symbol, price), defaultS, DAY);
+                Order o = placeBidLimitTIF(Math.min(price, bidMap.getOrDefault(symbol, price)), defaultS, DAY);
                 if (checkDeltaImpact(ct, o)) {
                     devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
                     apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
@@ -340,7 +341,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     && (price / Math.min(yOpen, mOpen) - 1) > MIN_ENTRY_DEV) {
                 addedMap.put(symbol, new AtomicBoolean(true));
                 int id = devTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(askMap.getOrDefault(symbol, price), defaultS, DAY);
+                Order o = placeOfferLimitTIF(Math.max(price, askMap.getOrDefault(symbol, price)), defaultS, DAY);
 
                 if (checkDeltaImpact(ct, o)) {
                     devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
@@ -380,7 +381,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 checkIfAdderPending(symbol);
                 liquidatedMap.put(symbol, new AtomicBoolean(true));
                 int id = devTradeID.incrementAndGet();
-                Order o = placeBidLimitTIF(bidMap.getOrDefault(symbol, price), Math.abs(pos), IOC);
+                Order o = placeBidLimitTIF(Math.min(price, bidMap.getOrDefault(symbol, price)), Math.abs(pos), IOC);
+
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                 apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
                 outputToSymbolFile(symbol, str("********", t), devOutput);
@@ -391,7 +393,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 checkIfAdderPending(symbol);
                 liquidatedMap.put(symbol, new AtomicBoolean(true));
                 int id = devTradeID.incrementAndGet();
-                Order o = placeOfferLimitTIF(askMap.getOrDefault(symbol, price), pos, IOC);
+                Order o = placeOfferLimitTIF(Math.max(price, askMap.getOrDefault(symbol, price)), pos, IOC);
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                 apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
                 outputToSymbolFile(symbol, str("********", t), devOutput);
