@@ -444,9 +444,9 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 liveData.get(symbol).put(t, price);
                 lastMap.put(symbol, price);
 
-//                if (symbol.equalsIgnoreCase("GXBT")) {
-//                    pr("handle price last ", symbol, t, price, ytdDayData.get(symbol));
-//                }
+                if (symbol.equalsIgnoreCase("GXBT")) {
+                    pr("handle price last ", symbol, t, price, ytdDayData.get(symbol));
+                }
 
 //                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
 //                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
