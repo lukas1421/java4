@@ -1,11 +1,13 @@
 package DevTrader;
 
+import AutoTraderOld.XuTraderHelper;
 import enums.Currency;
 import api.TradingConstants;
 import auxiliary.SimpleBar;
 import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
+import enums.Direction;
 import handler.LiveHandler;
 import utility.TradingUtility;
 import utility.Utility;
@@ -331,6 +333,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 double bidPrice = r(Math.min(price, bidMap.getOrDefault(symbol, price)) -
                         r(ENTRY_CUSHION * price));
 
+                bidPrice = roundToMinVariation(symbol, Direction.Long, bidPrice);
+
                 Order o = placeBidLimitTIF(bidPrice, defaultS, DAY);
                 if (checkDeltaImpact(ct, o)) {
                     devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
@@ -348,6 +352,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 int id = devTradeID.incrementAndGet();
                 double offerPrice = r(Math.max(price, askMap.getOrDefault(symbol, price))
                         + r(ENTRY_CUSHION * price));
+
+                offerPrice = roundToMinVariation(symbol, Direction.Short, offerPrice);
 
                 Order o = placeOfferLimitTIF(offerPrice, defaultS, DAY);
 
@@ -392,6 +398,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 double bidPrice = r(Math.min(price, bidMap.getOrDefault(symbol, price))
                         - r(ENTRY_CUSHION * price));
 
+                bidPrice = roundToMinVariation(symbol, Direction.Long, bidPrice);
+
                 Order o = placeBidLimitTIF(bidPrice, Math.abs(pos), IOC);
 
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
@@ -409,6 +417,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 double offerPrice = r(Math.max(price, askMap.getOrDefault(symbol, price))
                         + r(ENTRY_CUSHION * price));
 
+                offerPrice = roundToMinVariation(symbol, Direction.Short, offerPrice);
+
                 Order o = placeOfferLimitTIF(offerPrice, pos, IOC);
 
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
@@ -421,6 +431,15 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
         }
     }
 
+
+    private static double roundToMinVariation(String ticker, Direction dir, double price) {
+        if (ticker.equalsIgnoreCase("SGXA50")) {
+            return XuTraderHelper.roundToPricePassiveGen(price, dir, 2.5);
+        } else if (ticker.equalsIgnoreCase("GXBT")) {
+            return XuTraderHelper.roundToPricePassiveGen(price, dir, 5);
+        }
+        return price;
+    }
 
     private static void checkIfAdderPending(String symbol) {
         devOrderMap.entrySet().stream().filter(e -> e.getValue().getSymbol().equalsIgnoreCase(symbol))

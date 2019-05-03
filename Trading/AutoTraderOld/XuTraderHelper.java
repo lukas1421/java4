@@ -320,6 +320,10 @@ public class XuTraderHelper {
         return (Math.round(x * 10) - Math.round(x * 10) % 25 + (dir == Direction.Long ? 0 : 25)) / 10d;
     }
 
+    public static double roundToPricePassiveGen(double x, Direction dir, double minPriceVar) {
+        return (Math.round(x * 10) - Math.round(x * 10) % (minPriceVar * 10) + (dir == Direction.Long ? 0 : (minPriceVar * 10))) / 10d;
+    }
+
     static double roundToXUPriceVeryPassive(double x, Direction dir, long factor) {
         return (Math.round(x * 10) - Math.round(x * 10) % 25) / 10d + ((dir == Direction.Long ? -2.5 : 2.5) * factor);
     }
@@ -329,8 +333,12 @@ public class XuTraderHelper {
     }
 
 
-    static double roundToXUTradablePrice(double x) {
+    public static double roundToXUTradablePrice(double x) {
         return (Math.round(x * 10) - Math.round(x * 10) % 25) / 10d;
+    }
+
+    public static double roundToTradableGen(double x, double movement) {
+        return (Math.round(x * 10) - Math.round(x * 10) % (movement * 10)) / 10d;
     }
 
 //    static void computeMAProfit(Set<MAIdea> l, double lastPrice) {

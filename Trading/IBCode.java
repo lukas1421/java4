@@ -39,6 +39,8 @@ public class IBCode extends JPanel {
     }
 
     public static void main(String[] args) {
+        UIManager.getDefaults().put("Button.showMnemonics", Boolean.TRUE);
+
         loadList();
         String firstInt = JOptionPane.showInputDialog("Please input number ");
         List<String> al1 = Arrays.asList(firstInt.split("\\s+"));
