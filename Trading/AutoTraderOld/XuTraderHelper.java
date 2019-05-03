@@ -321,7 +321,8 @@ public class XuTraderHelper {
     }
 
     public static double roundToPricePassiveGen(double x, Direction dir, double minPriceVar) {
-        return (Math.round(x * 10) - Math.round(x * 10) % (minPriceVar * 10) + (dir == Direction.Long ? 0 : (minPriceVar * 10))) / 10d;
+        return (Math.round(x * 10) - Math.round(x * 10) % (minPriceVar * 10)
+                + (dir == Direction.Long ? 0 : (minPriceVar * 10))) / 10d;
     }
 
     static double roundToXUPriceVeryPassive(double x, Direction dir, long factor) {

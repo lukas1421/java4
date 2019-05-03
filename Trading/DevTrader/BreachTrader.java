@@ -31,7 +31,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     static final int MAX_ATTEMPTS = 100;
     private static final int MAX_CROSS_PER_MONTH = 10;
     private static final double MAX_ENTRY_DEV = 0.03;
-    private static final double MIN_ENTRY_DEV = -0.03;
+    private static final double MIN_ENTRY_DEV = 0.003;
 
 
     static volatile NavigableMap<Integer, OrderAugmented> devOrderMap = new ConcurrentSkipListMap<>();
@@ -326,7 +326,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 //                    r10000(price / Math.min(yOpen, mOpen) - 1));
 
             if (price > yOpen && price > mOpen && totalDelta < HI_LIMIT
-                    && ((price / Math.max(yOpen, mOpen) - 1) < MAX_ENTRY_DEV)) {
+                    && ((price / Math.max(yOpen, mOpen) - 1) < MAX_ENTRY_DEV)
+                    && ((price / Math.max(yOpen, mOpen) - 1) > MIN_ENTRY_DEV)) {
 
                 addedMap.put(symbol, new AtomicBoolean(true));
                 int id = devTradeID.incrementAndGet();
@@ -347,7 +348,9 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                             , devOutput);
                 }
             } else if (price < yOpen && price < mOpen && totalDelta > LO_LIMIT
-                    && (price / Math.min(yOpen, mOpen) - 1) > MIN_ENTRY_DEV) {
+                    && (price / Math.min(yOpen, mOpen) - 1) > -MAX_ENTRY_DEV
+                    && (price / Math.min(yOpen, mOpen) - 1) < -MIN_ENTRY_DEV) {
+
                 addedMap.put(symbol, new AtomicBoolean(true));
                 int id = devTradeID.incrementAndGet();
                 double offerPrice = r(Math.max(price, askMap.getOrDefault(symbol, price))
