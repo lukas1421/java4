@@ -29,6 +29,10 @@ public class PatientDevHandler implements ApiController.IOrderHandler {
         idStatusMap.put(id, OrderStatus.ConstructedInHandler);
     }
 
+    int getTradeID() {
+        return tradeID;
+    }
+
     @Override
     public void orderState(OrderState orderState) {
         LocalDateTime now = LocalDateTime.now();

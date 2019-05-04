@@ -1632,10 +1632,10 @@ public class ApiController implements EWrapper {
 //            return;
 //        }
 
-        if (o.totalQuantity() == 0.0) {
-            outputToAll(str(" quantity is 0 ", ct.symbol(), o.action(),
+        if (o.totalQuantity() == 0.0 || o.lmtPrice() == 0.0) {
+            outputToAll(str(" quantity/price problem ", ct.symbol(), o.action(),
                     o.lmtPrice(), o.totalQuantity()));
-            throw new IllegalStateException(" quantity is 0 ");
+            throw new IllegalStateException(" quantity/price is 0 ");
         }
 
         if (o.orderId() == 0) {

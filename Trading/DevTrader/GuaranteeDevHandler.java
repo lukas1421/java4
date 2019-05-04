@@ -120,9 +120,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
 
                 o.totalQuantity(lastQ);
                 if (aot == AutoOrderType.BREACH_CUTTER) {
-                    if (lastQ != Math.abs(livePos)) {
-                        o.totalQuantity(Math.abs(livePos));
-                    }
+                    o.totalQuantity(Math.abs(livePos));
                 } else if (aot == AutoOrderType.BREACH_ADDER) {
                     if (livePos != 0.0) {
                         if (defaultSize - Math.abs(livePos) >= 100.0) {
