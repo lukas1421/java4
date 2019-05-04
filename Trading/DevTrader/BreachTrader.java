@@ -34,6 +34,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     private static final int MAX_CROSS_PER_MONTH = 10;
     private static final double MAX_ENTRY_DEV = 0.03;
     private static final double MIN_ENTRY_DEV = 0.0035;
+    private static final double ENTRY_CUSHION = 0.002;
+
 
 
     static volatile NavigableMap<Integer, OrderAugmented> devOrderMap = new ConcurrentSkipListMap<>();
@@ -43,7 +45,6 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     private static final DateTimeFormatter f1 = DateTimeFormatter.ofPattern("M-d H:mm");
     public static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s.SSS");
 
-    private static final double ENTRY_CUSHION = 0.003;
 
 
     private static double totalDelta = 0.0;
