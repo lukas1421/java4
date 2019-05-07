@@ -22,7 +22,6 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static DevTrader.GuaranteeDevHandler.breachMDevOutput;
 import static client.Types.TimeInForce.*;
 import static util.AutoOrderType.*;
 import static utility.TradingUtility.*;
@@ -32,10 +31,9 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
     static final int MAX_ATTEMPTS = 100;
     private static final int MAX_CROSS_PER_MONTH = 10;
-    private static final double MAX_ENTRY_DEV = 0.03;
-    private static final double MIN_ENTRY_DEV = 0.0035;
-    private static final double ENTRY_CUSHION = 0.002;
-
+    private static final double MAX_ENTRY_DEV = 0.02;
+    private static final double MIN_ENTRY_DEV = 0.0015;
+    private static final double ENTRY_CUSHION = 0.0;
 
 
     static volatile NavigableMap<Integer, OrderAugmented> devOrderMap = new ConcurrentSkipListMap<>();
@@ -44,7 +42,6 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     private static DateTimeFormatter f = DateTimeFormatter.ofPattern("M-d H:mm:ss");
     private static final DateTimeFormatter f1 = DateTimeFormatter.ofPattern("M-d H:mm");
     public static final DateTimeFormatter f2 = DateTimeFormatter.ofPattern("M-d H:mm:s.SSS");
-
 
 
     private static double totalDelta = 0.0;
@@ -348,7 +345,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
                     outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER BUY:",
-                            devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
+                            devOrderMap.get(id), "yOpen:" + yOpen, "mOpen:" + mOpen,
                             "prevClose", prevClose, "p/b/a", price, getBid(symbol), getAsk(symbol), "devFromMaxOpen",
                             r10000(price / Math.max(yOpen, mOpen) - 1))
                             , devOutput);
@@ -371,7 +368,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
                     outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER SELL:",
-                            devOrderMap.get(id), "yOpen", yOpen, "mOpen", mOpen,
+                            devOrderMap.get(id), "yOpen:" + yOpen, "mOpen:" + mOpen,
                             "prevClose", prevClose, "p/b/a", price, getBid(symbol), getAsk(symbol), "devFromMinOpen",
                             r10000(price / Math.min(mOpen, yOpen) - 1)), devOutput);
                 }
@@ -412,10 +409,10 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 Order o = placeBidLimitTIF(bidPrice, Math.abs(pos), IOC);
 
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
+                apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
                 outputToSymbolFile(symbol, str("********", t), devOutput);
                 outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter BUY:",
-                        "added?" + added, devOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
+                        "added?" + added, devOrderMap.get(id), "pos", pos, "yOpen:" + yOpen, "mOpen:" + mOpen,
                         "price", price), devOutput);
 
             } else if (pos > 0.0 && (price < mOpen || price < yOpen)) {
@@ -432,11 +429,11 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
 
-                apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
+                apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
 
                 outputToSymbolFile(symbol, str("********", t), devOutput);
                 outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter SELL:",
-                        "added?" + added, devOrderMap.get(id), "pos", pos, "yOpen", yOpen, "mOpen", mOpen,
+                        "added?" + added, devOrderMap.get(id), "pos", pos, "yOpen:" + yOpen, "mOpen:" + mOpen,
                         "price", price), devOutput);
             }
         }
@@ -463,48 +460,49 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 });
     }
 
-    private static void checkOnBreachCutters() {
-        devOrderMap.entrySet().stream()
-                .filter(e -> e.getValue().getOrderType() == BREACH_CUTTER)
-                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Submitted)
-                .forEach(e -> {
-
-                    LocalDateTime now = LocalDateTime.now();
-                    LocalDateTime submitted = e.getValue().getOrderTime();
-
-                    if (ChronoUnit.SECONDS.between(submitted, now) > 15 * 60) {
-                        String symbol = e.getValue().getSymbol();
-                        Contract ct = e.getValue().getContract();
-
-                        apDev.cancelOrder(e.getValue().getOrder().orderId());
-
-                        double lastPrice = BreachTrader.getLast(symbol);
-                        double bid = BreachTrader.getBid(symbol);
-                        double ask = BreachTrader.getAsk(symbol);
-                        double livePos = getLivePos(symbol);
-
-                        Order prevO = e.getValue().getOrder();
-
-                        Order o = new Order();
-                        o.action(prevO.action());
-                        o.lmtPrice(prevO.action() == Types.Action.BUY ? r(bid) :
-                                (prevO.action() == Types.Action.SELL ? r(ask) : r(lastPrice)));
-                        o.orderType(OrderType.LMT);
-                        o.totalQuantity(Math.abs(livePos));
-                        o.outsideRth(true);
-                        o.tif(IOC);
-
-                        int newID = devTradeID.incrementAndGet();
-                        devOrderMap.put(newID, new OrderAugmented(ct, now, o, BREACH_CUTTER));
-
-                        apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(newID, apDev));
-                        outputToSymbolFile(symbol, str(o.orderId(), prevO.orderId(), "->", o.orderId(),
-                                "Revise cutter:", devOrderMap.get(newID), "b/a sprd last"
-                                , bid, ask, Math.round(10000d * (ask / bid - 1)) + "bp", lastPrice,
-                                "pos", livePos), breachMDevOutput);
-                    }
-                });
-    }
+//    private static void checkOnBreachCutters() {
+//        devOrderMap.entrySet().stream()
+//                .filter(e -> e.getValue().getOrderType() == BREACH_CUTTER)
+//                .filter(e -> getLivePos(e.getValue().getSymbol()) != 0.0)
+//                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Submitted)
+//                .forEach(e -> {
+//
+//                    LocalDateTime now = LocalDateTime.now();
+//                    LocalDateTime submitted = e.getValue().getOrderTime();
+//
+//                    if (ChronoUnit.SECONDS.between(submitted, now) > 15 * 60) {
+//                        String symbol = e.getValue().getSymbol();
+//                        Contract ct = e.getValue().getContract();
+//
+//                        apDev.cancelOrder(e.getValue().getOrder().orderId());
+//
+//                        double lastPrice = BreachTrader.getLast(symbol);
+//                        double bid = BreachTrader.getBid(symbol);
+//                        double ask = BreachTrader.getAsk(symbol);
+//                        double livePos = getLivePos(symbol);
+//
+//                        Order prevO = e.getValue().getOrder();
+//
+//                        Order o = new Order();
+//                        o.action(prevO.action());
+//                        o.lmtPrice(prevO.action() == Types.Action.BUY ? r(bid) :
+//                                (prevO.action() == Types.Action.SELL ? r(ask) : r(lastPrice)));
+//                        o.orderType(OrderType.LMT);
+//                        o.totalQuantity(Math.abs(livePos));
+//                        o.outsideRth(true);
+//                        o.tif(IOC);
+//
+//                        int newID = devTradeID.incrementAndGet();
+//                        devOrderMap.put(newID, new OrderAugmented(ct, now, o, BREACH_CUTTER));
+//
+//                        apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(newID));
+//                        outputToSymbolFile(symbol, str(o.orderId(), prevO.orderId(), "->", o.orderId(),
+//                                "Revise cutter:", devOrderMap.get(newID), "b/a sprd last"
+//                                , bid, ask, Math.round(10000d * (ask / bid - 1)) + "bp", lastPrice,
+//                                "pos", livePos), breachMDevOutput);
+//                    }
+//                });
+//    }
 
 
     private static boolean checkDeltaImpact(Contract ct, Order o) {
@@ -564,15 +562,15 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                         breachAdder(ct, price, t, yStart, mStart);
                     }
 
-                    double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
-
-                    boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
-                    boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
-
-                    double delta = getDelta(ct, price, pos, fx.getOrDefault(Currency.get(ct.currency()), 1.0));
-
-                    String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
-                            fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
+//                    double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
+//
+//                    boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
+//                    boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
+//
+//                    double delta = getDelta(ct, price, pos, fx.getOrDefault(Currency.get(ct.currency()), 1.0));
+//
+//                    String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
+//                            fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
 //                    if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
 //                        //pr(symbol, liveData.get(symbol));
 //                        pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,
@@ -636,7 +634,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     Math.min(0, getDelta(e.getKey(), getLastPriceFromYtd(e.getKey()), e.getValue(),
                             fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();
 
-            checkOnBreachCutters();
+            //checkOnBreachCutters();
 
             pr(LocalDateTime.now().format(f),
                     "||net delta:" + Math.round(totalDelta / 1000d) + "k",

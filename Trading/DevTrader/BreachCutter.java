@@ -252,7 +252,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                             int id = devTradeID.incrementAndGet();
                             Order o = placeBidLimitTIF(askMap.get(symbol), Math.abs(pos), IOC);
                             devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                            cutterController.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, cutterController));
+                            cutterController.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
                             outputToSymbolFile(symbol, "*********", breachOutput);
                             outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach Cutter BUY #:",
                                     devOrderMap.get(id), "pos", pos), breachOutput);
@@ -264,7 +264,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
                             Order o = placeOfferLimitTIF(bidMap.get(symbol), pos, IOC);
                             devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                             cutterController.placeOrModifyOrder(ct, o,
-                                    new GuaranteeDevHandler(id, cutterController));
+                                    new PatientDevHandler(id));
                             outputToSymbolFile(symbol, "*********", breachOutput);
                             outputToSymbolFile(symbol, str("NEW", o.orderId(), "Breach Cutter sell:"
                                     , devOrderMap.get(id), "pos", pos), breachOutput);
