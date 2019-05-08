@@ -984,6 +984,10 @@ public class Utility {
         return lt.isAfter(ltof(h1, m1)) && lt.isBefore(ltof(h2, m2));
     }
 
+    public static boolean ltBtwn(LocalTime lt, int h1, int m1, int s1, int h2, int m2, int s2) {
+        return lt.isAfter(ltof(h1, m1, s1)) && lt.isBefore(ltof(h2, m2, s2));
+    }
+
     public static int getMinuteBetween(LocalTime t1, LocalTime t2) {
         if (t1.isBefore(LocalTime.of(11, 30)) && t2.isAfter(LocalTime.of(13, 0))) {
             return (int) (ChronoUnit.MINUTES.between(t1, t2) - 90);

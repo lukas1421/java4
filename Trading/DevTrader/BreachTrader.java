@@ -93,7 +93,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
     private static Semaphore histSemaphore = new Semaphore(45);
 
-    private static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
+    //private static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
 
 
     private BreachTrader() {
@@ -382,9 +382,9 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
             ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
             LocalTime usLt = usZdt.toLocalDateTime().toLocalTime();
 
-            return ltBtwn(usLt, 9, 29, 16, 1);
+            return ltBtwn(usLt, 9, 30, 0, 16, 0, 0);
         } else if (ct.currency().equalsIgnoreCase("HKD") && ct.secType() == Types.SecType.STK) {
-            return ltBtwn(chinaTime.toLocalTime(), 9, 29, 16, 1);
+            return ltBtwn(chinaTime.toLocalTime(), 9, 30, 0, 16, 0, 0);
         }
         return true;
     }
@@ -406,7 +406,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 bidPrice = roundToMinVariation(symbol, Direction.Long, bidPrice);
 
-                Order o = placeBidLimitTIF(bidPrice, Math.abs(pos), IOC);
+                Order o = placeBidLimitTIF(bidPrice, Math.abs(pos), DAY);
 
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
                 apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
@@ -425,7 +425,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 offerPrice = roundToMinVariation(symbol, Direction.Short, offerPrice);
 
-                Order o = placeOfferLimitTIF(offerPrice, pos, IOC);
+                Order o = placeOfferLimitTIF(offerPrice, pos, DAY);
 
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
 
