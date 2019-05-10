@@ -1044,10 +1044,10 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         return currentPosMap.entrySet().stream()
                 .mapToDouble(e -> {
                     if ((e.getKey() == FutType.PreviousFut &&
-                            TradingUtility.getFutLastExpiry().equals(LocalDate.now())
+                            TradingUtility.getXINA50PrevExpiry().equals(LocalDate.now())
                             && LocalTime.now().isAfter(ltof(15, 0)))
                             || (e.getKey() == FutType.FrontFut &&
-                            TradingUtility.getFutFrontExpiry()
+                            TradingUtility.getXINA50FrontExpiry()
                                     .equals(LocalDate.now()) && LocalTime.now().isBefore(ltof(15, 0)))) {
 //                        pr(" get expiring delta ", e.getValue(), futPriceMap.getOrDefault(e.getKey(),
 //                                SinaStock.FTSE_OPEN), ChinaPosition.fx.getOrDefault(currencyMap.getOrDefault(e.getKey().getSymbol(),
@@ -1063,7 +1063,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
 
     public static double getFutDelta() {
         LocalDateTime now = LocalDateTime.now();
-        LocalDate frontMonthExpiryDate = TradingUtility.getFutFrontExpiry();
+        LocalDate frontMonthExpiryDate = TradingUtility.getXINA50FrontExpiry();
         return currentPosMap.entrySet().stream()
                 .mapToDouble(e -> {
                     double factor = 1.0;

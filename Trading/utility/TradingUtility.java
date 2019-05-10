@@ -24,9 +24,9 @@ import static utility.Utility.pr;
 
 public class TradingUtility {
 
-    public static final String A50_LAST_EXPIRY = getFutLastExpiry().format(TradingConstants.expPattern);
-    public static final String A50_FRONT_EXPIRY = getFutFrontExpiry().format(TradingConstants.expPattern);
-    public static final String A50_BACK_EXPIRY = getFutBackExpiry().format(TradingConstants.expPattern);
+    public static final String A50_LAST_EXPIRY = getXINA50PrevExpiry().format(TradingConstants.expPattern);
+    public static final String A50_FRONT_EXPIRY = getXINA50FrontExpiry().format(TradingConstants.expPattern);
+    public static final String A50_BACK_EXPIRY = getXINA50BackExpiry().format(TradingConstants.expPattern);
     public static volatile Map<Integer, Request> globalRequestMap = new ConcurrentHashMap<>();
 
     private TradingUtility() throws OperationNotSupportedException {
@@ -35,7 +35,7 @@ public class TradingUtility {
 
 
     public static Contract getActiveA50Contract() {
-        long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(), getFutFrontExpiry());
+        long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(), getXINA50FrontExpiry());
         //return frontFut;
         pr(" **********  days until expiry **********", daysUntilFrontExp);
         if (daysUntilFrontExp <= 1) {
@@ -195,8 +195,14 @@ public class TradingUtility {
         return LocalDate.now().isAfter(thisMonthExpiry) ? nextMonthExpiry : thisMonthExpiry;
     }
 
+    public static LocalDate getPrevBTCExpiry() {
+        LocalDate lastMonthExpiry = getThirdWednesday(LocalDate.now().minusMonths(1));
+        LocalDate thisMonthExpiry = getThirdWednesday(LocalDate.now());
+        return LocalDate.now().isAfter(thisMonthExpiry) ? thisMonthExpiry : lastMonthExpiry;
+    }
 
-    private static LocalDate getFutureExpiryDate(LocalDate d) {
+
+    private static LocalDate getXINA50ExpiryDate(LocalDate d) {
         LocalDate res = LocalDate.of(d.getYear(), d.getMonth(), 1).plusMonths(1);
         int count = 0;
         while (count < 2) {
@@ -213,53 +219,83 @@ public class TradingUtility {
         LocalDate today = LocalDate.now();
         LocalTime time = LocalTime.now();
 
-        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
+        LocalDate thisMonthExpiryDate = getXINA50ExpiryDate(today);
         if (today.isAfter(thisMonthExpiryDate) ||
                 (today.isEqual(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
-            return getFutureExpiryDate(today.plusMonths(3L));
+            return getXINA50ExpiryDate(today.plusMonths(3L));
         } else {
-            return getFutureExpiryDate(today.plusMonths(2L));
+            return getXINA50ExpiryDate(today.plusMonths(2L));
         }
     }
 
-    private static LocalDate getFutBackExpiry() {
+    private static LocalDate getXINA50BackExpiry() {
         LocalDateTime now = LocalDateTime.now();
         LocalDate today = LocalDate.now();
         LocalTime time = LocalTime.now();
 
-        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
+        LocalDate thisMonthExpiryDate = getXINA50ExpiryDate(today);
 
         if (today.isAfter(thisMonthExpiryDate) ||
                 (today.isEqual(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
-            return getFutureExpiryDate(today.plusMonths(2L));
+            return getXINA50ExpiryDate(today.plusMonths(2L));
         } else {
-            return getFutureExpiryDate(today.plusMonths(1L));
+            return getXINA50ExpiryDate(today.plusMonths(1L));
         }
     }
 
-    public static LocalDate getFutLastExpiry() {
+    public static LocalDate getXINA50PrevExpiry() {
         LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
         LocalTime time = now.toLocalTime();
-        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
+        LocalDate thisMonthExpiryDate = getXINA50ExpiryDate(today);
         if (today.isAfter(thisMonthExpiryDate) ||
                 (today.isEqual(thisMonthExpiryDate) && time.isAfter(LocalTime.of(14, 59)))) {
-            return getFutureExpiryDate(today);
+            return getXINA50ExpiryDate(today);
         } else {
-            return getFutureExpiryDate(today.minusMonths(1L));
+            return getXINA50ExpiryDate(today.minusMonths(1L));
         }
     }
 
-    public static LocalDate getFutFrontExpiry() {
+    public static LocalDate getXINA50FrontExpiry() {
         LocalDate today = LocalDate.now();
         LocalTime time = LocalTime.now();
-        LocalDate thisMonthExpiryDate = getFutureExpiryDate(today);
+        LocalDate thisMonthExpiryDate = getXINA50ExpiryDate(today);
 
         if (today.isAfter(thisMonthExpiryDate) ||
                 (today.equals(thisMonthExpiryDate) && time.isAfter(LocalTime.of(15, 0)))) {
-            return getFutureExpiryDate(today.plusMonths(1L));
+            return getXINA50ExpiryDate(today.plusMonths(1L));
         } else {
-            return getFutureExpiryDate(today);
+            return getXINA50ExpiryDate(today);
         }
+    }
+
+    private static Contract getShanghaiConnectStock(String symb) {
+        Contract ct = new Contract();
+        ct.symbol(symb);
+        ct.exchange("SEHKNTL");
+        ct.currency("CNH");
+        ct.secType(Types.SecType.STK);
+        return ct;
+    }
+
+    public static LocalDate getPrevMonthDay(Contract ct, LocalDate defaultDate) {
+        if (ct.secType() == Types.SecType.FUT || ct.secType() == Types.SecType.CONTFUT) {
+            if (ct.symbol().equalsIgnoreCase("GXBT")) {
+                return getPrevBTCExpiry();
+            } else if (ct.symbol().equalsIgnoreCase("XINA50")) {
+                return getXINA50PrevExpiry();
+            }
+        }
+        return defaultDate;
+    }
+
+    private static Contract getOilContract() {
+        Contract ct = new Contract();
+        ct.symbol("CL");
+        ct.exchange("NYMEX");
+        ct.currency("USD");
+        ct.secType(Types.SecType.FUT);
+        ct.lastTradeDateOrContractMonth("20190220");
+        return ct;
     }
 }

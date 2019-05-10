@@ -1,13 +1,13 @@
 package DevTrader;
 
 import client.*;
-import controller.AccountSummaryTag;
 import enums.Currency;
 import api.TradingConstants;
 import auxiliary.SimpleBar;
 import controller.ApiConnection;
 import controller.ApiController;
 import handler.LiveHandler;
+import utility.TradingUtility;
 import utility.Utility;
 
 import java.io.BufferedReader;
@@ -110,25 +110,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         }
     }
 
-    private static Contract getOilContract() {
-        Contract ct = new Contract();
-        ct.symbol("CL");
-        ct.exchange("NYMEX");
-        ct.currency("USD");
-        ct.secType(Types.SecType.FUT);
-        ct.lastTradeDateOrContractMonth("20190220");
-        return ct;
-    }
-
-    private Contract getShanghaiConnectStock(String symb) {
-        Contract ct = new Contract();
-        ct.symbol(symb);
-        ct.exchange("SEHKNTL");
-        ct.currency("CNH");
-        ct.secType(Types.SecType.STK);
-        return ct;
-    }
-
     private void getFromIB() {
         ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
@@ -189,7 +170,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                     Contract histCt = histCompatibleCt(c);
                     brMonController.reqHistDayData(ibStockReqId.incrementAndGet(),
                             histCt, BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
-                    //pr("position end hist ", k, ibStockReqId.get());
+                    pr("position end hist ", k, ibStockReqId.get());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -205,6 +186,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     private static void ytdOpen(Contract c, String date, double open, double high, double low,
                                 double close, int volume) {
         String symbol = utility.Utility.ibContractToSymbol(c);
+        LocalDate prevMonthDay = TradingUtility.getPrevMonthDay(c, LAST_MONTH_DAY);
 
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
@@ -232,12 +214,12 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 yCount = ytdDayData.get(symbol).entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY)).count();
 
-                double mOpen = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose();
+                double mOpen = ytdDayData.get(symbol).floorEntry(prevMonthDay).getValue().getClose();
                 long mCount = ytdDayData.get(symbol).entrySet().stream()
-                        .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY)).count();
+                        .filter(e -> e.getKey().isAfter(prevMonthDay)).count();
 
                 long numCrosses = ytdDayData.get(symbol).entrySet().stream()
-                        .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
+                        .filter(e -> e.getKey().isAfter(prevMonthDay))
                         .filter(e -> e.getValue().includes(mOpen))
                         .count();
 
@@ -292,10 +274,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                                 .getKey().format(f) + " " + yOpen + ")",
                         "||MMM", "Up%:" +
                                 Math.round(100d * ytdDayData.get(symbol).entrySet().stream()
-                                        .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
+                                        .filter(e -> e.getKey().isAfter(prevMonthDay))
                                         .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) + "%",
                         "mDev:" + mDev + "%" + "(" +
-                                ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey().format(f) + " " + mOpen + ")");
+                                ytdDayData.get(symbol).floorEntry(prevMonthDay).getKey().format(f) + " " + mOpen + ")");
 
 
 //                double getLot = last > 300 ? 0 :
@@ -331,6 +313,8 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     @Override
     public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
         String symbol = ibContractToSymbol(ct);
+        LocalDate prevMonthDate = TradingUtility.getPrevMonthDay(ct, LAST_MONTH_DAY);
+
         //pr("last symbol ", tt, symbol, price, t.format(f2));
         switch (tt) {
             case LAST:
@@ -342,7 +326,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 if (ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
                     double yOpen = ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY).getValue().getOpen();
-                    double mOpen = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose();
+                    double mOpen = ytdDayData.get(symbol).floorEntry(prevMonthDate).getValue().getClose();
 
                     double last;
                     double secLast;
@@ -387,7 +371,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                             , "CHG%:", lastChg + "%", "PREV:", secLastKey.format(f), secLast
                             , "||yOpen", ytdDayData.get(symbol).higherEntry(LAST_YEAR_DAY).getKey().format(f),
                             yOpen, "yDev", yDev + "%",
-                            "||mOpen ", ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey().format(f), mOpen,
+                            "||mOpen ", ytdDayData.get(symbol).floorEntry(prevMonthDate).getKey().format(f), mOpen,
                             "mDev", mDev + "%", info);
                     //pr("*", out, yBreachStatus, mBreachStatus);
                 }

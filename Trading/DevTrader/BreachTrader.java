@@ -9,7 +9,6 @@ import controller.ApiConnection;
 import controller.ApiController;
 import enums.Direction;
 import handler.LiveHandler;
-import util.AutoOrderType;
 import utility.TradingUtility;
 import utility.Utility;
 
@@ -298,6 +297,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
     private static void breachAdder(Contract ct, double price, LocalDateTime t, double yOpen, double mOpen) {
         String symbol = ibContractToSymbol(ct);
+        LocalDate prevMonthDay = getPrevMonthDay(ct, LAST_MONTH_DAY);
         double pos = symbolPosMap.get(symbol);
         double defaultS;
         if (defaultSize.containsKey(symbol)) {
@@ -311,7 +311,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
         boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
 
         long numCrosses = ytdDayData.get(symbol).entrySet().stream()
-                .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
+                .filter(e -> e.getKey().isAfter(prevMonthDay))
                 .filter(e -> e.getValue().includes(mOpen))
                 .count();
 
@@ -527,6 +527,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     @Override
     public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
         String symbol = ibContractToSymbol(ct);
+        LocalDate prevMonthDate = getPrevMonthDay(ct, LAST_MONTH_DAY);
+
         switch (tt) {
             case LAST:
                 liveData.get(symbol).put(t, price);
@@ -548,11 +550,11 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                     LocalDate yStartDate = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getKey();
                     double yStart = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getValue().getClose();
-                    LocalDate mStartDate = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey();
-                    double mStart = ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose();
+                    LocalDate mStartDate = ytdDayData.get(symbol).floorEntry(prevMonthDate).getKey();
+                    double mStart = ytdDayData.get(symbol).floorEntry(prevMonthDate).getValue().getClose();
                     double pos = symbolPosMap.get(symbol);
                     long numCrosses = ytdDayData.get(symbol).entrySet().stream()
-                            .filter(e -> e.getKey().isAfter(LAST_MONTH_DAY))
+                            .filter(e -> e.getKey().isAfter(prevMonthDate))
                             .filter(e -> e.getValue().includes(mStart))
                             .count();
 

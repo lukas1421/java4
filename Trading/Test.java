@@ -1,10 +1,7 @@
-import AutoTraderOld.XuTraderHelper;
-import enums.Direction;
-import net.sourceforge.tess4j.TesseractException;
+import utility.TradingUtility;
+import utility.Utility;
 
-import net.sourceforge.tess4j.Tesseract;
-
-import java.io.File;
+import java.time.LocalDate;
 
 import static utility.Utility.pr;
 
@@ -14,9 +11,10 @@ public class Test {
 
     public static void main(String[] args) {
 
+        //pr(TradingUtility.getActiveBTCExpiry());
+        pr(TradingUtility.getPrevBTCExpiry());
+        pr(TradingUtility.getXINA50PrevExpiry());
 
-        int x = 3;
-        pr(-x);
     }
 }
 

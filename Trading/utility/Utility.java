@@ -1043,6 +1043,15 @@ public class Utility {
         return LocalTime.of(h, m, s);
     }
 
+    public static LocalDate getThirdWednesday(LocalDate anyday) {
+        LocalDate currDay = anyday.withDayOfMonth(1);
+
+        while (currDay.getDayOfWeek() != DayOfWeek.WEDNESDAY) {
+            currDay = currDay.plusDays(1);
+        }
+        return currDay.plusDays(14);
+    }
+
     //    public static void outputDetailedUS(String symbol, String msg) {
 //        if (!symbol.equals("")) {
 //            outputDetailedUSSymbol(symbol, msg);
