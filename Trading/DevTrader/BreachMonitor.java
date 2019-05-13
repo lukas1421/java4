@@ -102,6 +102,8 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 //        registerContract(activeXIN50Fut);
     }
 
+    //test upload to github
+
     private void registerContract(Contract ct) {
         String symbol = ibContractToSymbol(ct);
         if (!symbol.equalsIgnoreCase("SGXA50PR")) {
