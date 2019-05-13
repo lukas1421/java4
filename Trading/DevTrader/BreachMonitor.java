@@ -185,8 +185,13 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
     private static void ytdOpen(Contract c, String date, double open, double high, double low,
                                 double close, int volume) {
+
+
         String symbol = utility.Utility.ibContractToSymbol(c);
+
+        pr("breach mon ytdopen", symbol, date, open, high, low, close);
         LocalDate prevMonthDay = TradingUtility.getPrevMonthDay(c, LAST_MONTH_DAY);
+
 
         if (!date.startsWith("finished")) {
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));

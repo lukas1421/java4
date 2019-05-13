@@ -216,6 +216,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         } else {
+            pr(" releasing semaphore for ", symbol);
             histSemaphore.release(1);
         }
     }
@@ -242,9 +243,10 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
     @Override
     public void positionEnd() {
-        for (Contract c : contractPosMap.keySet()) {
+
+        contractPosMap.keySet().stream().filter(e -> e.secType() == Types.SecType.FUT).forEach(c -> {
             String symb = ibContractToSymbol(c);
-//            pr(" symbol in positionEnd ", symb);
+            pr(" symbol in positionEnd fut", symb);
             ytdDayData.put(symb, new ConcurrentSkipListMap<>());
 
             if (!symb.equals("USD")) {
@@ -259,9 +261,32 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     }
                 });
             }
-
             apDev.req1ContractLive(liveCompatibleCt(c), this, false);
-        }
+
+        });
+
+        contractPosMap.keySet().stream().filter(e -> e.secType() != Types.SecType.FUT).forEach(c -> {
+
+//            for (Contract c : contractPosMap.keySet()) {
+            String symb = ibContractToSymbol(c);
+            pr(" symbol in positionEnd non fut", symb);
+            ytdDayData.put(symb, new ConcurrentSkipListMap<>());
+
+            if (!symb.equals("USD")) {
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        histSemaphore.acquire();
+                        apDev.reqHistDayData(ibStockReqId.addAndGet(5),
+                                histCompatibleCt(c), BreachTrader::ytdOpen,
+                                getCalendarYtdDays() + 10, Types.BarSize._1_day);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
+            apDev.req1ContractLive(liveCompatibleCt(c), this, false);
+//        }
+        });
     }
 
     private static int getCalendarYtdDays() {
@@ -406,10 +431,10 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 bidPrice = roundToMinVariation(symbol, Direction.Long, bidPrice);
 
-                Order o = placeBidLimitTIF(bidPrice, Math.abs(pos), DAY);
+                Order o = placeBidLimitTIF(bidPrice, Math.abs(pos), IOC);
 
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
+                apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
                 outputToSymbolFile(symbol, str("********", t), devOutput);
                 outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter BUY:",
                         "added?" + added, devOrderMap.get(id), "pos", pos, "yOpen:" + yOpen, "mOpen:" + mOpen,
@@ -425,11 +450,11 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 offerPrice = roundToMinVariation(symbol, Direction.Short, offerPrice);
 
-                Order o = placeOfferLimitTIF(offerPrice, pos, DAY);
+                Order o = placeOfferLimitTIF(offerPrice, pos, IOC);
 
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
 
-                apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
+                apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
 
                 outputToSymbolFile(symbol, str("********", t), devOutput);
                 outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter SELL:",
@@ -527,36 +552,37 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     @Override
     public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
         String symbol = ibContractToSymbol(ct);
-        LocalDate prevMonthDate = getPrevMonthDay(ct, LAST_MONTH_DAY);
+        LocalDate prevMonthEnd = getPrevMonthDay(ct, LAST_MONTH_DAY);
 
         switch (tt) {
             case LAST:
                 liveData.get(symbol).put(t, price);
                 lastMap.put(symbol, price);
 
-//                if (symbol.equalsIgnoreCase("GXBT")) {
-//                    pr("handle price last ", symbol, t, price, ytdDayData.get(symbol));
-//                }
+                if (symbol.equalsIgnoreCase("GXBT")) {
+                    pr("GXBT handle price last ", symbol, t, price, ytdDayData.get(symbol));
+                }
 
-//                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
-//                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
-//                            ytdDayData.get(symbol).firstEntry().getValue().getClose(),
-//                            "mFirst", ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getKey(),
-//                            ytdDayData.get(symbol).floorEntry(LAST_MONTH_DAY).getValue().getClose());
-//                }
+                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
+                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
+                            ytdDayData.get(symbol).firstEntry().getValue().getClose(),
+                            "mFirst", ytdDayData.get(symbol).floorEntry(prevMonthEnd).getKey(),
+                            ytdDayData.get(symbol).floorEntry(prevMonthEnd).getValue().getClose());
+                }
 
                 if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
 
-                    LocalDate yStartDate = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getKey();
                     double yStart = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getValue().getClose();
-                    LocalDate mStartDate = ytdDayData.get(symbol).floorEntry(prevMonthDate).getKey();
-                    double mStart = ytdDayData.get(symbol).floorEntry(prevMonthDate).getValue().getClose();
-                    double pos = symbolPosMap.get(symbol);
-                    long numCrosses = ytdDayData.get(symbol).entrySet().stream()
-                            .filter(e -> e.getKey().isAfter(prevMonthDate))
-                            .filter(e -> e.getValue().includes(mStart))
-                            .count();
+                    double mStart = ytdDayData.get(symbol).floorEntry(prevMonthEnd).getValue().getClose();
+
+//                    LocalDate yStartDate = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getKey();
+//                    LocalDate mStartDate = ytdDayData.get(symbol).floorEntry(prevMonthEnd).getKey();
+//                    double pos = symbolPosMap.get(symbol);
+//                    long numCrosses = ytdDayData.get(symbol).entrySet().stream()
+//                            .filter(e -> e.getKey().isAfter(prevMonthEnd))
+//                            .filter(e -> e.getValue().includes(mStart))
+//                            .count();
 
 
                     if (timeIsOk(ct, t)) {
