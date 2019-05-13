@@ -189,7 +189,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
         String symbol = utility.Utility.ibContractToSymbol(c);
 
-        pr("breach mon ytdopen", symbol, date, open, high, low, close);
+//        pr("breach mon ytdopen", symbol, date, open, high, low, close);
         LocalDate prevMonthDay = TradingUtility.getPrevMonthDay(c, LAST_MONTH_DAY);
 
 

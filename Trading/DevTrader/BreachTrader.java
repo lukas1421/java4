@@ -216,7 +216,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         } else {
-            pr(" releasing semaphore for ", symbol);
+//            pr(" releasing semaphore for ", symbol);
             histSemaphore.release(1);
         }
     }
@@ -243,31 +243,24 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
     @Override
     public void positionEnd() {
-
         contractPosMap.keySet().stream().filter(e -> e.secType() == Types.SecType.FUT).forEach(c -> {
             String symb = ibContractToSymbol(c);
             pr(" symbol in positionEnd fut", symb);
             ytdDayData.put(symb, new ConcurrentSkipListMap<>());
-
-            if (!symb.equals("USD")) {
-                CompletableFuture.runAsync(() -> {
-                    try {
-                        histSemaphore.acquire();
-                        apDev.reqHistDayData(ibStockReqId.addAndGet(5),
-                                histCompatibleCt(c), BreachTrader::ytdOpen,
-                                getCalendarYtdDays() + 10, Types.BarSize._1_day);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                });
-            }
+            CompletableFuture.runAsync(() -> {
+                try {
+                    histSemaphore.acquire();
+                    apDev.reqHistDayData(ibStockReqId.addAndGet(5),
+                            histCompatibleCt(c), BreachTrader::ytdOpen,
+                            getCalendarYtdDays() + 10, Types.BarSize._1_day);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
             apDev.req1ContractLive(liveCompatibleCt(c), this, false);
-
         });
 
         contractPosMap.keySet().stream().filter(e -> e.secType() != Types.SecType.FUT).forEach(c -> {
-
-//            for (Contract c : contractPosMap.keySet()) {
             String symb = ibContractToSymbol(c);
             pr(" symbol in positionEnd non fut", symb);
             ytdDayData.put(symb, new ConcurrentSkipListMap<>());
@@ -285,7 +278,6 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 });
             }
             apDev.req1ContractLive(liveCompatibleCt(c), this, false);
-//        }
         });
     }
 
@@ -559,16 +551,16 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 liveData.get(symbol).put(t, price);
                 lastMap.put(symbol, price);
 
-                if (symbol.equalsIgnoreCase("GXBT")) {
-                    pr("GXBT handle price last ", symbol, t, price, ytdDayData.get(symbol));
-                }
+//                if (symbol.equalsIgnoreCase("GXBT")) {
+//                    pr("GXBT handle price last ", symbol, t, price, ytdDayData.get(symbol));
+//                }
 
-                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
-                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
-                            ytdDayData.get(symbol).firstEntry().getValue().getClose(),
-                            "mFirst", ytdDayData.get(symbol).floorEntry(prevMonthEnd).getKey(),
-                            ytdDayData.get(symbol).floorEntry(prevMonthEnd).getValue().getClose());
-                }
+//                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
+//                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
+//                            ytdDayData.get(symbol).firstEntry().getValue().getClose(),
+//                            "mFirst", ytdDayData.get(symbol).floorEntry(prevMonthEnd).getKey(),
+//                            ytdDayData.get(symbol).floorEntry(prevMonthEnd).getValue().getClose());
+//                }
 
                 if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0
                         && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {

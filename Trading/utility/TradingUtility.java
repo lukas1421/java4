@@ -37,7 +37,7 @@ public class TradingUtility {
     public static Contract getActiveA50Contract() {
         long daysUntilFrontExp = ChronoUnit.DAYS.between(LocalDate.now(), getXINA50FrontExpiry());
         //return frontFut;
-        pr(" **********  days until expiry **********", daysUntilFrontExp);
+        pr(" **********  days until expiry **********", daysUntilFrontExp, getXINA50FrontExpiry());
         if (daysUntilFrontExp <= 1) {
             pr(" using back fut ");
             return getBackFutContract();
@@ -75,7 +75,7 @@ public class TradingUtility {
         ct.symbol("XINA50");
         ct.exchange("SGX");
         ct.currency("USD");
-        pr("front exp date ", A50_FRONT_EXPIRY);
+//        pr("front exp date ", A50_FRONT_EXPIRY);
         ct.lastTradeDateOrContractMonth(A50_FRONT_EXPIRY);
         ct.secType(Types.SecType.FUT);
         return ct;
