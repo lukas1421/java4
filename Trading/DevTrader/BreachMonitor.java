@@ -52,7 +52,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
     private static Semaphore semaphore = new Semaphore(40);
 
-    static ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
+    //static ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
 
 
     private BreachMonitor() {
