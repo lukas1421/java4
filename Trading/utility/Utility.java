@@ -916,6 +916,10 @@ public class Utility {
             c.exchange("SGX");
         }
 
+        if(c.symbol().equalsIgnoreCase("GXBT")) {
+            c.exchange("CFECRYPTO");
+        }
+
         if (c.secType() == Types.SecType.FUT) {
             Contract newC = new Contract();
             newC.symbol(c.symbol());
