@@ -791,14 +791,14 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         boolean maxAfterMin = checkf10maxAftermint(INDEX_000016);
         boolean maxAbovePrev = checkF10MaxAbovePrev(INDEX_000016);
 
-        NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(ibContractToFutType(activeFutCt)));
+//        NavigableMap<LocalDateTime, SimpleBar> futdata = trimDataFromYtd(futData.get(ibContractToFutType(activeFutCt)));
         //int pmChgY = getPercentileChgFut(futdata, getPrevTradingDate(futdata));
         //int pmChgY = getRecentPmCh(ldt.toLocalTime(), INDEX_000001);
-        int closePercY = getRecentClosePerc(ldt.toLocalTime(), INDEX_000001);
-        int openPercY = getOpenPercentile(futdata, getPrevTradingDate(futdata));
+//        int closePercY = getRecentClosePerc(ldt.toLocalTime(), INDEX_000001);
+//        int openPercY = getOpenPercentile(futdata, getPrevTradingDate(futdata));
         //int pmChg = getPercentileChgFut(futdata, getTradeDate(futdata.lastKey()));
-        int pmChg = getPmchToday(ldt.toLocalTime(), INDEX_000001);
-        int lastPerc = getPreCloseLastPercToday(ldt.toLocalTime(), INDEX_000001);
+//        int pmChg = getPmchToday(ldt.toLocalTime(), INDEX_000001);
+//        int lastPerc = getPreCloseLastPercToday(ldt.toLocalTime(), INDEX_000001);
 
         if (Math.abs(currDelta) > 2000000d) {
             if (currDelta > 2000000d) {
