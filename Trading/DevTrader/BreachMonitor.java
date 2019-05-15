@@ -23,6 +23,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static utility.TradingUtility.getActiveA50Contract;
+import static utility.TradingUtility.getActiveBTCContract;
 import static utility.Utility.*;
 
 public class BreachMonitor implements LiveHandler, ApiController.IPositionHandler, ApiController.ITradeReportHandler {
@@ -88,18 +90,18 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 //        }
 
 
-//        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-//                new FileInputStream(TradingConstants.GLOBALPATH + "breachUSNames.txt")))) {
-//            while ((line = reader1.readLine()) != null) {
-//                List<String> al1 = Arrays.asList(line.split("\t"));
-//                registerContract(getUSStockContract(al1.get(0)));
-//            }
-//        } catch (IOException x) {
-//            x.printStackTrace();
-//        }
-//
-//        Contract activeXIN50Fut = getActiveA50Contract();
-//        registerContract(activeXIN50Fut);
+        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
+                new FileInputStream(TradingConstants.GLOBALPATH + "breachUSNames.txt")))) {
+            while ((line = reader1.readLine()) != null) {
+                List<String> al1 = Arrays.asList(line.split("\t"));
+                registerContract(getUSStockContract(al1.get(0)));
+            }
+        } catch (IOException x) {
+            x.printStackTrace();
+        }
+
+        registerContract(getActiveA50Contract());
+        registerContract(getActiveBTCContract());
     }
 
     //test upload to github
@@ -169,10 +171,9 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             CompletableFuture.runAsync(() -> {
                 try {
                     semaphore.acquire();
-                    Contract histCt = histCompatibleCt(c);
                     brMonController.reqHistDayData(ibStockReqId.incrementAndGet(),
-                            histCt, BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
-                    pr("position end hist ", k, ibStockReqId.get());
+                            histCompatibleCt(c), BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
+//                    pr("position end hist ", k, ibStockReqId.get());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -210,18 +211,32 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             double pos = contractPosMap.getOrDefault(c, 0.0);
             if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
                 double yOpen;
+                LocalDate yOpenDate;
                 long yCount;
 
                 if (ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
                     yOpen = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getValue().getClose();
+                    yOpenDate = ytdDayData.get(symbol).floorKey(LAST_YEAR_DAY);
                 } else {
-                    yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getClose();
+                    yOpen = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getOpen();
+                    yOpenDate = ytdDayData.get(symbol).ceilingKey(LAST_YEAR_DAY);
+
                 }
 
                 yCount = ytdDayData.get(symbol).entrySet().stream()
                         .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY)).count();
 
-                double mOpen = ytdDayData.get(symbol).floorEntry(prevMonthDay).getValue().getClose();
+                double mOpen;
+                LocalDate mOpenDate;
+                if (ytdDayData.get(symbol).firstKey().isBefore(prevMonthDay)) {
+                    mOpen = ytdDayData.get(symbol).floorEntry(prevMonthDay).getValue().getClose();
+                    mOpenDate = ytdDayData.get(symbol).floorKey(prevMonthDay);
+                } else {
+                    mOpen = ytdDayData.get(symbol).ceilingEntry(prevMonthDay).getValue().getOpen();
+                    mOpenDate = ytdDayData.get(symbol).ceilingKey(prevMonthDay);
+                }
+
+
                 long mCount = ytdDayData.get(symbol).entrySet().stream()
                         .filter(e -> e.getKey().isAfter(prevMonthDay)).count();
 
@@ -266,9 +281,6 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                 }
 
                 double delta = pos * last * fx.getOrDefault(Currency.get(c.currency()), 1.0);
-//                pr("delta ", size, last,
-//                        c.currency(), fx.getOrDefault(Currency.get(c.currency()), 1.0),
-//                        Math.round(delta / 1000d), "k");
 
                 String out = str(symbol, info, "POS:" + (pos),
                         "#x:", numCrosses, mCount,
@@ -277,29 +289,19 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                                 Math.round(100d * ytdDayData.get(symbol).entrySet().stream()
                                         .filter(e -> e.getKey().isAfter(LAST_YEAR_DAY))
                                         .filter(e -> e.getValue().getClose() > yOpen).count() / yCount) + "%",
-                        "yDev:" + yDev + "%" + "(" + ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY)
-                                .getKey().format(f) + " " + yOpen + ")",
+                        "yDev:" + yDev + "%" + "(" + yOpenDate.format(f) + " " + yOpen + ")",
                         "||MMM", "Up%:" +
                                 Math.round(100d * ytdDayData.get(symbol).entrySet().stream()
                                         .filter(e -> e.getKey().isAfter(prevMonthDay))
                                         .filter(e -> e.getValue().getClose() > mOpen).count() / mCount) + "%",
                         "mDev:" + mDev + "%" + "(" +
-                                ytdDayData.get(symbol).floorEntry(prevMonthDay).getKey().format(f) + " " + mOpen + ")");
+                                mOpenDate.format(f) + " " + mOpen + ")");
 
 
-//                double getLot = last > 300 ? 0 :
-//                        ((10000 / last) < 100 ? 100 : Math.floor(10000 / last / 100) * 100);
-//                pr(str(symbol, last, getLot));
-
-//                if (symbol.equals("FOXA")) {
-//                    pr("foxa", ytdDayData.get(symbol));
+//                if (pos != 0.0) {
+                pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
+                        , out, Math.round(delta / 1000d) + "k");
 //                }
-
-
-                if (pos != 0.0) {
-                    pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
-                            , out, Math.round(delta / 1000d) + "k");
-                }
             }
         }
 

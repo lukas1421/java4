@@ -92,9 +92,6 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
     private static Semaphore histSemaphore = new Semaphore(45);
 
-    //private static File breachMDevOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
-
-
     private BreachTrader() {
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
@@ -544,7 +541,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     @Override
     public void handlePrice(TickType tt, Contract ct, double price, LocalDateTime t) {
         String symbol = ibContractToSymbol(ct);
-        LocalDate prevMonthEnd = getPrevMonthDay(ct, LAST_MONTH_DAY);
+        LocalDate prevMonthCutoff = getPrevMonthDay(ct, LAST_MONTH_DAY);
 
         switch (tt) {
             case LAST:
@@ -562,11 +559,23 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 //                            ytdDayData.get(symbol).floorEntry(prevMonthEnd).getValue().getClose());
 //                }
 
-                if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0
-                        && ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
+                if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0) {
 
-                    double yStart = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getValue().getClose();
-                    double mStart = ytdDayData.get(symbol).floorEntry(prevMonthEnd).getValue().getClose();
+                    double yStart;
+                    double mStart;
+
+                    if (ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
+                        yStart = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getValue().getClose();
+                    } else {
+                        yStart = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getOpen();
+
+                    }
+
+                    if (ytdDayData.get(symbol).firstKey().isBefore(prevMonthCutoff)) {
+                        mStart = ytdDayData.get(symbol).floorEntry(prevMonthCutoff).getValue().getClose();
+                    } else {
+                        mStart = ytdDayData.get(symbol).ceilingEntry(prevMonthCutoff).getValue().getOpen();
+                    }
 
 //                    LocalDate yStartDate = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getKey();
 //                    LocalDate mStartDate = ytdDayData.get(symbol).floorEntry(prevMonthEnd).getKey();
@@ -575,7 +584,6 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 //                            .filter(e -> e.getKey().isAfter(prevMonthEnd))
 //                            .filter(e -> e.getValue().includes(mStart))
 //                            .count();
-
 
                     if (timeIsOk(ct, t)) {
                         breachCutter(ct, price, t, yStart, mStart);
