@@ -12,15 +12,12 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.time.DayOfWeek;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static utility.Utility.pr;
+import static utility.Utility.*;
 
 public class TradingUtility {
 
@@ -190,15 +187,60 @@ public class TradingUtility {
     }
 
     public static LocalDate getActiveBTCExpiry() {
-        LocalDate thisMonthExpiry = getThirdWednesday(LocalDate.now());
-        LocalDate nextMonthExpiry = getThirdWednesday(LocalDate.now().plusMonths(1));
-        return LocalDate.now().isAfter(thisMonthExpiry) ? nextMonthExpiry : thisMonthExpiry;
+        LocalDateTime ldt = LocalDateTime.now();
+
+        LocalDate thisMonthExpiry = getThirdWednesday(ldt.toLocalDate());
+        LocalDate nextMonthExpiry = getThirdWednesday(ldt.toLocalDate().plusMonths(1));
+
+        ZonedDateTime chinaZdt = ZonedDateTime.of(ldt, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalDateTime usLdt = usZdt.toLocalDateTime();
+
+        return usLdt.isAfter(LocalDateTime.of(thisMonthExpiry, ltof(16, 0)))
+                ? nextMonthExpiry : thisMonthExpiry;
     }
 
+    public static LocalDate get2ndBTCExpiry() {
+        LocalDateTime ldt = LocalDateTime.now();
+
+        LocalDate thisMonthExpiry = getThirdWednesday(ldt.toLocalDate());
+        LocalDate plus1MonthExpiry = getThirdWednesday(ldt.toLocalDate().plusMonths(1));
+        LocalDate plus2MonthExpiry = getThirdWednesday(ldt.toLocalDate().plusMonths(2));
+
+        ZonedDateTime chinaZdt = ZonedDateTime.of(ldt, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalDateTime usLdt = usZdt.toLocalDateTime();
+
+        return usLdt.isAfter(LocalDateTime.of(thisMonthExpiry, ltof(16, 0)))
+                ? plus2MonthExpiry : plus1MonthExpiry;
+    }
+
+
     public static LocalDate getPrevBTCExpiry() {
-        LocalDate lastMonthExpiry = getThirdWednesday(LocalDate.now().minusMonths(1));
-        LocalDate thisMonthExpiry = getThirdWednesday(LocalDate.now());
-        return LocalDate.now().isAfter(thisMonthExpiry) ? thisMonthExpiry : lastMonthExpiry;
+        LocalDateTime ldt = LocalDateTime.now();
+
+        LocalDate lastMonthExpiry = getThirdWednesday(ldt.toLocalDate().minusMonths(1));
+        LocalDate thisMonthExpiry = getThirdWednesday(ldt.toLocalDate());
+
+        ZonedDateTime chinaZdt = ZonedDateTime.of(ldt, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalDateTime usLdt = usZdt.toLocalDateTime();
+
+        return usLdt.isAfter(LocalDateTime.of(thisMonthExpiry, ltof(16, 0)))
+                ? thisMonthExpiry : lastMonthExpiry;
+    }
+
+    public static LocalDate getPrevBTCExpiryGivenTime(LocalDateTime ldt) {
+
+        LocalDate lastMonthExpiry = getThirdWednesday(ldt.toLocalDate().minusMonths(1));
+        LocalDate thisMonthExpiry = getThirdWednesday(ldt.toLocalDate());
+
+        ZonedDateTime chinaZdt = ZonedDateTime.of(ldt, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalDateTime usLdt = usZdt.toLocalDateTime();
+
+        return usLdt.isAfter(LocalDateTime.of(thisMonthExpiry, ltof(16, 0)))
+                ? thisMonthExpiry : lastMonthExpiry;
     }
 
 

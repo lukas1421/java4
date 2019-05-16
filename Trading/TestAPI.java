@@ -1,16 +1,19 @@
 import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
-import utility.TradingUtility;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
 
 import static utility.TradingUtility.getActiveBTCExpiry;
+import static utility.TradingUtility.getPrevBTCExpiry;
 import static utility.Utility.*;
 
 public class TestAPI {
@@ -54,13 +57,34 @@ public class TestAPI {
         return ct;
     }
 
-    public static Contract getActiveBTCContract() {
+    public static Contract getPrevBTC() {
         Contract ct = new Contract();
         ct.symbol("GXBT");
         ct.exchange("CFECRYPTO");
-        //ct.secType(Types.SecType.CONTFUT);
+        ct.secType(Types.SecType.FUT);
+        //ct.secType(Types.SecType.FUT);
+//        pr(getPrevBTCExpiry().format(futExpPattern));
+        ct.lastTradeDateOrContractMonth(getPrevBTCExpiry().format(futExpPattern));
+        ct.includeExpired(true);
+        ct.currency("USD");
+        return ct;
+    }
+
+    public static Contract getActiveBTC() {
+        Contract ct = new Contract();
+        ct.symbol("GXBT");
+        ct.exchange("CFECRYPTO");
         ct.secType(Types.SecType.FUT);
         ct.lastTradeDateOrContractMonth(getActiveBTCExpiry().format(futExpPattern));
+        ct.currency("USD");
+        return ct;
+    }
+
+    public static Contract getContBTC() {
+        Contract ct = new Contract();
+        ct.symbol("GXBT");
+        ct.exchange("CFECRYPTO");
+        ct.secType(Types.SecType.CONTFUT);
         ct.currency("USD");
         return ct;
     }
@@ -103,16 +127,30 @@ public class TestAPI {
         pr(" Time after latch released " + LocalTime.now());
 
         //Contract ct = getFrontFutContract();
-        Contract ct = TradingUtility.getActiveBTCContract();
 
-        ap.reqHistDayData(100,
+        //Contract ct = getPrevBTC();
+//        Contract ct = getActiveBTC();
+        Contract ct = getContBTC();
+        //ct.secType(Types.SecType.CONTFUT);
+
+        ap.reqHistDayData(10001,
                 ct, (contract, date, open, high, low, close, vol) -> {
                     if (!date.startsWith("finished")) {
-                        pr(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")), open, high, low, close);
+                        pr(date, open, high, low, close);
+//                        Date dt = new Date(Long.parseLong(date) * 1000);
+//                        Calendar cal = Calendar.getInstance();
+//                        cal.setTime(dt);
+//                        LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+//                        LocalTime lt = ltof(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+//                        LocalDateTime ldt = LocalDateTime.of(ld, lt);
+//                        pr(ldt, open, high, low, close);
+
+//                        pr(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"))
+//                                , open, high, low, close);
                     } else {
                         pr(date, open, close);
                     }
-                }, 365, Types.BarSize._1_day);
+                }, 10, Types.BarSize._1_day);
 
 
     }

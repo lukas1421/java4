@@ -232,7 +232,6 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
         if (!contract.symbol().equals("USD") &&
                 !symbol.equalsIgnoreCase("SGXA50PR") &&
                 (position != 0 || symbolPosMap.getOrDefault(symbol, 0.0) != 0.0)) {
-
             pr("position registering ", symbol);
             registerContractPosition(contract, position);
         }
@@ -550,7 +549,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
 //                if (symbol.equalsIgnoreCase("GXBT")) {
 //                    pr("GXBT handle price last ", symbol, t, price, ytdDayData.get(symbol));
-//                }
+//                }china
 
 //                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
 //                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
