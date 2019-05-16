@@ -129,28 +129,28 @@ public class TestAPI {
         //Contract ct = getFrontFutContract();
 
         //Contract ct = getPrevBTC();
-//        Contract ct = getActiveBTC();
-        Contract ct = getContBTC();
+        Contract ct = getActiveBTC();
+//        Contract ct = getContBTC();
         //ct.secType(Types.SecType.CONTFUT);
 
         ap.reqHistDayData(10001,
                 ct, (contract, date, open, high, low, close, vol) -> {
                     if (!date.startsWith("finished")) {
-                        pr(date, open, high, low, close);
-//                        Date dt = new Date(Long.parseLong(date) * 1000);
-//                        Calendar cal = Calendar.getInstance();
-//                        cal.setTime(dt);
-//                        LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
-//                        LocalTime lt = ltof(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
-//                        LocalDateTime ldt = LocalDateTime.of(ld, lt);
-//                        pr(ldt, open, high, low, close);
+                        //pr(date, open, high, low, close);
+                        Date dt = new Date(Long.parseLong(date) * 1000);
+                        Calendar cal = Calendar.getInstance();
+                        cal.setTime(dt);
+                        LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+                        LocalTime lt = ltof(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+                        LocalDateTime ldt = LocalDateTime.of(ld, lt);
+                        pr(ldt, open, high, low, close);
 
 //                        pr(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"))
 //                                , open, high, low, close);
                     } else {
                         pr(date, open, close);
                     }
-                }, 10, Types.BarSize._1_day);
+                }, 2, Types.BarSize._1_min);
 
 
     }

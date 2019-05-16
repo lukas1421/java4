@@ -473,51 +473,6 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 });
     }
 
-//    private static void checkOnBreachCutters() {
-//        devOrderMap.entrySet().stream()
-//                .filter(e -> e.getValue().getOrderType() == BREACH_CUTTER)
-//                .filter(e -> getLivePos(e.getValue().getSymbol()) != 0.0)
-//                .filter(e -> e.getValue().getAugmentedOrderStatus() == OrderStatus.Submitted)
-//                .forEach(e -> {
-//
-//                    LocalDateTime now = LocalDateTime.now();
-//                    LocalDateTime submitted = e.getValue().getOrderTime();
-//
-//                    if (ChronoUnit.SECONDS.between(submitted, now) > 15 * 60) {
-//                        String symbol = e.getValue().getSymbol();
-//                        Contract ct = e.getValue().getContract();
-//
-//                        apDev.cancelOrder(e.getValue().getOrder().orderId());
-//
-//                        double lastPrice = BreachTrader.getLast(symbol);
-//                        double bid = BreachTrader.getBid(symbol);
-//                        double ask = BreachTrader.getAsk(symbol);
-//                        double livePos = getLivePos(symbol);
-//
-//                        Order prevO = e.getValue().getOrder();
-//
-//                        Order o = new Order();
-//                        o.action(prevO.action());
-//                        o.lmtPrice(prevO.action() == Types.Action.BUY ? r(bid) :
-//                                (prevO.action() == Types.Action.SELL ? r(ask) : r(lastPrice)));
-//                        o.orderType(OrderType.LMT);
-//                        o.totalQuantity(Math.abs(livePos));
-//                        o.outsideRth(true);
-//                        o.tif(IOC);
-//
-//                        int newID = devTradeID.incrementAndGet();
-//                        devOrderMap.put(newID, new OrderAugmented(ct, now, o, BREACH_CUTTER));
-//
-//                        apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(newID));
-//                        outputToSymbolFile(symbol, str(o.orderId(), prevO.orderId(), "->", o.orderId(),
-//                                "Revise cutter:", devOrderMap.get(newID), "b/a sprd last"
-//                                , bid, ask, Math.round(10000d * (ask / bid - 1)) + "bp", lastPrice,
-//                                "pos", livePos), breachMDevOutput);
-//                    }
-//                });
-//    }
-
-
     private static boolean checkDeltaImpact(Contract ct, Order o) {
         double totalQ = o.totalQuantity();
         double lmtPrice = o.lmtPrice();
@@ -547,16 +502,11 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 liveData.get(symbol).put(t, price);
                 lastMap.put(symbol, price);
 
-//                if (symbol.equalsIgnoreCase("GXBT")) {
-//                    pr("GXBT handle price last ", symbol, t, price, ytdDayData.get(symbol));
-//                }china
-
-//                if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
-//                    pr(symbol, t, price, "First", ytdDayData.get(symbol).firstKey(),
-//                            ytdDayData.get(symbol).firstEntry().getValue().getClose(),
-//                            "mFirst", ytdDayData.get(symbol).floorEntry(prevMonthEnd).getKey(),
-//                            ytdDayData.get(symbol).floorEntry(prevMonthEnd).getValue().getClose());
-//                }
+                if (ytdDayData.get(symbol).containsKey(t.toLocalDate())) {
+                    ytdDayData.get(symbol).get(t.toLocalDate()).add(price);
+                } else {
+                    ytdDayData.get(symbol).put(t.toLocalDate(), new SimpleBar(price));
+                }
 
                 if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0) {
 
@@ -576,40 +526,10 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                         mStart = ytdDayData.get(symbol).ceilingEntry(prevMonthCutoff).getValue().getOpen();
                     }
 
-//                    LocalDate yStartDate = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getKey();
-//                    LocalDate mStartDate = ytdDayData.get(symbol).floorEntry(prevMonthEnd).getKey();
-//                    double pos = symbolPosMap.get(symbol);
-//                    long numCrosses = ytdDayData.get(symbol).entrySet().stream()
-//                            .filter(e -> e.getKey().isAfter(prevMonthEnd))
-//                            .filter(e -> e.getValue().includes(mStart))
-//                            .count();
-
                     if (timeIsOk(ct, t)) {
                         breachCutter(ct, price, t, yStart, mStart);
                         breachAdder(ct, price, t, yStart, mStart);
                     }
-
-//                    double defaultS = defaultSize.getOrDefault(symbol, getDefaultSize(ct));
-//
-//                    boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
-//                    boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
-//
-//                    double delta = getDelta(ct, price, pos, fx.getOrDefault(Currency.get(ct.currency()), 1.0));
-//
-//                    String deltaDisplay = str(Math.round(1 / 1000d * getDelta(ct, price, pos,
-//                            fx.getOrDefault(Currency.get(ct.currency()), 1.0))));
-//                    if (liveData.containsKey(symbol) && liveData.get(symbol).size() > 0) {
-//                        //pr(symbol, liveData.get(symbol));
-//                        pr(symbol, "POS:", pos, "added?" + added, "liq?" + liquidated, "Default:", defaultS,
-//                                "yStart:" + yStartDate + " " + yStart
-//                                        + "(" + Math.round(1000d * (price / yStart - 1)) / 10d + "%)"
-//                                , "mStart:" + mStartDate + " " + mStart
-//                                        + "(" + Math.round(1000d * (price / mStart - 1)) / 10d + "%)",
-//                                "Last:", liveData.get(symbol).lastKey().format(f1) + " " + price
-//                                , pos != 0.0 ? ("Delta:" + deltaDisplay
-//                                        + "k " + (totalDelta != 0.0 ? "(" + Math.round(100d * delta / totalDelta)
-//                                        + "%)" : "")) : "");
-//                    }
                 }
                 break;
             case BID:

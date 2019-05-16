@@ -331,10 +331,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                     liveData.put(symbol, new ConcurrentSkipListMap<>());
                 }
 
-                if(ytdDayData.get(symbol).containsKey(t.toLocalDate())) {
+                if (ytdDayData.get(symbol).containsKey(t.toLocalDate())) {
                     ytdDayData.get(symbol).get(t.toLocalDate()).add(price);
                 } else {
-                    ytdDayData.get(symbol).put(t.toLocalDate(),new SimpleBar(price));
+                    ytdDayData.get(symbol).put(t.toLocalDate(), new SimpleBar(price));
                 }
 
 
