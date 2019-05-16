@@ -166,6 +166,15 @@ public class TradingUtility {
         }
     }
 
+    public static void outputToFile(String s, File f) {
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(f, true))) {
+            out.append(s);
+            out.newLine();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
+
     public static void outputToSpecial(String s) {
         pr(s);
         outputToError(s);

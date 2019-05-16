@@ -52,6 +52,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
     private static volatile AtomicInteger ibStockReqId = new AtomicInteger(60000);
     private static File devOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
+    private static File startEndTime = new File(TradingConstants.GLOBALPATH + "startEndTime.txt");
+
 
     private static final double HI_LIMIT = 4000000.0;
     private static final double LO_LIMIT = -4000000.0;
@@ -93,6 +95,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     private static Semaphore histSemaphore = new Semaphore(45);
 
     private BreachTrader() {
+        outputToFile(str("Starting Trader ", LocalDateTime.now()), startEndTime);
+
         String line;
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "fx.txt")))) {
@@ -592,6 +596,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             pr("closing hook ");
+            outputToFile(str("Ending Trader ", LocalDateTime.now()), startEndTime);
             devOrderMap.forEach((k, v) -> {
                 if (v.getAugmentedOrderStatus() != OrderStatus.Filled &&
                         v.getAugmentedOrderStatus() != OrderStatus.PendingCancel) {
