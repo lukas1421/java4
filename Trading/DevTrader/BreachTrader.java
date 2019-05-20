@@ -222,7 +222,9 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
             LocalDate ld = LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"));
             ytdDayData.get(symbol).put(ld, new SimpleBar(open, high, low, close));
         } else {
-//            pr(" releasing semaphore for ", symbol);
+            if (!ytdDayData.get(symbol).firstKey().isBefore(LAST_YEAR_DAY)) {
+                pr("YtdOpen after 1/1, check", symbol, ytdDayData.get(symbol).firstEntry());
+            }
             histSemaphore.release(1);
         }
     }
@@ -241,7 +243,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
         if (!contract.symbol().equals("USD") &&
                 !symbol.equalsIgnoreCase("SGXA50PR") &&
                 (position != 0 || symbolPosMap.getOrDefault(symbol, 0.0) != 0.0)) {
-            pr("position registering ", symbol);
+            pr("non-0 position ", symbol, position);
             registerContractPosition(contract, position);
         }
     }
@@ -263,9 +265,10 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 }
             });
 
-            es.schedule(() ->
-                            apDev.req1ContractLive(liveCompatibleCt(c), this, false),
-                    10L, TimeUnit.SECONDS);
+            es.schedule(() -> {
+                pr("Position end: requesting live for fut:", symb);
+                apDev.req1ContractLive(liveCompatibleCt(c), this, false);
+            }, 10L, TimeUnit.SECONDS);
         });
 
         contractPosMap.keySet().stream().filter(e -> e.secType() != Types.SecType.FUT).forEach(c -> {
@@ -285,8 +288,10 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     }
                 });
             }
-            es.schedule(() -> apDev.req1ContractLive(liveCompatibleCt(c), this, false),
-                    10L, TimeUnit.SECONDS);
+            es.schedule(() -> {
+                pr("Position end: requesting live for nonFut:", symb);
+                apDev.req1ContractLive(liveCompatibleCt(c), this, false);
+            }, 10L, TimeUnit.SECONDS);
         });
     }
 
@@ -434,7 +439,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 int id = devTradeID.incrementAndGet();
                 double offerPrice = Math.max(price, askMap.getOrDefault(symbol, price));
-                double size = Math.floor((totalDelta / fx.get(Currency.USD)) / (multi.get("MNQ") * price));
+                double size =
+                        Math.min(5, Math.floor((totalDelta / fx.get(Currency.USD)) / (multi.get("MNQ") * price)));
 
                 Order o = placeOfferLimitTIF(offerPrice, size, DAY);
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
@@ -451,7 +457,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 int id = devTradeID.incrementAndGet();
                 double bidPrice = Math.min(price, bidMap.getOrDefault(symbol, price));
-                double size = Math.floor((-totalDelta / fx.get(Currency.USD)) / (multi.get("MNQ") * price));
+                double size =
+                        Math.min(5, Math.floor((-totalDelta / fx.get(Currency.USD)) / (multi.get("MNQ") * price)));
                 Order o = placeBidLimitTIF(bidPrice, size, DAY);
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
                 apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
