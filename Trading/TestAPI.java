@@ -151,7 +151,7 @@ public class TestAPI {
         //Contract ct = getActiveBTC();
 //        Contract ct = getContBTC();
         //ct.secType(Types.SecType.CONTFUT);
-        Contract ct = getNQ();
+        Contract ct = getUSStockContract("AAPL");
 
         ap.reqHistDayData(10001,
                 ct, (contract, date, open, high, low, close, vol) -> {
@@ -170,7 +170,7 @@ public class TestAPI {
                     } else {
                         pr(date, open, close);
                     }
-                }, 30, Types.BarSize._1_day);
+                }, 200, Types.BarSize._1_day);
 
 
     }

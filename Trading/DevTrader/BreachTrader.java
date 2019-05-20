@@ -402,11 +402,9 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
         boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
         boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
 
-
         assert symbol.equalsIgnoreCase("MNQ");
 
-        if (!liquidated &&
-                ((NYOpen(t) && pos != 0) || (pos > 0 && price < mOpen) || (pos < 0 && price > mOpen))) {
+        if (!liquidated && ((NYOpen(t) && pos != 0) || (pos > 0 && price < mOpen) || (pos < 0 && price > mOpen))) {
             liquidatedMap.put(symbol, new AtomicBoolean(true));
             int id = devTradeID.incrementAndGet();
             Order o = new Order();
@@ -462,7 +460,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     }
 
 
-    private static boolean regTradingTime(Contract ct, LocalDateTime chinaTime) {
+    private static boolean usStockOpen(Contract ct, LocalDateTime chinaTime) {
         if (ct.currency().equalsIgnoreCase("USD") && ct.secType() == Types.SecType.STK) {
             ZonedDateTime chinaZdt = ZonedDateTime.of(chinaTime, chinaZone);
             ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
@@ -592,12 +590,6 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 liveData.get(symbol).put(t, price);
                 lastMap.put(symbol, price);
 
-                if (ytdDayData.get(symbol).containsKey(t.toLocalDate())) {
-                    ytdDayData.get(symbol).get(t.toLocalDate()).add(price);
-                } else {
-                    ytdDayData.get(symbol).put(t.toLocalDate(), new SimpleBar(price));
-                }
-
                 if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0) {
 
                     double yStart;
@@ -616,16 +608,23 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                         mStart = ytdDayData.get(symbol).ceilingEntry(prevMonthCutoff).getValue().getOpen();
                     }
 
-                    if (regTradingTime(ct, t)) {
+                    if (usStockOpen(ct, t)) {
                         breachCutter(ct, price, t, yStart, mStart);
                         breachAdder(ct, price, t, yStart, mStart);
                     }
 
                     if (symbol.equalsIgnoreCase("MNQ")) {
-                        pr("MNQ ", price, t, "ystart", yStart, "mstart", mStart);
+                        //pr("MNQ ", price, t, "ystart", yStart, "mstart", mStart);
                         overnightHedger(ct, price, t, mStart);
                     }
                 }
+
+                if (ytdDayData.get(symbol).containsKey(t.toLocalDate())) {
+                    ytdDayData.get(symbol).get(t.toLocalDate()).add(price);
+                } else {
+                    ytdDayData.get(symbol).put(t.toLocalDate(), new SimpleBar(price));
+                }
+
                 break;
             case BID:
                 bidMap.put(symbol, price);

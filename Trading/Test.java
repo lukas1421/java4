@@ -16,15 +16,15 @@ public class Test {
         return currDay.minusDays(7L);
     }
 
-    public static void main(String[] args) {
+    private static boolean NYOpen(LocalDateTime chinaTime) {
+        ZonedDateTime chinaZdt = ZonedDateTime.of(chinaTime, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalTime usLt = usZdt.toLocalDateTime().toLocalTime();
+        return ltBtwn(usLt, 9, 30, 0, 16, 0, 0);
+    }
 
-        for (int i = 0; i < 24; i++) {
-            LocalDate ldt = LocalDate.now().plusMonths(i);
-            int monthsToAddToNextExpiry = (3 - ldt.getMonthValue() % 3) % 3;
-            LocalDate thisMonthExpiry = getSecLastFriday(ldt.plusMonths(monthsToAddToNextExpiry));
-            LocalDate nextMonthExpiry = getSecLastFriday(ldt.plusMonths(monthsToAddToNextExpiry + 3));
-            pr(ldt, thisMonthExpiry, nextMonthExpiry);
-        }
+    public static void main(String[] args) {
+        pr(NYOpen(LocalDateTime.now()));
     }
 }
 

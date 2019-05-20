@@ -178,7 +178,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                     e.printStackTrace();
                 }
             });
-            brMonController.req1ContractLive(liveCompatibleCt(c), this, false);
+            //brMonController.req1ContractLive(liveCompatibleCt(c), this, false);
         }
     }
 
