@@ -405,7 +405,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
         assert symbol.equalsIgnoreCase("MNQ");
 
-        if (NYOpen(t) && !liquidated && pos != 0) {
+        if (!liquidated &&
+                ((NYOpen(t) && pos != 0) || (pos > 0 && price < mOpen) || (pos < 0 && price > mOpen))) {
             liquidatedMap.put(symbol, new AtomicBoolean(true));
             int id = devTradeID.incrementAndGet();
             Order o = new Order();
