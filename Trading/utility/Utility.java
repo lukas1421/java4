@@ -916,8 +916,12 @@ public class Utility {
             c.exchange("SGX");
         }
 
-        if(c.symbol().equalsIgnoreCase("GXBT")) {
+        if (c.symbol().equalsIgnoreCase("GXBT")) {
             c.exchange("CFECRYPTO");
+        }
+
+        if (c.symbol().equalsIgnoreCase("MNQ")) {
+            c.exchange("GLOBEX");
         }
 
         if (c.secType() == Types.SecType.FUT) {
@@ -946,6 +950,11 @@ public class Utility {
         if (c.symbol().equalsIgnoreCase("GXBT") && c.exchange() == null) {
             c.exchange("CFECRYPTO");
         }
+
+        if (c.symbol().equalsIgnoreCase("MNQ") && c.exchange() == null) {
+            c.exchange("GLOBEX");
+        }
+
 
         if (c.currency().equalsIgnoreCase("USD") && c.secType() == Types.SecType.STK) {
             return getUSStockContract(c.symbol());
