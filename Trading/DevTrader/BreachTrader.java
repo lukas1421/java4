@@ -54,6 +54,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
     private static File devOutput = new File(TradingConstants.GLOBALPATH + "breachMDev.txt");
     private static File startEndTime = new File(TradingConstants.GLOBALPATH + "startEndTime.txt");
 
+    static ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
+
 
     private static final double HI_LIMIT = 4000000.0;
     private static final double LO_LIMIT = -4000000.0;
@@ -260,7 +262,10 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     e.printStackTrace();
                 }
             });
-            apDev.req1ContractLive(liveCompatibleCt(c), this, false);
+
+            es.schedule(() ->
+                            apDev.req1ContractLive(liveCompatibleCt(c), this, false),
+                    10L, TimeUnit.SECONDS);
         });
 
         contractPosMap.keySet().stream().filter(e -> e.secType() != Types.SecType.FUT).forEach(c -> {
@@ -280,7 +285,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     }
                 });
             }
-            apDev.req1ContractLive(liveCompatibleCt(c), this, false);
+            es.schedule(() -> apDev.req1ContractLive(liveCompatibleCt(c), this, false),
+                    10L, TimeUnit.SECONDS);
         });
     }
 
@@ -590,7 +596,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 liveData.get(symbol).put(t, price);
                 lastMap.put(symbol, price);
 
-                if (liveData.get(symbol).size() > 0 && ytdDayData.get(symbol).size() > 0) {
+                if (liveData.get(symbol).size() > 1 && ytdDayData.get(symbol).size() > 1) {
 
                     double yStart;
                     double mStart;
@@ -599,7 +605,6 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                         yStart = ytdDayData.get(symbol).floorEntry(LAST_YEAR_DAY).getValue().getClose();
                     } else {
                         yStart = ytdDayData.get(symbol).ceilingEntry(LAST_YEAR_DAY).getValue().getOpen();
-
                     }
 
                     if (ytdDayData.get(symbol).firstKey().isBefore(prevMonthCutoff)) {
@@ -659,7 +664,6 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
         trader.connectAndReqPos();
         apDev.cancelAllOrders();
 
-        ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
         es.scheduleAtFixedRate(() -> {
             totalDelta = contractPosMap.entrySet().stream()
                     .filter(e -> e.getValue() != 0.0)
@@ -679,8 +683,6 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     .filter(e -> e.getValue() < 0.0)
                     .mapToDouble(e -> getDelta(e.getKey(), getLastPriceFromYtd(e.getKey()), e.getValue(),
                             fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
-
-            //checkOnBreachCutters();
 
             pr(LocalDateTime.now().format(f),
                     "||net delta:" + Math.round(totalDelta / 1000d) + "k",
