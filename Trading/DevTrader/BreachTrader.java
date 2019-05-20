@@ -57,6 +57,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
     private static final double HI_LIMIT = 4000000.0;
     private static final double LO_LIMIT = -4000000.0;
+    private static final double HEDGE_THRESHOLD = 300000;
     //private static final double ABS_LIMIT = 5000000.0;
 
     public static Map<Currency, Double> fx = new HashMap<>();
@@ -130,6 +131,8 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
         registerContract(getActiveA50Contract());
         registerContract(getActiveBTCContract());
+        registerContract(getActiveMNQContract());
+
 
         try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
                 new FileInputStream(TradingConstants.GLOBALPATH + "breachUSNames.txt")))) {
@@ -393,7 +396,72 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
         }
     }
 
-    private static boolean timeIsOk(Contract ct, LocalDateTime chinaTime) {
+    private static void overnightHedger(Contract ct, double price, LocalDateTime t, double mOpen) {
+        String symbol = ibContractToSymbol(ct);
+        double pos = symbolPosMap.get(symbol);
+        boolean liquidated = liquidatedMap.containsKey(symbol) && liquidatedMap.get(symbol).get();
+        boolean added = addedMap.containsKey(symbol) && addedMap.get(symbol).get();
+
+
+        assert symbol.equalsIgnoreCase("MNQ");
+
+        if (NYOpen(t) && !liquidated && pos != 0) {
+            liquidatedMap.put(symbol, new AtomicBoolean(true));
+            int id = devTradeID.incrementAndGet();
+            Order o = new Order();
+
+            if (pos > 0) {
+                o = placeOfferLimitTIF(askMap.getOrDefault(symbol, price), pos, IOC);
+            } else if (pos < 0) {
+                o = placeBidLimitTIF(bidMap.getOrDefault(symbol, price), Math.abs(pos), IOC);
+            }
+
+            devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
+            apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
+            outputToSymbolFile(symbol, str("********", t), devOutput);
+            outputToSymbolFile(symbol, str(o.orderId(), id, "hedger removal" + (pos > 0 ? "sell" : "buy"),
+                    devOrderMap.get(id), "pos", pos, "mOpen:" + mOpen, "price", price), devOutput);
+        }
+
+        if (NYOvernight(t) && !added) {
+            if (totalDelta > HEDGE_THRESHOLD && price < mOpen) {
+                addedMap.put(symbol, new AtomicBoolean(true));
+
+                int id = devTradeID.incrementAndGet();
+                double offerPrice = Math.max(price, askMap.getOrDefault(symbol, price));
+                double size = Math.floor((totalDelta / fx.get(Currency.USD)) / (multi.get("MNQ") * price));
+
+                Order o = placeOfferLimitTIF(offerPrice, size, DAY);
+                devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
+                apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
+
+                outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
+                outputToSymbolFile(symbol, str(o.orderId(), id, "Hedger SELL:",
+                        devOrderMap.get(id), "mOpen:" + mOpen,
+                        "p/b/a", price, getBid(symbol), getAsk(symbol), "devFromMonthOpen",
+                        r10000(price / mOpen - 1)), devOutput);
+
+            } else if (totalDelta < -HEDGE_THRESHOLD && price > mOpen) {
+                addedMap.put(symbol, new AtomicBoolean(true));
+
+                int id = devTradeID.incrementAndGet();
+                double bidPrice = Math.min(price, bidMap.getOrDefault(symbol, price));
+                double size = Math.floor((-totalDelta / fx.get(Currency.USD)) / (multi.get("MNQ") * price));
+                Order o = placeBidLimitTIF(bidPrice, size, DAY);
+                devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
+                apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
+                outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
+                outputToSymbolFile(symbol, str(o.orderId(), id, "Hedger BUY:",
+                        devOrderMap.get(id), "mOpen:" + mOpen,
+                        "p/b/a", price, getBid(symbol), getAsk(symbol), "devFromMonthOpen",
+                        r10000(price / mOpen - 1))
+                        , devOutput);
+            }
+        }
+    }
+
+
+    private static boolean regTradingTime(Contract ct, LocalDateTime chinaTime) {
         if (ct.currency().equalsIgnoreCase("USD") && ct.secType() == Types.SecType.STK) {
             ZonedDateTime chinaZdt = ZonedDateTime.of(chinaTime, chinaZone);
             ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
@@ -404,6 +472,20 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
             return ltBtwn(chinaTime.toLocalTime(), 9, 30, 0, 16, 0, 0);
         }
         return true;
+    }
+
+    private static boolean NYOpen(LocalDateTime chinaTime) {
+        ZonedDateTime chinaZdt = ZonedDateTime.of(chinaTime, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalTime usLt = usZdt.toLocalDateTime().toLocalTime();
+        return ltBtwn(usLt, 9, 30, 0, 16, 0, 0);
+    }
+
+    private static boolean NYOvernight(LocalDateTime chinaTime) {
+        ZonedDateTime chinaZdt = ZonedDateTime.of(chinaTime, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalTime usLt = usZdt.toLocalDateTime().toLocalTime();
+        return !ltBtwn(usLt, 9, 30, 0, 16, 0, 0);
     }
 
 
@@ -462,6 +544,9 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
             return XuTraderHelper.roundToPricePassiveGen(price, dir, 2.5);
         } else if (ticker.equalsIgnoreCase("GXBT")) {
             return XuTraderHelper.roundToPricePassiveGen(price, dir, 5);
+        } else if (ticker.equalsIgnoreCase("MNQ")) {
+            return price;
+            //return XuTraderHelper.roundToPricePassiveGen(price, dir, 0.25);
         }
         return price;
     }
@@ -530,9 +615,14 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                         mStart = ytdDayData.get(symbol).ceilingEntry(prevMonthCutoff).getValue().getOpen();
                     }
 
-                    if (timeIsOk(ct, t)) {
+                    if (regTradingTime(ct, t)) {
                         breachCutter(ct, price, t, yStart, mStart);
                         breachAdder(ct, price, t, yStart, mStart);
+                    }
+
+                    if (symbol.equalsIgnoreCase("MNQ")) {
+                        pr("MNQ ", price, t, "ystart", yStart, "mstart", mStart);
+                        overnightHedger(ct, price, t, mStart);
                     }
                 }
                 break;
@@ -592,7 +682,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     "||abs delta:" + Math.round(totalAbsDelta / 1000d) + "k",
                     "||long/short:", Math.round(longDelta / 1000d) + "k",
                     Math.round(shortDelta / 1000d) + "k");
-        }, 0, 1, TimeUnit.MINUTES);
+        }, 0, 20, TimeUnit.SECONDS);
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             pr("closing hook ");

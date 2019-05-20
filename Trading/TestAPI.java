@@ -89,6 +89,25 @@ public class TestAPI {
         return ct;
     }
 
+    public static Contract getMNQ() {
+        Contract ct = new Contract();
+        ct.symbol("MNQ");
+        ct.exchange("GLOBEX");
+        ct.secType(Types.SecType.CONTFUT);
+        ct.currency("USD");
+        return ct;
+    }
+
+    public static Contract getNQ() {
+        Contract ct = new Contract();
+        ct.symbol("NQ");
+        ct.exchange("GLOBEX");
+        ct.secType(Types.SecType.CONTFUT);
+        ct.currency("USD");
+        return ct;
+    }
+
+
     static void handleHist(Contract c, String date, double open, double high, double low,
                            double close, int volume) {
         String symbol = utility.Utility.ibContractToSymbol(c);
@@ -129,28 +148,29 @@ public class TestAPI {
         //Contract ct = getFrontFutContract();
 
         //Contract ct = getPrevBTC();
-        Contract ct = getActiveBTC();
+        //Contract ct = getActiveBTC();
 //        Contract ct = getContBTC();
         //ct.secType(Types.SecType.CONTFUT);
+        Contract ct = getNQ();
 
         ap.reqHistDayData(10001,
                 ct, (contract, date, open, high, low, close, vol) -> {
                     if (!date.startsWith("finished")) {
-                        //pr(date, open, high, low, close);
-                        Date dt = new Date(Long.parseLong(date) * 1000);
-                        Calendar cal = Calendar.getInstance();
-                        cal.setTime(dt);
-                        LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
-                        LocalTime lt = ltof(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
-                        LocalDateTime ldt = LocalDateTime.of(ld, lt);
-                        pr(ldt, open, high, low, close);
+//                        pr(date, open, high, low, close);
+//                        Date dt = new Date(Long.parseLong(date) * 1000);
+//                        Calendar cal = Calendar.getInstance();
+//                        cal.setTime(dt);
+//                        LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH));
+//                        LocalTime lt = ltof(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
+//                        LocalDateTime ldt = LocalDateTime.of(ld, lt);
+//                        pr(ldt, open, high, low, close);
 
-//                        pr(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"))
-//                                , open, high, low, close);
+                        pr(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd"))
+                                , open, high, low, close);
                     } else {
                         pr(date, open, close);
                     }
-                }, 2, Types.BarSize._1_min);
+                }, 30, Types.BarSize._1_day);
 
 
     }

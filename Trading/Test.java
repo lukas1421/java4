@@ -1,28 +1,30 @@
 import utility.TradingUtility;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.Month;
+import java.time.*;
 
-import static utility.Utility.pr;
+import static utility.Utility.*;
+import static utility.Utility.ltBtwn;
 
 
 public class Test {
 
+    private static LocalDate getSecLastFriday(LocalDate day) {
+        LocalDate currDay = day.plusMonths(1L).withDayOfMonth(1).minusDays(1);
+        while (currDay.getDayOfWeek() != DayOfWeek.FRIDAY) {
+            currDay = currDay.minusDays(1L);
+        }
+        return currDay.minusDays(7L);
+    }
 
     public static void main(String[] args) {
 
-
-        pr(TradingUtility.getActiveBTCExpiry());
-        pr(TradingUtility.get2ndBTCExpiry());
-
-//        pr(TradingUtility.getPrevBTCExpiryGivenTime(LocalDateTime.of(LocalDate.of(2019, Month.MAY,16),
-//                LocalTime.of(0,0,0))));
-//
-//        pr(TradingUtility.getPrevBTCExpiryGivenTime(LocalDateTime.of(LocalDate.of(2019, Month.MAY,16),
-//                LocalTime.of(5,0,0))));
-
+        for (int i = 0; i < 24; i++) {
+            LocalDate ldt = LocalDate.now().plusMonths(i);
+            int monthsToAddToNextExpiry = (3 - ldt.getMonthValue() % 3) % 3;
+            LocalDate thisMonthExpiry = getSecLastFriday(ldt.plusMonths(monthsToAddToNextExpiry));
+            LocalDate nextMonthExpiry = getSecLastFriday(ldt.plusMonths(monthsToAddToNextExpiry + 3));
+            pr(ldt, thisMonthExpiry, nextMonthExpiry);
+        }
     }
 }
 

@@ -298,10 +298,10 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                                 mOpenDate.format(f) + " " + mOpen + ")");
 
 
-//                if (pos != 0.0) {
-                pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
-                        , out, Math.round(delta / 1000d) + "k");
-//                }
+                if (pos != 0.0) {
+                    pr(LocalTime.now().truncatedTo(ChronoUnit.MINUTES), pos != 0.0 ? "*" : ""
+                            , out, Math.round(delta / 1000d) + "k");
+                }
             }
         }
 
@@ -331,11 +331,11 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                     liveData.put(symbol, new ConcurrentSkipListMap<>());
                 }
 
-                if (ytdDayData.get(symbol).containsKey(t.toLocalDate())) {
-                    ytdDayData.get(symbol).get(t.toLocalDate()).add(price);
-                } else {
-                    ytdDayData.get(symbol).put(t.toLocalDate(), new SimpleBar(price));
-                }
+//                if (ytdDayData.get(symbol).containsKey(t.toLocalDate())) {
+//                    ytdDayData.get(symbol).get(t.toLocalDate()).add(price);
+//                } else {
+//                    ytdDayData.get(symbol).put(t.toLocalDate(), new SimpleBar(price));
+//                }
 
 
                 liveData.get(symbol).put(t, price);

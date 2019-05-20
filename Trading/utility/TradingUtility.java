@@ -51,7 +51,17 @@ public class TradingUtility {
         //ct.secType(Types.SecType.CONTFUT);
         ct.secType(Types.SecType.FUT);
         pr("BTC expiry ", getActiveBTCExpiry());
-        ct.lastTradeDateOrContractMonth(getActiveBTCExpiry().format(Utility.futExpPattern));
+        ct.lastTradeDateOrContractMonth(getActiveBTCExpiry().format(futExpPattern));
+        ct.currency("USD");
+        return ct;
+    }
+
+    public static Contract getActiveMNQContract() {
+        Contract ct = new Contract();
+        ct.symbol("MNQ");
+        ct.exchange("GLOBEX");
+        ct.secType("FUT");
+        ct.lastTradeDateOrContractMonth(getActiveMNQExpiry().format(futExpPattern));
         ct.currency("USD");
         return ct;
     }
@@ -195,11 +205,34 @@ public class TradingUtility {
         return currDay.plusDays(14L);
     }
 
+    private static LocalDate getSecLastFriday(LocalDate day) {
+        LocalDate currDay = day.plusMonths(1L).withDayOfMonth(1).minusDays(1);
+        while (currDay.getDayOfWeek() != DayOfWeek.FRIDAY) {
+            currDay = currDay.minusDays(1L);
+        }
+        return currDay.minusDays(7L);
+    }
+
     public static LocalDate getActiveBTCExpiry() {
         LocalDateTime ldt = LocalDateTime.now();
 
         LocalDate thisMonthExpiry = getThirdWednesday(ldt.toLocalDate());
         LocalDate nextMonthExpiry = getThirdWednesday(ldt.toLocalDate().plusMonths(1));
+
+        ZonedDateTime chinaZdt = ZonedDateTime.of(ldt, chinaZone);
+        ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
+        LocalDateTime usLdt = usZdt.toLocalDateTime();
+
+        return usLdt.isAfter(LocalDateTime.of(thisMonthExpiry, ltof(16, 0)))
+                ? nextMonthExpiry : thisMonthExpiry;
+    }
+
+    public static LocalDate getActiveMNQExpiry() {
+        LocalDateTime ldt = LocalDateTime.now();
+
+        int monthsToAddToNextExpiry = (3 - ldt.getMonthValue() % 3) % 3;
+        LocalDate thisMonthExpiry = getSecLastFriday(ldt.toLocalDate().plusMonths(monthsToAddToNextExpiry));
+        LocalDate nextMonthExpiry = getSecLastFriday(ldt.toLocalDate().plusMonths(monthsToAddToNextExpiry + 3));
 
         ZonedDateTime chinaZdt = ZonedDateTime.of(ldt, chinaZone);
         ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
