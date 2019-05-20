@@ -151,7 +151,7 @@ public class TestAPI {
         //Contract ct = getActiveBTC();
 //        Contract ct = getContBTC();
         //ct.secType(Types.SecType.CONTFUT);
-        Contract ct = getUSStockContract("AAPL");
+        Contract ct = getUSStockContract("MRK");
 
         ap.reqHistDayData(10001,
                 ct, (contract, date, open, high, low, close, vol) -> {

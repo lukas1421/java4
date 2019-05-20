@@ -661,19 +661,24 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
         ScheduledExecutorService es = Executors.newScheduledThreadPool(10);
         es.scheduleAtFixedRate(() -> {
-            totalDelta = contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
-                    , getLastPriceFromYtd(e.getKey()), e.getValue(),
-                    fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
-            totalAbsDelta = contractPosMap.entrySet().stream().mapToDouble(e ->
-                    Math.abs(getDelta(e.getKey(), getLastPriceFromYtd(e.getKey()), e.getValue(),
+            totalDelta = contractPosMap.entrySet().stream()
+                    .filter(e -> e.getValue() != 0.0)
+                    .mapToDouble(e -> getDelta(e.getKey()
+                            , getLastPriceFromYtd(e.getKey()), e.getValue(),
+                            fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
+            totalAbsDelta = contractPosMap.entrySet().stream()
+                    .filter(e -> e.getValue() != 0.0)
+                    .mapToDouble(e -> Math.abs(getDelta(e.getKey(), getLastPriceFromYtd(e.getKey()), e.getValue(),
                             fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();
-            double longDelta = contractPosMap.entrySet().stream().mapToDouble(e ->
-                    Math.max(0, getDelta(e.getKey(), getLastPriceFromYtd(e.getKey()), e.getValue(),
-                            fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();
+            double longDelta = contractPosMap.entrySet().stream()
+                    .filter(e -> e.getValue() > 0.0)
+                    .mapToDouble(e -> getDelta(e.getKey(), getLastPriceFromYtd(e.getKey()), e.getValue(),
+                            fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
 
-            double shortDelta = contractPosMap.entrySet().stream().mapToDouble(e ->
-                    Math.min(0, getDelta(e.getKey(), getLastPriceFromYtd(e.getKey()), e.getValue(),
-                            fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();
+            double shortDelta = contractPosMap.entrySet().stream()
+                    .filter(e -> e.getValue() < 0.0)
+                    .mapToDouble(e -> getDelta(e.getKey(), getLastPriceFromYtd(e.getKey()), e.getValue(),
+                            fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
 
             //checkOnBreachCutters();
 

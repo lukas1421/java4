@@ -178,7 +178,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
                     e.printStackTrace();
                 }
             });
-            //brMonController.req1ContractLive(liveCompatibleCt(c), this, false);
+//            brMonController.req1ContractLive(liveCompatibleCt(c), this, false);
         }
     }
 
@@ -207,6 +207,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
         } else {
             semaphore.release();
+//            pr(" semaphore release: # permits ", semaphore.availablePermits());
 
             double pos = contractPosMap.getOrDefault(c, 0.0);
             if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
@@ -409,11 +410,14 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
         if (ytdDayData.containsKey(symbol) && ytdDayData.get(symbol).size() > 0) {
             return ytdDayData.get(symbol).lastEntry().getValue().getClose();
         }
-        return 0.0;
+        throw new IllegalStateException(" get price from ytd failed ");
+        //return 0.0;
 
     }
 
     private static double getDelta(Contract ct, double price, double size, double fx) {
+//        pr("get delta ", ibContractToSymbol(ct), price, size, fx);
+
         if (size != 0.0) {
             if (ct.secType() == Types.SecType.STK) {
                 return price * size * fx;
@@ -461,27 +465,34 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
 
         es.scheduleAtFixedRate(() -> {
-            double totalDelta = contractPosMap.entrySet().stream().mapToDouble(e -> getDelta(e.getKey()
-                    , getPriceFromYtd(e.getKey()), e.getValue(),
-                    fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
 
-            double totalAbsDelta = contractPosMap.entrySet().stream().mapToDouble(e ->
-                    Math.abs(getDelta(e.getKey(), getPriceFromYtd(e.getKey()), e.getValue(),
+            double totalDelta = contractPosMap.entrySet().stream()
+                    .filter(e -> e.getValue() != 0.0)
+                    .mapToDouble(e -> getDelta(e.getKey(), getPriceFromYtd(e.getKey()), e.getValue(),
+                            fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))
+                    .sum();
+
+            double totalAbsDelta = contractPosMap.entrySet().stream()
+                    .filter(e -> e.getValue() != 0.0)
+                    .mapToDouble(e -> Math.abs(getDelta(e.getKey(), getPriceFromYtd(e.getKey()), e.getValue(),
                             fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();
 
-            double longDelta = contractPosMap.entrySet().stream().mapToDouble(e ->
-                    Math.max(0, getDelta(e.getKey(), getPriceFromYtd(e.getKey()), e.getValue(),
-                            fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();
+            double longDelta = contractPosMap.entrySet().stream()
+                    .filter(e -> e.getValue() > 0.0)
+                    .mapToDouble(e -> getDelta(e.getKey(), getPriceFromYtd(e.getKey()), e.getValue(),
+                            fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
 
-            double shortDelta = contractPosMap.entrySet().stream().mapToDouble(e ->
-                    Math.min(0, getDelta(e.getKey(), getPriceFromYtd(e.getKey()), e.getValue(),
-                            fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0)))).sum();
+            double shortDelta = contractPosMap.entrySet().stream()
+                    .filter(e -> e.getValue() < 0.0)
+                    .mapToDouble(e -> getDelta(e.getKey(), getPriceFromYtd(e.getKey()), e.getValue(),
+                            fx.getOrDefault(Currency.get(e.getKey().currency()), 1.0))).sum();
 
             pr(LocalDateTime.now().format(f2),
-                    "||Net delta:", Math.round(totalDelta / 1000d) + "k",
-                    "||abs delta:", Math.round(totalAbsDelta / 1000d) + "k",
+                    "||Net delta:", Math.round(totalDelta / 1000d) + "k"
+                    , "||abs delta:", Math.round(totalAbsDelta / 1000d) + "k",
                     "||long/short", Math.round(longDelta / 1000d) + "k",
                     Math.round(shortDelta / 1000d) + "k");
+
         }, 15, 15, TimeUnit.SECONDS);
 
 //        es.scheduleAtFixedRate(() -> {
