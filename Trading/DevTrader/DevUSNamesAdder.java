@@ -4,15 +4,12 @@ import api.TradingConstants;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
-import com.mchange.v2.codegen.bean.CompleteConstructorGeneratorExtension;
-import com.sun.xml.internal.ws.util.CompletedFuture;
 import controller.ApiConnection;
 import controller.ApiController;
 import utility.Utility;
 
 import java.io.*;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.*;

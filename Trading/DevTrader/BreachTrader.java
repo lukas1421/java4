@@ -626,7 +626,9 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     }
 
                     if (symbol.equalsIgnoreCase("MNQ")) {
-                        //pr("MNQ ", price, t, "ystart", yStart, "mstart", mStart);
+                        pr("MNQ ", price, t, "ystart", yStart, "mstart", mStart,
+                                r10000(price / mStart - 1) * 100d + "%",
+                                "pos", symbolPosMap.getOrDefault("MNQ", 0.0));
                         overnightHedger(ct, price, t, mStart);
                     }
                 }
