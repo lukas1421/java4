@@ -1,4 +1,4 @@
-package graph;
+package enums;
 
 public enum IND {
     on(1), off(0);

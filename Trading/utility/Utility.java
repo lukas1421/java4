@@ -6,6 +6,7 @@ import auxiliary.SimpleBar;
 import client.Contract;
 import client.Order;
 import client.Types;
+import controller.ApiConnection;
 import enums.Currency;
 import enums.FutType;
 import graph.GraphIndustry;
@@ -1086,6 +1087,13 @@ public class Utility {
         double lmtPrice = o.lmtPrice();
         double xxxCny = ChinaPosition.fxMap.getOrDefault(Currency.get(curr), 1.0);
         return xxxCny * lmtPrice * totalQ;
+    }
+
+    public static class DefaultLogger implements ApiConnection.ILogger {
+        @Override
+        public void log(String valueOf) {
+            //System.out.println( " logging "+valueOf);
+        }
     }
 
     //    public static void outputDetailedUS(String symbol, String msg) {

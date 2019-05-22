@@ -1,10 +1,10 @@
 package DevTrader;
 
+import api.OrderAugmented;
 import api.TradingConstants;
 import client.*;
 import controller.ApiController;
-import controller.ConcurrentHashSet;
-import util.AutoOrderType;
+import enums.AutoOrderType;
 
 import java.io.File;
 import java.time.LocalDateTime;

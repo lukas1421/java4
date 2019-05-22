@@ -3,7 +3,7 @@ package api;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
-import controller.ApiConnection.ILogger.DefaultLogger;
+import utility.Utility.DefaultLogger;
 import controller.ApiController;
 import handler.DefaultConnectionHandler;
 import utility.TradingUtility;

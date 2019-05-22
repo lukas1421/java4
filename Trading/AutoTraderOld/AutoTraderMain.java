@@ -1,12 +1,13 @@
 package AutoTraderOld;
 
+import api.OrderAugmented;
 import enums.HalfHour;
 import enums.MinuteHour;
 import api.QuarterHour;
 import api.TradingConstants;
 import client.*;
 import controller.ApiController;
-import util.AutoOrderType;
+import enums.AutoOrderType;
 import utility.TradingUtility;
 
 import javax.swing.*;
@@ -29,7 +30,7 @@ import static api.ChinaData.priceMapBarDetail;
 import static api.ChinaStock.*;
 import static AutoTraderOld.XuTraderHelper.*;
 import static client.OrderStatus.*;
-import static util.AutoOrderType.*;
+import static enums.AutoOrderType.*;
 import static utility.Utility.*;
 
 public class AutoTraderMain extends JPanel {

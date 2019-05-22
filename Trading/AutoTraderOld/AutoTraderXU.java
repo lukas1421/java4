@@ -15,7 +15,7 @@ import graph.GraphXuTrader;
 import handler.HistoricalHandler;
 import handler.XUOvernightTradeExecHandler;
 import sound.EmbeddedSoundPlayer;
-import util.AutoOrderType;
+import enums.AutoOrderType;
 import utility.TradingUtility;
 import utility.Utility;
 
@@ -52,7 +52,7 @@ import static AutoTraderOld.XuTraderHelper.*;
 import static client.OrderStatus.*;
 import static client.Types.TimeInForce.IOC;
 import static java.time.temporal.ChronoUnit.*;
-import static util.AutoOrderType.*;
+import static enums.AutoOrderType.*;
 import static utility.Utility.*;
 
 public final class AutoTraderXU extends JPanel implements HistoricalHandler, ApiController.IDeepMktDataHandler,

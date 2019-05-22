@@ -20,12 +20,6 @@ public class ApiConnection extends EClientSocket {
     public interface ILogger {
         void log(String valueOf);
 
-        public static class DefaultLogger implements ILogger {   
-            @Override
-            public void log(String valueOf) {
-                //System.out.println( " logging "+valueOf);
-            }
-        }
     }
 
     public static final char EOL = 0;

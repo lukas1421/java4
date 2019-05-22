@@ -1,5 +1,6 @@
 package AutoTraderOld;
 
+import api.OrderAugmented;
 import enums.FutType;
 import client.*;
 import controller.ApiController;

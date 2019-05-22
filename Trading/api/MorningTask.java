@@ -5,7 +5,7 @@ import client.Contract;
 import client.TickType;
 import client.Types;
 import controller.AccountSummaryTag;
-import controller.ApiConnection.ILogger.DefaultLogger;
+import utility.Utility.DefaultLogger;
 import controller.ApiController;
 import handler.DefaultConnectionHandler;
 import handler.HistoricalHandler;

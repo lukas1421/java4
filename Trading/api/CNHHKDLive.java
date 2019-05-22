@@ -4,13 +4,13 @@ import auxiliary.SimpleBar;
 import client.Contract;
 import client.TickType;
 import client.Types;
-import controller.ApiConnection;
 import controller.ApiController;
 import graph.GraphBarGen;
 import handler.DefaultConnectionHandler;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
 import utility.TradingUtility;
+import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
@@ -252,7 +252,7 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
 
     private void getFromIB() {
         ApiController ap = new ApiController(new DefaultConnectionHandler(),
-                new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
+                new Utility.DefaultLogger(), new Utility.DefaultLogger());
 
         CountDownLatch l = new CountDownLatch(1);
         boolean connectionStatus = false;

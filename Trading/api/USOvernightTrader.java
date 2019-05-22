@@ -1,9 +1,9 @@
 package api;
 
 import client.*;
-import controller.ApiConnection;
 import controller.ApiController;
 import graph.GraphBarTemporal;
+import utility.Utility;
 
 import javax.swing.*;
 import java.awt.*;
@@ -16,7 +16,7 @@ public class USOvernightTrader extends JPanel {
     static JLabel connectionLabel;
 
     static ApiController usApcon = new ApiController(new USConnectionHandler(),
-            new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
+            new Utility.DefaultLogger(), new Utility.DefaultLogger());
 
     static GraphBarTemporal<LocalDateTime> graph1 = new GraphBarTemporal<>();
 

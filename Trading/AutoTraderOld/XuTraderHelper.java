@@ -7,7 +7,7 @@ import client.Order;
 import controller.ApiController;
 import enums.Currency;
 import enums.Direction;
-import util.AutoOrderType;
+import enums.AutoOrderType;
 import utility.TradingUtility;
 
 import javax.swing.*;

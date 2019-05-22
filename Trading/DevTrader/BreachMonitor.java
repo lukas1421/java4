@@ -4,7 +4,6 @@ import client.*;
 import enums.Currency;
 import api.TradingConstants;
 import auxiliary.SimpleBar;
-import controller.ApiConnection;
 import controller.ApiController;
 import handler.DefaultConnectionHandler;
 import handler.LiveHandler;
@@ -117,7 +116,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
 
     private void getFromIB() {
         ApiController ap = new ApiController(new DefaultConnectionHandler(),
-                new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
+                new DefaultLogger(), new DefaultLogger());
         brMonController = ap;
         CountDownLatch l = new CountDownLatch(1);
         boolean connectionStatus = false;

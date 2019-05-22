@@ -4,7 +4,7 @@ import AutoTraderOld.AutoTraderMain;
 import TradeType.TradeBlock;
 import api.*;
 import auxiliary.SimpleBar;
-import client.OrderAugmented;
+import api.OrderAugmented;
 import client.OrderStatus;
 import client.Types;
 import historical.HistChinaStocks;

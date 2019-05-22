@@ -4,7 +4,6 @@ import api.TradingConstants;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
-import controller.ApiConnection;
 import controller.ApiController;
 import handler.DefaultConnectionHandler;
 import utility.TradingUtility;
@@ -59,7 +58,7 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
 
     private void getFromIB() {
         ApiController ap = new ApiController(new DefaultConnectionHandler(),
-                new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
+                new DefaultLogger(), new DefaultLogger());
         staticController = ap;
         CountDownLatch l = new CountDownLatch(1);
         boolean connectionStatus = false;

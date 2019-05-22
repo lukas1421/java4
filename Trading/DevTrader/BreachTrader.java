@@ -1,11 +1,11 @@
 package DevTrader;
 
 import AutoTraderOld.XuTraderHelper;
+import api.OrderAugmented;
 import enums.Currency;
 import api.TradingConstants;
 import auxiliary.SimpleBar;
 import client.*;
-import controller.ApiConnection;
 import controller.ApiController;
 import enums.Direction;
 import handler.DefaultConnectionHandler;
@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static api.ControllerCalls.placeOrModifyOrderCheck;
 import static client.Types.TimeInForce.*;
-import static util.AutoOrderType.*;
+import static enums.AutoOrderType.*;
 import static utility.TradingUtility.*;
 import static utility.Utility.*;
 
@@ -179,7 +179,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
     public void connectAndReqPos() {
         ApiController ap = new ApiController(new DefaultConnectionHandler(),
-                new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
+                new DefaultLogger(), new DefaultLogger());
         apDev = ap;
         CountDownLatch l = new CountDownLatch(1);
         boolean connectionStatus = false;

@@ -1,7 +1,11 @@
-package client;
+package api;
 
 import TradeType.FutureTrade;
-import util.AutoOrderType;
+import client.Contract;
+import client.Order;
+import client.OrderStatus;
+import client.Types;
+import enums.AutoOrderType;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;

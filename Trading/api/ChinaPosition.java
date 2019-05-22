@@ -9,7 +9,7 @@ import enums.Currency;
 import graph.GraphPnl;
 import handler.HistoricalHandler;
 import handler.IBPositionHandler;
-import util.AutoOrderType;
+import enums.AutoOrderType;
 import utility.SharpeUtility;
 import utility.TradingUtility;
 import utility.Utility;

@@ -5,14 +5,14 @@ import auxiliary.Dividends;
 import client.ExecutionFilter;
 import client.Types.NewsType;
 import controller.ApiConnection.ILogger;
-import controller.ApiConnection.ILogger.DefaultLogger;
+import utility.Utility.DefaultLogger;
 import controller.ApiController;
 import controller.ApiController.IConnectionHandler;
 import controller.Formats;
 import graph.GraphIndustry;
 import saving.Hibtask;
 import util.*;
-import util.IConnectionConfiguration.DefaultConnectionConfiguration;
+import api.IConnectionConfiguration.DefaultConnectionConfiguration;
 import utility.Utility;
 
 import javax.swing.*;

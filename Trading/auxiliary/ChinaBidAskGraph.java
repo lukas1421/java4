@@ -1,7 +1,7 @@
 package auxiliary;
 
 import graph.GraphBidAsk;
-import graph.IND;
+import enums.IND;
 
 import javax.swing.*;
 import java.awt.*;

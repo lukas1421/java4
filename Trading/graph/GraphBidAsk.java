@@ -2,6 +2,7 @@ package graph;
 
 import api.ChinaData;
 import api.ChinaStock;
+import enums.IND;
 
 import javax.swing.*;
 import java.awt.*;

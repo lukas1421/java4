@@ -4,10 +4,10 @@ import AutoTraderOld.AutoTraderMain;
 import auxiliary.SimpleBar;
 import client.Contract;
 import client.Types;
-import controller.ApiConnection;
 import controller.ApiController;
 import handler.DefaultConnectionHandler;
 import utility.TradingUtility;
+import utility.Utility;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -61,7 +61,7 @@ public class ResearchAPI {
     @SuppressWarnings("Duplicates")
     public static void main(String[] args) {
         ApiController ap = new ApiController(new DefaultConnectionHandler(),
-                new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
+                new Utility.DefaultLogger(), new Utility.DefaultLogger());
         CountDownLatch l = new CountDownLatch(1);
         boolean connectionStatus = false;
 
