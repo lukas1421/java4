@@ -11,6 +11,7 @@ import utility.TradingUtility;
 
 import javax.swing.*;
 import java.io.*;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -609,11 +610,24 @@ public class AutoTraderMain extends JPanel {
         ct.symbol(symb);
         ct.exchange("HKFE");
         ct.currency("HKD");
-        ct.lastTradeDateOrContractMonth(AutoTraderHK.getSecondLastBD(LocalDate.now()).
+        ct.lastTradeDateOrContractMonth(getSecondLastBD(LocalDate.now()).
                 format(DateTimeFormatter.ofPattern("yyyyMMdd")));
         ct.secType(Types.SecType.FUT);
         return ct;
     }
+
+    static LocalDate getSecondLastBD(LocalDate d) {
+        LocalDate res = d.plusMonths(1L).withDayOfMonth(1);
+        int i = 0;
+        while (i != 2) {
+            res = res.minusDays(1);
+            if (res.getDayOfWeek() != DayOfWeek.SATURDAY && res.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                i = i + 1;
+            }
+        }
+        return res;
+    }
+
 
     public static String hkSymbolToTicker(String symbol) {
         if (symbol.startsWith("hk")) {

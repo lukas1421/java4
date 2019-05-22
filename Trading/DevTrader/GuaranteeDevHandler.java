@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static DevTrader.BreachTrader.*;
+import static api.ControllerCalls.placeOrModifyOrderCheck;
 import static client.OrderStatus.Filled;
 import static client.OrderStatus.PendingCancel;
 import static client.Types.TimeInForce.DAY;
@@ -136,7 +137,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 o.tif(DAY);
 
                 int newID = devTradeID.incrementAndGet();
-                controller.placeOrModifyOrder(ct, o, new PatientDevHandler(newID));
+                placeOrModifyOrderCheck(controller, ct, o, new PatientDevHandler(newID));
 
                 devOrderMap.put(newID, new OrderAugmented(ct, LocalDateTime.now(), o,
                         devOrderMap.get(currentID).getOrderType(), false));
@@ -195,7 +196,7 @@ public class GuaranteeDevHandler implements ApiController.IOrderHandler {
                 o.tif(IOC);
 
                 int newID = devTradeID.incrementAndGet();
-                controller.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(primaryID, newID, controller,
+                placeOrModifyOrderCheck(controller, ct, o, new GuaranteeDevHandler(primaryID, newID, controller,
                         attempts.incrementAndGet()));
 
                 devOrderMap.put(newID, new OrderAugmented(ct, LocalDateTime.now(), o,

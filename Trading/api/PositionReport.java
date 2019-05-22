@@ -6,7 +6,7 @@ import client.Types;
 import controller.ApiConnection.ILogger.DefaultLogger;
 import controller.ApiController;
 import handler.DefaultConnectionHandler;
-import handler.DefaultConnectionHandler;
+import utility.TradingUtility;
 import utility.Utility;
 
 import java.io.File;
@@ -151,7 +151,7 @@ public class PositionReport implements ApiController.IPositionHandler {
             String k = ibContractToSymbol(c);
             morningYtdData.put(k, new ConcurrentSkipListMap<>());
             if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
-                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
+                TradingUtility.reqHistDayData(staticController, ibStockReqId.addAndGet(5),
                         fillContract(c), PositionReport::morningYtdOpen, 250, Types.BarSize._1_day);
             }
         }

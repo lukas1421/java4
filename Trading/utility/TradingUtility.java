@@ -1,10 +1,11 @@
 package utility;
 
 import api.TradingConstants;
-import client.Contract;
-import client.Order;
-import client.OrderType;
-import client.Types;
+import client.*;
+import controller.ApiController;
+import handler.HistDataConsumer;
+import handler.HistoricalHandler;
+import handler.LiveHandler;
 import historical.Request;
 
 import javax.naming.OperationNotSupportedException;
@@ -13,8 +14,11 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static utility.Utility.*;
@@ -381,5 +385,82 @@ public class TradingUtility {
         ct.secType(Types.SecType.FUT);
         ct.lastTradeDateOrContractMonth("20190220");
         return ct;
+    }
+
+    public static void req1ContractLive(ApiController ap, Contract ct, LiveHandler h, boolean snapshot) {
+        int reqId = ApiController.getNextId();
+        globalRequestMap.put(reqId, new Request(ct, h));
+        ap.client().reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
+    }
+
+    public static void getHistoricalCustom(ApiController ap, int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
+                                    int duration) {
+
+        String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
+                .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
+
+        Types.DurationUnit durationUnit = Types.DurationUnit.DAY;
+        String durationStr = duration + " " + durationUnit.toString().charAt(0);
+        Types.BarSize barSize = Types.BarSize._1_min;
+        Types.WhatToShow whatToShow = Types.WhatToShow.TRADES;
+        boolean rthOnly = false;
+
+        globalRequestMap.put(reqId, new Request(c, dc));
+
+        CompletableFuture.runAsync(() -> ap.client().reqHistoricalData(reqId, c, "", durationStr,
+                barSize.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
+    }
+
+    //requ month open
+    public static void reqHistDayData(ApiController ap, int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
+                          int duration, Types.BarSize bs) {
+        Types.DurationUnit durationUnit = Types.DurationUnit.DAY;
+        String durationStr = duration + " " + durationUnit.toString().charAt(0);
+        Types.WhatToShow whatToShow = Types.WhatToShow.TRADES;
+        globalRequestMap.put(reqId, new Request(c, dc));
+        CompletableFuture.runAsync(() -> ap.client().reqHistoricalData(reqId, c, "", durationStr,
+                bs.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
+    }
+
+    public static void getSGXA50Historical2(ApiController ap, int reqID, HistoricalHandler hh) {
+        Contract previousFut = getExpiredFutContract();
+        Contract frontFut = getFrontFutContract();
+        Contract backFut = getBackFutContract();
+
+        int duration = 4;
+        Types.DurationUnit durationUnit = Types.DurationUnit.DAY;
+        String durationStr = duration + " " + durationUnit.toString().charAt(0);
+        Types.BarSize barSize = Types.BarSize._1_min;
+        Types.WhatToShow whatToShow = Types.WhatToShow.TRADES;
+
+        globalRequestMap.put(reqID, new Request(frontFut, hh));
+        globalRequestMap.put(reqID + 1, new Request(backFut, hh));
+
+
+        CompletableFuture.runAsync(() -> {
+
+            ap.client().reqHistoricalData(reqID, frontFut, "", durationStr, barSize.toString(),
+                    whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList());
+            ap.client().reqHistoricalData(reqID + 1, backFut, "", durationStr, barSize.toString(),
+                    whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList());
+
+            if (ChronoUnit.DAYS.between(LocalDate.parse(previousFut.lastTradeDateOrContractMonth(),
+                    DateTimeFormatter.ofPattern("yyyyMMdd")), LocalDate.now()) < 7) {
+                globalRequestMap.put(reqID + 2, new Request(previousFut, hh));
+                ap.client().reqHistoricalData(reqID + 2, previousFut, "", durationStr,
+                        barSize.toString(), whatToShow.toString(), 0, 2,
+                        Collections.<TagValue>emptyList());
+            }
+        });
+    }
+
+    public static void getHistoricalCustom(ApiController ap,int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
+                                    int duration, Types.BarSize bs) {
+        Types.DurationUnit durationUnit = Types.DurationUnit.DAY;
+        String durationStr = duration + " " + durationUnit.toString().charAt(0);
+        Types.WhatToShow whatToShow = Types.WhatToShow.TRADES;
+        globalRequestMap.put(reqId, new Request(c, dc));
+        CompletableFuture.runAsync(() -> ap.client().reqHistoricalData(reqId, c, "", durationStr,
+                bs.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
     }
 }

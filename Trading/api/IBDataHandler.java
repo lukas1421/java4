@@ -2,6 +2,7 @@ package api;
 
 import client.TickType;
 import controller.ApiController;
+import handler.HistoricalHandler;
 import handler.LiveHandler;
 import historical.Request;
 import utility.TradingUtility;
@@ -46,5 +47,43 @@ public class IBDataHandler {
         }
     }
 
+    public static void historicalData(int reqId, String date, double open, double high, double low,
+                                      double close, int volume, int count, double wap, boolean hasGaps) {
+        if (TradingUtility.globalRequestMap.containsKey(reqId)) {
+            Request r = TradingUtility.globalRequestMap.get(reqId);
+            String symb = utility.Utility.ibContractToSymbol(r.getContract());
+
+            if (r.getCustomFunctionNeeded()) {
+                r.getDataConsumer().apply(r.getContract(), date, open, high, low, close, volume);
+            } else {
+                HistoricalHandler hh = (HistoricalHandler) r.getHandler();
+                if (!date.startsWith("finished")) {
+                    try {
+                        hh.handleHist(symb, date, open, high, low, close);
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                    }
+                } else if (date.toUpperCase().startsWith("ERROR")) {
+                    hh.actionUponFinish(symb);
+                    throw new IllegalStateException(" error found ");
+                } else {
+                    hh.actionUponFinish(symb);
+                }
+            }
+        }
+    }
+
+    public static void historicalDataEnd(int reqId) {
+        if (TradingUtility.globalRequestMap.containsKey(reqId)) {
+            Request r = TradingUtility.globalRequestMap.get(reqId);
+            String symb = ibContractToSymbol(r.getContract());
+            if (r.getCustomFunctionNeeded()) {
+                pr(" custom handling needed ");
+            } else {
+                HistoricalHandler hh = (HistoricalHandler) r.getHandler();
+                hh.actionUponFinish(symb);
+            }
+        }
+    }
 
 }

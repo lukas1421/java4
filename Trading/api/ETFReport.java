@@ -6,7 +6,7 @@ import client.Types;
 import controller.ApiConnection.ILogger.DefaultLogger;
 import controller.ApiController;
 import handler.DefaultConnectionHandler;
-import handler.DefaultConnectionHandler;
+import utility.TradingUtility;
 
 import java.io.*;
 import java.time.LocalDate;
@@ -81,7 +81,7 @@ public class ETFReport {
             //String k = ibContractToSymbol(c);
             morningYtdData.put(k, new ConcurrentSkipListMap<>());
             if (!k.startsWith("sz") && !k.startsWith("sh") && !k.equals("USD")) {
-                ap.reqHistDayData(ibStockReqId.addAndGet(5),
+                TradingUtility.reqHistDayData(ap, ibStockReqId.addAndGet(5),
                         etfToUSContract(k), ETFReport::morningYtdOpen, 250, Types.BarSize._1_day);
             }
         }

@@ -71,30 +71,17 @@ public class ApiController implements EWrapper {
     private final ConcurrentHashSet<IAccountHandler> m_accountHandlers = new ConcurrentHashSet<>();
     private final ConcurrentHashSet<ILiveOrderHandler> m_liveOrderHandlers = new ConcurrentHashSet<>();
     static volatile boolean m_connected = false;
-    //data structure to store
-    //private final ArrayList<ArrayList<Double>> results = new ArrayList<ArrayList<Double>>();
-    //private final HashMap<Integer, HashMap<Double,Double>> results2 = new HashMap<Integer, HashMap<Double,Double>>();
-
-    private final HashMap<Integer, TreeMap<LocalTime, Double>> map1 = new HashMap<>(); //stock symbol and map2
-    //private final TreeMap<Double,Double> map2 = new TreeMap<>(); //time from 9:30 to 16pm
-
-    //symbol and request ID map
     private final HashMap<Integer, String> m_symReqMap = new HashMap<>();  //for intraday data
     private final HashMap<Integer, String> m_symReqMapH = new HashMap<>(); //for historical data
 
-    //private static final SimpleDateFormat FORMAT = new SimpleDateFormat( "yyyyMMdd HH:mm:ss");
     private static final SimpleDateFormat FORMAT = new SimpleDateFormat("HH:mm");
 
-    // for historical data maps
     private final HashMap<Integer, TreeMap<LocalTime, Double>> map1h = new HashMap<>(); //stock symbol and map2
     private final TreeMap<LocalTime, Double> map2h = new TreeMap<>(); //time from 9:30 to 16pm
 
-    //calendar
     private static final Calendar CAL = Calendar.getInstance();
 
-    //Handler for top market data
     private final HashMap<Integer, ITopMktDataHandler1> m_topMktDataMap1 = new HashMap<>();
-    //Handle for contract details
     private final HashMap<Integer, IInternalHandler1> m_contractDetailsMap1 = new HashMap<>();
 
     @Override
@@ -242,7 +229,6 @@ public class ApiController implements EWrapper {
     @Override
     public void nextValidId(int orderId) {
         m_orderId.set(orderId);
-        //m_reqId = m_orderId + 10000000; // let order id's not collide with other request id's
         m_reqId.set(m_orderId.getAndIncrement() + 10000000);
         if (m_connectionHandler != null) {
             m_connectionHandler.connected();
@@ -504,7 +490,6 @@ public class ApiController implements EWrapper {
     }
 
     private void internalReqContractDetails(Contract contract, IInternalHandler processor) {
-        //int reqId = m_reqId++;
         int reqId = m_reqId.getAndIncrement();
         m_contractDetailsMap.put(reqId, processor);
         m_client.reqContractDetails(reqId, contract);
@@ -608,141 +593,13 @@ public class ApiController implements EWrapper {
         }
     }
 
-    private void req1StockLive(String ticker, String exch, String curr, LiveHandler h, boolean snapshot) {
-        try {
-            int reqId = m_reqId.incrementAndGet();
-
-            if (reqId % 90 == 0) {
-                Thread.sleep(1000);
-            }
-            Contract ct = generateStockContract(ticker, exch, curr);
-            TradingUtility.globalRequestMap.put(reqId, new Request(ct, h));
-            m_client.reqMktData(reqId, ct, "236", snapshot, Collections.<TagValue>emptyList());
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    private void req1ContractLive(Contract ct, LiveHandler h) {
-        try {
-            int reqId = m_reqId.incrementAndGet();
-
-            if (reqId % 90 == 0) {
-                Thread.sleep(1000);
-            }
-            TradingUtility.globalRequestMap.put(reqId, new Request(ct, h));
-            m_client.reqMktData(reqId, ct, "", false, Collections.<TagValue>emptyList());
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public void req1ContractLive(Contract ct, LiveHandler h, boolean snapshot) {
-        try {
-            int reqId = m_reqId.incrementAndGet();
-            if (reqId % 90 == 0) {
-                Thread.sleep(1000);
-            }
-            TradingUtility.globalRequestMap.put(reqId, new Request(ct, h));
-            m_client.reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
-        } catch (InterruptedException ex) {
-            ex.printStackTrace();
-        }
-    }
-
-
-    public void getHistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
-                                    int duration) {
-
-        String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
-                .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
-
-        DurationUnit durationUnit = DurationUnit.DAY;
-        String durationStr = duration + " " + durationUnit.toString().charAt(0);
-        Types.BarSize barSize = Types.BarSize._1_min;
-        WhatToShow whatToShow = WhatToShow.TRADES;
-        boolean rthOnly = false;
-
-        TradingUtility.globalRequestMap.put(reqId, new Request(c, dc));
-
-        CompletableFuture.runAsync(() -> m_client.reqHistoricalData(reqId, c, "", durationStr,
-                barSize.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
-    }
-
-
-    //requ month open
-    public void reqHistDayData(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
-                               int duration, BarSize bs) {
-//        pr(" APIController requesting hist day data ", reqId, c.symbol());
-        //Contract ct = tickerToHKStkContract("5");
-        //int duration = 30;
-        //BarSize bs = BarSize._1_day;
-        //int reqId = 100000;
-        DurationUnit durationUnit = DurationUnit.DAY;
-        String durationStr = duration + " " + durationUnit.toString().charAt(0);
-        WhatToShow whatToShow = WhatToShow.TRADES;
-        TradingUtility.globalRequestMap.put(reqId, new Request(c, dc));
-        CompletableFuture.runAsync(() -> m_client.reqHistoricalData(reqId, c, "", durationStr,
-                bs.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
-    }
-
-
-    public void getHistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
-                                    int duration, BarSize bs) {
-        DurationUnit durationUnit = DurationUnit.DAY;
-        String durationStr = duration + " " + durationUnit.toString().charAt(0);
-        WhatToShow whatToShow = WhatToShow.TRADES;
-        TradingUtility.globalRequestMap.put(reqId, new Request(c, dc));
-        CompletableFuture.runAsync(() -> m_client.reqHistoricalData(reqId, c, "", durationStr,
-                bs.toString(), whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList()));
-    }
-
-
-    public void getSGXA50Historical2(int reqID, HistoricalHandler hh) {
-        Contract previousFut = getExpiredFutContract();
-        Contract frontFut = TradingUtility.getFrontFutContract();
-        Contract backFut = TradingUtility.getBackFutContract();
-
-        String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
-                .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
-
-        int duration = 4;
-        DurationUnit durationUnit = DurationUnit.DAY;
-        String durationStr = duration + " " + durationUnit.toString().charAt(0);
-        Types.BarSize barSize = Types.BarSize._1_min;
-        WhatToShow whatToShow = WhatToShow.TRADES;
-
-        TradingUtility.globalRequestMap.put(reqID, new Request(frontFut, hh));
-        TradingUtility.globalRequestMap.put(reqID + 1, new Request(backFut, hh));
-
-
-        CompletableFuture.runAsync(() -> {
-
-            m_client.reqHistoricalData(reqID, frontFut, "", durationStr, barSize.toString(),
-                    whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList());
-            m_client.reqHistoricalData(reqID + 1, backFut, "", durationStr, barSize.toString(),
-                    whatToShow.toString(), 0, 2, Collections.<TagValue>emptyList());
-
-            if (ChronoUnit.DAYS.between(LocalDate.parse(previousFut.lastTradeDateOrContractMonth(),
-                    DateTimeFormatter.ofPattern("yyyyMMdd")), LocalDate.now()) < 7) {
-                TradingUtility.globalRequestMap.put(reqID + 2, new Request(previousFut, hh));
-                m_client.reqHistoricalData(reqID + 2, previousFut, "", durationStr,
-                        barSize.toString(), whatToShow.toString(), 0, 2,
-                        Collections.<TagValue>emptyList());
-            }
-        });
-    }
 
     public void reqTopMktData(Contract contract, String genericTickList, boolean snapshot, ITopMktDataHandler handler) {
         int reqId = m_reqId.incrementAndGet();
         m_symReqMap.put(reqId, contract.symbol()); //potential issue
-        pr("req id is " + reqId + "contract symbol is " + contract.symbol());
         m_topMktDataMap.put(reqId, handler);
 
         m_client.reqMktData(reqId, contract, genericTickList, snapshot, Collections.<TagValue>emptyList());
-
-        pr("symbol is " + contract.symbol());
-        pr(" reqTopMktData is being requested");
 
         sendEOM();
     }
@@ -958,7 +815,6 @@ public class ApiController implements EWrapper {
     }
 
     public void reqExecutions(ExecutionFilter filter, ITradeReportHandler handler) {
-        //pr(" requesting execution ");
         m_tradeReportHandler = handler;
         m_client.reqExecutions(m_reqId.getAndIncrement(), filter);
         sendEOM();
@@ -966,9 +822,6 @@ public class ApiController implements EWrapper {
 
     @Override
     public void execDetails(int reqId, Contract contract, Execution execution) {
-        //pr(" exeDetails results out");
-
-        //pr(ChinaStockHelper.getStrCheckNull("|||", reqId,contract.symbol(), execution));
         if (m_tradeReportHandler != null) {
             int i = execution.execId().lastIndexOf('.');
             String tradeKey = execution.execId().substring(0, i);
@@ -1127,7 +980,6 @@ public class ApiController implements EWrapper {
     }
 
     public void reqLiveOrders(ILiveOrderHandler handler) {
-        //pr(" req live orders ");
         m_liveOrderHandlers.add(handler);
         m_client.reqAllOpenOrders();
         sendEOM();
@@ -1242,9 +1094,7 @@ public class ApiController implements EWrapper {
 
     // ----------------------------------------- Historical data handling ----------------------------------------
     public interface IHistoricalDataHandler {
-
         void historicalData(Bar bar, boolean hasGaps);
-
         void historicalDataEnd();
     }
 
@@ -1269,16 +1119,6 @@ public class ApiController implements EWrapper {
         sendEOM();
     }
 
-    public void reqHistoricalDataUSHK(HistoricalHandler hh, int reqId, Contract contract, String endDateTime, int duration,
-                                      DurationUnit durationUnit, BarSize barSize, WhatToShow whatToShow, boolean rthOnly) {
-
-        TradingUtility.globalRequestMap.put(reqId, new Request(contract, hh));
-
-        String durationStr = duration + " " + durationUnit.toString().charAt(0);
-        m_client.reqHistoricalData(reqId, contract, endDateTime, durationStr,
-                barSize.toString(), whatToShow.toString(), rthOnly ? 1 : 0, 2, Collections.<TagValue>emptyList());
-    }
-
     public void cancelHistoricalData(IHistoricalDataHandler handler) {
         Integer reqId = getAndRemoveKey(m_historicalDataMap, handler);
         if (reqId != null) {
@@ -1286,74 +1126,30 @@ public class ApiController implements EWrapper {
             sendEOM();
         }
     }
-    // this method returns the data by reqID. Calls handler.historicalData which fills the table
 
     @Override
     public void historicalData(int reqId, String date, double open, double high, double low,
                                double close, int volume, int count, double wap, boolean hasGaps) {
 
-        //pr(str("historical data in apicontroller/reqid / date / close ", reqId, date, close));
-
-
-        if (TradingUtility.globalRequestMap.containsKey(reqId)) {
-            Request r = TradingUtility.globalRequestMap.get(reqId);
-            String symb = utility.Utility.ibContractToSymbol(r.getContract());
-
-            if (r.getCustomFunctionNeeded()) {
-                //pr(" date open volume" + date + " " + open + " " + volume);
-                r.getDataConsumer().apply(r.getContract(), date, open, high, low, close, volume);
-            } else {
-                HistoricalHandler hh = (HistoricalHandler) r.getHandler();
-                if (!date.startsWith("finished")) {
-                    try {
-                        hh.handleHist(symb, date, open, high, low, close);
-                    } catch (Exception ex) {
-                        ex.printStackTrace();
-                    }
-                } else if (date.toUpperCase().startsWith("ERROR")) {
-                    hh.actionUponFinish(symb);
-                    throw new IllegalStateException(" error found ");
-                } else {
-                    //try this in historicalDataEnd
-                    hh.actionUponFinish(symb);
-                }
-            }
-        }
-
-
+        IBDataHandler.historicalData(reqId, date, open, high, low, close, volume, count, wap, hasGaps);
         recEOM();
     }
 
     @Override
     public void historicalDataEnd(int reqId) {
-        pr(" historical data ending for " + reqId);
-        if (TradingUtility.globalRequestMap.containsKey(reqId)) {
-            Request r = TradingUtility.globalRequestMap.get(reqId);
-            String symb = ibContractToSymbol(r.getContract());
-            if (r.getCustomFunctionNeeded()) {
-                pr(" custom handling needed ");
-            } else {
-                HistoricalHandler hh = (HistoricalHandler) r.getHandler();
-                hh.actionUponFinish(symb);
-            }
-        }
+        IBDataHandler.historicalDataEnd(reqId);
     }
 
     //----------------------------------------- Real-time bars --------------------------------------
     public interface IRealTimeBarHandler {
-
         void realtimeBar(Bar bar); // time is in seconds since epoch
     }
 
     public void reqRealTimeBars(Contract contract, WhatToShow whatToShow, boolean rthOnly, IRealTimeBarHandler handler) {
-        //int reqId = m_reqId++;
-
         int reqId = m_reqId.getAndIncrement();
         m_realTimeBarMap.put(reqId, handler);
         ArrayList<TagValue> realTimeBarsOptions = new ArrayList<>();
         m_client.reqRealTimeBars(reqId, contract, 0, whatToShow.toString(), rthOnly, realTimeBarsOptions);
-        //add
-
         sendEOM();
     }
 
@@ -1384,8 +1180,6 @@ public class ApiController implements EWrapper {
     }
 
     public void reqFundamentals(Contract contract, FundamentalType reportType, IFundamentalsHandler handler) {
-        //int reqId = m_reqId++;
-
         int reqId = m_reqId.getAndIncrement();
         m_fundMap.put(reqId, handler);
         m_client.reqFundamentalData(reqId, contract, reportType.getApiString());
@@ -1399,14 +1193,11 @@ public class ApiController implements EWrapper {
             handler.fundamentals(data);
         }
         recEOM();
-
     }
 
     // ---------------------------------------- Time handling ----------------------------------------
     public interface ITimeHandler {
-
         void currentTime(long time);
-
     }
 
     public void reqCurrentTime(ITimeHandler handler) {
@@ -1419,12 +1210,8 @@ public class ApiController implements EWrapper {
     public void currentTime(long time) {
         Date d = new Date(time * 1000);
         LocalTime t = LocalDateTime.ofInstant(d.toInstant(), ZoneId.systemDefault()).toLocalTime();
-        //pr(" time is " + (new Date(time * 1000)));
         ChinaMain.updateTWSTime("TWS: " + Utility.timeToString(t));
-        //ChinaMain.updateTWSTime(new Date(time * 1000).toString());
-        //m_timeHandler.currentTime(time);
         recEOM();
-
     }
 
     // ---------------------------------------- Bulletins handling ----------------------------------------
@@ -1505,7 +1292,6 @@ public class ApiController implements EWrapper {
     @Override
     public void securityDefinitionOptionalParameter(int reqId, String exchange, int underlyingConId, String tradingClass,
                                                     String multiplier, Set<String> expirations, Set<Double> strikes) {
-
     }
 
     @Override
@@ -1514,8 +1300,5 @@ public class ApiController implements EWrapper {
 
     @Override
     public void softDollarTiers(int reqId, SoftDollarTier[] tiers) {
-
     }
-
-
 }

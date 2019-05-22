@@ -8,6 +8,7 @@ import controller.ApiController;
 import graph.GraphBarGen;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
+import utility.TradingUtility;
 
 import javax.swing.*;
 import java.awt.*;
@@ -42,7 +43,7 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
         JButton getLiveButton = new JButton("Live");
         getLiveButton.addActionListener(l -> {
             pr(" requesting vix live ");
-            ap.req1ContractLive(getVixContract(), this, false);
+            TradingUtility.req1ContractLive(ap,getVixContract(), this, false);
         });
 
         JButton getHistButton = new JButton(" Hist ");

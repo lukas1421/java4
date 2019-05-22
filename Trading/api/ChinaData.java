@@ -40,6 +40,7 @@ import static api.ChinaStockHelper.fixYtdSuspendedStocks;
 import static enums.Currency.CNY;
 import static enums.Currency.HKD;
 import static java.util.Optional.ofNullable;
+import static utility.TradingUtility.getHistoricalCustom;
 import static utility.Utility.*;
 
 public final class ChinaData extends JPanel {
@@ -376,17 +377,17 @@ public final class ChinaData extends JPanel {
 //        }));
 
         getSGXA50TodayButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
-            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+            getHistoricalCustom(controller(), GLOBAL_REQ_ID.addAndGet(5),
                     TradingUtility.getFrontFutContract(), ChinaData::handleSGXDataToday, 2);
-            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+            getHistoricalCustom(controller(), GLOBAL_REQ_ID.addAndGet(5),
                     TradingUtility.getBackFutContract(), ChinaData::handleSGXDataToday, 2);
         }));
 
         getSGXA50DetailedButton.addActionListener(l -> CompletableFuture.runAsync(() -> {
             pr(" getting detailed wtd XU ");
-            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+            TradingUtility.getHistoricalCustom(controller(),GLOBAL_REQ_ID.addAndGet(5),
                     TradingUtility.getFrontFutContract(), ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
-            controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+            TradingUtility.getHistoricalCustom(controller(),GLOBAL_REQ_ID.addAndGet(5),
                     TradingUtility.getBackFutContract(), ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
         }));
 
@@ -395,7 +396,7 @@ public final class ChinaData extends JPanel {
             priceMapBarDetail.keySet().forEach(k -> {
                 if (currencyMap.getOrDefault(k, CNY).equals(HKD)) {
                     Contract c = symbolToIBContract(k);
-                    controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), c
+                    TradingUtility.getHistoricalCustom(controller(),GLOBAL_REQ_ID.addAndGet(5), c
                             , ChinaData::handleWtdDetailed, 7, Types.BarSize._1_min);
                 }
             });
@@ -408,7 +409,7 @@ public final class ChinaData extends JPanel {
         getYtdButton.addActionListener(l -> {
             priceMapBarDetail.keySet().forEach(k -> {
                 if (!k.startsWith("sz") && !k.startsWith("sh"))
-                    controller().reqHistDayData(GLOBAL_REQ_ID.addAndGet(5),
+                    TradingUtility.reqHistDayData(controller(), GLOBAL_REQ_ID.addAndGet(5),
                             symbolToIBContract(k), ChinaData::handleYtdOpen, 365, Types.BarSize._1_day);
             });
 

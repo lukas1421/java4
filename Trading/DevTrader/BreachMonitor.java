@@ -172,9 +172,8 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
             CompletableFuture.runAsync(() -> {
                 try {
                     semaphore.acquire();
-                    brMonController.reqHistDayData(ibStockReqId.incrementAndGet(),
+                    TradingUtility.reqHistDayData(brMonController, ibStockReqId.incrementAndGet(),
                             histCompatibleCt(c), BreachMonitor::ytdOpen, getCalendarYtdDays(), Types.BarSize._1_day);
-//                    pr("position end hist ", k, ibStockReqId.get());
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

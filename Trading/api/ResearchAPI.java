@@ -7,6 +7,7 @@ import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
 import handler.DefaultConnectionHandler;
+import utility.TradingUtility;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -97,7 +98,7 @@ public class ResearchAPI {
                     e.printStackTrace();
                 }
             }
-            ap.reqHistDayData(hkReqId.incrementAndGet()
+            TradingUtility.reqHistDayData(ap, hkReqId.incrementAndGet()
                     , hkCt, ResearchAPI::handleHist, 365, Types.BarSize._1_week);
         });
 

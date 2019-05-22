@@ -10,6 +10,7 @@ import graph.GraphBarGen;
 import handler.DefaultConnectionHandler;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
+import utility.TradingUtility;
 
 import javax.swing.*;
 import java.awt.*;
@@ -225,7 +226,7 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
         pr(" format time " + formatTime);
 
         pr(" requesting live contract for CNHKKD ");
-        ap.req1ContractLive(c, this, false);
+        TradingUtility.req1ContractLive(ap,c, this, false);
     }
 
     private void getFXLast(ApiController ap) {

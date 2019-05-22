@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static AutoTraderOld.AutoTraderMain.globalIdOrderMap;
 import static AutoTraderOld.AutoTraderXU.*;
 import static AutoTraderOld.XuTraderHelper.*;
+import static api.ControllerCalls.placeOrModifyOrderCheck;
 import static client.OrderStatus.*;
 import static utility.Utility.*;
 
@@ -78,7 +79,7 @@ public class GuaranteeXUHandler implements ApiController.IOrderHandler {
                 o.tif(Types.TimeInForce.IOC);
 
                 int id = AutoTraderMain.autoTradeID.incrementAndGet();
-                controller.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(primaryID, id, controller));
+                placeOrModifyOrderCheck(controller,activeFutCt, o, new GuaranteeXUHandler(primaryID, id, controller));
                 globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, LocalDateTime.now(), o,
                         globalIdOrderMap.get(defaultID).getOrderType(), false));
 

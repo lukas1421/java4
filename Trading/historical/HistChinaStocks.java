@@ -43,9 +43,11 @@ import java.util.stream.Stream;
 import static api.ChinaData.priceMapBar;
 import static api.ChinaData.wtdSharpe;
 import static api.ChinaMain.GLOBAL_REQ_ID;
+import static api.ChinaMain.controller;
 import static api.ChinaPosition.tradesMap;
 import static api.ChinaStock.currencyMap;
 import static enums.Currency.CNY;
+import static utility.TradingUtility.getHistoricalCustom;
 import static utility.Utility.*;
 
 @SuppressWarnings("SpellCheckingInspection")
@@ -558,11 +560,11 @@ public class HistChinaStocks extends JPanel {
 
         sgxDataButton.addActionListener(l ->
                 CompletableFuture.runAsync(() -> {
-                            ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+                            getHistoricalCustom(controller(), GLOBAL_REQ_ID.addAndGet(5),
                                     getExpiredFutContract(), HistChinaStocks::handleIBWtdData, 7);
-                            ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+                            getHistoricalCustom(controller(), GLOBAL_REQ_ID.addAndGet(5),
                                     TradingUtility.getFrontFutContract(), HistChinaStocks::handleIBWtdData, 7);
-                            ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+                            getHistoricalCustom(controller(), GLOBAL_REQ_ID.addAndGet(5),
                                     TradingUtility.getBackFutContract(), HistChinaStocks::handleIBWtdData, 7);
                         }
                 ));
@@ -618,16 +620,16 @@ public class HistChinaStocks extends JPanel {
                 });
             });
             CompletableFuture.runAsync(() -> {
-                ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), getExpiredFutContract()
+                getHistoricalCustom(controller(), GLOBAL_REQ_ID.addAndGet(5), getExpiredFutContract()
                         , HistChinaStocks::handleIBWtdData, 7);
-                ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), TradingUtility.getFrontFutContract()
+                getHistoricalCustom(controller(), GLOBAL_REQ_ID.addAndGet(5), TradingUtility.getFrontFutContract()
                         , HistChinaStocks::handleIBWtdData, 7);
-                ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5), TradingUtility.getBackFutContract(),
+                getHistoricalCustom(controller(), GLOBAL_REQ_ID.addAndGet(5), TradingUtility.getBackFutContract(),
                         HistChinaStocks::handleIBWtdData, 7);
                 stockList.forEach(s -> {
                     if (s.startsWith("hk")) {
                         pr("requesting hk ", s.substring(2));
-                        ChinaMain.controller().getHistoricalCustom(GLOBAL_REQ_ID.addAndGet(5),
+                        getHistoricalCustom(controller(), GLOBAL_REQ_ID.addAndGet(5),
                                 AutoTraderMain.tickerToHKStkContract(s.substring(2)),
                                 HistChinaStocks::handleIBWtdData, 7);
                     }
@@ -848,7 +850,7 @@ public class HistChinaStocks extends JPanel {
 
     private static void getSGXPosition() {
         System.out.println(" getting sgx position ");
-        ChinaMain.controller().reqPositions(new SGXPositionHandler());
+        controller().reqPositions(new SGXPositionHandler());
     }
 
     private static void getSGXTrades() {
@@ -856,7 +858,7 @@ public class HistChinaStocks extends JPanel {
         chinaTradeMap.put("SGXA50PR", new ConcurrentSkipListMap<>());
         chinaTradeMap.put("SGXA50", new ConcurrentSkipListMap<>());
         chinaTradeMap.put("SGXA50BM", new ConcurrentSkipListMap<>());
-        ChinaMain.controller().reqExecutions(new ExecutionFilter(), new IBTradesHandler());
+        controller().reqExecutions(new ExecutionFilter(), new IBTradesHandler());
     }
 
 

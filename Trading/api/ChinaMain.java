@@ -1,7 +1,6 @@
 package api;
 
 import AutoTraderOld.AutoTraderXU;
-import auxiliary.Analysis;
 import auxiliary.Dividends;
 import client.ExecutionFilter;
 import client.Types.NewsType;
@@ -100,11 +99,6 @@ public final class ChinaMain implements IConnectionHandler {
     //private static AutoTraderMain autoMain = new AutoTraderMain();
     private static AutoTraderXU xutrader = new AutoTraderXU(M_CONTROLLER);
 
-    //private static HKStock hkstock = new HKStock();
-    //private static AutoTraderHK hkTrader = new AutoTraderHK();
-    //private static AutoTraderUS usTrader = new AutoTraderUS();
-    //private static USStock usstock = new USStock(M_CONTROLLER);
-
     private SinaStock sinastock1 = SinaStock.getInstance();
     private final ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
 
@@ -189,8 +183,8 @@ public final class ChinaMain implements IConnectionHandler {
             }
         };
 
-        JButton runAnalysis = new JButton("Run Analysis");
-        runAnalysis.addActionListener((ae) -> Analysis.compute(LiveData.map1));
+        //JButton runAnalysis = new JButton("Run Analysis");
+        //runAnalysis.addActionListener((ae) -> Analysis.compute(LiveData.map1));
 
         //JButton startPool = new JButton("start Analysis");
         JButton startPool2 = new JButton("start Backtesting");

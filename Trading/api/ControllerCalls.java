@@ -122,12 +122,7 @@ public class ControllerCalls {
     public static void reqHistoricalDataSimple(ApiController ap, int reqId, HistoricalHandler hh, Contract contract, String endDateTime, int duration,
                                                Types.DurationUnit durationUnit, Types.BarSize barSize, Types.WhatToShow whatToShow, boolean rthOnly) {
 
-        //pr(" getting historical data simple ");
-        //pr(" contract " + contract);
-        //pr(str("stock reqid ", contract.symbol(), reqId));
         TradingUtility.globalRequestMap.put(reqId, new Request(contract, hh));
-
-        //pr(" req id is" + reqId);
         String durationStr = duration + " " + durationUnit.toString().charAt(0);
         ap.client().reqHistoricalData(reqId, contract, endDateTime, durationStr,
                 barSize.toString(), whatToShow.toString(), rthOnly ? 1 : 0, 2, Collections.<TagValue>emptyList());

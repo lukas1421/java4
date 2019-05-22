@@ -10,6 +10,7 @@ import controller.ApiController;
 import handler.DefaultConnectionHandler;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
+import utility.TradingUtility;
 import utility.Utility;
 
 import java.io.*;
@@ -604,9 +605,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
         String formatTime = lt.format(dtf);
 
         pr(" requesting a50 index");
-        ap.req1ContractLive(c, this, true);
-//        ap.reqHistDayData(ibStockReqId.addAndGet(5),
-//                histCompatibleCt(c), MorningTask::a50Handler, 5, Types.BarSize._1_day);
+        TradingUtility.req1ContractLive(ap, c, this, true);
 
     }
 
@@ -900,7 +899,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
                     }
                 }
 
-                staticController.reqHistDayData(ibStockReqId.addAndGet(5),
+                TradingUtility.reqHistDayData(staticController, ibStockReqId.addAndGet(5),
                         fillContract(c), MorningTask::breachPriceHandler, 5, Types.BarSize._1_day);
                 counter.incrementAndGet();
             }

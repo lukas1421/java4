@@ -1,7 +1,6 @@
 package DevTrader;
 
 import AutoTraderOld.XuTraderHelper;
-import api.ControllerCalls;
 import enums.Currency;
 import api.TradingConstants;
 import auxiliary.SimpleBar;
@@ -260,7 +259,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
             CompletableFuture.runAsync(() -> {
                 try {
                     histSemaphore.acquire();
-                    apDev.reqHistDayData(ibStockReqId.addAndGet(5),
+                    reqHistDayData(apDev, ibStockReqId.addAndGet(5),
                             histCompatibleCt(c), BreachTrader::ytdOpen,
                             getCalendarYtdDays() + 10, Types.BarSize._1_day);
                 } catch (InterruptedException e) {
@@ -270,7 +269,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
             es.schedule(() -> {
                 pr("Position end: requesting live for fut:", symb);
-                apDev.req1ContractLive(liveCompatibleCt(c), this, false);
+                req1ContractLive(apDev, liveCompatibleCt(c), this, false);
             }, 10L, TimeUnit.SECONDS);
         });
 
@@ -283,7 +282,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 CompletableFuture.runAsync(() -> {
                     try {
                         histSemaphore.acquire();
-                        apDev.reqHistDayData(ibStockReqId.addAndGet(5),
+                        reqHistDayData(apDev, ibStockReqId.addAndGet(5),
                                 histCompatibleCt(c), BreachTrader::ytdOpen,
                                 getCalendarYtdDays() + 10, Types.BarSize._1_day);
                     } catch (InterruptedException e) {
@@ -293,7 +292,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
             }
             es.schedule(() -> {
                 pr("Position end: requesting live for nonFut:", symb);
-                apDev.req1ContractLive(liveCompatibleCt(c), this, false);
+                req1ContractLive(apDev, liveCompatibleCt(c), this, false);
             }, 10L, TimeUnit.SECONDS);
         });
     }
@@ -376,7 +375,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 Order o = placeBidLimitTIF(bidPrice, defaultS, DAY);
                 if (checkDeltaImpact(ct, o)) {
                     devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                    placeOrModifyOrderCheck(apDev,ct, o, new PatientDevHandler(id));
+                    placeOrModifyOrderCheck(apDev, ct, o, new PatientDevHandler(id));
                     outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER BUY:",
                             devOrderMap.get(id), "yOpen:" + yOpen, "mOpen:" + mOpen,
@@ -399,7 +398,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 if (checkDeltaImpact(ct, o)) {
                     devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                    placeOrModifyOrderCheck(apDev,ct, o, new PatientDevHandler(id));
+                    placeOrModifyOrderCheck(apDev, ct, o, new PatientDevHandler(id));
                     outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER SELL:",
                             devOrderMap.get(id), "yOpen:" + yOpen, "mOpen:" + mOpen,
@@ -430,7 +429,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
             }
 
             devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-            placeOrModifyOrderCheck(apDev,ct, o, new GuaranteeDevHandler(id, apDev));
+            placeOrModifyOrderCheck(apDev, ct, o, new GuaranteeDevHandler(id, apDev));
             outputToSymbolFile(symbol, str("********", t), devOutput);
             outputToSymbolFile(symbol, str(o.orderId(), id, "hedger removal" + (pos > 0 ? "sell" : "buy"),
                     devOrderMap.get(id), "pos", pos, "mOpen:" + mOpen, "price", price), devOutput);
@@ -447,7 +446,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 Order o = placeOfferLimitTIF(offerPrice, size, DAY);
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                placeOrModifyOrderCheck(apDev,ct, o, new PatientDevHandler(id));
+                placeOrModifyOrderCheck(apDev, ct, o, new PatientDevHandler(id));
 
                 outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                 outputToSymbolFile(symbol, str(o.orderId(), id, "Hedger SELL:",
@@ -464,7 +463,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                         Math.min(5, Math.floor((-totalDelta / fx.get(Currency.USD)) / (multi.get("MNQ") * price)));
                 Order o = placeBidLimitTIF(bidPrice, size, DAY);
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                placeOrModifyOrderCheck(apDev,ct, o, new PatientDevHandler(id));
+                placeOrModifyOrderCheck(apDev, ct, o, new PatientDevHandler(id));
                 outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                 outputToSymbolFile(symbol, str(o.orderId(), id, "Hedger BUY:",
                         devOrderMap.get(id), "mOpen:" + mOpen,
@@ -523,7 +522,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 Order o = placeBidLimitTIF(bidPrice, Math.abs(pos), IOC);
 
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                placeOrModifyOrderCheck(apDev,ct, o, new GuaranteeDevHandler(id, apDev));
+                placeOrModifyOrderCheck(apDev, ct, o, new GuaranteeDevHandler(id, apDev));
                 outputToSymbolFile(symbol, str("********", t), devOutput);
                 outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter BUY:",
                         "added?" + added, devOrderMap.get(id), "pos", pos, "yOpen:" + yOpen, "mOpen:" + mOpen,
@@ -543,7 +542,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
 
-                placeOrModifyOrderCheck(apDev,ct, o, new GuaranteeDevHandler(id, apDev));
+                placeOrModifyOrderCheck(apDev, ct, o, new GuaranteeDevHandler(id, apDev));
 
                 outputToSymbolFile(symbol, str("********", t), devOutput);
                 outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter SELL:",
@@ -629,9 +628,9 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                     }
 
                     if (symbol.equalsIgnoreCase("MNQ")) {
-//                        pr("MNQ ", price, t, "ystart", yStart, "mstart", mStart,
-//                                r10000(price / mStart - 1) * 100d + "%",
-//                                "pos", symbolPosMap.getOrDefault("MNQ", 0.0));
+                        pr("MNQ ", price, t, "ystart", yStart, "mstart", mStart,
+                                r10000(price / mStart - 1) * 100d + "%",
+                                "pos", symbolPosMap.getOrDefault("MNQ", 0.0));
                         overnightHedger(ct, price, t, mStart);
                     }
                 }

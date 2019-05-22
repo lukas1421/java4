@@ -1,7 +1,6 @@
 package graph;
 
 import api.ChinaPosition;
-import api.HKStock;
 import api.XU;
 import auxiliary.SimpleBar;
 import utility.Utility;
@@ -154,19 +153,6 @@ public final class GraphBar extends JComponent implements GraphFillable, MouseMo
                 this.setNavigableMap(new ConcurrentSkipListMap<>());
             }
         }
-    }
-
-    public void fillInGraphHK(String symb) {
-        //System.out.println(" filling HK " + symbol);
-        this.symbol = symb;
-        setName(symb);
-        setChineseName(HKStock.hkNameMap.getOrDefault(symb, ""));
-
-//        if (HKStock.hkData.containsKey(symbol) && HKStock.hkData.get(symbol).size() > 0) {
-//            this.setNavigableMap(HKStock.hkData.get(symbol));
-//        } else {
-//            this.setNavigableMap(new ConcurrentSkipListMap<>());
-//        }
     }
 
     @Override

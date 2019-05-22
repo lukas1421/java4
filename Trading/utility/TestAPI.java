@@ -163,7 +163,7 @@ public class TestAPI {
 //        Contract ct = getUSStockContract("MRK");
         Contract ct = getMYM();
 
-        ap.reqHistDayData(10002,
+        TradingUtility.reqHistDayData(ap, 10002,
                 ct, (contract, date, open, high, low, close, vol) -> {
                     if (!date.startsWith("finished")) {
 //                        pr(date, open, high, low, close);

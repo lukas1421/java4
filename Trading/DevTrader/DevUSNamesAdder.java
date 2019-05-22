@@ -7,6 +7,7 @@ import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
 import handler.DefaultConnectionHandler;
+import utility.TradingUtility;
 import utility.Utility;
 
 import java.io.*;
@@ -119,7 +120,7 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
             CompletableFuture.runAsync(() -> {
                 try {
                     semaphore.acquire();
-                    staticController.reqHistDayData(ibStockReqId.addAndGet(5),
+                    TradingUtility.reqHistDayData(staticController, ibStockReqId.addAndGet(5),
                             c, DevUSNamesAdder::breachPriceHandler, 5, Types.BarSize._1_day);
                     pr("dev us names ", ibContractToSymbol(c), ibStockReqId.get());
                 } catch (InterruptedException e) {
