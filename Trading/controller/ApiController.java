@@ -70,19 +70,11 @@ public class ApiController implements EWrapper {
     private final ConcurrentHashSet<IPositionHandler> m_positionHandlers = new ConcurrentHashSet<>();
     private final ConcurrentHashSet<IAccountHandler> m_accountHandlers = new ConcurrentHashSet<>();
     private final ConcurrentHashSet<ILiveOrderHandler> m_liveOrderHandlers = new ConcurrentHashSet<>();
-    static volatile boolean m_connected = false;
+    private static volatile boolean m_connected = false;
     private final HashMap<Integer, String> m_symReqMap = new HashMap<>();  //for intraday data
     private final HashMap<Integer, String> m_symReqMapH = new HashMap<>(); //for historical data
 
-    private static final SimpleDateFormat FORMAT = new SimpleDateFormat("HH:mm");
-
-    private final HashMap<Integer, TreeMap<LocalTime, Double>> map1h = new HashMap<>(); //stock symbol and map2
-    private final TreeMap<LocalTime, Double> map2h = new TreeMap<>(); //time from 9:30 to 16pm
-
-    private static final Calendar CAL = Calendar.getInstance();
-
     private final HashMap<Integer, ITopMktDataHandler1> m_topMktDataMap1 = new HashMap<>();
-    private final HashMap<Integer, IInternalHandler1> m_contractDetailsMap1 = new HashMap<>();
 
     @Override
     public void connectAck() {
@@ -236,12 +228,8 @@ public class ApiController implements EWrapper {
         recEOM();
     }
 
-    public static int getNextId() {
-        return m_reqId.incrementAndGet();
-    }
-
-    public static int addGetNextId(int i) {
-        return m_reqId.addAndGet(i);
+    public static AtomicInteger getCurrID() {
+        return m_reqId;
     }
 
     @Override
@@ -499,12 +487,9 @@ public class ApiController implements EWrapper {
     @Override
     public void contractDetails(int reqId, ContractDetails contractDetails) {
         IInternalHandler handler = m_contractDetailsMap.get(reqId);
-        IInternalHandler1 handler1 = m_contractDetailsMap1.get(reqId);
 
         if (handler != null) {
             handler.contractDetails(contractDetails);
-        } else if (handler1 != null) {
-            handler1.contractDetails(contractDetails);
         } else {
             show("Error: no contract details handler for reqId " + reqId);
         }
@@ -613,7 +598,6 @@ public class ApiController implements EWrapper {
     }
 
     public void reqEfpMktData(Contract contract, String genericTickList, boolean snapshot, IEfpHandler handler) {
-        //int reqId = m_reqId++;
         int reqId = m_reqId.getAndIncrement();
         m_topMktDataMap.put(reqId, handler);
         m_efpMap.put(reqId, handler);
@@ -656,22 +640,12 @@ public class ApiController implements EWrapper {
     @Override
     public void tickSize(int reqId, int tickType, int size) {
         ITopMktDataHandler handler = m_topMktDataMap.get(reqId);
-        ITopMktDataHandler1 handler1;
-        int symb;
 
         IBDataHandler.tickSize(reqId, tickType, size);
 
         if (handler != null) {
             handler.tickSize(TickType.get(tickType), size);
         }
-
-        handler1 = m_topMktDataMap1.getOrDefault(reqId, null);
-
-        if (handler1 != null) {
-            symb = Integer.parseInt(m_symReqMap.get(reqId));
-            handler1.tickSize(symb, TickType.get(tickType), size);
-        }
-
         recEOM();
     }
 
@@ -769,17 +743,13 @@ public class ApiController implements EWrapper {
     // ---------------------------------------- Option computations ----------------------------------------
     public void reqOptionVolatility(Contract c, double optPrice, double underPrice, IOptHandler handler) {
         int reqId = m_reqId.getAndIncrement();
-        //int reqId = m_reqId++;
         m_optionCompMap.put(reqId, handler);
         m_client.calculateImpliedVolatility(reqId, c, optPrice, underPrice);
         sendEOM();
     }
 
     public void reqOptionComputation(Contract c, double vol, double underPrice, IOptHandler handler) {
-
         int reqId = m_reqId.getAndIncrement();
-
-        //int reqId = m_reqId++;
         m_optionCompMap.put(reqId, handler);
         m_client.calculateOptionPrice(reqId, c, vol, underPrice);
         sendEOM();
@@ -920,13 +890,6 @@ public class ApiController implements EWrapper {
     }
 
     public void placeOrModifyOrder(Contract ct, final Order o, final IOrderHandler handler) {
-
-        if (o.totalQuantity() == 0.0 || o.lmtPrice() == 0.0) {
-            outputToAll(str(" quantity/price problem ", ct.symbol(), o.action(),
-                    o.lmtPrice(), o.totalQuantity()));
-            //throw new IllegalStateException(" quantity/price is 0 ");
-            return;
-        }
 
         if (o.orderId() == 0) {
             o.orderId(m_orderId.incrementAndGet());
@@ -1095,6 +1058,7 @@ public class ApiController implements EWrapper {
     // ----------------------------------------- Historical data handling ----------------------------------------
     public interface IHistoricalDataHandler {
         void historicalData(Bar bar, boolean hasGaps);
+
         void historicalDataEnd();
     }
 

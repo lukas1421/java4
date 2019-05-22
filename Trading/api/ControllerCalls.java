@@ -26,7 +26,7 @@ public class ControllerCalls {
     public static void req1ContractHistory(ApiController ap, Contract ct, Types.BarSize b, HistoricalHandler h) {
         pr(" requesting stock hist ", ct.symbol());
         CompletableFuture.runAsync(() -> {
-            int reqId = ApiController.getNextId();
+            int reqId = getNextId();
             TradingUtility.globalRequestMap.put(reqId, new Request(ct, h));
             String formatTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
             String durationStr = 2 + " " + Types.DurationUnit.DAY.toString().charAt(0);
@@ -40,7 +40,7 @@ public class ControllerCalls {
     public static void req1StockHistToday(ApiController ap, String stock, String exch, String curr, HistoricalHandler h) {
         pr(" requesting stock hist ", stock, exch, curr);
         CompletableFuture.runAsync(() -> {
-            int reqId = ApiController.getNextId();
+            int reqId = getNextId();
             Contract ct = Utility.generateStockContract(stock, exch, curr);
             TradingUtility.globalRequestMap.put(reqId, new Request(ct, h));
             String formatTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
@@ -91,9 +91,9 @@ public class ControllerCalls {
         Contract frontCt = TradingUtility.getFrontFutContract();
         Contract backCt = TradingUtility.getBackFutContract();
 
-        ApiController.getNextId();
-        int reqIdFront = ApiController.getNextId();
-        int reqIdBack = ApiController.getNextId();
+        getNextId();
+        int reqIdFront = getNextId();
+        int reqIdBack = getNextId();
         //m_reqId.
 
         if (!TradingUtility.globalRequestMap.containsKey(reqIdFront) && !TradingUtility.globalRequestMap.containsKey(reqIdBack)) {
@@ -106,9 +106,9 @@ public class ControllerCalls {
                 pr(" reqXUDataArray but not connected ");
             }
         } else {
-            ApiController.addGetNextId(10000);
-            reqIdFront = ApiController.getNextId();
-            reqIdBack = ApiController.getNextId();
+            addGetNextId(10000);
+            reqIdFront = getNextId();
+            reqIdBack = getNextId();
             if (ap.client().isConnected()) {
                 ap.client().reqMktData(reqIdFront, frontCt, "", false, Collections.<TagValue>emptyList());
                 ap.client().reqMktData(reqIdBack, backCt, "", false, Collections.<TagValue>emptyList());
@@ -135,5 +135,13 @@ public class ControllerCalls {
             return;
         }
         ap.placeOrModifyOrder(ct, o, handler);
+    }
+
+    public static int getNextId() {
+        return ApiController.getCurrID().incrementAndGet();
+    }
+
+    public static int addGetNextId(int i) {
+        return ApiController.getCurrID().addAndGet(i);
     }
 }
