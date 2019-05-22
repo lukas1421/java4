@@ -4,7 +4,9 @@ import TradeType.TradeBlock;
 import api.*;
 import auxiliary.SimpleBar;
 import client.Contract;
+import client.Order;
 import client.Types;
+import enums.Currency;
 import enums.FutType;
 import graph.GraphIndustry;
 import org.hibernate.Hibernate;
@@ -1063,6 +1065,27 @@ public class Utility {
             currDay = currDay.plusDays(1);
         }
         return currDay.plusDays(14);
+    }
+
+    public static Contract generateStockContract(String ticker, String ex, String curr) {
+        Contract ct = new Contract();
+        ct.symbol(ticker);
+        ct.exchange(ex);
+        ct.currency(curr);
+        if (ticker.equals("ASHR") || ticker.equals("MSFT") || ticker.equals("CSCO")) {
+            pr("setting primary exchange", ticker);
+            ct.primaryExch("ARCA");
+        }
+        ct.secType(Types.SecType.STK);
+        return ct;
+    }
+
+    private static double getDeltaImpactCny(Contract ct, Order o) {
+        String curr = ct.currency();
+        double totalQ = o.totalQuantity();
+        double lmtPrice = o.lmtPrice();
+        double xxxCny = ChinaPosition.fxMap.getOrDefault(Currency.get(curr), 1.0);
+        return xxxCny * lmtPrice * totalQ;
     }
 
     //    public static void outputDetailedUS(String symbol, String msg) {

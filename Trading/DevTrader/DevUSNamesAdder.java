@@ -6,6 +6,7 @@ import client.Contract;
 import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
+import handler.DefaultConnectionHandler;
 import utility.Utility;
 
 import java.io.*;
@@ -56,7 +57,7 @@ public class DevUSNamesAdder implements ApiController.IPositionHandler {
     }
 
     private void getFromIB() {
-        ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
+        ApiController ap = new ApiController(new DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
         staticController = ap;
         CountDownLatch l = new CountDownLatch(1);

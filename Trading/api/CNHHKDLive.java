@@ -7,6 +7,7 @@ import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
 import graph.GraphBarGen;
+import handler.DefaultConnectionHandler;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
 
@@ -235,7 +236,7 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
 
         Contract c = getCNHHKDContract();
 
-        ap.reqHistoricalDataSimple(2, this, c, formatTime, 7, Types.DurationUnit.DAY,
+        ControllerCalls.reqHistoricalDataSimple(ap,2, this, c, formatTime, 7, Types.DurationUnit.DAY,
                 Types.BarSize._1_hour, Types.WhatToShow.MIDPOINT, false);
     }
 
@@ -249,7 +250,7 @@ public class CNHHKDLive extends JComponent implements LiveHandler, HistoricalHan
     }
 
     private void getFromIB() {
-        ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
+        ApiController ap = new ApiController(new DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
 
         CountDownLatch l = new CountDownLatch(1);

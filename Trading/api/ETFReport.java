@@ -5,7 +5,8 @@ import client.Contract;
 import client.Types;
 import controller.ApiConnection.ILogger.DefaultLogger;
 import controller.ApiController;
-import controller.ApiController.IConnectionHandler.DefaultConnectionHandler;
+import handler.DefaultConnectionHandler;
+import handler.DefaultConnectionHandler;
 
 import java.io.*;
 import java.time.LocalDate;

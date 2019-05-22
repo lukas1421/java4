@@ -7,6 +7,7 @@ import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
 import graph.GraphBarTemporal;
+import handler.DefaultConnectionHandler;
 import utility.SharpeUtility;
 import utility.Utility;
 
@@ -53,7 +54,7 @@ public class HistUSStocks extends JPanel {
             getMondayOfWeek(LocalDateTime.now()), LocalDate.now()) + 2;
 
     private static ApiController apcon = new ApiController(
-            new ApiController.IConnectionHandler.DefaultConnectionHandler(),
+            new DefaultConnectionHandler(),
             new ApiConnection.ILogger.DefaultLogger(),
             new ApiConnection.ILogger.DefaultLogger());
 

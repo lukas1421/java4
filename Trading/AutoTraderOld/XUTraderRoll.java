@@ -8,6 +8,7 @@ import utility.TradingUtility;
 
 import javax.swing.*;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.concurrent.CountDownLatch;
@@ -59,8 +60,8 @@ public class XUTraderRoll extends JPanel {
     }
 
     static void getContractDetails() {
-        apcon.reqContractDetails(frontContract, new ApiController.IContractDetailsHandler.DefaultContractDetailsHandler());
-        apcon.reqContractDetails(backContract, new ApiController.IContractDetailsHandler.DefaultContractDetailsHandler());
+        apcon.reqContractDetails(frontContract, new DefaultContractDetailsHandler());
+        apcon.reqContractDetails(backContract, new DefaultContractDetailsHandler());
     }
 
     void shortRoll(double p) {
@@ -86,4 +87,29 @@ public class XUTraderRoll extends JPanel {
     }
 
 
+    public static class DefaultContractDetailsHandler implements ApiController.IContractDetailsHandler {
+        @Override
+        public void contractDetails(ArrayList<ContractDetails> list) {
+            for (ContractDetails cd : list) {
+                Contract ct = cd.contract();
+                pr("In Default Details Handler: "
+                        , cd.contract().symbol(), cd.contract().getSecType(), cd.contract().lastTradeDateOrContractMonth()
+                        , cd.contract().exchange(), cd.contract().conid());
+                if (ct.symbol().equalsIgnoreCase("XINA50")) {
+                    if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_FRONT_EXPIRY)) {
+                        contractID.put(FutType.FrontFut, ct.conid());
+                        latch.countDown();
+                        pr(" latch counting down ", latch.getCount(), LocalTime.now());
+                    } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_BACK_EXPIRY)) {
+                        contractID.put(FutType.BackFut, ct.conid());
+                        latch.countDown();
+                        pr(" latch counting down ", latch.getCount(), LocalTime.now());
+                    } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_LAST_EXPIRY)) {
+                        contractID.put(FutType.PreviousFut, ct.conid());
+                    }
+                }
+            }
+            pr("xu id map is ", contractID);
+        }
+    }
 }

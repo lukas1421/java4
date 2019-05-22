@@ -21,6 +21,7 @@ import java.util.NavigableMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import static api.ControllerCalls.req1ContractHistory;
 import static utility.Utility.*;
 
 public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
@@ -47,7 +48,7 @@ public class USStock extends JPanel implements LiveHandler, HistoricalHandler {
         JButton getHistButton = new JButton(" Hist ");
         getHistButton.addActionListener(l -> {
             pr(" requesting hist ");
-            ap.req1ContractHistory(getVixContract(), barsize, this);
+            req1ContractHistory(ap, getVixContract(), barsize, this);
         });
 
         JScrollPane scroll = new JScrollPane(g) {

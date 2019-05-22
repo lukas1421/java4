@@ -7,6 +7,7 @@ import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
 import graph.GraphBarTemporal;
+import handler.DefaultConnectionHandler;
 import handler.HistoricalHandler;
 import utility.SharpeUtility;
 import utility.Utility;
@@ -55,7 +56,7 @@ public class HistHKStocks extends JPanel {
     private final static File hkTestOutput = new File(TradingConstants.GLOBALPATH + "hkTestData.txt");
 
     //ScheduledExecutorService es = Executors.newSingleThreadScheduledExecutor();
-    private static ApiController apcon = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
+    private static ApiController apcon = new ApiController(new DefaultConnectionHandler(),
             new ApiConnection.ILogger.DefaultLogger(),
             new ApiConnection.ILogger.DefaultLogger());
 

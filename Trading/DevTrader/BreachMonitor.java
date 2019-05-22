@@ -6,6 +6,7 @@ import api.TradingConstants;
 import auxiliary.SimpleBar;
 import controller.ApiConnection;
 import controller.ApiController;
+import handler.DefaultConnectionHandler;
 import handler.LiveHandler;
 import utility.TradingUtility;
 import utility.Utility;
@@ -115,7 +116,7 @@ public class BreachMonitor implements LiveHandler, ApiController.IPositionHandle
     }
 
     private void getFromIB() {
-        ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
+        ApiController ap = new ApiController(new DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
         brMonController = ap;
         CountDownLatch l = new CountDownLatch(1);

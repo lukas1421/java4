@@ -5,7 +5,6 @@ import auxiliary.Analysis;
 import auxiliary.Dividends;
 import client.ExecutionFilter;
 import client.Types.NewsType;
-import controller.AccountSummaryTag;
 import controller.ApiConnection.ILogger;
 import controller.ApiConnection.ILogger.DefaultLogger;
 import controller.ApiController;
@@ -55,8 +54,8 @@ public final class ChinaMain implements IConnectionHandler {
     public static ChinaMain INSTANCE;
     private final JTextArea m_inLog = new JTextArea();
     private final JTextArea m_outLog = new JTextArea();
-    private final static ILogger M_INLOGGER = new DefaultLogger(); //new Logger( m_inLog);
-    private final static ILogger M_OUTLOGGER = new DefaultLogger(); // new Logger( m_outLog);
+    private final static ILogger M_INLOGGER = new DefaultLogger();
+    private final static ILogger M_OUTLOGGER = new DefaultLogger();
     private final static ApiController M_CONTROLLER = new ApiController(new ChinaMainHandler(), M_INLOGGER, M_OUTLOGGER);
     public static volatile CountDownLatch ibConnLatch = new CountDownLatch(1);
 
@@ -317,7 +316,7 @@ public final class ChinaMain implements IConnectionHandler {
 //            pool.execute(stratcompute);
 //        });
 
-        startXU.addActionListener((ae) -> M_CONTROLLER.reqXUDataArray());
+        startXU.addActionListener((ae) -> ControllerCalls.reqXUDataArray(M_CONTROLLER));
 
         //startHK.addActionListener(al -> M_CONTROLLER.reqHKLiveData());
         //startIBChina.addActionListener(al -> M_CONTROLLER.reqA50Live());
@@ -452,7 +451,7 @@ public final class ChinaMain implements IConnectionHandler {
             try {
                 ibConnLatch.await();
                 pr(" ib conn latch finished waiting " + LocalTime.now());
-                M_CONTROLLER.reqXUDataArray();
+                ControllerCalls.reqXUDataArray(M_CONTROLLER);
 //                M_CONTROLLER.reqNonChinaTrader();
 //                M_CONTROLLER.reqHKAutoTrader();
 //                M_CONTROLLER.reqUSAutoTrader();
@@ -607,6 +606,66 @@ public final class ChinaMain implements IConnectionHandler {
     @Override
     public void message(int id, int errorCode, String errorMsg) {
         show(id + " " + errorCode + " " + errorMsg);
+    }
+
+    public static class ChinaMainHandler implements IConnectionHandler {
+
+        @Override
+        public void connected() {
+            show("connected");
+            pr(" connected from connected ");
+
+            SwingUtilities.invokeLater(() -> {
+                m_connectionPanel.setConnectionStatus("connected");
+                connectionIndicator.setBackground(Color.green);
+                connectionIndicator.setText("通");
+                ibConnLatch.countDown();
+                pr(" ib con latch counted down in Apicontroller connected " + LocalTime.now()
+                        + " latch remains: " + ibConnLatch.getCount());
+            });
+
+            controller().reqCurrentTime((long time) -> {
+                show("Server date/time is " + Formats.fmtDate(time * 1000));
+            });
+            controller().reqBulletins(true, (int msgId, NewsType newsType, String message, String exchange) -> {
+                String str = String.format("Received bulletin:  type=%s  exchange=%s", newsType, exchange);
+                show(str);
+                show(message);
+            });
+        }
+
+        @Override
+        public void disconnected() {
+            show("disconnected");
+            pr(" setting panel status disconnected ");
+
+            SwingUtilities.invokeLater(() -> {
+                m_connectionPanel.setConnectionStatus("disconnected");
+                connectionIndicator.setBackground(Color.red);
+                connectionIndicator.setText("断");
+            });
+        }
+
+        @Override
+        public void accountList(ArrayList<String> list) {
+            //show("Received account list");
+        }
+
+        @Override
+        public void show(final String str) {
+            pr(str);
+        }
+
+        @Override
+        public void error(Exception e) {
+            e.printStackTrace();
+            show(e.toString());
+        }
+
+        @Override
+        public void message(int id, int errorCode, String errorMsg) {
+            show(id + " " + errorCode + " " + errorMsg);
+        }
     }
 
     public final class ConnectionPanel extends javax.swing.JPanel {

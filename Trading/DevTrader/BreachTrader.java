@@ -1,6 +1,7 @@
 package DevTrader;
 
 import AutoTraderOld.XuTraderHelper;
+import api.ControllerCalls;
 import enums.Currency;
 import api.TradingConstants;
 import auxiliary.SimpleBar;
@@ -8,6 +9,7 @@ import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
 import enums.Direction;
+import handler.DefaultConnectionHandler;
 import handler.LiveHandler;
 import utility.TradingUtility;
 import utility.Utility;
@@ -21,6 +23,7 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static api.ControllerCalls.placeOrModifyOrderCheck;
 import static client.Types.TimeInForce.*;
 import static util.AutoOrderType.*;
 import static utility.TradingUtility.*;
@@ -176,7 +179,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
 
     public void connectAndReqPos() {
-        ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
+        ApiController ap = new ApiController(new DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
         apDev = ap;
         CountDownLatch l = new CountDownLatch(1);
@@ -373,7 +376,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 Order o = placeBidLimitTIF(bidPrice, defaultS, DAY);
                 if (checkDeltaImpact(ct, o)) {
                     devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                    apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
+                    placeOrModifyOrderCheck(apDev,ct, o, new PatientDevHandler(id));
                     outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER BUY:",
                             devOrderMap.get(id), "yOpen:" + yOpen, "mOpen:" + mOpen,
@@ -396,7 +399,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 if (checkDeltaImpact(ct, o)) {
                     devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                    apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
+                    placeOrModifyOrderCheck(apDev,ct, o, new PatientDevHandler(id));
                     outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                     outputToSymbolFile(symbol, str(o.orderId(), id, "ADDER SELL:",
                             devOrderMap.get(id), "yOpen:" + yOpen, "mOpen:" + mOpen,
@@ -427,7 +430,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
             }
 
             devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-            apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
+            placeOrModifyOrderCheck(apDev,ct, o, new GuaranteeDevHandler(id, apDev));
             outputToSymbolFile(symbol, str("********", t), devOutput);
             outputToSymbolFile(symbol, str(o.orderId(), id, "hedger removal" + (pos > 0 ? "sell" : "buy"),
                     devOrderMap.get(id), "pos", pos, "mOpen:" + mOpen, "price", price), devOutput);
@@ -444,7 +447,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 Order o = placeOfferLimitTIF(offerPrice, size, DAY);
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
+                placeOrModifyOrderCheck(apDev,ct, o, new PatientDevHandler(id));
 
                 outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                 outputToSymbolFile(symbol, str(o.orderId(), id, "Hedger SELL:",
@@ -461,7 +464,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                         Math.min(5, Math.floor((-totalDelta / fx.get(Currency.USD)) / (multi.get("MNQ") * price)));
                 Order o = placeBidLimitTIF(bidPrice, size, DAY);
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_ADDER));
-                apDev.placeOrModifyOrder(ct, o, new PatientDevHandler(id));
+                placeOrModifyOrderCheck(apDev,ct, o, new PatientDevHandler(id));
                 outputToSymbolFile(symbol, str("********", t.format(f1)), devOutput);
                 outputToSymbolFile(symbol, str(o.orderId(), id, "Hedger BUY:",
                         devOrderMap.get(id), "mOpen:" + mOpen,
@@ -520,7 +523,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
                 Order o = placeBidLimitTIF(bidPrice, Math.abs(pos), IOC);
 
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
-                apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
+                placeOrModifyOrderCheck(apDev,ct, o, new GuaranteeDevHandler(id, apDev));
                 outputToSymbolFile(symbol, str("********", t), devOutput);
                 outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter BUY:",
                         "added?" + added, devOrderMap.get(id), "pos", pos, "yOpen:" + yOpen, "mOpen:" + mOpen,
@@ -540,7 +543,7 @@ public class BreachTrader implements LiveHandler, ApiController.IPositionHandler
 
                 devOrderMap.put(id, new OrderAugmented(ct, t, o, BREACH_CUTTER));
 
-                apDev.placeOrModifyOrder(ct, o, new GuaranteeDevHandler(id, apDev));
+                placeOrModifyOrderCheck(apDev,ct, o, new GuaranteeDevHandler(id, apDev));
 
                 outputToSymbolFile(symbol, str("********", t), devOutput);
                 outputToSymbolFile(symbol, str(o.orderId(), id, "Cutter SELL:",

@@ -372,7 +372,7 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         computeButton = new JButton("Compute");
         computeButton.addActionListener(l -> {
             try {
-                getAPICon().reqXUDataArray();
+                ControllerCalls.reqXUDataArray(ap);
             } catch (Exception ex) {
                 ex.printStackTrace();
             }

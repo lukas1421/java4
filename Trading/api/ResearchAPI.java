@@ -6,6 +6,7 @@ import client.Contract;
 import client.Types;
 import controller.ApiConnection;
 import controller.ApiController;
+import handler.DefaultConnectionHandler;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -58,7 +59,7 @@ public class ResearchAPI {
 
     @SuppressWarnings("Duplicates")
     public static void main(String[] args) {
-        ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
+        ApiController ap = new ApiController(new DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
         CountDownLatch l = new CountDownLatch(1);
         boolean connectionStatus = false;

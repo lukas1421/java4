@@ -39,8 +39,6 @@ import static api.ChinaStock.*;
 import static api.ChinaStockHelper.fixYtdSuspendedStocks;
 import static enums.Currency.CNY;
 import static enums.Currency.HKD;
-import static api.TradingConstants.FTSE_INDEX;
-import static historical.HistChinaStocks.chinaWtd;
 import static java.util.Optional.ofNullable;
 import static utility.Utility.*;
 
@@ -57,8 +55,6 @@ public final class ChinaData extends JPanel {
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Strategy>> strategyTotalMap = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, VolBar>> bidMap = new ConcurrentHashMap<>();
     public static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, VolBar>> askMap = new ConcurrentHashMap<>();
-    //static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> bidTotalMap = new ConcurrentHashMap<>();
-    //static volatile ConcurrentHashMap<String, ConcurrentSkipListMap<LocalTime, Double>> askTotalMap = new ConcurrentHashMap<>();
 
     static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDate, SimpleBar>>
             ytdData = new ConcurrentSkipListMap<>();
@@ -72,39 +68,18 @@ public final class ChinaData extends JPanel {
     public static volatile ConcurrentSkipListMap<String, ConcurrentSkipListMap<LocalDateTime, SimpleBar>> price5mWtd
             = new ConcurrentSkipListMap<>();
 
-    //static ConcurrentHashMap<Integer, ConcurrentHashMap<String, ?>> saveMap = new ConcurrentHashMap<>();
-    //ConcurrentHashMap<Integer, ConcurrentHashMap<String, ?>> saveMap2 = new ConcurrentHashMap<>();
 
     public static volatile Map<String, Double> priceMinuteSharpe = new HashMap<>();
     public static volatile Map<String, Double> wtdSharpe = new HashMap<>();
-
-    //very important. This date map is always the last 3 days of A share, not including T)
-//    public static volatile Map<Integer, LocalDate> dateMap = new HashMap<>();
-
-//    static volatile NavigableMap<LocalDate, Double> ftseOpenMap = new TreeMap<>();
-//    public static volatile NavigableMap<LocalDate, Double> ftseCloseMap = new TreeMap<>();
 
     public static List<LocalTime> tradeTime = new LinkedList<>();
     public static List<LocalTime> tradeTimePure = new LinkedList<>();
     static BarModel m_model;
 
-//    LocalTime lastSaveTime = Utility.AM929T;
-//    LocalTime lastLoadTime = Utility.AM929T;
-//    public static LocalTime lastDataTime = Utility.AM929T;
-
-//    static File source = new File(TradingConstants.GLOBALPATH + "CHINASS.ser");
-//    static File backup = new File(TradingConstants.GLOBALPATH + "CHINABackup.ser");
-//    static File source2 = new File(TradingConstants.GLOBALPATH + "CHINASS2.ser");
-//    static File backup2 = new File(TradingConstants.GLOBALPATH + "CHINABackup2.ser");
-//    static File priceDetailedSource = new File(TradingConstants.GLOBALPATH + "priceDetailed.ser");
-//    static File priceDetailedBackup = new File(TradingConstants.GLOBALPATH + "priceDetailedBackup.ser");
-
     private static File priceBarSource = new File(TradingConstants.GLOBALPATH + "priceBar.ser");
-    //    static File priceBarBackup = new File(TradingConstants.GLOBALPATH + "priceBarBackup.ser");
     private static File priceBarYtdSource = new File(TradingConstants.GLOBALPATH + "priceBarYtd.ser");
 
     private static File shcompSource = new File(TradingConstants.GLOBALPATH + "shcomp.txt");
-    //    public static JButton btnSave2;
     static ExecutorService es = Executors.newCachedThreadPool();
     private static final Predicate<? super Entry<LocalTime, Double>> IS_OPEN = e -> e.getKey().isAfter(Utility.AM929T) && e.getValue() != 0.0;
 
@@ -137,29 +112,6 @@ public final class ChinaData extends JPanel {
             strategyTotalMap.get(v).put(LocalTime.MIN, new Strategy());
             priceMinuteSharpe.put(v, 0.0);
         });
-
-        //initialize date map
-//        int lineNo = 0;
-//        try (BufferedReader reader1 = new BufferedReader(new InputStreamReader(
-//                new FileInputStream(TradingConstants.GLOBALPATH + "ftseA50Open.txt"), "gbk"))) {
-//            String line;
-//            while ((line = reader1.readLine()) != null) {
-//                List<String> al1 = Arrays.asList(line.split("\t"));
-//                if (lineNo > 2) {
-//                    throw new IllegalArgumentException(" ERROR: date map has more than 3 lines ");
-//                }
-//
-////                dateMap.put(lineNo, LocalDate.parse(al1.get(0)));
-////                ftseOpenMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(1)));
-////                ftseCloseMap.put(LocalDate.parse(al1.get(0)), Double.parseDouble(al1.get(2)));
-////                closeMap.put(FTSE_INDEX, Double.parseDouble(al1.get(2)));
-////                currentTradingDate = LocalDate.parse(al1.get(0));
-////                System.out.println(str(" datemap ", lineNo, dateMap.getOrDefault(lineNo, LocalDate.MIN)));
-//                lineNo++;
-//            }
-//        } catch (IOException ex) {
-//            ex.printStackTrace();
-//        }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(
                 TradingConstants.GLOBALPATH + "mostRecentTradingDate.txt")))) {
@@ -481,7 +433,7 @@ public final class ChinaData extends JPanel {
 
         fixYtdZeroButton.addActionListener(l -> fixYtdSuspendedStocks());
 
-        getIBChinaButton.addActionListener(l -> controller().reqHoldingsTodayHist());
+        getIBChinaButton.addActionListener(l -> ControllerCalls.reqHoldingsTodayHist(controller()));
     }
 
     static void outputPrices() {

@@ -46,7 +46,6 @@ public class ApiController implements EWrapper {
     private final ApiConnection m_client;
     private final ILogger m_outLogger;
     private final ILogger m_inLogger;
-    //private int m_reqId;	// used for all requests except orders; designed not to conflict with m_orderId
     private static volatile AtomicInteger m_reqId = new AtomicInteger(10000000);
     private AtomicInteger m_orderId = new AtomicInteger(0);
 
@@ -83,7 +82,6 @@ public class ApiController implements EWrapper {
     private final HashMap<Integer, String> m_symReqMap = new HashMap<>();  //for intraday data
     private final HashMap<Integer, String> m_symReqMapH = new HashMap<>(); //for historical data
 
-    //for historical data
     //private static final SimpleDateFormat FORMAT = new SimpleDateFormat( "yyyyMMdd HH:mm:ss");
     private static final SimpleDateFormat FORMAT = new SimpleDateFormat("HH:mm");
 
@@ -99,39 +97,8 @@ public class ApiController implements EWrapper {
     //Handle for contract details
     private final HashMap<Integer, IInternalHandler1> m_contractDetailsMap1 = new HashMap<>();
 
-    public void generateData() {
-        List<Integer> numbers;
-        // HashMap<Integer,HashMap<Double,Double>> map1 = new HashMap<Integer,HashMap<Double,Double>>();
-        // HashMap<Double,Double> map2 = new HashMap<Double,Double>();
-
-        LocalTime lt = LocalTime.of(9, 30);
-
-        while (lt.getHour() < 16) {
-            if (lt.getHour() > 12 && lt.getHour() < 13) {
-                lt = LocalTime.of(13, 0);
-            }
-            map2h.put(lt, 0.0);
-            lt = lt.plusMinutes(1);
-        }
-
-        try {
-            numbers = Files.lines(Paths.get(TradingConstants.GLOBALPATH + "Table2.txt"))
-                    .map(line -> line.split("\\s+"))
-                    .flatMap(Arrays::stream)
-                    .map(Integer::valueOf)
-                    .distinct()
-                    .collect(toList());
-            numbers.forEach((value) -> {
-                map1.put(value, new TreeMap<>());
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     @Override
     public void connectAck() {
-        //m_connected
         if (m_client.isAsyncEConnect()) {
             pr(" connectAndReqPos Ack sstarting API ");
             m_client.startAPI();
@@ -150,10 +117,6 @@ public class ApiController implements EWrapper {
     public void deltaNeutralValidation(int reqId, DeltaNeutralContract underComp) {
     }
 
-    //    @Override
-//    public void position(String account, Contract contract, double pos, double avgCost) {
-//        pr(ChinaStockHelper.str("account contract pos avgcost", account, contract, pos, avgCost));
-//    }
     @Override
     public void verifyAndAuthMessageAPI(String apiData, String xyzChallange) {
     }
@@ -192,103 +155,6 @@ public class ApiController implements EWrapper {
 
         void show(String string);
 
-        class DefaultConnectionHandler implements IConnectionHandler {
-            @Override
-            public void connected() {
-                m_connected = true;
-                pr("Default Conn Handler: connected");
-            }
-
-            @Override
-            public void disconnected() {
-                pr("Default Conn Handler: disconnected");
-            }
-
-            @Override
-            public void accountList(ArrayList<String> list) {
-                pr(" account list is " + list);
-            }
-
-            @Override
-            public void error(Exception e) {
-                pr(" error in iconnectionHandler");
-                e.printStackTrace();
-            }
-
-            @Override
-            public void message(int id, int errorCode, String errorMsg) {
-                if (errorCode != 2104 && errorCode != 2105 && errorCode != 2106 && errorCode != 2108 &&
-                        errorCode != 2119) {
-                    pr(" DefaultConnHandler error ID " + id + " error code " + errorCode + " errormsg " + errorMsg);
-                }
-            }
-
-            @Override
-            public void show(String string) {
-                pr(" show string " + string);
-            }
-        }
-
-        class ChinaMainHandler implements IConnectionHandler {
-
-            @Override
-            public void connected() {
-                show("connected");
-                pr(" connected from connected ");
-
-                SwingUtilities.invokeLater(() -> {
-                    ChinaMain.m_connectionPanel.setConnectionStatus("connected");
-                    ChinaMain.connectionIndicator.setBackground(Color.green);
-                    ChinaMain.connectionIndicator.setText("通");
-                    ibConnLatch.countDown();
-                    pr(" ib con latch counted down in Apicontroller connected " + LocalTime.now()
-                            + " latch remains: " + ibConnLatch.getCount());
-                });
-
-                controller().reqCurrentTime((long time) -> {
-                    show("Server date/time is " + Formats.fmtDate(time * 1000));
-                });
-                controller().reqBulletins(true, (int msgId, NewsType newsType, String message, String exchange) -> {
-                    String str = String.format("Received bulletin:  type=%s  exchange=%s", newsType, exchange);
-                    show(str);
-                    show(message);
-                });
-            }
-
-            @Override
-            public void disconnected() {
-                show("disconnected");
-                pr(" setting panel status disconnected ");
-
-                SwingUtilities.invokeLater(() -> {
-                    ChinaMain.m_connectionPanel.setConnectionStatus("disconnected");
-                    ChinaMain.connectionIndicator.setBackground(Color.red);
-                    ChinaMain.connectionIndicator.setText("断");
-                });
-            }
-
-            @Override
-            public void accountList(ArrayList<String> list) {
-                //show("Received account list");
-            }
-
-            @Override
-            public void show(final String str) {
-                pr(str);
-            }
-
-            @Override
-            public void error(Exception e) {
-                e.printStackTrace();
-                show(e.toString());
-            }
-
-            @Override
-            public void message(int id, int errorCode, String errorMsg) {
-                show(id + " " + errorCode + " " + errorMsg);
-            }
-        }
-
     }
 
     public ApiController(IConnectionHandler handler, ILogger inLogger, ILogger outLogger) {
@@ -298,19 +164,12 @@ public class ApiController implements EWrapper {
         m_outLogger = outLogger;
     }
 
-    //	public void connectAndReqPos( String host, int port, int clientId) {
-//            pr(" in connectAndReqPos " + host + " " + port + " " + clientId);
-//            m_client.eConnect(host, port, clientId);
-//            sendEOM();
-//	}
+
     public void connect(String host, int port, int clientId, String connectionOpts) {
         pr(" ------------------in connectAndReqPos----------------- " + host + " " + port + " " + clientId);
-        //pr(str(" checking connection BEFORE----", checkConnection(), port));
         m_client.eConnect(host, port, clientId);
         startMsgProcessingThread();
-        //pr(str(" checking connection AFTER-----" + checkConnection(), port));
         sendEOM();
-        //pr(str(" checking connection AFTER EOM-----", checkConnection(), port));
     }
 
     public ApiConnection client() {
@@ -367,7 +226,7 @@ public class ApiController implements EWrapper {
 
     //	public void disconnect() {
 //            m_client.eDisconnect();
-//            m_connectionHandler.disconnected();
+//            m_disconnected();
 //            sendEOM();
 //	}
     @Override
@@ -388,8 +247,15 @@ public class ApiController implements EWrapper {
         if (m_connectionHandler != null) {
             m_connectionHandler.connected();
         }
-
         recEOM();
+    }
+
+    public static int getNextId() {
+        return m_reqId.incrementAndGet();
+    }
+
+    public static int addGetNextId(int i) {
+        return m_reqId.addAndGet(i);
     }
 
     @Override
@@ -488,26 +354,6 @@ public class ApiController implements EWrapper {
         void accountSummary(String account, AccountSummaryTag tag, String value, String currency);
 
         void accountSummaryEnd();
-
-        class AccountInfoHandler implements IAccountSummaryHandler {
-            @Override
-            public void accountSummary(String account, AccountSummaryTag tag, String value, String currency) {
-                String output = getStrCheckNull(LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES)
-                        , account, tag, value, currency);
-//                if (LocalDateTime.now().toLocalTime().getSecond() < 20) {
-                pr("Account Pnl: ", output, "**********************");
-//                }
-                //AutoTraderXU.updateLog(str("Account pnl", output));
-                //AutoTraderXU.currentIBNAV = Double.parseDouble(value);
-            }
-
-            @Override
-            public void accountSummaryEnd() {
-                //pr(" account summary end, cancelling acct summary ");
-                //ChinaMain.controller().cancelAccountSummary(this);
-
-            }
-        }
     }
 
     public interface IMarketValueSummaryHandler {
@@ -560,11 +406,6 @@ public class ApiController implements EWrapper {
     @Override
     public void accountSummary(int reqId, String account, String tag, String value, String currency) {
 
-//        System.out.print(Utility.getStrCheckNull("", reqId, Optional.ofNullable(account).orElse("accountnull"),
-//                Optional.ofNullable(tag).orElse("tagnull"),
-//                Optional.ofNullable(value).orElse("valuenull"),
-//                Optional.ofNullable(currency).orElse("currencynull")));
-
         if (tag.equals("Currency")) { // ignore this, it is useless
             return;
         }
@@ -601,29 +442,12 @@ public class ApiController implements EWrapper {
         void position(String account, Contract contract, double position, double avgCost);
 
         void positionEnd();
-
-        public static class DefaultPositionHandler implements IPositionHandler {
-            @Override
-            public void position(String account, Contract contract, double position, double avgCost) {
-                pr(" in default position handler " + Utility.str(account, ibContractToSymbol(contract)
-                        , position, avgCost));
-            }
-
-            @Override
-            public void positionEnd() {
-            }
-
-        }
     }
 
     public void reqPositions(IPositionHandler handler) {
-        //pr(" requesting for position in reqPositions");
-        //pr ( " size position handler BEFORE" + m_positionHandlers.size());
-        //pr(" requesting position " + );
         m_positionHandlers.add(handler);
         m_client.reqPositions();
         sendEOM();
-        //pr ( " size position handler AFTER" + m_positionHandlers.size());
     }
 
     public void cancelPositions(IPositionHandler handler) {
@@ -649,31 +473,6 @@ public class ApiController implements EWrapper {
 
         void contractDetails(ArrayList<ContractDetails> list);
 
-        class DefaultContractDetailsHandler implements IContractDetailsHandler {
-            @Override
-            public void contractDetails(ArrayList<ContractDetails> list) {
-                for (ContractDetails cd : list) {
-                    Contract ct = cd.contract();
-                    pr("In Default Details Handler: "
-                            , cd.contract().symbol(), cd.contract().getSecType(), cd.contract().lastTradeDateOrContractMonth()
-                            , cd.contract().exchange(), cd.contract().conid());
-                    if (ct.symbol().equalsIgnoreCase("XINA50")) {
-                        if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_FRONT_EXPIRY)) {
-                            XUTraderRoll.contractID.put(FutType.FrontFut, ct.conid());
-                            XUTraderRoll.latch.countDown();
-                            pr(" latch counting down ", XUTraderRoll.latch.getCount(), LocalTime.now());
-                        } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_BACK_EXPIRY)) {
-                            XUTraderRoll.contractID.put(FutType.BackFut, ct.conid());
-                            XUTraderRoll.latch.countDown();
-                            pr(" latch counting down ", XUTraderRoll.latch.getCount(), LocalTime.now());
-                        } else if (ct.lastTradeDateOrContractMonth().equalsIgnoreCase(TradingUtility.A50_LAST_EXPIRY)) {
-                            XUTraderRoll.contractID.put(FutType.PreviousFut, ct.conid());
-                        }
-                    }
-                }
-                pr("xu id map is ", XUTraderRoll.contractID);
-            }
-        }
     }
 
     public void reqContractDetails(Contract contract, final IContractDetailsHandler processor) {
@@ -702,41 +501,6 @@ public class ApiController implements EWrapper {
     public interface IInternalHandler1 {
 
         void contractDetails(ContractDetails data);
-    }
-
-    public void customReqContractDetais(Contract contract, IInternalHandler1 processor) {
-        int reqId = m_reqId.getAndIncrement();
-        m_contractDetailsMap1.put(reqId, processor);
-        m_client.reqContractDetails(reqId, contract);
-    }
-
-    public void customReqContractDetailFull(IInternalHandler1 processor) {
-
-        pr("requesting contract data begins");
-
-        Contract ct = new Contract();
-
-        int reqId = m_reqId.getAndIncrement();
-        int counter = 1;
-        for (int nextVal : map1.keySet()) {
-            reqId++;
-            ct.symbol(String.valueOf(nextVal));
-            ct.exchange("SEHK");
-            ct.currency("HKD");
-            ct.secType(SecType.STK);
-            m_contractDetailsMap1.put(reqId, processor);
-            m_client.reqContractDetails(reqId, ct);
-            counter++;
-            try {
-                if (counter % 80 == 0) {
-                    Thread.sleep(2000);
-                    pr("thread sleeping");
-                }
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        pr("requesting contract data ends");
     }
 
     private void internalReqContractDetails(Contract contract, IInternalHandler processor) {
@@ -844,110 +608,6 @@ public class ApiController implements EWrapper {
         }
     }
 
-    // This method attempts to get real time data
-    // write method to store it in a table AND export to excel/matlab
-    public void reHKMktDataArray(ITopMktDataHandler1 handler) throws InterruptedException {
-        pr("requesting mkt data begins");
-        Contract ct = new Contract();
-        //int reqId=m_reqId++;
-        //int reqId = m_reqId.getAndIncrement();
-        //int reqId = m_reqId.get() + 1000;
-
-        int reqId = m_reqId.incrementAndGet();
-        int counter = 1;
-        boolean isSnapShot = true;
-
-        Iterator it = map1.keySet().iterator();
-
-        if (((LocalTime.now().isAfter(LocalTime.of(9, 19)) && LocalTime.now().isBefore(LocalTime.of(12, 1)))
-                || (LocalTime.now().isAfter(LocalTime.of(12, 59)) && LocalTime.now().isBefore(LocalTime.of(16, 1))))) {
-            while (it.hasNext()) {
-                if (isSnapShot) {
-                    Object nextVal = it.next();
-                    reqId++;
-                    // m_reqId.getAndIncrement();
-                    ct.symbol(String.valueOf(nextVal));
-                    ct.exchange("SEHK");
-                    ct.currency("HKD");
-                    ct.secType(SecType.STK);
-                    m_symReqMap.put(reqId, String.valueOf(nextVal));
-                    m_topMktDataMap1.put(reqId, handler);
-                    m_client.reqMktData(reqId, ct, "", isSnapShot, Collections.<TagValue>emptyList());
-                    counter++;
-                    if (counter % 90 == 0) {
-                        Thread.sleep(1000);
-                    }
-                } else {
-                    Object nextVal = it.next();
-                    reqId++;
-                    pr("Symbol ID is " + nextVal);
-                    pr("ticker ID is " + reqId);
-                    ct.symbol(String.valueOf(nextVal));
-                    ct.exchange("SEHK");
-                    ct.currency("HKD");
-                    ct.secType(SecType.STK);
-                    m_symReqMap.put(reqId, String.valueOf(nextVal));
-                    m_topMktDataMap1.put(reqId, handler);
-                    m_client.reqMktData(reqId, ct, "", isSnapShot, Collections.<TagValue>emptyList());
-                }
-            }
-            pr("requesting mkt data ends");
-        }
-    }
-
-//    public void reqHKLiveData() {
-//        pr(" requesting hk ");
-//        HKData.es.shutdown();
-//        HKData.es = Executors.newScheduledThreadPool(10);
-//        HKData.es.scheduleAtFixedRate(() -> {
-//            HKData.hkPriceBar.keySet().forEach(k -> req1StockLive(k, "SEHK", "HKD",
-//                    api.ChinaMain.hkdata, true));
-//        }, 5L, 10L, TimeUnit.SECONDS);
-//    }
-
-//    public void reqHKTodayData() {
-//        //HKData.historyDataSem.drainPermits();
-//        HKData.historyDataSem = new Semaphore(50);
-//        HKData.hkPriceBar.keySet().forEach(k -> {
-//            try {
-//                HKData.historyDataSem.acquire();
-//                req1StockHistToday(k, "SEHK", "HKD", ChinaMain.hkdata);
-//            } catch (InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        });
-//    }
-
-
-    public void req1ContractHistory(Contract ct, BarSize b, HistoricalHandler h) {
-        pr(" requesting stock hist ", ct.symbol());
-        CompletableFuture.runAsync(() -> {
-            int reqId = m_reqId.incrementAndGet();
-            //Contract ct = generateStockContract(stock, exch, curr);
-            TradingUtility.globalRequestMap.put(reqId, new Request(ct, h));
-            String formatTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
-            String durationStr = 2 + " " + DurationUnit.DAY.toString().charAt(0);
-            m_client.reqHistoricalData(reqId, ct, formatTime, durationStr,
-                    b.toString(), WhatToShow.TRADES.toString(),
-                    0, 2, Collections.<TagValue>emptyList());
-        });
-
-    }
-
-    private void req1StockHistToday(String stock, String exch, String curr, HistoricalHandler h) {
-        pr(" requesting stock hist ", stock, exch, curr);
-        CompletableFuture.runAsync(() -> {
-            int reqId = m_reqId.incrementAndGet();
-            Contract ct = generateStockContract(stock, exch, curr);
-            TradingUtility.globalRequestMap.put(reqId, new Request(ct, h));
-            String formatTime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
-            String durationStr = 1 + " " + DurationUnit.DAY.toString().charAt(0);
-            m_client.reqHistoricalData(reqId, ct, formatTime, durationStr,
-                    BarSize._1_min.toString(), WhatToShow.TRADES.toString(),
-                    0, 2, Collections.<TagValue>emptyList());
-        });
-    }
-
     private void req1StockLive(String ticker, String exch, String curr, LiveHandler h, boolean snapshot) {
         try {
             int reqId = m_reqId.incrementAndGet();
@@ -957,34 +617,16 @@ public class ApiController implements EWrapper {
             }
             Contract ct = generateStockContract(ticker, exch, curr);
             TradingUtility.globalRequestMap.put(reqId, new Request(ct, h));
-            //m_client.reqMktData(reqId, ct, "236,259", snapshot, Collections.<TagValue>emptyList()); for genericTick
             m_client.reqMktData(reqId, ct, "236", snapshot, Collections.<TagValue>emptyList());
         } catch (InterruptedException ex) {
             ex.printStackTrace();
         }
     }
 
-
-//    public void req1FutLive(String ticker, String exch, String curr, LiveHandler h, boolean snapshot) {
-//        pr(" requesting 1 stock live ", ticker, exch, curr);
-//        try {
-//            int reqId = m_reqId.incrementAndGet();
-//            if (reqId % 90 == 0) {
-//                Thread.sleep(1000);
-//            }
-//            Contract ct = generateFutContract(ticker, exch, curr);
-//            ChinaMain.globalRequestMap.put(reqId, new Request(ct, h));
-//            m_client.reqMktData(reqId, ct, "", snapshot, Collections.<TagValue>emptyList());
-//        } catch (InterruptedException ex) {
-//            ex.printStackTrace();
-//        }
-//    }
-
     private void req1ContractLive(Contract ct, LiveHandler h) {
         try {
             int reqId = m_reqId.incrementAndGet();
-//            pr(" req 1 contract live ", reqId, ibContractToSymbol(ct), ct.symbol(), ct.currency(),
-//                    ct.lastTradeDateOrContractMonth());
+
             if (reqId % 90 == 0) {
                 Thread.sleep(1000);
             }
@@ -1009,159 +651,12 @@ public class ApiController implements EWrapper {
     }
 
 
-    public void reqA50Live() {
-        for (String s : SinaStock.weightMapA50.keySet()) {
-            String ticker = s.substring(2);
-            String exch = s.substring(0, 2).toUpperCase().equalsIgnoreCase("SH") ? "SEHKNTL" : "SEHKSZSE";
-            req1StockLive(ticker, exch, "CNH", new LiveHandler.DefaultLiveHandler(), false);
-        }
-    }
-
-    public void reqHKInPosLive() {
-        ChinaData.priceMapBar.keySet().stream().filter(e -> e.startsWith("hk")).forEach(k -> {
-            String ticker = k.substring(2);
-            req1StockLive(ticker, "SEHK", "HKD", new LiveHandler.DefaultLiveHandler(), false);
-        });
-    }
-
-    public void reqNonChinaTrader() {
-        ChinaData.priceMapBarDetail.keySet().forEach(k -> {
-            if (!k.startsWith("sz") && !k.startsWith("sh") && !k.startsWith("FTSEA50")
-                    && !k.startsWith("SGXA50PR") && !k.startsWith("SGXA50BM")) {
-                //pr(" req Non china trader ", k);
-                //pr(" symbol ", AutoTraderMain.symbolToIBContract(k).symbol());
-                Contract c = AutoTraderMain.symbolToIBContract(k);
-                req1ContractLive(c, new LiveHandler.PriceMapUpdater());
-            }
-        });
-    }
-
-    /**
-     * req hk prices for auto trader
-     */
-    public void reqHKAutoTrader() {
-        AutoTraderHK.hkSymbols.forEach(k -> {
-            pr("requesting hk for ", k);
-            if (k.startsWith("hk")) {
-                String ticker = k.substring(2);
-                req1StockLive(ticker, "SEHK", "HKD", ReceiverHK.getReceiverHK(), false);
-            } else {
-                if (k.equals("MCH.HK") || k.equals("HHI.HK")) {
-                    Contract ct = getHKFutContract(k);
-                    req1ContractLive(ct, ReceiverHK.getReceiverHK());
-                }
-            }
-        });
-    }
-
-    /**
-     * req US prices for auto trading
-     */
-    public void reqUSAutoTrader() {
-        AutoTraderUS.usSymbols.forEach(k -> {
-            req1StockLive(k, "SMART", "USD", new ReceiverUS(k), false);
-        });
-    }
-
-
-    public void reqHoldingsTodayHist() {
-        pr(" request holdings today ");
-        CompletableFuture.runAsync(() -> {
-            AtomicInteger i = new AtomicInteger(0);
-            for (String s : ChinaData.priceMapBar.keySet()) {
-                if (ChinaPosition.openPositionMap.getOrDefault(s, 0) != 0 ||
-                        ChinaPosition.tradesMap.containsKey(s) && ChinaPosition.tradesMap.get(s).size() > 0) {
-                    pr(" req holding today ", s, " open ", ChinaPosition.openPositionMap.getOrDefault(s, 0),
-                            " traded ", ChinaPosition.tradesMap.getOrDefault(s, new ConcurrentSkipListMap<>()));
-                    i.incrementAndGet();
-                    pr(" IB hist counter is ", i);
-
-                    if (s.substring(0, 2).equals("sh") || s.substring(0, 2).equals("sz")) {
-
-                        String ticker = s.substring(2);
-                        String exch = s.substring(0, 2).toUpperCase().equalsIgnoreCase("SH") ? "SEHKNTL" : "SEHKSZSE";
-                        if (i.get() % 30 == 0) {
-                            try {
-                                Thread.sleep(2000L);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        req1StockHistToday(ticker, exch, "CNH", new HistoricalHandler.TodayHistHandle());
-                    } else if (s.startsWith("hk")) {
-                        String ticker = s.substring(2);
-                        pr(" req today hist ", ticker);
-                        req1StockHistToday(ticker, "SEHK", "HKD", new HistoricalHandler.TodayHistHandle());
-                    }
-                }
-            }
-        });
-    }
-
-    private static Contract generateStockContract(String ticker, String ex, String curr) {
-        Contract ct = new Contract();
-        ct.symbol(ticker);
-        ct.exchange(ex);
-        ct.currency(curr);
-        if (ticker.equals("ASHR") || ticker.equals("MSFT") || ticker.equals("CSCO")) {
-            pr("setting primary exchange", ticker);
-            ct.primaryExch("ARCA");
-        }
-        ct.secType(SecType.STK);
-        return ct;
-    }
-
-    //    private Contract tickerToHKStkContract(String stock) {
-//        Contract ct = new Contract();
-//        ct.symbol(stock);
-//        ct.exchange("SEHK");
-//        ct.currency("HKD");
-//        ct.secType(SecType.STK);
-//        return ct;
-//    }
-
-    //xu data
-    public void reqXUDataArray() {
-//        pr("requesting XU data begins " + LocalTime.now());
-        Contract frontCt = TradingUtility.getFrontFutContract();
-        Contract backCt = TradingUtility.getBackFutContract();
-
-        m_reqId.getAndIncrement();
-        int reqIdFront = m_reqId.getAndIncrement();
-        int reqIdBack = m_reqId.getAndIncrement();
-        //m_reqId.
-
-        if (!TradingUtility.globalRequestMap.containsKey(reqIdFront) && !TradingUtility.globalRequestMap.containsKey(reqIdBack)) {
-            TradingUtility.globalRequestMap.put(reqIdFront, new Request(frontCt, SGXFutureReceiver.getReceiver()));
-            TradingUtility.globalRequestMap.put(reqIdBack, new Request(backCt, SGXFutureReceiver.getReceiver()));
-            if (m_client.isConnected()) {
-                m_client.reqMktData(reqIdFront, frontCt, "", false, Collections.<TagValue>emptyList());
-                m_client.reqMktData(reqIdBack, backCt, "", false, Collections.<TagValue>emptyList());
-            } else {
-                pr(" reqXUDataArray but not connected ");
-            }
-        } else {
-            m_reqId.set(m_reqId.addAndGet(10000));
-            reqIdFront = m_reqId.getAndIncrement();
-            reqIdBack = m_reqId.getAndIncrement();
-            if (m_client.isConnected()) {
-                m_client.reqMktData(reqIdFront, frontCt, "", false, Collections.<TagValue>emptyList());
-                m_client.reqMktData(reqIdBack, backCt, "", false, Collections.<TagValue>emptyList());
-            }
-            //pr(" req used " + reqIdFront + " " + globalRequestMap.get(reqIdFront).getContract());
-            throw new IllegalArgumentException(" req ID used ");
-        }
-//        pr("requesting XU data ends");
-    }
-
-
     public void getHistoricalCustom(int reqId, Contract c, HistDataConsumer<Contract, String, Double, Integer> dc,
                                     int duration) {
 
         String formatTime = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS)
                 .format(DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss"));
 
-        //int duration = 7;
         DurationUnit durationUnit = DurationUnit.DAY;
         String durationStr = duration + " " + durationUnit.toString().charAt(0);
         Types.BarSize barSize = Types.BarSize._1_min;
@@ -1217,7 +712,6 @@ public class ApiController implements EWrapper {
         Types.BarSize barSize = Types.BarSize._1_min;
         WhatToShow whatToShow = WhatToShow.TRADES;
 
-//        if(!globalRequestMap.containsKey(reqID) && !globalRequestMap.containsKey(reqID+1)) {
         TradingUtility.globalRequestMap.put(reqID, new Request(frontFut, hh));
         TradingUtility.globalRequestMap.put(reqID + 1, new Request(backFut, hh));
 
@@ -1237,30 +731,6 @@ public class ApiController implements EWrapper {
                         Collections.<TagValue>emptyList());
             }
         });
-    }
-
-    public void reHistDataArray(IHistoricalDataHandler handler) {
-        Contract ct = new Contract();
-        int reqId = m_reqId.incrementAndGet();
-
-        for (Object nextVal : map1h.keySet()) {
-            reqId++;
-            m_historicalDataMap.put(reqId, handler);
-            pr("Symbol ID is " + nextVal);
-            pr("ticker ID is " + reqId);
-            ct.symbol(String.valueOf(nextVal));
-            ct.exchange("SEHK");
-            ct.currency("HKD");
-            ct.secType(SecType.STK);
-
-            m_symReqMapH.put(reqId, String.valueOf(nextVal));
-
-            //m_client.reqMktData(reqId, ct,"",true,Collections.<TagValue>emptyList());
-            //m_client.reqHistoricalData(reqId, ct, "20151218 16:00:00", "DAY","1 min" , "TRADES", 0, 2, Collections.<TagValue>emptyList() );
-            m_client.reqHistoricalData(reqId, ct, "20151222 16:00:00", "1 D", "1 min", "TRADES", 0, 2, Collections.<TagValue>emptyList());
-            sendEOM();
-        }
-        pr("requesting hist data ends");
     }
 
     public void reqTopMktData(Contract contract, String genericTickList, boolean snapshot, ITopMktDataHandler handler) {
@@ -1322,17 +792,7 @@ public class ApiController implements EWrapper {
     // key method. This method is called when market data changes.
     @Override
     public void tickPrice(int reqId, int tickType, double price, int canAutoExecute) {
-        if (TradingUtility.globalRequestMap.containsKey(reqId)) {
-            Request r = TradingUtility.globalRequestMap.get(reqId);
-            LiveHandler lh = (LiveHandler) TradingUtility.globalRequestMap.get(reqId).getHandler();
-            try {
-                lh.handlePrice(TickType.get(tickType), r.getContract(), price,
-                        LocalDateTime.now().truncatedTo(ChronoUnit.MILLIS));
-            } catch (Exception ex) {
-                pr(" handling price has issues ");
-                ex.printStackTrace();
-            }
-        }
+        IBDataHandler.tickPrice(reqId, tickType, price, canAutoExecute);
         recEOM();
     }
 
@@ -1342,12 +802,7 @@ public class ApiController implements EWrapper {
         ITopMktDataHandler1 handler1;
         int symb;
 
-        if (TradingUtility.globalRequestMap.containsKey(reqId)) {
-            Request r = TradingUtility.globalRequestMap.get(reqId);
-            LiveHandler lh = (LiveHandler) r.getHandler();
-            lh.handleVol(TickType.get(tickType), ibContractToSymbol(r.getContract()), size,
-                    LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
-        }
+        IBDataHandler.tickSize(reqId, tickType, size);
 
         if (handler != null) {
             handler.tickSize(TickType.get(tickType), size);
@@ -1367,12 +822,7 @@ public class ApiController implements EWrapper {
     public void tickGeneric(int reqId, int tickType, double value) {
         ITopMktDataHandler handler = m_topMktDataMap.get(reqId);
 
-        if (TradingUtility.globalRequestMap.containsKey(reqId)) {
-            Request r = TradingUtility.globalRequestMap.get(reqId);
-            LiveHandler lh = (LiveHandler) r.getHandler();
-            lh.handleGeneric(TickType.get(tickType), ibContractToSymbol(r.getContract()), value,
-                    LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES));
-        }
+        IBDataHandler.tickGeneric(reqId, tickType, value);
 
         if (handler != null) {
             handler.tickPrice(TickType.get(tickType), value, 0);
@@ -1616,21 +1066,7 @@ public class ApiController implements EWrapper {
 
     }
 
-    private double getDeltaImpactCny(Contract ct, Order o) {
-        String curr = ct.currency();
-        double totalQ = o.totalQuantity();
-        double lmtPrice = o.lmtPrice();
-        double xxxCny = ChinaPosition.fxMap.getOrDefault(Currency.get(curr), 1.0);
-        return xxxCny * lmtPrice * totalQ;
-    }
-
     public void placeOrModifyOrder(Contract ct, final Order o, final IOrderHandler handler) {
-//        double impact = getDeltaImpactCny(ct, o, );
-//        if (Math.abs(impact) > 300000) {
-//            TradingUtility.outputToError(str("IMPACT TOO BIG", impact, ct.symbol(), o.action(),
-//                    o.lmtPrice(), o.totalQuantity()));
-//            return;
-//        }
 
         if (o.totalQuantity() == 0.0 || o.lmtPrice() == 0.0) {
             outputToAll(str(" quantity/price problem ", ct.symbol(), o.action(),
@@ -1715,15 +1151,7 @@ public class ApiController implements EWrapper {
 
     @Override
     public void openOrder(int orderId, Contract contract, Order orderIn, OrderState orderState) {
-        //Order order = new Order( orderIn);
-
         IOrderHandler handler = m_orderHandlers.get(orderId);
-
-//        if (orderId != 0) {
-//            pr(str(" order ID ", orderId, contract.symbol(), orderState.status()));
-//            //pr(str(" handling open order ", orderId, handler));
-//            pr("handler contained in order handlers " + m_orderHandlers.containsKey(orderId));
-//        }
 
         if (handler != null) {
             handler.orderState(orderState);
@@ -1846,23 +1274,6 @@ public class ApiController implements EWrapper {
 
         TradingUtility.globalRequestMap.put(reqId, new Request(contract, hh));
 
-        //pr(" getting historical data simple US HK");
-        //pr(" contract " + contract);
-        //pr(" req id is" + reqId);
-        String durationStr = duration + " " + durationUnit.toString().charAt(0);
-        m_client.reqHistoricalData(reqId, contract, endDateTime, durationStr,
-                barSize.toString(), whatToShow.toString(), rthOnly ? 1 : 0, 2, Collections.<TagValue>emptyList());
-    }
-
-    public void reqHistoricalDataSimple(int reqId, HistoricalHandler hh, Contract contract, String endDateTime, int duration,
-                                        DurationUnit durationUnit, BarSize barSize, WhatToShow whatToShow, boolean rthOnly) {
-
-        //pr(" getting historical data simple ");
-        //pr(" contract " + contract);
-        //pr(str("stock reqid ", contract.symbol(), reqId));
-        TradingUtility.globalRequestMap.put(reqId, new Request(contract, hh));
-
-        //pr(" req id is" + reqId);
         String durationStr = duration + " " + durationUnit.toString().charAt(0);
         m_client.reqHistoricalData(reqId, contract, endDateTime, durationStr,
                 barSize.toString(), whatToShow.toString(), rthOnly ? 1 : 0, 2, Collections.<TagValue>emptyList());
@@ -1909,132 +1320,6 @@ public class ApiController implements EWrapper {
             }
         }
 
-        //pr("successful connecting to historical data");
-        //pr(" req ID " + reqId);
-//        if (reqId == 10000) {
-//            MorningTask.handleHistoricalData(date, close);
-//        }
-//        if (reqId == 20000) {
-//            pr(" handling sgx data ");
-//            ChinaData.handleSGX50HistData(date, open, high, low, close, volume);
-//            return;
-//        }
-//        if (reqId == 30000) {
-//            pr(" handling sgx data for AutoTraderXU");
-//            AutoTraderXU.handleSGX50HistData(date, open, high, low, close, volume);
-//            return;
-//        }
-//        if (reqId == 40000) {
-//            ChinaPosition.handleSGX50HistData(date, open, high, low, close, volume);
-//            return;
-//        }
-//        if (reqId == 50000) {
-//            ChinaData.handleSGXDataToday(date, open, high, low, close, volume);
-//            return;
-//        }
-//        if (reqId >= 60000 && reqId < 70000) {
-//            if (!date.startsWith("finished")) {
-//                //pr(" req id " + reqId + " stock "+ USStocks.idStockMap.get(reqId));
-//                HistUSStocks.USALLYtd.get(HistUSStocks.idStockMap.get(reqId))
-//                        .put(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")),
-//                                new SimpleBar(open, high, low, close));
-//            } else {
-//                HistUSStocks.stocksProcessedYtd++;
-//                HistUSStocks.sm.release(1);
-//                pr(" current permit after done " + HistUSStocks.sm.availablePermits());
-//                HistUSStocks.computeYtd(HistUSStocks.idStockMap.get(reqId));
-//                HistUSStocks.refreshYtd();
-//            }
-//            return;
-//        }
-//
-//        if (reqId >= 70000) {
-//            if (!date.startsWith("finished")) {
-//                //pr(" req id " + reqId + " stock " + HistHKStocks.idStockMap.get(reqId));
-//
-//                HistHKStocks.hkYtdAll.get(HistHKStocks.idStockMap.get(reqId))
-//                        .put(LocalDate.parse(date, DateTimeFormatter.ofPattern("yyyyMMdd")),
-//                                new SimpleBar(open, high, low, close));
-//                if (HistHKStocks.idStockMap.get(reqId).equals("700")) {
-//                    //MorningTask.clearFile(HistHKStocks.usTestOutput);
-//                    MorningTask.simpleWriteToFile(ChinaStockHelper.getStrTabbed(date, open, high, low, close, volume),
-//                            true, HistHKStocks.usTestOutput);
-//                }
-//            } else {
-//                HistHKStocks.stocksProcessedYtd++;
-//                HistHKStocks.sm.release(1);
-//                pr(" current permit after done " + HistHKStocks.sm.availablePermits());
-//                HistHKStocks.computeYtd(HistHKStocks.idStockMap.get(reqId));
-//                HistHKStocks.refreshYtd();
-//            }
-//            return;
-//        }
-/*        long start = System.nanoTime();
-        Date dt;
-        boolean isNumericalTicker = true;
-        int symb = 0;
-        Bar bar;
-        IHistoricalDataHandler handler;
-        //pr("response received");
-        //pr( "date "+date);
-
-        if (date.startsWith("finished")) {
-            //pr("finished");
-        } else {
-            try {
-                dt = new Date(Long.parseLong(date) * 1000);
-            } catch (NumberFormatException x) {
-                pr(" dt cannot be parsed " + date);
-            }
-            //pr(" date"+(new Date(Long.parseLong(date)*1000))+"close "+close);
-            //dt.toInstant().
-        }
-
-        if (m_historicalDataMap.containsKey(reqId)) {
-            handler = m_historicalDataMap.get(reqId);
-            pr("ID found ");
-        } else {
-            handler = null;
-        }
-
-        try {
-            symb = Integer.parseInt(m_symReqMapH.get(reqId));
-            pr(" symb " + symb);
-        } catch (NumberFormatException e) {
-            isNumericalTicker = false;
-        }
-
-        if (handler != null) {
-            if (date.startsWith("finished")) {
-                handler.historicalDataEnd();
-            } else {
-                long longDate;
-                if (date.length() == 8) {
-//                           int year = Integer.parseInt( date.substring( 0, 4) );
-//                           int month = Integer.parseInt( date.substring( 4, 6) );
-//                           int day = Integer.parseInt( date.substring( 6) );
-
-                    Date dt2 = new Date(Long.parseLong(date) * 1000);
-                    Calendar cal = Calendar.getInstance();
-                    cal.setTime(dt2);
-                    longDate = cal.getTimeInMillis() / 1000L;
-                    //LocalDate ld = LocalDate.of(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH)+1, cal.get(Calendar.DAY_OF_MONTH));
-                    //ocalTime lt = LocalTime.of(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE));
-
-                    //longDate = new Date( year - 1900, month - 1, day).getTime() / 1000;
-                } else {
-                    longDate = Long.parseLong(date);
-                }
-
-                if (isNumericalTicker) {
-                    bar = new Bar(symb, longDate, high, low, open, close, wap, volume, count);
-                } else {
-                    bar = new Bar(longDate, high, low, open, close, wap, volume, count);
-                }
-                pr("Bar is " + bar);
-                handler.historicalData(bar, hasGaps);
-            }
-        }*/
 
         recEOM();
     }
@@ -2161,8 +1446,6 @@ public class ApiController implements EWrapper {
     @Override
     public void updateNewsBulletin(int msgId, int msgType, String message, String origExchange) {
         pr(" news: ", msgId, msgType, message, origExchange);
-        //m_bulletinHandler.bulletin(msgId, NewsType.get(msgType), message, origExchange);
-        //recEOM();
     }
 
     @Override
@@ -2186,22 +1469,13 @@ public class ApiController implements EWrapper {
     /**
      * Not supported in ApiController.
      */
-//	@Override public void deltaNeutralValidation(int reqId, UnderComp underComp) {
-//		show( "RECEIVED DN VALIDATION");
-//		recEOM();
-//	}
+
     private void sendEOM() {
         m_outLogger.log("\n");
     }
 
     private void recEOM() {
-        // = LocalTime.now();
-        //pr( " rec EOM BEFORE "+ LocalTime.now());
-
         m_inLogger.log("\n");
-
-        //pr( " rec EOM AFTER "+ LocalTime.now());
-        //pr( " length in recEOM "+(System.currentTimeMillis()-start));
     }
 
     public void show(String string) {
@@ -2231,27 +1505,17 @@ public class ApiController implements EWrapper {
     @Override
     public void securityDefinitionOptionalParameter(int reqId, String exchange, int underlyingConId, String tradingClass,
                                                     String multiplier, Set<String> expirations, Set<Double> strikes) {
-//		ISecDefOptParamsReqHandler handler = m_secDefOptParamsReqMap.get( reqId);
-//
-//		if (handler != null) {
-//			handler.securityDefinitionOptionalParameter(exchange, underlyingConId, tradingClass, multiplier, expirations, strikes);
-//		}
+
     }
 
     @Override
     public void securityDefinitionOptionalParameterEnd(int reqId) {
-//        ISecDefOptParamsReqHandler handler = m_secDefOptParamsReqMap.get( reqId);
-//		if (handler != null) {
-//			handler.securityDefinitionOptionalParameterEnd(reqId);
-//		}
     }
 
     @Override
     public void softDollarTiers(int reqId, SoftDollarTier[] tiers) {
-//        ISoftDollarTiersReqHandler handler = m_softDollarTiersReqMap.get(reqId);
-//
-//		if (handler != null) {
-//			handler.softDollarTiers(tiers);
-//		}
+
     }
+
+
 }

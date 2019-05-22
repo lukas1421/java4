@@ -6,6 +6,7 @@ import auxiliary.SimpleBar;
 import client.*;
 import controller.ApiConnection;
 import controller.ApiController;
+import handler.DefaultConnectionHandler;
 import handler.LiveHandler;
 import utility.Utility;
 
@@ -72,7 +73,7 @@ public class BreachCutter implements LiveHandler, ApiController.IPositionHandler
     private static ApiController cutterController;
 
     private void connectAndReqHoldings() {
-        ApiController ap = new ApiController(new ApiController.IConnectionHandler.DefaultConnectionHandler(),
+        ApiController ap = new ApiController(new DefaultConnectionHandler(),
                 new ApiConnection.ILogger.DefaultLogger(), new ApiConnection.ILogger.DefaultLogger());
         cutterController = ap;
 

@@ -7,10 +7,9 @@ import client.Types;
 import controller.AccountSummaryTag;
 import controller.ApiConnection.ILogger.DefaultLogger;
 import controller.ApiController;
-import controller.ApiController.IConnectionHandler.DefaultConnectionHandler;
+import handler.DefaultConnectionHandler;
 import handler.HistoricalHandler;
 import handler.LiveHandler;
-import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import utility.Utility;
 
 import java.io.*;
@@ -568,7 +567,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 
         pr(" format time " + formatTime);
 
-        ap.reqHistoricalDataSimple(generateReqId(c), this, c, formatTime, 2, Types.DurationUnit.DAY,
+        ControllerCalls.reqHistoricalDataSimple(ap, generateReqId(c), this, c, formatTime, 2, Types.DurationUnit.DAY,
                 Types.BarSize._1_hour, Types.WhatToShow.MIDPOINT, false);
     }
 
@@ -588,7 +587,7 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
 
         pr(" format time " + formatTime);
 
-        ap.reqHistoricalDataSimple(generateReqId(c), this, c, formatTime, 2, Types.DurationUnit.DAY,
+        ControllerCalls.reqHistoricalDataSimple(ap, generateReqId(c), this, c, formatTime, 2, Types.DurationUnit.DAY,
                 Types.BarSize._1_hour, Types.WhatToShow.MIDPOINT, false);
     }
 
@@ -629,7 +628,8 @@ public final class MorningTask implements HistoricalHandler, LiveHandler, ApiCon
             DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
             String formatTime = lt.format(dtf);
 
-            ap.reqHistoricalDataSimple(generateReqId(c), this, c, formatTime, 1, Types.DurationUnit.DAY,
+            ControllerCalls.reqHistoricalDataSimple(ap,
+                    generateReqId(c), this, c, formatTime, 1, Types.DurationUnit.DAY,
                     Types.BarSize._5_mins, Types.WhatToShow.MIDPOINT, false);
         }
     }
