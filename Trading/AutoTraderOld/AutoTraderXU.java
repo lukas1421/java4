@@ -3703,9 +3703,9 @@ public final class AutoTraderXU extends JPanel implements HistoricalHandler, Api
         if (numTestOrders < 1) {
             int id = autoTradeID.incrementAndGet();
             Order o = TradingUtility.placeOfferLimitTIF(freshPrice + 10.0, 1, IOC);
-            globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, "Test ", TEST));
+            globalIdOrderMap.put(id, new OrderAugmented(activeFutCt, nowMilli, o, "utility.Test ", TEST));
             apcon.placeOrModifyOrder(activeFutCt, o, new GuaranteeXUHandler(id, apcon));
-            outputDetailedXU(symbol, str(o.orderId(), "Test trade ", freshPrice, "bid ask", bid, ask));
+            outputDetailedXU(symbol, str(o.orderId(), "utility.Test trade ", freshPrice, "bid ask", bid, ask));
         }
     }
 

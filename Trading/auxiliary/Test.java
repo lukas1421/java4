@@ -22,7 +22,7 @@ public class Test implements EWrapper {
     EClientSocket m_s = new EClientSocket(this, m_signal);
 
     public static void main(String[] args) {
-        //new Test().run();
+        //new utility.Test().run();
 
         System.out.println(" user " + System.getProperty("user.name"));
     }

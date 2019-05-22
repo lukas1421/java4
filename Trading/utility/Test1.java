@@ -1,3 +1,5 @@
+package utility;
+
 import static utility.Utility.pr;
 
 public class Test1 {
