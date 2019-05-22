@@ -3,11 +3,8 @@ import controller.ApiConnection;
 import controller.ApiController;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CountDownLatch;
@@ -98,6 +95,15 @@ public class TestAPI {
         return ct;
     }
 
+    public static Contract getMYM() {
+        Contract ct = new Contract();
+        ct.symbol("MYM");
+        ct.exchange("ECBOT");
+        ct.secType(Types.SecType.CONTFUT);
+        ct.currency("USD");
+        return ct;
+    }
+
     public static Contract getNQ() {
         Contract ct = new Contract();
         ct.symbol("NQ");
@@ -122,7 +128,7 @@ public class TestAPI {
         boolean connectionStatus = false;
 
         try {
-            ap.connect("127.0.0.1", 7496, 100, "");
+            ap.connect("127.0.0.1", 7496, 101, "");
             connectionStatus = true;
             pr(" connection status is true ");
             l.countDown();
@@ -132,7 +138,7 @@ public class TestAPI {
 
         if (!connectionStatus) {
             pr(" using port 4001 ");
-            ap.connect("127.0.0.1", 4001, 100, "");
+            ap.connect("127.0.0.1", 4001, 101, "");
             l.countDown();
             pr(" Latch counted down " + LocalTime.now());
         }
@@ -151,9 +157,10 @@ public class TestAPI {
         //Contract ct = getActiveBTC();
 //        Contract ct = getContBTC();
         //ct.secType(Types.SecType.CONTFUT);
-        Contract ct = getUSStockContract("MRK");
+//        Contract ct = getUSStockContract("MRK");
+        Contract ct = getMYM();
 
-        ap.reqHistDayData(10001,
+        ap.reqHistDayData(10002,
                 ct, (contract, date, open, high, low, close, vol) -> {
                     if (!date.startsWith("finished")) {
 //                        pr(date, open, high, low, close);
@@ -170,7 +177,7 @@ public class TestAPI {
                     } else {
                         pr(date, open, close);
                     }
-                }, 200, Types.BarSize._1_day);
+                }, 50, Types.BarSize._1_day);
 
 
     }

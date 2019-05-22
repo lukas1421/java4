@@ -238,7 +238,7 @@ public class TradingUtility {
         ZonedDateTime usZdt = chinaZdt.withZoneSameInstant(nyZone);
         LocalDateTime usLdt = usZdt.toLocalDateTime();
 
-        return usLdt.isAfter(LocalDateTime.of(thisMonthExpiry, ltof(16, 0)))
+        return usLdt.isAfter(LocalDateTime.of(thisMonthExpiry, ltof(9, 30)))
                 ? nextMonthExpiry : thisMonthExpiry;
     }
 
